@@ -22,13 +22,13 @@ the [Github repo][].
 You can either clone the public repository:
 
 ``` console
-$ git clone git://github.com/pbk0/toolcraft
+$ git clone git://github.com/SpikingNeurons/toolcraft
 ```
 
 Or download the [tarball][]:
 
 ``` console
-$ curl -OJL https://github.com/pbk0/toolcraft/tarball/master
+$ curl -OJL https://github.com/SpikingNeurons/toolcraft/tarball/master
 ```
 
 Once you have a copy of the source, you can install it with:

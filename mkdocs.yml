@@ -1,6 +1,6 @@
 site_name: ToolCraft
 # site_url: http://www.jieyu.ai
-repo_url: https://github.com/pbk0/toolcraft
+repo_url: https://github.com/SpikingNeurons/toolcraft
 repo_name: toolcraft
 #strict: true
 nav:
@@ -62,7 +62,7 @@ extra:
       link: http://www.jieyu.ai
       name: Facebook
     - icon: fontawesome/brands/github
-      link: https://github.com/pbk0/toolcraft
+      link: https://github.com/SpikingNeurons/toolcraft
       name: Github
     - icon: material/email
       link: "mailto:praveenneuron@gmail.com"

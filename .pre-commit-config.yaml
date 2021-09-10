@@ -14,10 +14,10 @@ repos:
     - id: check-merge-conflict
     - id: check-yaml
       args: [--unsafe]
--   repo: https://github.com/pre-commit/mirrors-isort
-    rev: v4.3.21
-    hooks:
-    - id: isort
+#-   repo: https://github.com/pre-commit/mirrors-isort
+#    rev: v4.3.21
+#    hooks:
+#    - id: isort
 #-   repo: https://github.com/ambv/black
 #    rev: stable
 #    hooks:

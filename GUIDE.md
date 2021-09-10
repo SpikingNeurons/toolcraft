@@ -19,3 +19,7 @@ Then ...
   + support for API documentation
   + MDX components
   + multi-platform doc i.e. for mobile, desktop etc ...
+
+## pre-commit hooks
+
+Explore `.pre-commit-config.yaml`
