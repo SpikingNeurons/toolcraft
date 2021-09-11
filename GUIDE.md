@@ -20,6 +20,30 @@ Then ...
   + MDX components
   + multi-platform doc i.e. for mobile, desktop etc ...
 
-## pre-commit hooks
+## Badges
 
-Explore `.pre-commit-config.yaml`
++ You can generate badges and display status
+  + https://shields.io/category/coverage
+
++ Add badges for social networking too ...
+
+## Gen inspirations for different files from
+
+[pyproject.toml](https://github.com/python-poetry/poetry-core/blob/master/pyproject.toml)
+
+[.pre-commit-config.yaml](https://github.com/python-poetry/poetry-core/blob/master/.pre-commit-config.yaml)
+
+[workflows](https://github.com/python-poetry/poetry-core/tree/master/.github/workflows)
+
+
+## CLI for toolcraft using `cleo`
+
++ tasks
+  + Note the `tasks.py` is for toolcraft management may be not needed.
+  + May be, avoid imperative programming for library management.
+
+
++ tools
+  + we will continue using `typer` instead of `cleo`
+  + But anyways get inspiration from poetry library
+    + https://github.com/python-poetry/poetry/tree/master/poetry/console/commands

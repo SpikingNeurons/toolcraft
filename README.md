@@ -1,6 +1,16 @@
 # ToolCraft
 
 
+[![PyPI version](https://img.shields.io/pypi/v/toolcraft)](https://pypi.org/project/toolcraft/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/toolcraft)](https://pypi.org/project/toolcraft/)
+[![License: MIT](https://img.shields.io/pypi/l/toolcraft)](https://opensource.org/licenses/BSD-3-Clause)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
+
+
+[![Tests](https://github.com/SpikingNeurons/toolcraft/workflows/Tests/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions?query=workflow%3ATests)
+
+
 <p align="center">
 <a href="https://pypi.python.org/pypi/toolcraft">
     <img src="https://img.shields.io/pypi/v/toolcraft.svg"

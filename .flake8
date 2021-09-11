@@ -14,10 +14,10 @@ exclude =
     build,
     dist,
     releases,
+    .idea,
     .venv,
     .tox,
     .mypy_cache,
     .pytest_cache,
     .vscode,
     .github,
-    tests
