@@ -7,6 +7,8 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SpikingNeurons/toolcraft/main.svg)](https://results.pre-commit.ci/latest/github/SpikingNeurons/toolcraft/main)
+
 
 [![Tests](https://github.com/SpikingNeurons/toolcraft/workflows/Tests/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions?query=workflow%3ATests)
 
