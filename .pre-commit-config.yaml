@@ -9,7 +9,7 @@ repos:
 #    -   id: check-json
     -   id: name-tests-test
 #    -   id: requirements-txt-fixer
-    -   id: double-quote-string-fixer
+#    -   id: double-quote-string-fixer
     -   id: debug-statements
     -   id: check-merge-conflict
     -   id: check-yaml

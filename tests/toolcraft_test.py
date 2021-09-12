@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Tests for `toolcraft` package."""
 # pylint: disable=redefined-outer-name
-
 import pytest
 
 
