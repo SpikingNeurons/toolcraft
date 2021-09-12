@@ -48,6 +48,14 @@ pandas = "^1.3.2"
 pyarrow = "^5.0.0"
 
 
+[tool.poetry.extras]
+
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+
 [tool.poetry.dev-dependencies]
 # build
 virtualenv = "^20.7.2"
@@ -80,7 +88,7 @@ toolcraft = 'toolcraft.tools:main'
 
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 

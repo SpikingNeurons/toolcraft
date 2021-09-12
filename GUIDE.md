@@ -1,5 +1,22 @@
 # Guide
 
+## Poetry installation
+
+Note that poetry needs to be installed in isolated environment. So refrain from `pip install poetry`
+
+https://python-poetry.org/docs/master/#installation
+
+```bat
+activate base
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python - --version 1.2.0a2
+```
+
+Open new terminal and check version
+
+```bat
+poetry --version
+```
+
 ## Getting started with ppw
 
 + use ppw to start with
