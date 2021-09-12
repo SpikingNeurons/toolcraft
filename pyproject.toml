@@ -129,6 +129,14 @@ exclude_lines = [
     "if TYPE_CHECKING:"
 ]
 
+
+[tool.pytest.ini_options]  # refer: https://docs.pytest.org/en/6.2.x/customize.html
+minversion = "6.2"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+
 [tool.tox]  # refer: https://github.com/ymyzk/tox-gh-actions
 legacy_tox_ini = """
 [tox]
