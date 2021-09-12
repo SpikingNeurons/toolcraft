@@ -47,3 +47,8 @@ Then ...
   + we will continue using `typer` instead of `cleo`
   + But anyways get inspiration from poetry library
     + https://github.com/python-poetry/poetry/tree/master/poetry/console/commands
+
+## Understand `tox` and `tox-gh-actions`
+
+Refer
++ https://github.com/ymyzk/tox-gh-actions

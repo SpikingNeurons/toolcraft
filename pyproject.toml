@@ -86,6 +86,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+multi_line_output = 3
 force_single_line = true
 atomic = true
 include_trailing_comma = true
@@ -96,7 +97,12 @@ src_paths = ["toolcraft", "tests"]
 skip_glob = ["*/setup.py"]
 filter_files = true
 known_first_party = "poetry"
-
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+# you can skip files as below
+#skip_glob = docs/conf.py
 
 [tool.black]
 line-length = 88
@@ -123,3 +129,26 @@ exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:"
 ]
+
+[tool.tox]  # refer: https://github.com/ymyzk/tox-gh-actions
+legacy_tox_ini = """
+[tox]
+minversion >= 3.20.1
+isolated_build = true
+envlist = py37, py38, py39, doc
+
+[gh-actions]
+python =
+    3.7: py37
+    3.8: py38
+    3.9: py39, doc
+
+[testenv]
+whitelist_externals = poetry
+setenv =
+    PYTHONPATH = {toxinidir}
+    PYTHONWARNINGS = ignore
+commands =
+    poetry install --no-root
+    poetry run pytest {posargs} tests/
+"""
