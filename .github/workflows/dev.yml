@@ -45,9 +45,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
 
-      - name: Test with PyTest
-        run:
-          tox
+#      - name: Test with PyTest
+#        run:
+#          tox
 
       - name: List files
         run: ls -l .
