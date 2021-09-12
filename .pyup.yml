@@ -3,6 +3,7 @@
 # allowed: all, insecure, False
 update: all
 
+
 # configure dependency pinning globally
 # default: True
 # allowed: True, False
