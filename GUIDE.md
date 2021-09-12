@@ -75,3 +75,7 @@ Then ...
 
 Refer
 + https://github.com/ymyzk/tox-gh-actions
+
+
+## PyUp: the dependencies' security tracker
+Set this up
