@@ -82,8 +82,9 @@ jobs:
 
       - name: Build wheels and source tarball
         run: |
-          poetry version $(poetry version --short)
           poetry version
+          poetry version --short
+          poetry version $(poetry version --short)-dev.$GITHUB_RUN_NUMBER
           poetry build
 
       - name: Check wheels and source tarball
