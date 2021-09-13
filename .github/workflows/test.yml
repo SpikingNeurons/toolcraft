@@ -21,8 +21,10 @@ jobs:
     # The type of runner that the job will run on
     strategy:
       matrix:
-        python-versions: [3.7, 3.8, 3.9]
-        os: [ubuntu-18.04, macos-latest, windows-latest]
+#        python-versions: [3.7, 3.8, 3.9]
+#        os: [ubuntu-18.04, macos-latest, windows-latest]
+        python-versions: [3.9]
+        os: [ubuntu-18.04]
 
     runs-on: ${{ matrix.os }}
 
@@ -80,7 +82,7 @@ jobs:
 
       - name: Build wheels and source tarball
         run: |
-          poetry version $(poetry version --short)-dev.$GITHUB_RUN_NUMBER
+          poetry version $(poetry version --short)
           poetry version
           poetry build
 
