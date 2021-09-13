@@ -1,6 +1,6 @@
 
 
-name: coverage workflow
+name: coverage
 
 
 on:
