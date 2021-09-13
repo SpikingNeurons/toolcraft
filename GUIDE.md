@@ -79,3 +79,7 @@ Refer
 
 ## PyUp: the dependencies' security tracker
 Set this up
+
+
+## Add to conda-forge
+Example repo https://github.com/pytest-dev/pytest
