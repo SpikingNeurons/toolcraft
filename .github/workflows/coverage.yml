@@ -16,7 +16,7 @@ on:
 
 jobs:
 
-  test:
+  code-coverage:
 
     runs-on: ubuntu-18.04
 
