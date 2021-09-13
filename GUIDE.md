@@ -27,7 +27,7 @@ Also do some more things for pre-commit, docs and pytest to work
 Rest all dependencies will be taken care on cloud
 
 ```bat
-poetry install --with dev --with test --with docs --with pre-commit --no-root
+poetry install --with dev --with test --with docs --with pre-commit --with build --no-root
 pre-commit install --install-hooks
 ```
 

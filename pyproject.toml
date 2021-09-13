@@ -73,6 +73,13 @@ pytest = "^6.2.5"
 pytest-cov  = "^2.12.1"
 
 
+[tool.poetry.group.build]
+optional = true
+
+[tool.poetry.group.build.dependencies]
+twine = "^3.4.2"
+
+
 [tool.poetry.group.pre-commit]
 optional = true
 

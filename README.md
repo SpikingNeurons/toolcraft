@@ -1,23 +1,18 @@
 # ToolCraft
 
-
 [![PyPI version](https://img.shields.io/pypi/v/toolcraft?style=for-the-badge)](https://pypi.org/project/toolcraft/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/toolcraft?style=for-the-badge)](https://pypi.org/project/toolcraft/)
 [![License: MIT](https://img.shields.io/pypi/l/toolcraft?style=for-the-badge)](https://opensource.org/licenses/BSD-3-Clause)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge)](https://github.com/psf/black)
-[![Codecov branch](https://img.shields.io/codecov/c/github/SpikingNeurons/toolcraft/main?token=Zz1FhlxwEe&&style=for-the-badge)](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main)
-
-
 
 Github Workflows:
 
-[![coverage workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml)
-[![pre-commit workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml)
-[![release & publish workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml)
-[![test & test-publish workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml)
+[![coverage](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml)
+[![pre-commit](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml)
+[![test & test-publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml)
+[![release & publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml)
 
-
-Third-party Workflows:
+External Services/Workflows:
 
 [![codecov:main](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main/graph/badge.svg?token=Zz1FhlxwEe)](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SpikingNeurons/toolcraft/main.svg)](https://results.pre-commit.ci/latest/github/SpikingNeurons/toolcraft/main)
