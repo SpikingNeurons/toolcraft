@@ -7,6 +7,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge)](https://github.com/psf/black)
 
 
+[![codecov](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main/graph/badge.svg?token=Zz1FhlxwEe)](https://codecov.io/gh/SpikingNeurons/toolcraft)
 [![Open Source Helpers](https://www.codetriage.com/spikingneurons/toolcraft/badges/users.svg)](https://www.codetriage.com/spikingneurons/toolcraft)
 [![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SpikingNeurons/toolcraft/main.svg)](https://results.pre-commit.ci/latest/github/SpikingNeurons/toolcraft/main)
