@@ -16,6 +16,17 @@
 [![Tests](https://github.com/SpikingNeurons/toolcraft/workflows/Tests/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions?query=workflow%3ATests)
 
 
+Github Workflows:
+
+[![coverage workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml)
+[![pre-commit workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml)
+[![release & publish workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml)
+[![test & test-publish workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml)
+
+
+##
+
+
 <p align="center">
 <a href="https://pypi.python.org/pypi/toolcraft">
     <img src="https://img.shields.io/pypi/v/toolcraft.svg"
