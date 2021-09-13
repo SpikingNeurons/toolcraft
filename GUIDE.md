@@ -28,7 +28,7 @@ Rest all dependencies will be taken care on cloud
 
 ```bat
 poetry install --with dev --with test --with docs
-pre-commit install
+pre-commit install --install-hooks
 ```
 
 ## Getting started with ppw
@@ -92,3 +92,20 @@ Currently it expects requirements file ... need to see how and when they will su
 
 ## Add to conda-forge
 Example repo https://github.com/pytest-dev/pytest
+
+
+## coverage
+
+There are two options
++ codecov
++ coveralls
+
+We are using codecov
+But looks like both do not have release-tag specific badges
+We need to just have badge on main branch and disable it for release
+
+
+## Release tag specific readme badge
+
+We might need to have badges specific to release tage
+And the badges that cannot be release-tag specific must be removed from readme...
