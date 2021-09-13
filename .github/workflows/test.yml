@@ -89,7 +89,6 @@ jobs:
 
       - name: List files
         run: |
-          cd build
           ls -l .
 
       # Know more at https://github.com/pypa/gh-action-pypi-publish
