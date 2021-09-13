@@ -57,10 +57,23 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python 3.9
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9
+
+      # know more at https://github.com/snok/install-poetry
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.2.0a2
+          virtualenvs-create: true
+          virtualenvs-in-project: false
+          # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
+          installer-parallel: true
 
       - name: Install build dependencies
         run: poetry install --with build
@@ -72,7 +85,7 @@ jobs:
           poetry build
 
       - name: Build wheels and source tarball
-        run: twine check dist/*
+        run: poetry run twine check dist/*
 
       - name: List files
         run: |
