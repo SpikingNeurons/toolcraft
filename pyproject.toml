@@ -89,14 +89,6 @@ mkdocs-material-extensions = "^1.0.3"
 mkdocs-autorefs = "^0.2"
 
 
-[tool.poetry.extras]
-
-test = [
-    "pytest",
-    "pytest-cov",
-]
-
-
 [tool.poetry.scripts]
 toolcraft = 'toolcraft.tools:main'
 

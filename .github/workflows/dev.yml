@@ -45,16 +45,21 @@ jobs:
           # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
           installer-parallel: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
+      - name: Install test dependencies
+        run: poetry install --with test
 
-#      - name: Test with PyTest
-#        run:
-#          tox
+      - name: Test with PyTest
+        run: poetry run pytest --cov=./ --cov-report=xml
 
-      - name: List files
-        run: ls -l .
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+#          files: ./coverage1.xml,./coverage2.xml # optional
+#          flags: unittests # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
 
   publish_dev_build:
     # if test failed, we should not publish
