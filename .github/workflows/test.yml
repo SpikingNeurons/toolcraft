@@ -89,7 +89,7 @@ jobs:
 
       - name: List files
         run: |
-          cd test
+          cd dist
           ls -l .
           cd ..
 
