@@ -84,7 +84,7 @@ jobs:
           poetry version --short
           poetry build
 
-      - name: Build wheels and source tarball
+      - name: Check wheels and source tarball
         run: poetry run twine check dist/*
 
       - name: List files
