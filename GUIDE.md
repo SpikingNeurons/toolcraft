@@ -110,6 +110,11 @@ We are using codecov
 But looks like both do not have release-tag specific badges
 We need to just have badge on main branch and disable it for release
 
+Note that codecov report can be specialized for branch but same is not known for tags
+
+You can see branches here
+https://app.codecov.io/gh/SpikingNeurons/toolcraft/branches?page=1&order=-updatestamp
+
 
 ## Release tag specific readme badge
 

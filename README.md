@@ -5,15 +5,11 @@
 [![Python Versions](https://img.shields.io/pypi/pyversions/toolcraft?style=for-the-badge)](https://pypi.org/project/toolcraft/)
 [![License: MIT](https://img.shields.io/pypi/l/toolcraft?style=for-the-badge)](https://opensource.org/licenses/BSD-3-Clause)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge)](https://github.com/psf/black)
+[![Codecov branch](https://img.shields.io/codecov/c/github/SpikingNeurons/toolcraft/main?token=Zz1FhlxwEe&&style=for-the-badge)](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main)
 
-
-[![codecov](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main/graph/badge.svg?token=Zz1FhlxwEe)](https://codecov.io/gh/SpikingNeurons/toolcraft)
 [![Open Source Helpers](https://www.codetriage.com/spikingneurons/toolcraft/badges/users.svg)](https://www.codetriage.com/spikingneurons/toolcraft)
 [![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SpikingNeurons/toolcraft/main.svg)](https://results.pre-commit.ci/latest/github/SpikingNeurons/toolcraft/main)
-
-
-[![Tests](https://github.com/SpikingNeurons/toolcraft/workflows/Tests/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions?query=workflow%3ATests)
 
 
 Github Workflows:
@@ -23,6 +19,13 @@ Github Workflows:
 [![release & publish workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml)
 [![test & test-publish workflow](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/dev.yml)
 
+
+## Code Coverage
+[![codecov:main](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main/graph/badge.svg?token=Zz1FhlxwEe)](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main)
+
+![](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main/graphs/sunburst.svg)
+
+![](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main/graphs/commits.svg)
 
 ##
 
