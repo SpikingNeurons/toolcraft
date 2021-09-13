@@ -36,6 +36,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-versions }}
 
+      # know more at https://github.com/snok/install-poetry
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -49,18 +50,7 @@ jobs:
         run: poetry install --with test
 
       - name: Test with PyTest
-        run: poetry run pytest --cov=./ --cov-report=xml
-
-      # know more at https://github.com/codecov/codecov-action
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-#          files: ./coverage1.xml,./coverage2.xml # optional
-#          flags: unittests # optional
-          name: ${{ matrix.python-versions }} on ${{ matrix.os }}
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false)
+        run: poetry run pytest
 
   publish_dev_build:
     # if test failed, we should not publish
