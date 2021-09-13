@@ -40,19 +40,8 @@ jobs:
           # virtualenvs-path: ~/my-custom-path
           installer-parallel: true
 
-      - name: Install test/coverage dependencies
-        run: poetry install --with test
+      - name: Install pre-commit dependencies
+        run: poetry install --with pre-commit
 
-      - name: Test with PyTest and get coverage report
-        run: poetry run pytest --cov=./ --cov-report=xml
-
-      # know more at https://github.com/codecov/codecov-action
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-#          files: ./coverage1.xml,./coverage2.xml # optional
-#          flags: unittests # optional
-          name: codecov_report
-          fail_ci_if_error: true # optional (default = false)
-          verbose: true # optional (default = false)
+      - name: Perform pre-commit tests
+        run: poetry run pre-commit run

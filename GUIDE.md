@@ -27,7 +27,7 @@ Also do some more things for pre-commit, docs and pytest to work
 Rest all dependencies will be taken care on cloud
 
 ```bat
-poetry install --with dev --with test --with docs
+poetry install --with dev --with test --with docs --with pre-commit --no-root
 pre-commit install --install-hooks
 ```
 
@@ -94,7 +94,13 @@ Currently it expects requirements file ... need to see how and when they will su
 Example repo https://github.com/pytest-dev/pytest
 
 
-## coverage
+## Pre-commit
+
+Currently, we let pre-commit serves handle it
+But if it fails our workflows will not know that
+So we can make our own `pre-commit` workflow ... this also make it dependent on release tags
+
+## Coverage
 
 There are two options
 + codecov
@@ -109,3 +115,8 @@ We need to just have badge on main branch and disable it for release
 
 We might need to have badges specific to release tage
 And the badges that cannot be release-tag specific must be removed from readme...
+
+
+## Having workflows as dependency
+
+https://github.com/KarmaComputing/Github-Trigger-workflow-from-another-workflow/tree/main/.github/workflows
