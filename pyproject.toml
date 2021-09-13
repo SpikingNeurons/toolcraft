@@ -12,7 +12,6 @@ license =  "BSD-3-Clause"
 classifiers=[
     'Intended Audience :: Developers',
     'Natural Language :: English',
-    "Topic :: Software Development :: Tools",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 packages = [

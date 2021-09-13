@@ -89,7 +89,9 @@ jobs:
 
       - name: List files
         run: |
+          cd test
           ls -l .
+          cd ..
 
       # Know more at https://github.com/pypa/gh-action-pypi-publish
       - name: Publish to Test PyPI
