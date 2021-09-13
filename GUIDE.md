@@ -23,6 +23,14 @@ Open new terminal and check version
 poetry --version
 ```
 
+Also do some more things for pre-commit, docs and pytest to work
+Rest all dependencies will be taken care on cloud
+
+```bat
+poetry install --with dev --with test --with docs
+pre-commit install
+```
+
 ## Getting started with ppw
 
 + use ppw to start with
@@ -79,6 +87,7 @@ Refer
 
 ## PyUp: the dependencies' security tracker
 Set this up
+Currently it expects requirements file ... need to see how and when they will support poetry based files
 
 
 ## Add to conda-forge
