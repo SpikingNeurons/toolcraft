@@ -85,11 +85,18 @@ Refer
 + https://github.com/ymyzk/tox-gh-actions
 
 
-## security tracker
+## Security (check dependencies and check python code)
 
-Two options:
+Three options for dependencies:
 + snyk
 + pyup
++ dependabot from github security
+  + https://github.com/SpikingNeurons/toolcraft/security
+
+For code analysis
++ code-ql (from github)
+
+Github has a lab for it ... use tools from them maybe (https://securitylab.github.com/)
 
 Currently pyup it expects requirements file ... need to see how and when they will support poetry based files
 
