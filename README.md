@@ -7,6 +7,7 @@
 
 Github Workflows:
 
+[![code-ql scan](https://github.com/SpikingNeurons/toolcraft/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/codeql-analysis.yml)
 [![coverage](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml)
 [![pre-commit](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml)
 [![test & test-publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml)
@@ -22,7 +23,7 @@ External Services/Workflows:
 
 [![Open Source Helpers](https://www.codetriage.com/spikingneurons/toolcraft/badges/users.svg)](https://www.codetriage.com/spikingneurons/toolcraft)
 [![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg?logo=pyup)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
-
+[![Snyk](https://snyk-widget.herokuapp.com/badge/pip/toolcraft/badge.svg)]()
 
 ## Ssssss
 

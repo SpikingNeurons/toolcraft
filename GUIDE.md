@@ -85,10 +85,15 @@ Refer
 + https://github.com/ymyzk/tox-gh-actions
 
 
-## PyUp: the dependencies' security tracker
-Set this up
-Currently it expects requirements file ... need to see how and when they will support poetry based files
+## security tracker
 
+Two options:
++ snyk
++ pyup
+
+Currently pyup it expects requirements file ... need to see how and when they will support poetry based files
+
+Snyk seems to support poetry but the badge link does not work ... need to see that
 
 ## Add to conda-forge
 Example repo https://github.com/pytest-dev/pytest
