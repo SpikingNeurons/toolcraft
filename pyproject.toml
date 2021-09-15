@@ -69,7 +69,8 @@ optional = true
 
 [tool.poetry.group.test.dependencies]
 pytest = "^6.2.5"
-pytest-cov  = "^2.12.1"
+pytest-cov = "^2.12.1"
+pytest-xdist = "^2.3.0"
 invoke = "^1.6.0"
 
 [tool.poetry.group.pre-commit]
