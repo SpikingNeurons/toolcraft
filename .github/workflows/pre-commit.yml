@@ -44,4 +44,6 @@ jobs:
         run: poetry install --with pre-commit
 
       - name: Perform pre-commit tests
-        run: poetry run pre-commit run
+        run: |
+          poetry run pre-commit install --install-hooks
+          poetry run pre-commit run
