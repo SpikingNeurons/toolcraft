@@ -9,6 +9,7 @@ Github Workflows:
 
 [![code-ql scan](https://github.com/SpikingNeurons/toolcraft/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/codeql-analysis.yml)
 [![coverage](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml)
+[![pre-commit](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml)
 [![test & test-publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml)
 [![release & publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml)
 

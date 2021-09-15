@@ -52,9 +52,7 @@ jobs:
         run: poetry install --with test
 
       - name: Test with PyTest
-        run: |
-          poetry run pre-commit
-          poetry run pytest
+        run: poetry run pytest
 
   publish_dev_build:
     # if test failed, we should not publish

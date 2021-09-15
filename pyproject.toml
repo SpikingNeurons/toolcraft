@@ -68,11 +68,6 @@ pyarrow = "^5.0.0"
 optional = true
 
 [tool.poetry.group.test.dependencies]
-autopep8 = "^1.5.7"
-yapf = "^0.31.0"
-black = "^21.9b0"
-flake8 = "^3.9.2"
-flake8-docstrings = "^1.6.0"
 pytest = "^6.2.5"
 pytest-cov  = "^2.12.1"
 invoke = "^1.6.0"
