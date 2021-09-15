@@ -68,8 +68,15 @@ pyarrow = "^5.0.0"
 optional = true
 
 [tool.poetry.group.test.dependencies]
+autopep8 = "^1.5.7"
+yapf = "^0.31.0"
+black = "^21.9b0"
+flake8 = "^3.9.2"
+flake8-docstrings = "^1.6.0"
 pytest = "^6.2.5"
 pytest-cov  = "^2.12.1"
+invoke = "^1.6.0"
+pre-commit = "^2.15.0"
 
 
 [tool.poetry.group.build]
@@ -77,14 +84,6 @@ optional = true
 
 [tool.poetry.group.build.dependencies]
 twine = "^3.4.2"
-
-
-[tool.poetry.group.pre-commit]
-optional = true
-
-[tool.poetry.group.pre-commit.dependencies]
-pre-commit = "^2.15.0"
-
 
 [tool.poetry.group.docs]
 optional = true
@@ -127,8 +126,11 @@ line_length = 88
 # you can skip files as below
 #skip_glob = docs/conf.py
 
+[tool.yapf]
+#recursive = true
+
 [tool.black]
-line-length = 88
+line-length = 81
 include = '\.pyi?$'
 exclude = '''
 /(
@@ -142,8 +144,40 @@ exclude = '''
   | buck-out
   | build
   | dist
+  | website
   | tests/.*/setup.py
 )/
+'''
+
+[tool.autopep8]
+max_line_length = 120
+ignore = "E501,W6"  # or ["E501", "W6"]
+recursive = true
+aggressive = 3
+
+[tool.flake8]
+max-line-length = 81
+max-doc-length = 81
+max-complexity = 18
+ignore = ['E203', 'E266', 'E501', 'W503', 'F403', 'F401', 'D200']
+select = ['B', 'C', 'E', 'F', 'W', 'T4', 'B9']
+docstring-convention = 'google'
+per-file-ignores = '__init__.py:F401'
+exclude = '''
+    .git,
+    __pycache__,
+    setup.py,
+    build,
+    dist,
+    releases,
+    .idea,
+    .venv,
+    .tox,
+    .mypy_cache,
+    .pytest_cache,
+    .vscode,
+    .github,
+    website,
 '''
 
 
