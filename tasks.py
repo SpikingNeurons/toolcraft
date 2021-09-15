@@ -76,3 +76,7 @@ def pytest_cov(c):
     # todo: this works but takes time uncomment later
     _run(c, "pytest -s --cov=toolcraft --cov-append " "--cov-report=html tests")
     webbrowser.open(COVERAGE_REPORT.as_uri())
+
+
+
+
