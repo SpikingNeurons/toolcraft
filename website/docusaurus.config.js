@@ -6,8 +6,8 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 (module.exports = {
   title: 'Tool Craft',
   tagline: 'Create your tools with Tool Craft',
-  url: 'https://spikingneurons.github.io',
-  baseUrl: '/toolcraft/',
+  url: 'https://toolcraft.netlify.app',
+  baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
