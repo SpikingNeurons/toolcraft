@@ -11,6 +11,7 @@ Maybe we will make class for these tools and group them together ... or else
 make them more general and have own options (e.g. overwrite) and then
 generalize them across all tools
 """
+import os
 import pathlib
 import platform
 import shutil
@@ -76,6 +77,20 @@ def pytest_cov(c):
     # todo: this works but takes time uncomment later
     _run(c, "pytest -s --cov=toolcraft --cov-append " "--cov-report=html tests")
     webbrowser.open(COVERAGE_REPORT.as_uri())
+
+
+@task
+def doc_preview(c):
+    """
+    Launches docs without building them. Useful for live editing.
+
+    npm run clear
+    npm run build
+    """
+    _curr_dir = os.getcwd()
+    _doc_dir = _curr_dir + "//website//"
+    os.chdir(_doc_dir)
+    _run(c, "npm start")
 
 
 

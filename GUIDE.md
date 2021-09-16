@@ -102,6 +102,14 @@ Currently pyup it expects requirements file ... need to see how and when they wi
 
 Snyk seems to support poetry but the badge link does not work ... need to see that
 
+### Add workflow for security
+
+Make sure that before release the vulnerabilities are addressed in workflow
+Either use
++ github dependabot
++ snyk
++ or something else
+
 ## Add to conda-forge
 Example repo https://github.com/pytest-dev/pytest
 
@@ -137,3 +145,18 @@ And the badges that cannot be release-tag specific must be removed from readme..
 ## Having workflows as dependency
 
 https://github.com/KarmaComputing/Github-Trigger-workflow-from-another-workflow/tree/main/.github/workflows
+
+
+## Netlify
+
+We will use this as [facebook](https://github.com/facebook/docusaurus/edit/main/README.md) uses it
+
+
+### Cloud functions
+
+Netlify allows deploying cloud functions
+We have set that to `website/functions` dir
+[Netlify Functions](https://docs.netlify.com/functions/build-with-typescript/)
+
+
+
