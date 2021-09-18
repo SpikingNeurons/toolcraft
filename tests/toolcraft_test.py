@@ -2,6 +2,7 @@
 """Tests for `toolcraft` package."""
 # pylint: disable=redefined-outer-name
 import pytest
+from toolcraft import rules
 from toolcraft import tools
 from typer.testing import CliRunner
 
@@ -35,3 +36,7 @@ def test_command_line_interface():
     help_result = runner.invoke(tools.main, ["--help"])
     assert help_result.exit_code == 0
     assert "--help  Show this message and exit." in help_result.output
+
+
+def test_toolcraft_rules():
+    rules.main()

@@ -23,6 +23,12 @@ if False:
     from . import gui
 
 
+try:
+    import tensorflow.keras as tk
+except ImportError:
+    ...
+
+
 _LOGGER = logger.get_logger()
 
 
@@ -876,7 +882,6 @@ class YamlRepr(Tracker):
                     cls.can_be_frozen(
                         item=v,
                         key_or_index=current_key,
-                        allowed_nesting=allowed_nesting,
                         allowed_types=allowed_types,
                     )
 
@@ -949,9 +954,9 @@ class YamlRepr(Tracker):
 class FrozenKeras(YamlRepr):
     class LITERAL(YamlRepr.LITERAL):
         SUPPORTED_KERAS_OBJECTS_TYPE = t.Union[
-            tk.losses.Loss,
-            tk.optimizers.Optimizer,
-            tk.optimizers.schedules.LearningRateSchedule,
+            "tk.losses.Loss",
+            "tk.optimizers.Optimizer",
+            "tk.optimizers.schedules.LearningRateSchedule",
         ]
         # noinspection PyUnresolvedReferences
         SUPPORTED_KERAS_OBJECTS = SUPPORTED_KERAS_OBJECTS_TYPE.__args__

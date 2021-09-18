@@ -22,12 +22,12 @@ todo: Also refer
   https://github.com/ml-tooling/ml-workspace
 
 """
-from . import rules
 
 __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 
-# Note that this is done as code cannot know the version number and it is the job of pyproject.toml
+# Note that this is done as code cannot know the version number and it is
+# the job of pyproject.toml
 try:
     from importlib.metadata import PackageNotFoundError, version
 
@@ -36,14 +36,3 @@ except PackageNotFoundError as pnf:
     __version__ = "cannot estimate version"
 except ModuleNotFoundError as mnf:
     __version__ = "cannot estimate version"
-
-
-# todo: let us see if we can get the pyproject.toml populated here
-#  may be just overwrite this file by replacing the empty dict with filled up dict as and when
-#  bump2version is executed
-PYPROJECT_TOML = {}
-
-
-# todo: we will move to tests module and will improve design
-
-rules.main()
