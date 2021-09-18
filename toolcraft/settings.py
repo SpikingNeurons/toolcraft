@@ -5,9 +5,8 @@ todo: Formalize with a parent Settings class which will store settings in
 import pathlib
 import sys
 
-import numpy as np
-
 import __main__ as main
+import numpy as np
 
 
 # noinspection PyUnresolvedReferences,PyCompatibility
