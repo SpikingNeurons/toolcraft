@@ -127,7 +127,7 @@ line_length = 88
 # you can skip files as below
 #skip_glob = docs/conf.py
 sections=[
-    "PYARROW",
+    "NUMPY",
     "FUTURE",
     "STDLIB",
     "THIRDPARTY",
