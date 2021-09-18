@@ -15,16 +15,16 @@ todo:
     - https://typer.tiangolo.com/tutorial/prompt/
 
 """
-import pathlib
-import typer
-import toml
-
-from . import Tool
 from .. import error as e
+from . import Tool
+
+import pathlib
+
+import toml
+import typer
 
 
 class ConfigTool(Tool):
-
     @classmethod
     def command_fn(
         cls,

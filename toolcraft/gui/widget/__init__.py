@@ -1,12 +1,41 @@
-import numpy as np
+from .auto import Button
+from .auto import CheckBox
+from .auto import Child
+from .auto import CollapsingHeader
+from .auto import ColorMap
+from .auto import ColorMapScale
+from .auto import Column
+from .auto import Combo
+from .auto import DragLine
+from .auto import DragPoint
+from .auto import Group
+from .auto import InputInt
+from .auto import InputIntX
+from .auto import InSameLine
+from .auto import Legend
+from .auto import Marker
+from .auto import Row
+from .auto import Separator
+from .auto import Slider3D
+from .auto import SliderFloat
+from .auto import SliderFloatX
+from .auto import SliderInt
+from .auto import SliderIntX
+from .auto import SubPlot
+from .auto import Tab
+from .auto import TabBar
+from .auto import TabButton
+from .auto import TableSizingPolicy
+from .auto import Text
+from .auto import Window
+from .auto import XAxis
+from .auto import YAxis
+from .core import Plot
+from .core import Table
+
 import typing as t
 
-PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
+import numpy as np
 
-from .core import Table, Plot
-from .auto import Window, SubPlot, Child, DragLine, DragPoint
-from .auto import TableSizingPolicy, ColorMap, Marker
-from .auto import Row, Column, Legend, XAxis, YAxis, ColorMapScale
-from .auto import Group, Tab, TabBar, TabButton, Combo, Button, Text, Separator
-from .auto import CheckBox, InputIntX, InputInt, InSameLine, CollapsingHeader
-from .auto import SliderInt, SliderIntX, SliderFloat, SliderFloatX, Slider3D
+
+PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]

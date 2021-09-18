@@ -4,6 +4,7 @@ https://github.com/hoffstadt/SimpleDataFlow/edit/main/simple_data_flow.py
 
 import dearpygui.dearpygui as dpg
 
+
 ########################################################################################################################
 # Simple Data Flow
 ########################################################################################################################
@@ -50,16 +51,24 @@ with dpg.theme() as _source_theme:
     dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [25, 119, 0])
 
 with dpg.theme() as _completion_theme:
-    dpg.add_theme_color(dpg.mvNodeCol_TitleBar, [37, 28, 138], category=dpg.mvThemeCat_Nodes)
-    dpg.add_theme_color(dpg.mvNodeCol_TitleBarHovered, [37, 28, 138], category=dpg.mvThemeCat_Nodes)
-    dpg.add_theme_color(dpg.mvNodeCol_TitleBarSelected, [37, 28, 138], category=dpg.mvThemeCat_Nodes)
+    dpg.add_theme_color(dpg.mvNodeCol_TitleBar, [37, 28, 138],
+                        category=dpg.mvThemeCat_Nodes)
+    dpg.add_theme_color(
+        dpg.mvNodeCol_TitleBarHovered,
+        [37, 28, 138],
+        category=dpg.mvThemeCat_Nodes,
+    )
+    dpg.add_theme_color(
+        dpg.mvNodeCol_TitleBarSelected,
+        [37, 28, 138],
+        category=dpg.mvThemeCat_Nodes,
+    )
 
 
 ########################################################################################################################
 # Node DPG Wrappings
 ########################################################################################################################
 class OutputNodeAttribute:
-
     def __init__(self, label: str = "output"):
 
         self._label = label
@@ -80,13 +89,16 @@ class OutputNodeAttribute:
 
     def submit(self, parent):
 
-        with dpg.node_attribute(parent=parent, attribute_type=dpg.mvNode_Attr_Output,
-                                user_data=self, id=self.uuid):
+        with dpg.node_attribute(
+                parent=parent,
+                attribute_type=dpg.mvNode_Attr_Output,
+                user_data=self,
+                id=self.uuid,
+        ):
             dpg.add_text(self._label)
 
 
 class InputNodeAttribute:
-
     def __init__(self, label: str = "input"):
 
         self._label = label
@@ -107,7 +119,6 @@ class InputNodeAttribute:
 
 
 class Node:
-
     def __init__(self, label: str, data):
 
         self.label = label
@@ -141,13 +152,21 @@ class Node:
         with dpg.node(parent=parent, label=self.label, id=self.uuid):
 
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Static):
-                dpg.add_button(label="Execute", user_data=self, callback=lambda s, a, u: u.execute())
+                dpg.add_button(
+                    label="Execute",
+                    user_data=self,
+                    callback=lambda s, a, u: u.execute(),
+                )
 
             for attribute in self._input_attributes:
                 attribute.submit(self.uuid)
 
-            with dpg.node_attribute(parent=self.uuid, attribute_type=dpg.mvNode_Attr_Static,
-                                    user_data=self, id=self.static_uuid):
+            with dpg.node_attribute(
+                    parent=self.uuid,
+                    attribute_type=dpg.mvNode_Attr_Static,
+                    user_data=self,
+                    id=self.static_uuid,
+            ):
                 self.custom()
 
             for attribute in self._output_attributes:
@@ -155,7 +174,6 @@ class Node:
 
 
 class NodeEditor:
-
     @staticmethod
     def _link_callback(sender, app_data, user_data):
         output_attr_uuid, input_attr_uuid = app_data
@@ -182,8 +200,16 @@ class NodeEditor:
 
     def submit(self, parent):
 
-        with dpg.node_editor(parent=parent, id=self.uuid, user_data=self, callback=NodeEditor._link_callback,
-                             width=-160, height=-1, drop_callback=lambda s, a, u: dpg.get_item_user_data(s).on_drop(s, a, u)):
+        with dpg.node_editor(
+                parent=parent,
+                id=self.uuid,
+                user_data=self,
+                callback=NodeEditor._link_callback,
+                width=-160,
+                height=-1,
+                drop_callback=lambda s, a, u: dpg.get_item_user_data(s).
+                on_drop(s, a, u),
+        ):
 
             for node in self._nodes:
                 node.submit(self.uuid)
@@ -193,7 +219,6 @@ class NodeEditor:
 # Drag & Drop
 ########################################################################################################################
 class DragSource:
-
     def __init__(self, label: str, node_generator, data):
 
         self.label = label
@@ -205,12 +230,12 @@ class DragSource:
         dpg.add_button(label=self.label, parent=parent, width=-1)
         dpg.set_item_theme(dpg.last_item(), _source_theme)
 
-        with dpg.drag_payload(parent=dpg.last_item(), drag_data=(self, self._generator, self._data)):
+        with dpg.drag_payload(parent=dpg.last_item(),
+                              drag_data=(self, self._generator, self._data)):
             dpg.add_text(f"Name: {self.label}")
 
 
 class DragSourceContainer:
-
     def __init__(self, label: str, width: int = 150, height: int = -1):
 
         self._label = label
@@ -225,7 +250,13 @@ class DragSourceContainer:
 
     def submit(self, parent):
 
-        with dpg.child(parent=parent, width=self._width, height=self._height, id=self._uuid, menubar=True) as child_parent:
+        with dpg.child(
+                parent=parent,
+                width=self._width,
+                height=self._height,
+                id=self._uuid,
+                menubar=True,
+        ) as child_parent:
             with dpg.menu_bar():
                 dpg.add_menu(label=self._label)
 
@@ -237,7 +268,6 @@ class DragSourceContainer:
 # Inspectors
 ########################################################################################################################
 class MaxMinNode(Node):
-
     @staticmethod
     def factory(name, data):
         node = MaxMinNode(name, data)
@@ -256,8 +286,14 @@ class MaxMinNode(Node):
     def custom(self):
 
         with dpg.group(width=150):
-            dpg.add_text("Not Calculated", label="Min", show_label=True, id=self.min_id)
-            dpg.add_text("Not Calculated", label="Max", show_label=True, id=self.max_id)
+            dpg.add_text("Not Calculated",
+                         label="Min",
+                         show_label=True,
+                         id=self.min_id)
+            dpg.add_text("Not Calculated",
+                         label="Max",
+                         show_label=True,
+                         id=self.max_id)
 
     def execute(self):
 
@@ -290,7 +326,6 @@ class MaxMinNode(Node):
 # Modifiers
 ########################################################################################################################
 class DataShifterNode(Node):
-
     @staticmethod
     def factory(name, data):
         node = DataShifterNode(name, data)
@@ -342,7 +377,6 @@ class DataShifterNode(Node):
 # Tools
 ########################################################################################################################
 class ViewNode_1D(Node):
-
     @staticmethod
     def factory(name, data):
         node = ViewNode_1D(name, data)
@@ -356,7 +390,10 @@ class ViewNode_1D(Node):
 
     def custom(self):
 
-        dpg.add_simple_plot(label="Data View", width=200, height=80, id=self.simple_plot)
+        dpg.add_simple_plot(label="Data View",
+                            width=200,
+                            height=80,
+                            id=self.simple_plot)
 
     def execute(self):
 
@@ -366,7 +403,6 @@ class ViewNode_1D(Node):
 
 
 class ViewNode_2D(Node):
-
     @staticmethod
     def factory(name, data):
         node = ViewNode_2D(name, data)
@@ -403,7 +439,6 @@ class ViewNode_2D(Node):
 
 
 class CheckerNode(Node):
-
     @staticmethod
     def factory(name, data):
         node = CheckerNode(name, data)
@@ -420,20 +455,50 @@ class CheckerNode(Node):
         self.status_id = dpg.generate_uuid()
 
         with dpg.theme() as self.success:
-            dpg.add_theme_color(dpg.mvThemeCol_CheckMark, [0, 255, 0], category=dpg.mvThemeCat_Core, id=self.success)
+            dpg.add_theme_color(
+                dpg.mvThemeCol_CheckMark,
+                [0, 255, 0],
+                category=dpg.mvThemeCat_Core,
+                id=self.success,
+            )
 
         with dpg.theme() as self.fail:
-            dpg.add_theme_color(dpg.mvThemeCol_CheckMark, [255, 0, 0], category=dpg.mvThemeCat_Core, id=self.fail)
+            dpg.add_theme_color(
+                dpg.mvThemeCol_CheckMark,
+                [255, 0, 0],
+                category=dpg.mvThemeCat_Core,
+                id=self.fail,
+            )
 
         with dpg.theme() as self.neutral:
-            dpg.add_theme_color(dpg.mvThemeCol_CheckMark, [255, 255, 0], category=dpg.mvThemeCat_Core, id=self.neutral)
+            dpg.add_theme_color(
+                dpg.mvThemeCol_CheckMark,
+                [255, 255, 0],
+                category=dpg.mvThemeCat_Core,
+                id=self.neutral,
+            )
 
     def custom(self):
 
         with dpg.group(width=150):
-            dpg.add_input_float(label="Expected Value", step=0.0, id=self.expected_id, default_value=10)
-            dpg.add_input_float(label="Max Tolerance", step=0.0, id=self.max_id, default_value=.05)
-            dpg.add_input_float(label="Min Tolerance", step=0.0, id=self.min_id, default_value=.05)
+            dpg.add_input_float(
+                label="Expected Value",
+                step=0.0,
+                id=self.expected_id,
+                default_value=10,
+            )
+            dpg.add_input_float(
+                label="Max Tolerance",
+                step=0.0,
+                id=self.max_id,
+                default_value=0.05,
+            )
+            dpg.add_input_float(
+                label="Min Tolerance",
+                step=0.0,
+                id=self.min_id,
+                default_value=0.05,
+            )
             dpg.add_radio_button(items=["Status"], id=self.status_id)
             dpg.set_item_theme(self.status_id, self.neutral)
 
@@ -446,8 +511,10 @@ class CheckerNode(Node):
         max_value = dpg.get_value(self.max_id)
         expect_value = dpg.get_value(self.expected_id)
 
-        if round(expect_value - min_value,5) <= value <= round(expect_value + max_value, 5):
-            dpg.set_item_theme(self._static_attributes[0].status_id, self.success)
+        if (round(expect_value - min_value, 5) <= value <= round(
+                expect_value + max_value, 5)):
+            dpg.set_item_theme(self._static_attributes[0].status_id,
+                               self.success)
         else:
             dpg.set_item_theme(self._static_attributes[0].status_id, self.fail)
 
@@ -455,7 +522,6 @@ class CheckerNode(Node):
 
 
 class ValueNode(Node):
-
     @staticmethod
     def factory(name, data):
         node = ValueNode(name, data)
@@ -471,7 +537,10 @@ class ValueNode(Node):
     def custom(self):
 
         with dpg.group(width=150):
-            dpg.add_input_float(label="Input Value", step=0, id=self.value, default_value=10)
+            dpg.add_input_float(label="Input Value",
+                                step=0,
+                                id=self.value,
+                                default_value=10)
 
     def execute(self):
 
@@ -486,7 +555,6 @@ class ValueNode(Node):
 # Application
 ########################################################################################################################
 class App:
-
     @staticmethod
     def data_node_factory(name, data):
         node = Node(name, data)
@@ -505,7 +573,9 @@ class App:
 
         self.plugins = []
 
-        self.add_data_set("Test Data", [-5.0, -5.0, -3.0, -3.0, 0.0, 0.0, 3.0, 3.0, 5.0, 5.0])
+        self.add_data_set(
+            "Test Data",
+            [-5.0, -5.0, -3.0, -3.0, 0.0, 0.0, 3.0, 3.0, 5.0, 5.0])
         self.add_tool("1D Data View", ViewNode_1D.factory)
         self.add_tool("2D Data View", ViewNode_2D.factory)
         self.add_tool("Checker Tool", CheckerNode.factory)
@@ -525,16 +595,19 @@ class App:
             self.tool_container.submit(self.right_panel)
 
     def add_data_set(self, label, data):
-        self.data_set_container.add_drag_source(DragSource(label, App.data_node_factory, data))
+        self.data_set_container.add_drag_source(
+            DragSource(label, App.data_node_factory, data))
 
     def add_tool(self, label, factory, data=None):
         self.tool_container.add_drag_source(DragSource(label, factory, data))
 
     def add_inspector(self, label, factory, data=None):
-        self.inspector_container.add_drag_source(DragSource(label, factory, data))
+        self.inspector_container.add_drag_source(
+            DragSource(label, factory, data))
 
     def add_modifier(self, label, factory, data=None):
-        self.modifier_container.add_drag_source(DragSource(label, factory, data))
+        self.modifier_container.add_drag_source(
+            DragSource(label, factory, data))
 
     def add_plugin(self, name, callback):
         self.plugins.append((name, callback))
@@ -552,7 +625,11 @@ class App:
 
                 with dpg.menu(label="Operations"):
 
-                    dpg.add_menu_item(label="Reset", callback=lambda: dpg.delete_item(node_editor.uuid, children_only=True))
+                    dpg.add_menu_item(
+                        label="Reset",
+                        callback=lambda: dpg.delete_item(node_editor.uuid,
+                                                         children_only=True),
+                    )
 
                 with dpg.menu(label="Plugins"):
                     for plugin in self.plugins:

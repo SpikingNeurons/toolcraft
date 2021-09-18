@@ -29,7 +29,8 @@ __email__ = "praveenneuron@gmail.com"
 # Note that this is done as code cannot know the version number and it is
 # the job of pyproject.toml
 try:
-    from importlib.metadata import PackageNotFoundError, version
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version
 
     __version__ = version(__name__)
 except PackageNotFoundError as pnf:

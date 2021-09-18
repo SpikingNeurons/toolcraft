@@ -1,10 +1,13 @@
+from ... import error as e
+from ... import util
+
 import enum
 import pathlib
+
 import dearpygui.dearpygui as dpg
+
 from dearpygui import themes
 
-from ... import util
-from ... import error as e
 
 _ASSET_FOLDER = pathlib.Path(__file__).parent.resolve()
 
@@ -36,12 +39,5 @@ class Theme(enum.Enum):
         elif self is self.Light:
             return themes.create_theme_imgui_light()
         else:
-            e.code.ShouldNeverHappen(
-                msgs=[
-                    f"Unsupported theme {self}"
-                ]
-            )
+            e.code.ShouldNeverHappen(msgs=[f"Unsupported theme {self}"])
             raise
-
-
-

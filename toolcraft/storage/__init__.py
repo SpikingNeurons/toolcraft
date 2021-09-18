@@ -1,10 +1,28 @@
-from .__base__ import Folder, ResultsFolder, StorageHashable
-from .state import Info, Config
-from .file_group import FileGroup, NpyMemMap, SHUFFLE_SEED_TYPE, \
-    DETERMINISTIC_SHUFFLE, NO_SHUFFLE, DO_NOT_USE, USE_ALL, \
-    SELECT_TYPE, NON_DETERMINISTIC_SHUFFLE, FileGroupConfig
-from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup
-from .store import StoreField, StoreFieldsFolder, Mode, MODE_TYPE, \
-    is_store_field
-from .table import FILTERS_TYPE, FILTER_TYPE
+from .__base__ import Folder
+from .__base__ import ResultsFolder
+from .__base__ import StorageHashable
+from .file_group import DETERMINISTIC_SHUFFLE
+from .file_group import DO_NOT_USE
+from .file_group import NO_SHUFFLE
+from .file_group import NON_DETERMINISTIC_SHUFFLE
+from .file_group import SELECT_TYPE
+from .file_group import SHUFFLE_SEED_TYPE
+from .file_group import USE_ALL
+from .file_group import DownloadFileGroup
+from .file_group import FileGroup
+from .file_group import FileGroupConfig
+from .file_group import NpyFileGroup
+from .file_group import NpyMemMap
+from .file_group import TempFileGroup
+from .state import Config
+from .state import Info
+from .store import MODE_TYPE
+from .store import Mode
+from .store import StoreField
+from .store import StoreFieldsFolder
+from .store import is_store_field
+from .table import FILTER_TYPE
+from .table import FILTERS_TYPE
+
+
 # from .tf_chkpt import TfChkptFile, TfChkptFilesManager
