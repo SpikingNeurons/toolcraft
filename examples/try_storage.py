@@ -55,31 +55,30 @@ def try_hashable_ser():
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
     _hashable = HashableTry(
         a=33,
-        l=m.FrozenKeras(
-            tk.losses.CategoricalCrossentropy(label_smoothing=1.0)),
+        l=m.FrozenKeras(tk.losses.CategoricalCrossentropy(label_smoothing=1.0)),
         o=m.FrozenKeras(
             tk.optimizers.Adam(
                 learning_rate=tk.optimizers.schedules.ExponentialDecay(
                     0.1,
                     2,
                     0.3,
-                ), ), ),
-        d=m.FrozenDict({
-            11: 1,
-            "2": 2,
-            "3": 33
-        }),
+                ),
+            ),
+        ),
+        d=m.FrozenDict({11: 1, "2": 2, "3": 33}),
         e=NewEnum.a1,
         child=HashableTryChild(
             a=66,
             l=m.FrozenKeras(
-                tk.losses.CategoricalCrossentropy(label_smoothing=2.0), ),
+                tk.losses.CategoricalCrossentropy(label_smoothing=2.0),
+            ),
         ),
     )
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
     # noinspection PyTypeChecker
-    _de_ser_hashable = HashableTry.from_yaml(_hashable.yaml(),
-                                             )  # type: HashableTry
+    _de_ser_hashable = HashableTry.from_yaml(
+        _hashable.yaml(),
+    )  # type: HashableTry
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 
     print(_hashable.yaml())
@@ -118,15 +117,13 @@ class DnTestFile(s.DownloadFileGroup):
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
-            "file":
-            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
         }
 
     def get_hashes(self) -> t.Dict[str, str]:
         return {
-            "file":
-            "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "file": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
             "885e6adb4",
         }
 
@@ -152,8 +149,7 @@ class DnTestFileAutoHashed(s.DownloadFileGroup):
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
-            "file":
-            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
         }
 
@@ -311,15 +307,14 @@ class TestStorage(m.HashableClass):
         b: int = None,
     ) -> pa.Table:
         return {
-            "pandas_dataframe":
-            pa.table({"a": np.asarray([1, 2, 3, 4])}),
-            "pandas_dataframe_with_partition_cols":
-            pa.table(
+            "pandas_dataframe": pa.table({"a": np.asarray([1, 2, 3, 4])}),
+            "pandas_dataframe_with_partition_cols": pa.table(
                 {
                     "a": np.asarray([a] * 4),
                     "b": np.asarray([b] * 4),
                     "c": np.asarray([6, 7, 8, 9]),
-                }, ),
+                },
+            ),
         }[key]
 
     # noinspection PyUnusedLocal
@@ -364,10 +359,12 @@ class TestStorage(m.HashableClass):
         epoch: int,
         data: t.Dict,
     ) -> pa.Table:
-        return pa.table(data={
-            "epoch": [epoch],
-            **data,
-        }, )
+        return pa.table(
+            data={
+                "epoch": [epoch],
+                **data,
+            },
+        )
 
     @s.StoreField()
     def store_with_list(self, mode: s.MODE_TYPE) -> pa.Table:
@@ -417,16 +414,18 @@ def try_arrow_storage():
     print("ts.store_with_partition_cols(mode='rw', a=1, b=2)")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector("pandas_dataframe_with_partition_cols", a=1,
-                       b=2).to_pandas().sort_index(axis=1),
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=2)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
     r = ts.store_with_partition_cols(mode="r")
     print("ts.store_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector("pandas_dataframe_with_partition_cols", a=1,
-                       b=2).to_pandas().sort_index(axis=1),
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=2)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
     r = ts.store_with_partition_cols(mode="d")
@@ -448,12 +447,12 @@ def try_arrow_storage():
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
-                ts.data_vector("pandas_dataframe_with_partition_cols",
-                               a=1,
-                               b=22).to_pandas().sort_index(axis=1),
-                ts.data_vector("pandas_dataframe_with_partition_cols",
-                               a=1,
-                               b=33).to_pandas().sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33)
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
         ),
@@ -465,12 +464,12 @@ def try_arrow_storage():
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
-                ts.data_vector("pandas_dataframe_with_partition_cols",
-                               a=1,
-                               b=22).to_pandas().sort_index(axis=1),
-                ts.data_vector("pandas_dataframe_with_partition_cols",
-                               a=1,
-                               b=33).to_pandas().sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33)
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
         ),
@@ -480,8 +479,9 @@ def try_arrow_storage():
     print("ts.store_with_partition_cols(mode='r', a=1, b=22)")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector("pandas_dataframe_with_partition_cols", a=1,
-                       b=22).to_pandas().sort_index(axis=1),
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
     r = ts.store_with_partition_cols(mode="e", a=1, b=22)
@@ -508,8 +508,9 @@ def try_arrow_storage():
     print("ts.store_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector("pandas_dataframe_with_partition_cols", a=1,
-                       b=22).to_pandas().sort_index(axis=1),
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
     r = ts.store_with_partition_cols(mode="d")
@@ -547,7 +548,8 @@ def try_arrow_storage():
     mode='d', a=1, filters=[
         ('b', '=', '77')
     ]
-)""", )
+)""",
+    )
     assert not r
 
     r = ts.store_with_partition_cols(
@@ -563,7 +565,8 @@ def try_arrow_storage():
     mode='d', a=1, filters=[
         ('b', '<=', 55), ('b', '>', 22),
     ]
-)""", )
+)""",
+    )
     assert r
 
     r = ts.store_with_partition_cols(mode="r")
@@ -572,15 +575,15 @@ def try_arrow_storage():
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
-                ts.data_vector("pandas_dataframe_with_partition_cols",
-                               a=1,
-                               b=11).to_pandas().sort_index(axis=1),
-                ts.data_vector("pandas_dataframe_with_partition_cols",
-                               a=1,
-                               b=22).to_pandas().sort_index(axis=1),
-                ts.data_vector("pandas_dataframe_with_partition_cols",
-                               a=1,
-                               b=66).to_pandas().sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=11)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=66)
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
         ),
@@ -654,17 +657,23 @@ def try_arrow_storage():
                     "pandas_dataframe_with_partition_cols",
                     a=11,
                     b=22,
-                ).to_pandas().sort_index(axis=1),
+                )
+                .to_pandas()
+                .sort_index(axis=1),
                 ts.data_vector(
                     "pandas_dataframe_with_partition_cols",
                     a=33,
                     b=44,
-                ).to_pandas().sort_index(axis=1),
+                )
+                .to_pandas()
+                .sort_index(axis=1),
                 ts.data_vector(
                     "pandas_dataframe_with_partition_cols",
                     a=55,
                     b=66,
-                ).to_pandas().sort_index(axis=1),
+                )
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
         ),
@@ -684,12 +693,16 @@ def try_arrow_storage():
                     "pandas_dataframe_with_partition_cols",
                     a=33,
                     b=44,
-                ).to_pandas().sort_index(axis=1),
+                )
+                .to_pandas()
+                .sort_index(axis=1),
                 ts.data_vector(
                     "pandas_dataframe_with_partition_cols",
                     a=55,
                     b=66,
-                ).to_pandas().sort_index(axis=1),
+                )
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
         ),
@@ -710,10 +723,7 @@ def try_arrow_storage():
     print("ts.store_with_data_kwarg(mode='r', epoch=10)")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        pa.table({
-            "epoch": [10],
-            "a": [22]
-        }).to_pandas().sort_index(axis=1),
+        pa.table({"epoch": [10], "a": [22]}).to_pandas().sort_index(axis=1),
     )
 
     r = ts.store_with_data_kwarg(mode="d", epoch=10)

@@ -1,10 +1,8 @@
 import asyncio
 import json
-
 from typing import Optional
 
 import uvicorn
-
 from fastapi import FastAPI
 from fastapi import Request
 from sse_starlette.sse import EventSourceResponse

@@ -23,7 +23,6 @@ import traceback
 import types
 import typing as t
 import zipfile
-
 from urllib.error import HTTPError
 from urllib.error import URLError
 from urllib.request import urlretrieve
@@ -113,16 +112,18 @@ class OurNamedTuple(metaclass=MultipleInheritanceNamedTupleMeta):
                 # check values in the dict
                 for kk in sv_ks:
                     if not isinstance(sv[kk], np.ndarray) or not isinstance(
-                            sv[kk],
-                            np.ndarray,
+                        sv[kk],
+                        np.ndarray,
                     ):
-                        e.code.CodingError(msgs=[
-                            f"The named tuple "
-                            f"{self.__class__} can only hold "
-                            f"numpy arrays or dict of numpy arrays",
-                            f"Check key {kk} in the dict of field {f_name} "
-                            f"of named tuple {self.__class__}",
-                        ], )
+                        e.code.CodingError(
+                            msgs=[
+                                f"The named tuple "
+                                f"{self.__class__} can only hold "
+                                f"numpy arrays or dict of numpy arrays",
+                                f"Check key {kk} in the dict of field {f_name} "
+                                f"of named tuple {self.__class__}",
+                            ],
+                        )
                     if not np.array_equal(sv[kk], ov[kk]):
                         return False
             # else if numpy array
@@ -131,15 +132,17 @@ class OurNamedTuple(metaclass=MultipleInheritanceNamedTupleMeta):
                     return False
             # else
             else:
-                e.code.CodingError(msgs=[
-                    f"The named tuple {self.__class__} can only hold "
-                    f"numpy arrays or dict of numpy arrays ... "
-                    f"check field {f_name}",
-                    {
-                        "self type": type(sv),
-                        "other type": type(ov),
-                    },
-                ], )
+                e.code.CodingError(
+                    msgs=[
+                        f"The named tuple {self.__class__} can only hold "
+                        f"numpy arrays or dict of numpy arrays ... "
+                        f"check field {f_name}",
+                        {
+                            "self type": type(sv),
+                            "other type": type(ov),
+                        },
+                    ],
+                )
 
         # if all is well return True
         return True
@@ -164,10 +167,12 @@ class _SmartListDict:
         self.use_specific_class = use_specific_class
         if use_specific_class is not None:
             if allowed_types != t.Any:
-                e.code.NotAllowed(msgs=[
-                    f"If you are using specific class then do not provide "
-                    f"value for `allowed_types`",
-                ], )
+                e.code.NotAllowed(
+                    msgs=[
+                        f"If you are using specific class then do not provide "
+                        f"value for `allowed_types`",
+                    ],
+                )
 
         # ---------------------------------------------------------- 02
         # bake container
@@ -176,10 +181,12 @@ class _SmartListDict:
             if bool(supplied_items):
                 # check type
                 if not isinstance(supplied_items, list):
-                    e.code.NotAllowed(msgs=[
-                        f"We expect supplied items to be a list but found "
-                        f"{type(supplied_items)}",
-                    ], )
+                    e.code.NotAllowed(
+                        msgs=[
+                            f"We expect supplied items to be a list but found "
+                            f"{type(supplied_items)}",
+                        ],
+                    )
                 # populate
                 for v in supplied_items:
                     _items.append(self._make_it_smart(v))
@@ -188,17 +195,21 @@ class _SmartListDict:
             if bool(supplied_items):
                 # check type
                 if not isinstance(supplied_items, dict):
-                    e.code.NotAllowed(msgs=[
-                        f"We expect supplied items to be a dict but found "
-                        f"{type(supplied_items)}",
-                    ], )
+                    e.code.NotAllowed(
+                        msgs=[
+                            f"We expect supplied items to be a dict but found "
+                            f"{type(supplied_items)}",
+                        ],
+                    )
                 # populate
                 for k, v in supplied_items.items():
                     if isinstance(k, str):
-                        e.code.NotAllowed(msgs=[
-                            f"We expect dict key to be str but found type "
-                            f"{type(k)}",
-                        ], )
+                        e.code.NotAllowed(
+                            msgs=[
+                                f"We expect dict key to be str but found type "
+                                f"{type(k)}",
+                            ],
+                        )
                     _items[k] = self._make_it_smart(v)
         else:
             e.code.ShouldNeverHappen(msgs=[f"Unsupported type {type(self)}"])
@@ -226,10 +237,12 @@ class _SmartListDict:
                     allowed_types=self.allowed_types,
                 )
             else:
-                e.code.NotAllowed(msgs=[
-                    f"You have configured SmartList to not have nested "
-                    f"elements .. so we raise error",
-                ], )
+                e.code.NotAllowed(
+                    msgs=[
+                        f"You have configured SmartList to not have nested "
+                        f"elements .. so we raise error",
+                    ],
+                )
         elif isinstance(item, dict):
             if self.allow_nested_dict_or_list:
                 return SmartDict(
@@ -239,19 +252,23 @@ class _SmartListDict:
                     allowed_types=self.allowed_types,
                 )
             else:
-                e.code.NotAllowed(msgs=[
-                    f"You have configured SmartDict to not have nested "
-                    f"elements .. so we raise error",
-                ], )
+                e.code.NotAllowed(
+                    msgs=[
+                        f"You have configured SmartDict to not have nested "
+                        f"elements .. so we raise error",
+                    ],
+                )
         else:
             # if specific class is used check if item has specific type
             if self.use_specific_class is not None:
                 if self.use_specific_class != item.__class__:
-                    e.validation.NotAllowed(msgs=[
-                        f"You have restricted to use items with specific "
-                        f"class {self.use_specific_class}, but the item "
-                        f"you are using has class {item.__class__}",
-                    ], )
+                    e.validation.NotAllowed(
+                        msgs=[
+                            f"You have restricted to use items with specific "
+                            f"class {self.use_specific_class}, but the item "
+                            f"you are using has class {item.__class__}",
+                        ],
+                    )
             # if there is restriction on allowed types then check
             if self.allowed_types != t.Any:
                 e.validation.ShouldBeInstanceOf(
@@ -297,7 +314,7 @@ class SmartDict(_SmartListDict):
         # check if key is str
         e.validation.ShouldBeInstanceOf(
             value=key,
-            value_types=(str, ),
+            value_types=(str,),
             msgs=[
                 f"We expect key to be always a str.",
                 f"Found unsupported type {type(key)}",
@@ -371,8 +388,9 @@ class WatchDogTimer:
         watch_for_minutes: int = 0,
         watch_for_seconds: int = 0,
     ):
-        self.wait_for = datetime.timedelta(seconds=watch_for_minutes * 60 +
-                                           watch_for_seconds, )
+        self.wait_for = datetime.timedelta(
+            seconds=watch_for_minutes * 60 + watch_for_seconds,
+        )
         self.start = datetime.datetime.now()
         self.last_refresh = datetime.datetime.now()
 
@@ -449,6 +467,7 @@ def rgetattr(obj, attr, *args):
     Inspired from
     https://stackoverflow.com/questions/31174295/
     """
+
     def _getattr(_obj, _attr):
         return getattr(_obj, _attr, *args)
 
@@ -544,9 +563,9 @@ def WipeCacheResult(decorated_fn_name: str, obj_or_module_name):
 
     # check if CACHE_KEY present
     if CACHE_KEY not in _cache_store_handler_dict.keys():
-        e.code.CodingError(msgs=[
-            f"We expect CACHE container from which we want to wipe cache"
-        ], )
+        e.code.CodingError(
+            msgs=[f"We expect CACHE container from which we want to wipe cache"],
+        )
 
     # get the cached container
     _cache_dict = _cache_store_handler_dict[CACHE_KEY]
@@ -556,9 +575,11 @@ def WipeCacheResult(decorated_fn_name: str, obj_or_module_name):
 
     # raise error if cache key not present
     if _cache_key not in _cache_dict.keys():
-        e.code.CodingError(msgs=[
-            f"There is no element {_cache_key} cached so we cannot wipe it",
-        ], )
+        e.code.CodingError(
+            msgs=[
+                f"There is no element {_cache_key} cached so we cannot wipe it",
+            ],
+        )
 
     # wipe contents
     del _cache_dict[_cache_key]
@@ -583,27 +604,33 @@ def CacheResult(*dec_args, **dec_kwargs):
     # ---------------------------------------------------------------- 01.01
     # kwargs must not be supplied
     if len(dec_kwargs) != 0:
-        e.code.NotAllowed(msgs=[
-            f"Do not pass keyword args to CacheResult related decorators ",
-            f"Just use it without braces ...",
-            f"KwArgs detected {dec_kwargs}",
-        ], )
+        e.code.NotAllowed(
+            msgs=[
+                f"Do not pass keyword args to CacheResult related decorators ",
+                f"Just use it without braces ...",
+                f"KwArgs detected {dec_kwargs}",
+            ],
+        )
     # ---------------------------------------------------------------- 01.02
     # do not use curly braces for decorator
     if len(dec_args) == 0:
-        e.code.NotAllowed(msgs=[
-            f"Do not use curly braces for  CacheResult related decorators ",
-        ], )
+        e.code.NotAllowed(
+            msgs=[
+                f"Do not use curly braces for  CacheResult related decorators ",
+            ],
+        )
     # ---------------------------------------------------------------- 01.03
     # do not pass args to decorator
     if len(dec_args) > 1:
-        e.code.NotAllowed(msgs=[
-            f"Do not pass args to decorator CacheResult related "
-            f"decorators ",
-            f"Just use it without braces ...",
-            f"Args detected:",
-            dec_args,
-        ], )
+        e.code.NotAllowed(
+            msgs=[
+                f"Do not pass args to decorator CacheResult related "
+                f"decorators ",
+                f"Just use it without braces ...",
+                f"Args detected:",
+                dec_args,
+            ],
+        )
     # ---------------------------------------------------------------- 01.04
     # this should be always the case when used decorator with curly braces
     # the thing that i decorated should be a function
@@ -620,12 +647,14 @@ def CacheResult(*dec_args, **dec_kwargs):
     # ---------------------------------------------------------------- 01.05
     # the dec function should not be local
     if dec_args[0].__qualname__.find("<locals>") != -1:
-        e.validation.NotAllowed(msgs=[
-            f"We do not allow to use CacheResult decorator to be used "
-            f"with local functions ... only instance methods and first "
-            f"class functions are supported",
-            f"Please check {dec_args[0]}",
-        ], )
+        e.validation.NotAllowed(
+            msgs=[
+                f"We do not allow to use CacheResult decorator to be used "
+                f"with local functions ... only instance methods and first "
+                f"class functions are supported",
+                f"Please check {dec_args[0]}",
+            ],
+        )
 
     # ---------------------------------------------------------------- 02
     # if all is well then the decorated function is as follows
@@ -648,26 +677,32 @@ def CacheResult(*dec_args, **dec_kwargs):
         # some validations
         # kwargs should not be provided
         if bool(kwargs):
-            e.code.NotAllowed(msgs=[
-                f"Please so not supply kwargs while using caching",
-                f"Found kwargs",
-                kwargs,
-            ], )
+            e.code.NotAllowed(
+                msgs=[
+                    f"Please so not supply kwargs while using caching",
+                    f"Found kwargs",
+                    kwargs,
+                ],
+            )
         # check args provided
         if _is_method:
             if len(args) != 1:
-                e.code.ShouldNeverHappen(msgs=[
-                    f"We detected above that this is method so we expect "
-                    f"one arg which is self to be available ...",
-                ], )
+                e.code.ShouldNeverHappen(
+                    msgs=[
+                        f"We detected above that this is method so we expect "
+                        f"one arg which is self to be available ...",
+                    ],
+                )
         else:
             if len(args) != 0:
-                e.code.NotAllowed(msgs=[
-                    f"Please do not supply args to function decorated "
-                    f"with CacheResult",
-                    f"Found args",
-                    args,
-                ], )
+                e.code.NotAllowed(
+                    msgs=[
+                        f"Please do not supply args to function decorated "
+                        f"with CacheResult",
+                        f"Found args",
+                        args,
+                    ],
+                )
         # if one arg is provided it will be self (i.e the dec function is
         # defined within class)
         if _is_method:
@@ -680,8 +715,7 @@ def CacheResult(*dec_args, **dec_kwargs):
         if _is_method:
             _cache_store_handler_dict = args[0].__dict__
         else:
-            _cache_store_handler_dict = __import__(
-                _dec_func.__module__).__dict__
+            _cache_store_handler_dict = __import__(_dec_func.__module__).__dict__
         # add cache container if not present
         if CACHE_KEY in _cache_store_handler_dict.keys():
             _cache_store = _cache_store_handler_dict[CACHE_KEY]  # type: dict
@@ -741,7 +775,7 @@ def break_list_in_chunks(
 
         cnt = 0
         for cl in _chunk_lens:
-            yield ll[cnt:cnt + cl]
+            yield ll[cnt : cnt + cl]
             cnt += cl
 
     return list(chunk_it(list_of_items, num_of_chunks))
@@ -759,8 +793,11 @@ def break_list_in_chunks(
 
 
 def fetch_non_dunder_attributes(cls):
-    return [(a, getattr(cls, a)) for a in dir(cls)
-            if not (a.startswith("__") and a.endswith("__"))]
+    return [
+        (a, getattr(cls, a))
+        for a in dir(cls)
+        if not (a.startswith("__") and a.endswith("__"))
+    ]
 
 
 def return_argument_as_it_is(t):
@@ -798,7 +835,8 @@ def get_object_memory_usage(obj) -> int:
 
 
 def _generate_descriptors_for_group_tasks(
-        _items: t.Dict[str, t.Any], ) -> t.Dict[str, str]:
+    _items: t.Dict[str, t.Any],
+) -> t.Dict[str, str]:
 
     _num_items = len(_items)
     _max_key_len = max(len(_) for _ in _items.keys())
@@ -808,8 +846,7 @@ def _generate_descriptors_for_group_tasks(
     }
     _max_desc_len = max(len(_) for _ in _descriptors.values())
     _descriptors = {
-        k: v.ljust(_max_desc_len, " ")
-        for k, v in _descriptors.items()
+        k: v.ljust(_max_desc_len, " ") for k, v in _descriptors.items()
     }
     return _descriptors
 
@@ -923,11 +960,11 @@ def crosscheck_hash(
                 _num_chunks = path_or_npy_arr.stat().st_size // _chunk_size
                 _total = (_num_chunks + 1) * _chunk_size
                 with logger.ProgressBar(
-                        total=_total,
-                        unit_scale=True,
-                        unit="B",
-                        unit_divisor=1024,
-                        miniters=1,
+                    total=_total,
+                    unit_scale=True,
+                    unit="B",
+                    unit_divisor=1024,
+                    miniters=1,
                 ) as pb:
                     # set description
                     pb.set_description_str(msg)
@@ -947,23 +984,24 @@ def crosscheck_hash(
                         _status = "✅" if _hash_is_correct else "❌"
                         pb.set_postfix_str(_status, refresh=True)
         else:
-            e.code.CodingError(
-                msgs=[f"Unknown type for path {path_or_npy_arr}"])
+            e.code.CodingError(msgs=[f"Unknown type for path {path_or_npy_arr}"])
             raise
     elif isinstance(path_or_npy_arr, np.ndarray):
         with logger.Spinner(
-                title=f"{msg}",
-                logger=_LOGGER,
+            title=f"{msg}",
+            logger=_LOGGER,
         ) as spinner:
             spinner.text = "Computing hash ..."
             # noinspection PyTypeChecker
             hash_module.update(path_or_npy_arr)
             computed_hash = hash_module.hexdigest()
     else:
-        e.code.NotAllowed(msgs=[
-            f"Not allowed! Only pathlib.Path or numpy array supported!!!",
-            f"Found {path_or_npy_arr} of type {type(path_or_npy_arr)}",
-        ], )
+        e.code.NotAllowed(
+            msgs=[
+                f"Not allowed! Only pathlib.Path or numpy array supported!!!",
+                f"Found {path_or_npy_arr} of type {type(path_or_npy_arr)}",
+            ],
+        )
         raise
 
     # final return
@@ -1015,7 +1053,8 @@ def download_files(
     # handle return
     if bool(_store):
         e.code.CodingError(
-            msgs=[f"Some files failed to download. Check below", _store], )
+            msgs=[f"Some files failed to download. Check below", _store],
+        )
 
 
 def download_file(
@@ -1043,25 +1082,28 @@ def download_file(
         if not file_path.parent.is_dir():
             raise Exception(
                 f"If parent dir name exists we expect {file_path.parent} to "
-                f"be a dir.", )
+                f"be a dir.",
+            )
     else:
         file_path.parent.mkdir(parents=True)
     # if file_path exists and is file we return
     if file_path.exists():
         if not file_path.is_file():
-            e.code.NotAllowed(msgs=[
-                f"The download file already exists and we expect "
-                f"it to be a file ...",
-            ], )
+            e.code.NotAllowed(
+                msgs=[
+                    f"The download file already exists and we expect "
+                    f"it to be a file ...",
+                ],
+            )
 
     # ---------------------------------------------------------- 02
     _error_msgs = None
     with logger.ProgressBar(
-            unit="B",
-            unit_scale=True,
-            unit_divisor=1024,
-            miniters=1,
-            # desc=file_path.name,
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024,
+        miniters=1,
+        # desc=file_path.name,
     ) as pb:
 
         # ------------------------------------------------------ 02.01
@@ -1165,16 +1207,19 @@ def pathlib_rmtree(
     """
     if not path.is_dir():
         e.code.NotAllowed(
-            msgs=[f"We need a directory.", f"Please check path {path}"], )
+            msgs=[f"We need a directory.", f"Please check path {path}"],
+        )
     for f in path.iterdir():
         if f.is_dir():
             if recursive:
                 pathlib_rmtree(f, recursive, force)
             else:
-                e.code.NotAllowed(msgs=[
-                    f"You have opted for non recursive folder delete "
-                    f"hence cannot delete sub folder ...",
-                ], )
+                e.code.NotAllowed(
+                    msgs=[
+                        f"You have opted for non recursive folder delete "
+                        f"hence cannot delete sub folder ...",
+                    ],
+                )
             # f.rmdir()
         if f.is_file():
             try:
@@ -1184,12 +1229,14 @@ def pathlib_rmtree(
                     io_make_path_editable(f)
                     f.unlink()
                 else:
-                    e.code.CodingError(msgs=[
-                        f"You do not have permission to delete file "
-                        f"`{f}`",
-                        f"Make sure you get permissions on files to delete "
-                        f"before deleting them.",
-                    ], )
+                    e.code.CodingError(
+                        msgs=[
+                            f"You do not have permission to delete file "
+                            f"`{f}`",
+                            f"Make sure you get permissions on files to delete "
+                            f"before deleting them.",
+                        ],
+                    )
     path.rmdir()
     return True
 
@@ -1204,7 +1251,8 @@ def input_response(question: str, options: t.List[str]) -> str:
             else:
                 print(
                     f"\nResponse should be one of {tuple(options)}, \n"
-                    f"\t found unrecognized response {response}", )
+                    f"\t found unrecognized response {response}",
+                )
                 response = None
         return response
 
@@ -1227,18 +1275,22 @@ def extract_file(
     archive = zipfile.ZipFile(archive_file_path, "r")
     if extract_all:
         if members is not None:
-            e.code.NotAllowed(msgs=[
-                "We expect `members` to be None when `extract_all` is "
-                "True.",
-                "No need to pass members when you want to extract all ...",
-            ], )
+            e.code.NotAllowed(
+                msgs=[
+                    "We expect `members` to be None when `extract_all` is "
+                    "True.",
+                    "No need to pass members when you want to extract all ...",
+                ],
+            )
         _ms = archive.namelist()
     else:
         if members is None:
-            e.code.NotAllowed(msgs=[
-                "Argument `extract_all` is False.",
-                "Please pass the list of archive members you need ....",
-            ], )
+            e.code.NotAllowed(
+                msgs=[
+                    "Argument `extract_all` is False.",
+                    "Please pass the list of archive members you need ....",
+                ],
+            )
         _ms = members
 
     for _zip_info in _ms:
@@ -1260,7 +1312,8 @@ def io_make_path_read_only(path: pathlib.Path):
         path.chmod(_FILE_READ_MODE)
     else:
         e.code.NotAllowed(
-            msgs=[f"Path {path} is not a file/dir or does not exist ..."], )
+            msgs=[f"Path {path} is not a file/dir or does not exist ..."],
+        )
 
 
 def io_make_path_editable(path: pathlib.Path):
@@ -1268,7 +1321,8 @@ def io_make_path_editable(path: pathlib.Path):
         path.chmod(_FILE_WRITE_MODE)
     else:
         e.code.NotAllowed(
-            msgs=[f"Path {path} is not a file/dir or does not exist ..."], )
+            msgs=[f"Path {path} is not a file/dir or does not exist ..."],
+        )
 
 
 def io_path_delete(path: pathlib.Path, force: bool):
@@ -1284,24 +1338,26 @@ def io_path_delete(path: pathlib.Path, force: bool):
                 io_make_path_editable(path)
                 path.unlink()
             else:
-                e.code.CodingError(msgs=[
-                    f"You do not have permission to delete file "
-                    f"`{path}`",
-                    f"Make sure you get permissions on files to delete "
-                    f"before deleting them.",
-                ], )
+                e.code.CodingError(
+                    msgs=[
+                        f"You do not have permission to delete file "
+                        f"`{path}`",
+                        f"Make sure you get permissions on files to delete "
+                        f"before deleting them.",
+                    ],
+                )
     elif path.is_dir():
         pathlib_rmtree(path, recursive=True, force=force)
     else:
         e.code.NotAllowed(
-            msgs=[f"Path {path} is not a file/path or does not exist ..."], )
+            msgs=[f"Path {path} is not a file/path or does not exist ..."],
+        )
 
 
 def io_is_dir_empty(_dir: pathlib.Path) -> bool:
     # checks
     if not _dir.exists():
-        e.code.NotAllowed(
-            msgs=[f"Directory {_dir} does not exist on the disk"])
+        e.code.NotAllowed(msgs=[f"Directory {_dir} does not exist on the disk"])
     if not _dir.is_dir():
         e.code.NotAllowed(msgs=[f"Path {_dir} is not a directory"])
 
@@ -1320,8 +1376,9 @@ def find_free_port():
     Inspired from
     https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
     """
-    with contextlib.closing(socket.socket(socket.AF_INET,
-                                          socket.SOCK_STREAM), ) as _socket:
+    with contextlib.closing(
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM),
+    ) as _socket:
         _socket.bind(("", 0))
         _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return _socket.getsockname()[1]
@@ -1331,17 +1388,19 @@ def npy_array_save(file: pathlib.Path, npy_array: np.ndarray):
     # only supported type is np.ndarray
     e.validation.ShouldBeInstanceOf(
         value=npy_array,
-        value_types=(np.ndarray, ),
+        value_types=(np.ndarray,),
         msgs=[f"Only numpy arrays are allowed to be saved"],
     )
 
     # if npy_array is structured raise error
     if npy_array.dtype.names is not None:
-        e.code.NotAllowed(msgs=[
-            f"The data type of numpy array is not a "
-            f"builtin, found {npy_array.dtype}",
-            f"We cannot save numpy record.",
-        ], )
+        e.code.NotAllowed(
+            msgs=[
+                f"The data type of numpy array is not a "
+                f"builtin, found {npy_array.dtype}",
+                f"We cannot save numpy record.",
+            ],
+        )
 
     # save numpy record file
     with file.open(mode="wb") as f:
@@ -1367,31 +1426,35 @@ def npy_record_save(
     # do some validations
     e.validation.ShouldBeInstanceOf(
         value=npy_record_dict,
-        value_types=(dict, ),
+        value_types=(dict,),
         msgs=[f"Was expecting dictionary of numpy arrays"],
     )
     _len = None
     for k, v in npy_record_dict.items():
         # key should be str
         if not isinstance(k, str):
-            e.code.NotAllowed(msgs=[
-                f"The dictionary keys should be str found type {type(k)}"
-            ], )
+            e.code.NotAllowed(
+                msgs=[f"The dictionary keys should be str found type {type(k)}"],
+            )
         # only supported type is np.ndarray
         if not isinstance(v, np.ndarray):
-            e.code.NotAllowed(msgs=[
-                f"Only numpy arrays are allowed to be saved within "
-                f"numpy record",
-                f"Found unsupported type {type(v)}",
-            ], )
+            e.code.NotAllowed(
+                msgs=[
+                    f"Only numpy arrays are allowed to be saved within "
+                    f"numpy record",
+                    f"Found unsupported type {type(v)}",
+                ],
+            )
 
         # check if builtin i.e. not a numpy record
         if v.dtype.isbuiltin == 0:
-            e.code.NotAllowed(msgs=[
-                f"The data type of numpy array for key {k!r} is not a "
-                f"builtin, found {v.dtype}",
-                f"We cannot save numpy record within numpy record",
-            ], )
+            e.code.NotAllowed(
+                msgs=[
+                    f"The data type of numpy array for key {k!r} is not a "
+                    f"builtin, found {v.dtype}",
+                    f"We cannot save numpy record within numpy record",
+                ],
+            )
 
         # get len of first element
         if _len is None:
@@ -1399,11 +1462,13 @@ def npy_record_save(
 
         # check if len is same for all elements
         if v.shape[0] != _len:
-            e.code.NotAllowed(msgs=[
-                f"While creating numpy struct all arrays must have "
-                f"same length.",
-                f"Found invalid shape {v.shape} for item {k}",
-            ], )
+            e.code.NotAllowed(
+                msgs=[
+                    f"While creating numpy struct all arrays must have "
+                    f"same length.",
+                    f"Found invalid shape {v.shape} for item {k}",
+                ],
+            )
 
     # ---------------------------------------------------------------02
     # sort the keys
@@ -1412,8 +1477,10 @@ def npy_record_save(
     # create numpy record buffer
     npy_record = np.zeros(
         _len,
-        dtype=[(k, npy_record_dict[k].dtype, npy_record_dict[k].shape[1:])
-               for k in _sorted_keys],
+        dtype=[
+            (k, npy_record_dict[k].dtype, npy_record_dict[k].shape[1:])
+            for k in _sorted_keys
+        ],
     )
 
     # ---------------------------------------------------------------03
@@ -1506,11 +1573,13 @@ class HookUp:
         setattr(cls, method.__name__, self)
 
     def __repr__(self):
-        return (f"HookUp for {self.cls.__module__}.{self.cls.__name__}: ("
-                f"{self.pre_method.__qualname__}, "
-                f"{self.method.__qualname__}, "
-                f"{self.post_method.__qualname__}"
-                f")")
+        return (
+            f"HookUp for {self.cls.__module__}.{self.cls.__name__}: ("
+            f"{self.pre_method.__qualname__}, "
+            f"{self.method.__qualname__}, "
+            f"{self.post_method.__qualname__}"
+            f")"
+        )
 
     def __get__(self, method_self, method_self_type):
         """
@@ -1542,10 +1611,12 @@ class HookUp:
         # -----------------------------------------------------------01
         # although might not be necessary ... we enforce
         if bool(args):
-            e.code.CodingError(msgs=[
-                f"Please avoid methods that use args ... while using "
-                f"hook up ...",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"Please avoid methods that use args ... while using "
+                    f"hook up ...",
+                ],
+            )
 
         # -----------------------------------------------------------02
         # bake title
@@ -1567,17 +1638,17 @@ class HookUp:
         # todo: with gui build {self.method_self.name} poses problem find a
         #  way to avoid logs while building GUI
         # _title = f"<{self.method_self.name}> {self.cls.__name__}." \
-        _title = (f"{self.cls.__name__}."
-                  f"{self.method.__name__}"
-                  f"({_kwargs_str})")
+        _title = (
+            f"{self.cls.__name__}." f"{self.method.__name__}" f"({_kwargs_str})"
+        )
         # _title = logger.replace_with_emoji(_title)
 
         # -----------------------------------------------------------03
         # call business logic
         # execution
         with logger.Spinner(
-                title=_title,
-                logger=logger.get_logger(self.cls.__module__),
+            title=_title,
+            logger=logger.get_logger(self.cls.__module__),
         ) as spinner:
 
             # -------------------------------------------------------03.01
@@ -1590,13 +1661,15 @@ class HookUp:
                 _pre_ret = self.pre_method(self.method_self, **kwargs)
                 # pre_method should not return anything
                 if _pre_ret is not None:
-                    e.code.CodingError(msgs=[
-                        f"{HookUp} protocol enforces the "
-                        f"pre_method {self.pre_method} of method "
-                        f"{self.method} to "
-                        f"not return anything ...",
-                        f"Found return value {_pre_ret}",
-                    ], )
+                    e.code.CodingError(
+                        msgs=[
+                            f"{HookUp} protocol enforces the "
+                            f"pre_method {self.pre_method} of method "
+                            f"{self.method} to "
+                            f"not return anything ...",
+                            f"Found return value {_pre_ret}",
+                        ],
+                    )
 
             # -------------------------------------------------------03.02
             # call actual method
@@ -1623,13 +1696,15 @@ class HookUp:
                 )
                 # post_method should not return anything
                 if _post_ret is not None:
-                    e.code.CodingError(msgs=[
-                        f"{HookUp} protocol enforces the "
-                        f"post_method {self.post_method} of method"
-                        f" {self.method} to "
-                        f"not return anything ...",
-                        f"Found return value {_pre_ret}",
-                    ], )
+                    e.code.CodingError(
+                        msgs=[
+                            f"{HookUp} protocol enforces the "
+                            f"post_method {self.post_method} of method"
+                            f" {self.method} to "
+                            f"not return anything ...",
+                            f"Found return value {_pre_ret}",
+                        ],
+                    )
 
             # -------------------------------------------------------03.04
             # return the return value of method
@@ -1643,7 +1718,8 @@ def import_from_str(module: str, name: str) -> t.Any:
         e.code.CodingError(msgs=[f"Module {module!r} cannot be imported ..."])
     except ImportError:
         e.code.CodingError(
-            msgs=[f"Cannot find name {name!r} in module {module!r} ..."], )
+            msgs=[f"Cannot find name {name!r} in module {module!r} ..."],
+        )
 
 
 def try_hook_instance_method():
@@ -1684,7 +1760,8 @@ def try_hook_instance_method():
 
 
 def compute_class_weights(
-        _labels: np.ndarray, ) -> t.Tuple[np.ndarray, np.ndarray]:
+    _labels: np.ndarray,
+) -> t.Tuple[np.ndarray, np.ndarray]:
     ...
     # _unique_labels = np.sort(np.unique(_labels))
     # _unique_labels_weight = sklearn.utils.compute_class_
@@ -1709,7 +1786,7 @@ def shuffle_arrays(
     set_seed : Seed value if int >= 0, else seed is random.
     """
     assert all(len(arr) == len(arrays[0]) for arr in arrays)
-    seed = np.random.randint(0, 2**(32 - 1) - 1) if set_seed < 0 else set_seed
+    seed = np.random.randint(0, 2 ** (32 - 1) - 1) if set_seed < 0 else set_seed
 
     for arr in arrays:
         rstate = np.random.RandomState(seed)
@@ -1722,6 +1799,7 @@ def np_to_lnp(data: np.ndarray) -> t.List:
     """
     Convert any n-dim array to nested list of lists of 1D array
     """
+
     def _make_list(_data):
         if _data.ndim == 1:
             return _data
@@ -1745,7 +1823,8 @@ def np_to_pa(data: np.ndarray) -> pa.Array:
 
 
 def pa_to_np(
-        data: t.Union[pa.Array, pa.ChunkedArray, pa.ListArray], ) -> np.ndarray:
+    data: t.Union[pa.Array, pa.ChunkedArray, pa.ListArray],
+) -> np.ndarray:
     """
     Unit test code
 
@@ -1762,10 +1841,12 @@ def pa_to_np(
     elif isinstance(data, pa.ListArray):
         return np.asarray(data)
     else:
-        e.code.CodingError(msgs=[
-            f"Expected {pa.Array} or {pa.ChunkedArray} but found "
-            f"{type(data)}",
-        ], )
+        e.code.CodingError(
+            msgs=[
+                f"Expected {pa.Array} or {pa.ChunkedArray} but found "
+                f"{type(data)}",
+            ],
+        )
 
     def _make_list(_data):
         if _data.dtype != object:
@@ -1820,7 +1901,8 @@ def one_hot_to_simple_labels(oh_label: pd.Series) -> pd.Series:
 
 _changer_methods = set(
     "__setitem__ __setslice__ __delitem__ update append extend add insert "
-    "pop popitem remove setdefault __iadd__".split(), )
+    "pop popitem remove setdefault __iadd__".split(),
+)
 
 
 def _proxy_decorator(func, callback):
@@ -1842,7 +1924,7 @@ def notifying_list_dict_class_factory(cls, callback):
     for key, value in new_dct.items():
         if key in _changer_methods:
             new_dct[key] = _proxy_decorator(value, callback)
-    return type("proxy_" + cls.__name__, (cls, ), new_dct)
+    return type("proxy_" + cls.__name__, (cls,), new_dct)
 
 
 # noinspection PyProtectedMember
@@ -1865,6 +1947,7 @@ class Process:
         - Event loops run asynchronous tasks and
         - Callbacks, perform network IO operations, and run subprocesses.
     """
+
     class SIGNAL:
         _start = "_start"
         _started = "_started"
@@ -1876,8 +1959,7 @@ class Process:
         _exception_ack = "_exception_ack"
 
     name: str
-    _child_connector: "mp.connection.Connection" = dataclasses.field(
-        init=False)
+    _child_connector: "mp.connection.Connection" = dataclasses.field(init=False)
     _error_log_file: pathlib.Path = dataclasses.field(init=False)
 
     _RUNNING_PROCESSES = []
@@ -1892,11 +1974,13 @@ class Process:
         # if not overriden this should be empty
         if self.SIGNAL == Process.SIGNAL:
             if bool(_ret_list):
-                e.code.CodingError(msgs=[
-                    f"Class {Process.SIGNAL} is not overriden in"
-                    f" {self.__class__} so we expect that there is no "
-                    f"signal to use.",
-                ], )
+                e.code.CodingError(
+                    msgs=[
+                        f"Class {Process.SIGNAL} is not overriden in"
+                        f" {self.__class__} so we expect that there is no "
+                        f"signal to use.",
+                    ],
+                )
         # return
         return _ret_list
 
@@ -1934,35 +2018,40 @@ class Process:
             _DIR.mkdir(exist_ok=True, parents=True)
         _FILE = _DIR / f"{self.name}.logs"
         if _FILE.is_file():
-            e.code.CodingError(msgs=[
-                f"There should ideally no file {_FILE} on disk",
-                f"Whenever an exception occurs in a thread an error log "
-                f"file will be created in child process and while in main "
-                f"thread it will be read and deleted",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"There should ideally no file {_FILE} on disk",
+                    f"Whenever an exception occurs in a thread an error log "
+                    f"file will be created in child process and while in main "
+                    f"thread it will be read and deleted",
+                ],
+            )
         self._error_log_file = _FILE
 
         # check if process with same name exists
         if self.name in self._RUNNING_PROCESSES:
-            e.code.CodingError(msgs=[
-                f"The process with name {self.name!r} is already running"
-            ], )
+            e.code.CodingError(
+                msgs=[f"The process with name {self.name!r} is already running"],
+            )
 
         # check if fn is overriden
         if self.__class__.process_fn == Process.process_fn:
-            e.code.CodingError(msgs=[
-                f"You need to override method `fn` which will "
-                f"execute the parallel process code",
-                f"NOTE: ",
-                f"When you override always favour to use python "
-                f"exceptions instead of error.* exceptions",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"You need to override method `fn` which will "
+                    f"execute the parallel process code",
+                    f"NOTE: ",
+                    f"When you override always favour to use python "
+                    f"exceptions instead of error.* exceptions",
+                ],
+            )
 
     def _register(self):
         # check if process with same name exists
         if self.name in self._RUNNING_PROCESSES:
             e.code.CodingError(
-                msgs=[f"Cannot register process with name {self.name!r}"], )
+                msgs=[f"Cannot register process with name {self.name!r}"],
+            )
         else:
             self._RUNNING_PROCESSES.append(self.name)
 
@@ -1970,7 +2059,8 @@ class Process:
         # check if process with same name exists
         if self.name not in self._RUNNING_PROCESSES:
             e.code.CodingError(
-                msgs=[f"Cannot unregister process with name {self.name!r}"], )
+                msgs=[f"Cannot unregister process with name {self.name!r}"],
+            )
         else:
             self._RUNNING_PROCESSES.remove(self.name)
 
@@ -1984,11 +2074,13 @@ class Process:
             self._child_connector.send(Process.SIGNAL._started)
         else:
             # noinspection PyProtectedMember
-            e.code.CodingError(msgs=[
-                f"While using process the first signal needs to be to "
-                f"{Process.SIGNAL._start}",
-                f"Instead found {_recv_signal}",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"While using process the first signal needs to be to "
+                    f"{Process.SIGNAL._start}",
+                    f"Instead found {_recv_signal}",
+                ],
+            )
 
         # --------------------------------------------------------------- 02
         # an infinite loop to get many more signals
@@ -2010,10 +2102,12 @@ class Process:
             # Now that we are here that means the _recv_signal must be one of
             # supported signals
             if _recv_signal not in self.supported_signals:
-                e.code.CodingError(msgs=[
-                    f"Signal {_recv_signal} is unrecognized",
-                    f"Note that it should not be one of internal signals",
-                ], )
+                e.code.CodingError(
+                    msgs=[
+                        f"Signal {_recv_signal} is unrecognized",
+                        f"Note that it should not be one of internal signals",
+                    ],
+                )
 
             # ----------------------------------------------------------- 02.04
             # call the process fn
@@ -2025,19 +2119,25 @@ class Process:
                 # write error message to file
                 _err_msg = ""
                 if self._error_log_file.is_file():
-                    _err_msg += (f"The error log file should not exist on "
-                                 f"disk. \n We will overwrite. \n\n")
-                _err_msg += (f"{traceback.format_exc()} \n"
-                             f"-----------------------------------------------"
-                             f"\n")
-                _err_msg += (f"There was an exception as above and now we "
-                             f"will wait for signal "
-                             f"Process._SIGNAL.exception_ack from main "
-                             f"thread.\n"
-                             f"-----------------------------------------------"
-                             f"\n"
-                             f"Meanwhile if we received any other signals "
-                             f"they are as logged below.\n\n")
+                    _err_msg += (
+                        f"The error log file should not exist on "
+                        f"disk. \n We will overwrite. \n\n"
+                    )
+                _err_msg += (
+                    f"{traceback.format_exc()} \n"
+                    f"-----------------------------------------------"
+                    f"\n"
+                )
+                _err_msg += (
+                    f"There was an exception as above and now we "
+                    f"will wait for signal "
+                    f"Process._SIGNAL.exception_ack from main "
+                    f"thread.\n"
+                    f"-----------------------------------------------"
+                    f"\n"
+                    f"Meanwhile if we received any other signals "
+                    f"they are as logged below.\n\n"
+                )
                 self._error_log_file.touch(exist_ok=True)
                 self._error_log_file.write_text(_err_msg)
 
@@ -2058,7 +2158,8 @@ class Process:
                             f.write(
                                 f" . Received signal [{i:04d}]: "
                                 f" {_recv_signal_1!r} "
-                                f"at time {datetime.datetime.now()}\n", )
+                                f"at time {datetime.datetime.now()}\n",
+                            )
 
                 # final break as we received proper ack from main thread
                 break
@@ -2094,13 +2195,15 @@ class Process:
         # hence parallel child processes will not be killed .... here we
         # still use it to serve as reminder .... do not raise custom
         # exceptions from error module ... only use python exceptions instead
-        e.code.CodingError(msgs=[
-            f"You need to override method `fn` which will "
-            f"execute the parallel process code",
-            f"NOTE: ",
-            f"When you override always favour to use python "
-            f"exceptions instead of error.* exceptions",
-        ], )
+        e.code.CodingError(
+            msgs=[
+                f"You need to override method `fn` which will "
+                f"execute the parallel process code",
+                f"NOTE: ",
+                f"When you override always favour to use python "
+                f"exceptions instead of error.* exceptions",
+            ],
+        )
 
     def process_start(self):
         # ---------------------------------------------------------------- 01
@@ -2118,11 +2221,13 @@ class Process:
         # ---------------------------------------------------------------- 04
         # confirm if received message is correct
         if _received_message != self.SIGNAL._started:
-            e.code.CodingError(msgs=[
-                f"Should receive a message "
-                f"{self.SIGNAL._started} instead received"
-                f"{_received_message}",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"Should receive a message "
+                    f"{self.SIGNAL._started} instead received"
+                    f"{_received_message}",
+                ],
+            )
 
         # ---------------------------------------------------------------- 05
         # register
@@ -2157,25 +2262,29 @@ class Process:
             # join and close child process
             self._process.join()
             self._process.close()
-            e.code.CodingError(msgs=[
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
-                f"Parallel process {self.name!r} has crashed",
-                f"The traceback from the child process is as follows:",
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
-                *_error_log,
-                ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
+                    f"Parallel process {self.name!r} has crashed",
+                    f"The traceback from the child process is as follows:",
+                    ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
+                    *_error_log,
+                    ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",
+                ],
+            )
 
         # ---------------------------------------------------------------- 04
         # if there was no exception then simple we expect response as closed
         # signal for our close request
         # confirm if received message is correct
         if _received_message != self.SIGNAL._closed:
-            e.code.CodingError(msgs=[
-                f"Should receive a message "
-                f"{self.SIGNAL._closed} instead received "
-                f"{_received_message}",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"Should receive a message "
+                    f"{self.SIGNAL._closed} instead received "
+                    f"{_received_message}",
+                ],
+            )
         # things are as expected so close things
         else:
             # just for safety join as after broadcasting message "close" it
@@ -2197,11 +2306,13 @@ class Process:
         # ---------------------------------------------------------------- 01
         # some verification
         if signal not in self.supported_signals:
-            e.code.CodingError(msgs=[
-                f"Provided signal {signal!r} is not supported by you",
-                f"Allowed signals are:",
-                self.supported_signals,
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"Provided signal {signal!r} is not supported by you",
+                    f"Allowed signals are:",
+                    self.supported_signals,
+                ],
+            )
 
         # ---------------------------------------------------------------- 02
         # signal it to terminate

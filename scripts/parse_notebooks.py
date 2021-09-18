@@ -9,11 +9,9 @@ from __future__ import annotations
 import argparse
 import json
 import os
-
 from pathlib import Path
 
 import nbformat
-
 from bs4 import BeautifulSoup
 from nbconvert import HTMLExporter
 from nbconvert import PythonExporter
@@ -49,7 +47,8 @@ def validate_tutorial_links(input_dir: str) -> None:
 
     tutorials_nbs = {
         fn.name.replace(".ipynb", "")
-        for fn in Path(input_dir).iterdir() if fn.suffix == ".ipynb"
+        for fn in Path(input_dir).iterdir()
+        if fn.suffix == ".ipynb"
     }
 
     missing_files = tutorial_ids - tutorials_nbs
@@ -58,13 +57,16 @@ def validate_tutorial_links(input_dir: str) -> None:
     if missing_files:
         raise RuntimeError(
             "The following tutorials are linked on the website, but missing an "
-            f"associated .ipynb file: {missing_files}.", )
+            f"associated .ipynb file: {missing_files}.",
+        )
 
     if missing_ids:
         raise RuntimeError(
             "The following tutorial files are present, but are not linked on the "
             "website: {}.".format(
-                ", ".join([nbid + ".ipynb" for nbid in missing_ids]), ), )
+                ", ".join([nbid + ".ipynb" for nbid in missing_ids]),
+            ),
+        )
 
 
 def gen_tutorials(input_dir: str, output_dir: str) -> None:
@@ -115,8 +117,7 @@ def gen_tutorials(input_dir: str, output_dir: str) -> None:
 
         # generate JS file
         script = TEMPLATE.format(tid)
-        js_out_path = os.path.join(output_dir, "pages", "tutorials",
-                                   f"{tid}.js")
+        js_out_path = os.path.join(output_dir, "pages", "tutorials", f"{tid}.js")
         Path(js_out_path).parent.mkdir(exist_ok=True, parents=True)
         with open(js_out_path, "w", encoding="utf8") as js_outfile:
             js_outfile.write(script)
@@ -139,7 +140,8 @@ def gen_tutorials(input_dir: str, output_dir: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate JS, HTML, ipynb, and py files for tutorials.", )
+        description="Generate JS, HTML, ipynb, and py files for tutorials.",
+    )
 
     parser.add_argument(
         "-i",

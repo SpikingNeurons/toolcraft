@@ -59,8 +59,9 @@ class CustomException:
         # -----------------------------------------------------------------04
         # MESSAGES RELATED
         # get exception str
-        exception_str = " ".join(camel_case_split(
-            self.__class__.__name__), ).upper()
+        exception_str = " ".join(
+            camel_case_split(self.__class__.__name__),
+        ).upper()
 
         # -----------------------------------------------------------------05
         # LOG
@@ -88,14 +89,17 @@ class CustomException:
                 if cf.f_code.co_filename == "<frozen importlib._bootstrap>":
                     cf = cf.f_back
                     continue
-                if (cf.f_code.co_filename ==
-                        "<frozen importlib._bootstrap_external>"):
+                if (
+                    cf.f_code.co_filename
+                    == "<frozen importlib._bootstrap_external>"
+                ):
                     cf = cf.f_back
                     continue
 
                 # append traceback frame
                 _traceback_msgs.append(
-                    f'File "{cf.f_code.co_filename}", line {cf.f_lineno}', )
+                    f'File "{cf.f_code.co_filename}", line {cf.f_lineno}',
+                )
 
                 # go back to previous traceback frame
                 cf = cf.f_back
@@ -125,7 +129,9 @@ class CustomException:
             print(
                 util.StringFmt.centered_text(
                     f"[ {unhandled_exception.__class__.__module__}."
-                    f"{unhandled_exception.__class__.__name__} ]", ), )
+                    f"{unhandled_exception.__class__.__name__} ]",
+                ),
+            )
             print(util.StringFmt.centered_text())
             print(str(unhandled_exception))
             print(util.StringFmt.centered_text())

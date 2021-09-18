@@ -18,13 +18,13 @@ def get_methods_related_to_plot():
             continue
 
         if _name in [
-                "plot",
-                "subplots",
-                "add_plot",
-                "add_plot_axis",
-                "add_plot_legend",
-                "add_simple_plot",
-                "add_subplots",
+            "plot",
+            "subplots",
+            "add_plot",
+            "add_plot_axis",
+            "add_plot_legend",
+            "add_simple_plot",
+            "add_subplots",
         ]:
             continue
 
@@ -113,9 +113,12 @@ for _method in get_methods_related_to_plot():
         _param_name = _param.name
         if _param_name in ["id", "parent"]:
             continue
-        _param_type = (f"{_param.annotation}".replace("typing", "t").replace(
-            "<class '", "").replace("'>", "").replace("t.Callable",
-                                                      "t.Optional[Callback]"))
+        _param_type = (
+            f"{_param.annotation}".replace("typing", "t")
+            .replace("<class '", "")
+            .replace("'>", "")
+            .replace("t.Callable", "t.Optional[Callback]")
+        )
         _all_params_to_consider.append(_param_name)
         if _param_type.find("Callback") != -1:
             _callback_params.append(_param_name)
@@ -129,8 +132,12 @@ for _method in get_methods_related_to_plot():
             _parm_str = _parm_str.replace("t.List[float]", "PLOT_DATA_TYPE")
             _parm_str += ","
         else:
-            if (_param_value in ["", "$$DPG_PAYLOAD"]
-                    or str(_param_value, ).startswith("%")):
+            if (
+                _param_value in ["", "$$DPG_PAYLOAD"]
+                or str(
+                    _param_value,
+                ).startswith("%")
+            ):
                 _parm_str += f" = '{_param_value}',"
             else:
                 _parm_str += f" = {_param_value},"
@@ -140,25 +147,32 @@ for _method in get_methods_related_to_plot():
         _lines.append(_parm_str)
 
     # method end
-    _lines += ([
-        "\t\ty_axis_dim: int = 1,",
-        "\t) -> int:",
-        '\t\t"""',
-        "\t\tRefer:",
-        f"\t\t>>> dpg.{_method.__name__}",
-        "",
-    ] + _main_doc + _kwarg_doc + ['\t\t"""', ""])
+    _lines += (
+        [
+            "\t\ty_axis_dim: int = 1,",
+            "\t) -> int:",
+            '\t\t"""',
+            "\t\tRefer:",
+            f"\t\t>>> dpg.{_method.__name__}",
+            "",
+        ]
+        + _main_doc
+        + _kwarg_doc
+        + ['\t\t"""', ""]
+    )
 
     # call method code
     _kwargs = []
     for _param in _all_params_to_consider:
         _assign_str = f"\t\t\t{_param}={_param},"
         if _param in ["source", "before"]:
-            _assign_str = (f"\t\t\t{_param}=0 if {_param} is None else "
-                           f"{_param}.dpg_id,")
+            _assign_str = (
+                f"\t\t\t{_param}=0 if {_param} is None else " f"{_param}.dpg_id,"
+            )
         if _param in _callback_params:
-            _assign_str = (f"\t\t\t{_param}=None "
-                           f"if {_param} is None else {_param}.fn,")
+            _assign_str = (
+                f"\t\t\t{_param}=None " f"if {_param} is None else {_param}.fn,"
+            )
         _kwargs.append(_assign_str)
     _lines += [
         f"\t\t_y_axis = self.get_y_axis(axis_dim=y_axis_dim)",

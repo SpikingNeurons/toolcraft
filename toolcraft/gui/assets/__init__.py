@@ -2,7 +2,6 @@ import enum
 import pathlib
 
 import dearpygui.dearpygui as dpg
-
 from dearpygui import themes
 
 from ... import error as e

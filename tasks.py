@@ -17,7 +17,6 @@ import platform
 import shutil
 import typing as t
 import webbrowser
-
 from pathlib import Path
 
 from invoke import task
@@ -77,8 +76,7 @@ def pytest_cov(c):
     #   pytest-cov
     #   pytest-xdist
     # todo: this works but takes time uncomment later
-    _run(c, "pytest -s --cov=toolcraft --cov-append "
-         "--cov-report=html tests")
+    _run(c, "pytest -s --cov=toolcraft --cov-append " "--cov-report=html tests")
     webbrowser.open(COVERAGE_REPORT.as_uri())
 
 

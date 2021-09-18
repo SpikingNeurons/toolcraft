@@ -25,7 +25,11 @@ def move_packages(pypi_root_dir: str):
 
     # get only files
     fs = [
-        f for f in all_fs if f.is_file() and f.name not in [
+        f
+        for f in all_fs
+        if f.is_file()
+        and f.name
+        not in [
             "pip_detect_redundant_packages.py",
             "pip_package_mover.py",
             "install_from_internal_repo.bat",

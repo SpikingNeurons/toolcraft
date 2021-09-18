@@ -3,10 +3,10 @@ import pathlib
 import typer
 import yaml
 
+from . import Tool
 from .. import error as e
 from .. import logger
 from .. import util
-from . import Tool
 
 
 _LOGGER = logger.get_logger()
@@ -26,8 +26,7 @@ class SftpTool(Tool):
         # read details from input yaml file
         yaml_file = pathlib.Path(file_name)
         if not yaml_file.exists():
-            e.validation.NotAllowed(
-                msgs=[f"We cannot find file `{file_name}`"])
+            e.validation.NotAllowed(msgs=[f"We cannot find file `{file_name}`"])
         yaml_str = yaml_file.read_text()
         files_to_download = yaml.safe_load(yaml_str)["files"]
         sftp_details = yaml.safe_load(yaml_str)["sftp"]
