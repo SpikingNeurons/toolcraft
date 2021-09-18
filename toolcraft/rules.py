@@ -57,13 +57,11 @@ def check_classes_that_should_not_be_overridden():
     for cls in _CLASSES_THAT_SHOULD_NOT_BE_OVERRIDDEN:
         _sub_classes = cls.available_sub_classes()
         if len(_sub_classes) > 1:
-            e.code.CodingError(
-                msgs=[
-                    f"You are not allowed to subclass class {cls}",
-                    f"Please check classes: ",
-                    _sub_classes[1:],
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"You are not allowed to subclass class {cls}",
+                f"Please check classes: ",
+                _sub_classes[1:],
+            ], )
 
 
 def check_things_to_be_cached(to_check: dict = None):
@@ -97,13 +95,11 @@ def check_things_to_be_cached(to_check: dict = None):
                     continue
                 # check if cached
                 if not util.is_cached(_method_or_prop):
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect you to cache property/method `{_t}` "
-                            f"using decorator `@util.CacheResult` in "
-                            f"class {cls}",
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"We expect you to cache property/method `{_t}` "
+                        f"using decorator `@util.CacheResult` in "
+                        f"class {cls}",
+                    ], )
 
 
 def check_things_not_to_be_cached(to_check: dict = None):
@@ -130,14 +126,12 @@ def check_things_not_to_be_cached(to_check: dict = None):
                     continue
                 # check if cached
                 if util.is_cached(_method_or_prop):
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect you not to cache property/method "
-                            f"`{_t}`. Do not use  decorator "
-                            f"`@util.CacheResult` in "
-                            f"class {cls} for `{_t}`",
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"We expect you not to cache property/method "
+                        f"`{_t}`. Do not use  decorator "
+                        f"`@util.CacheResult` in "
+                        f"class {cls} for `{_t}`",
+                    ], )
 
 
 def check_things_not_to_be_overridden(to_check: dict = None):
@@ -158,12 +152,10 @@ def check_things_not_to_be_overridden(to_check: dict = None):
         for cls in sup_cls.available_sub_classes():
             for _t in things:
                 if getattr(cls, _t) != getattr(sup_cls, _t):
-                    e.code.CodingError(
-                        msgs=[
-                            f"Please do not override method/property "
-                            f"`{_t}` in class {cls}",
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"Please do not override method/property "
+                        f"`{_t}` in class {cls}",
+                    ], )
 
 
 def check_things_to_be_dataclasses():
@@ -174,16 +166,12 @@ def check_things_to_be_dataclasses():
             # dataclass ...
             _cls_dict_keys = cls.__dict__.keys()
             # noinspection PyProtectedMember
-            if not (
-                dataclasses._FIELDS in _cls_dict_keys
-                or dataclasses._PARAMS in _cls_dict_keys
-            ):
-                e.code.NotAllowed(
-                    msgs=[
-                        f"You missed to decorate subclass {cls} of {sup_cls} "
-                        f"with `@dataclasses.dataclass` decorator",
-                    ],
-                )
+            if not (dataclasses._FIELDS in _cls_dict_keys
+                    or dataclasses._PARAMS in _cls_dict_keys):
+                e.code.NotAllowed(msgs=[
+                    f"You missed to decorate subclass {cls} of {sup_cls} "
+                    f"with `@dataclasses.dataclass` decorator",
+                ], )
 
 
 # noinspection PyPep8Naming
@@ -213,7 +201,7 @@ def check_YamlRepr():
             _parent_literal_class = YamlRepr.LITERAL
         e.validation.ShouldBeSubclassOf(
             value=cls.LITERAL,
-            value_types=(_parent_literal_class,),
+            value_types=(_parent_literal_class, ),
             msgs=[
                 f"We expect a nested class of class {cls} with name "
                 f"{LITERAL_CLASS_NAME!r} to "
@@ -227,13 +215,11 @@ def check_YamlRepr():
         if _yaml_tag not in _yaml_tag_check.keys():
             _yaml_tag_check[_yaml_tag] = cls
         else:
-            e.code.CodingError(
-                msgs=[
-                    f"The same yaml tag `{_yaml_tag}` seems to appear in both "
-                    f"classes: ",
-                    [cls, _yaml_tag_check[_yaml_tag]],
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"The same yaml tag `{_yaml_tag}` seems to appear in both "
+                f"classes: ",
+                [cls, _yaml_tag_check[_yaml_tag]],
+            ], )
 
 
 # noinspection PyPep8Naming
@@ -268,14 +254,12 @@ def check_HashableClass():
         # ---------------------------------------------------------- 01
         # class should not be local
         if str(cls).find("<locals>") > -1:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"Hashable classes can only be first class classes.",
-                    f"Do not define classes locally, declare them at module "
-                    f"level.",
-                    f"Check class {cls}",
-                ],
-            )
+            e.validation.NotAllowed(msgs=[
+                f"Hashable classes can only be first class classes.",
+                f"Do not define classes locally, declare them at module "
+                f"level.",
+                f"Check class {cls}",
+            ], )
 
         # ---------------------------------------------------------- 02
         # check all non dunder attributes
@@ -302,13 +286,11 @@ def check_HashableClass():
                 if _attr_k == "_abc_impl":
                     continue
                 # anything else raise error
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Attribute {_attr_k} is not one of {_allowed_types} "
-                        f"and it starts with `_`",
-                        f"Please check attribute {_attr_k} of class {cls}",
-                    ],
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"Attribute {_attr_k} is not one of {_allowed_types} "
+                    f"and it starts with `_`",
+                    f"Please check attribute {_attr_k} of class {cls}",
+                ], )
 
             # ------------------------------------------------------ 02.03
             # if special helper classes that stores all LITERALS
@@ -330,44 +312,38 @@ def check_HashableClass():
                 # simple way to see if typing was used as annotation value
                 if hasattr(_attr_v, "__origin__"):
                     if _attr_v.__origin__ == t.ClassVar:
-                        e.code.CodingError(
-                            msgs=[
-                                f"We do not allow class variable {_attr_k} "
-                                f"... check class {cls}",
-                            ],
-                        )
+                        e.code.CodingError(msgs=[
+                            f"We do not allow class variable {_attr_k} "
+                            f"... check class {cls}",
+                        ], )
                 # if `dataclasses.InitVar` raise error
                 if isinstance(_attr_v, dataclasses.InitVar):
-                    e.code.CodingError(
-                        msgs=[
-                            f"We co not allow using dataclass.InitVar.",
-                            f"Please check annotated field {_attr_k} in "
-                            f"class {cls}",
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"We co not allow using dataclass.InitVar.",
+                        f"Please check annotated field {_attr_k} in "
+                        f"class {cls}",
+                    ], )
                 # if a vail dataclass field continue
                 continue
 
             # ------------------------------------------------------ 02.05
             # if we reached here we do not understand the class attribute so
             # raise error
-            e.code.NotAllowed(
-                msgs=[
-                    f"Found an attribute `{_attr_k}` with: ",
-                    dict(
-                        type=f"{type(_attr_v)}",
-                        value=f"{_attr_v}",
-                    ),
-                    f"Problem with attribute {_attr_k} of class {cls}",
-                    f"It is neither one of {_allowed_types}, nor is it "
-                    f"defined as dataclass field.",
-                    f"Note that if you are directly assigning the annotated "
-                    f"field it will not return dataclass field so please "
-                    f"assign it with "
-                    f"`dataclass.field(default=...)` or "
-                    f"`dataclass.field(default_factory=...)`",
-                ],
-            )
+            e.code.NotAllowed(msgs=[
+                f"Found an attribute `{_attr_k}` with: ",
+                dict(
+                    type=f"{type(_attr_v)}",
+                    value=f"{_attr_v}",
+                ),
+                f"Problem with attribute {_attr_k} of class {cls}",
+                f"It is neither one of {_allowed_types}, nor is it "
+                f"defined as dataclass field.",
+                f"Note that if you are directly assigning the annotated "
+                f"field it will not return dataclass field so please "
+                f"assign it with "
+                f"`dataclass.field(default=...)` or "
+                f"`dataclass.field(default_factory=...)`",
+            ], )
 
         # ---------------------------------------------------------- 03
         # do not override dunder methods
@@ -375,14 +351,12 @@ def check_HashableClass():
             for k in cls.__dict__.keys():
                 if k.startswith("__") and k.endswith("__"):
                     if k not in _general_dunders_to_ignore:
-                        e.code.CodingError(
-                            msgs=[
-                                f"You are not allowed to override dunder "
-                                f"methods in any subclass of {HashableClass}",
-                                f"Please check class {cls} and avoid defining "
-                                f"dunder method `{k}` inside it",
-                            ],
-                        )
+                        e.code.CodingError(msgs=[
+                            f"You are not allowed to override dunder "
+                            f"methods in any subclass of {HashableClass}",
+                            f"Please check class {cls} and avoid defining "
+                            f"dunder method `{k}` inside it",
+                        ], )
 
         # ---------------------------------------------------------- 04
         # if block_fields_in_subclasses then check there are no new fields in
@@ -400,23 +374,20 @@ def check_HashableClass():
                 if sub_cls == cls:
                     continue
                 # get fields in subclass
-                sub_cls_fields = sorted(
-                    f.name for f in dataclasses.fields(sub_cls)
-                )
+                sub_cls_fields = sorted(f.name
+                                        for f in dataclasses.fields(sub_cls))
                 # sort
                 # compare
                 if cls_fields != sub_cls_fields:
-                    e.code.CodingError(
-                        msgs=[
-                            f"You are not allowed to add any new fields in "
-                            f"dataclass {sub_cls} as it is restricted by class "
-                            f"{cls}",
-                            {
-                                "fields restricted to": cls_fields,
-                                "found": sub_cls_fields,
-                            },
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"You are not allowed to add any new fields in "
+                        f"dataclass {sub_cls} as it is restricted by class "
+                        f"{cls}",
+                        {
+                            "fields restricted to": cls_fields,
+                            "found": sub_cls_fields,
+                        },
+                    ], )
 
         # ---------------------------------------------------------- xx
         # todo: find a way to check if super() calls are made
@@ -454,13 +425,11 @@ def check_FrozenEnum():
         # getting created. It is not yet created so we cannot detect it here
         if cls.__mro__[1] != YamlRepr:
             if not issubclass(cls, enum.Enum):
-                e.code.CodingError(
-                    msgs=[
-                        f"While subclassing `FrozenEnum` make sure "
-                        f"that you it also extends `enum.Enum`",
-                        f"Check class {cls}",
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"While subclassing `FrozenEnum` make sure "
+                    f"that you it also extends `enum.Enum`",
+                    f"Check class {cls}",
+                ], )
 
 
 def main():

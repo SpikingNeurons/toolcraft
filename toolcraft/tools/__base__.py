@@ -12,6 +12,7 @@ import typer
 from .. import error as e
 from .. import logger
 
+
 APP = typer.Typer(name="Tools")
 _LOGGER = logger.get_logger()
 
@@ -32,22 +33,18 @@ class Tool(abc.ABC):
         # there can be only one tool class per module
         else:
             if cls.tool_name() in cls.AVAILABLE_TOOL_CLASSES.keys():
-                e.code.CodingError(
-                    msgs=[
-                        f"you can have only one concrete subclass of {Tool} in "
-                        f"module {cls.__module__}",
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"you can have only one concrete subclass of {Tool} in "
+                    f"module {cls.__module__}",
+                ], )
         # -------------------------------------------------------- 01.03
         # you need to define `command_fn` method in order to register it with
         # `typer_app`
         if Tool.command_fn.__name__ not in cls.__dict__.keys():
-            e.code.CodingError(
-                msgs=[
-                    f"Please override method `{Tool.command_fn.__name__}` in "
-                    f"class {cls}.",
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"Please override method `{Tool.command_fn.__name__}` in "
+                f"class {cls}.",
+            ], )
 
         # -------------------------------------------------------- 02
         # store tool classes for future reference ...
@@ -73,5 +70,5 @@ class Tool(abc.ABC):
     @classmethod
     def command_fn(cls, **kwargs):
         raise NotImplementedError(
-            f"Please implement this method in the respective " f"subclass ...",
-        )
+            f"Please implement this method in the respective "
+            f"subclass ...", )

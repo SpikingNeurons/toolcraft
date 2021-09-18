@@ -3,10 +3,10 @@ import typing as t
 
 import dearpygui.dearpygui as dpg
 
-from . import PLOT_DATA_TYPE
+from ... import error as e
 from .. import Callback
 from .. import Widget
-from ... import error as e
+from . import PLOT_DATA_TYPE
 from .auto import BPlot
 from .auto import BTable
 from .auto import Column
@@ -33,12 +33,10 @@ class Table(BTable):
         # check mandatory fields
         if self.rows is None:
             e.validation.NotAllowed(
-                msgs=[f"Please supply mandatory field `rows`"],
-            )
+                msgs=[f"Please supply mandatory field `rows`"], )
         if self.columns is None:
             e.validation.NotAllowed(
-                msgs=[f"Please supply mandatory field `columns`"],
-            )
+                msgs=[f"Please supply mandatory field `columns`"], )
 
     def init(self):
         # call super
@@ -61,9 +59,9 @@ class Table(BTable):
                 )
             _num_columns = len(self.columns)
         else:
-            e.validation.NotAllowed(
-                msgs=[f"unknown type for field columns: {type(self.columns)}"],
-            )
+            e.validation.NotAllowed(msgs=[
+                f"unknown type for field columns: {type(self.columns)}"
+            ], )
             raise
 
         # add rows
@@ -158,13 +156,16 @@ class Plot(BPlot):
                 self.add_child(guid="x_axis", widget=XAxis(label=self.x_axis))
         if self.y1_axis is not None:
             if isinstance(self.y1_axis, str):
-                self.add_child(guid="y1_axis", widget=YAxis(label=self.y1_axis))
+                self.add_child(guid="y1_axis",
+                               widget=YAxis(label=self.y1_axis))
         if self.y2_axis is not None:
             if isinstance(self.y2_axis, str):
-                self.add_child(guid="y2_axis", widget=YAxis(label=self.y2_axis))
+                self.add_child(guid="y2_axis",
+                               widget=YAxis(label=self.y2_axis))
         if self.y3_axis is not None:
             if isinstance(self.y3_axis, str):
-                self.add_child(guid="y3_axis", widget=YAxis(label=self.y3_axis))
+                self.add_child(guid="y3_axis",
+                               widget=YAxis(label=self.y3_axis))
 
     def clear(self):
         # plot series are added to YAxis so we clear its children to clear
@@ -175,22 +176,18 @@ class Plot(BPlot):
 
     def get_y_axis(self, axis_dim: int) -> YAxis:
         if axis_dim not in [1, 2, 3]:
-            e.code.CodingError(
-                msgs=[
-                    f"for y axis axis_dim should be one of {[1, 2, 3]} ... "
-                    f"but found unsupported {axis_dim}",
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"for y axis axis_dim should be one of {[1, 2, 3]} ... "
+                f"but found unsupported {axis_dim}",
+            ], )
         try:
             # noinspection PyTypeChecker
             return self.children[f"y{axis_dim}_axis"]
         except KeyError:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"field `y{axis_dim}_axis` is not supplied while "
-                    f"creating Plot instance",
-                ],
-            )
+            e.validation.NotAllowed(msgs=[
+                f"field `y{axis_dim}_axis` is not supplied while "
+                f"creating Plot instance",
+            ], )
 
     def get_x_axis(self) -> XAxis:
         try:

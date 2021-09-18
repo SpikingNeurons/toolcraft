@@ -2,8 +2,10 @@
 """Tests for `toolcraft` package."""
 # pylint: disable=redefined-outer-name
 import pytest
-from toolcraft import tools
+
 from typer.testing import CliRunner
+
+from toolcraft import tools
 
 
 @pytest.fixture

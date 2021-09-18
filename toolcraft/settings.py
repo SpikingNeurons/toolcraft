@@ -5,12 +5,11 @@ todo: Formalize with a parent Settings class which will store settings in
 import pathlib
 import sys
 
+import __main__ as main
 import numpy as np
 
-import __main__ as main
 
 # noinspection PyUnresolvedReferences,PyCompatibility
-
 
 # check if debugger is used
 DEBUGGING = False

@@ -10,6 +10,7 @@ import argparse
 import os
 import pkgutil
 import re
+
 from typing import Set
 
 
@@ -56,22 +57,21 @@ def validate_complete_sphinx(path_to_botorch: str) -> None:
         for importer, modname, ispkg in pkgutil.walk_packages(
             path=[BOTORCH_LIBRARY_PATH],
             onerror=lambda x: None,
-        )
-        if modname not in EXCLUDED_MODULES
+        ) if modname not in EXCLUDED_MODULES
     }
 
     # Load all rst files (these contain the documentation for Sphinx)
     rstpath = os.path.join(path_to_botorch, SPHINX_RST_PATH)
     rsts = {
-        f.replace(".rst", "") for f in os.listdir(rstpath) if f.endswith(".rst")
+        f.replace(".rst", "")
+        for f in os.listdir(rstpath) if f.endswith(".rst")
     }
 
     # Verify that all top-level modules have a corresponding rst
     missing_rsts = modules.difference(rsts)
     if not len(missing_rsts) == 0:
         raise RuntimeError(
-            f"Not all modules have corresponding rst: {missing_rsts}",
-        )
+            f"Not all modules have corresponding rst: {missing_rsts}", )
 
     # Track all modules that are not in docs (so can print all)
     modules_not_in_docs = []
@@ -83,29 +83,24 @@ def validate_complete_sphinx(path_to_botorch: str) -> None:
 
         # Extract all non-package modules
         for _importer, modname, ispkg in pkgutil.walk_packages(
-            path=[
-                os.path.join(BOTORCH_LIBRARY_PATH, module),
-            ],  # botorch.__path__[0], module),
-            prefix="botorch." + module + ".",
-            onerror=lambda x: None,
+                path=[
+                    os.path.join(BOTORCH_LIBRARY_PATH, module),
+                ],  # botorch.__path__[0], module),
+                prefix="botorch." + module + ".",
+                onerror=lambda x: None,
         ):
-            if (
-                not ispkg
-                and ".tests" not in modname
-                and modname not in modules_in_rst
-            ):
+            if (not ispkg and ".tests" not in modname
+                    and modname not in modules_in_rst):
                 modules_not_in_docs.append(modname)
 
     if not len(modules_not_in_docs) == 0:
         raise RuntimeError(
-            f"Not all modules are documented: {modules_not_in_docs}",
-        )
+            f"Not all modules are documented: {modules_not_in_docs}", )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Validate that Sphinx documentation is complete.",
-    )
+        description="Validate that Sphinx documentation is complete.", )
     parser.add_argument(
         "-p",
         "--path",

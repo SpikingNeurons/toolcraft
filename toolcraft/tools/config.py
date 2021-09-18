@@ -20,8 +20,8 @@ import pathlib
 import toml
 import typer
 
-from . import Tool
 from .. import error as e
+from . import Tool
 
 
 class ConfigTool(Tool):

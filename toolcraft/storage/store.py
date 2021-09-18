@@ -27,15 +27,15 @@ import typing as t
 import pyarrow as pa
 import pyarrow.dataset as pds
 
-from . import Folder
-from . import ResultsFolder
 from .. import error as e
 from .. import marshalling as m
 from .. import util
-from .table import bake_expression
+from . import Folder
+from . import ResultsFolder
 from .table import FILTER_VALUE_TYPE
 from .table import FILTERS_TYPE
 from .table import Table
+from .table import bake_expression
 
 
 MODE_TYPE = t.Literal["r", "rw", "d", "e", "a", "w"]
@@ -100,30 +100,32 @@ class Mode(enum.Enum):
         # todo: if we do not write batches to disk in that case investigate
         #  if we can delete based on filters on non-pivot columns
         if self in [
-            self.write,
-            self.delete,
-            self.read_write,
-            self.append,
+                self.write,
+                self.delete,
+                self.read_write,
+                self.append,
         ]:
             return True
         elif self in [self.read, self.exists]:
             return False
         else:
-            e.code.ShouldNeverHappen(msgs=[f"Mode {self} is not yet supported"])
+            e.code.ShouldNeverHappen(
+                msgs=[f"Mode {self} is not yet supported"])
 
     @classmethod
     def mode_from_str(cls, mode: MODE_TYPE) -> "Mode":
         for _m in cls:
             if _m.value == mode:
                 return _m
-        e.code.NotAllowed(
-            msgs=[
-                f"The mode str cannot be parsed to valid mode",
-                {"value": mode, "type": type(mode)},
-                f"Possible valid str values are:",
-                [_m.value for _m in cls],
-            ],
-        )
+        e.code.NotAllowed(msgs=[
+            f"The mode str cannot be parsed to valid mode",
+            {
+                "value": mode,
+                "type": type(mode)
+            },
+            f"Possible valid str values are:",
+            [_m.value for _m in cls],
+        ], )
         raise
 
 
@@ -168,17 +170,14 @@ class OnCallReturn(t.NamedTuple):
                         filter_expression=self.filter_expression,
                     )
                 else:
-                    e.validation.NotAllowed(
-                        msgs=[
-                            f"There is nothing to read on the disk. Please "
-                            f"check if exists before performing read.",
-                        ],
-                    )
+                    e.validation.NotAllowed(msgs=[
+                        f"There is nothing to read on the disk. Please "
+                        f"check if exists before performing read.",
+                    ], )
                     raise
             else:
                 e.code.ShouldNeverHappen(
-                    msgs=[f"Cannot recognize type {type(_exists)}"],
-                )
+                    msgs=[f"Cannot recognize type {type(_exists)}"], )
                 raise
         # ------------------------------------------------------- 02
         elif self.mode is Mode.write:
@@ -188,12 +187,10 @@ class OnCallReturn(t.NamedTuple):
                 return_table=False,
             )
             if _exists:
-                e.validation.NotAllowed(
-                    msgs=[
-                        "Cannot write as data already exists on the disk.",
-                        "Please check if exists before writing",
-                    ],
-                )
+                e.validation.NotAllowed(msgs=[
+                    "Cannot write as data already exists on the disk.",
+                    "Please check if exists before writing",
+                ], )
                 raise
             else:
                 # noinspection PyTypeChecker
@@ -232,14 +229,12 @@ class OnCallReturn(t.NamedTuple):
                 # if something existed then it should have been a table so
                 # raise error ...
                 if _exists:
-                    e.code.CodingError(
-                        msgs=[
-                            f"Ideally this should be table as we used "
-                            f"return_table=True",
-                            f"If nothing exists it should be false ... check "
-                            f"the code ...",
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"Ideally this should be table as we used "
+                        f"return_table=True",
+                        f"If nothing exists it should be false ... check "
+                        f"the code ...",
+                    ], )
                 # else create table
                 else:
                     _yields = store_field.yields
@@ -262,8 +257,7 @@ class OnCallReturn(t.NamedTuple):
                         return _value
             else:
                 e.code.ShouldNeverHappen(
-                    msgs=[f"Cannot recognize type {type(_exists)}"],
-                )
+                    msgs=[f"Cannot recognize type {type(_exists)}"], )
                 raise
         # ------------------------------------------------------- 07
         else:
@@ -275,7 +269,6 @@ class StoreField:
     """
     Will be used as a decorator.
     """
-
     class LITERAL:
         mode = "mode"
         mode_options = "mode_options"
@@ -376,12 +369,10 @@ class StoreField:
         # original dec_fn
         def _wrap_fn(*args, **kwargs):
             if len(args) != 1:
-                e.code.CodingError(
-                    msgs=[
-                        f"The class methods decorated with {StoreField} do "
-                        f"not allow args ... only use kwargs ...",
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"The class methods decorated with {StoreField} do "
+                    f"not allow args ... only use kwargs ...",
+                ], )
             return self.on_call(for_hashable=args[0], **kwargs)
 
         setattr(_wrap_fn, _IS_STORE_FIELD, True)
@@ -465,7 +456,7 @@ class StoreField:
         # Make sure that it is HashableClass
         e.validation.ShouldBeInstanceOf(
             value=for_hashable,
-            value_types=(m.HashableClass,),
+            value_types=(m.HashableClass, ),
             msgs=[
                 f"We expect you to use {self.__class__} decorator on "
                 f"methods of classes that are subclasses of "
@@ -476,27 +467,23 @@ class StoreField:
         # ------------------------------------------------------- 02
         # do not allow args
         if bool(args):
-            e.code.NotAllowed(
-                msgs=[
-                    f"We do not allow you to pass args to function "
-                    f"which is decorated by {StoreField}",
-                    f"\t > Found args: {args}",
-                    f"Please check call to: ",
-                    self.dec_fn_info,
-                ],
-            )
+            e.code.NotAllowed(msgs=[
+                f"We do not allow you to pass args to function "
+                f"which is decorated by {StoreField}",
+                f"\t > Found args: {args}",
+                f"Please check call to: ",
+                self.dec_fn_info,
+            ], )
 
         # ------------------------------------------------------- 03
         # check if mandatory kwargs are supplied
         for mk in self.LITERAL.mandatory_kwarg_names:
             if mk not in kwargs.keys():
-                e.code.CodingError(
-                    msgs=[
-                        f"We expect mandatory kwarg {mk} to be supplied "
-                        f"while calling decorated function ",
-                        self.dec_fn_info,
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"We expect mandatory kwarg {mk} to be supplied "
+                    f"while calling decorated function ",
+                    self.dec_fn_info,
+                ], )
 
         # ------------------------------------------------------- 04
         # get mode ... need to fetch it earlier as it is important
@@ -513,15 +500,13 @@ class StoreField:
         # mode allows it
         if self.streamed_write:
             if not _mode.is_streaming_possible:
-                e.code.CodingError(
-                    msgs=[
-                        f"Mode `{_mode.value}` cannot be used when "
-                        f"storage field is configured for streamed write "
-                        f"...",
-                        f"Please check call to: ",
-                        self.dec_fn_info,
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"Mode `{_mode.value}` cannot be used when "
+                    f"storage field is configured for streamed write "
+                    f"...",
+                    f"Please check call to: ",
+                    self.dec_fn_info,
+                ], )
 
         # ------------------------------------------------------- 06
         # if any reserved kwarg is supplied make sure to test if it was
@@ -531,19 +516,17 @@ class StoreField:
         for rk in self.LITERAL.reserved_kwarg_names:
             if rk in kwargs.keys():
                 if rk not in self.dec_fn_args:
-                    e.code.CodingError(
-                        msgs=[
-                            f"Looks like you are supplying one of the reserved "
-                            f"kwarg i.e. `{rk}` used by StoreField mechanism.",
-                            f"Please make sure to provide it in method "
-                            f"definition even if you are not consuming it.",
-                            f"StoreField mechanism will internally consume it "
-                            f"while it is optional for you to consume it "
-                            f"within your decorated method.",
-                            f"Please check method:",
-                            self.dec_fn_info,
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"Looks like you are supplying one of the reserved "
+                        f"kwarg i.e. `{rk}` used by StoreField mechanism.",
+                        f"Please make sure to provide it in method "
+                        f"definition even if you are not consuming it.",
+                        f"StoreField mechanism will internally consume it "
+                        f"while it is optional for you to consume it "
+                        f"within your decorated method.",
+                        f"Please check method:",
+                        self.dec_fn_info,
+                    ], )
 
         # ------------------------------------------------------- 07
         # related to filters and partition_cols
@@ -592,21 +575,17 @@ class StoreField:
                 # + all pivot columns must be specified
                 if _mode is not Mode.delete:
                     if bool(_f_from_filters):
-                        e.code.NotAllowed(
-                            msgs=[
-                                f"You cannot use `filters` kwarg for mode "
-                                f"{_mode}",
-                            ],
-                        )
+                        e.code.NotAllowed(msgs=[
+                            f"You cannot use `filters` kwarg for mode "
+                            f"{_mode}",
+                        ], )
                     if len(_f_for_pivots) != len(self.partition_cols):
-                        e.code.NotAllowed(
-                            msgs=[
-                                f"For mode {_mode} all partition related "
-                                f"kwargs must be supplied",
-                                f"That is supply values for all kwargs below",
-                                self.partition_cols,
-                            ],
-                        )
+                        e.code.NotAllowed(msgs=[
+                            f"For mode {_mode} all partition related "
+                            f"kwargs must be supplied",
+                            f"That is supply values for all kwargs below",
+                            self.partition_cols,
+                        ], )
                 # Now cook expression from filters ... note that for delete
                 # mode we anyways fix columns to pivot only because of kwarg
                 # _columns_allowed
@@ -633,8 +612,7 @@ class StoreField:
         _mode_options = None  # type: t.Optional[t.Dict[str, t.Any]]
         if self.LITERAL.mode_options in kwargs.keys():
             _mode_options = kwargs[
-                self.LITERAL.mode_options
-            ]  # type: t.Dict[str, t.Any]
+                self.LITERAL.mode_options]  # type: t.Dict[str, t.Any]
 
         # ------------------------------------------------------- 09
         # get columns options if supplied
@@ -642,12 +620,10 @@ class StoreField:
         if self.LITERAL.columns in kwargs.keys():
             # check if mode allows
             if _mode.is_write_or_delete_mode:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"The `columns` kwarg cannot be used with mode "
-                        f"{_mode}",
-                    ],
-                )
+                e.code.NotAllowed(msgs=[
+                    f"The `columns` kwarg cannot be used with mode "
+                    f"{_mode}",
+                ], )
             # set var
             _columns = kwargs[self.LITERAL.columns]  # type: t.List[str]
 
@@ -691,31 +667,27 @@ class StoreField:
         # check function name and __qualname__
         _fn_qualname_split = self.dec_fn.__qualname__.split(".")
         if len(_fn_qualname_split) != 2:
-            e.code.CodingError(
-                msgs=[
-                    f"Cannot understand fn qualifier name "
-                    f"{self.dec_fn.__qualname__}",
-                    f"Was expecting format `<class_name>.<method_name>`",
-                    f"Please check: ",
-                    self.dec_fn_info,
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"Cannot understand fn qualifier name "
+                f"{self.dec_fn.__qualname__}",
+                f"Was expecting format `<class_name>.<method_name>`",
+                f"Please check: ",
+                self.dec_fn_info,
+            ], )
         # noinspection PyUnresolvedReferences
         _fn_module_name = self.dec_fn.__module__
         _fn_class_name = _fn_qualname_split[0]
         _fn_name = _fn_qualname_split[1]
         if _fn_name != self.dec_fn.__name__:
-            e.code.CodingError(
-                msgs=[
-                    f"Should be ideally same",
-                    {
-                        "_fn_name from __qualname__": _fn_name,
-                        "fn.__name__": self.dec_fn.__name__,
-                    },
-                    f"Please check: ",
-                    self.dec_fn_info,
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"Should be ideally same",
+                {
+                    "_fn_name from __qualname__": _fn_name,
+                    "fn.__name__": self.dec_fn.__name__,
+                },
+                f"Please check: ",
+                self.dec_fn_info,
+            ], )
 
         # ------------------------------------------------------- 02
         # get function kwargs defined in the method
@@ -731,15 +703,13 @@ class StoreField:
         # make sure that first arg is self and update fn_args to ignore name
         # self
         if _dec_fn_arg_names[0] != "self":
-            e.code.CodingError(
-                msgs=[
-                    f"We expect first arg of decorated function to be self "
-                    f"as it will be instance method and also we want to stick "
-                    f"to python naming conventions.",
-                    f"Please check function: ",
-                    self.dec_fn_info,
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"We expect first arg of decorated function to be self "
+                f"as it will be instance method and also we want to stick "
+                f"to python naming conventions.",
+                f"Please check function: ",
+                self.dec_fn_info,
+            ], )
         # update so as to ignore the name self
         _dec_fn_arg_names = _dec_fn_arg_names[1:]
 
@@ -747,13 +717,11 @@ class StoreField:
         # make sure that mandatory kwargs are defined in function
         for k in _mandatory_kwargs:
             if k not in _dec_fn_arg_names:
-                e.code.CodingError(
-                    msgs=[
-                        f"Make sure to define mandatory kwarg {k} in function "
-                        f"below ... ",
-                        self.dec_fn_info,
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"Make sure to define mandatory kwarg {k} in function "
+                    f"below ... ",
+                    self.dec_fn_info,
+                ], )
 
         # ------------------------------------------------------- 05
         # make sure that all kwargs specified in partition_cols are defined in
@@ -761,16 +729,14 @@ class StoreField:
         if bool(_partition_cols):
             for k in _partition_cols:
                 if k not in _dec_fn_arg_names:
-                    e.code.CodingError(
-                        msgs=[
-                            f"You specified key `{k}` as a partition column "
-                            f"while decorating method with StoreField. ",
-                            f"So please make sure to define it in method "
-                            f"definition and also make sure to consume it.",
-                            f"Please check function: ",
-                            self.dec_fn_info,
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"You specified key `{k}` as a partition column "
+                        f"while decorating method with StoreField. ",
+                        f"So please make sure to define it in method "
+                        f"definition and also make sure to consume it.",
+                        f"Please check function: ",
+                        self.dec_fn_info,
+                    ], )
 
         # ------------------------------------------------------- 06
         # check the annotations for reserved kwargs if provided in method
@@ -781,40 +747,34 @@ class StoreField:
         # ------------------------------------------------------- 06.02
         # check if return annotation correct
         if "return" not in _dec_fn_annotations.keys():
-            e.code.CodingError(
-                msgs=[
-                    f"Please annotate return type for method",
-                    self.dec_fn_info,
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"Please annotate return type for method",
+                self.dec_fn_info,
+            ], )
         else:
             if _dec_fn_annotations["return"] != pa.Table:
-                e.code.CodingError(
-                    msgs=[
-                        f"The return annotation should be {pa.Table}, "
-                        f"instead found annotation to be "
-                        f"{_dec_fn_annotations['return']} ...",
-                        f"Please check function: ",
-                        self.dec_fn_info,
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"The return annotation should be {pa.Table}, "
+                    f"instead found annotation to be "
+                    f"{_dec_fn_annotations['return']} ...",
+                    f"Please check function: ",
+                    self.dec_fn_info,
+                ], )
         # ------------------------------------------------------- 06.03
         # check annotations for reserved kwargs
         for k in _dec_fn_arg_names:
             if k in _reserved_kwargs:
                 if _res_kwarg_ann_defs[k] != _dec_fn_annotations[k]:
-                    e.code.CodingError(
-                        msgs=[
-                            f"For reserved kwarg `{k}` the supplied "
-                            f"annotation is not correct.",
-                            {
-                                "supplied": _dec_fn_annotations[k],
-                                "expected": _res_kwarg_ann_defs[k],
-                            },
-                            f"Please check function: ",
-                            self.dec_fn_info,
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"For reserved kwarg `{k}` the supplied "
+                        f"annotation is not correct.",
+                        {
+                            "supplied": _dec_fn_annotations[k],
+                            "expected": _res_kwarg_ann_defs[k],
+                        },
+                        f"Please check function: ",
+                        self.dec_fn_info,
+                    ], )
         # ------------------------------------------------------- 06.04
         # check if defaults supplied are None except for mode
         # ------------------------------------------------------- 06.04.01
@@ -828,8 +788,7 @@ class StoreField:
                 zip(
                     _dec_fn_full_arg_spec.args[::-1],
                     _dec_fn_full_arg_spec.defaults[::-1],
-                ),
-            )
+                ), )
         # ------------------------------------------------------- 06.04.02
         # if reserved kwarg specified then it should have default value None
         # except mode
@@ -841,25 +800,21 @@ class StoreField:
             if rk in _dec_fn_arg_names:
                 # if default not specified raise error
                 if rk not in _default_value_pairs.keys():
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect you to supply default value None to "
-                            f"reserved kwarg `{rk}`",
-                            f"Please check function: ",
-                            self.dec_fn_info,
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"We expect you to supply default value None to "
+                        f"reserved kwarg `{rk}`",
+                        f"Please check function: ",
+                        self.dec_fn_info,
+                    ], )
                 # else if default value specified it should be None
                 else:
                     if _default_value_pairs[rk] is not None:
-                        e.code.CodingError(
-                            msgs=[
-                                f"We expect default value to be None for "
-                                f"reserved kwarg `{rk}`",
-                                f"Please check function: ",
-                                self.dec_fn_info,
-                            ],
-                        )
+                        e.code.CodingError(msgs=[
+                            f"We expect default value to be None for "
+                            f"reserved kwarg `{rk}`",
+                            f"Please check function: ",
+                            self.dec_fn_info,
+                        ], )
 
     def validate(self):
         """
@@ -870,21 +825,17 @@ class StoreField:
         if bool(self.partition_cols):
             # check if partition cols do not have repeat keys
             if len(set(self.partition_cols)) != len(self.partition_cols):
-                e.code.CodingError(
-                    msgs=[
-                        "Please check the partition_cols, looks like you "
-                        "repeated string in the list provided ...",
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    "Please check the partition_cols, looks like you "
+                    "repeated string in the list provided ...",
+                ], )
             # check if partition column name is a reserved kwarg
             for col_name in self.partition_cols:
                 if col_name in self.LITERAL.reserved_kwarg_names:
-                    e.validation.NotAllowed(
-                        msgs=[
-                            f"You cannot use column name to be `{col_name}` as "
-                            f"it is reserved for use by storage.StoreField...",
-                        ],
-                    )
+                    e.validation.NotAllowed(msgs=[
+                        f"You cannot use column name to be `{col_name}` as "
+                        f"it is reserved for use by storage.StoreField...",
+                    ], )
 
 
 def is_store_field(_fn) -> bool:

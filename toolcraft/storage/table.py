@@ -51,12 +51,13 @@ import pyarrow as pa
 import pyarrow.dataset as pds
 import pyarrow.fs as pafs
 
-from . import file_system as our_fs
-from . import Folder
 from .. import error as e
 from .. import marshalling as m
 from .. import storage as s
 from .. import util
+from . import Folder
+from . import file_system as our_fs
+
 
 # noinspection PyUnresolvedReferences
 if False:
@@ -67,28 +68,15 @@ _PARTITIONING = "hive"
 # _FILE_FORMAT = pds.CsvFileFormat()
 _FILE_FORMAT = pds.IpcFileFormat()
 
-
 # see documentation for filters in pyarrow
 # https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetDataset.html
 FILTER_VALUE_TYPE = t.Union[int, float, str, set, list, tuple]
-FILTER_OPS_TYPE = t.Literal[
-    "=",
-    "==",
-    "<",
-    ">",
-    "<=",
-    ">=",
-    "!=",
-    "&",
-    "|",
-    "in",
-    "not in",
-]
+FILTER_OPS_TYPE = t.Literal["=", "==", "<", ">", "<=", ">=", "!=", "&", "|",
+                            "in", "not in", ]
 FILTER_TYPE = t.Tuple[str, FILTER_OPS_TYPE, FILTER_VALUE_TYPE]
 # Predicates are expressed in disjunctive normal form (DNF),
 # like [[('x', '=', 0), ...], ...]
 FILTERS_TYPE = t.List[t.Union[FILTER_TYPE, t.List[FILTER_TYPE]]]
-
 
 # todo: check pds.Expression for more operations that are supported
 
@@ -158,12 +146,10 @@ def bake_expression(
         if isinstance(_element, list):
             # todo: remove this limitation when we understand DNF queries
             #   that is add support for filters that are nested lists
-            e.code.NotSupported(
-                msgs=[
-                    f"We will support nested filters list once we figure out "
-                    f"how DNF queries work ...",
-                ],
-            )
+            e.code.NotSupported(msgs=[
+                f"We will support nested filters list once we figure out "
+                f"how DNF queries work ...",
+            ], )
             for _e in _element:
                 _r = bake_expression(_e, _err_msg, _columns_allowed, _schema)
                 if _expression is None:
@@ -179,18 +165,16 @@ def bake_expression(
             # basic validations
             # check if three elements
             if len(_element) != 3:
-                e.validation.NotAllowed(
-                    msgs=[
-                        _err_msg,
-                        f"We expect filters that are tuples and "
-                        f"made of three elements",
-                        f"Check unsupported tuple {_element}",
-                    ],
-                )
+                e.validation.NotAllowed(msgs=[
+                    _err_msg,
+                    f"We expect filters that are tuples and "
+                    f"made of three elements",
+                    f"Check unsupported tuple {_element}",
+                ], )
             # validate first element
             e.validation.ShouldBeInstanceOf(
                 value=_element[0],
-                value_types=(str,),
+                value_types=(str, ),
                 msgs=[
                     _err_msg,
                     f"The first element of every filter tuple should be a str",
@@ -244,15 +228,13 @@ def bake_expression(
         # -----------------------------------------------02.03
         # else not supported
         else:
-            e.code.ShouldNeverHappen(
-                msgs=[
-                    _err_msg,
-                    f"We only support filters that are tuples "
-                    f"with three elements or the list of those "
-                    f"three element tuples",
-                    f"Found type {type(_element)}",
-                ],
-            )
+            e.code.ShouldNeverHappen(msgs=[
+                _err_msg,
+                f"We only support filters that are tuples "
+                f"with three elements or the list of those "
+                f"three element tuples",
+                f"Found type {type(_element)}",
+            ], )
 
     # ---------------------------------------------------03
     # return
@@ -369,13 +351,11 @@ class TableInternal(m.Internal):
                 _partition_cols = []
             for _col in _partition_cols:
                 if _col not in _tables_cols:
-                    e.code.CodingError(
-                        msgs=[
-                            f"While returning pa.Table from the decorated "
-                            f"method you missed to add important partition "
-                            f"column `{_col}`",
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"While returning pa.Table from the decorated "
+                        f"method you missed to add important partition "
+                        f"column `{_col}`",
+                    ], )
 
             # if table_schema none estimate from first table and write it
             # back to config
@@ -384,31 +364,27 @@ class TableInternal(m.Internal):
             # if table_schema available then validate
             else:
                 if _schema_in_config != table.schema:
-                    e.code.CodingError(
-                        msgs=[
-                            f"The yielded/returned table schema is "
-                            f"not valid",
-                            {
-                                "expected": _schema_in_config,
-                                "found": table.schema,
-                            },
-                        ],
-                    )
+                    e.code.CodingError(msgs=[
+                        f"The yielded/returned table schema is "
+                        f"not valid",
+                        {
+                            "expected": _schema_in_config,
+                            "found": table.schema,
+                        },
+                    ], )
         # if table is None and this method is called we expect the schema to
         # be available in config file ... check for config file and raise
         # error if table schema not available
         else:
             # if table schema in config is none raise error
             if _schema_in_config is None:
-                e.code.CodingError(
-                    msgs=[
-                        f"We cannot update internals as you have not "
-                        f"supplied table nor there is schema definition "
-                        f"available in config which should be either "
-                        f"supplied by user via StoreField decorator or "
-                        f"inferred from table written on the disk.",
-                    ],
-                )
+                e.code.CodingError(msgs=[
+                    f"We cannot update internals as you have not "
+                    f"supplied table nor there is schema definition "
+                    f"available in config which should be either "
+                    f"supplied by user via StoreField decorator or "
+                    f"inferred from table written on the disk.",
+                ], )
 
         # update internal for faster access later
         self.partitioning = _c.get_partitioning()
@@ -424,21 +400,18 @@ class TableConfig(s.Config):
 
     def get_partitioning(self) -> t.Optional[pds.Partitioning]:
         if self.schema is None:
-            e.code.CodingError(
-                msgs=[
-                    f"Ideally by now this should be set by now if not "
-                    f"available",
-                    f"That is possible on first write where table schema not "
-                    f"provided it is estimated while writing and stored in "
-                    f"config file",
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"Ideally by now this should be set by now if not "
+                f"available",
+                f"That is possible on first write where table schema not "
+                f"provided it is estimated while writing and stored in "
+                f"config file",
+            ], )
         if self.partition_cols is None:
             return None
         # noinspection PyUnresolvedReferences
         return pds.partitioning(
-            self.schema.empty_table().select(self.partition_cols).schema,
-        )
+            self.schema.empty_table().select(self.partition_cols).schema, )
 
 
 # noinspection PyDataclass
@@ -508,11 +481,10 @@ class Table(Folder):
     def file_system(
         self,
     ) -> t.Union[
-        pafs.FileSystem,
-        # todo: eventually this needs to be migrated tp `pafs.FileSystem` as
-        #   `pa.filesystem.FileSystem` will be deprecated by pyarrow
-        pa.filesystem.FileSystem,
-    ]:
+            pafs.FileSystem,
+            # todo: eventually this needs to be migrated tp `pafs.FileSystem` as
+            #   `pa.filesystem.FileSystem` will be deprecated by pyarrow
+            pa.filesystem.FileSystem, ]:
         # todo: currently only local file system .... we need to plan other
         #  file systems later ...
         # todo: for local we are going with singleton pattern
@@ -525,14 +497,12 @@ class Table(Folder):
         # make sure that for_hashable is str as in super class it
         # can be even HashableClass and that cannot be tolerated here
         if not isinstance(self.for_hashable, str):
-            e.code.NotAllowed(
-                msgs=[
-                    f"We only allow for_hashable to be a str as this is "
-                    f"Table.",
-                    f"Most likely for_hashable is name of method on which "
-                    f"StoreField decorator was used.",
-                ],
-            )
+            e.code.NotAllowed(msgs=[
+                f"We only allow for_hashable to be a str as this is "
+                f"Table.",
+                f"Most likely for_hashable is name of method on which "
+                f"StoreField decorator was used.",
+            ], )
 
     def init(self):
         # call super
@@ -654,13 +624,11 @@ class Table(Folder):
         # todo: add support for filters that are nested lists
         for f in filters:
             if isinstance(f, list):
-                e.code.NotAllowed(
-                    msgs=[
-                        f"For delete mode we support simple filters that "
-                        f"operate on partition columns ... nested "
-                        f"filters is not yet supported ...",
-                    ],
-                )
+                e.code.NotAllowed(msgs=[
+                    f"For delete mode we support simple filters that "
+                    f"operate on partition columns ... nested "
+                    f"filters is not yet supported ...",
+                ], )
         # some vars
         _partition_cols = self.internal.partition_cols
 
@@ -685,8 +653,7 @@ class Table(Folder):
             # the path must be a dir
             if not _path.is_dir():
                 e.code.CodingError(
-                    msgs=[f"We were expecting path {_path} to be a dir ..."],
-                )
+                    msgs=[f"We were expecting path {_path} to be a dir ..."], )
 
             # --------------------------------------------------04.03
             # expect partition column
@@ -751,14 +718,12 @@ class Table(Folder):
                         try:
                             _del &= _op(_val, _val1)
                         except TypeError:
-                            e.code.CodingError(
-                                msgs=[
-                                    f"Check supplied filters",
-                                    f"Operation {_op} cannot be applied on "
-                                    f"values {(_val, _val1)} with type "
-                                    f"{(type(_val), type(_val1))}",
-                                ],
-                            )
+                            e.code.CodingError(msgs=[
+                                f"Check supplied filters",
+                                f"Operation {_op} cannot be applied on "
+                                f"values {(_val, _val1)} with type "
+                                f"{(type(_val), type(_val1))}",
+                            ], )
                         # quick break
                         if not _del:
                             break
@@ -823,16 +788,14 @@ class Table(Folder):
 
         # extra check
         if len(_table) == 0:
-            e.code.ShouldNeverHappen(
-                msgs=[
-                    "The exists check before read call should handled it.",
-                    "Found a empty table while reading",
-                    f"Please do not use `.` or `_` at start of any folder in "
-                    f"the path as the pyarrow does not raise error but reads "
-                    f"empty table.",
-                    f"Check path {self.path}",
-                ],
-            )
+            e.code.ShouldNeverHappen(msgs=[
+                "The exists check before read call should handled it.",
+                "Found a empty table while reading",
+                f"Please do not use `.` or `_` at start of any folder in "
+                f"the path as the pyarrow does not raise error but reads "
+                f"empty table.",
+                f"Check path {self.path}",
+            ], )
 
         # return
         return _table
@@ -848,20 +811,16 @@ class Table(Folder):
         # check if yields value should be generator
         if yields:
             if not _is_generator_type:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Are you using return ?? ... ",
-                        f"We expect you to yield",
-                    ],
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"Are you using return ?? ... ",
+                    f"We expect you to yield",
+                ], )
         else:
             if _is_generator_type:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Are you using yield ?? ... ",
-                        f"We expect you to return",
-                    ],
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"Are you using yield ?? ... ",
+                    f"We expect you to return",
+                ], )
 
         # check if partition columns exist in table that is to be
         # written to disk
@@ -892,12 +851,10 @@ class Table(Folder):
 
         # if not pa.Table then raise error
         if not isinstance(_table, pa.Table):
-            e.code.CodingError(
-                msgs=[
-                    f"We expect the decorated method to return {pa.Table} "
-                    f"but instead found return value of type {type(_table)}",
-                ],
-            )
+            e.code.CodingError(msgs=[
+                f"We expect the decorated method to return {pa.Table} "
+                f"but instead found return value of type {type(_table)}",
+            ], )
 
         # get schema if in config else get schema from table and write
         # back to config

@@ -4,8 +4,8 @@ import typing as t
 
 import numpy as np
 
-from . import CustomException
 from ..logger import MESSAGES_TYPE
+from . import CustomException
 
 
 class ShouldNeverHappen(CustomException):
@@ -39,8 +39,8 @@ class RaiseUnhandledException(CustomException):
 class NotImplementedCorrectly(CustomException):
     def __init__(self, *, msgs: MESSAGES_TYPE):
         super().__init__(
-            msgs=["The functionality is not implemented correctly !!!", *msgs],
-        )
+            msgs=["The functionality is not implemented correctly !!!",
+                  *msgs], )
 
 
 class NotSupported(CustomException):
@@ -57,13 +57,11 @@ class AssertError(CustomException):
         if value1 == value2:
             return
 
-        super().__init__(
-            msgs=[
-                *msgs,
-                f"Value {value1} != {value2}",
-                f"Value types are {type(value1)}, {type(value2)}",
-            ],
-        )
+        super().__init__(msgs=[
+            *msgs,
+            f"Value {value1} != {value2}",
+            f"Value types are {type(value1)}, {type(value2)}",
+        ], )
 
 
 class ExitGracefully(CustomException):

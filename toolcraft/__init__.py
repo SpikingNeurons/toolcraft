@@ -24,12 +24,14 @@ todo: Also refer
 """
 from . import rules
 
+
 __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 
 # Note that this is done as code cannot know the version number and it is the job of pyproject.toml
 try:
-    from importlib.metadata import PackageNotFoundError, version
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version
 
     __version__ = version(__name__)
 except PackageNotFoundError as pnf:
@@ -37,12 +39,10 @@ except PackageNotFoundError as pnf:
 except ModuleNotFoundError as mnf:
     __version__ = "cannot estimate version"
 
-
 # todo: let us see if we can get the pyproject.toml populated here
 #  may be just overwrite this file by replacing the empty dict with filled up dict as and when
 #  bump2version is executed
 PYPROJECT_TOML = {}
-
 
 # todo: we will move to tests module and will improve design
 

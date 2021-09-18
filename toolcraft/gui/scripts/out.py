@@ -6,6 +6,7 @@ import dearpygui.dearpygui as dpg
 import numpy as np
 import Widget
 
+
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
 

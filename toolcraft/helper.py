@@ -11,6 +11,7 @@ from . import logger
 from . import storage as s
 from . import util
 
+
 _LOGGER = logger.get_logger()
 
 
@@ -38,7 +39,8 @@ class PythonDownloader(s.DownloadFileGroup):
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
-            f"{self.name}.exe": f"https://www.python.org/ftp/python/"
+            f"{self.name}.exe":
+            f"https://www.python.org/ftp/python/"
             f"{self.version}/{self.name}.exe",
         }
 
@@ -50,8 +52,8 @@ class PythonDownloader(s.DownloadFileGroup):
             return _zip_path
 
         with logger.Spinner(
-            title=f"Packaging {self.name}",
-            logger=_LOGGER,
+                title=f"Packaging {self.name}",
+                logger=_LOGGER,
         ) as _s:
 
             # get all related debug files
@@ -89,7 +91,8 @@ def pip_downloader(
     pip_exe = pip_exe.resolve().as_posix()
 
     # create dir
-    store_dir = pathlib.Path.home() / "Downloads" / ".pip_downloads" / store_for
+    store_dir = pathlib.Path.home(
+    ) / "Downloads" / ".pip_downloads" / store_for
     store_dir.mkdir(parents=True, exist_ok=True)
     zip_path = store_dir.parent / f"{store_for}.zip"
 
@@ -115,18 +118,15 @@ def pip_downloader(
     for package_name, package_version in packages:
 
         # all commands
-        _pip_command = (
-            f"{pip_exe} download " f"{package_name}=={package_version}"
-        )
+        _pip_command = (f"{pip_exe} download "
+                        f"{package_name}=={package_version}")
         _dest_command = f"--dest {store_dir.resolve().as_posix()}"
 
         # coalesce command
-        _command = " ".join(
-            [
-                _pip_command,
-                _dest_command,
-            ],
-        )
+        _command = " ".join([
+            _pip_command,
+            _dest_command,
+        ], )
 
         # download
         os.system(_command)
@@ -144,25 +144,19 @@ def pip_downloader(
     # create installation bats
     install_from_local_dir_script = store_dir / "install_from_local_dir.bat"
     install_from_local_dir_script.write_text(
-        "\n".join([f"{_} -f ." for _ in pip_installs]),
-    )
+        "\n".join([f"{_} -f ." for _ in pip_installs]), )
 
     # if behind firewall setting are provided create bat script for it
     if behind_firewall_settings is not None:
-        install_from_internal_repo_script = (
-            store_dir / "install_from_internal_repo.bat"
-        )
+        install_from_internal_repo_script = (store_dir /
+                                             "install_from_internal_repo.bat")
         index_url: str = behind_firewall_settings["index_url"]
         trusted_host: str = behind_firewall_settings["trusted_host"]
         install_from_internal_repo_script.write_text(
-            "\n".join(
-                [
-                    f'pip config set global.index-url "{index_url}"',
-                    f'pip config set global.trusted-host "{trusted_host}"',
-                ]
-                + pip_installs,
-            ),
-        )
+            "\n".join([
+                f'pip config set global.index-url "{index_url}"',
+                f'pip config set global.trusted-host "{trusted_host}"',
+            ] + pip_installs, ), )
 
     # copy python pip scripts
     python_pip_scripts_dir = pathlib.Path(__file__).parent / "scripts"
