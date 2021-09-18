@@ -127,12 +127,12 @@ line_length = 88
 # you can skip files as below
 #skip_glob = docs/conf.py
 sections=[
-    "NUMPY",
+    "LOCALFOLDER",
+    "PANDAS",
     "FUTURE",
     "STDLIB",
     "THIRDPARTY",
     "FIRSTPARTY",
-    "LOCALFOLDER"
 ]
 
 [tool.yapf]
