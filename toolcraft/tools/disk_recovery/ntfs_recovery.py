@@ -28,9 +28,9 @@ def readat(f, n, s):
 
 
 def parseFilename(s):
-    (ref, ) = struct.unpack("<Q", s[:8])
+    (ref,) = struct.unpack("<Q", s[:8])
     flen = ord(s[64:65])
-    fn = s[66:66 + flen * 2].decode("UTF-16-LE")
+    fn = s[66 : 66 + flen * 2].decode("UTF-16-LE")
     return ref, fn
 
 
@@ -77,7 +77,7 @@ def parse_attr(f, bpc, chunk):
     type, size, nonres, namelen, nameoff = struct.unpack("<iiBBH", chunk[:12])
 
     if namelen:
-        name = chunk[nameoff:nameoff + namelen * 2].decode("UTF-16-LE")
+        name = chunk[nameoff : nameoff + namelen * 2].decode("UTF-16-LE")
     else:
         name = None
 
@@ -96,7 +96,7 @@ def parse_attr(f, bpc, chunk):
         runlist = []
         curoff = 0
         while rlpos < len(chunk):
-            header = ord(chunk[rlpos:rlpos + 1])
+            header = ord(chunk[rlpos : rlpos + 1])
             if not header:
                 break
             rlpos += 1
@@ -104,14 +104,14 @@ def parse_attr(f, bpc, chunk):
             offlen = header >> 4
             if rlpos + lenlen + offlen > len(chunk):
                 print(
-                    "Warning: invalid runlist header %02x (runlist %s)" %
-                    (header, codecs.encode(chunk[rloff:], "hex")),
+                    "Warning: invalid runlist header %02x (runlist %s)"
+                    % (header, codecs.encode(chunk[rloff:], "hex")),
                     file=sys.stderr,
                 )
                 break
-            thislen = parse_varint(chunk[rlpos:rlpos + lenlen])
+            thislen = parse_varint(chunk[rlpos : rlpos + lenlen])
             rlpos += lenlen
-            thisoff = parse_varint(chunk[rlpos:rlpos + offlen])
+            thisoff = parse_varint(chunk[rlpos : rlpos + offlen])
             if thisoff and (thisoff & (1 << (8 * offlen - 1))):
                 thisoff -= 1 << (8 * offlen)
             rlpos += offlen
@@ -123,7 +123,7 @@ def parse_attr(f, bpc, chunk):
 
     else:
         attrlen, attroff = struct.unpack("<IH", chunk[16:22])
-        data = chunk[attroff:attroff + attrlen]
+        data = chunk[attroff : attroff + attrlen]
 
         def attrdata():
             return sparser(data)
@@ -137,18 +137,18 @@ def usa_fixup(chunk, chunkoff, usa_ofs, usa_count):
         return chunk
 
     upos = usa_ofs
-    usa_num = chunk[upos:upos + 2]
+    usa_num = chunk[upos : upos + 2]
     upos += 2
     for i in range(len(chunk) // 512):
         cpos = i * 512 + 510
-        if chunk[cpos:cpos + 2] != usa_num:
+        if chunk[cpos : cpos + 2] != usa_num:
             print(
-                "Warning: bad USA data at MBR offset %d - disk corrupt?" %
-                (chunkoff + cpos),
+                "Warning: bad USA data at MBR offset %d - disk corrupt?"
+                % (chunkoff + cpos),
                 file=sys.stderr,
             )
         else:
-            chunk[cpos:cpos + 2] = chunk[upos:upos + 2]
+            chunk[cpos : cpos + 2] = chunk[upos : upos + 2]
         upos += 2
     return chunk
 
@@ -163,8 +163,7 @@ def parse_file(f, chunkoff, bpc, chunk):
         chunk = usa_fixup(chunk, chunkoff, usa_ofs, usa_count)
     except Exception as e:
         print(
-            "File at offset %d: failed to perform USA fixup: %s" %
-            (chunkoff, e),
+            "File at offset %d: failed to perform USA fixup: %s" % (chunkoff, e),
             file=sys.stderr,
         )
 
@@ -175,18 +174,18 @@ def parse_file(f, chunkoff, bpc, chunk):
             break
         type, size, nonres, namelen, nameoff = struct.unpack(
             "<iIBBH",
-            chunk[pos:pos + 12],
+            chunk[pos : pos + 12],
         )
         if type == -1:
             break
 
         try:
-            sname, name, data = parse_attr(f, bpc, chunk[pos:pos + size])
+            sname, name, data = parse_attr(f, bpc, chunk[pos : pos + size])
             attrs[sname][name] = data
         except Exception as e:
             print(
-                "File at offset %d: failed to parse attr type=%d pos=%d: %s" %
-                (chunkoff, type, pos, e),
+                "File at offset %d: failed to parse attr type=%d pos=%d: %s"
+                % (chunkoff, type, pos, e),
                 file=sys.stderr,
             )
 
@@ -201,7 +200,7 @@ def parse_mft(f, bpc, mft):
             sys.stderr.write("\rParsing MFT: %d/%d" % (i, len(mft) // 1024))
             sys.stderr.flush()
 
-        chunk = mft[i * 1024:(i + 1) * 1024]
+        chunk = mft[i * 1024 : (i + 1) * 1024]
         if chunk[:4] == b"FILE":
             out.append(parse_file(f, i * 1024, bpc, chunk))
         else:
@@ -222,8 +221,8 @@ def read_mft(f, bpc, mft_cluster, clusters_per_mft):
         mft = newmft
     except Exception as e:
         print(
-            "WARNING: Failed to load $MFT (%s), proceeding with partial MFT." %
-            e,
+            "WARNING: Failed to load $MFT (%s), proceeding with partial MFT."
+            % e,
             file=sys.stderr,
         )
 
@@ -275,7 +274,8 @@ def parse_args(argv):
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Recover files from an NTFS volume", )
+        description="Recover files from an NTFS volume",
+    )
     parser.add_argument(
         "--sector-size",
         type=int,

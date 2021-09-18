@@ -109,13 +109,15 @@ class StateFile(m.YamlRepr, abc.ABC):
         **kwargs,
     ) -> "StateFile":
         e.code.CodingError(
-            msgs=[f"For state files we refrain using as_dict and from_dict"], )
+            msgs=[f"For state files we refrain using as_dict and from_dict"],
+        )
         raise
 
     # noinspection PyTypeChecker
     def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         e.code.CodingError(
-            msgs=[f"For state files we refrain using as_dict and from_dict"], )
+            msgs=[f"For state files we refrain using as_dict and from_dict"],
+        )
         raise
 
 
@@ -126,6 +128,7 @@ class Info(StateFile):
     + When we serialize it will save it as HashableClass and hence when loaded
       from disk it will still be HashableClass and not the Info class
     """
+
     @property
     def suffix(self) -> str:
         return Suffix.info
@@ -142,13 +145,15 @@ class Info(StateFile):
         if self.path.exists():
             _yaml_on_disk = self.path.read_text()
             if _yaml_on_disk != _yaml:
-                e.code.CodingError(msgs=[
-                    "Info file mismatch ... should never happen",
-                    "State on disk: ",
-                    [_yaml_on_disk],
-                    "State in memory: ",
-                    [_yaml],
-                ], )
+                e.code.CodingError(
+                    msgs=[
+                        "Info file mismatch ... should never happen",
+                        "State on disk: ",
+                        [_yaml_on_disk],
+                        "State in memory: ",
+                        [_yaml],
+                    ],
+                )
         else:
             # handle info file and make it read only
             # ... write hashable info
@@ -158,17 +163,21 @@ class Info(StateFile):
 
     def check_if_backup_matches(self):
         if not self.backup_path.exists():
-            e.code.CodingError(msgs=[
-                f"Looks like you have forgot to backup the state file ...",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"Looks like you have forgot to backup the state file ...",
+                ],
+            )
 
         _self_yaml = self.hashable.yaml()
         _backup_yaml = self.backup_path.read_text()
         if self.hashable.yaml() != self.backup_path.read_text():
-            e.code.CodingError(msgs=[
-                f"We expect Info state file to be exactly same",
-                dict(_self_yaml=_self_yaml, _backup_yaml=_backup_yaml),
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"We expect Info state file to be exactly same",
+                    dict(_self_yaml=_self_yaml, _backup_yaml=_backup_yaml),
+                ],
+            )
 
     def reset(self):
         """
@@ -197,6 +206,7 @@ class Config(StateFile):
         LOCK_ACCESS_FLAG
         BACKUP_YAML_STR_KEY
     """
+
     class LITERAL(StateFile.LITERAL):
         config_updated_on_list_limit = 10
         accessed_on_list_limit = 10
@@ -208,10 +218,12 @@ class Config(StateFile):
     created_on: datetime.datetime = None
     # time when config file was updated ... i.e. when access happened etc
     config_updated_on: t.List[datetime.datetime] = dataclasses.field(
-        default_factory=list, )
+        default_factory=list,
+    )
     # will be updated when File or Folder is accessed
     accessed_on: t.List[datetime.datetime] = dataclasses.field(
-        default_factory=list, )
+        default_factory=list,
+    )
 
     @property
     @util.CacheResult
@@ -227,7 +239,8 @@ class Config(StateFile):
     def dataclass_field_names(self) -> t.List[str]:
         # we do not want to use this values to be saved in serialized state
         return [
-            f_name for f_name in super().dataclass_field_names
+            f_name
+            for f_name in super().dataclass_field_names
             if f_name not in ["hashable", "path_prefix"]
         ]
 
@@ -256,8 +269,7 @@ class Config(StateFile):
         # if path exists load data dict from it
         # that is sync with contents on disk
         if self.path.exists():
-            _dict_from_dick = m.YamlLoader.load(cls=dict,
-                                                file_or_text=self.path)
+            _dict_from_dick = m.YamlLoader.load(cls=dict, file_or_text=self.path)
             # update internal dict from HashableDict loaded from disk
             for _k, _v in _dict_from_dick.items():
                 # this will take care of conversion of list/dict into
@@ -319,16 +331,18 @@ class Config(StateFile):
         if self.path.exists():
             _disk_state = self.path.read_text()
             if _current_state == _disk_state:
-                e.code.CodingError(msgs=[
-                    f"We expect the state on disk to be different to "
-                    f"internal state for config ...",
-                    {
-                        "_current_state": _current_state,
-                        "_disk_state": _disk_state,
-                    },
-                    f"This looks like unexpected sync as nothing has "
-                    f"changed in config",
-                ], )
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect the state on disk to be different to "
+                        f"internal state for config ...",
+                        {
+                            "_current_state": _current_state,
+                            "_disk_state": _disk_state,
+                        },
+                        f"This looks like unexpected sync as nothing has "
+                        f"changed in config",
+                    ],
+                )
 
         # -------------------------------------------------- 03
         # write to disk
@@ -351,12 +365,14 @@ class Config(StateFile):
             if v == dataclasses.MISSING:
                 v = f.default_factory()
             if v == dataclasses.MISSING:
-                e.code.CodingError(msgs=[
-                    f"Field {f_name} does not have any default value to "
-                    f"extract",
-                    f"We assume it is non mandatory field and hence we "
-                    f"expect a default to be provided",
-                ], )
+                e.code.CodingError(
+                    msgs=[
+                        f"Field {f_name} does not have any default value to "
+                        f"extract",
+                        f"We assume it is non mandatory field and hence we "
+                        f"expect a default to be provided",
+                    ],
+                )
             setattr(self, f_name, v)
 
         # set back to sync so that any further updates can be synced
@@ -366,10 +382,12 @@ class Config(StateFile):
     def append_last_accessed_on(self):
         # this can never happen
         if len(self.accessed_on) > self.LITERAL.accessed_on_list_limit:
-            e.code.CodingError(msgs=[
-                f"This should never happens ... did you try to append "
-                f"last_accessed_on list multiple times",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"This should never happens ... did you try to append "
+                    f"last_accessed_on list multiple times",
+                ],
+            )
         # limit the list
         if len(self.accessed_on) == self.LITERAL.accessed_on_list_limit:
             self.accessed_on = self.accessed_on[1:]
@@ -379,21 +397,26 @@ class Config(StateFile):
     def check_if_backup_matches(self):
         # noinspection DuplicatedCode
         if not self.backup_path.exists():
-            e.code.CodingError(msgs=[
-                f"Looks like you have forgot to backup the state file ...",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"Looks like you have forgot to backup the state file ...",
+                ],
+            )
 
         # get the state as dict
         _self_yaml_dict = self.as_dict()
         _backup_yaml_dict = self.from_yaml(
-            self.backup_path.read_text(), ).as_dict()
+            self.backup_path.read_text(),
+        ).as_dict()
 
         # match lengths
         if len(_self_yaml_dict) != len(_backup_yaml_dict):
-            e.code.CodingError(msgs=[
-                f"The config does not have same number of keys as that "
-                f"in backup",
-            ], )
+            e.code.CodingError(
+                msgs=[
+                    f"The config does not have same number of keys as that "
+                    f"in backup",
+                ],
+            )
 
         # keys that must differ
         _keys_that_must_differ = ["created_on"]
@@ -406,18 +429,22 @@ class Config(StateFile):
             _matches = _self_yaml_dict[k] == _backup_yaml_dict[k]
             if k in _keys_that_must_differ:
                 if _matches:
-                    e.code.CodingError(msgs=[
-                        f"We expect value for key `{k}` to differ in "
-                        f"backup",
-                        f"Found value: {_backup_yaml_dict[k]}",
-                    ], )
+                    e.code.CodingError(
+                        msgs=[
+                            f"We expect value for key `{k}` to differ in "
+                            f"backup",
+                            f"Found value: {_backup_yaml_dict[k]}",
+                        ],
+                    )
             if k in _keys_that_must_not_differ:
                 if not _matches:
-                    e.code.CodingError(msgs=[
-                        f"We expect value for key `{k}` to not differ in "
-                        f"backup",
-                        dict(
-                            _self=_self_yaml_dict[k],
-                            _backup=_backup_yaml_dict[k],
-                        ),
-                    ], )
+                    e.code.CodingError(
+                        msgs=[
+                            f"We expect value for key `{k}` to not differ in "
+                            f"backup",
+                            dict(
+                                _self=_self_yaml_dict[k],
+                                _backup=_backup_yaml_dict[k],
+                            ),
+                        ],
+                    )

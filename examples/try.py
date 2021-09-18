@@ -5,7 +5,6 @@ import typing as t
 
 import numpy as np
 import pyarrow as pa
-
 from dearpygui import core as dpg
 
 from toolcraft import gui

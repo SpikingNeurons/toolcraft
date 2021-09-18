@@ -85,7 +85,8 @@ class TaskRunnerPool:
                 task_queue=self.task_queue,
                 result_queue=self.result_queue,
                 task_runner=_tr,
-            ) for _tr in self.task_runners
+            )
+            for _tr in self.task_runners
         ]
 
     def __init__(

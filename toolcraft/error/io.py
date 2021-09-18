@@ -1,8 +1,8 @@
 import pathlib
 import typing as t
 
-from ..logger import MESSAGES_TYPE
 from . import CustomException
+from ..logger import MESSAGES_TYPE
 
 
 class FileMustBeOnDiskOrNetwork(CustomException):
@@ -63,12 +63,14 @@ class FolderMustNotBeOnDiskOrNetwork(CustomException):
 class LongPath(CustomException):
     def __init__(self, *, path: pathlib.Path, msgs: MESSAGES_TYPE):
         if not path.is_absolute():
-            super().__init__(msgs=[
-                *msgs,
-                f"The path provided is relative please provide absolute "
-                f"path.",
-                f"Supplied path {path}",
-            ], )
+            super().__init__(
+                msgs=[
+                    *msgs,
+                    f"The path provided is relative please provide absolute "
+                    f"path.",
+                    f"Supplied path {path}",
+                ],
+            )
 
         _path_len = len(path.as_posix())
 
@@ -77,12 +79,14 @@ class LongPath(CustomException):
         if _path_len < 260 - 60:
             return
 
-        super().__init__(msgs=[
-            *msgs,
-            f"Length of the path is too long {_path_len} > 260",
-            f"Try to not use deep nesting structures and keep short "
-            f"folder names.",
-            f"Supplied path {path}",
-            f"If possible do not keep project working dir is nested "
-            f"directories.",
-        ], )
+        super().__init__(
+            msgs=[
+                *msgs,
+                f"Length of the path is too long {_path_len} > 260",
+                f"Try to not use deep nesting structures and keep short "
+                f"folder names.",
+                f"Supplied path {path}",
+                f"If possible do not keep project working dir is nested "
+                f"directories.",
+            ],
+        )

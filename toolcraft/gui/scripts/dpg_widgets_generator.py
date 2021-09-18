@@ -32,16 +32,20 @@ def gen_widget(_method, _widget_name, _color_fields):
                 _main_doc.append(f"\t{_s}")
 
     # header
-    _lines = ([
-        "",
-        "",
-        "@dataclasses.dataclass(frozen=True)",
-        f"class {_widget_name}(Widget):",
-        '\t"""',
-        "\tRefer:",
-        f"\t>>> dpg.{_method.__name__}",
-        "",
-    ] + _main_doc + ['\t"""', ""])
+    _lines = (
+        [
+            "",
+            "",
+            "@dataclasses.dataclass(frozen=True)",
+            f"class {_widget_name}(Widget):",
+            '\t"""',
+            "\tRefer:",
+            f"\t>>> dpg.{_method.__name__}",
+            "",
+        ]
+        + _main_doc
+        + ['\t"""', ""]
+    )
 
     # make fields
     _callback_params = []
@@ -50,9 +54,9 @@ def gen_widget(_method, _widget_name, _color_fields):
     for _param in _signature.parameters.values():
         _param_name = _param.name
         if _param_name in [
-                "id",
-                "parent",
-                "before",
+            "id",
+            "parent",
+            "before",
         ]:
             continue
         if _widget_name in ["XAxis", "YAxis"]:
@@ -62,9 +66,12 @@ def gen_widget(_method, _widget_name, _color_fields):
                     f"{'dpg.mvXAxis' if _widget_name == 'XAxis' else 'dpg.mvYAxis'},",
                 )
                 continue
-        _param_type = (f"{_param.annotation}".replace("typing", "t").replace(
-            "<class '", "").replace("'>", "").replace("t.Callable",
-                                                      "Callback"))
+        _param_type = (
+            f"{_param.annotation}".replace("typing", "t")
+            .replace("<class '", "")
+            .replace("'>", "")
+            .replace("t.Callable", "Callback")
+        )
         _all_params_to_consider.append(_param_name)
         if _param_type.find("Callback") != -1:
             _callback_params.append(_param_name)
@@ -84,8 +91,12 @@ def gen_widget(_method, _widget_name, _color_fields):
         _parm_str = f"\t{_param_name}: {_param_type}"
         # noinspection PyUnresolvedReferences,PyProtectedMember
         if _param_value != inspect._empty:
-            if (_param_value in ["", "$$DPG_PAYLOAD"]
-                    or str(_param_value, ).startswith("%")):
+            if (
+                _param_value in ["", "$$DPG_PAYLOAD"]
+                or str(
+                    _param_value,
+                ).startswith("%")
+            ):
                 _parm_str += f" = '{_param_value}'"
             elif isinstance(_param_value, list):
                 _parm_str += f" = dataclasses.field(default_factory=list)"
@@ -109,9 +120,11 @@ def gen_widget(_method, _widget_name, _color_fields):
     for _param in _all_params_to_consider:
         _assign_str = f"\t\t\t{_param}=self.{_param},"
         if _param in ["source", "policy"]:
-            _assign_str = (f"\t\t\t"
-                           f"{_param}=0 if self.{_param} is None else self."
-                           f"{_param}.dpg_id,")
+            _assign_str = (
+                f"\t\t\t"
+                f"{_param}=0 if self.{_param} is None else self."
+                f"{_param}.dpg_id,"
+            )
         if _param in _color_fields.keys():
             _assign_str = f"\t\t\t{_param}=self.{_param}.dpg_value,"
         if _param in _callback_params:
@@ -234,9 +247,7 @@ from .. import Widget, Callback, Color
         (dpg.add_separator, "Separator", {}),
         (dpg.child, "Child", {}),
         (dpg.add_window, "Window", {}),
-        (dpg.add_text, "Text", {
-            "color": "Color.DEFAULT"
-        }),
+        (dpg.add_text, "Text", {"color": "Color.DEFAULT"}),
         (dpg.collapsing_header, "CollapsingHeader", {}),
         (dpg.group, "Group", {}),
         (dpg.add_plot_legend, "Legend", {}),
@@ -250,12 +261,8 @@ from .. import Widget, Callback, Color
         (dpg.add_progress_bar, "ProgressBar", {}),
         (dpg.add_checkbox, "CheckBox", {}),
         (dpg.add_colormap_scale, "ColorMapScale", {}),
-        (dpg.add_drag_line, "DragLine", {
-            "color": "Color.DEFAULT"
-        }),
-        (dpg.add_drag_point, "DragPoint", {
-            "color": "Color.DEFAULT"
-        }),
+        (dpg.add_drag_line, "DragLine", {"color": "Color.DEFAULT"}),
+        (dpg.add_drag_point, "DragPoint", {"color": "Color.DEFAULT"}),
         (dpg.add_slider_int, "SliderInt", {}),
         (dpg.add_slider_intx, "SliderIntX", {}),
         (dpg.add_slider_float, "SliderFloat", {}),

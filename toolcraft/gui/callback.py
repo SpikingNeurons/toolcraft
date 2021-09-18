@@ -3,14 +3,14 @@ import typing as t
 
 import dearpygui.dearpygui as dpg
 
-from .. import error as e
-from .. import marshalling as m
-from .. import util
+from . import assets
 from . import Binder
 from . import Callback
 from . import Widget
-from . import assets
 from . import widget
+from .. import error as e
+from .. import marshalling as m
+from .. import util
 
 
 @dataclasses.dataclass(frozen=True)
@@ -20,6 +20,7 @@ class SetThemeCallback(Callback):
       once we understand theme, icon, font, background, color etc styling
       related things
     """
+
     @staticmethod
     def themes() -> t.List[str]:
         return [
@@ -66,6 +67,7 @@ class CloseWidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete its Parent
     """
+
     @classmethod
     def get_button_widget(cls) -> widget.Button:
         return widget.Button(label="Close [X]", callback=cls())
@@ -139,17 +141,20 @@ class HashableMethodRunnerCallback(Callback):
         # check if receiver can accept child
         if not self.receiver.is_container:
             e.validation.NotAllowed(
-                msgs=[f"We expect a receiver that can accept children..."], )
+                msgs=[f"We expect a receiver that can accept children..."],
+            )
 
         # if tab_group_name is supplied that means you are sharing receiver
         # object across multiple Callbacks with same tab_group_name
         # So ensure that the allow_refresh is True
         if self.tab_group_name is not None:
             if not self.allow_refresh:
-                e.code.NotAllowed(msgs=[
-                    f"looks like you are using tab_group_name. So please "
-                    f"ensure that allow_refresh is set to True",
-                ], )
+                e.code.NotAllowed(
+                    msgs=[
+                        f"looks like you are using tab_group_name. So please "
+                        f"ensure that allow_refresh is set to True",
+                    ],
+                )
 
     def fn(
         self,
@@ -185,7 +190,8 @@ class HashableMethodRunnerCallback(Callback):
                 guid=_unique_guid,
                 parent=_receiver,
                 # before=None
-            ), )
+            ),
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -211,14 +217,17 @@ class HashableMethodsRunnerCallback(Callback):
         # check if receiver can accept child
         if not self.receiver.is_container:
             e.validation.NotAllowed(
-                msgs=[f"We expect a receiver that can accept children..."], )
+                msgs=[f"We expect a receiver that can accept children..."],
+            )
 
         # length must be same
         if len(self.callable_names) != len(self.callable_labels):
-            e.validation.NotAllowed(msgs=[
-                f"We expect fields `callable_names` and `callable_labels` "
-                f"to have same length",
-            ], )
+            e.validation.NotAllowed(
+                msgs=[
+                    f"We expect fields `callable_names` and `callable_labels` "
+                    f"to have same length",
+                ],
+            )
 
     def fn(
         self,
@@ -255,8 +264,7 @@ class HashableMethodsRunnerCallback(Callback):
             title=self.title,
             close_button=self.close_button,
             callable_names={
-                k: v
-                for k, v in zip(self.callable_labels, self.callable_names)
+                k: v for k, v in zip(self.callable_labels, self.callable_names)
             },
         )
         _receiver.add_child(guid=_unique_guid, widget=_result_widget)
