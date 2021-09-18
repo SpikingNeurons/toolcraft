@@ -3,16 +3,16 @@ Get inspirations from
 https://github.com/python-poetry/poetry/tree/master/poetry/console/commands
 
 """
+
 import abc
 import inspect
-import typing as t
-
 import typer
+import typing as t
 
 from .. import error as e
 from .. import logger
 
-APP = typer.Typer(name="Tools")
+APP = typer.Typer(name="toolcraft")
 _LOGGER = logger.get_logger()
 
 
@@ -27,7 +27,11 @@ class Tool(abc.ABC):
         # -------------------------------------------------------- 01.01
         # all subclasses must be concrete
         if inspect.isabstract(cls):
-            e.code.CodingError(msgs=[f"Class {cls} is not concrete ..."])
+            e.code.CodingError(
+                msgs=[
+                    f"Class {cls} is not concrete ..."
+                ]
+            )
         # -------------------------------------------------------- 01.02
         # there can be only one tool class per module
         else:
@@ -35,8 +39,8 @@ class Tool(abc.ABC):
                 e.code.CodingError(
                     msgs=[
                         f"you can have only one concrete subclass of {Tool} in "
-                        f"module {cls.__module__}",
-                    ],
+                        f"module {cls.__module__}"
+                    ]
                 )
         # -------------------------------------------------------- 01.03
         # you need to define `command_fn` method in order to register it with
@@ -45,8 +49,8 @@ class Tool(abc.ABC):
             e.code.CodingError(
                 msgs=[
                     f"Please override method `{Tool.command_fn.__name__}` in "
-                    f"class {cls}.",
-                ],
+                    f"class {cls}."
+                ]
             )
 
         # -------------------------------------------------------- 02
@@ -73,5 +77,6 @@ class Tool(abc.ABC):
     @classmethod
     def command_fn(cls, **kwargs):
         raise NotImplementedError(
-            f"Please implement this method in the respective " f"subclass ...",
+            f"Please implement this method in the respective "
+            f"subclass ..."
         )

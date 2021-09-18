@@ -1,10 +1,7 @@
-from . import assets
-from . import callback
-from . import demo
-from . import helper
-from .__base__ import Binder
-from .__base__ import Callback
-from .__base__ import Color
-from .__base__ import Dashboard
-from .__base__ import Widget
+from .__base__ import Color, Widget, Dashboard, Callback, Binder
 from .widget import *
+from . import demo
+from . import callback
+from . import helper
+from . import assets
+

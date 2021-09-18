@@ -1,19 +1,18 @@
+import dearpygui.dearpygui as dpg
 import dataclasses
 import typing as t
-
-import Callback
-import dearpygui.dearpygui as dpg
-import numpy as np
 import Widget
+import Callback
+import numpy as np
 
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
 
 @dataclasses.dataclass(frozen=True)
 class ___:
+
     def add_area_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -64,7 +63,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_area_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -78,12 +77,11 @@ class ___:
             fill=fill,
             contribute_to_bounds=contribute_to_bounds,
         )
-
+        
         return _dpg_id
-
+        
     def add_bar_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -134,7 +132,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_bar_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -148,12 +146,11 @@ class ___:
             weight=weight,
             horizontal=horizontal,
         )
-
+        
         return _dpg_id
-
+        
     def add_candle_series(
-        self,
-        *,
+        self, *,
         dates: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         opens: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         closes: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
@@ -219,7 +216,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_candle_series(
             parent=_y_axis.dpg_id,
             dates=dates,
@@ -238,12 +235,11 @@ class ___:
             weight=weight,
             tooltip=tooltip,
         )
-
+        
         return _dpg_id
-
+        
     def add_drag_line(
-        self,
-        *,
+        self, *,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
@@ -300,7 +296,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_drag_line(
             parent=_y_axis.dpg_id,
             label=label,
@@ -316,12 +312,11 @@ class ___:
             show_label=show_label,
             vertical=vertical,
         )
-
+        
         return _dpg_id
-
+        
     def add_drag_point(
-        self,
-        *,
+        self, *,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
@@ -375,7 +370,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_drag_point(
             parent=_y_axis.dpg_id,
             label=label,
@@ -390,12 +385,11 @@ class ___:
             thickness=thickness,
             show_label=show_label,
         )
-
+        
         return _dpg_id
-
+        
     def add_error_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         negative: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
@@ -452,7 +446,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_error_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -468,12 +462,11 @@ class ___:
             contribute_to_bounds=contribute_to_bounds,
             horizontal=horizontal,
         )
-
+        
         return _dpg_id
-
+        
     def add_heat_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         rows: int,
         cols: int,
@@ -487,7 +480,7 @@ class ___:
         scale_max: float = 1.0,
         bounds_min: t.Any = (0.0, 0.0),
         bounds_max: t.Any = (1.0, 1.0),
-        format: str = "%0.1f",
+        format: str = '%0.1f',
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
@@ -542,7 +535,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_heat_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -561,12 +554,11 @@ class ___:
             format=format,
             contribute_to_bounds=contribute_to_bounds,
         )
-
+        
         return _dpg_id
-
+        
     def add_histogram_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
         user_data: t.Any = None,
@@ -632,7 +624,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_histogram_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -651,12 +643,11 @@ class ___:
             outliers=outliers,
             contribute_to_bounds=contribute_to_bounds,
         )
-
+        
         return _dpg_id
-
+        
     def add_hline_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
         user_data: t.Any = None,
@@ -701,7 +692,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_hline_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -713,12 +704,11 @@ class ___:
             show=show,
             contribute_to_bounds=contribute_to_bounds,
         )
-
+        
         return _dpg_id
-
+        
     def add_image_series(
-        self,
-        *,
+        self, *,
         texture_id: t.Union[int, str],
         bounds_min: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         bounds_max: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
@@ -775,7 +765,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_image_series(
             parent=_y_axis.dpg_id,
             texture_id=texture_id,
@@ -791,12 +781,11 @@ class ___:
             uv_max=uv_max,
             tint_color=tint_color,
         )
-
+        
         return _dpg_id
-
+        
     def add_line_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -841,7 +830,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_line_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -853,12 +842,11 @@ class ___:
             source=0 if source is None else source.dpg_id,
             show=show,
         )
-
+        
         return _dpg_id
-
+        
     def add_pie_series(
-        self,
-        *,
+        self, *,
         x: float,
         y: float,
         radius: float,
@@ -870,7 +858,7 @@ class ___:
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        format: str = "%0.2f",
+        format: str = '%0.2f',
         angle: float = 90.0,
         normalize: bool = False,
         y_axis_dim: int = 1,
@@ -921,7 +909,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_pie_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -939,12 +927,11 @@ class ___:
             angle=angle,
             normalize=normalize,
         )
-
+        
         return _dpg_id
-
+        
     def add_plot_annotation(
-        self,
-        *,
+        self, *,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
@@ -995,7 +982,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_plot_annotation(
             parent=_y_axis.dpg_id,
             label=label,
@@ -1009,12 +996,11 @@ class ___:
             color=color,
             clamped=clamped,
         )
-
+        
         return _dpg_id
-
+        
     def add_scatter_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1059,7 +1045,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_scatter_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -1071,12 +1057,11 @@ class ___:
             source=0 if source is None else source.dpg_id,
             show=show,
         )
-
+        
         return _dpg_id
-
+        
     def add_shade_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y1: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1124,7 +1109,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_shade_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -1137,12 +1122,11 @@ class ___:
             show=show,
             y2=y2,
         )
-
+        
         return _dpg_id
-
+        
     def add_stair_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1187,7 +1171,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_stair_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -1199,12 +1183,11 @@ class ___:
             source=0 if source is None else source.dpg_id,
             show=show,
         )
-
+        
         return _dpg_id
-
+        
     def add_stem_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1253,7 +1236,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_stem_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -1266,12 +1249,11 @@ class ___:
             source=0 if source is None else source.dpg_id,
             show=show,
         )
-
+        
         return _dpg_id
-
+        
     def add_text_point(
-        self,
-        *,
+        self, *,
         x: float,
         y: float,
         label: str = None,
@@ -1325,7 +1307,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_text_point(
             parent=_y_axis.dpg_id,
             x=x,
@@ -1340,12 +1322,11 @@ class ___:
             y_offset=y_offset,
             vertical=vertical,
         )
-
+        
         return _dpg_id
-
+        
     def add_vline_series(
-        self,
-        *,
+        self, *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
         user_data: t.Any = None,
@@ -1387,7 +1368,7 @@ class ___:
         """
 
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
-
+        
         _dpg_id = dpg.add_vline_series(
             parent=_y_axis.dpg_id,
             x=x,
@@ -1398,5 +1379,6 @@ class ___:
             source=0 if source is None else source.dpg_id,
             show=show,
         )
-
+        
         return _dpg_id
+        

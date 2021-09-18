@@ -40,23 +40,24 @@ http://wesmckinney.com/blog/python-parquet-multithreading/
 
 todo: explore `pds.Expression` and `pds.Dataset.scan`
 """
-import dataclasses
-import operator
-import pathlib
-import time
-import types
+
+
 import typing as t
-
+import pathlib
+import dataclasses
 import pyarrow as pa
-import pyarrow.dataset as pds
 import pyarrow.fs as pafs
+import pyarrow.dataset as pds
+import types
+import operator
+import time
 
-from . import file_system as our_fs
-from . import Folder
+from .. import util
 from .. import error as e
 from .. import marshalling as m
 from .. import storage as s
-from .. import util
+from . import file_system as our_fs
+from . import Folder
 
 # noinspection PyUnresolvedReferences
 if False:
@@ -72,19 +73,12 @@ _FILE_FORMAT = pds.IpcFileFormat()
 # https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetDataset.html
 FILTER_VALUE_TYPE = t.Union[int, float, str, set, list, tuple]
 FILTER_OPS_TYPE = t.Literal[
-    "=",
-    "==",
-    "<",
-    ">",
-    "<=",
-    ">=",
-    "!=",
-    "&",
-    "|",
-    "in",
-    "not in",
+    '=', '==', '<', '>', '<=', '>=', '!=', '&', '|', 'in', 'not in'
 ]
-FILTER_TYPE = t.Tuple[str, FILTER_OPS_TYPE, FILTER_VALUE_TYPE]
+FILTER_TYPE = t.Tuple[
+    str, FILTER_OPS_TYPE,
+    FILTER_VALUE_TYPE
+]
 # Predicates are expressed in disjunctive normal form (DNF),
 # like [[('x', '=', 0), ...], ...]
 FILTERS_TYPE = t.List[t.Union[FILTER_TYPE, t.List[FILTER_TYPE]]]
@@ -93,17 +87,17 @@ FILTERS_TYPE = t.List[t.Union[FILTER_TYPE, t.List[FILTER_TYPE]]]
 # todo: check pds.Expression for more operations that are supported
 
 _OP_MAPPER = {
-    "=": operator.eq,
-    "==": operator.eq,
-    "<": operator.lt,
-    ">": operator.gt,
-    "<=": operator.le,
-    ">=": operator.ge,
-    "!=": operator.ne,
-    "and": operator.and_,
-    "or": operator.or_,
-    "in": lambda _x, _l: _x in _l,
-    "not in": lambda _x, _l: _x not in _l,
+    '=': operator.eq,
+    '==': operator.eq,
+    '<': operator.lt,
+    '>': operator.gt,
+    '<=': operator.le,
+    '>=': operator.ge,
+    '!=': operator.ne,
+    'and': operator.and_,
+    'or': operator.or_,
+    'in': lambda _x, _l: _x in _l,
+    'not in': lambda _x, _l: _x not in _l,
     # todo: dont know how this will be used filter tuple that uses three
     #  elements
     # '~': lambda _x: ~x,
@@ -114,17 +108,17 @@ _OP_MAPPER = {
 # do not try to reuse code for operators as we encounter problem of using
 # last value while looping over dict _OP_MAPPER (loop rolling issue with python)
 _OP_MAPPER_EXP = {
-    "=": lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
-    "==": lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
-    "<": lambda _x, _y: operator.lt(pds.field(_x), pds.scalar(_y)),
-    ">": lambda _x, _y: operator.gt(pds.field(_x), pds.scalar(_y)),
-    "<=": lambda _x, _y: operator.le(pds.field(_x), pds.scalar(_y)),
-    ">=": lambda _x, _y: operator.ge(pds.field(_x), pds.scalar(_y)),
-    "!=": lambda _x, _y: operator.ne(pds.field(_x), pds.scalar(_y)),
-    "and": lambda _x, _y: operator.and_(pds.field(_x), pds.scalar(_y)),
-    "or": lambda _x, _y: operator.or_(pds.field(_x), pds.scalar(_y)),
-    "in": lambda _x, _l: pds.field(_x).isin(_l),
-    "not in": lambda _x, _l: operator.inv(pds.field(_x).isin(_l)),
+    '=': lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
+    '==': lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
+    '<': lambda _x, _y: operator.lt(pds.field(_x), pds.scalar(_y)),
+    '>': lambda _x, _y: operator.gt(pds.field(_x), pds.scalar(_y)),
+    '<=': lambda _x, _y: operator.le(pds.field(_x), pds.scalar(_y)),
+    '>=': lambda _x, _y: operator.ge(pds.field(_x), pds.scalar(_y)),
+    '!=': lambda _x, _y: operator.ne(pds.field(_x), pds.scalar(_y)),
+    'and': lambda _x, _y: operator.and_(pds.field(_x), pds.scalar(_y)),
+    'or': lambda _x, _y: operator.or_(pds.field(_x), pds.scalar(_y)),
+    'in': lambda _x, _l: pds.field(_x).isin(_l),
+    'not in': lambda _x, _l: operator.inv(pds.field(_x).isin(_l)),
     # todo: dont know how this will be used filter tuple that uses three
     #  elements
     # '~': lambda _x: operator.inv(pds.scalar(_x)),
@@ -134,9 +128,7 @@ _OP_MAPPER_EXP = {
 
 
 def bake_expression(
-    _elements: t.List,
-    _err_msg,
-    _columns_allowed=None,
+    _elements: t.List, _err_msg, _columns_allowed=None,
     # todo: support validation against schema later ...
     #  + check `pds.Expression.is_valid` and `pds.Expression.validate`
     _schema=None,
@@ -161,8 +153,8 @@ def bake_expression(
             e.code.NotSupported(
                 msgs=[
                     f"We will support nested filters list once we figure out "
-                    f"how DNF queries work ...",
-                ],
+                    f"how DNF queries work ..."
+                ]
             )
             for _e in _element:
                 _r = bake_expression(_e, _err_msg, _columns_allowed, _schema)
@@ -185,16 +177,15 @@ def bake_expression(
                         f"We expect filters that are tuples and "
                         f"made of three elements",
                         f"Check unsupported tuple {_element}",
-                    ],
+                    ]
                 )
             # validate first element
             e.validation.ShouldBeInstanceOf(
-                value=_element[0],
-                value_types=(str,),
+                value=_element[0], value_types=(str, ),
                 msgs=[
                     _err_msg,
-                    f"The first element of every filter tuple should be a str",
-                ],
+                    f"The first element of every filter tuple should be a str"
+                ]
             )
             # validate first element if it is one of _columns_allowed if
             # supplied
@@ -207,7 +198,7 @@ def bake_expression(
                         f"Filter cannot be used on column {_element[0]}",
                         f"You can use filters only on below columns: ",
                         _columns_allowed,
-                    ],
+                    ]
                 )
             # validate second element
             # noinspection PyUnresolvedReferences
@@ -216,8 +207,8 @@ def bake_expression(
                 values=FILTER_OPS_TYPE.__args__,
                 msgs=[
                     _err_msg,
-                    "Invalid query string used for filter tuple ...",
-                ],
+                    "Invalid query string used for filter tuple ..."
+                ]
             )
             # validate third element
             # noinspection PyUnresolvedReferences
@@ -228,11 +219,13 @@ def bake_expression(
                     _err_msg,
                     f"PyArrow filters kwarg tuple do not understand numpy "
                     f"or other types",
-                ],
+                ]
             )
             # -------------------------------------------02.02.02
             # bake expression for tuple
-            _exp = _OP_MAPPER_EXP[_element[1]](_element[0], _element[2])
+            _exp = _OP_MAPPER_EXP[_element[1]](
+                _element[0], _element[2]
+            )
             # -------------------------------------------02.02.04
             # make global expression
             if _expression is None:
@@ -251,7 +244,7 @@ def bake_expression(
                     f"with three elements or the list of those "
                     f"three element tuples",
                     f"Found type {type(_element)}",
-                ],
+                ]
             )
 
     # ---------------------------------------------------03
@@ -338,7 +331,9 @@ class TableInternal(m.Internal):
         """
         return self.has("partitioning")
 
-    def update_from_table_or_config(self, table: t.Optional[pa.Table]):
+    def update_from_table_or_config(
+        self, table: t.Optional[pa.Table]
+    ):
         """
         We want to save some things in internal for faster access as going
         through config will need with context and unnecessary sync process.
@@ -373,8 +368,8 @@ class TableInternal(m.Internal):
                         msgs=[
                             f"While returning pa.Table from the decorated "
                             f"method you missed to add important partition "
-                            f"column `{_col}`",
-                        ],
+                            f"column `{_col}`"
+                        ]
                     )
 
             # if table_schema none estimate from first table and write it
@@ -390,9 +385,9 @@ class TableInternal(m.Internal):
                             f"not valid",
                             {
                                 "expected": _schema_in_config,
-                                "found": table.schema,
-                            },
-                        ],
+                                "found": table.schema
+                            }
+                        ]
                     )
         # if table is None and this method is called we expect the schema to
         # be available in config file ... check for config file and raise
@@ -406,8 +401,8 @@ class TableInternal(m.Internal):
                         f"supplied table nor there is schema definition "
                         f"available in config which should be either "
                         f"supplied by user via StoreField decorator or "
-                        f"inferred from table written on the disk.",
-                    ],
+                        f"inferred from table written on the disk."
+                    ]
                 )
 
         # update internal for faster access later
@@ -430,14 +425,14 @@ class TableConfig(s.Config):
                     f"available",
                     f"That is possible on first write where table schema not "
                     f"provided it is estimated while writing and stored in "
-                    f"config file",
-                ],
+                    f"config file"
+                ]
             )
         if self.partition_cols is None:
             return None
         # noinspection PyUnresolvedReferences
         return pds.partitioning(
-            self.schema.empty_table().select(self.partition_cols).schema,
+            self.schema.empty_table().select(self.partition_cols).schema
         )
 
 
@@ -486,7 +481,9 @@ class Table(Folder):
     @property
     @util.CacheResult
     def config(self) -> TableConfig:
-        return TableConfig(hashable=self, path_prefix=self.path.as_posix())
+        return TableConfig(
+            hashable=self, path_prefix=self.path.as_posix()
+        )
 
     @property
     @util.CacheResult
@@ -505,9 +502,7 @@ class Table(Folder):
         return True
 
     @property
-    def file_system(
-        self,
-    ) -> t.Union[
+    def file_system(self) -> t.Union[
         pafs.FileSystem,
         # todo: eventually this needs to be migrated tp `pafs.FileSystem` as
         #   `pa.filesystem.FileSystem` will be deprecated by pyarrow
@@ -531,7 +526,7 @@ class Table(Folder):
                     f"Table.",
                     f"Most likely for_hashable is name of method on which "
                     f"StoreField decorator was used.",
-                ],
+                ]
             )
 
     def init(self):
@@ -579,9 +574,7 @@ class Table(Folder):
         # returned or not ... and at that time it does not matter which
         # column we select in that row
         _table = _read_table(
-            self,
-            columns=columns,
-            filter_expression=filter_expression,
+            self, columns=columns, filter_expression=filter_expression,
             table_schema=self.internal.schema,
             partitioning=self.internal.partitioning,
         )
@@ -597,9 +590,7 @@ class Table(Folder):
     # argument will have no purpose.
     # noinspection PyMethodOverriding
     def delete_(
-        self,
-        *,
-        filters: FILTERS_TYPE,
+        self, *, filters: FILTERS_TYPE,
     ) -> bool:
         """
         Note that this is not Folder.delete but delete related to mode=`d`
@@ -658,8 +649,8 @@ class Table(Folder):
                     msgs=[
                         f"For delete mode we support simple filters that "
                         f"operate on partition columns ... nested "
-                        f"filters is not yet supported ...",
-                    ],
+                        f"filters is not yet supported ..."
+                    ]
                 )
         # some vars
         _partition_cols = self.internal.partition_cols
@@ -669,7 +660,9 @@ class Table(Folder):
         # column and value as the list of tuple (operation, value)
         # todo: I hope this handles the use case of multiple filters over same
         #  column properly
-        _filters_dict_of_op_val_list = {pc: [] for pc in _partition_cols}
+        _filters_dict_of_op_val_list = {
+            pc: [] for pc in _partition_cols
+        }
         for f in filters:
             _filters_dict_of_op_val_list[f[0]].append((_OP_MAPPER[f[1]], f[2]))
 
@@ -685,7 +678,9 @@ class Table(Folder):
             # the path must be a dir
             if not _path.is_dir():
                 e.code.CodingError(
-                    msgs=[f"We were expecting path {_path} to be a dir ..."],
+                    msgs=[
+                        f"We were expecting path {_path} to be a dir ..."
+                    ]
                 )
 
             # --------------------------------------------------04.03
@@ -707,7 +702,11 @@ class Table(Folder):
                 # ----------------------------------------------04.06.01
                 # should be a dir
                 if not _nested_path.is_dir():
-                    e.code.CodingError(msgs=[f"We were expecting folder ..."])
+                    e.code.CodingError(
+                        msgs=[
+                            f"We were expecting folder ..."
+                        ]
+                    )
 
                 # ----------------------------------------------04.06.02
                 # todo: sometimes the folder names are like
@@ -756,8 +755,8 @@ class Table(Folder):
                                     f"Check supplied filters",
                                     f"Operation {_op} cannot be applied on "
                                     f"values {(_val, _val1)} with type "
-                                    f"{(type(_val), type(_val1))}",
-                                ],
+                                    f"{(type(_val), type(_val1))}"
+                                ]
                             )
                         # quick break
                         if not _del:
@@ -774,7 +773,8 @@ class Table(Folder):
                     if _pc_exp == _partition_cols[-1]:
                         # delete
                         # noinspection PyTypeChecker
-                        self.file_system.delete(_nested_path, recursive=False)
+                        self.file_system.delete(
+                            _nested_path, recursive=False)
                         # if nested path is empty the delete empty dir
                         # todo: can this be optimized ??
                         if _nested_path.exists():
@@ -784,10 +784,8 @@ class Table(Folder):
                         _something_deleted |= True
                     # else call the method in recursion
                     else:
-                        _something_deleted |= _delete(
-                            _depth=_depth,
-                            _path=_nested_path,
-                        )
+                        _something_deleted |= \
+                            _delete(_depth=_depth, _path=_nested_path)
 
             # --------------------------------------------------04.07
             # return
@@ -814,11 +812,9 @@ class Table(Folder):
 
         # read table
         _table = _read_table(
-            self,
-            columns=columns,
-            filter_expression=filter_expression,
+            self, columns=columns, filter_expression=filter_expression,
             partitioning=_partitioning,
-            table_schema=_schema,
+            table_schema=_schema
         )
 
         # extra check
@@ -830,8 +826,8 @@ class Table(Folder):
                     f"Please do not use `.` or `_` at start of any folder in "
                     f"the path as the pyarrow does not raise error but reads "
                     f"empty table.",
-                    f"Check path {self.path}",
-                ],
+                    f"Check path {self.path}"
+                ]
             )
 
         # return
@@ -851,16 +847,16 @@ class Table(Folder):
                 e.validation.NotAllowed(
                     msgs=[
                         f"Are you using return ?? ... ",
-                        f"We expect you to yield",
-                    ],
+                        f"We expect you to yield"
+                    ]
                 )
         else:
             if _is_generator_type:
                 e.validation.NotAllowed(
                     msgs=[
                         f"Are you using yield ?? ... ",
-                        f"We expect you to return",
-                    ],
+                        f"We expect you to return"
+                    ]
                 )
 
         # check if partition columns exist in table that is to be
@@ -895,8 +891,8 @@ class Table(Folder):
             e.code.CodingError(
                 msgs=[
                     f"We expect the decorated method to return {pa.Table} "
-                    f"but instead found return value of type {type(_table)}",
-                ],
+                    f"but instead found return value of type {type(_table)}"
+                ]
             )
 
         # get schema if in config else get schema from table and write

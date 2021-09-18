@@ -14,17 +14,15 @@ We will also add our own file systems here.
 """
 import pathlib
 import typing as t
-
 import pyarrow as pa
 import pyarrow.fs as pafs
-
 from .. import error as e
 from .. import util
 
 
 # noinspection PyAbstractClass
 class LocalFileSystem(pafs.LocalFileSystem):
-
+    
     _instance = None
 
     @classmethod
@@ -38,21 +36,21 @@ class LocalFileSystem(pafs.LocalFileSystem):
         else:
             e.validation.ShouldBeInstanceOf(
                 value=cls._instance,
-                value_types=(LocalFileSystem,),
+                value_types=(LocalFileSystem, ),
                 msgs=[
                     f"Make sure that you override pyarrow.localfs or any "
                     f"other code that calls parents get_instance and inits "
-                    f"self._instance variable to wrong value ...",
-                ],
+                    f"self._instance variable to wrong value ..."
+                ]
             )
         return cls._instance
-
+    
     # def rename(self, path, new_path):
     #     raise NotImplementedError
     #
     # def stat(self, path):
     #     raise NotImplementedError
-
+    
     def delete(self, path: pathlib.Path, recursive=True) -> bool:
         # this does mean the user is using local file system for
         # which the delete is not implemented

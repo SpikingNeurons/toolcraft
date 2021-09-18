@@ -28,14 +28,9 @@ def test_content(response):
 def test_command_line_interface():
     """Test the CLI."""
     runner = CliRunner()
-    # noinspection PyTypeChecker
-    result = runner.invoke(tools.main)
+    result = runner.invoke(tools.APP, ["--help"])
     assert result.exit_code == 0
-    assert "toolcraft.tools.main" in result.output
-    # noinspection PyTypeChecker
-    help_result = runner.invoke(tools.main, ["--help"])
-    assert help_result.exit_code == 0
-    assert "--help  Show this message and exit." in help_result.output
+    assert "toolcraft" in result.output
 
 
 def test_toolcraft_rules():

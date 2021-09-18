@@ -9,7 +9,6 @@ Github Workflows:
 
 [![code-ql scan](https://github.com/SpikingNeurons/toolcraft/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/codeql-analysis.yml)
 [![coverage](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml)
-[![pre-commit](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/pre-commit.yml)
 [![test & test-publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml)
 [![release & publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml)
 
@@ -23,3 +22,8 @@ External Services/Workflows:
 [![toolcraft Actions](https://api.meercode.io/badge/SpikingNeurons/toolcraft?type=ci-score&branch=main&lastDay=14)](https://meercode.io/public/dashboard/7f2afff96630ed94ef8f1bc21f84aacd:fd482cc7fa8e4d110e770890d9332a318943b734e2ac323e4b67b122611438afe7461739754621a7b41db1eea1eb9146)
 [![Snyk](https://snyk-widget.herokuapp.com/badge/pip/toolcraft/badge.svg)](https://snyk.io/test/github/SpikingNeurons/toolcraft?targetFile=pyproject.toml)
 [![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg?logo=pyup)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
+
+Code Quality:
+
+[![DeepSource](https://deepsource.io/gh/SpikingNeurons/toolcraft.svg/?label=active+issues&show_trend=true&token=pQJ5UfAM4bTXJU_tn2dm3njo)](https://deepsource.io/gh/SpikingNeurons/toolcraft/?ref=repository-badge)
+[![DeepSource](https://deepsource.io/gh/SpikingNeurons/toolcraft.svg/?label=resolved+issues&show_trend=true&token=pQJ5UfAM4bTXJU_tn2dm3njo)](https://deepsource.io/gh/SpikingNeurons/toolcraft/?ref=repository-badge)

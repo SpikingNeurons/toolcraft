@@ -1,3 +1,4 @@
+
 import pathlib
 import typing as t
 
@@ -6,7 +7,11 @@ from ..logger import MESSAGES_TYPE
 
 
 class FileMustBeOnDiskOrNetwork(CustomException):
-    def __init__(self, *, path: pathlib.Path, msgs: MESSAGES_TYPE):
+    def __init__(
+        self, *,
+        path: pathlib.Path,
+        msgs: MESSAGES_TYPE
+    ):
         if path.is_file():
             return
 
@@ -15,11 +20,19 @@ class FileMustBeOnDiskOrNetwork(CustomException):
         else:
             _msg = f"File `{str(path)}` not on disk."
 
-        super().__init__(msgs=[*msgs, _msg])
+        super().__init__(
+            msgs=[
+                *msgs, _msg
+            ]
+        )
 
 
 class FolderMustBeOnDiskOrNetwork(CustomException):
-    def __init__(self, *, path: pathlib.Path, msgs: MESSAGES_TYPE):
+    def __init__(
+        self, *,
+        path: pathlib.Path,
+        msgs: MESSAGES_TYPE
+    ):
         if path.is_dir():
             return
 
@@ -28,16 +41,32 @@ class FolderMustBeOnDiskOrNetwork(CustomException):
         else:
             _msg = f"Folder `{str(path)}` not on disk or network."
 
-        super().__init__(msgs=[*msgs, _msg])
+        super().__init__(
+            msgs=[
+                *msgs, _msg
+            ]
+        )
 
 
 class NotAllowed(CustomException):
-    def __init__(self, *, msgs: MESSAGES_TYPE):
-        super().__init__(msgs=["This is Not Allowed !!!", *msgs])
+    def __init__(
+        self, *,
+        msgs: MESSAGES_TYPE
+    ):
+        super().__init__(
+            msgs=[
+                "This is Not Allowed !!!",
+                *msgs
+            ]
+        )
 
 
 class FileMustNotBeOnDiskOrNetwork(CustomException):
-    def __init__(self, *, path: pathlib.Path, msgs: MESSAGES_TYPE):
+    def __init__(
+        self, *,
+        path: pathlib.Path,
+        msgs: MESSAGES_TYPE
+    ):
         if not path.exists():
             return
 
@@ -45,11 +74,19 @@ class FileMustNotBeOnDiskOrNetwork(CustomException):
         if path.is_dir():
             _msg += "And it happens to be a directory !!!"
 
-        super().__init__(msgs=[*msgs, _msg])
+        super().__init__(
+            msgs=[
+                *msgs, _msg
+            ]
+        )
 
 
 class FolderMustNotBeOnDiskOrNetwork(CustomException):
-    def __init__(self, *, path: pathlib.Path, msgs: MESSAGES_TYPE):
+    def __init__(
+        self, *,
+        path: pathlib.Path,
+        msgs: MESSAGES_TYPE
+    ):
         if not path.exists():
             return
 
@@ -57,19 +94,28 @@ class FolderMustNotBeOnDiskOrNetwork(CustomException):
         if path.is_file():
             _msg += "And it happens to be a file !!!"
 
-        super().__init__(msgs=[*msgs, _msg])
+        super().__init__(
+            msgs=[
+                *msgs, _msg
+            ]
+        )
 
 
 class LongPath(CustomException):
-    def __init__(self, *, path: pathlib.Path, msgs: MESSAGES_TYPE):
+
+    def __init__(
+            self, *,
+            path: pathlib.Path,
+            msgs: MESSAGES_TYPE
+    ):
         if not path.is_absolute():
             super().__init__(
                 msgs=[
                     *msgs,
                     f"The path provided is relative please provide absolute "
                     f"path.",
-                    f"Supplied path {path}",
-                ],
+                    f"Supplied path {path}"
+                ]
             )
 
         _path_len = len(path.as_posix())
@@ -88,5 +134,5 @@ class LongPath(CustomException):
                 f"Supplied path {path}",
                 f"If possible do not keep project working dir is nested "
                 f"directories.",
-            ],
+            ]
         )

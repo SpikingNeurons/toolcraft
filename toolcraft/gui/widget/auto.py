@@ -4,16 +4,14 @@
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
+
 import dataclasses
-import enum
-import typing as t
-
 import dearpygui.dearpygui as dpg
+import typing as t
+import enum
 
-from .. import Callback
-from .. import Color
-from .. import Widget
 from ... import marshalling as m
+from .. import Widget, Callback, Color
 
 
 class TableSizingPolicy(m.FrozenEnum, enum.Enum):
@@ -221,7 +219,7 @@ class Column(Widget):
             indent_enable=self.indent_enable,
             indent_disable=self.indent_disable,
         )
-
+        
         return _ret
 
 
@@ -251,7 +249,7 @@ class Row(Widget):
     show: bool = True
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     @property
     def is_container(self) -> bool:
@@ -267,7 +265,7 @@ class Row(Widget):
             show=self.show,
             filter_key=self.filter_key,
         )
-
+        
         return _ret
 
 
@@ -310,12 +308,10 @@ class BTable(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -470,23 +466,25 @@ class BTable(Widget):
             scrollY=self.scrollY,
             no_saved_settings=self.no_saved_settings,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -515,7 +513,7 @@ class TabButton(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -530,7 +528,7 @@ class TabButton(Widget):
     show: bool = True
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -576,65 +574,61 @@ class TabButton(Widget):
             trailing=self.trailing,
             no_tooltip=self.no_tooltip,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -663,7 +657,7 @@ class TabBar(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -678,12 +672,10 @@ class TabBar(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -722,65 +714,61 @@ class TabBar(Widget):
             track_offset=self.track_offset,
             reorderable=self.reorderable,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -809,7 +797,7 @@ class Tab(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -821,7 +809,7 @@ class Tab(Widget):
     show: bool = True
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -866,49 +854,43 @@ class Tab(Widget):
             no_tooltip=self.no_tooltip,
             order_mode=self.order_mode,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -943,7 +925,7 @@ class Button(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -961,12 +943,10 @@ class Button(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -1010,65 +990,61 @@ class Button(Widget):
             arrow=self.arrow,
             direction=self.direction,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -1108,7 +1084,7 @@ class Combo(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -1126,12 +1102,10 @@ class Combo(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -1140,7 +1114,7 @@ class Combo(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: str = ""
+    default_value: str = ''
 
     # Align the popup toward the left.
     popup_align_left: bool = False
@@ -1184,65 +1158,61 @@ class Combo(Widget):
             no_preview=self.no_preview,
             height_mode=self.height_mode,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -1289,7 +1259,7 @@ class InSameLine(Widget):
             xoffset=self.xoffset,
             spacing=self.spacing,
         )
-
+        
         return _ret
 
 
@@ -1320,9 +1290,7 @@ class Separator(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     @property
     def is_container(self) -> bool:
@@ -1338,7 +1306,7 @@ class Separator(Widget):
             show=self.show,
             pos=self.pos,
         )
-
+        
         return _ret
 
 
@@ -1374,7 +1342,7 @@ class Child(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -1386,12 +1354,10 @@ class Child(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -1452,49 +1418,43 @@ class Child(Widget):
             horizontal_scrollbar=self.horizontal_scrollbar,
             menubar=self.menubar,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -1531,9 +1491,7 @@ class Window(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -1541,14 +1499,10 @@ class Window(Widget):
     delay_search: bool = False
 
     # Minimum window size.
-    min_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    min_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Maximum window size.
-    max_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    max_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Shows or hides the menubar.
     menubar: bool = False
@@ -1642,23 +1596,25 @@ class Window(Widget):
             no_saved_settings=self.no_saved_settings,
             on_close=self.on_close_fn,
         )
-
+        
         return _ret
 
-    def on_close_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def on_close_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.on_close is None:
             return None
         else:
             return self.on_close.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -1673,7 +1629,7 @@ class Text(Widget):
     """
 
     # ...
-    default_value: str = ""
+    default_value: str = ''
 
     # Overrides 'name' as label.
     label: str = None
@@ -1696,12 +1652,10 @@ class Text(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -1744,7 +1698,7 @@ class Text(Widget):
             color=self.color.dpg_value,
             show_label=self.show_label,
         )
-
+        
         return _ret
 
 
@@ -1774,7 +1728,7 @@ class CollapsingHeader(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -1786,12 +1740,10 @@ class CollapsingHeader(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -1850,49 +1802,43 @@ class CollapsingHeader(Widget):
             leaf=self.leaf,
             bullet=self.bullet,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -1926,7 +1872,7 @@ class Group(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -1938,12 +1884,10 @@ class Group(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -1986,49 +1930,43 @@ class Group(Widget):
             horizontal=self.horizontal,
             horizontal_spacing=self.horizontal_spacing,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -2053,7 +1991,7 @@ class Legend(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -2091,49 +2029,43 @@ class Legend(Widget):
             horizontal=self.horizontal,
             outside=self.outside,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -2158,7 +2090,7 @@ class XAxis(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -2217,49 +2149,43 @@ class XAxis(Widget):
             lock_max=self.lock_max,
             time=self.time,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -2284,7 +2210,7 @@ class YAxis(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -2343,49 +2269,43 @@ class YAxis(Widget):
             lock_max=self.lock_max,
             time=self.time,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -2432,12 +2352,10 @@ class SubPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -2451,14 +2369,10 @@ class SubPlot(Widget):
     track_offset: float = 0.5
 
     # ...
-    row_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(
-        default_factory=list,
-    )
+    row_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(default_factory=list)
 
     # ...
-    column_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(
-        default_factory=list,
-    )
+    column_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(default_factory=list)
 
     # ...
     no_title: bool = False
@@ -2524,23 +2438,25 @@ class SubPlot(Widget):
             link_all_y=self.link_all_y,
             column_major=self.column_major,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -2578,7 +2494,7 @@ class SimplePlot(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -2590,7 +2506,7 @@ class SimplePlot(Widget):
     show: bool = True
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -2602,7 +2518,7 @@ class SimplePlot(Widget):
     default_value: t.Union[t.List[float], t.Tuple[float]] = ()
 
     # overlays text (similar to a plot title)
-    overlay: str = ""
+    overlay: str = ''
 
     # ...
     histogram: bool = False
@@ -2644,49 +2560,43 @@ class SimplePlot(Widget):
             min_scale=self.min_scale,
             max_scale=self.max_scale,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -2722,7 +2632,7 @@ class BPlot(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -2737,12 +2647,10 @@ class BPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -2868,65 +2776,61 @@ class BPlot(Widget):
             horizontal_mod=self.horizontal_mod,
             vertical_mod=self.vertical_mod,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -2961,7 +2865,7 @@ class InputIntX(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -2979,12 +2883,10 @@ class InputIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -3048,65 +2950,61 @@ class InputIntX(Widget):
             on_enter=self.on_enter,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -3141,7 +3039,7 @@ class InputInt(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -3159,12 +3057,10 @@ class InputInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -3236,65 +3132,61 @@ class InputInt(Widget):
             on_enter=self.on_enter,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -3332,7 +3224,7 @@ class ProgressBar(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -3344,12 +3236,10 @@ class ProgressBar(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -3358,7 +3248,7 @@ class ProgressBar(Widget):
     track_offset: float = 0.5
 
     # Overlayed text.
-    overlay: str = ""
+    overlay: str = ''
 
     # Normalized value to fill the bar from 0.0 to 1.0.
     default_value: float = 0.0
@@ -3388,49 +3278,43 @@ class ProgressBar(Widget):
             overlay=self.overlay,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -3462,7 +3346,7 @@ class CheckBox(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -3480,12 +3364,10 @@ class CheckBox(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -3520,65 +3402,61 @@ class CheckBox(Widget):
             track_offset=self.track_offset,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -3619,9 +3497,7 @@ class ColorMapScale(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # mvPlotColormap_* constants or mvColorMap uuid
     colormap: t.Union[int, str] = 0
@@ -3654,7 +3530,7 @@ class ColorMapScale(Widget):
             min_scale=self.min_scale,
             max_scale=self.max_scale,
         )
-
+        
         return _ret
 
 
@@ -3720,23 +3596,25 @@ class DragLine(Widget):
             show_label=self.show_label,
             vertical=self.vertical,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -3798,23 +3676,25 @@ class DragPoint(Widget):
             thickness=self.thickness,
             show_label=self.show_label,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -3855,7 +3735,7 @@ class SliderInt(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -3873,12 +3753,10 @@ class SliderInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -3907,7 +3785,7 @@ class SliderInt(Widget):
     max_value: int = 100
 
     # ...
-    format: str = "%d"
+    format: str = '%d'
 
     @property
     def is_container(self) -> bool:
@@ -3941,65 +3819,61 @@ class SliderInt(Widget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -4035,7 +3909,7 @@ class SliderIntX(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -4053,12 +3927,10 @@ class SliderIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -4087,7 +3959,7 @@ class SliderIntX(Widget):
     max_value: int = 100
 
     # ...
-    format: str = "%d"
+    format: str = '%d'
 
     @property
     def is_container(self) -> bool:
@@ -4120,65 +3992,61 @@ class SliderIntX(Widget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -4219,7 +4087,7 @@ class SliderFloat(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -4237,12 +4105,10 @@ class SliderFloat(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -4271,7 +4137,7 @@ class SliderFloat(Widget):
     max_value: float = 100.0
 
     # ...
-    format: str = "%.3f"
+    format: str = '%.3f'
 
     @property
     def is_container(self) -> bool:
@@ -4305,65 +4171,61 @@ class SliderFloat(Widget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -4401,7 +4263,7 @@ class SliderFloatX(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -4419,12 +4281,10 @@ class SliderFloatX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -4453,7 +4313,7 @@ class SliderFloatX(Widget):
     max_value: float = 100.0
 
     # ...
-    format: str = "%.3f"
+    format: str = '%.3f'
 
     @property
     def is_container(self) -> bool:
@@ -4486,65 +4346,61 @@ class SliderFloatX(Widget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
 
@@ -4583,7 +4439,7 @@ class Slider3D(Widget):
 
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
-    payload_type: str = "$$DPG_PAYLOAD"
+    payload_type: str = '$$DPG_PAYLOAD'
 
     # Registers a callback.
     callback: Callback = None
@@ -4598,12 +4454,10 @@ class Slider3D(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
 
     # Used by filter widget.
-    filter_key: str = ""
+    filter_key: str = ''
 
     # Scroll tracking
     tracked: bool = False
@@ -4667,63 +4521,59 @@ class Slider3D(Widget):
             min_z=self.min_z,
             scale=self.scale,
         )
-
+        
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
             return self.callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
             return self.drag_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
-        user_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
             return self.drop_callback.fn(
-                sender=self,
-                app_data=app_data,
-                user_data=user_data,
+                sender=self, app_data=app_data, user_data=user_data
             )
