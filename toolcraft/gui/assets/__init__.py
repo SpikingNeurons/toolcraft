@@ -2,10 +2,12 @@ import enum
 import pathlib
 
 import dearpygui.dearpygui as dpg
+
 from dearpygui import themes
 
 from ... import error as e
 from ... import util
+
 
 _ASSET_FOLDER = pathlib.Path(__file__).parent.resolve()
 

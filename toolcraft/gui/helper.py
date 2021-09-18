@@ -1,10 +1,10 @@
 import typing as t
 
+from .. import error as e
+from .. import marshalling as m
 from . import __base__
 from . import callback
 from . import widget
-from .. import error as e
-from .. import marshalling as m
 
 
 def simple_split_window(

@@ -38,7 +38,7 @@ class LocalFileSystem(pafs.LocalFileSystem):
         else:
             e.validation.ShouldBeInstanceOf(
                 value=cls._instance,
-                value_types=(LocalFileSystem,),
+                value_types=(LocalFileSystem, ),
                 msgs=[
                     f"Make sure that you override pyarrow.localfs or any "
                     f"other code that calls parents get_instance and inits "

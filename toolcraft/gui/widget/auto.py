@@ -10,10 +10,10 @@ import typing as t
 
 import dearpygui.dearpygui as dpg
 
+from ... import marshalling as m
 from .. import Callback
 from .. import Color
 from .. import Widget
-from ... import marshalling as m
 
 
 class TableSizingPolicy(m.FrozenEnum, enum.Enum):
@@ -310,9 +310,8 @@ class BTable(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -473,11 +472,11 @@ class BTable(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -579,11 +578,11 @@ class TabButton(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -602,9 +601,8 @@ class TabButton(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -623,9 +621,8 @@ class TabButton(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -678,9 +675,8 @@ class TabBar(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -725,11 +721,11 @@ class TabBar(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -748,9 +744,8 @@ class TabBar(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -769,9 +764,8 @@ class TabBar(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -876,9 +870,8 @@ class Tab(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -897,9 +890,8 @@ class Tab(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -961,9 +953,8 @@ class Button(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -1013,11 +1004,11 @@ class Button(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1036,9 +1027,8 @@ class Button(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1057,9 +1047,8 @@ class Button(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1126,9 +1115,8 @@ class Combo(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -1187,11 +1175,11 @@ class Combo(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1210,9 +1198,8 @@ class Combo(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1231,9 +1218,8 @@ class Combo(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1320,9 +1306,8 @@ class Separator(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     @property
     def is_container(self) -> bool:
@@ -1386,9 +1371,8 @@ class Child(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -1462,9 +1446,8 @@ class Child(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1483,9 +1466,8 @@ class Child(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1531,9 +1513,8 @@ class Window(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -1541,14 +1522,12 @@ class Window(Widget):
     delay_search: bool = False
 
     # Minimum window size.
-    min_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    min_size: t.Union[t.List[int],
+                      t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Maximum window size.
-    max_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    max_size: t.Union[t.List[int],
+                      t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Shows or hides the menubar.
     menubar: bool = False
@@ -1645,11 +1624,11 @@ class Window(Widget):
 
         return _ret
 
-    def on_close_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def on_close_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.on_close is None:
@@ -1696,9 +1675,8 @@ class Text(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -1786,9 +1764,8 @@ class CollapsingHeader(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -1860,9 +1837,8 @@ class CollapsingHeader(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1881,9 +1857,8 @@ class CollapsingHeader(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1938,9 +1913,8 @@ class Group(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -1996,9 +1970,8 @@ class Group(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2017,9 +1990,8 @@ class Group(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2101,9 +2073,8 @@ class Legend(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2122,9 +2093,8 @@ class Legend(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2227,9 +2197,8 @@ class XAxis(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2248,9 +2217,8 @@ class XAxis(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2353,9 +2321,8 @@ class YAxis(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2374,9 +2341,8 @@ class YAxis(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2432,9 +2398,8 @@ class SubPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -2452,13 +2417,11 @@ class SubPlot(Widget):
 
     # ...
     row_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(
-        default_factory=list,
-    )
+        default_factory=list, )
 
     # ...
     column_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(
-        default_factory=list,
-    )
+        default_factory=list, )
 
     # ...
     no_title: bool = False
@@ -2527,11 +2490,11 @@ class SubPlot(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -2654,9 +2617,8 @@ class SimplePlot(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2675,9 +2637,8 @@ class SimplePlot(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2737,9 +2698,8 @@ class BPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -2871,11 +2831,11 @@ class BPlot(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -2894,9 +2854,8 @@ class BPlot(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2915,9 +2874,8 @@ class BPlot(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2979,9 +2937,8 @@ class InputIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -3051,11 +3008,11 @@ class InputIntX(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3074,9 +3031,8 @@ class InputIntX(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3095,9 +3051,8 @@ class InputIntX(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3159,9 +3114,8 @@ class InputInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -3239,11 +3193,11 @@ class InputInt(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3262,9 +3216,8 @@ class InputInt(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3283,9 +3236,8 @@ class InputInt(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3344,9 +3296,8 @@ class ProgressBar(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -3398,9 +3349,8 @@ class ProgressBar(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3419,9 +3369,8 @@ class ProgressBar(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3480,9 +3429,8 @@ class CheckBox(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -3523,11 +3471,11 @@ class CheckBox(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3546,9 +3494,8 @@ class CheckBox(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3567,9 +3514,8 @@ class CheckBox(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3619,9 +3565,8 @@ class ColorMapScale(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # mvPlotColormap_* constants or mvColorMap uuid
     colormap: t.Union[int, str] = 0
@@ -3723,11 +3668,11 @@ class DragLine(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3801,11 +3746,11 @@ class DragPoint(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3873,9 +3818,8 @@ class SliderInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -3944,11 +3888,11 @@ class SliderInt(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3967,9 +3911,8 @@ class SliderInt(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3988,9 +3931,8 @@ class SliderInt(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -4053,9 +3995,8 @@ class SliderIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -4123,11 +4064,11 @@ class SliderIntX(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4146,9 +4087,8 @@ class SliderIntX(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -4167,9 +4107,8 @@ class SliderIntX(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -4237,9 +4176,8 @@ class SliderFloat(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -4308,11 +4246,11 @@ class SliderFloat(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4331,9 +4269,8 @@ class SliderFloat(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -4352,9 +4289,8 @@ class SliderFloat(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -4419,9 +4355,8 @@ class SliderFloatX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -4433,7 +4368,8 @@ class SliderFloatX(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: t.Union[t.List[float],
+                           t.Tuple[float]] = (0.0, 0.0, 0.0, 0.0)
 
     # Number of components.
     size: int = 4
@@ -4489,11 +4425,11 @@ class SliderFloatX(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4512,9 +4448,8 @@ class SliderFloatX(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -4533,9 +4468,8 @@ class SliderFloatX(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -4598,9 +4532,8 @@ class Slider3D(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(
-        default_factory=list,
-    )
+    pos: t.Union[t.List[int],
+                 t.Tuple[int]] = dataclasses.field(default_factory=list, )
 
     # Used by filter widget.
     filter_key: str = ""
@@ -4612,7 +4545,8 @@ class Slider3D(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: t.Union[t.List[float],
+                           t.Tuple[float]] = (0.0, 0.0, 0.0, 0.0)
 
     # Applies upper limit to slider.
     max_x: float = 100.0
@@ -4670,11 +4604,11 @@ class Slider3D(Widget):
 
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int, app_data: t.Any, user_data: t.Any):
+    def callback_fn(self, sender_dpg_id: int, app_data: t.Any,
+                    user_data: t.Any):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4693,9 +4627,8 @@ class Slider3D(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -4714,9 +4647,8 @@ class Slider3D(Widget):
         user_data: t.Any,
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert (
-            sender_dpg_id == self.dpg_id
-        ), "was expecting the dpg_id to match ..."
+        assert (sender_dpg_id == self.dpg_id
+                ), "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:

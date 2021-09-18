@@ -37,4 +37,5 @@ from .auto import YAxis
 from .core import Plot
 from .core import Table
 
+
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]

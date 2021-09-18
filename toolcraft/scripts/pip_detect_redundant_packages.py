@@ -3,6 +3,7 @@ import pathlib
 import shutil
 import sys
 
+
 if len(sys.argv) != 2:
     raise Exception(
         f"Please call this script with an arg that indicates `pypi_root_dir`",

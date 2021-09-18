@@ -3,6 +3,7 @@ https://github.com/hoffstadt/SimpleDataFlow/edit/main/simple_data_flow.py
 """
 import dearpygui.dearpygui as dpg
 
+
 ########################################################################################################################
 # Simple Data Flow
 ########################################################################################################################
@@ -91,10 +92,10 @@ class OutputNodeAttribute:
     def submit(self, parent):
 
         with dpg.node_attribute(
-            parent=parent,
-            attribute_type=dpg.mvNode_Attr_Output,
-            user_data=self,
-            id=self.uuid,
+                parent=parent,
+                attribute_type=dpg.mvNode_Attr_Output,
+                user_data=self,
+                id=self.uuid,
         ):
             dpg.add_text(self._label)
 
@@ -163,10 +164,10 @@ class Node:
                 attribute.submit(self.uuid)
 
             with dpg.node_attribute(
-                parent=self.uuid,
-                attribute_type=dpg.mvNode_Attr_Static,
-                user_data=self,
-                id=self.static_uuid,
+                    parent=self.uuid,
+                    attribute_type=dpg.mvNode_Attr_Static,
+                    user_data=self,
+                    id=self.static_uuid,
             ):
                 self.custom()
 
@@ -202,17 +203,18 @@ class NodeEditor:
     def submit(self, parent):
 
         with dpg.node_editor(
-            parent=parent,
-            id=self.uuid,
-            user_data=self,
-            callback=NodeEditor._link_callback,
-            width=-160,
-            height=-1,
-            drop_callback=lambda s, a, u: dpg.get_item_user_data(s).on_drop(
-                s,
-                a,
-                u,
-            ),
+                parent=parent,
+                id=self.uuid,
+                user_data=self,
+                callback=NodeEditor._link_callback,
+                width=-160,
+                height=-1,
+                drop_callback=lambda s, a, u: dpg.get_item_user_data(s).
+                on_drop(
+                    s,
+                    a,
+                    u,
+                ),
         ):
 
             for node in self._nodes:
@@ -235,8 +237,8 @@ class DragSource:
         dpg.set_item_theme(dpg.last_item(), _source_theme)
 
         with dpg.drag_payload(
-            parent=dpg.last_item(),
-            drag_data=(self, self._generator, self._data),
+                parent=dpg.last_item(),
+                drag_data=(self, self._generator, self._data),
         ):
             dpg.add_text(f"Name: {self.label}")
 
@@ -257,11 +259,11 @@ class DragSourceContainer:
     def submit(self, parent):
 
         with dpg.child(
-            parent=parent,
-            width=self._width,
-            height=self._height,
-            id=self._uuid,
-            menubar=True,
+                parent=parent,
+                width=self._width,
+                height=self._height,
+                id=self._uuid,
+                menubar=True,
         ) as child_parent:
             with dpg.menu_bar():
                 dpg.add_menu(label=self._label)
@@ -523,11 +525,8 @@ class CheckerNode(Node):
         max_value = dpg.get_value(self.max_id)
         expect_value = dpg.get_value(self.expected_id)
 
-        if (
-            round(expect_value - min_value, 5)
-            <= value
-            <= round(expect_value + max_value, 5)
-        ):
+        if (round(expect_value - min_value, 5) <= value <= round(
+                expect_value + max_value, 5)):
             dpg.set_item_theme(
                 self._static_attributes[0].status_id,
                 self.success,
@@ -616,19 +615,18 @@ class App:
 
     def add_data_set(self, label, data):
         self.data_set_container.add_drag_source(
-            DragSource(label, App.data_node_factory, data),
-        )
+            DragSource(label, App.data_node_factory, data), )
 
     def add_tool(self, label, factory, data=None):
         self.tool_container.add_drag_source(DragSource(label, factory, data))
 
     def add_inspector(self, label, factory, data=None):
         self.inspector_container.add_drag_source(
-            DragSource(label, factory, data),
-        )
+            DragSource(label, factory, data), )
 
     def add_modifier(self, label, factory, data=None):
-        self.modifier_container.add_drag_source(DragSource(label, factory, data))
+        self.modifier_container.add_drag_source(
+            DragSource(label, factory, data))
 
     def add_plugin(self, name, callback):
         self.plugins.append((name, callback))
