@@ -89,7 +89,11 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
               },
               {
                 label: 'Twitter',
-                href: 'https://twitter.com/praveenneuron',
+                href: 'https://twitter.com/ToolCraft4',
+              },
+              {
+                label: 'Contact',
+                href: 'mailto:toolcraft@spikingneurons.com',
               },
             ],
           },
@@ -102,7 +106,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/toolcraft',
+                href: 'https://github.com/SpikingNeurons/toolcraft',
               },
             ],
           },
