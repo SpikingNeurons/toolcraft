@@ -6,11 +6,12 @@ todo: read typer docs
 todo: to expand
   https://typer.tiangolo.com/#other-tools-and-plug-ins
 """
-
-import pathlib
 import importlib
+import pathlib
 import sys
-from .__base__ import Tool, APP
+
+from .__base__ import APP
+from .__base__ import Tool
 
 # todo: is this needed? Can this be removed?
 # this is so that all modules are loaded in tools directory ... so that the
@@ -28,5 +29,5 @@ def main():
     return APP()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

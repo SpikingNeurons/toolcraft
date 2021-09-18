@@ -23,4 +23,3 @@ External Services/Workflows:
 [![toolcraft Actions](https://api.meercode.io/badge/SpikingNeurons/toolcraft?type=ci-score&branch=main&lastDay=14)](https://meercode.io/public/dashboard/7f2afff96630ed94ef8f1bc21f84aacd:fd482cc7fa8e4d110e770890d9332a318943b734e2ac323e4b67b122611438afe7461739754621a7b41db1eea1eb9146)
 [![Snyk](https://snyk-widget.herokuapp.com/badge/pip/toolcraft/badge.svg)](https://snyk.io/test/github/SpikingNeurons/toolcraft?targetFile=pyproject.toml)
 [![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg?logo=pyup)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
-

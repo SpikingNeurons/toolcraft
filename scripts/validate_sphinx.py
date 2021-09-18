@@ -4,7 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 # https://github.com/pytorch/botorch/blob/master/scripts/validate_sphinx.py
-
 from __future__ import annotations
 
 import argparse
@@ -25,10 +24,10 @@ AUTOMODULE_REGEX = re.compile(r"\.\. automodule:: ([\.\w]*)")
 EXCLUDED_MODULES = {"version"}
 
 
-def parse_rst(rst_filename: str) -> Set[str]:
+def parse_rst(rst_filename: str) -> set[str]:
     """Extract automodule directives from rst."""
     ret = set()
-    with open(rst_filename, "r") as f:
+    with open(rst_filename) as f:
         lines = f.readlines()
         for line in lines:
             line = line.strip()
@@ -55,19 +54,24 @@ def validate_complete_sphinx(path_to_botorch: str) -> None:
     modules = {
         modname
         for importer, modname, ispkg in pkgutil.walk_packages(
-            path=[BOTORCH_LIBRARY_PATH], onerror=lambda x: None
+            path=[BOTORCH_LIBRARY_PATH],
+            onerror=lambda x: None,
         )
         if modname not in EXCLUDED_MODULES
     }
 
     # Load all rst files (these contain the documentation for Sphinx)
     rstpath = os.path.join(path_to_botorch, SPHINX_RST_PATH)
-    rsts = {f.replace(".rst", "") for f in os.listdir(rstpath) if f.endswith(".rst")}
+    rsts = {
+        f.replace(".rst", "") for f in os.listdir(rstpath) if f.endswith(".rst")
+    }
 
     # Verify that all top-level modules have a corresponding rst
     missing_rsts = modules.difference(rsts)
     if not len(missing_rsts) == 0:
-        raise RuntimeError(f"Not all modules have corresponding rst: {missing_rsts}")
+        raise RuntimeError(
+            f"Not all modules have corresponding rst: {missing_rsts}",
+        )
 
     # Track all modules that are not in docs (so can print all)
     modules_not_in_docs = []
@@ -80,21 +84,27 @@ def validate_complete_sphinx(path_to_botorch: str) -> None:
         # Extract all non-package modules
         for _importer, modname, ispkg in pkgutil.walk_packages(
             path=[
-                os.path.join(BOTORCH_LIBRARY_PATH, module)
+                os.path.join(BOTORCH_LIBRARY_PATH, module),
             ],  # botorch.__path__[0], module),
             prefix="botorch." + module + ".",
             onerror=lambda x: None,
         ):
-            if not ispkg and ".tests" not in modname and modname not in modules_in_rst:
+            if (
+                not ispkg
+                and ".tests" not in modname
+                and modname not in modules_in_rst
+            ):
                 modules_not_in_docs.append(modname)
 
     if not len(modules_not_in_docs) == 0:
-        raise RuntimeError(f"Not all modules are documented: {modules_not_in_docs}")
+        raise RuntimeError(
+            f"Not all modules are documented: {modules_not_in_docs}",
+        )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Validate that Sphinx documentation is complete."
+        description="Validate that Sphinx documentation is complete.",
     )
     parser.add_argument(
         "-p",

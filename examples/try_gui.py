@@ -1,8 +1,8 @@
 import dataclasses
-import numpy as np
-import dearpygui.dearpygui as dpg
 import typing as t
 
+import dearpygui.dearpygui as dpg
+import numpy as np
 from toolcraft import gui
 
 
@@ -12,7 +12,7 @@ class Info(gui.CollapsingHeader):
     label: str = "Topic 1 - Text"
 
     message: gui.Text = gui.Text(
-        "This is topic 1. We will just add some bullet points below ..."
+        "This is topic 1. We will just add some bullet points below ...",
     )
 
     bullet_1: gui.Text = gui.Text(
@@ -42,8 +42,9 @@ class Plotting(gui.CollapsingHeader):
     )
 
     subplot: gui.SubPlot = gui.SubPlot(
-        rows=2, columns=2,
-        label= "This is sub plot ..."
+        rows=2,
+        columns=2,
+        label="This is sub plot ...",
     )
 
     def plot_some_examples(self):
@@ -57,25 +58,17 @@ class Plotting(gui.CollapsingHeader):
         _line_plot.add_line_series(
             label="line 1",
             x=np.arange(100),
-            y=np.random.normal(0.0, scale=2.0, size=100)
+            y=np.random.normal(0.0, scale=2.0, size=100),
         )
         _line_plot.add_line_series(
             label="line 2",
             x=np.arange(100),
             y=np.random.normal(0.0, scale=2.0, size=100),
         )
-        _line_plot.add_vline_series(
-            x=[1., 2.], label='vline 1'
-        )
-        _line_plot.add_vline_series(
-            x=[10., 11.], label='vline 2'
-        )
-        _line_plot.add_hline_series(
-            x=[1., 2.], label='hline 1'
-        )
-        _line_plot.add_hline_series(
-            x=[10., 11.], label='hline 2'
-        )
+        _line_plot.add_vline_series(x=[1.0, 2.0], label="vline 1")
+        _line_plot.add_vline_series(x=[10.0, 11.0], label="vline 2")
+        _line_plot.add_hline_series(x=[1.0, 2.0], label="hline 1")
+        _line_plot.add_hline_series(x=[10.0, 11.0], label="hline 2")
 
         # ------------------------------------------------------- 03
         _scatter_plot = self.scatter_plot
@@ -94,9 +87,7 @@ class Plotting(gui.CollapsingHeader):
         _subplot = self.subplot
         for i in range(4):
             _plot = gui.Plot(height=200)
-            _subplot.add_child(
-                guid=f"plot_{i}", widget=_plot
-            )
+            _subplot.add_child(guid=f"plot_{i}", widget=_plot)
             _plot.add_line_series(
                 label="line 1",
                 x=np.arange(100),
@@ -118,7 +109,7 @@ class ButtonPlotCallback(gui.Callback):
         self,
         sender: gui.Widget,
         app_data: t.Any,
-        user_data: t.Union[gui.Widget, t.List[gui.Widget]]
+        user_data: t.Union[gui.Widget, t.List[gui.Widget]],
     ):
         # provide type
         sender: gui.Button
@@ -128,29 +119,28 @@ class ButtonPlotCallback(gui.Callback):
 
             # make collapsing header
             _collapsing_header = gui.CollapsingHeader(
-                label=sender.label, closable=False, default_open=True,
+                label=sender.label,
+                closable=False,
+                default_open=True,
             )
 
             # add child to receiver
-            self.receiver.add_child(
-                guid=sender.guid,
-                widget=_collapsing_header
-            )
+            self.receiver.add_child(guid=sender.guid, widget=_collapsing_header)
 
             # make close button and add it collapsing header
             _close_button = gui.callback.CloseWidgetCallback.get_button_widget()
             _collapsing_header.add_child(
-                guid="close_button", widget=_close_button
+                guid="close_button",
+                widget=_close_button,
             )
 
             # make plot and add to collapsing header
             _plot = gui.Plot(
                 label=f"This is plot for {sender.label} ...",
-                height=200, width=-1
+                height=200,
+                width=-1,
             )
-            _collapsing_header.add_child(
-                guid="plot", widget=_plot
-            )
+            _collapsing_header.add_child(guid="plot", widget=_plot)
 
             # add some data
             _plot.add_line_series(
@@ -181,10 +171,14 @@ class ButtonPlot(gui.CollapsingHeader):
     def layout(self):
         _table = gui.Table(
             header_row=False,
-            resizable=True, policy=gui.TableSizingPolicy.StretchSame,
-            borders_innerH=True, borders_outerH=True,
-            borders_innerV=True, borders_outerV=True,
-            rows=1, columns=2,
+            resizable=True,
+            policy=gui.TableSizingPolicy.StretchSame,
+            borders_innerH=True,
+            borders_outerH=True,
+            borders_innerV=True,
+            borders_outerV=True,
+            rows=1,
+            columns=2,
         )
         _button_cell = _table.get_cell(row=0, column=0)
         _display_cell = _table.get_cell(row=0, column=1)
@@ -194,9 +188,7 @@ class ButtonPlot(gui.CollapsingHeader):
                 widget=gui.Button(
                     width=300,
                     label=f"Button {i}",
-                    callback=ButtonPlotCallback(
-                        receiver=_display_cell
-                    )
+                    callback=ButtonPlotCallback(receiver=_display_cell),
                 ),
             )
         self.add_child(guid="columns", widget=_table)
@@ -208,7 +200,7 @@ class MyDashboard(gui.Dashboard):
     theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget()
 
     welcome_msg: gui.Text = gui.Text(
-        "Welcome to my dashboard ..... toolcraft ..... "
+        "Welcome to my dashboard ..... toolcraft ..... ",
     )
 
     topic1: Info = Info()
@@ -218,21 +210,11 @@ class MyDashboard(gui.Dashboard):
     topic3: ButtonPlot = ButtonPlot()
 
     def layout(self):
-        self.add_child(
-            guid='theme_selector', widget=self.theme_selector
-        )
-        self.add_child(
-            guid='welcome_msg', widget=self.welcome_msg
-        )
-        self.add_child(
-            guid='topic2', widget=self.topic2
-        )
-        self.add_child(
-            guid='topic1', widget=self.topic1, before=self.topic2
-        )
-        self.add_child(
-            guid='topic3', widget=self.topic3
-        )
+        self.add_child(guid="theme_selector", widget=self.theme_selector)
+        self.add_child(guid="welcome_msg", widget=self.welcome_msg)
+        self.add_child(guid="topic2", widget=self.topic2)
+        self.add_child(guid="topic1", widget=self.topic1, before=self.topic2)
+        self.add_child(guid="topic3", widget=self.topic3)
 
 
 def basic_dashboard():
@@ -252,8 +234,5 @@ def main():
     demo()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
-
-

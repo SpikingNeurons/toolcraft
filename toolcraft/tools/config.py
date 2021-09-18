@@ -16,15 +16,15 @@ todo:
 
 """
 import pathlib
-import typer
+
 import toml
+import typer
 
 from . import Tool
 from .. import error as e
 
 
 class ConfigTool(Tool):
-
     @classmethod
     def command_fn(
         cls,

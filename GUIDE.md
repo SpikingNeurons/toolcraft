@@ -157,6 +157,3 @@ We will use this as [facebook](https://github.com/facebook/docusaurus/edit/main/
 Netlify allows deploying cloud functions
 We have set that to `website/functions` dir
 [Netlify Functions](https://docs.netlify.com/functions/build-with-typescript/)
-
-
-

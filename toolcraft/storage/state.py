@@ -1,16 +1,16 @@
 """
 Module that will hold code to do state management
 """
-
+import abc
 import dataclasses
+import datetime
 import pathlib
 import typing as t
-import datetime
-import abc
 
 from .. import error as e
-from .. import util, settings
 from .. import marshalling as m
+from .. import settings
+from .. import util
 
 
 class Suffix:
@@ -37,6 +37,7 @@ class StateFile(m.YamlRepr, abc.ABC):
       But we might have more usage for this so we will retain here
 
     """
+
     hashable: m.HashableClass
     # this is the path for which we store state
     # this is the str to which we attach suffix and save it alongside path dir
@@ -60,11 +61,12 @@ class StateFile(m.YamlRepr, abc.ABC):
     @util.CacheResult
     def backup_path(self) -> pathlib.Path:
         e.code.AssertError(
-            value1=settings.FileHash.DEBUG_HASHABLE_STATE, value2=True,
+            value1=settings.FileHash.DEBUG_HASHABLE_STATE,
+            value2=True,
             msgs=[
                 f"This property can be used only when you have configured "
-                f"`config.DEBUG_HASHABLE_STATE=True`"
-            ]
+                f"`config.DEBUG_HASHABLE_STATE=True`",
+            ],
         )
         return self.path.parent / f"_backup_{self.path.name}_backup_"
 
@@ -104,23 +106,17 @@ class StateFile(m.YamlRepr, abc.ABC):
     def from_dict(
         cls,
         yaml_state: t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
+        **kwargs,
     ) -> "StateFile":
         e.code.CodingError(
-            msgs=[
-                f"For state files we refrain using as_dict and from_dict"
-            ]
+            msgs=[f"For state files we refrain using as_dict and from_dict"],
         )
         raise
 
     # noinspection PyTypeChecker
-    def as_dict(
-        self
-    ) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+    def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         e.code.CodingError(
-            msgs=[
-                f"For state files we refrain using as_dict and from_dict"
-            ]
+            msgs=[f"For state files we refrain using as_dict and from_dict"],
         )
         raise
 
@@ -156,7 +152,7 @@ class Info(StateFile):
                         [_yaml_on_disk],
                         "State in memory: ",
                         [_yaml],
-                    ]
+                    ],
                 )
         else:
             # handle info file and make it read only
@@ -169,8 +165,8 @@ class Info(StateFile):
         if not self.backup_path.exists():
             e.code.CodingError(
                 msgs=[
-                    f"Looks like you have forgot to backup the state file ..."
-                ]
+                    f"Looks like you have forgot to backup the state file ...",
+                ],
             )
 
         _self_yaml = self.hashable.yaml()
@@ -179,10 +175,8 @@ class Info(StateFile):
             e.code.CodingError(
                 msgs=[
                     f"We expect Info state file to be exactly same",
-                    dict(
-                        _self_yaml=_self_yaml, _backup_yaml=_backup_yaml
-                    )
-                ]
+                    dict(_self_yaml=_self_yaml, _backup_yaml=_backup_yaml),
+                ],
             )
 
     def reset(self):
@@ -201,7 +195,7 @@ class ConfigInternal(m.Internal):
     start_syncing: bool = False
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ['start_syncing']
+        return super().vars_that_can_be_overwritten() + ["start_syncing"]
 
 
 @dataclasses.dataclass
@@ -224,11 +218,11 @@ class Config(StateFile):
     created_on: datetime.datetime = None
     # time when config file was updated ... i.e. when access happened etc
     config_updated_on: t.List[datetime.datetime] = dataclasses.field(
-        default_factory=list
+        default_factory=list,
     )
     # will be updated when File or Folder is accessed
     accessed_on: t.List[datetime.datetime] = dataclasses.field(
-        default_factory=list
+        default_factory=list,
     )
 
     @property
@@ -245,7 +239,8 @@ class Config(StateFile):
     def dataclass_field_names(self) -> t.List[str]:
         # we do not want to use this values to be saved in serialized state
         return [
-            f_name for f_name in super().dataclass_field_names
+            f_name
+            for f_name in super().dataclass_field_names
             if f_name not in ["hashable", "path_prefix"]
         ]
 
@@ -274,9 +269,7 @@ class Config(StateFile):
         # if path exists load data dict from it
         # that is sync with contents on disk
         if self.path.exists():
-            _dict_from_dick = m.YamlLoader.load(
-                cls=dict, file_or_text=self.path
-            )
+            _dict_from_dick = m.YamlLoader.load(cls=dict, file_or_text=self.path)
             # update internal dict from HashableDict loaded from disk
             for _k, _v in _dict_from_dick.items():
                 # this will take care of conversion of list/dict into
@@ -295,13 +288,17 @@ class Config(StateFile):
         if key in self.dataclass_field_names:
             if value.__class__ == list:
                 # noinspection PyPep8Naming
-                NotifierList = \
-                    util.notifying_list_dict_class_factory(list, self.sync)
+                NotifierList = util.notifying_list_dict_class_factory(
+                    list,
+                    self.sync,
+                )
                 value = NotifierList(value)
             elif value.__class__ == dict:
                 # noinspection PyPep8Naming
-                NotifierDict = \
-                    util.notifying_list_dict_class_factory(dict, self.sync)
+                NotifierDict = util.notifying_list_dict_class_factory(
+                    dict,
+                    self.sync,
+                )
                 value = NotifierDict(value)
             else:
                 ...
@@ -340,11 +337,11 @@ class Config(StateFile):
                         f"internal state for config ...",
                         {
                             "_current_state": _current_state,
-                            "_disk_state": _disk_state
+                            "_disk_state": _disk_state,
                         },
                         f"This looks like unexpected sync as nothing has "
-                        f"changed in config"
-                    ]
+                        f"changed in config",
+                    ],
                 )
 
         # -------------------------------------------------- 03
@@ -373,8 +370,8 @@ class Config(StateFile):
                         f"Field {f_name} does not have any default value to "
                         f"extract",
                         f"We assume it is non mandatory field and hence we "
-                        f"expect a default to be provided"
-                    ]
+                        f"expect a default to be provided",
+                    ],
                 )
             setattr(self, f_name, v)
 
@@ -384,17 +381,15 @@ class Config(StateFile):
     # noinspection DuplicatedCode
     def append_last_accessed_on(self):
         # this can never happen
-        if len(self.accessed_on) > \
-                self.LITERAL.accessed_on_list_limit:
+        if len(self.accessed_on) > self.LITERAL.accessed_on_list_limit:
             e.code.CodingError(
                 msgs=[
                     f"This should never happens ... did you try to append "
-                    f"last_accessed_on list multiple times"
-                ]
+                    f"last_accessed_on list multiple times",
+                ],
             )
         # limit the list
-        if len(self.accessed_on) == \
-                self.LITERAL.accessed_on_list_limit:
+        if len(self.accessed_on) == self.LITERAL.accessed_on_list_limit:
             self.accessed_on = self.accessed_on[1:]
         # append time
         self.accessed_on.append(datetime.datetime.now())
@@ -404,14 +399,14 @@ class Config(StateFile):
         if not self.backup_path.exists():
             e.code.CodingError(
                 msgs=[
-                    f"Looks like you have forgot to backup the state file ..."
-                ]
+                    f"Looks like you have forgot to backup the state file ...",
+                ],
             )
 
         # get the state as dict
         _self_yaml_dict = self.as_dict()
         _backup_yaml_dict = self.from_yaml(
-            self.backup_path.read_text()
+            self.backup_path.read_text(),
         ).as_dict()
 
         # match lengths
@@ -419,15 +414,15 @@ class Config(StateFile):
             e.code.CodingError(
                 msgs=[
                     f"The config does not have same number of keys as that "
-                    f"in backup"
-                ]
+                    f"in backup",
+                ],
             )
 
         # keys that must differ
-        _keys_that_must_differ = ['created_on']
+        _keys_that_must_differ = ["created_on"]
 
         # keys that must not differ
-        _keys_that_must_not_differ = ['auto_hashes']
+        _keys_that_must_not_differ = ["auto_hashes"]
 
         # loop over keys
         for k in _self_yaml_dict.keys():
@@ -438,8 +433,8 @@ class Config(StateFile):
                         msgs=[
                             f"We expect value for key `{k}` to differ in "
                             f"backup",
-                            f"Found value: {_backup_yaml_dict[k]}"
-                        ]
+                            f"Found value: {_backup_yaml_dict[k]}",
+                        ],
                     )
             if k in _keys_that_must_not_differ:
                 if not _matches:
@@ -450,6 +445,6 @@ class Config(StateFile):
                             dict(
                                 _self=_self_yaml_dict[k],
                                 _backup=_backup_yaml_dict[k],
-                            )
-                        ]
+                            ),
+                        ],
                     )

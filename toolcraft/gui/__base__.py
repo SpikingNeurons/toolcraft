@@ -5,18 +5,19 @@ The rule for now is to
 """
 import abc
 import dataclasses
-import typing as t
 import enum
+import typing as t
 
-import dearpygui.dearpygui as dpg
-# noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
+from . import assets
 from .. import error as e
 from .. import logger
-from .. import util
 from .. import marshalling as m
-from . import assets
+from .. import util
+
+# noinspection PyProtectedMember
 
 _LOGGER = logger.get_logger()
 
@@ -59,13 +60,11 @@ class Color(m.FrozenEnum, enum.Enum):
             e.code.CodingError(
                 msgs=[
                     f"Seems like you are using custom color in that case "
-                    f"please pass [r, g, b, a] kwargs i.e. Color.CUSTOM(...)"
-                ]
+                    f"please pass [r, g, b, a] kwargs i.e. Color.CUSTOM(...)",
+                ],
             )
         else:
-            e.code.NotSupported(
-                msgs=[f"Unknown {self}"]
-            )
+            e.code.NotSupported(msgs=[f"Unknown {self}"])
 
     # noinspection PyMethodOverriding
     def __call__(self, r: int, g: int, b: int, a: int) -> "Color":
@@ -73,8 +72,10 @@ class Color(m.FrozenEnum, enum.Enum):
         This method return fake Color when called with Color.CUSTOM(...)
         """
         if self is self.CUSTOM:
+
             class _:
                 ...
+
             __ = _()
             __.dpg_value = [r, g, b, a]
             # noinspection PyTypeChecker
@@ -83,8 +84,8 @@ class Color(m.FrozenEnum, enum.Enum):
             e.code.CodingError(
                 msgs=[
                     f"You are allowed to pass custom values only with "
-                    f"{self.CUSTOM} color."
-                ]
+                    f"{self.CUSTOM} color.",
+                ],
             )
 
 
@@ -105,7 +106,7 @@ class Callback(m.HashableClass, abc.ABC):
         self,
         sender: "Widget",
         app_data: t.Any,
-        user_data: t.Union["Widget", t.List["Widget"]]
+        user_data: t.Union["Widget", t.List["Widget"]],
     ):
         ...
 
@@ -123,15 +124,14 @@ class WidgetInternal(m.Internal):
 
     @property
     def dpg_kwargs(self) -> t.Dict[str, t.Any]:
-        _ret = {'parent': self.parent.dpg_id}
+        _ret = {"parent": self.parent.dpg_id}
         if self.before is not None:
-            _ret['before'] = self.before.dpg_id
+            _ret["before"] = self.before.dpg_id
         return _ret
 
 
 @dataclasses.dataclass(frozen=True)
 class Widget(m.HashableClass, abc.ABC):
-
     @property
     def guid(self) -> str:
         return self.internal.guid
@@ -191,8 +191,8 @@ class Widget(m.HashableClass, abc.ABC):
                 msgs=[
                     f"This property is not available for Widgets that do not "
                     f"support containers",
-                    f"Please check class {self.__class__}"
-                ]
+                    f"Please check class {self.__class__}",
+                ],
             )
         # this will be populated when add_child is called
         return {}
@@ -220,7 +220,7 @@ class Widget(m.HashableClass, abc.ABC):
     def duplicate_field(
         self,
         field_name: str,
-        value: t.Union["Widget", Callback]
+        value: t.Union["Widget", Callback],
     ):
         """
         To be called from init. Will be only called for fields that are
@@ -317,9 +317,7 @@ class Widget(m.HashableClass, abc.ABC):
         # delete the UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
 
-    def delete_post_runner(
-        self, *, hooked_method_return_value: t.Any
-    ):
+    def delete_post_runner(self, *, hooked_method_return_value: t.Any):
         ...
 
     def layout(self):
@@ -354,8 +352,8 @@ class Widget(m.HashableClass, abc.ABC):
                     f"Note that children dict is not empty",
                     "If you have performed add_child before build the code "
                     "before call to layout should back them up and clear "
-                    "children dict"
-                ]
+                    "children dict",
+                ],
             )
 
         # ----------------------------------------------------- 02
@@ -373,11 +371,8 @@ class Widget(m.HashableClass, abc.ABC):
             e.code.CodingError(
                 msgs=[
                     f"Widget is already built and registered with:",
-                    {
-                        'parent': self.internal.parent.name,
-                        'guid': self.guid
-                    },
-                ]
+                    {"parent": self.internal.parent.name, "guid": self.guid},
+                ],
             )
 
         # ---------------------------------------------------- 02
@@ -388,9 +383,7 @@ class Widget(m.HashableClass, abc.ABC):
             # this is needed because in some cases there will be add_child
             # performed before build, but we need to give preference to layout
             # method and then again append the backed up elements
-            _backup_children = {
-                k: v for k, v in self.children.items()
-            }
+            _backup_children = {k: v for k, v in self.children.items()}
             # ------------------------------------------------ 02.02
             # clear the children dict
             self.children.clear()
@@ -405,8 +398,8 @@ class Widget(m.HashableClass, abc.ABC):
                         msgs=[
                             f"The `layout()` method has added child with guid "
                             f"`{k}` which was already added before `build()` "
-                            f"was called"
-                        ]
+                            f"was called",
+                        ],
                     )
                 self.children[k] = v
 
@@ -414,15 +407,13 @@ class Widget(m.HashableClass, abc.ABC):
     def build(self) -> int:
         ...
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: int
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: int):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
             e.code.CodingError(
                 msgs=[
-                    f"We expect build to return int which happens to be dpg_id"
-                ]
+                    f"We expect build to return int which happens to be dpg_id",
+                ],
             )
 
         # set dpg_id
@@ -458,8 +449,8 @@ class Widget(m.HashableClass, abc.ABC):
             e.code.CodingError(
                 msgs=[
                     f"Widget {self.__class__} is not of container type. We "
-                    f"do not support adding widget as child"
-                ]
+                    f"do not support adding widget as child",
+                ],
             )
         # -------------------------------------------------- 01.02
         # make sure that you are not adding Dashboard
@@ -467,8 +458,8 @@ class Widget(m.HashableClass, abc.ABC):
             e.code.CodingError(
                 msgs=[
                     f"Note that you are not allowed to add Dashboard as child "
-                    f"to any Widget"
-                ]
+                    f"to any Widget",
+                ],
             )
 
         # -------------------------------------------------- 02
@@ -477,16 +468,10 @@ class Widget(m.HashableClass, abc.ABC):
             e.code.NotAllowed(
                 msgs=[
                     f"The widget is already built with:",
-                    {
-                        'parent': widget.parent.name,
-                        'guid': widget.guid
-                    },
+                    {"parent": widget.parent.name, "guid": widget.guid},
                     f"You are now attempting to build it again with",
-                    {
-                        'parent': self.name,
-                        'guid': guid
-                    }
-                ]
+                    {"parent": self.name, "guid": guid},
+                ],
             )
 
         # -------------------------------------------------- 02
@@ -495,8 +480,8 @@ class Widget(m.HashableClass, abc.ABC):
             e.validation.NotAllowed(
                 msgs=[
                     f"Looks like the widget with guid `{guid}` is already "
-                    f"added to parent."
-                ]
+                    f"added to parent.",
+                ],
             )
 
         # -------------------------------------------------- 04
@@ -505,14 +490,14 @@ class Widget(m.HashableClass, abc.ABC):
         # does mean that you cannot share widgets in multiple places i.e. it
         # must have only one parent and will be unique with peer children of
         # that parent
-        if widget.internal.has('guid'):
+        if widget.internal.has("guid"):
             e.code.CodingError(
                 msgs=[
                     f"Seems like widget was already assigned to some parent "
                     f"and has guid `{widget.guid}`",
                     f"Your attempt to add to some new parent with guid "
                     f"`{guid}` is not possible.",
-                ]
+                ],
             )
 
         # -------------------------------------------------- 05
@@ -585,6 +570,7 @@ class Binder:
     """
     Can bind to parent that is already built
     """
+
     guid: str
     parent: Widget
     before: Widget = None
@@ -595,28 +581,30 @@ class Binder:
                 msgs=[
                     f"The parent is not built so we cannot create binder "
                     f"instance ...",
-                    f"Make sure to supply parent that is built"
-                ]
+                    f"Make sure to supply parent that is built",
+                ],
             )
         if not self.parent.is_container:
             e.validation.NotAllowed(
                 msgs=[
                     f"We expect parent to be of container type so that "
-                    f"new widget can be bind ..."
-                ]
+                    f"new widget can be bind ...",
+                ],
             )
         if self.guid in self.parent.children.keys():
             e.validation.NotAllowed(
                 msgs=[
                     f"You cannot have widget with guid `{self.guid}` to be "
-                    f"bind with this parent"
-                ]
+                    f"bind with this parent",
+                ],
             )
 
     def __call__(self, widget: Widget):
         # bind
         self.parent.add_child(
-            guid=self.guid, widget=widget, before=self.before,
+            guid=self.guid,
+            widget=widget,
+            before=self.before,
         )
 
 
@@ -646,6 +634,7 @@ class Dashboard(Widget):
       Also maybe add field save_state for Widget so that we know that only
       these widgets state needs to be saved
     """
+
     dash_guid: str
     title: str
     width: int = 1370
@@ -659,9 +648,7 @@ class Dashboard(Widget):
     @property
     def parent(self) -> "Widget":
         e.code.CodingError(
-            msgs=[
-                f"You need not use this property for dashboard"
-            ]
+            msgs=[f"You need not use this property for dashboard"],
         )
 
     @property
@@ -683,18 +670,16 @@ class Dashboard(Widget):
         property
         """
         from . import Window
-        return {
-            k: v
-            for k, v in self.children.items() if isinstance(v, Window)
-        }
+
+        return {k: v for k, v in self.children.items() if isinstance(v, Window)}
 
     # noinspection PyTypeChecker,PyMethodMayBeStatic
     def copy(self) -> "Dashboard":
         e.code.CodingError(
             msgs=[
                 f"this is dashboard and you need not use this method as "
-                f"already this instance is eligible to be setup ..."
-            ]
+                f"already this instance is eligible to be setup ...",
+            ],
         )
 
     # noinspection PyMethodMayBeStatic,PyMethodOverriding
@@ -705,7 +690,8 @@ class Dashboard(Widget):
         _ret = dpg.add_window(
             label=self.title,
             on_close=self.on_close,
-            width=self.width, height=self.height,
+            width=self.width,
+            height=self.height,
         )
 
         # -------------------------------------------------- 02
@@ -727,8 +713,8 @@ class Dashboard(Widget):
             e.code.NotAllowed(
                 msgs=[
                     f"looks like you missed to build dashboard "
-                    f"`{self.name}`"
-                ]
+                    f"`{self.name}`",
+                ],
             )
 
         # setup and start

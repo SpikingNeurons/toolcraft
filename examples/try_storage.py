@@ -5,24 +5,23 @@ todo: Some bugs to be fixed
     + need test cases
     + and is not working
 """
-
-
+import dataclasses
+import enum
 import pathlib
 import sys
-
-sys.path.append("..\\..")
+import time
 import typing as t
-import dataclasses
-import pyarrow as pa
-import tensorflow.keras as tk
+
 import numpy as np
 import pandas as pd
-import time
-import enum
-from toolcraft import settings
+import pyarrow as pa
+import tensorflow.keras as tk
 from toolcraft import marshalling as m
+from toolcraft import settings
 from toolcraft import storage as s
 from toolcraft import util
+
+sys.path.append("..\\..")
 
 settings.DEBUG_HASHABLE_STATE = False
 
@@ -54,31 +53,29 @@ def try_hashable_ser():
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
     _hashable = HashableTry(
         a=33,
-        l=m.FrozenKeras(
-            tk.losses.CategoricalCrossentropy(label_smoothing=1.0)
-        ),
+        l=m.FrozenKeras(tk.losses.CategoricalCrossentropy(label_smoothing=1.0)),
         o=m.FrozenKeras(
-          tk.optimizers.Adam(
-              learning_rate=tk.optimizers.schedules.ExponentialDecay(
-                  0.1, 2, 0.3
-              )
-          )
+            tk.optimizers.Adam(
+                learning_rate=tk.optimizers.schedules.ExponentialDecay(
+                    0.1,
+                    2,
+                    0.3,
+                ),
+            ),
         ),
-        d=m.FrozenDict(
-            {11: 1, "2": 2, "3": 33}
-        ),
+        d=m.FrozenDict({11: 1, "2": 2, "3": 33}),
         e=NewEnum.a1,
         child=HashableTryChild(
             a=66,
             l=m.FrozenKeras(
-                tk.losses.CategoricalCrossentropy(label_smoothing=2.0)
-            )
-        )
+                tk.losses.CategoricalCrossentropy(label_smoothing=2.0),
+            ),
+        ),
     )
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
     # noinspection PyTypeChecker
     _de_ser_hashable = HashableTry.from_yaml(
-        _hashable.yaml()
+        _hashable.yaml(),
     )  # type: HashableTry
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 
@@ -119,13 +116,13 @@ class DnTestFile(s.DownloadFileGroup):
     def get_urls(self) -> t.Dict[str, str]:
         return {
             "file": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
-                    "resources/pdf/dummy.pdf"
+            "resources/pdf/dummy.pdf",
         }
 
     def get_hashes(self) -> t.Dict[str, str]:
         return {
             "file": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
-                    "885e6adb4"
+            "885e6adb4",
         }
 
 
@@ -151,7 +148,7 @@ class DnTestFileAutoHashed(s.DownloadFileGroup):
     def get_urls(self) -> t.Dict[str, str]:
         return {
             "file": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
-                    "resources/pdf/dummy.pdf"
+            "resources/pdf/dummy.pdf",
         }
 
     @property
@@ -199,7 +196,6 @@ def try_metainfo_file():
 
 @dataclasses.dataclass(frozen=True)
 class Folder0(s.Folder):
-
     @property
     @util.CacheResult
     def root_dir(self) -> pathlib.Path:
@@ -255,18 +251,13 @@ class ParentTestStorage(m.HashableClass):
 
 
 def try_creating_folders():
-    folder0 = Folder0(
-        for_hashable="arrow_storage"
-    )
-    folder1 = Folder1(
-        parent_folder=folder0, for_hashable="parent_1"
-    )
+    folder0 = Folder0(for_hashable="arrow_storage")
+    folder1 = Folder1(parent_folder=folder0, for_hashable="parent_1")
     folder2 = Folder2(
-        parent_folder=folder1, for_hashable=ParentTestStorage(44, 55.)
+        parent_folder=folder1,
+        for_hashable=ParentTestStorage(44, 55.0),
     )
-    folder3 = Folder3(
-        parent_folder=folder2, for_hashable="leaf_folder"
-    )
+    folder3 = Folder3(parent_folder=folder2, for_hashable="leaf_folder")
 
     # either delete from bottom to top
     # folder3.delete(force=True)
@@ -292,7 +283,6 @@ def try_creating_folders():
 
 @dataclasses.dataclass(frozen=True)
 class TestStorageResultsFolder(s.ResultsFolder):
-
     @property
     @util.CacheResult
     def root_dir(self) -> pathlib.Path:
@@ -306,9 +296,7 @@ class TestStorage(m.HashableClass):
 
     @property
     def results_folder(self) -> TestStorageResultsFolder:
-        return TestStorageResultsFolder(
-            for_hashable=self
-        )
+        return TestStorageResultsFolder(for_hashable=self)
 
     @staticmethod
     def data_vector(
@@ -317,16 +305,14 @@ class TestStorage(m.HashableClass):
         b: int = None,
     ) -> pa.Table:
         return {
-            "pandas_dataframe":
-                pa.table({"a": np.asarray([1, 2, 3, 4])}),
-            "pandas_dataframe_with_partition_cols":
-                pa.table(
-                    {
-                        "a": np.asarray([a]*4),
-                        "b": np.asarray([b]*4),
-                        "c": np.asarray([6, 7, 8, 9]),
-                    }
-                )
+            "pandas_dataframe": pa.table({"a": np.asarray([1, 2, 3, 4])}),
+            "pandas_dataframe_with_partition_cols": pa.table(
+                {
+                    "a": np.asarray([a] * 4),
+                    "b": np.asarray([b] * 4),
+                    "c": np.asarray([6, 7, 8, 9]),
+                },
+            ),
         }[key]
 
     # noinspection PyUnusedLocal
@@ -338,7 +324,11 @@ class TestStorage(m.HashableClass):
     # noinspection PyUnusedLocal
     @s.StoreField(partition_cols=["a", "b"])
     def store_with_partition_cols(
-        self, mode: s.MODE_TYPE, a: int, b: int, filters: s.FILTERS_TYPE = None
+        self,
+        mode: s.MODE_TYPE,
+        a: int,
+        b: int,
+        filters: s.FILTERS_TYPE = None,
     ) -> pa.Table:
         return self.data_vector("pandas_dataframe_with_partition_cols", a, b)
 
@@ -352,33 +342,32 @@ class TestStorage(m.HashableClass):
     @s.StoreField(streamed_write=True, partition_cols=["a", "b"])
     # noinspection PyMethodMayBeStatic
     def store_streamed_with_partition_cols(
-        self, mode: s.MODE_TYPE, a: int, b: int
+        self,
+        mode: s.MODE_TYPE,
+        a: int,
+        b: int,
     ) -> pa.Table:
         return self.data_vector("pandas_dataframe_with_partition_cols", a, b)
 
     # noinspection PyUnusedLocal
-    @s.StoreField(partition_cols=['epoch'])
+    @s.StoreField(partition_cols=["epoch"])
     def store_with_data_kwarg(
-        self, mode: s.MODE_TYPE, epoch: int, data: t.Dict
+        self,
+        mode: s.MODE_TYPE,
+        epoch: int,
+        data: t.Dict,
     ) -> pa.Table:
         return pa.table(
             data={
-                'epoch': [epoch],
+                "epoch": [epoch],
                 **data,
-            }
+            },
         )
 
     @s.StoreField()
-    def store_with_list(
-            self,
-            mode: s.MODE_TYPE
-    ) -> pa.Table:
+    def store_with_list(self, mode: s.MODE_TYPE) -> pa.Table:
         result = np.ones((4, 5))
-        return pa.table(
-            {
-               "list": [_ for _ in result]
-            }
-        )
+        return pa.table({"list": [_ for _ in result]})
 
 
 def try_arrow_storage():
@@ -387,31 +376,31 @@ def try_arrow_storage():
     # ---------------------------------------------------------01
     print("---------------------------------------------------------01")
     # pandas_dataframe
-    r = ts.store(mode='rw')
+    r = ts.store(mode="rw")
     print("ts.store(mode='rw')")
     assert r == ts.data_vector("pandas_dataframe")
 
-    r = ts.store(mode='r')
+    r = ts.store(mode="r")
     print("ts.store(mode='r')")
     assert r == ts.data_vector("pandas_dataframe")
 
-    r = ts.store(mode='r')
+    r = ts.store(mode="r")
     print("Ensure reading twice works -> ts.store(mode='r')")
     assert r == ts.data_vector("pandas_dataframe")
 
-    r = ts.store(mode='d')
+    r = ts.store(mode="d")
     print("ts.store(mode='d')")
     assert r
 
-    r = ts.store(mode='w')
+    r = ts.store(mode="w")
     print("ts.store(mode='w')")
     assert r
 
-    r = ts.store(mode='r')
+    r = ts.store(mode="r")
     print("ts.store(mode='r')")
     assert r == ts.data_vector("pandas_dataframe")
 
-    r = ts.store(mode='d')
+    r = ts.store(mode="d")
     print("ts.store(mode='d')")
     assert r
 
@@ -419,190 +408,190 @@ def try_arrow_storage():
     print("---------------------------------------------------------02")
     print("---------------------------------------------------------02.01")
     # pandas_dataframe_with_partition_cols
-    r = ts.store_with_partition_cols(mode='rw', a=1, b=2)
+    r = ts.store_with_partition_cols(mode="rw", a=1, b=2)
     print("ts.store_with_partition_cols(mode='rw', a=1, b=2)")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector(
-            "pandas_dataframe_with_partition_cols", a=1, b=2
-        ).to_pandas().sort_index(axis=1)
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=2)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
-    r = ts.store_with_partition_cols(mode='r')
+    r = ts.store_with_partition_cols(mode="r")
     print("ts.store_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector(
-            "pandas_dataframe_with_partition_cols", a=1, b=2
-        ).to_pandas().sort_index(axis=1)
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=2)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
-    r = ts.store_with_partition_cols(mode='d')
+    r = ts.store_with_partition_cols(mode="d")
     print("ts.store_with_partition_cols(mode='d')")
     assert r
 
     print("---------------------------------------------------------02.02")
-    r = ts.store_with_partition_cols(mode='w', a=1, b=22)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=22)
     print("ts.store_with_partition_cols(mode='w', a=1, b=22)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='w', a=1, b=33)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=33)
     print("ts.store_with_partition_cols(mode='w', a=1, b=33)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='r')
+    r = ts.store_with_partition_cols(mode="r")
     print("ts.store_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
-                ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=1, b=22
-                ).to_pandas().sort_index(axis=1),
-                ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=1, b=33
-                ).to_pandas().sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33)
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
-        )
+        ),
     )
 
-    r = ts.store_with_partition_cols(mode='r', a=1)
+    r = ts.store_with_partition_cols(mode="r", a=1)
     print("ts.store_with_partition_cols(mode='r', a=1)")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
-                ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=1, b=22
-                ).to_pandas().sort_index(axis=1),
-                ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=1, b=33
-                ).to_pandas().sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33)
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
-        )
+        ),
     )
 
-    r = ts.store_with_partition_cols(mode='r', a=1, b=22)
+    r = ts.store_with_partition_cols(mode="r", a=1, b=22)
     print("ts.store_with_partition_cols(mode='r', a=1, b=22)")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector(
-            "pandas_dataframe_with_partition_cols", a=1, b=22
-        ).to_pandas().sort_index(axis=1),
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
-    r = ts.store_with_partition_cols(mode='e', a=1, b=22)
+    r = ts.store_with_partition_cols(mode="e", a=1, b=22)
     print("ts.store_with_partition_cols(mode='r', a=1, b=22)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='e', a=1, b=33)
+    r = ts.store_with_partition_cols(mode="e", a=1, b=33)
     print("ts.store_with_partition_cols(mode='r', a=1, b=33)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='e', a=1, b=55)
+    r = ts.store_with_partition_cols(mode="e", a=1, b=55)
     print("ts.store_with_partition_cols(mode='r', a=1, b=55)")
     assert not r
 
-    r = ts.store_with_partition_cols(mode='d', b=33)
+    r = ts.store_with_partition_cols(mode="d", b=33)
     print("ts.store_with_partition_cols(mode='d', b=33)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='e', b=33)
+    r = ts.store_with_partition_cols(mode="e", b=33)
     print("ts.store_with_partition_cols(mode='r', b=33)")
     assert not r
 
-    r = ts.store_with_partition_cols(mode='r')
+    r = ts.store_with_partition_cols(mode="r")
     print("ts.store_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        ts.data_vector(
-            "pandas_dataframe_with_partition_cols", a=1, b=22
-        ).to_pandas().sort_index(axis=1),
+        ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+        .to_pandas()
+        .sort_index(axis=1),
     )
 
-    r = ts.store_with_partition_cols(mode='d')
+    r = ts.store_with_partition_cols(mode="d")
     print("ts.store_with_partition_cols(mode='d')")
     assert r
 
     print("---------------------------------------------------------02.03")
-    r = ts.store_with_partition_cols(mode='w', a=1, b=11)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=11)
     print("ts.store_with_partition_cols(mode='w', a=1, b=11)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='w', a=1, b=22)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=22)
     print("ts.store_with_partition_cols(mode='w', a=1, b=22)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='w', a=1, b=33)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=33)
     print("ts.store_with_partition_cols(mode='w', a=1, b=33)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='w', a=1, b=44)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=44)
     print("ts.store_with_partition_cols(mode='w', a=1, b=44)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='w', a=1, b=55)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=55)
     print("ts.store_with_partition_cols(mode='w', a=1, b=55)")
     assert r
 
-    r = ts.store_with_partition_cols(mode='w', a=1, b=66)
+    r = ts.store_with_partition_cols(mode="w", a=1, b=66)
     print("ts.store_with_partition_cols(mode='w', a=1, b=66)")
     assert r
 
-    r = ts.store_with_partition_cols(
-        mode='d', a=1, filters=[
-            ('b', '=', '77')
-        ]
-    )
+    r = ts.store_with_partition_cols(mode="d", a=1, filters=[("b", "=", "77")])
     print(
         """r = ts.store_with_partition_cols(
     mode='d', a=1, filters=[
         ('b', '=', '77')
     ]
-)""")
+)""",
+    )
     assert not r
 
     r = ts.store_with_partition_cols(
-        mode='d', a=1, filters=[
-            ('b', '<=', 55), ('b', '>', 22),
-        ]
+        mode="d",
+        a=1,
+        filters=[
+            ("b", "<=", 55),
+            ("b", ">", 22),
+        ],
     )
     print(
         """r = ts.store_with_partition_cols(
     mode='d', a=1, filters=[
         ('b', '<=', 55), ('b', '>', 22),
     ]
-)"""
+)""",
     )
     assert r
 
-    r = ts.store_with_partition_cols(mode='r')
+    r = ts.store_with_partition_cols(mode="r")
     print("ts.store_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
-                ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=1, b=11
-                ).to_pandas().sort_index(axis=1),
-                ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=1, b=22
-                ).to_pandas().sort_index(axis=1),
-                ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=1, b=66
-                ).to_pandas().sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=11)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+                .to_pandas()
+                .sort_index(axis=1),
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=66)
+                .to_pandas()
+                .sort_index(axis=1),
             ],
             ignore_index=True,
-        )
+        ),
     )
 
-    r = ts.store_with_partition_cols(mode='d', filters=[])
+    r = ts.store_with_partition_cols(mode="d", filters=[])
     print("ts.store_with_partition_cols(mode='d')")
     assert r
 
-    r = ts.store_with_partition_cols(mode='d')
+    r = ts.store_with_partition_cols(mode="d")
     print("ts.store_with_partition_cols(mode='d')")
     assert r
 
@@ -610,39 +599,33 @@ def try_arrow_storage():
     print("---------------------------------------------------------03")
     # pandas_dataframe_streamed
 
-    r = ts.store_streamed(mode='a')
+    r = ts.store_streamed(mode="a")
     print("ts.store_streamed(mode='a')")
     assert r
 
-    r = ts.store_streamed(mode='a')
+    r = ts.store_streamed(mode="a")
     print("ts.store_streamed(mode='a')")
     assert r
 
-    r = ts.store_streamed(mode='a')
+    r = ts.store_streamed(mode="a")
     print("ts.store_streamed(mode='a')")
     assert r
 
-    r = ts.store_streamed(mode='r')
+    r = ts.store_streamed(mode="r")
     print("ts.store_streamed(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas(),
         pd.concat(
             [
-                ts.data_vector(
-                    "pandas_dataframe"
-                ).to_pandas(),
-                ts.data_vector(
-                    "pandas_dataframe"
-                ).to_pandas(),
-                ts.data_vector(
-                    "pandas_dataframe"
-                ).to_pandas(),
+                ts.data_vector("pandas_dataframe").to_pandas(),
+                ts.data_vector("pandas_dataframe").to_pandas(),
+                ts.data_vector("pandas_dataframe").to_pandas(),
             ],
-            ignore_index=True
-        )
+            ignore_index=True,
+        ),
     )
 
-    r = ts.store_streamed(mode='d')
+    r = ts.store_streamed(mode="d")
     print("ts.store_streamed(mode='d')")
     assert r
 
@@ -650,87 +633,102 @@ def try_arrow_storage():
     print("---------------------------------------------------------04")
     # pandas_dataframe_streamed_group_by
 
-    r = ts.store_streamed_with_partition_cols(mode='a', a=11, b=22)
+    r = ts.store_streamed_with_partition_cols(mode="a", a=11, b=22)
     print("ts.store_streamed_with_partition_cols(mode='a', a=11, b=22)")
     assert r
 
-    r = ts.store_streamed_with_partition_cols(mode='a', a=33, b=44)
+    r = ts.store_streamed_with_partition_cols(mode="a", a=33, b=44)
     print("ts.store_streamed_with_partition_cols(mode='a', a=33, b=44)")
     assert r
 
-    r = ts.store_streamed_with_partition_cols(mode='a', a=55, b=66)
+    r = ts.store_streamed_with_partition_cols(mode="a", a=55, b=66)
     print("ts.store_streamed_with_partition_cols(mode='a', a=55, b=66)")
     assert r
 
-    r = ts.store_streamed_with_partition_cols(mode='r')
+    r = ts.store_streamed_with_partition_cols(mode="r")
     print("ts.store_streamed_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
                 ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=11, b=22
-                ).to_pandas().sort_index(axis=1),
+                    "pandas_dataframe_with_partition_cols",
+                    a=11,
+                    b=22,
+                )
+                .to_pandas()
+                .sort_index(axis=1),
                 ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=33, b=44
-                ).to_pandas().sort_index(axis=1),
+                    "pandas_dataframe_with_partition_cols",
+                    a=33,
+                    b=44,
+                )
+                .to_pandas()
+                .sort_index(axis=1),
                 ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=55, b=66
-                ).to_pandas().sort_index(axis=1),
+                    "pandas_dataframe_with_partition_cols",
+                    a=55,
+                    b=66,
+                )
+                .to_pandas()
+                .sort_index(axis=1),
             ],
-            ignore_index=True
-        )
+            ignore_index=True,
+        ),
     )
 
-    r = ts.store_streamed_with_partition_cols(mode='d', a=11)
+    r = ts.store_streamed_with_partition_cols(mode="d", a=11)
     print("ts.store_streamed_with_partition_cols(mode='d', a=11)")
     assert r
 
-    r = ts.store_streamed_with_partition_cols(mode='r')
+    r = ts.store_streamed_with_partition_cols(mode="r")
     print("ts.store_streamed_with_partition_cols(mode='r')")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
         pd.concat(
             [
                 ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=33, b=44
-                ).to_pandas().sort_index(axis=1),
+                    "pandas_dataframe_with_partition_cols",
+                    a=33,
+                    b=44,
+                )
+                .to_pandas()
+                .sort_index(axis=1),
                 ts.data_vector(
-                    "pandas_dataframe_with_partition_cols", a=55, b=66
-                ).to_pandas().sort_index(axis=1),
+                    "pandas_dataframe_with_partition_cols",
+                    a=55,
+                    b=66,
+                )
+                .to_pandas()
+                .sort_index(axis=1),
             ],
-            ignore_index=True
-        )
+            ignore_index=True,
+        ),
     )
 
-    r = ts.store_streamed_with_partition_cols(mode='d')
+    r = ts.store_streamed_with_partition_cols(mode="d")
     print("ts.store_streamed_with_partition_cols(mode='d')")
     assert r
 
     # ---------------------------------------------------------05
     print("---------------------------------------------------------05")
     # using data dict for dumping
-    r = ts.store_with_data_kwarg(mode='w', epoch=10, data={'a': [22]})
+    r = ts.store_with_data_kwarg(mode="w", epoch=10, data={"a": [22]})
     print("ts.store_with_data_kwarg(mode='w', epoch=10, data={'a': [22]})")
     assert r
 
-    r = ts.store_with_data_kwarg(mode='r', epoch=10)
+    r = ts.store_with_data_kwarg(mode="r", epoch=10)
     print("ts.store_with_data_kwarg(mode='r', epoch=10)")
     pd.testing.assert_frame_equal(
         r.to_pandas().sort_index(axis=1),
-        pa.table(
-            {
-                'epoch': [10],
-                'a': [22]
-            }
-        ).to_pandas().sort_index(axis=1)
+        pa.table({"epoch": [10], "a": [22]}).to_pandas().sort_index(axis=1),
     )
 
-    r = ts.store_with_data_kwarg(mode='d', epoch=10)
+    r = ts.store_with_data_kwarg(mode="d", epoch=10)
     print("ts.store_with_data_kwarg(mode='d', epoch=10)")
     assert r
 
-    r = ts.store_with_data_kwarg(mode='d')
+    r = ts.store_with_data_kwarg(mode="d")
     print("ts.store_with_data_kwarg(mode='d')")
     assert r
 
@@ -789,5 +787,5 @@ def try_main():
     _TEMP_PATH.rmdir()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try_main()

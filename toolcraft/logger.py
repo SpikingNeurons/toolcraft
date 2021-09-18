@@ -1,26 +1,25 @@
-# coding=utf-8
 """
 NOTE: we do not use scandal.error as it is not possible here
 
 todo: removing exceptions is difficult ... as it is problematic to import
   .error module ... we can just pretty log the exceptions instead
 """
-
-import logging
-from tqdm import tqdm
-import typing as t
 import dataclasses
 import inspect
-import types
+import io
+import logging
 import pathlib
+import sys
+import textwrap
+import types
+import typing as t
+from datetime import datetime
 from logging import config as lc
 from logging import handlers
-import textwrap
-from datetime import datetime
-import sys
-import io
-from yaspin.core import Yaspin
+
 import dearpygui.dearpygui as dpg
+from tqdm import tqdm
+from yaspin.core import Yaspin
 
 # log dirs
 # todo: use `tooling.tool.config` to get these settings from user or
@@ -39,10 +38,10 @@ _LOGGERS = {}  # type: t.Dict[str, _LoggerClass]
 #      ✅  ❎ ❌ 👍  ✔ ✘ ❎ ✅ ✅ ✅ ⌛ ⏳ ⚿ 🗝️ 🔑 🔐 🔒 🔰 🌡️ 🗺️
 #      📈 📉 📊 🧬 ϻ  ƝƝ 📥 📩 📤 ⬇️🔻 📂 🌀
 _MODULE_EMOJI_MAPPING = {
-    "__main__"   : "🎬",
-    "__base__"   : "⭐",
-    "util"       : "🛠️",
-    "logger"     : "📝",
+    "__main__": "🎬",
+    "__base__": "⭐",
+    "util": "🛠️",
+    "logger": "📝",
 }
 
 _LOGGER_STREAM = sys.stdout
@@ -85,10 +84,7 @@ class Emoji:
 def module_name_to_emoji(module_name: str) -> str:
     global _MODULE_EMOJI_MAPPING
     return ".".join(
-        [
-            _MODULE_EMOJI_MAPPING.get(v, v)
-            for v in module_name.split(".")
-        ]
+        [_MODULE_EMOJI_MAPPING.get(v, v) for v in module_name.split(".")],
     )
 
 
@@ -106,13 +102,13 @@ def update_emoji_map(emoji_map: t.Dict[str, str]):
         if k in _MODULE_EMOJI_MAPPING.keys():
             raise KeyError(
                 f"Key {k} already exists in emoji map with symbol "
-                f"{_MODULE_EMOJI_MAPPING[k]}. You cannot override it."
+                f"{_MODULE_EMOJI_MAPPING[k]}. You cannot override it.",
             )
         for _k, _v in _MODULE_EMOJI_MAPPING.items():
             if _v == v:
                 raise ValueError(
                     f"Emoji map already has symbol {v} with key {_k}. So you "
-                    f"cannot use this value for the new key {k}."
+                    f"cannot use this value for the new key {k}.",
                 )
         _MODULE_EMOJI_MAPPING[k] = v
 
@@ -132,38 +128,40 @@ def parse_iterators(
     if isinstance(obj, (list, tuple)):
         for o in obj:
             if isinstance(o, (list, tuple, dict)):
-                _ret.extend(
-                    parse_iterators(o, nest_level)
-                )
+                _ret.extend(parse_iterators(o, nest_level))
             else:
                 _ret.extend(
                     _wrap_message(
-                        msg=f"{o}", prefix=prefix,
-                        wrap_width=wrap_width, no_wrap=no_wrap
-                    )
+                        msg=f"{o}",
+                        prefix=prefix,
+                        wrap_width=wrap_width,
+                        no_wrap=no_wrap,
+                    ),
                 )
     elif isinstance(obj, dict):
         for k, o in obj.items():
             if isinstance(o, (list, tuple, dict)):
                 _ret.extend(
                     _wrap_message(
-                        msg=f"{k}: ", prefix=prefix,
-                        wrap_width=wrap_width, no_wrap=no_wrap
-                    )
+                        msg=f"{k}: ",
+                        prefix=prefix,
+                        wrap_width=wrap_width,
+                        no_wrap=no_wrap,
+                    ),
                 )
-                _ret.extend(
-                    parse_iterators(o, nest_level)
-                )
+                _ret.extend(parse_iterators(o, nest_level))
             else:
                 _ret.extend(
                     _wrap_message(
-                        msg=f"{k}: {o}", prefix=prefix,
-                        wrap_width=wrap_width, no_wrap=no_wrap
-                    )
+                        msg=f"{k}: {o}",
+                        prefix=prefix,
+                        wrap_width=wrap_width,
+                        no_wrap=no_wrap,
+                    ),
                 )
     else:
         raise TypeError(
-            f"Unrecognized type for value {obj} with type {type(obj)}"
+            f"Unrecognized type for value {obj} with type {type(obj)}",
         )
 
     return _ret
@@ -183,13 +181,15 @@ def parse_msgs(
     if isinstance(msg, str):
         _ret_msgs.extend(
             _wrap_message(
-                msg=msg, prefix=prefix,
-                wrap_width=wrap_width, no_wrap=no_wrap
-            )
+                msg=msg,
+                prefix=prefix,
+                wrap_width=wrap_width,
+                no_wrap=no_wrap,
+            ),
         )
     else:
         raise TypeError(
-            f"The attribute msg should always be a str, found {type(msg)}"
+            f"The attribute msg should always be a str, found {type(msg)}",
         )
 
     # if no msgs return
@@ -201,22 +201,26 @@ def parse_msgs(
         if isinstance(m, str):
             _ret_msgs.extend(
                 _wrap_message(
-                    msg=m, prefix="▫️ ",
-                    wrap_width=wrap_width, no_wrap=no_wrap
-                )
+                    msg=m,
+                    prefix="▫️ ",
+                    wrap_width=wrap_width,
+                    no_wrap=no_wrap,
+                ),
             )
         elif isinstance(m, (list, tuple, dict)):
             _ret_msgs.extend(
                 parse_iterators(
-                    m, nest_level=1,
-                    wrap_width=wrap_width, no_wrap=no_wrap
-                )
+                    m,
+                    nest_level=1,
+                    wrap_width=wrap_width,
+                    no_wrap=no_wrap,
+                ),
             )
         else:
             raise TypeError(
                 f"One items at location {i!r} in the msgs list has "
                 f"unsupported type {type(m)}. We only allow str, list, tuple, "
-                f"and dict"
+                f"and dict",
             )
 
     # return
@@ -224,7 +228,8 @@ def parse_msgs(
 
 
 def _wrap_message(
-    *, msg: str,
+    *,
+    msg: str,
     prefix: str = Emoji.DEFAULT_PREFIX,
     wrap_width: int = WRAP_WIDTH,
     no_wrap: bool = False,
@@ -243,7 +248,7 @@ def _wrap_message(
         return m_wraps
     else:
         _ret = []
-        _empty_prefix = " "*(len(prefix)+1)
+        _empty_prefix = " " * (len(prefix) + 1)
         for i, mw in enumerate(m_wraps):
             _prefix = prefix if i == 0 else _empty_prefix
             _ret.append(f"{_prefix}{mw}")
@@ -267,7 +272,7 @@ class Formatters:
     default = logging.Formatter(
         # f'%(emoji_level)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
         # f'%(message)s'
-        f'%(emoji_level)s %(name)s: %(message)s'
+        f"%(emoji_level)s %(name)s: %(message)s",
     )
 
 
@@ -297,7 +302,8 @@ class ProgressBar(tqdm):
 
     # noinspection PyShadowingBuiltins
     def __init__(
-        self, *,
+        self,
+        *,
         iterable: t.Iterable = None,
         desc: str = None,
         total: t.Union[int, float] = None,
@@ -309,7 +315,7 @@ class ProgressBar(tqdm):
         miniters: t.Union[int, float] = None,
         ascii: t.Union[str, bool] = None,
         disable=False,
-        unit: str = ' it',
+        unit: str = " it",
         unit_scale: t.Union[bool, int, float] = False,
         dynamic_ncols: bool = True,
         smoothing: float = 0.3,
@@ -446,14 +452,32 @@ class ProgressBar(tqdm):
 
         # call super
         super().__init__(
-            iterable=iterable, desc=desc, total=total, leave=leave, file=file,
-            ncols=ncols, mininterval=mininterval, maxinterval=maxinterval,
-            miniters=miniters, ascii=ascii, disable=disable, unit=unit,
-            unit_scale=unit_scale, dynamic_ncols=dynamic_ncols,
-            smoothing=smoothing, bar_format=bar_format, initial=initial,
-            position=position, postfix=postfix, unit_divisor=unit_divisor,
-            write_bytes=write_bytes, lock_args=lock_args, nrows=nrows,
-            colour=colour, delay=delay, gui=gui,
+            iterable=iterable,
+            desc=desc,
+            total=total,
+            leave=leave,
+            file=file,
+            ncols=ncols,
+            mininterval=mininterval,
+            maxinterval=maxinterval,
+            miniters=miniters,
+            ascii=ascii,
+            disable=disable,
+            unit=unit,
+            unit_scale=unit_scale,
+            dynamic_ncols=dynamic_ncols,
+            smoothing=smoothing,
+            bar_format=bar_format,
+            initial=initial,
+            position=position,
+            postfix=postfix,
+            unit_divisor=unit_divisor,
+            write_bytes=write_bytes,
+            lock_args=lock_args,
+            nrows=nrows,
+            colour=colour,
+            delay=delay,
+            gui=gui,
         )
 
     def __enter__(self) -> "ProgressBar":
@@ -517,8 +541,9 @@ class Spinner(Yaspin):
       asks for prompt -> https://typer.tiangolo.com/tutorial/prompt/
       nice terminating -> https://typer.tiangolo.com/tutorial/terminating/
     """
+
     COLOR = "yellow"
-    SPINNER_WRAP_WIDTH = int(WRAP_WIDTH*1.5)
+    SPINNER_WRAP_WIDTH = int(WRAP_WIDTH * 1.5)
     TILDA_PREFIX = "~ "
     NESTED_SPINNERS_STORE = []  # type: t.List[Spinner]
 
@@ -533,7 +558,8 @@ class Spinner(Yaspin):
         return True
 
     def __init__(
-        self, *,
+        self,
+        *,
         title: str,
         logger: "_LoggerClass",
         timeout_seconds: int = None,
@@ -584,8 +610,9 @@ class Spinner(Yaspin):
         self.aborted = False
 
         # create prefix based on nesting level
-        self.prefix = "  " + \
-                      self.TILDA_PREFIX * (len(self.NESTED_SPINNERS_STORE) + 1)
+        self.prefix = "  " + self.TILDA_PREFIX * (
+            len(self.NESTED_SPINNERS_STORE) + 1
+        )
 
         # skip time related
         self.skip_time_for_current_step = 0
@@ -641,7 +668,10 @@ class Spinner(Yaspin):
         if self.log_to_file:
             self.logger.info(msg=_msg, prefix=_prefix)
         self.log_on_spinner_console(
-            msg=_msg, prefix=_prefix, annotate_with_time_elapsed=False)
+            msg=_msg,
+            prefix=_prefix,
+            annotate_with_time_elapsed=False,
+        )
 
         # call super
         return super().__enter__()
@@ -667,7 +697,10 @@ class Spinner(Yaspin):
         _msg = f"{self.title} finished in {_delta.total_seconds():.2f} sec ..."
         _prefix = Emoji.SUCCESS_PREFIX if self.success else Emoji.FAIL_PREFIX
         self.log_on_spinner_console(
-            msg=_msg, prefix=_prefix, annotate_with_time_elapsed=False)
+            msg=_msg,
+            prefix=_prefix,
+            annotate_with_time_elapsed=False,
+        )
         if self.log_to_file:
             self.logger.info(msg=_msg, prefix=_prefix)
 
@@ -676,9 +709,7 @@ class Spinner(Yaspin):
         try:
             self.NESTED_SPINNERS_STORE.pop()
         except IndexError:
-            raise IndexError(
-                f"This is some coding bug ... SHOULD NEVER HAPPEN"
-            )
+            raise IndexError(f"This is some coding bug ... SHOULD NEVER HAPPEN")
         if bool(self.NESTED_SPINNERS_STORE):
             self.NESTED_SPINNERS_STORE[-1].show()
 
@@ -691,7 +722,7 @@ class Spinner(Yaspin):
         if len(self.title) > SPINNER_TITLE_WIDTH:
             raise Exception(
                 f"Spinner title is too long {len(self.title)} > "
-                f"{SPINNER_TITLE_WIDTH}"
+                f"{SPINNER_TITLE_WIDTH}",
             )
 
     def annotate_with_time_elapsed(self, *, msg: str) -> str:
@@ -699,7 +730,9 @@ class Spinner(Yaspin):
         return f"{_delta.total_seconds(): 4.0f} sec | {msg}"
 
     def log_on_spinner_console(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         prefix: str,
         msgs: MESSAGES_TYPE = None,
         annotate_with_time_elapsed: bool = True,
@@ -713,7 +746,9 @@ class Spinner(Yaspin):
             msg = self.annotate_with_time_elapsed(msg=msg)
 
         wrap_msgs = parse_msgs(
-            msg=msg, msgs=msgs, prefix=f"{self.prefix}{prefix}",
+            msg=msg,
+            msgs=msgs,
+            prefix=f"{self.prefix}{prefix}",
             wrap_width=self.SPINNER_WRAP_WIDTH,
         )
         # logs to console only
@@ -721,13 +756,17 @@ class Spinner(Yaspin):
             self.write(_msg)
 
     def info(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
         annotate_with_time_elapsed: bool = True,
     ):
         self.log_on_spinner_console(
-            msg=msg, msgs=msgs, prefix=Emoji.SPINNER_INFO_PREFIX,
-            annotate_with_time_elapsed=annotate_with_time_elapsed
+            msg=msg,
+            msgs=msgs,
+            prefix=Emoji.SPINNER_INFO_PREFIX,
+            annotate_with_time_elapsed=annotate_with_time_elapsed,
         )
 
     def abort(self):
@@ -755,8 +794,10 @@ class Spinner(Yaspin):
         _delta = datetime.now() - self.last_timeout_at
 
         # check if timed out
-        if _delta.total_seconds() < self.timeout_seconds + \
-                self.skip_time_for_current_step:
+        if (
+            _delta.total_seconds()
+            < self.timeout_seconds + self.skip_time_for_current_step
+        ):
             return False
         else:
             # note we reset timeout so you can reuse it ... if you intend to
@@ -772,8 +813,10 @@ class Spinner(Yaspin):
         _delta = datetime.now() - self.last_track_timeout_at
 
         # check if timed out
-        if _delta.total_seconds() < self.track_timeout_seconds + \
-                self.skip_time_for_current_step:
+        if (
+            _delta.total_seconds()
+            < self.track_timeout_seconds + self.skip_time_for_current_step
+        ):
             return False
         else:
             self.last_track_timeout_at = datetime.now()
@@ -785,8 +828,10 @@ class Spinner(Yaspin):
         _delta = datetime.now() - self.started_at
 
         # return
-        return _delta.total_seconds() >= self.hard_timeout_seconds + \
-            self.skip_time_from_start
+        return (
+            _delta.total_seconds()
+            >= self.hard_timeout_seconds + self.skip_time_from_start
+        )
 
     def time_elapsed_in_sec(self) -> int:
         return int((datetime.now() - self.started_at).total_seconds())
@@ -828,6 +873,7 @@ class DpgLogger:
       ... let logging in backend be synced to client in async updates from
       backend ... may be when we have blazor based UI we can think of this
     """
+
     def __init__(self, logger_module):
         self.logger_module = logger_module
 
@@ -839,7 +885,11 @@ class DpgLogger:
             self.window_id = parent
         else:
             self.window_id = dpg.add_window(
-                label="mvLogger", pos=(200, 200), width=500, height=500)
+                label="mvLogger",
+                pos=(200, 200),
+                width=500,
+                height=500,
+            )
         self.count = 0
         self.flush_count = 1000
 
@@ -847,22 +897,29 @@ class DpgLogger:
             dpg.add_checkbox(
                 label="Auto-scroll",
                 default_value=True,
-                callback=lambda sender:self.auto_scroll(dpg.get_value(sender)))
+                callback=lambda sender: self.auto_scroll(dpg.get_value(sender)),
+            )
             dpg.add_button(
                 label="Clear",
                 callback=lambda: dpg.delete_item(
-                    self.filter_id, children_only=True
-                )
+                    self.filter_id,
+                    children_only=True,
+                ),
             )
 
         dpg.add_input_text(
             label="Filter",
             callback=lambda sender: dpg.set_value(
-                self.filter_id, dpg.get_value(sender)
+                self.filter_id,
+                dpg.get_value(sender),
             ),
-            parent=self.window_id)
+            parent=self.window_id,
+        )
         self.child_id = dpg.add_child(
-            parent=self.window_id, autosize_x=True, autosize_y=True)
+            parent=self.window_id,
+            autosize_x=True,
+            autosize_y=True,
+        )
         self.filter_id = dpg.add_filter_set(parent=self.child_id)
 
         with dpg.theme() as self.trace_theme:
@@ -894,7 +951,10 @@ class DpgLogger:
             self.clear()
 
         new_log = dpg.add_text(
-            message, parent=self.filter_id, filter_key=message)
+            message,
+            parent=self.filter_id,
+            filter_key=message,
+        )
         dpg.set_item_theme(new_log, theme)
         if self._auto_scroll:
             scroll_max = dpg.get_y_scroll_max(self.child_id)
@@ -944,9 +1004,10 @@ class _LoggerClass:
 
         # if running from external python script add the python file name
         if self.module.__name__ == "__main__":
-            _emoji_logger_name = \
-                f"{_emoji_logger_name} " \
+            _emoji_logger_name = (
+                f"{_emoji_logger_name} "
                 f"({pathlib.Path(self.module.__file__).name})"
+            )
 
         # return
         return _emoji_logger_name
@@ -993,15 +1054,19 @@ class _LoggerClass:
             # get file
             if not LOG_DIR.exists():
                 LOG_DIR.mkdir(parents=True)
-            _file_name = f"{self.module.__name__}.logs" \
-                if self.use_separate_file else "common.logs"
+            _file_name = (
+                f"{self.module.__name__}.logs"
+                if self.use_separate_file
+                else "common.logs"
+            )
             _file = LOG_DIR / _file_name
 
             # get file handler
             _fh = handlers.RotatingFileHandler(
                 _file,
                 encoding="utf-8",
-                maxBytes=MAX_LOG_FILE_SIZE, backupCount=100,
+                maxBytes=MAX_LOG_FILE_SIZE,
+                backupCount=100,
             )
 
             # configure file handler
@@ -1020,16 +1085,18 @@ class _LoggerClass:
         #       creating Logger for this (i.e. logger.py) module. Then in
         #       that case we need to use `self`.
         if "_LOGGER" not in globals().keys():
-            assert self.module.__name__ == __name__, \
-                f"Note that the first logger to get created is for the " \
-                f"module same as this file i.e. {__name__}. Also in that " \
+            assert self.module.__name__ == __name__, (
+                f"Note that the first logger to get created is for the "
+                f"module same as this file i.e. {__name__}. Also in that "
                 f"case the global var _LOGGER should not be set in that case."
+            )
             _LOGGER = self
         else:
-            assert self.module.__name__ != __name__, \
-                f"This should not happen as if global var _LOGGER is " \
-                f"available then then no other module can have name " \
+            assert self.module.__name__ != __name__, (
+                f"This should not happen as if global var _LOGGER is "
+                f"available then then no other module can have name "
                 f"{__name__}"
+            )
 
         # Send message using the LOGGER for `logger.py`
         # _LOGGER.info(
@@ -1050,7 +1117,7 @@ class _LoggerClass:
                 f"Logger for module {self.module.__name__} was already "
                 f"registered in _LOGGERS dict ... Make sure you are "
                 f"using `get_logger()` method instead of creating instances "
-                f"on your own."
+                f"on your own.",
             )
 
         # check if use_separate_file setting needed
@@ -1058,28 +1125,30 @@ class _LoggerClass:
             if self.use_separate_file:
                 raise ValueError(
                     f"Setting self.use_separate_file does not matter as you "
-                    f"are not using file handler"
+                    f"are not using file handler",
                 )
 
         # check logging levels
         if self.stream_handler_level > self.level:
             raise ValueError(
                 f"The stream handler log level is greater than the logger "
-                f"level ... this is meaningless ..."
+                f"level ... this is meaningless ...",
             )
 
         # check logging levels
         if self.file_handler_level > self.level:
             raise ValueError(
                 f"The file handler log level is greater than the logger "
-                f"level ... this is meaningless ..."
+                f"level ... this is meaningless ...",
             )
 
     # level: 10
     def debug(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
+        prefix=Emoji.DEFAULT_PREFIX,
     ):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
@@ -1089,9 +1158,11 @@ class _LoggerClass:
 
     # level: 20
     def info(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
+        prefix=Emoji.DEFAULT_PREFIX,
     ):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
@@ -1101,9 +1172,11 @@ class _LoggerClass:
 
     # level: 30
     def warning(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
+        prefix=Emoji.DEFAULT_PREFIX,
     ):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
@@ -1113,13 +1186,19 @@ class _LoggerClass:
 
     # level: 40
     def error(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
         prefix=Emoji.DEFAULT_PREFIX,
         no_wrap: bool = False,
     ):
         wrap_msgs = parse_msgs(
-            msg=msg, msgs=msgs, prefix=prefix, no_wrap=no_wrap)
+            msg=msg,
+            msgs=msgs,
+            prefix=prefix,
+            no_wrap=no_wrap,
+        )
         for _msg in wrap_msgs:
             self.log.error(_msg)
             if self.use_dpg_logger:
@@ -1127,9 +1206,11 @@ class _LoggerClass:
 
     # level: 50
     def critical(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
+        prefix=Emoji.DEFAULT_PREFIX,
     ):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
@@ -1139,9 +1220,7 @@ class _LoggerClass:
 
 
 def get_logger(
-    module: t.Optional[
-        t.Union[types.ModuleType, str]
-    ] = None
+    module: t.Optional[t.Union[types.ModuleType, str]] = None,
 ) -> _LoggerClass:
     # global dict to store _LOGGERS
     global _LOGGERS
@@ -1196,8 +1275,8 @@ if not __ONE_TIME:
         ...
 
     LOGGING_CONFIG = {
-        'version': 1,
-        'disable_existing_loggers': False,
+        "version": 1,
+        "disable_existing_loggers": False,
         # 'formatters': {
         #     'standard': {
         #       'format': '%(asctime)s [%(levelname).4s] %(name)s: %(message)s'
@@ -1261,8 +1340,9 @@ def try_spinner_logger_from_class():
                     ) as spinner1:
                         for i1 in range(3):
                             spinner1.text = f"BlaBlaBla {i1} ..."
-                            spinner1.info(msg=f"BlaBlaBla Some information"
-                                              f" {i1}")
+                            spinner1.info(
+                                msg=f"BlaBlaBla Some information" f" {i1}",
+                            )
                             time.sleep(2)  # time consuming code
 
                         success = randint(0, 1)

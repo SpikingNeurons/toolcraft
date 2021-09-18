@@ -91,7 +91,3 @@ def doc_preview(c):
     _doc_dir = _curr_dir + "//website//"
     os.chdir(_doc_dir)
     _run(c, "npm start")
-
-
-
-

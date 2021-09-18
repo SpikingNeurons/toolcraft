@@ -4,7 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 # https://github.com/pytorch/botorch/blob/master/scripts/parse_sphinx.py
-
 from __future__ import annotations
 
 import argparse
@@ -34,32 +33,51 @@ def parse_sphinx(input_dir, output_dir):
     for cur, _, files in os.walk(input_dir):
         for fname in files:
             if fname.endswith(".html"):
-                with open(os.path.join(cur, fname), "r", encoding='utf8') as f:
+                with open(os.path.join(cur, fname), encoding="utf8") as f:
                     soup = BeautifulSoup(f.read(), "html.parser")
                     doc = soup.find("div", {"class": "document"})
-                    wrapped_doc = doc.wrap(soup.new_tag("div", **{"class": "sphinx"}))
+                    wrapped_doc = doc.wrap(
+                        soup.new_tag("div", **{"class": "sphinx"}),
+                    )
                 # add js
                 if fname == "search.html":
                     out = js_scripts + search_js_scripts + str(wrapped_doc)
                 else:
                     out = js_scripts + str(wrapped_doc)
-                output_path = os.path.join(output_dir, os.path.relpath(cur, input_dir))
+                output_path = os.path.join(
+                    output_dir,
+                    os.path.relpath(cur, input_dir),
+                )
                 os.makedirs(output_path, exist_ok=True)
-                with open(os.path.join(output_path, fname), "w", encoding='utf8') as fout:
+                with open(
+                    os.path.join(output_path, fname),
+                    "w",
+                    encoding="utf8",
+                ) as fout:
                     fout.write(out)
 
     # update reference in JS file
-    with open(os.path.join(input_dir, "_static/searchtools.js"), "r", encoding='utf8') as js_file:
+    with open(
+        os.path.join(input_dir, "_static/searchtools.js"),
+        encoding="utf8",
+    ) as js_file:
         js = js_file.read()
     js = js.replace(
-        "DOCUMENTATION_OPTIONS.URL_ROOT + '_sources/'", "'_sphinx-sources/'"
+        "DOCUMENTATION_OPTIONS.URL_ROOT + '_sources/'",
+        "'_sphinx-sources/'",
     )
-    with open(os.path.join(input_dir, "_static/searchtools.js"), "w", encoding='utf8') as js_file:
+    with open(
+        os.path.join(input_dir, "_static/searchtools.js"),
+        "w",
+        encoding="utf8",
+    ) as js_file:
         js_file.write(js)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Strip HTML body from Sphinx docs.")
+    parser = argparse.ArgumentParser(
+        description="Strip HTML body from Sphinx docs.",
+    )
     parser.add_argument(
         "-i",
         "--input_dir",

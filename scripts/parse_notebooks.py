@@ -4,17 +4,17 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 # https://github.com/pytorch/botorch/blob/master/scripts/parse_tutorials.py
-
 from __future__ import annotations
 
 import argparse
 import json
 import os
+from pathlib import Path
 
 import nbformat
 from bs4 import BeautifulSoup
-from nbconvert import HTMLExporter, PythonExporter
-from pathlib import Path
+from nbconvert import HTMLExporter
+from nbconvert import PythonExporter
 
 
 TEMPLATE = """const CWD = process.cwd();
@@ -40,7 +40,7 @@ def validate_tutorial_links(input_dir: str) -> None:
     """Checks that all .ipynb files that present are linked on the website, and vice
     versa, that any linked tutorial has an associated .ipynb file present.
     """
-    with open(os.path.join(input_dir, "mapping.json"), "r") as infile:
+    with open(os.path.join(input_dir, "mapping.json")) as infile:
         tutorial_config = json.load(infile)
 
     tutorial_ids = {x["id"] for v in tutorial_config.values() for x in v}
@@ -57,13 +57,15 @@ def validate_tutorial_links(input_dir: str) -> None:
     if missing_files:
         raise RuntimeError(
             "The following tutorials are linked on the website, but missing an "
-            f"associated .ipynb file: {missing_files}."
+            f"associated .ipynb file: {missing_files}.",
         )
 
     if missing_ids:
         raise RuntimeError(
             "The following tutorial files are present, but are not linked on the "
-            "website: {}.".format(", ".join([nbid + ".ipynb" for nbid in missing_ids]))
+            "website: {}.".format(
+                ", ".join([nbid + ".ipynb" for nbid in missing_ids]),
+            ),
         )
 
 
@@ -72,12 +74,12 @@ def gen_tutorials(input_dir: str, output_dir: str) -> None:
     Also create ipynb and py versions of tutorial in Docusaurus site for
     download.
     """
-    with open(os.path.join(input_dir, "mapping.json"), "r") as infile:
+    with open(os.path.join(input_dir, "mapping.json")) as infile:
         tutorial_config = json.load(infile)
 
     # create output directories if necessary
-    html_out_dir = Path(output_dir) / '_tutorials'
-    files_out_dir = Path(output_dir) / 'static' / 'files'
+    html_out_dir = Path(output_dir) / "_tutorials"
+    files_out_dir = Path(output_dir) / "static" / "files"
     html_out_dir.mkdir(parents=True, exist_ok=True)
     files_out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -88,7 +90,7 @@ def gen_tutorials(input_dir: str, output_dir: str) -> None:
 
         # convert notebook to HTML
         ipynb_in_path = os.path.join(input_dir, f"{tid}.ipynb")
-        with open(ipynb_in_path, "r", encoding='utf8') as infile:
+        with open(ipynb_in_path, encoding="utf8") as infile:
             nb_str = infile.read()
             nb = nbformat.reads(nb_str, nbformat.NO_CONVERT)
 
@@ -110,33 +112,35 @@ def gen_tutorials(input_dir: str, output_dir: str) -> None:
             html_out_dir,
             f"{tid}.html",
         )
-        with open(html_out_path, "w", encoding='utf8') as html_outfile:
+        with open(html_out_path, "w", encoding="utf8") as html_outfile:
             html_outfile.write(html_out)
 
         # generate JS file
         script = TEMPLATE.format(tid)
-        js_out_path = os.path.join(
-            output_dir, "pages", "tutorials", f"{tid}.js"
-        )
+        js_out_path = os.path.join(output_dir, "pages", "tutorials", f"{tid}.js")
         Path(js_out_path).parent.mkdir(exist_ok=True, parents=True)
-        with open(js_out_path, "w", encoding='utf8') as js_outfile:
+        with open(js_out_path, "w", encoding="utf8") as js_outfile:
             js_outfile.write(script)
 
         # output tutorial in both ipynb & py form
         ipynb_out_path = os.path.join(files_out_dir, f"{tid}.ipynb")
-        with open(ipynb_out_path, "w", encoding='utf8') as ipynb_outfile:
+        with open(ipynb_out_path, "w", encoding="utf8") as ipynb_outfile:
             ipynb_outfile.write(nb_str)
         exporter = PythonExporter()
         script, meta = exporter.from_notebook_node(nb)
         # make sure to use python3 shebang
-        script = script.replace("#!/usr/bin/env python", "#!/usr/bin/env python3")
+        script = script.replace(
+            "#!/usr/bin/env python",
+            "#!/usr/bin/env python3",
+        )
         py_out_path = os.path.join(output_dir, "static", "files", f"{tid}.py")
-        with open(py_out_path, "w", encoding='utf8') as py_outfile:
+        with open(py_out_path, "w", encoding="utf8") as py_outfile:
             py_outfile.write(script)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate JS, HTML, ipynb, and py files for tutorials."
+        description="Generate JS, HTML, ipynb, and py files for tutorials.",
     )
 
     parser.add_argument(
