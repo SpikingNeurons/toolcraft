@@ -1,10 +1,9 @@
 [tool.poetry]
 name = "toolcraft"
-# In favour of https://github.com/tiangolo/poetry-version-plugin
-version = "0"
+version = "0.1.3a3"
 homepage = "https://github.com/SpikingNeurons/toolcraft"
 repository = "https://github.com/SpikingNeurons/toolcraft"
-documentation = "https://github.com/SpikingNeurons/toolcraft"
+documentation = "https://toolcraft.spikingneurons.com/"
 description = "Create tools with ToolCraft."
 authors = ["Praveen Kulkarni <praveenneuron@gmail.com>"]
 keywords = ["reporting", "gui", "tool", "toolcraft"]
@@ -27,9 +26,6 @@ packages = [
 #    "**/*.pyi",
 #]
 
-[tool.poetry-version-plugin]
-source = "git-tag"
-
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/SpikingNeurons/toolcraft/issues"
@@ -40,7 +36,7 @@ generate-setup-file = false
 
 
 [tool.poetry.dependencies]
-python = ">=3.7.1,<3.11"
+python = ">=3.8,<3.11"
 typer = "^0.4.0"
 tqdm = "^4.62.2"
 PyYAML = "^5.4.1"
@@ -83,18 +79,19 @@ optional = true
 
 [tool.poetry.group.build.dependencies]
 twine = "^3.4.2"
+bump2version = "^1.0.1"
 
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
 #livereload = "^2.6.3"
-mkdocs = "^1.2.2"
-mkdocs-include-markdown-plugin = "^3.2.3"
-mkdocs-material = "^7.2.6"
-mkdocstrings = "^0.15.2"
-mkdocs-material-extensions = "^1.0.3"
-mkdocs-autorefs = "^0.2"
+#mkdocs = "^1.2.2"
+#mkdocs-include-markdown-plugin = "^3.2.3"
+#mkdocs-material = "^7.2.6"
+#mkdocstrings = "^0.15.2"
+#mkdocs-material-extensions = "^1.0.3"
+#mkdocs-autorefs = "^0.2"
 
 
 [tool.poetry.scripts]

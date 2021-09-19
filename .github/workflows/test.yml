@@ -21,7 +21,7 @@ jobs:
     # The type of runner that the job will run on
     strategy:
       matrix:
-        python-versions: [3.7, 3.8, 3.9]
+        python-versions: [3.8, 3.9]
         os: [ubuntu-18.04, macos-latest, windows-latest]
 #        python-versions: [3.9]
 #        os: [ubuntu-18.04]
@@ -78,9 +78,7 @@ jobs:
           installer-parallel: true
 
       - name: Install build dependencies
-        run: |
-          poetry plugin add poetry-version-plugin
-          poetry install --with build
+        run: poetry install --with build
 
       - name: Build wheels and source tarball
         run: |

@@ -9,10 +9,15 @@ https://python-poetry.org/docs/master/#installation
 ```bat
 activate base
 
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py > get-poetry.py
+python get-poetry.py --uninstall
+rm get-poetry.py
+
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py > install-poetry.py
 python install-poetry.py --uninstall
 python install-poetry.py --version 1.2.0a2
 rm install-poetry.py
+poetry --version
 
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python - --version 1.2.0a2
 ```
