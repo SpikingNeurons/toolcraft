@@ -15,7 +15,6 @@ Github Workflows:
 External Services/Workflows:
 
 [![codecov:main](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main/graph/badge.svg?token=Zz1FhlxwEe)](https://codecov.io/gh/SpikingNeurons/toolcraft/branch/main)
-[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/SpikingNeurons/toolcraft/main.svg)](https://results.pre-commit.ci/latest/github/SpikingNeurons/toolcraft/main)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/7934e330-f273-4c7b-9c77-a6edf0f97130/deploy-status)](https://app.netlify.com/sites/toolcraft/deploys)
 [![Open Source Helpers](https://www.codetriage.com/spikingneurons/toolcraft/badges/users.svg)](https://www.codetriage.com/spikingneurons/toolcraft)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/SpikingNeurons/toolcraft)
