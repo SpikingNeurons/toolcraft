@@ -40,7 +40,7 @@ jobs:
           # virtualenvs-path: ~/my-custom-path
           installer-parallel: true
 
-      - name: Install test/coverage dependencies
+      - name: Install dependencies with test/coverage dependencies
         run: poetry install --with test
 
       - name: Test with PyTest and get coverage report

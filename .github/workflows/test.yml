@@ -48,7 +48,7 @@ jobs:
           # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
           installer-parallel: true
 
-      - name: Install test dependencies
+      - name: Install dependencies with test dependencies
         run: poetry install --with test
 
       - name: Test with PyTest
