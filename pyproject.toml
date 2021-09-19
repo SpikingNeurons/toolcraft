@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "toolcraft"
-version = "0.1.4"
+# In favour of https://github.com/tiangolo/poetry-version-plugin
+version = "0"
 homepage = "https://github.com/SpikingNeurons/toolcraft"
 repository = "https://github.com/SpikingNeurons/toolcraft"
 documentation = "https://github.com/SpikingNeurons/toolcraft"
@@ -25,6 +26,9 @@ packages = [
 #    "**/*.pyc",
 #    "**/*.pyi",
 #]
+
+[tool.poetry-version-plugin]
+source = "git-tag"
 
 
 [tool.poetry.urls]

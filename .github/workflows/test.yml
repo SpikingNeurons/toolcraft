@@ -78,7 +78,9 @@ jobs:
           installer-parallel: true
 
       - name: Install build dependencies
-        run: poetry install --with build
+        run: |
+          poetry plugin add poetry-version-plugin
+          poetry install --with build
 
       - name: Build wheels and source tarball
         run: |
