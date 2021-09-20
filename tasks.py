@@ -14,11 +14,11 @@ generalize them across all tools
 import os
 import pathlib
 import platform
-import toml
 import typing as t
 import webbrowser
 from pathlib import Path
 
+import toml
 from invoke import task
 
 ROOT_DIR = Path(__file__).parent
@@ -75,7 +75,8 @@ def pytest_cov(c):
     #   pytest-cov
     #   pytest-xdist
     # todo: this works but takes time uncomment later
-    _run(c, "pytest -s --cov=toolcraft --cov-append " "--cov-report=html tests")
+    _run(c, "pytest -s --cov=toolcraft --cov-append "
+         "--cov-report=html tests")
     webbrowser.open(COVERAGE_REPORT.as_uri())
 
 
@@ -92,23 +93,36 @@ def doc_preview(c):
 
 @task(
     help={
-        'show_version': 'Display current version',
-        'alpha': 'Make alpha release',
-        'beta': 'Make beta release',
-        'patch': 'Make patch release',
-        'minor': 'Make minor release',
-        'major': 'Make major release',
-        'dry_run': "Only test and do not modify files",
-        'bump_into': "When bumping from stable release specify release type "
-                     "which is one of 'alpha', 'beta' or 'stable'. "
-                     "Only useful along with --major, --minor and --patch "
-                     "option and when current version is stable",
-    }
-)
+        "show_version":
+        "Display current version",
+        "alpha":
+        "Make alpha release",
+        "beta":
+        "Make beta release",
+        "patch":
+        "Make patch release",
+        "minor":
+        "Make minor release",
+        "major":
+        "Make major release",
+        "dry_run":
+        "Only test and do not modify files",
+        "bump_into":
+        "When bumping from stable release specify release type "
+        "which is one of 'alpha', 'beta' or 'stable'. "
+        "Only useful along with --major, --minor and --patch "
+        "option and when current version is stable",
+    })
 def bump(
-    c, show_version=False,
-    alpha=False, beta=False, patch=False, minor=False, major=False,
-    dry_run=False, bump_into='alpha',
+    c,
+    show_version=False,
+    alpha=False,
+    beta=False,
+    patch=False,
+    minor=False,
+    major=False,
+    dry_run=False,
+    bump_into="alpha",
 ):
     """
     Handle bumping versions for toolcraft library.
@@ -127,10 +141,9 @@ def bump(
 
     # ------------------------------------------------- 02
     # detect current version
-    _curr_ver = \
-        toml.load("pyproject.toml")['tool']['poetry']['version'].split(".")
-    _major, _minor, _patch = \
-        int(_curr_ver[0]), int(_curr_ver[1]), _curr_ver[2]
+    _curr_ver = toml.load("pyproject.toml")["tool"]["poetry"]["version"].split(
+        ".")
+    _major, _minor, _patch = int(_curr_ver[0]), int(_curr_ver[1]), _curr_ver[2]
     _release_type = None
     _release_num = None
     if _patch.find("a") > -1:
@@ -155,7 +168,7 @@ def bump(
                 "patch": _patch,
                 "release_type": _release_type,
                 "release_num": _release_num,
-            }
+            },
         )
         return
 
@@ -172,8 +185,7 @@ def bump(
             _release_num += 1
         elif _release_type == "b":
             raise Exception(
-                "Current release is in beta so alpha release is not possible"
-            )
+                "Current release is in beta so alpha release is not possible")
         else:
             raise Exception("Should not happen ...")
     # ------------------------------------------------- 04.02
@@ -204,11 +216,9 @@ def bump(
             elif bump_into == "stable":
                 ...
             else:
-                raise Exception(
-                    "Arg --bump-into can be one of "
-                    "['alpha', 'beta', 'stable']. "
-                    f"Found {bump_into}"
-                )
+                raise Exception("Arg --bump-into can be one of "
+                                "['alpha', 'beta', 'stable']. "
+                                f"Found {bump_into}")
         elif _release_type in ["a", "b"]:
             _release_type = None
             _release_num = None
@@ -229,17 +239,14 @@ def bump(
             elif bump_into == "stable":
                 ...
             else:
-                raise Exception(
-                    "Arg --bump-into can be one of "
-                    "['alpha', 'beta', 'stable']. "
-                    f"Found {bump_into}"
-                )
+                raise Exception("Arg --bump-into can be one of "
+                                "['alpha', 'beta', 'stable']. "
+                                f"Found {bump_into}")
         elif _release_type in ["a", "b"]:
             raise Exception(
                 f"The current version {_curr_ver} is in alpha or beta. "
                 f"So please patch current version for stable release "
-                f"before considering next minor release ..."
-            )
+                f"before considering next minor release ...")
         else:
             raise Exception("Should not happen ...")
     # ------------------------------------------------- 04.05
@@ -258,32 +265,24 @@ def bump(
             elif bump_into == "stable":
                 ...
             else:
-                raise Exception(
-                    "Arg --bump-into can be one of "
-                    "['alpha', 'beta', 'stable']. "
-                    f"Found {bump_into}"
-                )
+                raise Exception("Arg --bump-into can be one of "
+                                "['alpha', 'beta', 'stable']. "
+                                f"Found {bump_into}")
         elif _release_type in ["a", "b"]:
             raise Exception(
                 f"The current version {_curr_ver} is in alpha or beta. "
                 f"So please patch current version for stable release "
-                f"before considering next major release ..."
-            )
+                f"before considering next major release ...")
         else:
             raise Exception("Should not happen ...")
     # ------------------------------------------------- 04.06
     else:
-        raise Exception(
-            "You did not supply any options ..."
-        )
+        raise Exception("You did not supply any options ...")
 
     # ------------------------------------------------- 05
-    _new_ver = f"{_major}.{_minor}.{_patch}" \
-               f"{_release_type or ''}{_release_num or ''}"
-    _bump_command = f"bump2version --verbose --new-version " \
-                    f"{'--dry-run' if dry_run else ''} " \
-                    f"{_new_ver} xyz"
+    _new_ver = (f"{_major}.{_minor}.{_patch}"
+                f"{_release_type or ''}{_release_num or ''}")
+    _bump_command = (f"bump2version --verbose --new-version "
+                     f"{'--dry-run' if dry_run else ''} "
+                     f"{_new_ver} xyz")
     _run(c, _bump_command)
-
-
-
