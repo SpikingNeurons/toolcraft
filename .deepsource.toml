@@ -1,5 +1,19 @@
 version = 1
 
+test_patterns = [
+  "tests/",
+  "toolcraft/",
+  "examples/",
+  "scripts/"
+]
+
+exclude_patterns = [
+  "__pycache__/",
+  "build/",
+  "dist/",
+  "website/"
+]
+
 [[analyzers]]
 name = "test-coverage"
 enabled = true
