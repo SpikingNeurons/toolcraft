@@ -78,13 +78,14 @@ invoke = "^1.6.0"
 optional = true
 
 [tool.poetry.group.build.dependencies]
+toml = "^0.10.2"
 twine = "^3.4.2"
 bump2version = "^1.0.1"
 
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
+#[tool.poetry.group.docs]
+#optional = true
+#
+#[tool.poetry.group.docs.dependencies]
 #livereload = "^2.6.3"
 #mkdocs = "^1.2.2"
 #mkdocs-include-markdown-plugin = "^3.2.3"
@@ -103,88 +104,6 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-force_single_line = true
-atomic = true
-include_trailing_comma = true
-lines_after_imports = 2
-lines_between_types = 1
-src_paths = ["toolcraft", "tests"]
-skip_glob = ["*/setup.py"]
-filter_files = true
-known_first_party = "poetry"
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-line_length = 88
-# you can skip files as below
-#skip_glob = docs/conf.py
-sections=[
-    "LOCALFOLDER",
-    "PANDAS",
-    "FUTURE",
-    "STDLIB",
-    "THIRDPARTY",
-    "FIRSTPARTY",
-]
-
-[tool.yapf]
-#recursive = true
-
-[tool.black]
-line-length = 81
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | website
-  | tests/.*/setup.py
-)/
-'''
-
-[tool.autopep8]
-max_line_length = 120
-ignore = "E501,W6"  # or ["E501", "W6"]
-recursive = true
-aggressive = 3
-
-[tool.flake8]
-max-line-length = 81
-max-doc-length = 81
-max-complexity = 18
-ignore = ['E203', 'E266', 'E501', 'W503', 'F403', 'F401', 'D200']
-select = ['B', 'C', 'E', 'F', 'W', 'T4', 'B9']
-docstring-convention = 'google'
-per-file-ignores = '__init__.py:F401'
-exclude = '''
-    .git,
-    __pycache__,
-    setup.py,
-    build,
-    dist,
-    releases,
-    .idea,
-    .venv,
-    .tox,
-    .mypy_cache,
-    .pytest_cache,
-    .vscode,
-    .github,
-    website,
-'''
-
-
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
@@ -198,26 +117,3 @@ addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
-
-[tool.tox]  # refer: https://github.com/ymyzk/tox-gh-actions
-legacy_tox_ini = """
-[tox]
-minversion >= 3.20.1
-isolated_build = true
-envlist = py37, py38, py39, doc
-
-[gh-actions]
-python =
-    3.7: py37
-    3.8: py38
-    3.9: py39, doc
-
-[testenv]
-whitelist_externals = poetry
-setenv =
-    PYTHONPATH = {toxinidir}
-    PYTHONWARNINGS = ignore
-commands =
-    poetry install --no-root
-    poetry run pytest {posargs} tests/
-"""

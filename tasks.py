@@ -14,6 +14,7 @@ generalize them across all tools
 import os
 import pathlib
 import platform
+import toml
 import typing as t
 import webbrowser
 from pathlib import Path
@@ -109,4 +110,4 @@ def bump(c):
         >> 'Bump version: 0.1.2 → 0.1.3alpha0'
 
     """
-    ...
+    _curr_ver = toml.load("pyproject.toml")['tool']['poetry']['version']
