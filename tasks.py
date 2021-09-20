@@ -325,7 +325,6 @@ def bump(
     _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
     _bump_command = f"bump2version --verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
-                    f"--current-version {_curr_ver} " \
                     f"--new-version {_new_ver} xyz"
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print("The bump command:", _bump_command)
