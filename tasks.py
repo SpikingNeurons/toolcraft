@@ -336,6 +336,7 @@ def bump(
     print()
     print()
     print("We will now push the tags")
+    _run(c, "git")
     _run(c, "git tag -n")
     _run(c, "git push tag")
 
