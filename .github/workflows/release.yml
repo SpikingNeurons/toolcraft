@@ -84,27 +84,27 @@ jobs:
           ls -l .
           cd ..
 
-      # Upload files
-      - name: Upload artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.os }}-${{ matrix.python-version }}
-          path: ${{ github.workspace }}/dist/*.whl
-          retention-days: 2
-
-  # deploy builds
-  release-deploy:
-    name: Deploy release builds
-    needs: [release-build]
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        python-versions: [3.8, 3.9]
-        os: [ubuntu-18.04, macos-latest, windows-latest]
-    steps:
-      - name: Download artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
-        uses: actions/download-artifact@v2
-      - name: List files
-        run: |
-          ls -l .
+#      # Upload files
+#      - name: Upload artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: ${{ matrix.os }}-${{ matrix.python-version }}
+#          path: ${{ github.workspace }}/dist/*.whl
+#          retention-days: 2
+#
+#  # deploy builds
+#  release-deploy:
+#    name: Deploy release builds
+#    needs: [release-build]
+#    runs-on: ubuntu-18.04
+#    strategy:
+#      matrix:
+#        python-versions: [3.8, 3.9]
+#        os: [ubuntu-18.04, macos-latest, windows-latest]
+#    steps:
+#      - name: Download artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
+#        uses: actions/download-artifact@v2
+#      - name: List files
+#        run: |
+#          ls -l .
 
