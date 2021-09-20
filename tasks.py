@@ -98,11 +98,17 @@ def doc_preview(c):
         'patch': 'Make patch release',
         'minor': 'Make minor release',
         'major': 'Make major release',
+        'dry_run': "Only test and do not modify files",
+        'bump_into': "When bumping from stable release specify release type "
+                     "which is one of 'alpha', 'beta' or 'stable'. "
+                     "Only useful along with --major, --minor and --patch "
+                     "option and when current version is stable",
     }
 )
 def bump(
     c, show_version=False,
     alpha=False, beta=False, patch=False, minor=False, major=False,
+    dry_run=False, bump_into='alpha',
 ):
     """
     Handle bumping versions for toolcraft library.
@@ -158,7 +164,6 @@ def bump(
     # ------------------------------------------------- 04.01
     # if alpha release
     if alpha:
-        # if current release is stable then increment patch and add alpha tag
         if _release_type is None:
             _patch += 1
             _release_type = "a"
@@ -171,14 +176,114 @@ def bump(
             )
         else:
             raise Exception("Should not happen ...")
+    # ------------------------------------------------- 04.02
+    # if beta release
+    elif beta:
+        if _release_type is None:
+            _patch += 1
+            _release_type = "b"
+            _release_num = 0
+        elif _release_type == "a":
+            _release_type = "b"
+            _release_num = 0
+        elif _release_type == "b":
+            _release_num += 1
+        else:
+            raise Exception("Should not happen ...")
+    # ------------------------------------------------- 04.03
+    # if patch release
+    elif patch:
+        if _release_type is None:
+            _patch += 1
+            if bump_into == "alpha":
+                _release_type = "a"
+                _release_num = 0
+            elif bump_into == "beta":
+                _release_type = "b"
+                _release_num = 0
+            elif bump_into == "stable":
+                ...
+            else:
+                raise Exception(
+                    "Arg --bump-into can be one of "
+                    "['alpha', 'beta', 'stable']. "
+                    f"Found {bump_into}"
+                )
+        elif _release_type in ["a", "b"]:
+            _release_type = None
+            _release_num = None
+        else:
+            raise Exception("Should not happen ...")
+    # ------------------------------------------------- 04.04
+    # if minor release
+    elif minor:
+        if _release_type is None:
+            _minor += 1
+            _patch = 0
+            if bump_into == "alpha":
+                _release_type = "a"
+                _release_num = 0
+            elif bump_into == "beta":
+                _release_type = "b"
+                _release_num = 0
+            elif bump_into == "stable":
+                ...
+            else:
+                raise Exception(
+                    "Arg --bump-into can be one of "
+                    "['alpha', 'beta', 'stable']. "
+                    f"Found {bump_into}"
+                )
+        elif _release_type in ["a", "b"]:
+            raise Exception(
+                f"The current version {_curr_ver} is in alpha or beta. "
+                f"So please patch current version for stable release "
+                f"before considering next minor release ..."
+            )
+        else:
+            raise Exception("Should not happen ...")
+    # ------------------------------------------------- 04.05
+    # if major release
+    elif major:
+        if _release_type is None:
+            _major += 1
+            _minor = 0
+            _patch = 0
+            if bump_into == "alpha":
+                _release_type = "a"
+                _release_num = 0
+            elif bump_into == "beta":
+                _release_type = "b"
+                _release_num = 0
+            elif bump_into == "stable":
+                ...
+            else:
+                raise Exception(
+                    "Arg --bump-into can be one of "
+                    "['alpha', 'beta', 'stable']. "
+                    f"Found {bump_into}"
+                )
+        elif _release_type in ["a", "b"]:
+            raise Exception(
+                f"The current version {_curr_ver} is in alpha or beta. "
+                f"So please patch current version for stable release "
+                f"before considering next major release ..."
+            )
+        else:
+            raise Exception("Should not happen ...")
+    # ------------------------------------------------- 04.06
+    else:
+        raise Exception(
+            "You did not supply any options ..."
+        )
 
     # ------------------------------------------------- 05
     _new_ver = f"{_major}.{_minor}.{_patch}" \
                f"{_release_type or ''}{_release_num or ''}"
-    _bump_command = f"bump2version --verbose --new-version {_new_ver}"
-    _run(c, f'{_bump_command} '
-            f'--search version = "{_curr_ver}" '
-            f'--replace version = "{_new_ver} xyz pyproject.toml"')
+    _bump_command = f"bump2version --verbose --new-version " \
+                    f"{'--dry-run' if dry_run else ''} " \
+                    f"{_new_ver} xyz"
+    _run(c, _bump_command)
 
 
 
