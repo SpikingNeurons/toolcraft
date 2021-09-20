@@ -36,7 +36,7 @@ generate-setup-file = false
 
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.8,<3.10"
 typer = "^0.4.0"
 tqdm = "^4.62.2"
 PyYAML = "^5.4.1"
