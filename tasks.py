@@ -106,6 +106,8 @@ def bumpversion(c):
         >> 'Bump version: 0.1.2beta22 → 0.1.2'
       --current-version 0.1.2alpha22 patch
         >> 'Bump version: 0.1.2alpha22 → 0.1.3'
+      --current-version 0.1.2 patch
+        >> 'Bump version: 0.1.2 → 0.1.3alpha0'
 
     """
     ...
