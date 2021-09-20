@@ -3,6 +3,7 @@ import typing as t
 
 import dearpygui.dearpygui as dpg
 import numpy as np
+
 from toolcraft import gui
 
 
@@ -12,8 +13,7 @@ class Info(gui.CollapsingHeader):
     label: str = "Topic 1 - Text"
 
     message: gui.Text = gui.Text(
-        "This is topic 1. We will just add some bullet points below ...",
-    )
+        "This is topic 1. We will just add some bullet points below ...", )
 
     bullet_1: gui.Text = gui.Text(
         "bullet 1 ...",
@@ -125,10 +125,12 @@ class ButtonPlotCallback(gui.Callback):
             )
 
             # add child to receiver
-            self.receiver.add_child(guid=sender.guid, widget=_collapsing_header)
+            self.receiver.add_child(guid=sender.guid,
+                                    widget=_collapsing_header)
 
             # make close button and add it collapsing header
-            _close_button = gui.callback.CloseWidgetCallback.get_button_widget()
+            _close_button = gui.callback.CloseWidgetCallback.get_button_widget(
+            )
             _collapsing_header.add_child(
                 guid="close_button",
                 widget=_close_button,
@@ -197,11 +199,11 @@ class ButtonPlot(gui.CollapsingHeader):
 @dataclasses.dataclass(frozen=True)
 class MyDashboard(gui.Dashboard):
 
-    theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget()
+    theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget(
+    )
 
     welcome_msg: gui.Text = gui.Text(
-        "Welcome to my dashboard ..... toolcraft ..... ",
-    )
+        "Welcome to my dashboard ..... toolcraft ..... ", )
 
     topic1: Info = Info()
 

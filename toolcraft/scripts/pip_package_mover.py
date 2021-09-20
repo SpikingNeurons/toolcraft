@@ -8,7 +8,7 @@ import typing
 
 # figures out package name
 def _return_package_name(_package_name: str) -> str:
-    tokens = _package_name.rsplit('-', maxsplit=1)
+    tokens = _package_name.rsplit("-", maxsplit=1)
     pn_start, pn_end = tokens[0], tokens[1]
     if pn_end[0].isdigit():
         return pn_start
@@ -26,11 +26,11 @@ def move_packages(pypi_root_dir: str):
 
     # get only files
     fs = [
-        f for f in all_fs
-        if f.is_file() and
-        f.name not in [
-            'pip_detect_redundant_packages.py', 'pip_package_mover.py',
-            'install_from_internal_repo.bat', 'install_from_local_dir.bat',
+        f for f in all_fs if f.is_file() and f.name not in [
+            "pip_detect_redundant_packages.py",
+            "pip_package_mover.py",
+            "install_from_internal_repo.bat",
+            "install_from_local_dir.bat",
         ]
     ]
 
@@ -55,8 +55,7 @@ def move_packages(pypi_root_dir: str):
 print()
 if len(sys.argv) != 2:
     raise Exception(
-        f"Please call this script with an arg that indicates `pypi_root_dir`"
-    )
+        f"Please call this script with an arg that indicates `pypi_root_dir`")
 _pypi_root_dir = sys.argv[1]
 print(f"Moving packages to pypi_root_dir {_pypi_root_dir}")
 move_packages(pypi_root_dir=_pypi_root_dir)

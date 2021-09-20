@@ -1,27 +1,25 @@
-import dataclasses
-import inspect
 import abc
-import yaml
-import hashlib
-import typing as t
+import dataclasses
 import datetime
+import hashlib
+import inspect
+import pathlib
+import typing as t
+
 import numpy as np
 import pyarrow as pa
-import pathlib
+import yaml
 
-from . import util, logger, settings
 from . import error as e
+from . import logger, settings, util
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
 if False:
     # noinspection PyUnresolvedReferences
-    from . import storage
-    from . import gui
-
+    from . import gui, storage
 
 _LOGGER = logger.get_logger()
-
 
 # Class to keep track of all concrete HashableClass class's used in the
 # entire application
@@ -29,10 +27,9 @@ _LOGGER = logger.get_logger()
 ALL_TRACKERS = None  # type: t.List[t.Type[YamlRepr]]
 YAML_TAG_MAPPING = {}
 
-
 # use this as default value for kwargs in HashableClass.__call__ to indicate
 # that kwarg was not provided
-NOT_PROVIDED = '__NOT_PROVIDED__'
+NOT_PROVIDED = "__NOT_PROVIDED__"
 
 # todo: come up with more appropriate file extensions if needed like
 #  model.info, dataset.info, file_group.info,
@@ -44,13 +41,11 @@ NOT_PROVIDED = '__NOT_PROVIDED__'
 
 class _ReadOnlyClass(type):
     def __setattr__(self, key, value):
-        e.code.NotAllowed(
-            msgs=[
-                f"Class {self} is read only.",
-                f"You cannot override its attribute {key!r} programmatically.",
-                f"Edit it during class definition ..."
-            ]
-        )
+        e.code.NotAllowed(msgs=[
+            f"Class {self} is read only.",
+            f"You cannot override its attribute {key!r} programmatically.",
+            f"Edit it during class definition ...",
+        ])
 
 
 class Internal:
@@ -82,22 +77,18 @@ class Internal:
         _ret = []
         for _c in self.__class__.__mro__:
             if hasattr(_c, "__annotations__"):
-                _ret.extend(
-                    list(_c.__annotations__.keys())
-                )
+                _ret.extend(list(_c.__annotations__.keys()))
         return list(set(_ret))
 
     def __init__(self, owner: "Tracker"):
 
         # store_key must not be present as it is not loaded from serialized file
         if hasattr(owner, self.LITERAL.store_key):
-            e.code.CodingError(
-                msgs=[
-                    f"Did you miss to cache the `internal` property?",
-                    f"Looks like {self.LITERAL.store_key} is already present",
-                    f"We do not expect this to happen."
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Did you miss to cache the `internal` property?",
+                f"Looks like {self.LITERAL.store_key} is already present",
+                f"We do not expect this to happen.",
+            ])
 
         # keep internal instance reference in owner
         owner.__dict__[self.LITERAL.store_key] = self
@@ -109,24 +100,23 @@ class Internal:
         # container
         for _vn in self.__variable_names__:
             try:
-                setattr(
-                    self, _vn, getattr(self.__class__, _vn)
-                )
+                setattr(self, _vn, getattr(self.__class__, _vn))
             except AttributeError:
                 ...
 
     def __setattr__(self, key: str, value):
         # bypass dunder keys
-        if key.startswith('__'):
+        if key.startswith("__"):
             return super().__setattr__(key, value)
 
         # only keys that are annotated can be set
         e.validation.ShouldBeOneOf(
-            value=key, values=self.__variable_names__,
+            value=key,
+            values=self.__variable_names__,
             msgs=[
                 f"Member `{key}` is not annotated in class "
                 f"{self.__class__} so you cannot set it."
-            ]
+            ],
         )
 
         # if item is allowed to be set only once then do not allow it to be
@@ -137,18 +127,16 @@ class Internal:
                     _str_value = value.yaml()
                 else:
                     _str_value = str(value)
-                e.code.NotAllowed(
-                    msgs=[
-                        f"The item `{key}` is already present in the internal "
-                        f"object.",
-                        f"Please refrain from overwriting it as it is "
-                        f"configured to be written only once.",
-                        f"You are overwriting it with value `{_str_value}`",
-                        f"In case you want to overwrite it then override "
-                        f"method `self.vars_that_can_be_overwritten` so "
-                        f"that we allow you to overwrite it."
-                    ]
-                )
+                e.code.NotAllowed(msgs=[
+                    f"The item `{key}` is already present in the internal "
+                    f"object.",
+                    f"Please refrain from overwriting it as it is "
+                    f"configured to be written only once.",
+                    f"You are overwriting it with value `{_str_value}`",
+                    f"In case you want to overwrite it then override "
+                    f"method `self.vars_that_can_be_overwritten` so "
+                    f"that we allow you to overwrite it.",
+                ])
 
         # set attribute
         return super().__setattr__(key, value)
@@ -156,35 +144,31 @@ class Internal:
     def __getattr__(self, item):
 
         # bypass dunder keys
-        if item.startswith('__'):
+        if item.startswith("__"):
             return super().__getattribute__(item)
 
         # check if already set
         # We go via __dict__ as using self.has causes recursion
         if item not in self.__dict__.keys():
-            e.code.CodingError(
-                msgs=[
-                    f"You cannot access annotated attribute `{item}` as it is "
-                    f"not yet set",
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"You cannot access annotated attribute `{item}` as it is "
+                f"not yet set",
+            ])
 
         # return
         return super().__getattribute__(item)
 
     # noinspection PyMethodMayBeStatic
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ['on_call_kwargs', "progress_bar", "part_iterator_state"]
+        return ["on_call_kwargs", "progress_bar", "part_iterator_state"]
 
     def has(self, item: str) -> bool:
         if item not in self.__variable_names__:
-            e.code.CodingError(
-                msgs=[
-                    f"You can only test has(...) for items that are annotated",
-                    f"Item `{item}` is not one of "
-                    f"{self.__variable_names__}"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"You can only test has(...) for items that are annotated",
+                f"Item `{item}` is not one of "
+                f"{self.__variable_names__}",
+            ])
         return item in self.__dict__.keys()
 
 
@@ -197,17 +181,13 @@ class Tracker:
       + this library is builtin and hence justifies usage for same
       + it also has async context support so check it out
     """
-
     class LITERAL(metaclass=_ReadOnlyClass):
-
         def __new__(cls, *args, **kwargs):
-            e.code.NotAllowed(
-                msgs=[
-                    f"This class is meant to be used to hold class "
-                    f"variables only",
-                    f"Do not try to create instance of {cls} ..."
-                ]
-            )
+            e.code.NotAllowed(msgs=[
+                f"This class is meant to be used to hold class "
+                f"variables only",
+                f"Do not try to create instance of {cls} ...",
+            ])
 
     @property
     @util.CacheResult
@@ -228,45 +208,38 @@ class Tracker:
         """
         Indicates weather this class can be iterated or not
         """
-        _iterable_length_overridden = \
-            self.__class__.iterable_length != Tracker.iterable_length
-        _on_iter_overridden = \
-            self.__class__.on_iter != Tracker.on_iter
+        _iterable_length_overridden = (self.__class__.iterable_length !=
+                                       Tracker.iterable_length)
+        _on_iter_overridden = self.__class__.on_iter != Tracker.on_iter
         if _iterable_length_overridden ^ _on_iter_overridden:
-            e.code.CodingError(
-                msgs=[
-                    f"Both property iterable_length and method on_iter must "
-                    f"be overridden if you want to support iterating on "
-                    f"instances of class {self.__class__}",
-                    dict(
-                        _iterable_length_overridden=_iterable_length_overridden,
-                        _on_iter_overridden=_on_iter_overridden,
-                    )
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Both property iterable_length and method on_iter must "
+                f"be overridden if you want to support iterating on "
+                f"instances of class {self.__class__}",
+                dict(
+                    _iterable_length_overridden=_iterable_length_overridden,
+                    _on_iter_overridden=_on_iter_overridden,
+                ),
+            ])
         return _iterable_length_overridden
 
     # noinspection PyPropertyDefinition,PyTypeChecker
     @property
     def iterable_length(self) -> int:
-        e.code.NotSupported(
-            msgs=[
-                f"Override this property in class "
-                f"{self.__class__} if you want to iterate "
-                f"over tracker"
-            ]
-        )
+        e.code.NotSupported(msgs=[
+            f"Override this property in class "
+            f"{self.__class__} if you want to iterate "
+            f"over tracker"
+        ])
 
     # noinspection PyPropertyDefinition,PyTypeChecker
     @property
     def iterable_unit(self) -> str:
-        e.code.NotSupported(
-            msgs=[
-                f"Override this property in class "
-                f"{self.__class__} if you want to iterate "
-                f"over tracker"
-            ]
-        )
+        e.code.NotSupported(msgs=[
+            f"Override this property in class "
+            f"{self.__class__} if you want to iterate "
+            f"over tracker"
+        ])
 
     @property
     @util.CacheResult
@@ -310,19 +283,17 @@ class Tracker:
         # prefetch if not done
         # handle expensive things that can reduce load on consecutive calls
         # on same instance
-        if not self.internal.has('prefetched_on_first_call'):
+        if not self.internal.has("prefetched_on_first_call"):
             self.prefetch_stuff_before_first_call()
 
         # set call
         if self.is_called:
-            e.code.CodingError(
-                msgs=[
-                    f"Internal variable on_call_kwargs is already set.",
-                    f"Did you miss to call your code from within with context "
-                    f"and forgot to exit properly in previous runs??",
-                    f"Or else try to call this with for statement ..."
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Internal variable on_call_kwargs is already set.",
+                f"Did you miss to call your code from within with context "
+                f"and forgot to exit properly in previous runs??",
+                f"Or else try to call this with for statement ...",
+            ])
         else:
             # if iterating is not supported then make sure that iter_* kwargs
             # are None
@@ -331,20 +302,18 @@ class Tracker:
                     # the default when self is iterable is to show progress bar
                     iter_show_progress_bar = True
                 self.internal.on_call_kwargs = {
-                    'iter_show_progress_bar': iter_show_progress_bar,
-                    'iter_desc': iter_desc,
-                    **kwargs
+                    "iter_show_progress_bar": iter_show_progress_bar,
+                    "iter_desc": iter_desc,
+                    **kwargs,
                 }
             else:
                 if iter_show_progress_bar is not None or iter_desc is not None:
-                    e.code.CodingError(
-                        msgs=[
-                            f"The class {self.__class__} does not override "
-                            f"on_iter that is it does not support iterating "
-                            f"so please make sure to set iter related "
-                            f"__call__ kwargs to None"
-                        ]
-                    )
+                    e.code.CodingError(msgs=[
+                        f"The class {self.__class__} does not override "
+                        f"on_iter that is it does not support iterating "
+                        f"so please make sure to set iter related "
+                        f"__call__ kwargs to None"
+                    ])
                     # skip adding iter related kwargs
                 self.internal.on_call_kwargs = kwargs
 
@@ -382,16 +351,16 @@ class Tracker:
             _iterable = self.on_iter()
 
             # get some vars
-            _show_progress_bar = \
-                self.internal.on_call_kwargs['iter_show_progress_bar']
-            _iter_desc = self.internal.on_call_kwargs['iter_desc']
+            _show_progress_bar = self.internal.on_call_kwargs[
+                "iter_show_progress_bar"]
+            _iter_desc = self.internal.on_call_kwargs["iter_desc"]
 
             # iterate
             if _show_progress_bar:
                 with logger.ProgressBar(
-                    total=self.iterable_length,
-                    unit=self.iterable_unit,
-                    desc=_iter_desc,
+                        total=self.iterable_length,
+                        unit=self.iterable_unit,
+                        desc=_iter_desc,
                 ) as pg:
                     self.internal.progress_bar = pg
                     for _ in _iterable:
@@ -423,12 +392,10 @@ class Tracker:
         on_call
 
         """
-        if self.internal.has('prefetched_on_first_call'):
-            e.code.CodingError(
-                msgs=[
-                    f"The method `prefetch_stuff` can be called only once ..."
-                ]
-            )
+        if self.internal.has("prefetched_on_first_call"):
+            e.code.CodingError(msgs=[
+                f"The method `prefetch_stuff` can be called only once ..."
+            ])
         else:
             # set var
             self.internal.prefetched_on_first_call = True
@@ -439,48 +406,42 @@ class Tracker:
         """
         # ----------------------------------------------------- 01
         if not self.is_called:
-            e.code.CodingError(
-                msgs=[
-                    f"Internal variable on_call_kwargs is not yet set",
-                    f"Did you miss to call your code from within with context",
-                    f"Also did you miss to use __call__",
-                    f"If iterating over Hashable class make sure that "
-                    f"__call__ is called which sets kwargs related to "
-                    f"iteration or anything else"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Internal variable on_call_kwargs is not yet set",
+                f"Did you miss to call your code from within with context",
+                f"Also did you miss to use __call__",
+                f"If iterating over Hashable class make sure that "
+                f"__call__ is called which sets kwargs related to "
+                f"iteration or anything else",
+            ])
 
     def on_enter(self):
         """
         Override this in case you want to do something when __enter__ is called
         """
         if not self.is_called:
-            e.code.CodingError(
-                msgs=[
-                    f"Internal variable on_call_kwargs is not yet set",
-                    f"Did you miss to call your code from within with context",
-                    f"Also did you miss to use __call__",
-                    f"If iterating over Hashable class make sure that "
-                    f"__call__ is called which sets kwargs related to "
-                    f"iteration or anything else"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Internal variable on_call_kwargs is not yet set",
+                f"Did you miss to call your code from within with context",
+                f"Also did you miss to use __call__",
+                f"If iterating over Hashable class make sure that "
+                f"__call__ is called which sets kwargs related to "
+                f"iteration or anything else",
+            ])
 
     def on_exit(self):
         """
         Override this in case you want to do something when __exit__ is called
         """
         if not self.is_called:
-            e.code.CodingError(
-                msgs=[
-                    f"Internal variable `on_call_kwargs` is not yet set",
-                    f"Did you miss to call your code from within with context",
-                    f"Also did you miss to use __call__",
-                    f"If iterating over Hashable class make sure that "
-                    f"__call__ is called which sets kwargs related to "
-                    f"iteration or anything else"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Internal variable `on_call_kwargs` is not yet set",
+                f"Did you miss to call your code from within with context",
+                f"Also did you miss to use __call__",
+                f"If iterating over Hashable class make sure that "
+                f"__call__ is called which sets kwargs related to "
+                f"iteration or anything else",
+            ])
 
         # reset on_call_kwargs
         self.internal.on_call_kwargs = None
@@ -490,14 +451,12 @@ class Tracker:
         """
         Override this in case you want to do something when __iter__ is called
         """
-        e.code.CodingError(
-            msgs=[
-                f"Looks like you do not support iterating over "
-                f"hashable class {self.__class__}",
-                f"Considering overriding `on_iter` in class {self.__class__} "
-                f"to return an iterator"
-            ]
-        )
+        e.code.CodingError(msgs=[
+            f"Looks like you do not support iterating over "
+            f"hashable class {self.__class__}",
+            f"Considering overriding `on_iter` in class {self.__class__} "
+            f"to return an iterator",
+        ])
 
     def on_del(self):
         ...
@@ -510,9 +469,7 @@ class Tracker:
         ...
 
     @classmethod
-    def available_concrete_sub_classes(cls) -> t.List[
-        t.Type["YamlRepr"]
-    ]:
+    def available_concrete_sub_classes(cls) -> t.List[t.Type["YamlRepr"]]:
         """
         Return a subset of AvailableHashableClasses that are subclass of
         incoming argument hashable_type.
@@ -538,9 +495,7 @@ class Tracker:
         return _ret
 
     @classmethod
-    def available_sub_classes(cls) -> t.List[
-        t.Type["YamlRepr"]
-    ]:
+    def available_sub_classes(cls) -> t.List[t.Type["YamlRepr"]]:
         """
         Return a subset of AvailableHashableClasses that are subclass of
         incoming argument hashable_type.
@@ -587,7 +542,8 @@ class YamlDumper(yaml.Dumper):
         The method that dumps with specific yaml config for toolcraft
         """
         return yaml.dump(
-            item, Dumper=YamlDumper,
+            item,
+            Dumper=YamlDumper,
             sort_keys=False,
             default_flow_style=False,
         )
@@ -611,9 +567,8 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(
-        cls, file_or_text: t.Union[pathlib.Path, str],  **kwargs
-    ) -> t.Union[dict, "YamlRepr"]:
+    def load(cls, file_or_text: t.Union[pathlib.Path, str],
+             **kwargs) -> t.Union[dict, "YamlRepr"]:
         # get text
         _text = file_or_text
         if isinstance(file_or_text, pathlib.Path):
@@ -628,33 +583,28 @@ class YamlLoader(yaml.UnsafeLoader):
 
         # check
         if _instance.__class__ != cls:
-            e.code.CodingError(
-                msgs=[
-                    f"We expect yaml str is for correct class ",
-                    {
-                        "expected": cls,
-                        "found": _instance.__class__
-                    }
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"We expect yaml str is for correct class ",
+                {
+                    "expected": cls,
+                    "found": _instance.__class__
+                },
+            ])
 
         # return
         return _instance
 
 
 class YamlRepr(Tracker):
-
     """
     This class makes it possible to have YamlRepr for dataclasses.
 
     NOTE: do nat make this class abstract as FrozenEnum like classes will not
     work
     """
-
     @classmethod
     def class_init(cls):
-        """
-        """
+        """ """
         global YAML_TAG_MAPPING
 
         # call super
@@ -679,16 +629,14 @@ class YamlRepr(Tracker):
                     del YAML_TAG_MAPPING[_yaml_tag]
                     YAML_TAG_MAPPING[_yaml_tag] = cls
                 else:
-                    e.code.CodingError(
-                        msgs=[
-                            f"The yaml tag `{_yaml_tag}` is already registered "
-                            f"for class `{YAML_TAG_MAPPING[_yaml_tag]}`",
-                            f"But you are again trying to use same tag for "
-                            f"class `{cls}`.",
-                            f"Please check if you have overridden `yaml_tag` "
-                            f"method appropriately ... "
-                        ]
-                    )
+                    e.code.CodingError(msgs=[
+                        f"The yaml tag `{_yaml_tag}` is already registered "
+                        f"for class `{YAML_TAG_MAPPING[_yaml_tag]}`",
+                        f"But you are again trying to use same tag for "
+                        f"class `{cls}`.",
+                        f"Please check if you have overridden `yaml_tag` "
+                        f"method appropriately ... ",
+                    ])
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -703,21 +651,17 @@ class YamlRepr(Tracker):
         return f"!{cls.__module__}:{cls.__name__}"
 
     @classmethod
-    def _yaml_representer(
-        cls, dumper: YamlDumper, data: "YamlRepr"
-    ) -> yaml.Node:
+    def _yaml_representer(cls, dumper: YamlDumper,
+                          data: "YamlRepr") -> yaml.Node:
         # get yaml state dict
         _yaml_state = data.as_dict()
 
         # return representer
-        return dumper.represent_mapping(
-            cls.yaml_tag(), _yaml_state
-        )
+        return dumper.represent_mapping(cls.yaml_tag(), _yaml_state)
 
     @classmethod
-    def _yaml_constructor(
-        cls, loader: YamlLoader, node: yaml.Node
-    ) -> "YamlRepr":
+    def _yaml_constructor(cls, loader: YamlLoader,
+                          node: yaml.Node) -> "YamlRepr":
         """
         From the SO discussion here
         https://stackoverflow.com/questions/43812020/what-does-deep-true-do-in-pyyaml-loader-construct-mapping
@@ -746,33 +690,25 @@ class YamlRepr(Tracker):
         return YamlDumper.dump(self)
 
     @classmethod
-    def from_yaml(
-        cls,
-        file_or_text: t.Union[pathlib.Path, str],  **kwargs
-    ) -> "YamlRepr":
+    def from_yaml(cls, file_or_text: t.Union[pathlib.Path, str],
+                  **kwargs) -> "YamlRepr":
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
     def clone(self) -> "YamlRepr":
         return self.from_yaml(self.yaml())
 
-    def as_dict(
-        self
-    ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        e.code.CodingError(
-            msgs=[
-                f"We expect you to override this method in class "
-                f"{self.__class__}"
-            ]
-        )
+    def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+        e.code.CodingError(msgs=[
+            f"We expect you to override this method in class "
+            f"{self.__class__}"
+        ])
         return {}
 
     @classmethod
-    def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
-    ) -> "YamlRepr":
+    def from_dict(cls, yaml_state: t.Dict[str,
+                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+                  **kwargs) -> "YamlRepr":
         # noinspection PyArgumentList
         return cls(**yaml_state)
 
@@ -792,29 +728,23 @@ class YamlRepr(Tracker):
         # check if item is dict or list
         if isinstance(item, dict):
             if item.__class__ != dict:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Looks like you are using a dict that is not builtin "
-                        f"python dict.",
-                        f"Found dict of type {type(item)}!={dict}"
-                    ] + _err_msg
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"Looks like you are using a dict that is not builtin "
+                    f"python dict.",
+                    f"Found dict of type {type(item)}!={dict}",
+                ] + _err_msg)
         elif isinstance(item, list):
             if item.__class__ != list:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Looks like you are using a list that is not builtin "
-                        f"python list.",
-                        f"Found list of type {type(item)}!={list}"
-                    ] + _err_msg
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"Looks like you are using a list that is not builtin "
+                    f"python list.",
+                    f"Found list of type {type(item)}!={list}",
+                ] + _err_msg)
         else:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"We expect item to be a dict or list but instead found "
-                    f"item of type {type(item)}"
-                ] + _err_msg
-            )
+            e.validation.NotAllowed(msgs=[
+                f"We expect item to be a dict or list but instead found "
+                f"item of type {type(item)}"
+            ] + _err_msg)
 
         # ------------------------------------------------------------ 04
         # if dict check keys and values
@@ -824,33 +754,28 @@ class YamlRepr(Tracker):
             for k, v in item.items():
                 # ---------------------------------------------------- 04.02
                 # compute current key
-                current_key = f">{k}" if key_or_index is None else \
-                    f"{key_or_index}>{k}"
+                current_key = f">{k}" if key_or_index is None else f"{key_or_index}>{k}"
                 # ---------------------------------------------------- 04.03
                 # dict key needs to be str or int
                 if not isinstance(k, (str, int)):
-                    e.validation.NotAllowed(
-                        msgs=[
-                            f"We expect the dict to be frozen to have str or "
-                            f"int keys",
-                            f"Found key `{k}` of type {type(k)}."
-                        ] + _err_msg
-                    )
+                    e.validation.NotAllowed(msgs=[
+                        f"We expect the dict to be frozen to have str or "
+                        f"int keys",
+                        f"Found key `{k}` of type {type(k)}.",
+                    ] + _err_msg)
                 # ---------------------------------------------------- 04.04
                 # if nested dict or list try to verify keys and values
                 if isinstance(v, (dict, list)):
                     # check the value
-                    cls.can_be_frozen(
-                        v, current_key, allowed_types)
+                    cls.can_be_frozen(v, current_key, allowed_types)
                 # ---------------------------------------------------- 04.05
                 # else value needs to be one of supported hashable
                 else:
                     e.validation.ShouldBeInstanceOf(
                         value=v,
                         value_types=allowed_types,
-                        msgs=[
-                            f"Value for key `{k}` in dict cannot be frozen"
-                        ] + _err_msg
+                        msgs=[f"Value for key `{k}` in dict cannot be frozen"]
+                        + _err_msg,
                     )
 
         # ------------------------------------------------------------ 05
@@ -861,16 +786,14 @@ class YamlRepr(Tracker):
             for i, v in enumerate(item):
                 # ---------------------------------------------------- 05.02
                 # compute current key
-                current_key = f">{i}" if key_or_index is None else \
-                    f"{key_or_index}>{i}"
+                current_key = f">{i}" if key_or_index is None else f"{key_or_index}>{i}"
                 # ---------------------------------------------------- 05.03
                 # value needs to be hashable
                 e.validation.ShouldBeInstanceOf(
                     value=v,
                     value_types=allowed_types + (dict, list),
-                    msgs=[
-                        f"Value for index `{i}` in list cannot be frozen"
-                    ] + _err_msg
+                    msgs=[f"Value for index `{i}` in list cannot be frozen"] +
+                    _err_msg,
                 )
                 # ---------------------------------------------------- 05.04
                 # if nested dict or list try to verify keys and values
@@ -885,6 +808,7 @@ class YamlRepr(Tracker):
         # else not possible
         else:
             e.code.ShouldNeverHappen(msgs=[])
+
 
 #
 # class _FrozenDict:
@@ -947,13 +871,10 @@ class YamlRepr(Tracker):
 
 
 class FrozenKeras(YamlRepr):
-
     class LITERAL(YamlRepr.LITERAL):
         SUPPORTED_KERAS_OBJECTS_TYPE = t.Union[
-            "tk.losses.Loss",
-            "tk.optimizers.Optimizer",
-            "tk.optimizers.schedules.LearningRateSchedule",
-        ]
+            "tk.losses.Loss", "tk.optimizers.Optimizer",
+            "tk.optimizers.schedules.LearningRateSchedule", ]
         # noinspection PyUnresolvedReferences
         SUPPORTED_KERAS_OBJECTS = SUPPORTED_KERAS_OBJECTS_TYPE.__args__
 
@@ -965,9 +886,7 @@ class FrozenKeras(YamlRepr):
         e.validation.ShouldBeInstanceOf(
             value=item,
             value_types=self.LITERAL.SUPPORTED_KERAS_OBJECTS,
-            msgs=[
-                f"Unrecognized item type that cannot be freezed ..."
-            ]
+            msgs=[f"Unrecognized item type that cannot be freezed ..."],
         )
         # -------------------------------------------------------- 01.02
         # check if keras config is serializable as per our code
@@ -994,21 +913,17 @@ class FrozenKeras(YamlRepr):
         # creates instance from config given by `self._item`
         return self._k_class.from_config(self._k_config)
 
-    def as_dict(
-        self
-    ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+    def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         return {
             "module": self._k_class.__module__,
             "class": self._k_class.__name__,
-            "config": self._k_config.copy()
+            "config": self._k_config.copy(),
         }
 
     @classmethod
-    def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
-    ) -> "FrozenKeras":
+    def from_dict(cls, yaml_state: t.Dict[str,
+                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+                  **kwargs) -> "FrozenKeras":
         _k_class = util.load_class_from_strs(
             class_name=yaml_state["class"],
             class_module=yaml_state["module"],
@@ -1035,20 +950,14 @@ class FrozenEnum(YamlRepr):
       for builtins
     """
 
-    def as_dict(
-        self
-    ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+    def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         # noinspection PyUnresolvedReferences
-        return {
-            "name": self.name
-        }
+        return {"name": self.name}
 
     @classmethod
-    def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
-    ) -> "FrozenEnum":
+    def from_dict(cls, yaml_state: t.Dict[str,
+                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+                  **kwargs) -> "FrozenEnum":
         return getattr(cls, yaml_state["name"])
 
 
@@ -1070,7 +979,6 @@ class HashableClass(YamlRepr, abc.ABC):
     todo: We can have a class method to be used with class validate where we
       can store names of properties that need to be cached.
     """
-
     @property
     def name(self) -> str:
         """
@@ -1108,18 +1016,16 @@ class HashableClass(YamlRepr, abc.ABC):
         If None is returned then grouping is not used
 
         """
-        e.code.CodingError(
-            msgs=[
-                f"Do you need some grouping?",
-                f"Are you using this for plotting or organizing folders?",
-                f"Then please override this property or else refrain from "
-                f"using this property.",
-                f"If you do not want to use grouping please consider "
-                f"returning None ..."
-                f"Check class {self.__class__} and override its property "
-                f"`group_by` if needed",
-            ]
-        )
+        e.code.CodingError(msgs=[
+            f"Do you need some grouping?",
+            f"Are you using this for plotting or organizing folders?",
+            f"Then please override this property or else refrain from "
+            f"using this property.",
+            f"If you do not want to use grouping please consider "
+            f"returning None ..."
+            f"Check class {self.__class__} and override its property "
+            f"`group_by` if needed",
+        ])
         return ""
 
     @property
@@ -1146,21 +1052,17 @@ class HashableClass(YamlRepr, abc.ABC):
         # todo: find dataclass based alternative (explore dataclass generated
         #  __repr__ and __hash__ dunder methods)
         # return
-        return hashlib.md5(
-            f"{self.yaml()}".encode('utf-8')
-        ).hexdigest()
+        return hashlib.md5(f"{self.yaml()}".encode("utf-8")).hexdigest()
 
     # noinspection PyPropertyDefinition,PyTypeChecker
     @property
     @util.CacheResult
     def results_folder(self) -> "storage.ResultsFolder":
-        e.code.NotAllowed(
-            msgs=[
-                f"Please override `results_folder` property if you want to "
-                f"save results or StoreFields for hashable class "
-                f"{self.__class__}"
-            ]
-        )
+        e.code.NotAllowed(msgs=[
+            f"Please override `results_folder` property if you want to "
+            f"save results or StoreFields for hashable class "
+            f"{self.__class__}"
+        ])
 
     # do not cache as dynamic list will be popped out and the reference to
     # spinner will hang on and ... on consecutive calls cached spinners from
@@ -1169,14 +1071,12 @@ class HashableClass(YamlRepr, abc.ABC):
     def spinner(self) -> logger.Spinner:
         _spinner = logger.Spinner.get_last_spinner()
         if _spinner is None:
-            e.code.CodingError(
-                msgs=[
-                    f"Please use this spinner property from within code that "
-                    f"is called within spinner loops",
-                    f"Looks like the code was never called within "
-                    f"spinner loops"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Please use this spinner property from within code that "
+                f"is called within spinner loops",
+                f"Looks like the code was never called within "
+                f"spinner loops",
+            ])
         return _spinner
 
     # todo: this was for yaml repr .... but not needed ... so may be we
@@ -1190,10 +1090,10 @@ class HashableClass(YamlRepr, abc.ABC):
         # --------------------------------------------------------------01
         # do instance related things
         with logger.Spinner(
-            title=f"Init "
-                    f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}",
-            logger=_LOGGER,
+                title=f"Init "
+                f"{self.__class__.__module__}."
+                f"{self.__class__.__name__}",
+                logger=_LOGGER,
         ) as _s:
             # ----------------------------------------------------------01.01
             # todo: add global flag to start and stop validation
@@ -1226,13 +1126,11 @@ class HashableClass(YamlRepr, abc.ABC):
 
         # when not in debug method we do not allow to print this object
         # instead `self.yaml()` should be used
-        e.code.CodingError(
-            msgs=[
-                f"We do not allow to use __str__ or __repr__ of the "
-                f"marshalling class.",
-                f"Instead use `.yaml()` method."
-            ]
-        )
+        e.code.CodingError(msgs=[
+            f"We do not allow to use __str__ or __repr__ of the "
+            f"marshalling class.",
+            f"Instead use `.yaml()` method.",
+        ])
         return ""
 
     def __eq__(self, other):
@@ -1265,9 +1163,7 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         return False
 
-    def as_dict(
-        self
-    ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+    def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
         for f_name in self.dataclass_field_names:
             _ret[f_name] = getattr(self, f_name)
@@ -1297,13 +1193,11 @@ class HashableClass(YamlRepr, abc.ABC):
             # ----------------------------------------------------------01.03
             # raise error to inform to use FrozenKeras
             elif isinstance(v, FrozenKeras.LITERAL.SUPPORTED_KERAS_OBJECTS):
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Please set the field `{f_name}` where the `keras` "
-                        f"object is wrapped with `{FrozenKeras.__name__}` ... "
-                        f"check class {self.__class__}"
-                    ]
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"Please set the field `{f_name}` where the `keras` "
+                    f"object is wrapped with `{FrozenKeras.__name__}` ... "
+                    f"check class {self.__class__}"
+                ])
             # ----------------------------------------------------------01.04
             # if list check if values inside are hashable
             elif isinstance(v, list):
@@ -1316,11 +1210,12 @@ class HashableClass(YamlRepr, abc.ABC):
             # else should be one of supported type
             else:
                 e.validation.ShouldBeInstanceOf(
-                    value=v, value_types=SUPPORTED_HASHABLE_OBJECTS,
+                    value=v,
+                    value_types=SUPPORTED_HASHABLE_OBJECTS,
                     msgs=[
                         f"Check value of field `{f_name}` for class "
                         f"{self.__class__}"
-                    ]
+                    ],
                 )
 
     def init(self):
@@ -1382,12 +1277,10 @@ class HashableClass(YamlRepr, abc.ABC):
         # ---------------------------------------------------- 02
         # test callable name
         if not util.rhasattr(self, callable_name):
-            e.code.CodingError(
-                msgs=[
-                    f"Callable `{callable_name}` not available for "
-                    f"HashableClass {self.__class__}"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Callable `{callable_name}` not available for "
+                f"HashableClass {self.__class__}"
+            ])
 
         # ---------------------------------------------------- 03
         # create callback
@@ -1402,16 +1295,15 @@ class HashableClass(YamlRepr, abc.ABC):
         # ---------------------------------------------------- 04
         # create and return button
         return gui.Button(
-            label=button_label, callback=_callback,
+            label=button_label,
+            callback=_callback,
         )
 
 
-SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
-    int, float, str, slice, list, dict,
-    np.float32, np.int64, np.int32,
-    datetime.datetime, None,
-    FrozenEnum, FrozenKeras, HashableClass,
-    pa.Schema,
-]
+SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict,
+                                          np.float32, np.int64, np.int32,
+                                          datetime.datetime, None, FrozenEnum,
+                                          FrozenKeras, HashableClass,
+                                          pa.Schema, ]
 # noinspection PyUnresolvedReferences
 SUPPORTED_HASHABLE_OBJECTS = SUPPORTED_HASHABLE_OBJECTS_TYPE.__args__

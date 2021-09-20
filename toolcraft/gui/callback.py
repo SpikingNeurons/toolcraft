@@ -1,13 +1,12 @@
 import dataclasses
-import dearpygui.dearpygui as dpg
 import typing as t
 
-from .. import util
-from .. import marshalling as m
+import dearpygui.dearpygui as dpg
+
 from .. import error as e
-from . import Widget, Callback, Binder
-from . import widget
-from . import assets
+from .. import marshalling as m
+from .. import util
+from . import Binder, Callback, Widget, assets, widget
 
 
 @dataclasses.dataclass(frozen=True)
@@ -17,11 +16,11 @@ class SetThemeCallback(Callback):
       once we understand theme, icon, font, background, color etc styling
       related things
     """
-
     @staticmethod
     def themes() -> t.List[str]:
         return [
-            "Dark", "Light",
+            "Dark",
+            "Light",
             # "Classic",
             # "Dark 2", "Grey", "Purple",
             # "Dark Grey", "Cherry", "Gold", "Red"
@@ -37,14 +36,14 @@ class SetThemeCallback(Callback):
             items=cls.themes(),
             default_value=cls.default_theme(),
             callback=cls(),
-            label="Select Theme"
+            label="Select Theme",
         )
 
     def fn(
         self,
         sender: Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[Widget, t.List[Widget]],
     ):
         _theme_str = dpg.get_value(item=sender.dpg_id)
         if _theme_str == "Dark":
@@ -52,11 +51,7 @@ class SetThemeCallback(Callback):
         elif _theme_str == "Light":
             _theme = assets.Theme.Light
         else:
-            e.code.CodingError(
-                msgs=[
-                    f"unknown theme {_theme_str}"
-                ]
-            )
+            e.code.CodingError(msgs=[f"unknown theme {_theme_str}"])
             raise
         # we change theme of parent to which this Combo widget is child
         sender.parent.set_theme(theme=_theme)
@@ -67,19 +62,15 @@ class CloseWidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete its Parent
     """
-
     @classmethod
     def get_button_widget(cls) -> widget.Button:
-        return widget.Button(
-            label="Close [X]",
-            callback=cls()
-        )
+        return widget.Button(label="Close [X]", callback=cls())
 
     def fn(
         self,
         sender: Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[Widget, t.List[Widget]],
     ):
         sender.parent.delete()
 
@@ -94,23 +85,22 @@ class RefreshWidgetCallback(Callback):
     refresh_callback: Callback
 
     @classmethod
-    def get_button_widget(
-        cls, refresh_callback: Callback, label: str = "Refresh [R]"
-    ) -> widget.Button:
-        return widget.Button(
-            label=label,
-            callback=cls(refresh_callback=refresh_callback)
-        )
+    def get_button_widget(cls,
+                          refresh_callback: Callback,
+                          label: str = "Refresh [R]") -> widget.Button:
+        return widget.Button(label=label,
+                             callback=cls(refresh_callback=refresh_callback))
 
     def fn(
         self,
         sender: Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[Widget, t.List[Widget]],
     ):
         sender.parent.delete()
-        self.refresh_callback.fn(
-            sender=sender, app_data=app_data, user_data=user_data)
+        self.refresh_callback.fn(sender=sender,
+                                 app_data=app_data,
+                                 user_data=user_data)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -125,6 +115,7 @@ class HashableMethodRunnerCallback(Callback):
     Note that this will mean that allow_refresh will be True when
     tab_group_name is not None.
     """
+
     hashable: m.HashableClass
     callable_name: str
     receiver: Widget
@@ -138,28 +129,23 @@ class HashableMethodRunnerCallback(Callback):
         # check if receiver can accept child
         if not self.receiver.is_container:
             e.validation.NotAllowed(
-                msgs=[
-                    f"We expect a receiver that can accept children..."
-                ]
-            )
+                msgs=[f"We expect a receiver that can accept children..."])
 
         # if tab_group_name is supplied that means you are sharing receiver
         # object across multiple Callbacks with same tab_group_name
         # So ensure that the allow_refresh is True
         if self.tab_group_name is not None:
             if not self.allow_refresh:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"looks like you are using tab_group_name. So please "
-                        f"ensure that allow_refresh is set to True"
-                    ]
-                )
+                e.code.NotAllowed(msgs=[
+                    f"looks like you are using tab_group_name. So please "
+                    f"ensure that allow_refresh is set to True"
+                ])
 
     def fn(
         self,
         sender: Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[Widget, t.List[Widget]],
     ):
         # get some vars
         # _sender = self.sender
@@ -184,14 +170,12 @@ class HashableMethodRunnerCallback(Callback):
 
         # get actual result widget we are interested to display ... and make
         # it child to receiver
-        util.rgetattr(
-            _hashable, self.callable_name
-        )(
+        util.rgetattr(_hashable, self.callable_name)(
             binder=Binder(
-                guid=_unique_guid, parent=_receiver,
+                guid=_unique_guid,
+                parent=_receiver,
                 # before=None
-            )
-        )
+            ))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -200,6 +184,7 @@ class HashableMethodsRunnerCallback(Callback):
     Special class just to create a button bar if you do not want to have a
     special method that generates button bar
     """
+
     tab_group_name: str
     hashable: m.HashableClass
     title: str
@@ -216,25 +201,20 @@ class HashableMethodsRunnerCallback(Callback):
         # check if receiver can accept child
         if not self.receiver.is_container:
             e.validation.NotAllowed(
-                msgs=[
-                    f"We expect a receiver that can accept children..."
-                ]
-            )
+                msgs=[f"We expect a receiver that can accept children..."])
 
         # length must be same
         if len(self.callable_names) != len(self.callable_labels):
-            e.validation.NotAllowed(
-                msgs=[
-                    f"We expect fields `callable_names` and `callable_labels` "
-                    f"to have same length"
-                ]
-            )
+            e.validation.NotAllowed(msgs=[
+                f"We expect fields `callable_names` and `callable_labels` "
+                f"to have same length"
+            ])
 
     def fn(
         self,
         sender: Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[Widget, t.List[Widget]],
     ):
         # import
         from . import helper
@@ -265,13 +245,8 @@ class HashableMethodsRunnerCallback(Callback):
             title=self.title,
             close_button=self.close_button,
             callable_names={
-                k: v for k, v in zip(self.callable_labels, self.callable_names)
+                k: v
+                for k, v in zip(self.callable_labels, self.callable_names)
             },
         )
-        _receiver.add_child(
-            guid=_unique_guid,
-            widget=_result_widget
-        )
-
-
-
+        _receiver.add_child(guid=_unique_guid, widget=_result_widget)
