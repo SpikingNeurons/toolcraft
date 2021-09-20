@@ -10,8 +10,9 @@ keywords = ["reporting", "gui", "tool", "toolcraft"]
 readme = "README.md"
 license =  "BSD-3-Clause"
 classifiers=[
+    'Intended Audience :: Education',
     'Intended Audience :: Developers',
-    'Natural Language :: English',
+    'Intended Audience :: Science/Research',
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 packages = [

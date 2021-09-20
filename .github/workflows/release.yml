@@ -4,11 +4,11 @@ name: release & publish
 
 # Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branch: release
-    tags:
-      - 'v*'
+    branches: [main, ]
+#    tags:
+#      - 'v*'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -16,20 +16,25 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  release:
-    name: Create Release
-    runs-on: ubuntu-20.04
+  release-build:
+    name: Create release builds
 
+    # The type of runner that the job will run on
     strategy:
       matrix:
-        python-versions: [3.8]
+        python-versions: [3.8, 3.9]
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
       - uses: actions/checkout@v2
 
-      - name: generate change log
+      # Generate Change Log
+      - name: Generate change log
         uses: heinrichreimer/github-changelog-generator-action@v2.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -41,48 +46,65 @@ jobs:
           addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
           output: CHANGELOG.md
 
-      - uses: actions/setup-python@v2
+      # Setup Python
+      - name: Setup Python ${{ matrix.python-versions }}
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-versions }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox-gh-actions poetry
-
-      - name: pre-publish documentation
-        run: |
-          poetry install -E doc
-          poetry run mkdocs build
-
-      - name: publish documentation
-        uses: peaceiris/actions-gh-pages@v3
+      # install poetry
+      # know more at https://github.com/snok/install-poetry
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
         with:
-          personal_token: ${{ secrets.PERSONAL_TOKEN }}
-          publish_dir: ./site
+          version: 1.2.0a2
+          virtualenvs-create: true
+          virtualenvs-in-project: false
+          # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
+          installer-parallel: true
 
+      # Install build dependencies
+      - name: Install build dependencies
+        run: poetry install --with build
+
+      # Build wheels and source tarball
       - name: Build wheels and source tarball
-        run: >-
+        run: |
+          poetry version
           poetry build
 
-      - name: show temporary files
-        run: >-
-          ls -l
+      # Check wheels and source tarball
+      - name: Check wheels and source tarball
+        run: poetry run twine check dist/*
 
-      - name: create github release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          body_path: ./CHANGELOG.md
-          files: dist/*.whl
-          draft: false
-          prerelease: false
+      # List files
+      - name: List files
+        run: |
+          cd dist
+          ls -l .
+          cd ..
 
-      - name:
-        uses: pypa/gh-action-pypi-publish@release/v1
+      # Upload files
+      - name: Upload artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
+        uses: actions/upload-artifact@v2
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
+          name: ${{ matrix.os }}-${{ matrix.python-version }}
+          path: ${{ github.workspace }}/dist/*.whl
+          retention-days: 2
+
+  # deploy builds
+  release-deploy:
+    name: Deploy release builds
+    needs: [release-build]
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python-versions: [3.8, 3.9]
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+    steps:
+      - name: Download artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
+        uses: actions/download-artifact@v2
+      - name: List files
+        run: |
+          ls -l .
+
