@@ -14,7 +14,6 @@ generalize them across all tools
 import os
 import pathlib
 import platform
-import shutil
 import typing as t
 import webbrowser
 from pathlib import Path
@@ -93,7 +92,7 @@ def doc_preview(c):
 @task(
 
 )
-def bumpversion(c):
+def bump(c):
     """
     Format is:
       >> {major}.{minor}.{patch}{release}{num}\
