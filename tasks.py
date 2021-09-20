@@ -95,6 +95,9 @@ def doc_preview(c):
 )
 def bumpversion(c):
     """
+    Format is:
+      >> {major}.{minor}.{patch}{release}{num}\
+
     Easy way to test `bump2version`
       bump2version --no-configured-files --dry-run --verbose
       --current-version 0.1.2alpha22 num
@@ -103,5 +106,6 @@ def bumpversion(c):
         >> 'Bump version: 0.1.2beta22 → 0.1.2'
       --current-version 0.1.2alpha22 patch
         >> 'Bump version: 0.1.2alpha22 → 0.1.3'
+
     """
     ...
