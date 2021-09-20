@@ -83,11 +83,15 @@ def pytest_cov(c):
 def doc_preview(c):
     """
     Launches docs without building them. Useful for live editing.
-
-    npm run clear
-    npm run build
     """
     _curr_dir = os.getcwd()
     _doc_dir = _curr_dir + "//website//"
     os.chdir(_doc_dir)
     _run(c, "npm start")
+
+
+@task(
+
+)
+def bumpversion(c):
+    ...
