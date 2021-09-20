@@ -333,6 +333,11 @@ def bump(
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print("Executed bump command:", _bump_command)
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print()
+    print()
+    print("We will now push the tags")
+    _run(c, "git tag -n")
+    _run(c, "git push tag")
 
 
 
