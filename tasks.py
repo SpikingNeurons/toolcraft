@@ -335,9 +335,11 @@ def bump(
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print()
     print()
-    print("We will now push the tags")
+    print("Run below commands to see and push newly created tags:")
+    print("  >>  git tag -n")
+    print("  >>  git push --tags")
     _run(c, "git tag -n")
-    _run(c, "git push tag")
+    # _run(c, "git push tag")
 
 
 
