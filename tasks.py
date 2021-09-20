@@ -94,4 +94,9 @@ def doc_preview(c):
 
 )
 def bumpversion(c):
+    """
+    Easy way to test `bump2version`
+      bump2version --no-configured-files --dry-run
+      --current-version 0.1.2alpha22 num --verbose
+    """
     ...
