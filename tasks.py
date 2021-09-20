@@ -165,9 +165,10 @@ def bump(
     # ------------------------------------------------- 02
     # detect current version
     _curr_ver = \
-        toml.load("pyproject.toml")['tool']['poetry']['version'].split(".")
+        toml.load("pyproject.toml")['tool']['poetry']['version']
+    _splits = _curr_ver.split(".")
     _major, _minor, _patch = \
-        int(_curr_ver[0]), int(_curr_ver[1]), _curr_ver[2]
+        int(_splits[0]), int(_splits[1]), _splits[2]
     _release_type = None
     _release_num = None
     if _patch.find("a") > -1:
