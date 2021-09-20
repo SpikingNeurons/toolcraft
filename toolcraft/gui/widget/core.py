@@ -1,13 +1,12 @@
-
 import dataclasses
 import typing as t
+
 import dearpygui.dearpygui as dpg
 
 from ... import error as e
-from .. import Widget, Callback
+from .. import Callback, Widget
 from . import PLOT_DATA_TYPE
-from .auto import BTable, BPlot, Group
-from .auto import YAxis, XAxis, Legend, Column, Row, Text
+from .auto import BPlot, BTable, Column, Group, Legend, Row, Text, XAxis, YAxis
 
 
 @dataclasses.dataclass(frozen=True)
@@ -25,16 +24,10 @@ class Table(BTable):
         # check mandatory fields
         if self.rows is None:
             e.validation.NotAllowed(
-                msgs=[
-                    f"Please supply mandatory field `rows`"
-                ]
-            )
+                msgs=[f"Please supply mandatory field `rows`"])
         if self.columns is None:
             e.validation.NotAllowed(
-                msgs=[
-                    f"Please supply mandatory field `columns`"
-                ]
-            )
+                msgs=[f"Please supply mandatory field `columns`"])
 
     def init(self):
         # call super
@@ -45,7 +38,8 @@ class Table(BTable):
         if isinstance(self.columns, int):
             for _ in range(self.columns):
                 self.add_child(
-                    guid=f"c{_}", widget=Column(),
+                    guid=f"c{_}",
+                    widget=Column(),
                 )
             _num_columns = self.columns
         elif isinstance(self.columns, list):
@@ -57,10 +51,7 @@ class Table(BTable):
             _num_columns = len(self.columns)
         else:
             e.validation.NotAllowed(
-                msgs=[
-                    f"unknown type for field columns: {type(self.columns)}"
-                ]
-            )
+                msgs=[f"unknown type for field columns: {type(self.columns)}"])
             raise
 
         # add rows
@@ -71,13 +62,12 @@ class Table(BTable):
         for _, _row in enumerate(_rows):
             # add row
             self.add_child(
-                guid=f"r{_}", widget=_row,
+                guid=f"r{_}",
+                widget=_row,
             )
             # add cells to row
             for _c in range(_num_columns):
-                _row.add_child(
-                    guid=f"{_c}", widget=Group()
-                )
+                _row.add_child(guid=f"{_c}", widget=Group())
 
     def get_cell(self, row: int, column: int) -> "Group":
         # noinspection PyTypeChecker
@@ -93,28 +83,25 @@ class Table(BTable):
 
     @classmethod
     def table_from_dict(
-        cls, input_dict: t.Dict,
+        cls,
+        input_dict: t.Dict,
     ) -> "Table":
         _rows = list(input_dict.keys())
         _columns = ["\\"] + list(input_dict[_rows[0]].keys())
         _table = Table(
-            rows=len(_rows), columns=_columns,
+            rows=len(_rows),
+            columns=_columns,
         )
         for _rid, _r in enumerate(_rows):
             for _cid, _c in enumerate(_columns):
                 if _c == "\\":
-                    _table.get_cell(
-                        row=_rid, column=_cid
-                    ).add_child(
+                    _table.get_cell(row=_rid, column=_cid).add_child(
                         guid=f"{_rid}_{_cid}",
-                        widget=Text(default_value=f"{_r}")
-                    )
+                        widget=Text(default_value=f"{_r}"))
                 else:
-                    _table.get_cell(
-                        row=_rid, column=_cid
-                    ).add_child(
+                    _table.get_cell(row=_rid, column=_cid).add_child(
                         guid=f"{_rid}_{_cid}",
-                        widget=Text(default_value=f"{input_dict[_r][_c]}")
+                        widget=Text(default_value=f"{input_dict[_r][_c]}"),
                     )
         return _table
 
@@ -152,34 +139,22 @@ class Plot(BPlot):
         # part of Plot widget and needs to be added well in advance
         if self.legend is not None:
             if isinstance(self.legend, str):
-                self.add_child(
-                    guid="legend",
-                    widget=Legend(label=self.legend)
-                )
+                self.add_child(guid="legend", widget=Legend(label=self.legend))
         if self.x_axis is not None:
             if isinstance(self.x_axis, str):
-                self.add_child(
-                    guid="x_axis",
-                    widget=XAxis(label=self.x_axis)
-                )
+                self.add_child(guid="x_axis", widget=XAxis(label=self.x_axis))
         if self.y1_axis is not None:
             if isinstance(self.y1_axis, str):
-                self.add_child(
-                    guid="y1_axis",
-                    widget=YAxis(label=self.y1_axis)
-                )
+                self.add_child(guid="y1_axis",
+                               widget=YAxis(label=self.y1_axis))
         if self.y2_axis is not None:
             if isinstance(self.y2_axis, str):
-                self.add_child(
-                    guid="y2_axis",
-                    widget=YAxis(label=self.y2_axis)
-                )
+                self.add_child(guid="y2_axis",
+                               widget=YAxis(label=self.y2_axis))
         if self.y3_axis is not None:
             if isinstance(self.y3_axis, str):
-                self.add_child(
-                    guid="y3_axis",
-                    widget=YAxis(label=self.y3_axis)
-                )
+                self.add_child(guid="y3_axis",
+                               widget=YAxis(label=self.y3_axis))
 
     def clear(self):
         # plot series are added to YAxis so we clear its children to clear
@@ -190,44 +165,32 @@ class Plot(BPlot):
 
     def get_y_axis(self, axis_dim: int) -> YAxis:
         if axis_dim not in [1, 2, 3]:
-            e.code.CodingError(
-                msgs=[
-                    f"for y axis axis_dim should be one of {[1, 2, 3]} ... "
-                    f"but found unsupported {axis_dim}"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"for y axis axis_dim should be one of {[1, 2, 3]} ... "
+                f"but found unsupported {axis_dim}"
+            ])
         try:
             # noinspection PyTypeChecker
             return self.children[f"y{axis_dim}_axis"]
         except KeyError:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"field `y{axis_dim}_axis` is not supplied while "
-                    f"creating Plot instance"
-                ]
-            )
+            e.validation.NotAllowed(msgs=[
+                f"field `y{axis_dim}_axis` is not supplied while "
+                f"creating Plot instance"
+            ])
 
     def get_x_axis(self) -> XAxis:
         try:
             # noinspection PyTypeChecker
             return self.children["x_axis"]
         except KeyError:
-            e.validation.NotAllowed(
-                msgs=[
-                    "field `x_axis` is not supplied"
-                ]
-            )
+            e.validation.NotAllowed(msgs=["field `x_axis` is not supplied"])
 
     def get_legend(self) -> Legend:
         try:
             # noinspection PyTypeChecker
             return self.children["legend"]
         except KeyError:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"field `legend` is not supplied"
-                ]
-            )
+            e.validation.NotAllowed(msgs=[f"field `legend` is not supplied"])
 
     # noinspection PyMethodMayBeStatic
     def update_series(self, series_dpg_id: int, **kwargs):
@@ -236,7 +199,8 @@ class Plot(BPlot):
         dpg.configure_item(series_dpg_id, **kwargs)
 
     def add_area_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -305,7 +269,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_bar_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -374,7 +339,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_candle_series(
-        self, *,
+        self,
+        *,
         dates: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         opens: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         closes: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
@@ -463,7 +429,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_drag_line(
-        self, *,
+        self,
+        *,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
@@ -540,7 +507,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_drag_point(
-        self, *,
+        self,
+        *,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
@@ -613,7 +581,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_error_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         negative: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
@@ -690,7 +659,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_heat_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         rows: int,
         cols: int,
@@ -704,7 +674,7 @@ class Plot(BPlot):
         scale_max: float = 1.0,
         bounds_min: t.Any = (0.0, 0.0),
         bounds_max: t.Any = (1.0, 1.0),
-        format: str = '%0.1f',
+        format: str = "%0.1f",
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
     ) -> int:
@@ -782,7 +752,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_histogram_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
         user_data: t.Any = None,
@@ -871,7 +842,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_hline_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
         user_data: t.Any = None,
@@ -932,7 +904,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_image_series(
-        self, *,
+        self,
+        *,
         texture_id: t.Union[int, str],
         bounds_min: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         bounds_max: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
@@ -1009,7 +982,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_line_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1070,7 +1044,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_pie_series(
-        self, *,
+        self,
+        *,
         x: float,
         y: float,
         radius: float,
@@ -1082,7 +1057,7 @@ class Plot(BPlot):
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        format: str = '%0.2f',
+        format: str = "%0.2f",
         angle: float = 90.0,
         normalize: bool = False,
         y_axis_dim: int = 1,
@@ -1155,7 +1130,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_plot_annotation(
-        self, *,
+        self,
+        *,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
@@ -1224,7 +1200,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_scatter_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1285,7 +1262,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_shade_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y1: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1350,7 +1328,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_stair_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1411,7 +1390,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_stem_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
@@ -1477,7 +1457,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_text_point(
-        self, *,
+        self,
+        *,
         x: float,
         y: float,
         label: str = None,
@@ -1550,7 +1531,8 @@ class Plot(BPlot):
         return _dpg_id
 
     def add_vline_series(
-        self, *,
+        self,
+        *,
         x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
         label: str = None,
         user_data: t.Any = None,
@@ -1605,4 +1587,3 @@ class Plot(BPlot):
         )
 
         return _dpg_id
-

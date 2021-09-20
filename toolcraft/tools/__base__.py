@@ -6,8 +6,9 @@ https://github.com/python-poetry/poetry/tree/master/poetry/console/commands
 
 import abc
 import inspect
-import typer
 import typing as t
+
+import typer
 
 from .. import error as e
 from .. import logger
@@ -27,31 +28,23 @@ class Tool(abc.ABC):
         # -------------------------------------------------------- 01.01
         # all subclasses must be concrete
         if inspect.isabstract(cls):
-            e.code.CodingError(
-                msgs=[
-                    f"Class {cls} is not concrete ..."
-                ]
-            )
+            e.code.CodingError(msgs=[f"Class {cls} is not concrete ..."])
         # -------------------------------------------------------- 01.02
         # there can be only one tool class per module
         else:
             if cls.tool_name() in cls.AVAILABLE_TOOL_CLASSES.keys():
-                e.code.CodingError(
-                    msgs=[
-                        f"you can have only one concrete subclass of {Tool} in "
-                        f"module {cls.__module__}"
-                    ]
-                )
+                e.code.CodingError(msgs=[
+                    f"you can have only one concrete subclass of {Tool} in "
+                    f"module {cls.__module__}"
+                ])
         # -------------------------------------------------------- 01.03
         # you need to define `command_fn` method in order to register it with
         # `typer_app`
         if Tool.command_fn.__name__ not in cls.__dict__.keys():
-            e.code.CodingError(
-                msgs=[
-                    f"Please override method `{Tool.command_fn.__name__}` in "
-                    f"class {cls}."
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Please override method `{Tool.command_fn.__name__}` in "
+                f"class {cls}."
+            ])
 
         # -------------------------------------------------------- 02
         # store tool classes for future reference ...
@@ -78,5 +71,4 @@ class Tool(abc.ABC):
     def command_fn(cls, **kwargs):
         raise NotImplementedError(
             f"Please implement this method in the respective "
-            f"subclass ..."
-        )
+            f"subclass ...")

@@ -1,7 +1,3 @@
-from .__base__ import Color, Widget, Dashboard, Callback, Binder
+from . import assets, callback, demo, helper
+from .__base__ import Binder, Callback, Color, Dashboard, Widget
 from .widget import *
-from . import demo
-from . import callback
-from . import helper
-from . import assets
-
