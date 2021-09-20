@@ -278,11 +278,17 @@ def bump(
         )
 
     # ------------------------------------------------- 05
-    _new_ver = f"{_major}.{_minor}.{_patch}" \
-               f"{_release_type or ''}{_release_num or ''}"
+    if _release_type is None:
+        _release_type = ''
+    if _release_num is None:
+        _release_num = ''
+    _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
     _bump_command = f"bump2version --verbose --new-version " \
                     f"{'--dry-run' if dry_run else ''} " \
                     f"{_new_ver} xyz"
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print("Bump command", _bump_command)
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     _run(c, _bump_command)
 
 
