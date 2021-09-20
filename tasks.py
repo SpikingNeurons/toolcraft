@@ -108,14 +108,49 @@ def doc_preview(c):
 def bump(
     c, show_version=False,
     alpha=False, beta=False, patch=False, minor=False, major=False,
-    dry_run=False, bump_into='alpha',
+    dry_run=False, bump_into=None,
 ):
     """
     Handle bumping versions for toolcraft library.
-    Version style
+
+    Version style:
       >> {major}.{minor}.{patch}{release_type}{release_num}
         release_type is one of ['a', 'b']
       >> {major}.{minor}.{patch}
+
+    Behaviour:
+      Five options for bumping:
+        - alpha, beta, patch, minor, major
+      When current version is in alpha
+        calling alpha will increment release_num
+        calling beta will make release_num=0 and release_type=beta
+        calling patch will make it stable
+        calling minor will raise error (you need to patch for making it stable)
+        calling major will raise error (you need to patch for making it stable)
+      When current version is in beta
+        calling alpha will raise error as you cannot move backward
+        calling beta will increment release_num
+        calling patch will make it stable
+        calling minor will raise error (you need to patch for making it stable)
+        calling major will raise error (you need to patch for making it stable)
+      When current version is stable
+        with patch, minor, major make sure to use --bump-into option
+          bump-into is one of 'alpha'. 'beta' or 'stable' (default 'alpha')
+        calling alpha will raise error
+        calling beta will raise error
+      When current version in alpha or beta then you need to patch to get
+        into stable release, before updating wither patch, minor or major
+
+      Examples:
+        When current release is stable
+          >> invoke bump --dry-run --patch --bump-into alpha
+        When current release is alpha or beta
+          >> To make release stable
+            >> invoke bump --dry-run --patch
+          >> To increment alpha
+            >> invoke bump --dry-run --alpha
+          >> To move to beta
+            >> invoke bump --dry-run --beta
     """
     # ------------------------------------------------- 01
     # Format is:
@@ -124,6 +159,8 @@ def bump(
     # Easy way to test `bump2version`
     #   bump2version --no-configured-files --dry-run --verbose
     #     --current-version 0.1.2 --new-version 0.1.2a2 xyz
+    #
+    # invoke bump --dry-run --patch --bump-into stable
 
     # ------------------------------------------------- 02
     # detect current version
@@ -165,9 +202,10 @@ def bump(
     # if alpha release
     if alpha:
         if _release_type is None:
-            _patch += 1
-            _release_type = "a"
-            _release_num = 0
+            raise Exception(
+                "The current version is stable. So please use either --patch, "
+                "--minor or --major option along with --bump-into option"
+            )
         elif _release_type == "a":
             _release_num += 1
         elif _release_type == "b":
@@ -180,9 +218,10 @@ def bump(
     # if beta release
     elif beta:
         if _release_type is None:
-            _patch += 1
-            _release_type = "b"
-            _release_num = 0
+            raise Exception(
+                "The current version is stable. So please use either --patch, "
+                "--minor or --major option along with --bump-into option"
+            )
         elif _release_type == "a":
             _release_type = "b"
             _release_num = 0
@@ -283,13 +322,16 @@ def bump(
     if _release_num is None:
         _release_num = ''
     _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
-    _bump_command = f"bump2version --verbose --new-version " \
+    _bump_command = f"bump2version --verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
-                    f"{_new_ver} xyz"
+                    f"--new-version {_new_ver} xyz"
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    print("Bump command", _bump_command)
+    print("The bump command:", _bump_command)
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     _run(c, _bump_command)
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print("Executed bump command:", _bump_command)
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
 
 
