@@ -91,7 +91,7 @@ jobs:
         run: |
           poetry version
           poetry build
-          poetry publish --dry-run --userbame=__token__ --password=${{ secrets.TEST_PYPI_API_TOKEN}}
+          poetry publish --dry-run --username=__token__ --password=${{ secrets.TEST_PYPI_API_TOKEN}}
 
       # Check wheels and source tarball
       - name: Check wheels and source tarball

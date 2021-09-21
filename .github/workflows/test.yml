@@ -92,7 +92,7 @@ jobs:
           poetry version --short
           poetry version $(poetry version --short)dev$GITHUB_RUN_NUMBER
           poetry build
-          poetry publish --dry-run --userbame=__token__ --password=${{ secrets.TEST_PYPI_API_TOKEN}}
+          poetry publish --dry-run --username=__token__ --password=${{ secrets.TEST_PYPI_API_TOKEN}}
 
       - name: Check wheels and source tarball
         run: poetry run twine check dist/*
