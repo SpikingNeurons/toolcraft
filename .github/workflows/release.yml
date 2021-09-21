@@ -104,7 +104,7 @@ jobs:
   # todo: figure out how changelog will be part of stable release with same tag
   # todo: not sure how this is done ... but this is the close we have for now
   release-docs:
-    needs: [release-changelog]
+    needs: [release-build]
     runs-on: ubuntu-18.04
     steps:
       - name: Generate docs
@@ -115,7 +115,7 @@ jobs:
 
   # Job for deploy
   release-deploy:
-    needs: [release-docs, release-build]
+    needs: [release-docs]
     runs-on: ubuntu-18.04
     strategy:
       matrix:
