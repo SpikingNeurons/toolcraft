@@ -54,6 +54,13 @@ jobs:
       - name: Test with PyTest
         run: poetry run pytest
 
+      # Build wheels and source tarball
+      - name: Build wheels and source tarball
+        run: |
+          poetry version
+          poetry build
+          poetry publish --dry-run --username=__token__ --password=${{ secrets.PYPI_API_TOKEN}}
+
   publish_dev_build:
     # if test failed, we should not publish
     needs: test
@@ -80,6 +87,10 @@ jobs:
       - name: Install build dependencies
         run: poetry install --with build
 
+      # Make fake change log
+      - name: Make fake change log
+        run: echo "Fake CHANGELOG" > CHANGELOG.md
+
       # We are aware that this does not change version in all places as
       # we are using poetry for bumping version.
       # But Note that this is intended as it is just for dev purpose ;)
@@ -102,7 +113,6 @@ jobs:
 
       # Know more at https://github.com/pypa/gh-action-pypi-publish
       - name: Publish to Test PyPI
-        if: startsWith( github.ref, 'v')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
