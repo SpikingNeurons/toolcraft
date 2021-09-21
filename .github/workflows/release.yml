@@ -14,8 +14,29 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  # Job for CHANGELOG
+  release-changelog:
+    runs-on: ubuntu-18.04
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout
+        uses: actions/checkout@v2
+      # Generate Change Log
+      - name: Generate change log
+        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issues: true
+          issuesWoLabels: true
+          pullRequests: true
+          prWoLabels: true
+          unreleased: true
+          addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
+          output: CHANGELOG.md
+
+  # Job for "build"
   release-build:
+    needs: [release-changelog]
 
     # The type of runner that the job will run on
     strategy:
@@ -30,19 +51,6 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v2
-
-      # Generate Change Log
-      - name: Generate change log
-        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issues: true
-          issuesWoLabels: true
-          pullRequests: true
-          prWoLabels: true
-          unreleased: true
-          addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
-          output: CHANGELOG.md
 
       # Setup Python
       - name: Setup Python ${{ matrix.python-versions }}
@@ -90,7 +98,7 @@ jobs:
           path: ${{ github.workspace }}/dist/*.whl
           retention-days: 2
 
-  # deploy builds
+  # Job for deploy
   release-deploy:
     needs: [release-build]
     runs-on: ubuntu-18.04
