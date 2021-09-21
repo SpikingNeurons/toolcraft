@@ -13,6 +13,15 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+
+  echo-tag:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Echo
+        run: |
+          echo ${{ github.ref }}
+          echo ${{ startsWith( github.ref, 'v') }}
+
   # Job for CHANGELOG
   # todo: figure out how changelog will be part of stable release with same tag
   # todo: not sure how this is done ... but this is the close we have for now
