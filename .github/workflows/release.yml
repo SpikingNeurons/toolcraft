@@ -8,7 +8,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches: [ main, ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -22,7 +21,7 @@ jobs:
       - name: Echo
         run: |
           echo ${{ github.ref }}
-          echo ${{ startsWith( github.ref, 'v') }}
+          echo ${{ startsWith( github.ref, 'refs/tags/v') }}
 
   # Job for CHANGELOG
   # todo: figure out how changelog will be part of stable release with same tag
@@ -30,6 +29,7 @@ jobs:
   # todo: maybe we can just have it added in github online release section
   # todo: but not sure how to get HISTORY.md or CHANGELOG.md available
   release-changelog:
+    if: startsWith( github.ref, 'refs/tags/v')
     runs-on: ubuntu-18.04
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -65,6 +65,7 @@ jobs:
 
   # Job for "build"
   release-build:
+    if: startsWith( github.ref, 'refs/tags/v')
     needs: [release-changelog]
 
     # The type of runner that the job will run on
@@ -150,6 +151,7 @@ jobs:
   # todo: figure out how changelog will be part of stable release with same tag
   # todo: not sure how this is done ... but this is the close we have for now
   release-docs:
+    if: startsWith( github.ref, 'refs/tags/v')
     needs: [release-build]
     runs-on: ubuntu-18.04
     steps:
@@ -161,6 +163,7 @@ jobs:
 
   # Job for deploy
   release-deploy:
+    if: startsWith( github.ref, 'refs/tags/v')
     needs: [release-docs]
 
     strategy:
