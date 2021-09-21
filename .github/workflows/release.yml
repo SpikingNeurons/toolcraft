@@ -75,6 +75,8 @@ jobs:
       # Download CHANGELOG
       - name: Download CHANGELOG.md
         uses: actions/download-artifact@v2
+        with:
+          path: ${{ github.workspace }}
 
       # Show Change Log
       - name: Show change log
