@@ -25,6 +25,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v2
+      # Generate Create empty Log file
+      - name: Touch change log
+        run: touch CHANGELOG.md
       # Generate Change Log
       - name: Generate change log
         uses: heinrichreimer/github-changelog-generator-action@v2.1.1
@@ -39,7 +42,7 @@ jobs:
           output: CHANGELOG.md
       # Show Change Log
       - name: Show change log
-        run: cat CHANGELOG.md 2>/dev/null
+        run: cat CHANGELOG.md
 
   # Job for "build"
   release-build:
