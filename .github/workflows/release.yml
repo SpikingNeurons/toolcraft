@@ -39,7 +39,7 @@ jobs:
           output: CHANGELOG.md
       # Show Change Log
       - name: Show change log
-        run: cat CHANGELOG.md
+        run: cat CHANGELOG.md 2>/dev/null
 
   # Job for "build"
   release-build:
