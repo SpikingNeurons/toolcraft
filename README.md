@@ -1,9 +1,17 @@
 # ToolCraft
 
+---
+
+**Craft your tools with ToolCraft**
+
+---
+
 [![PyPI version](https://img.shields.io/pypi/v/toolcraft?style=for-the-badge)](https://pypi.org/project/toolcraft/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/toolcraft?style=for-the-badge)](https://pypi.org/project/toolcraft/)
 [![License: MIT](https://img.shields.io/pypi/l/toolcraft?style=for-the-badge)](https://opensource.org/licenses/BSD-3-Clause)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge)](https://github.com/psf/black)
+
+---
 
 Github Workflows:
 
@@ -11,6 +19,8 @@ Github Workflows:
 [![coverage](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/coverage.yml)
 [![test & test-publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/test.yml)
 [![release & publish](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml/badge.svg)](https://github.com/SpikingNeurons/toolcraft/actions/workflows/release.yml)
+
+---
 
 External Services/Workflows:
 
@@ -22,7 +32,11 @@ External Services/Workflows:
 [![Snyk](https://snyk-widget.herokuapp.com/badge/pip/toolcraft/badge.svg)](https://snyk.io/test/github/SpikingNeurons/toolcraft?targetFile=pyproject.toml)
 [![PyUp](https://pyup.io/repos/github/SpikingNeurons/toolcraft/shield.svg?logo=pyup)](https://pyup.io/repos/github/SpikingNeurons/toolcraft/)
 
+---
+
 Code Quality:
 
 [![DeepSource](https://deepsource.io/gh/SpikingNeurons/toolcraft.svg/?label=active+issues&show_trend=true&token=pQJ5UfAM4bTXJU_tn2dm3njo)](https://deepsource.io/gh/SpikingNeurons/toolcraft/?ref=repository-badge)
 [![DeepSource](https://deepsource.io/gh/SpikingNeurons/toolcraft.svg/?label=resolved+issues&show_trend=true&token=pQJ5UfAM4bTXJU_tn2dm3njo)](https://deepsource.io/gh/SpikingNeurons/toolcraft/?ref=repository-badge)
+
+---
