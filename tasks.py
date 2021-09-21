@@ -90,6 +90,16 @@ def doc_preview(c):
     _run(c, "npm start")
 
 
+@task
+def del_tag(c):
+
+    _curr_ver = \
+        toml.load("pyproject.toml")['tool']['poetry']['version']
+    _curr_ver = 'v' + _curr_ver
+    _run(c, f"git tag -d {_curr_ver}")
+    _run(c, f"git push --delete origin {_curr_ver}")
+
+
 @task(
     help={
         'show_version': 'Display current version',
