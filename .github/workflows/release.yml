@@ -108,10 +108,10 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - name: Generate docs
-      - run: echo Still TODO
+        run: echo Still TODO
       # todo: Add if condition to publish docs only for stable releases
       - name: Publish docs
-      - run: echo Still TODO
+        run: echo Still TODO
 
   # Job for deploy
   release-deploy:
