@@ -15,6 +15,8 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # Job for CHANGELOG
+  # todo: figure out how changelog will be part of stable release with same tag
+  # todo: not sure how this is done ... but this is the close we have for now
   release-changelog:
     runs-on: ubuntu-18.04
     steps:
@@ -98,9 +100,22 @@ jobs:
           path: ${{ github.workspace }}/dist/*.whl
           retention-days: 2
 
+  # Job for docs
+  # todo: figure out how changelog will be part of stable release with same tag
+  # todo: not sure how this is done ... but this is the close we have for now
+  release-docs:
+    needs: [release-changelog]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Generate docs
+      - run: echo Still TODO
+      # todo: Add if condition to publish docs only for stable releases
+      - name: Publish docs
+      - run: echo Still TODO
+
   # Job for deploy
   release-deploy:
-    needs: [release-build]
+    needs: [release-docs, release-build]
     runs-on: ubuntu-18.04
     strategy:
       matrix:
