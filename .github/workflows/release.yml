@@ -50,6 +50,7 @@ jobs:
       - name: Upload CHANGELOG.md
         uses: actions/upload-artifact@v2
         with:
+          name: changelog
           path: ${{ github.workspace }}/CHANGELOG.md
           retention-days: 1
 
@@ -75,6 +76,9 @@ jobs:
       # Download CHANGELOG
       - name: Download CHANGELOG.md
         uses: actions/download-artifact@v2
+        with:
+          name: changelog
+          path: ${{ github.workspace }}
 
       # Show Change Log
       - name: Show change log
