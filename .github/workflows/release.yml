@@ -1,12 +1,11 @@
 # Publish package on release branch if it's tagged with 'v*'
-
 name: release & publish
 
 # Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [main, ]
+    branches: [ main, ]
 #    tags:
 #      - 'v*'
 
@@ -17,7 +16,6 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   release-build:
-    name: Create release builds
 
     # The type of runner that the job will run on
     strategy:
@@ -94,7 +92,6 @@ jobs:
 #
 #  # deploy builds
 #  release-deploy:
-#    name: Deploy release builds
 #    needs: [release-build]
 #    runs-on: ubuntu-18.04
 #    strategy:
