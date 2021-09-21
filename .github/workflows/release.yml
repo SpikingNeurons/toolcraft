@@ -1,3 +1,4 @@
+
 # Publish package on release branch if it's tagged with 'v*'
 name: release & publish
 
@@ -52,10 +53,7 @@ jobs:
     strategy:
       matrix:
         python-versions: [3.8, 3.9]
-        # todo: Note poetry only supports pure python wheels currently ...
-        # todo: so we restrict for now https://python-poetry.org/docs/cli/#build
-        # os: [ ubuntu-18.04, macos-latest, windows-latest ]
-        os: [ ubuntu-18.04, ]
+        os: [ ubuntu-18.04, macos-latest, windows-latest ]
 
     runs-on: ${{ matrix.os }}
 
@@ -82,16 +80,20 @@ jobs:
           # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
           installer-parallel: true
 
-      # Install build dependencies
-      - name: Install build dependencies
-        run: poetry install --with build
+      # Install dependencies
+      - name: Install dependencies with test and build dependencies
+        run: poetry install --with test --with build
+
+      # Test with PyTest
+      - name: Test with PyTest
+        run: poetry run pytest
 
       # Build wheels and source tarball
       - name: Build wheels and source tarball
         run: |
           poetry version
           poetry build
-          poetry publish --dry-run --username=__token__ --password=${{ secrets.TEST_PYPI_API_TOKEN}}
+          poetry publish --dry-run --username=__token__ --password=${{ secrets.PYPI_API_TOKEN}}
 
       # Check wheels and source tarball
       - name: Check wheels and source tarball
