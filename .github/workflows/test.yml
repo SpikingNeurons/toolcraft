@@ -102,6 +102,7 @@ jobs:
 
       # Know more at https://github.com/pypa/gh-action-pypi-publish
       - name: Publish to Test PyPI
+        if: startsWith( github.ref, 'v')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
