@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "toolcraft"
-version = "0.1.3b0"
+version = "0.1.3a4"
 homepage = "https://github.com/SpikingNeurons/toolcraft"
 repository = "https://github.com/SpikingNeurons/toolcraft"
 documentation = "https://toolcraft.spikingneurons.com/"
