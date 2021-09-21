@@ -93,12 +93,12 @@ jobs:
           cd ..
 
       # Upload files
-      - name: Upload artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
+      - name: Upload artifacts ${{ matrix.python-versions }} on OS ${{ matrix.os }}
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-${{ matrix.python-version }}
+          name: ${{ matrix.os }}-${{ matrix.python-versions }}
           path: ${{ github.workspace }}/dist/*.whl
-          retention-days: 2
+          retention-days: 1
 
   # Job for docs
   # todo: figure out how changelog will be part of stable release with same tag
@@ -122,7 +122,7 @@ jobs:
         python-versions: [3.8, 3.9]
         os: [ubuntu-18.04, macos-latest, windows-latest]
     steps:
-      - name: Download artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
+      - name: Download artifacts ${{ matrix.python-versions }} on OS ${{ matrix.os }}
         uses: actions/download-artifact@v2
       - name: List files
         run: |
