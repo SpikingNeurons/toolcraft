@@ -33,56 +33,56 @@ jobs:
       - name: Checkout
       - uses: actions/checkout@v2
 
-      # Generate Change Log
-      - name: Generate change log
-        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issues: true
-          issuesWoLabels: true
-          pullRequests: true
-          prWoLabels: true
-          unreleased: true
-          addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
-          output: CHANGELOG.md
-
-      # Setup Python
-      - name: Setup Python ${{ matrix.python-versions }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-versions }}
-
-      # install poetry
-      # know more at https://github.com/snok/install-poetry
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: 1.2.0a2
-          virtualenvs-create: true
-          virtualenvs-in-project: false
-          # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
-          installer-parallel: true
-
-      # Install build dependencies
-      - name: Install build dependencies
-        run: poetry install --with build
-
-      # Build wheels and source tarball
-      - name: Build wheels and source tarball
-        run: |
-          poetry version
-          poetry build
-
-      # Check wheels and source tarball
-      - name: Check wheels and source tarball
-        run: poetry run twine check dist/*
-
-      # List files
-      - name: List files
-        run: |
-          cd dist
-          ls -l .
-          cd ..
+#      # Generate Change Log
+#      - name: Generate change log
+#        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+#        with:
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          issues: true
+#          issuesWoLabels: true
+#          pullRequests: true
+#          prWoLabels: true
+#          unreleased: true
+#          addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
+#          output: CHANGELOG.md
+#
+#      # Setup Python
+#      - name: Setup Python ${{ matrix.python-versions }}
+#        uses: actions/setup-python@v2
+#        with:
+#          python-version: ${{ matrix.python-versions }}
+#
+#      # install poetry
+#      # know more at https://github.com/snok/install-poetry
+#      - name: Install Poetry
+#        uses: snok/install-poetry@v1
+#        with:
+#          version: 1.2.0a2
+#          virtualenvs-create: true
+#          virtualenvs-in-project: false
+#          # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
+#          installer-parallel: true
+#
+#      # Install build dependencies
+#      - name: Install build dependencies
+#        run: poetry install --with build
+#
+#      # Build wheels and source tarball
+#      - name: Build wheels and source tarball
+#        run: |
+#          poetry version
+#          poetry build
+#
+#      # Check wheels and source tarball
+#      - name: Check wheels and source tarball
+#        run: poetry run twine check dist/*
+#
+#      # List files
+#      - name: List files
+#        run: |
+#          cd dist
+#          ls -l .
+#          cd ..
 
 #      # Upload files
 #      - name: Upload artifacts ${{ matrix.python-version }} on OS ${{ matrix.os }}
