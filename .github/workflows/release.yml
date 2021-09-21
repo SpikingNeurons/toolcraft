@@ -43,7 +43,9 @@ jobs:
           output: CHANGELOG.md
       # Show Change Log
       - name: Show change log
-        run: cat CHANGELOG.md
+        run: |
+          ls -l .
+          cat CHANGELOG.md
       # Upload CHANGELOG
       - name: Upload CHANGELOG.md
         uses: actions/upload-artifact@v2
@@ -65,17 +67,20 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Download CHANGELOG
-      - name: Download CHANGELOG.md
-        uses: actions/download-artifact@v2
 
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v2
 
+      # Download CHANGELOG
+      - name: Download CHANGELOG.md
+        uses: actions/download-artifact@v2
+
       # Show Change Log
       - name: Show change log
-        run: cat CHANGELOG.md
+        run: |
+          ls -l .
+          cat CHANGELOG.md
 
       # Setup Python
       - name: Setup Python ${{ matrix.python-versions }}
