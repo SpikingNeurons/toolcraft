@@ -17,6 +17,8 @@ jobs:
   # Job for CHANGELOG
   # todo: figure out how changelog will be part of stable release with same tag
   # todo: not sure how this is done ... but this is the close we have for now
+  # todo: maybe we can just have it added in github online release section
+  # todo: but not sure how to get HISTORY.md or CHANGELOG.md available
   release-changelog:
     runs-on: ubuntu-18.04
     steps:
@@ -35,6 +37,9 @@ jobs:
           unreleased: true
           addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
           output: CHANGELOG.md
+      # Show Change Log
+      - name: Show change log
+        run: cat CHANGELOG.md
 
   # Job for "build"
   release-build:
@@ -44,7 +49,10 @@ jobs:
     strategy:
       matrix:
         python-versions: [3.8, 3.9]
-        os: [ubuntu-18.04, macos-latest, windows-latest]
+        # todo: Note poetry only supports pure python wheels currently ...
+        # todo: so we restrict for now https://python-poetry.org/docs/cli/#build
+        # os: [ ubuntu-18.04, macos-latest, windows-latest ]
+        os: [ ubuntu-18.04, ]
 
     runs-on: ${{ matrix.os }}
 
@@ -80,6 +88,7 @@ jobs:
         run: |
           poetry version
           poetry build
+          poetry publish --dry-run
 
       # Check wheels and source tarball
       - name: Check wheels and source tarball
@@ -120,7 +129,10 @@ jobs:
     strategy:
       matrix:
         python-versions: [3.8, 3.9]
-        os: [ubuntu-18.04, macos-latest, windows-latest]
+        # todo: Note poetry only supports pure python wheels currently ...
+        # todo: so we restrict for now https://python-poetry.org/docs/cli/#build
+        # os: [ ubuntu-18.04, macos-latest, windows-latest ]
+        os: [ ubuntu-18.04, ]
     steps:
       - name: Download artifacts ${{ matrix.python-versions }} on OS ${{ matrix.os }}
         uses: actions/download-artifact@v2

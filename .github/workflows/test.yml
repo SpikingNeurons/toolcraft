@@ -22,7 +22,10 @@ jobs:
     strategy:
       matrix:
         python-versions: [3.8, 3.9]
-        os: [ubuntu-18.04, macos-latest, windows-latest]
+        # todo: Note poetry only supports pure python wheels currently ...
+        # todo: so we restrict for now https://python-poetry.org/docs/cli/#build
+        # os: [ ubuntu-18.04, macos-latest, windows-latest ]
+        os: [ ubuntu-18.04, ]
 #        python-versions: [3.9]
 #        os: [ubuntu-18.04]
 
@@ -89,6 +92,7 @@ jobs:
           poetry version --short
           poetry version $(poetry version --short)dev$GITHUB_RUN_NUMBER
           poetry build
+          poetry publish --dry-run
 
       - name: Check wheels and source tarball
         run: poetry run twine check dist/*
