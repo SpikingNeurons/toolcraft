@@ -48,7 +48,6 @@ jobs:
       - name: Upload CHANGELOG.md
         uses: actions/upload-artifact@v2
         with:
-          name: changelog
           path: ${{ github.workspace }}/CHANGELOG.md
           retention-days: 1
 
