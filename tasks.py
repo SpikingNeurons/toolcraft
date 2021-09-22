@@ -440,7 +440,7 @@ def bump(
         _release_type = ''
     if _release_num is None:
         _release_num = ''
-    _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
+    _new_ver = f"v{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
     _bump_command = f"bump2version --no-tag " \
                     f"--verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
