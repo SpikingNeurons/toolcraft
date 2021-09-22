@@ -440,12 +440,13 @@ def bump(
         _release_type = ''
     if _release_num is None:
         _release_num = ''
-    _new_ver = f"v{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
+    _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
     _bump_command = f"bump2version --no-tag " \
                     f"--verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
                     f"--current-version {_curr_ver} " \
                     f"--new-version {_new_ver} num"
+    _new_tag = 'v' + _new_ver
 
     # ------------------------------------------------- 06
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -458,19 +459,19 @@ def bump(
 
     # ------------------------------------------------- 07
     # update changelog
-    changelog(c, new_tag=_new_ver)
+    changelog(c, new_tag=_new_tag)
     _run(c, "git push")
 
     # ------------------------------------------------- 08
     # create release with gh
-    _is_pre_release = _new_ver.find("a") != -1 or _new_ver.find("b") != -1
+    _is_pre_release = _new_tag.find("a") != -1 or _new_tag.find("b") != -1
     _gh_release_command = \
-        f"gh release create {_new_ver} " \
+        f"gh release create {_new_tag} " \
         f"{'--prerelease' if _is_pre_release else ''} " \
         f"--draft " \
         f"--target main " \
         f"--notes-file CHANGELOG.md " \
-        f"--title '[bot] Releasing {_new_ver}' " \
+        f"--title '[bot] Releasing {_new_tag}' " \
         # f"--discussion-category 'General' " \
 
     # ------------------------------------------------- 07
