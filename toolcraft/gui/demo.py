@@ -20,7 +20,6 @@ LIGHT_IMGUI_THEME = themes.create_theme_imgui_light()
 
 def _help(message):
     """ Simple Helper """
-    pass
 
 
 def _config(sender, keyword, user_data):
