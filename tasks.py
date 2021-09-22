@@ -364,7 +364,8 @@ def bump(
                 raise Exception(
                     "The current release is stable. So in order to move "
                     "forward for next version you need to specify which stage "
-                    "you want to --bump-into"
+                    "you want to --bump-into "
+                    "i.e. specify ['alpha', 'beta', 'stable']"
                 )
             else:
                 raise Exception(
