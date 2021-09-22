@@ -11,7 +11,8 @@ exclude_patterns = [
   "__pycache__/",
   "website/",
   "dist/",
-  "build/"
+  "build/",
+  "toolcraft/gui/demo.py"
 ]
 
 [[analyzers]]
