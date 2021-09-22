@@ -441,7 +441,8 @@ def bump(
     if _release_num is None:
         _release_num = ''
     _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
-    _bump_command = f"bump2version --no-tag --verbose " \
+    _bump_command = f"bump2version --no-tag " \
+                    f"--verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
                     f"--new-version {_new_ver} xyz"
 
@@ -463,17 +464,26 @@ def bump(
     _gh_release_command = \
         f"gh release create {_new_ver} " \
         f"{'--prerelease' if _is_pre_release else ''} " \
+        f"--draft " \
         f"--target main " \
         f"--notes-file CHANGELOG.md " \
         f"--discussion-category 'General' " \
         f"--title '[bot] Releasing {_new_ver}' "
 
+    # ------------------------------------------------- 07
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print("The gh release command:", _gh_release_command)
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    _run(c, _gh_release_command)
+    print()
+    print()
+
     # ------------------------------------------------- 09
-    print("We will run below commands to see and push newly created tags:")
-    print("  >>  git tag -n")
-    print("  >>  git push --tags")
-    _run(c, "git tag -n")
-    _run(c, "git push --tags")
+    # print("We will run below commands to see and push newly created tags:")
+    # print("  >>  git tag -n")
+    # print("  >>  git push --tags")
+    # _run(c, "git tag -n")
+    # _run(c, "git push --tags")
 
 
 
