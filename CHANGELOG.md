@@ -1,4 +1,4 @@
-## Changelog for v0.0.1 >> HEAD
+## Changelog for v0.0.1 >> 0.1.3a7
 
 + d15936f [ 2021-09-20 ] @pbk0 : supporting bumpversion
 + f8b5fad [ 2021-09-20 ] @pbk0 : "Bump version: 0.1.3 >> 0.1.4"
@@ -68,3 +68,5 @@
 + 0bde3fd [ 2021-09-20 ] @pbk0 : add method to delete tag
 + 23d14a2 [ 2021-09-20 ] @pbk0 : "Bump version: 0.1.3a5 >> 0.1.3a6"
 + 1519d67 [ 2021-09-20 ] @pbk0 : update website for type script
++ 51285c8 [ 2021-09-20 ] @pbk0 : [bot] Update changelog to reflect commits from v0.0.1 to HEAD
++ ceddfee [ 2021-09-20 ] @pbk0 : adding auto release
