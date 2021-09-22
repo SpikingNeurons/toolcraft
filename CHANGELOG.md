@@ -1,4 +1,4 @@
-## Changelog for v0.0.1 >> v0.1.4a0
+## Changelog for v0.0.1 >> v0.1.3b0
 
 + d15936f [ 2021-09-22 ] @pbk0 : supporting bumpversion
 + f8b5fad [ 2021-09-22 ] @pbk0 : "Bump version: 0.1.3 >> 0.1.4"
@@ -102,3 +102,8 @@
 + f1e97c2 [ 2021-09-22 ] @pbk0 : proper message
 + 1cd5199 [ 2021-09-22 ] @pbk0 : proper message
 + fea7db1 [ 2021-09-22 ] @pbk0 : "[bot] Bump version: 0.1.3 >> 0.1.4a0"
++ 5a52e20 [ 2021-09-22 ] @pbk0 : [bot] Update changelog to reflect commits from v0.0.1 to v0.1.4a0
++ 89003bb [ 2021-09-22 ] @pbk0 : make sure that tags are created wven before release
++ 00eed2b [ 2021-09-22 ] @pbk0 : "[bot] Bump version: 0.1.3a11 >> 0.1.3b0"
++ f29bfed [ 2021-09-22 ] @pbk0 : make sure that tags are created wven before release
++ 5cbafa2 [ 2021-09-22 ] @pbk0 : go back to alpha
