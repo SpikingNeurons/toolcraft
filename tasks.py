@@ -448,7 +448,7 @@ def bump(
     if _release_num is None:
         _release_num = ''
     _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
-    _bump_command = f"bump2version --no-tag " \
+    _bump_command = f"bump2version " \
                     f"--verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
                     f"--current-version {_curr_ver} " \
@@ -461,6 +461,7 @@ def bump(
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     _run(c, _bump_command)
     _run(c, "git push")
+    _run(c, "git push --tags")
     print()
     print()
 
