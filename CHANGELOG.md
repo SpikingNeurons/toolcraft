@@ -1,4 +1,4 @@
-## Changelog for v0.0.1 >> 0.1.3a7
+## Changelog for v0.0.1 >> 0.1.3a8
 
 + d15936f [ 2021-09-20 ] @pbk0 : supporting bumpversion
 + f8b5fad [ 2021-09-20 ] @pbk0 : "Bump version: 0.1.3 >> 0.1.4"
@@ -70,3 +70,6 @@
 + 1519d67 [ 2021-09-20 ] @pbk0 : update website for type script
 + 51285c8 [ 2021-09-20 ] @pbk0 : [bot] Update changelog to reflect commits from v0.0.1 to HEAD
 + ceddfee [ 2021-09-20 ] @pbk0 : adding auto release
++ 37732c1 [ 2021-09-20 ] @pbk0 : [bot] Update changelog to reflect commits from v0.0.1 to 0.1.3a7
++ e85ee82 [ 2021-09-20 ] @pbk0 : "[bot] Bump version: 0.1.3a6 >> 0.1.3a7"
++ b08f1df [ 2021-09-20 ] @pbk0 : keep things in draft mode
