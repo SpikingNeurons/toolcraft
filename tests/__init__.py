@@ -1,3 +1,3 @@
 """Unit test package for toolcraft."""
 
-__version__ = "0.1.3b0"
+__version__ = "0.1.3a11"
