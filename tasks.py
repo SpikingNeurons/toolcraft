@@ -467,8 +467,8 @@ def bump(
         f"--draft " \
         f"--target main " \
         f"--notes-file CHANGELOG.md " \
-        f"--discussion-category 'General' " \
-        f"--title '[bot] Releasing {_new_ver}' "
+        f"--title '[bot] Releasing {_new_ver}' " \
+        # f"--discussion-category 'General' " \
 
     # ------------------------------------------------- 07
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
