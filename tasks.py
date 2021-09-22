@@ -447,10 +447,6 @@ def bump(
                     f"--new-version {_new_ver} xyz"
 
     # ------------------------------------------------- 06
-    # update changelog
-    changelog(c, new_tag=_new_ver)
-
-    # ------------------------------------------------- 07
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print("The bump command:", _bump_command)
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -458,6 +454,11 @@ def bump(
     _run(c, "git push")
     print()
     print()
+
+    # ------------------------------------------------- 07
+    # update changelog
+    changelog(c, new_tag=_new_ver)
+    _run(c, "git push")
 
     # ------------------------------------------------- 08
     # create release with gh
