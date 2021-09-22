@@ -445,7 +445,7 @@ def bump(
                     f"--verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
                     f"--current-version {_curr_ver} " \
-                    f"--new-version {_new_ver} xyz"
+                    f"--new-version {_new_ver} num"
 
     # ------------------------------------------------- 06
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
