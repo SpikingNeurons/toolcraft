@@ -455,6 +455,7 @@ def bump(
     print("The bump command:", _bump_command)
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     _run(c, _bump_command)
+    _run(c, "git push")
     print()
     print()
 
