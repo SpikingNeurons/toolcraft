@@ -448,14 +448,28 @@ def bump(
     if _release_num is None:
         _release_num = ''
     _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
+    # _bump_command = f"bump2version " \
+    #                 f"--verbose " \
+    #                 f"{'--dry-run' if dry_run else ''} " \
+    #                 f"--current-version {_curr_ver} " \
+    #                 f"--new-version {_new_ver} num"
     _bump_command = f"bump2version " \
-                    f"--verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
                     f"--current-version {_curr_ver} " \
                     f"--new-version {_new_ver} num"
     _new_tag = 'v' + _new_ver
 
     # ------------------------------------------------- 06
+    # update changelog
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    print(f"create changelog for {_new_tag}")
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+    changelog(c, new_tag=_new_tag)
+    _run(c, "git push")
+    print()
+    print()
+
+    # ------------------------------------------------- 07
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print("The bump command:", _bump_command)
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -464,11 +478,6 @@ def bump(
     _run(c, "git push --tags")
     print()
     print()
-
-    # ------------------------------------------------- 07
-    # update changelog
-    changelog(c, new_tag=_new_tag)
-    _run(c, "git push")
 
     # ------------------------------------------------- 08
     # create release with gh
