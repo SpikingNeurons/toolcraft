@@ -444,6 +444,7 @@ def bump(
     _bump_command = f"bump2version --no-tag " \
                     f"--verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
+                    f"--current-version {_curr_ver} " \
                     f"--new-version {_new_ver} xyz"
 
     # ------------------------------------------------- 06
