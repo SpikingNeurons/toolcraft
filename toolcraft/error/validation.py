@@ -207,19 +207,19 @@ class IsSliceOrListWithin(CustomException):
                 msgs += [f"Slice `stop` should be greater that `start`, "
                          f"found `start={value.start}` > `stop={value.stop}`"]
                 _raise = True
-            if not (min_value <= value.start < max_value):
+            if not min_value <= value.start < max_value:
                 msgs += [f"We need slice `start` to be between "
                          f"`{min_value} <= start < {max_value}`, "
                          f"found start={value.start!r}"]
                 _raise = True
-            if not (min_value < value.stop <= max_value):
+            if not min_value < value.stop <= max_value:
                 msgs += [f"We need slice `stop` to be between "
                          f"`{min_value} < stop <= {max_value}`, "
                          f"found stop={value.stop!r}"]
                 _raise = True
         elif isinstance(value, list):
             for i, index in enumerate(value):
-                if not(min_value <= index < max_value):
+                if not min_value <= index < max_value:
                     msgs += [
                         f"The item {i} in the list is not within range i.e. "
                         f"between {min_value} and {max_value}",
