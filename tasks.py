@@ -471,7 +471,7 @@ def bump(
         f"--draft " \
         f"--target main " \
         f"--notes-file CHANGELOG.md " \
-        f"--title '[bot] Releasing {_new_tag}' " \
+        f"--title \"[bot] Releasing {_new_tag}\" " \
         # f"--discussion-category 'General' " \
 
     # ------------------------------------------------- 07
