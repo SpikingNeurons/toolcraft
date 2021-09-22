@@ -17,8 +17,10 @@ import platform
 import toml
 import typing as t
 import webbrowser
+import os
+import git
+import github
 from pathlib import Path
-
 from invoke import task
 
 ROOT_DIR = Path(__file__).parent
@@ -32,6 +34,17 @@ COVERAGE_REPORT = COVERAGE_DIR.joinpath("index.html")
 # DOCUSAURUS_DIR = ROOT_DIR.joinpath(".website")
 # NOTEBOOKS_DIR = ROOT_DIR.joinpath(".notebooks")
 SCRIPTS_DIR = ROOT_DIR.joinpath("scripts")
+
+_GIT = git.Git()
+_GIT_LOCAL_REPO = git.Repo()
+# todo: make this more secure. Is this recommended??
+#    This keeps env variable exposed
+_GITHUB = github.Github(
+    login_or_token=os.environ.get('PK_PYGITHUB_TOKEN_PK', None)
+)
+# we will not do authentication as this is public repo
+# _GITHUB = github.Github()
+_GH_REMOTE_REPO = _GITHUB.get_repo('SpikingNeurons/toolcraft')
 
 
 def _find(
@@ -90,14 +103,108 @@ def doc_preview(c):
     _run(c, "npm start")
 
 
-@task
-def del_tag(c):
+@task(
+    help={
+        'tag': 'The tag that you want to delete. '
+               'Default is to use tag based on current version of repo.'
+    }
+)
+def del_tag(c, tag=None):
+    """
+    Delete the specified tag locally as well as remotely.
+    """
+    # resolve tag
+    if tag is None:
+        tag = \
+            toml.load("pyproject.toml")['tool']['poetry']['version']
+        tag = 'v' + tag
 
-    _curr_ver = \
-        toml.load("pyproject.toml")['tool']['poetry']['version']
-    _curr_ver = 'v' + _curr_ver
-    _run(c, f"git tag -d {_curr_ver}")
-    _run(c, f"git push --delete origin {_curr_ver}")
+    # get repo instance
+    _repo = git.Repo()
+
+    # delete tag locally
+    # _run(c, f"git tag -d {tag}")
+    git.Tag.delete(_repo, tag)
+
+    # delete on remote origin
+    # _run(c, f"git push --delete origin {tag}")
+    _repo.remote('origin').push(refspec=[f":{tag}"])
+
+
+@task(
+    help={
+        'new_tag': 'Dont use directly. Will be consumed from bump',
+    }
+)
+def changelog(c, new_tag=None):
+    """
+    Generates changelog and saves it to CHANGELOG.md
+    The logs cover the commit message on main branch from the last known
+    stable tag.
+    """
+    # todo: Convert this blog with GitPython and PyGithub to python (blog ideas)
+    # Refer: https://blogs.sap.com/2018/06/22/generating-release-notes-from-git-commit-messages-using-basic-shell-commands-gitgrep/
+
+    # get tags
+    _tags = sorted(
+        _GIT_LOCAL_REPO.tags, key=lambda _: _.commit.committed_datetime)
+    _tag_names = [_.name for _ in _tags]
+    _last_stable_tag_name = [
+        _ for _ in _tag_names
+        if _ != 'log' and _.find('a') == -1 and _.find('b') == -1
+    ][-1]
+
+    # NOTE: this is with git but note that we lack the github owner
+    #   so we will use github instead :(
+    # [USING GIT]
+    # get commits from last stable location
+    # for _commit in \
+    #     _GIT_LOCAL_REPO.iter_commits(rev=f'{_last_stable_tag_name}..HEAD'):
+    #     print(_commit, type(_commit))
+    # Also more raw way
+    # refer https://git-scm.com/docs/pretty-formats
+    # _commits = _git.log(
+    #     f'{_last_stable_tag_name}..HEAD',
+    #     '--pretty=format:"%h [ %ad ] @%al : %s"', '--date=short',
+    # )
+    # with github we use this api
+    # https://docs.github.com/en/rest/reference/repos#commits
+    # https://docs.github.com/en/rest/reference/repos#compare-two-commits
+    # [USING GITHUB]
+    _commits = \
+        _GH_REMOTE_REPO.compare(
+            base=_last_stable_tag_name, head=None or 'HEAD'
+        ).commits
+    _changelog_list = [
+        f"## Changelog for {_last_stable_tag_name} >> {new_tag}",
+        ""
+    ]
+    for _commit in _commits:
+        _commit_str = \
+            f"+ " \
+            f"{_commit.sha[:7]} " \
+            f"[ {_commit.committer.updated_at.strftime('%Y-%m-%d')} ] " \
+            f"@{_commit.committer.login} : " \
+            f"{_commit.commit.message}"
+        _changelog_list.append(_commit_str)
+
+    # make changelog
+    _changelog = "\n".join(_changelog_list)
+
+    # if show then display and return
+    if new_tag is None:
+        print(_changelog)
+        return
+
+    # write to file
+    _changelog_file = pathlib.Path("CHANGELOG.md")
+    _changelog_file.write_text(_changelog)
+
+    # commit file
+    _run(c, "git add CHANGELOG.md")
+    _run(c, f'git commit -m '
+            f'"[bot] Update changelog to reflect commits '
+            f'from {_last_stable_tag_name} to {new_tag}"')
 
 
 @task(
@@ -328,23 +435,40 @@ def bump(
         )
 
     # ------------------------------------------------- 05
+    # estimate new tag
     if _release_type is None:
         _release_type = ''
     if _release_num is None:
         _release_num = ''
     _new_ver = f"{_major}.{_minor}.{_patch}{_release_type}{_release_num}"
-    _bump_command = f"bump2version --verbose " \
+    _bump_command = f"bump2version --no-tag --verbose " \
                     f"{'--dry-run' if dry_run else ''} " \
                     f"--new-version {_new_ver} xyz"
+
+    # ------------------------------------------------- 06
+    # update changelog
+    changelog(c, new_tag=_new_ver)
+
+    # ------------------------------------------------- 07
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print("The bump command:", _bump_command)
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     _run(c, _bump_command)
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    print("Executed bump command:", _bump_command)
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     print()
     print()
+
+    # ------------------------------------------------- 08
+    # create release with gh
+    _is_pre_release = _new_ver.find("a") != -1 or _new_ver.find("b") != -1
+    _gh_release_command = \
+        f"gh release create {_new_ver} " \
+        f"{'--prerelease' if _is_pre_release else ''} " \
+        f"--target main " \
+        f"--notes-file CHANGELOG.md " \
+        f"--discussion-category 'General' " \
+        f"--title '[bot] Releasing {_new_ver}' "
+
+    # ------------------------------------------------- 09
     print("We will run below commands to see and push newly created tags:")
     print("  >>  git tag -n")
     print("  >>  git push --tags")

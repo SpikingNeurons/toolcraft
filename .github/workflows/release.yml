@@ -15,58 +15,18 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
 
+  # simple echo for tag
   echo-tag:
     runs-on: ubuntu-18.04
     steps:
-      - name: Echo
+      - name: The current tag is ${{ github.ref }}
         run: |
           echo ${{ github.ref }}
           echo ${{ startsWith( github.ref, 'refs/tags/v') }}
 
-  # Job for CHANGELOG
-  # todo: figure out how changelog will be part of stable release with same tag
-  # todo: not sure how this is done ... but this is the close we have for now
-  # todo: maybe we can just have it added in github online release section
-  # todo: but not sure how to get HISTORY.md or CHANGELOG.md available
-  release-changelog:
-    if: startsWith( github.ref, 'refs/tags/v')
-    runs-on: ubuntu-18.04
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - name: Checkout
-        uses: actions/checkout@v2
-      # Generate Create empty Log file
-      - name: Touch change log
-        run: touch CHANGELOG.md
-      # Generate Change Log
-      - name: Generate change log
-        uses: heinrichreimer/github-changelog-generator-action@v2.1.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issues: true
-          issuesWoLabels: true
-          pullRequests: true
-          prWoLabels: true
-          unreleased: true
-          addSections: '{"documentation":{"prefix":"**Documentation:**","labels":["documentation"]}}'
-          output: CHANGELOG.md
-      # Show Change Log
-      - name: Show change log
-        run: |
-          ls -l .
-          cat CHANGELOG.md
-      # Upload CHANGELOG
-      - name: Upload CHANGELOG.md
-        uses: actions/upload-artifact@v2
-        with:
-          name: changelog
-          path: ${{ github.workspace }}/CHANGELOG.md
-          retention-days: 1
-
   # Job for "build"
   release-build:
     if: startsWith( github.ref, 'refs/tags/v')
-    needs: [release-changelog]
 
     # The type of runner that the job will run on
     strategy:
@@ -82,13 +42,6 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout
         uses: actions/checkout@v2
-
-      # Download CHANGELOG
-      - name: Download CHANGELOG.md
-        uses: actions/download-artifact@v2
-        with:
-          name: changelog
-          path: ${{ github.workspace }}
 
       # Show Change Log
       - name: Show change log

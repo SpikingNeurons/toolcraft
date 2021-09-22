@@ -89,6 +89,8 @@ optional = true
 toml = "^0.10.2"
 twine = "^3.4.2"
 bump2version = "^1.0.1"
+GitPython = "^3.1.24"
+PyGithub = "^1.55"
 
 #[tool.poetry.group.docs]
 #optional = true
