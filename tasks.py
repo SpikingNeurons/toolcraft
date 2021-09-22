@@ -360,6 +360,12 @@ def bump(
                 _release_num = 0
             elif bump_into == "stable":
                 ...
+            elif bump_into is None:
+                raise Exception(
+                    "The current release is stable. So in order to move "
+                    "forward for next version you need to specify which stage "
+                    "you want to --bump-into"
+                )
             else:
                 raise Exception(
                     "Arg --bump-into can be one of "
