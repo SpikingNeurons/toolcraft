@@ -61,7 +61,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_area_series(
@@ -130,7 +129,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_bar_series(
@@ -214,7 +212,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_candle_series(
@@ -294,7 +291,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_drag_line(
@@ -368,7 +364,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_drag_point(
@@ -444,7 +439,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_error_series(
@@ -533,7 +527,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_heat_series(
@@ -622,7 +615,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_histogram_series(
@@ -690,7 +682,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_hline_series(
@@ -763,7 +754,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_image_series(
@@ -828,7 +818,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_line_series(
@@ -907,7 +896,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_pie_series(
@@ -980,7 +968,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_plot_annotation(
@@ -1043,7 +1030,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_scatter_series(
@@ -1107,7 +1093,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_shade_series(
@@ -1169,7 +1154,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_stair_series(
@@ -1234,7 +1218,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_stem_series(
@@ -1305,7 +1288,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_text_point(
@@ -1366,7 +1348,6 @@ class ___:
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_vline_series(

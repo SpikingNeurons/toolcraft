@@ -443,7 +443,6 @@ class ProgressBar(tqdm):
             matplotlib animations for a graphical output [default: False].
 
         """
-
         # call super
         super().__init__(
             iterable=iterable, desc=desc, total=total, leave=leave, file=file,

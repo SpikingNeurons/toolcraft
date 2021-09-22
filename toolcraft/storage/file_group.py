@@ -641,7 +641,6 @@ class FileGroup(StorageHashable, abc.ABC):
 
         todo: lock the config file so that no one else can access it
         """
-
         # --------------------------------------------------------------01
         # validations
         for file_key in file_keys:

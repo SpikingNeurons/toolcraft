@@ -622,7 +622,6 @@ class Folder(StorageHashable):
         we want fo_hashable to dictate things in Folder like the name of
         folder created on disk.
         """
-
         # the name is dictated by for_hashable as we will not allow any
         # fields in Folder (check validation)
         # This is unlike FileGroup where all fields decide name ... this si
@@ -643,7 +642,6 @@ class Folder(StorageHashable):
         todo: maybe not that big of a overhead but try to check if call to
           this property is minimal
         """
-
         # ----------------------------------------------------------------01
         _folder_present = self.path.is_dir()
         # (The super method is responsible to do this as state manager is
@@ -794,7 +792,6 @@ class Folder(StorageHashable):
         todo: when `self.contains is None` handle delete differently as we
           will not have items dict
         """
-
         # todo: do u want to add permission check for
         #  Folder similar to FileGroup
         # when contains is None we delete everything ... this is default
@@ -851,7 +848,6 @@ class Folder(StorageHashable):
         todo: We can have special Config class for Folder which can do some
           indexing operation
         """
-
         # -----------------------------------------------------------------01
         # Validations
         if self.contains is None:
