@@ -285,7 +285,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_area_series(
@@ -354,7 +353,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_bar_series(
@@ -438,7 +436,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_candle_series(
@@ -518,7 +515,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_drag_line(
@@ -592,7 +588,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_drag_point(
@@ -668,7 +663,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_error_series(
@@ -757,7 +751,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_heat_series(
@@ -846,7 +839,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_histogram_series(
@@ -914,7 +906,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_hline_series(
@@ -987,7 +978,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_image_series(
@@ -1052,7 +1042,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_line_series(
@@ -1131,7 +1120,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_pie_series(
@@ -1204,7 +1192,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_plot_annotation(
@@ -1267,7 +1254,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_scatter_series(
@@ -1331,7 +1317,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_shade_series(
@@ -1393,7 +1378,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_stair_series(
@@ -1458,7 +1442,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_stem_series(
@@ -1529,7 +1512,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_text_point(
@@ -1590,7 +1572,6 @@ class Plot(BPlot):
             int
 
         """
-
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_vline_series(

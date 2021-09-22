@@ -261,7 +261,6 @@ class Widget(m.HashableClass, abc.ABC):
           to be done. AVOID GENERALIZING THIS FUNCTION.
 
         """
-
         # ------------------------------------------------------ 01
         # get field and its default value
         # noinspection PyUnresolvedReferences

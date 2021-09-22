@@ -366,7 +366,6 @@ class StoreField:
         Hence we use this method to register the function we decorated,
         its name and the info associated for debugging.
         """
-
         # ------------------------------------------------------- 01
         # store decorated fn in decorator instance
         self.dec_fn = dec_fn
@@ -414,7 +413,6 @@ class StoreField:
         Returns:
 
         """
-
         # ------------------------------------------------------- 01
         # first validate things that are new for every call to decorated method
         # i.e. when this method gets called

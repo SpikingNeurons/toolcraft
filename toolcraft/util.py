@@ -826,9 +826,7 @@ def return_argument_as_it_is(t):
 
 def get_object_memory_usage(obj) -> int:
     """sum size of object & members."""
-
     # print(".......... DEBUG .........")
-
     # noinspection PyPep8Naming
     BLACKLIST = (type, types.ModuleType, types.FunctionType)
     e.validation.ShouldNotBeOneOf(

@@ -306,7 +306,6 @@ class Tracker:
           https://docs.python.domainunion.de/3/library/contextlib.html
 
         """
-
         # prefetch if not done
         # handle expensive things that can reduce load on consecutive calls
         # on same instance
@@ -1374,7 +1373,6 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         todo: support refresh
         """
-
         # ---------------------------------------------------- 01
         # import
         from . import gui
