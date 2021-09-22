@@ -1,4 +1,4 @@
-## Changelog for v0.0.1 >> v0.1.3a11
+## Changelog for v0.0.1 >> v0.1.3b0
 
 + d15936f [ 2021-09-22 ] @pbk0 : supporting bumpversion
 + f8b5fad [ 2021-09-22 ] @pbk0 : "Bump version: 0.1.3 >> 0.1.4"
@@ -93,3 +93,5 @@
 + 314cf48 [ 2021-09-22 ] @pbk0 : [bot] Update changelog to reflect commits from v0.0.1 to v0.1.3a10
 + ceaada2 [ 2021-09-22 ] @pbk0 : keep things in draft mode
 + 04b86c7 [ 2021-09-22 ] @pbk0 : "[bot] Bump version: 0.1.3a10 >> 0.1.3a11"
++ 974fb22 [ 2021-09-22 ] @pbk0 : [bot] Update changelog to reflect commits from v0.0.1 to v0.1.3a11
++ 9e66bc9 [ 2021-09-22 ] @pbk0 : "[bot] Bump version: 0.1.3a11 >> 0.1.3b0"
