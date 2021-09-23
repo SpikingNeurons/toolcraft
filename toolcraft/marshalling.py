@@ -944,75 +944,75 @@ class YamlRepr(Tracker):
 #     ) -> "FrozenDict":
 #         return cls(item=yaml_state)
 
-
-class FrozenKeras(YamlRepr):
-
-    class LITERAL(YamlRepr.LITERAL):
-        SUPPORTED_KERAS_OBJECTS_TYPE = t.Union[
-            "tk.losses.Loss",
-            "tk.optimizers.Optimizer",
-            "tk.optimizers.schedules.LearningRateSchedule",
-        ]
-        # noinspection PyUnresolvedReferences
-        SUPPORTED_KERAS_OBJECTS = SUPPORTED_KERAS_OBJECTS_TYPE.__args__
-
-    def __init__(self, item: LITERAL.SUPPORTED_KERAS_OBJECTS_TYPE):
-        # -------------------------------------------------------- 01
-        # validate
-        # -------------------------------------------------------- 01.01
-        # check item type
-        e.validation.ShouldBeInstanceOf(
-            value=item,
-            value_types=self.LITERAL.SUPPORTED_KERAS_OBJECTS,
-            msgs=[
-                f"Unrecognized item type that cannot be freezed ..."
-            ]
-        )
-        # -------------------------------------------------------- 01.02
-        # check if keras config is serializable as per our code
-        _k_config = item.get_config()
-        self.can_be_frozen(
-            _k_config,
-            key_or_index=f"{self.yaml_tag()}::",
-            allowed_types=SUPPORTED_HASHABLE_OBJECTS,
-        )
-
-        # -------------------------------------------------------- 02
-        # save keras related information
-        self._k_class = item.__class__
-        self._k_config = _k_config
-        # delete item so that the graph do not have any information
-        del item
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"!frozen_keras"
-
-    def get(self) -> LITERAL.SUPPORTED_KERAS_OBJECTS_TYPE:
-        # this basically picks up class of keras instance `self._item` and
-        # creates instance from config given by `self._item`
-        return self._k_class.from_config(self._k_config)
-
-    def as_dict(
-        self
-    ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        return {
-            "module": self._k_class.__module__,
-            "class": self._k_class.__name__,
-            "config": self._k_config.copy()
-        }
-
-    @classmethod
-    def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
-    ) -> "FrozenKeras":
-        _k_class = util.load_class_from_strs(
-            class_name=yaml_state["class"],
-            class_module=yaml_state["module"],
-        )  # type: t.Type[cls.LITERAL.SUPPORTED_KERAS_OBJECTS_TYPE]
-        return cls(item=_k_class.from_config(yaml_state["config"]))
+#
+# class FrozenKeras(YamlRepr):
+#
+#     class LITERAL(YamlRepr.LITERAL):
+#         SUPPORTED_KERAS_OBJECTS_TYPE = t.Union[
+#             tk.losses.Loss,
+#             tk.optimizers.Optimizer,
+#             tk.optimizers.schedules.LearningRateSchedule,
+#         ]
+#         # noinspection PyUnresolvedReferences
+#         SUPPORTED_KERAS_OBJECTS = SUPPORTED_KERAS_OBJECTS_TYPE.__args__
+#
+#     def __init__(self, item: LITERAL.SUPPORTED_KERAS_OBJECTS_TYPE):
+#         # -------------------------------------------------------- 01
+#         # validate
+#         # -------------------------------------------------------- 01.01
+#         # check item type
+#         e.validation.ShouldBeInstanceOf(
+#             value=item,
+#             value_types=self.LITERAL.SUPPORTED_KERAS_OBJECTS,
+#             msgs=[
+#                 f"Unrecognized item type that cannot be freezed ..."
+#             ]
+#         )
+#         # -------------------------------------------------------- 01.02
+#         # check if keras config is serializable as per our code
+#         _k_config = item.get_config()
+#         self.can_be_frozen(
+#             _k_config,
+#             key_or_index=f"{self.yaml_tag()}::",
+#             allowed_types=SUPPORTED_HASHABLE_OBJECTS,
+#         )
+#
+#         # -------------------------------------------------------- 02
+#         # save keras related information
+#         self._k_class = item.__class__
+#         self._k_config = _k_config
+#         # delete item so that the graph do not have any information
+#         del item
+#
+#     @classmethod
+#     def yaml_tag(cls) -> str:
+#         return f"!frozen_keras"
+#
+#     def get(self) -> LITERAL.SUPPORTED_KERAS_OBJECTS_TYPE:
+#         # this basically picks up class of keras instance `self._item` and
+#         # creates instance from config given by `self._item`
+#         return self._k_class.from_config(self._k_config)
+#
+#     def as_dict(
+#         self
+#     ) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+#         return {
+#             "module": self._k_class.__module__,
+#             "class": self._k_class.__name__,
+#             "config": self._k_config.copy()
+#         }
+#
+#     @classmethod
+#     def from_dict(
+#         cls,
+#         yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+#         **kwargs
+#     ) -> "FrozenKeras":
+#         _k_class = util.load_class_from_strs(
+#             class_name=yaml_state["class"],
+#             class_module=yaml_state["module"],
+#         )  # type: t.Type[cls.LITERAL.SUPPORTED_KERAS_OBJECTS_TYPE]
+#         return cls(item=_k_class.from_config(yaml_state["config"]))
 
 
 # todo: Have a FrozenEnum and FrozenSlice which is built on top of python
@@ -1295,14 +1295,14 @@ class HashableClass(YamlRepr, abc.ABC):
                 )
             # ----------------------------------------------------------01.03
             # raise error to inform to use FrozenKeras
-            elif isinstance(v, FrozenKeras.LITERAL.SUPPORTED_KERAS_OBJECTS):
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Please set the field `{f_name}` where the `keras` "
-                        f"object is wrapped with `{FrozenKeras.__name__}` ... "
-                        f"check class {self.__class__}"
-                    ]
-                )
+            # elif isinstance(v, FrozenKeras.LITERAL.SUPPORTED_KERAS_OBJECTS):
+            #     e.validation.NotAllowed(
+            #         msgs=[
+            #             f"Please set the field `{f_name}` where the `keras` "
+            #             f"object is wrapped with `{FrozenKeras.__name__}`  "
+            #             f"check class {self.__class__}"
+            #         ]
+            #     )
             # ----------------------------------------------------------01.04
             # if list check if values inside are hashable
             elif isinstance(v, list):
@@ -1408,7 +1408,9 @@ SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
     int, float, str, slice, list, dict,
     np.float32, np.int64, np.int32,
     datetime.datetime, None,
-    FrozenEnum, FrozenKeras, HashableClass,
+    FrozenEnum,
+    # FrozenKeras,
+    HashableClass,
     pa.Schema,
 ]
 # noinspection PyUnresolvedReferences
