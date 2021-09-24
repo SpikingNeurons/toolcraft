@@ -1,4 +1,4 @@
-## Changelog for v0.1.3 >> v0.1.4a1
+## Changelog for v0.1.3 >> v0.1.4a2
 
 + 714c89f [ 2020-11-06 ] @web-flow : Format code with black, yapf, autopep8 and isort
 
@@ -30,3 +30,5 @@ Remove blank lines after docstring
 + 70f3b1c [ 2021-09-22 ] @pbk0 : remove support for keras object for serialization to yaml
 + fffb32c [ 2021-09-22 ] @pbk0 : downgrade numpy to be compatible to tensorflow 2.6
 + 24cd8de [ 2021-09-22 ] @pbk0 : downgrade numpy to be compatible to tensorflow 2.6
++ 26b20de [ 2021-09-22 ] @pbk0 : [bot] Update changelog to reflect commits from v0.1.3 to v0.1.4a1
++ b24342d [ 2021-09-22 ] @pbk0 : "[bot] Bump version: 0.1.4a0 >> 0.1.4a1"
