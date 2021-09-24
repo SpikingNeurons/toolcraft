@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         python-versions: [3.8, 3.9]
-        os: [ ubuntu-18.04, macos-latest, windows-latest ]
+        os: [ ubuntu-18.04, windows-latest ]
 #        python-versions: [3.9]
 #        os: [ubuntu-18.04]
 
