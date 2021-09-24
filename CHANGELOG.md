@@ -1,4 +1,4 @@
-## Changelog for v0.1.3 >> v0.1.4a2
+## Changelog for v0.1.3 >> v0.1.4a3
 
 + 714c89f [ 2020-11-06 ] @web-flow : Format code with black, yapf, autopep8 and isort
 
@@ -32,3 +32,7 @@ Remove blank lines after docstring
 + 24cd8de [ 2021-09-22 ] @pbk0 : downgrade numpy to be compatible to tensorflow 2.6
 + 26b20de [ 2021-09-22 ] @pbk0 : [bot] Update changelog to reflect commits from v0.1.3 to v0.1.4a1
 + b24342d [ 2021-09-22 ] @pbk0 : "[bot] Bump version: 0.1.4a0 >> 0.1.4a1"
++ e107b0c [ 2021-09-22 ] @pbk0 : removing support for macos as numpy is giving error
+ERROR tests/test_toolcraft.py - RuntimeError: Polyfit sanity test emitted a w...
++ 8f4d1d1 [ 2021-09-22 ] @pbk0 : [bot] Update changelog to reflect commits from v0.1.3 to v0.1.4a2
++ 91a92a4 [ 2021-09-22 ] @pbk0 : "[bot] Bump version: 0.1.4a1 >> 0.1.4a2"
