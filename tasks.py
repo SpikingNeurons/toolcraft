@@ -459,7 +459,7 @@ def bump(
     print(f"create changelog for {_new_tag}")
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     changelog(c, new_tag=_new_tag)
-    _run(c, "git push")
+    # _run(c, "git push")
     print()
     print()
 
