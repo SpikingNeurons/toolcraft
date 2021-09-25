@@ -1,4 +1,6 @@
-# ToolCraft
+
+
+![ToolCraft](website/static/img/toolcraft.png)
 
 ---
 
