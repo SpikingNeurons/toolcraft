@@ -1097,8 +1097,8 @@ class HashableClass(YamlRepr, abc.ABC):
         # --------------------------------------------------------------01
         # do instance related things
         with logger.Spinner(
-            title=f"Init {self.__class__.__module__}.{self.__class__.__name__}",
-            logger=_LOGGER,
+                title=f"Init {self.__class__.__module__}.{self.__class__.__name__}",
+                logger=_LOGGER,
         ) as _s:
             # ----------------------------------------------------------01.01
             # dict field if any will be transformed
