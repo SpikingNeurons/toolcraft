@@ -1189,18 +1189,35 @@ class HashableClass(YamlRepr, abc.ABC):
         # --------------------------------------------------------------01
         # do instance related things
         with logger.Spinner(
-            title=f"Init "
-                    f"{self.__class__.__module__}."
-                    f"{self.__class__.__name__}",
+            title=f"Init {self.__class__.__module__}.{self.__class__.__name__}",
             logger=_LOGGER,
         ) as _s:
             # ----------------------------------------------------------01.01
+            # dict field if any will be transformed
+            _s.text = "transforming ..."
+            for f in self.dataclass_field_names:
+                _dict = getattr(self, f)
+                if isinstance(_dict, dict):
+                    # make changes to hyper_fields ...
+                    # it is possible as dict is mutable
+                    _copy_dict = {}
+                    # makes sures that the items are sorted
+                    _sorted_keys = list(_dict.keys())
+                    _sorted_keys.sort()
+                    for k in _sorted_keys:
+                        v = _dict[k]
+                        # get rid of None values
+                        if v is not None:
+                            _copy_dict[k] = v
+                    _dict.clear()
+                    _dict.update(_copy_dict)
+            # ----------------------------------------------------------01.02
             # todo: add global flag to start and stop validation
             # make sure that everything is light weight so that object creation
             # is fast ...
             _s.text = "validating ..."
             self.init_validate()
-            # ----------------------------------------------------------01.02
+            # ----------------------------------------------------------01.03
             # call init logic
             _s.text = "initiating ..."
             self.init()
