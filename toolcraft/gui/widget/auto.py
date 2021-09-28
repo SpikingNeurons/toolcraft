@@ -2913,7 +2913,7 @@ class InputIntX(Widget):
     max_clamped: bool = False
 
     # Only runs callback on enter.
-    on_enter: bool = False
+    if_entered: bool = False
 
     # Activates a read only mode for the inputs.
     readonly: bool = False
@@ -2947,7 +2947,7 @@ class InputIntX(Widget):
             size=self.size,
             min_clamped=self.min_clamped,
             max_clamped=self.max_clamped,
-            on_enter=self.on_enter,
+            on_enter=self.if_entered,
             readonly=self.readonly,
         )
         
@@ -3094,7 +3094,7 @@ class InputInt(Widget):
     max_clamped: bool = False
 
     # Only runs callback on enter key press.
-    on_enter: bool = False
+    if_entered: bool = False
 
     # Activates a read only mode for the input.
     readonly: bool = False
@@ -3129,7 +3129,7 @@ class InputInt(Widget):
             step_fast=self.step_fast,
             min_clamped=self.min_clamped,
             max_clamped=self.max_clamped,
-            on_enter=self.on_enter,
+            on_enter=self.if_entered,
             readonly=self.readonly,
         )
         

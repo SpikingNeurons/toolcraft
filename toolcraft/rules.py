@@ -308,7 +308,11 @@ def check_HashableClass():
             #  also have fields that are t.ClassVar and t.InitVar
             #  ... we will see this later how to deal with ... currently
             #  there is no easy way
-            if _attr_k in cls.__annotations__.keys():
+            _attr_ks = []
+            for _c in cls.__mro__:
+                if hasattr(_c, '__annotations__'):
+                    _attr_ks += list(_c.__annotations__.keys())
+            if _attr_k in _attr_ks:
                 # _ann_value is a typing.ClassVar raise error
                 # simple way to see if typing was used as annotation value
                 if hasattr(_attr_v, '__origin__'):
@@ -328,12 +332,13 @@ def check_HashableClass():
                             f"class {cls}"
                         ]
                     )
-                # if a vail dataclass field continue
+                # if a valid dataclass field continue
                 continue
 
             # ------------------------------------------------------ 02.05
             # if we reached here we do not understand the class attribute so
             # raise error
+            print(cls.__annotations__.keys(), "::::::::::::::::::", cls)
             e.code.NotAllowed(
                 msgs=[
                     f"Found an attribute `{_attr_k}` with: ",

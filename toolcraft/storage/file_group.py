@@ -1814,10 +1814,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         """
         ...
 
-    @classmethod
-    def block_fields_in_subclasses(cls) -> bool:
-        return True
-
     @abc.abstractmethod
     def get_urls(self) -> t.Dict[str, str]:
         ...

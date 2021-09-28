@@ -67,6 +67,8 @@ def gen_widget(_method, _widget_name, _color_fields):
             "t.Callable", "Callback"
         )
         _all_params_to_consider.append(_param_name)
+        for _s in textwrap.wrap(_docs_dict[_param_name], 70):
+            _lines.append(f"\t# {_s}")
         if _param_type.find("Callback") != -1:
             _callback_params.append(_param_name)
         _param_value = _param.default
@@ -79,6 +81,8 @@ def gen_widget(_method, _widget_name, _color_fields):
         if _param_name == "user_data":
             _param_type = "t.Union[Widget, t.List[Widget]]"
             _param_value = "None"
+        if _param_name == "on_enter":
+            _param_name = "if_entered"
         if _param_name in _color_fields.keys():
             _param_type = "Color"
             _param_value = _color_fields[_param_name]
@@ -93,8 +97,6 @@ def gen_widget(_method, _widget_name, _color_fields):
             else:
                 _parm_str += f" = {_param_value}"
 
-        for _s in textwrap.wrap(_docs_dict[_param_name], 70):
-            _lines.append(f"\t# {_s}")
         _lines.append(_parm_str)
         _lines.append("")
 
@@ -114,6 +116,8 @@ def gen_widget(_method, _widget_name, _color_fields):
                 f"\t\t\t" \
                 f"{_param}=0 if self.{_param} is None else self." \
                 f"{_param}.dpg_id,"
+        if _param == "on_enter":
+            _assign_str = f"\t\t\t{_param}=self.if_entered,"
         if _param in _color_fields.keys():
             _assign_str = f"\t\t\t{_param}=self.{_param}.dpg_value,"
         if _param in _callback_params:
