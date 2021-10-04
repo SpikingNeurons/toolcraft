@@ -32,9 +32,8 @@ import types
 import dataclasses
 import typing as t
 
-from toolcraft import error as e
-from toolcraft import util
-
+from . import error as e
+from . import util
 from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
 from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
     ResultsFolder
@@ -132,7 +131,6 @@ def check_things_not_to_be_overridden(
     _THINGS_NOT_TO_BE_OVERRIDDEN = {
         YamlRepr: ['yaml'],
         HashableClass: ['hex_hash'],
-        Folder: ['group_by'],
         NpyFileGroup: ['get_files', ],
         Tracker: ['is_called', 'is_iterable'],
         StorageHashable: ['path'],
