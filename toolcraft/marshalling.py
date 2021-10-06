@@ -1114,9 +1114,7 @@ class HashableClass(YamlRepr, abc.ABC):
                     _sorted_keys.sort()
                     for k in _sorted_keys:
                         v = _dict[k]
-                        # get rid of None values
-                        if v is not None:
-                            _copy_dict[k] = v
+                        _copy_dict[k] = v
                     _dict.clear()
                     _dict.update(_copy_dict)
             # ----------------------------------------------------------01.02
