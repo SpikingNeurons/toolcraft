@@ -1501,6 +1501,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
     def __call__(
         self, *,
         shuffle_seed: SHUFFLE_SEED_TYPE,
+        suppress_npymemmap_log: bool = False,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
@@ -1511,7 +1512,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
             iter_desc=None,
             iter_num_parts=None,
             iter_for_part=None,
-            shuffle_seed=shuffle_seed
+            shuffle_seed=shuffle_seed,
+            suppress_npymemmap_log=suppress_npymemmap_log,
         )
 
     def on_enter(self):
@@ -1523,34 +1525,56 @@ class NpyFileGroup(FileGroup, abc.ABC):
             self.internal.on_call_kwargs[
                 'shuffle_seed'
             ]  # type: SHUFFLE_SEED_TYPE
+        suppress_npymemmap_log = \
+            self.internal.on_call_kwargs[
+                'suppress_npymemmap_log'
+            ]  # type: bool
 
         # get property
         _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
 
         # make NpyMemmaps aware of seed
-        with logger.ProgressBar(
-            iterable=self.file_keys, unit=" files", desc="Opening NpyMemMap's"
-        ) as _pg:
-            for k in _pg:
+        if suppress_npymemmap_log:
+            for k in self.file_keys:
                 v = _all_npy_mem_maps_cache[k]
                 v(shuffle_seed=shuffle_seed)
                 v.__enter__()
+        else:
+            with logger.ProgressBar(
+                iterable=self.file_keys, unit=" files", desc="Opening NpyMemMap's"
+            ) as _pg:
+                for k in _pg:
+                    v = _all_npy_mem_maps_cache[k]
+                    v(shuffle_seed=shuffle_seed)
+                    v.__enter__()
 
     def on_exit(self):
-        # call super
-        super().on_exit()
+
+        # get kwargs passed in call
+        suppress_npymemmap_log = \
+            self.internal.on_call_kwargs[
+                'suppress_npymemmap_log'
+            ]  # type: bool
 
         # exit numpy memmaps
         # We have opened up all NpyMemMap's with shuffle_seed='DO_NOT_USE' ...
         # for use within `with` context ... so now we close it
-        with logger.ProgressBar(
-            iterable=self.file_keys, unit=" files", desc="Closing NpyMemMap's"
-        ) as _pg:
-            _pg.set_description(f"Closing NpyMemMap's")
-            for k in _pg:
+        if suppress_npymemmap_log:
+            for k in self.file_keys:
                 v = self.all_npy_mem_maps_cache[k]
                 # noinspection PyUnresolvedReferences
                 v.__exit__(None, None, None)
+        else:
+            with logger.ProgressBar(
+                iterable=self.file_keys, unit=" files", desc="Closing NpyMemMap's"
+            ) as _pg:
+                for k in _pg:
+                    v = self.all_npy_mem_maps_cache[k]
+                    # noinspection PyUnresolvedReferences
+                    v.__exit__(None, None, None)
+
+        # call super
+        super().on_exit()
 
     def get_files(
         self, *, file_keys: t.List[str]
