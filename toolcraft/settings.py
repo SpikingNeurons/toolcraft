@@ -20,6 +20,12 @@ if gettrace is not None:
 # detect if in interactive mode
 INTERACTIVE = not hasattr(main, '__file__')
 
+try:
+    import dearpygui.dearpygui as dpg
+    DPG_WORKS = True
+except ImportError:
+    DPG_WORKS = False
+
 
 class Dir:
     ROOT_DND = pathlib.Path("C:\\Sdl_DND")

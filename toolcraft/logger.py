@@ -20,7 +20,10 @@ from datetime import datetime
 import sys
 import io
 from yaspin.core import Yaspin
-import dearpygui.dearpygui as dpg
+from . import settings
+
+if settings.DPG_WORKS:
+    import dearpygui.dearpygui as dpg
 
 # log dirs
 # todo: use `tooling.tool.config` to get these settings from user or
