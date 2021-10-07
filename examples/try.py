@@ -12,5 +12,4 @@ runner = CliRunner()
 result = runner.invoke(tools.APP, ["--help"])
 print(">>>>>>>>>>>>>", result.output, "<<<<<<<<<<<<<<<<<<<<<<<<<")
 
-
 rules.main()
