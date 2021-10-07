@@ -35,7 +35,7 @@ if _config_file.exists():
     _root_dnd = pathlib.Path(_config_data["dirs"]["DND"])
     _root_del = pathlib.Path(_config_data["dirs"]["DEL"])
     if not _root_dnd.exists():
-        _root_del.mkdir(parents=True, exist_ok=True)
+        _root_dnd.mkdir(parents=True, exist_ok=True)
     if not _root_del.exists():
         _root_del.mkdir(parents=True, exist_ok=True)
 else:
