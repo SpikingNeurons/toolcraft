@@ -46,8 +46,8 @@ else:
 
 
 class Dir:
-    ROOT_DND = pathlib.Path("C:\\Sdl_DND")
-    ROOT_DEL = pathlib.Path("C:\\z_Sdl_DEL")
+    ROOT_DND = _root_dnd
+    ROOT_DEL = _root_del
     DOWNLOAD = ROOT_DND / "Download"
     TEMPORARY = ROOT_DEL / "_tmp"
     LOG = ROOT_DEL / "log"
