@@ -28,7 +28,7 @@ if settings.DPG_WORKS:
 # log dirs
 # todo: use `tooling.tool.config` to get these settings from user or
 #  configure them
-LOG_DIR = pathlib.Path("C:\\.log")
+LOG_DIR = settings.Dir.LOG
 MULTIPROCESSING_LOG_DIR = LOG_DIR / "multiprocessing"
 # todo: still not supported
 MAX_LOG_FILE_SIZE = 20 * 1024 * 1024  # 20MB

@@ -5,6 +5,7 @@ todo: Formalize with a parent Settings class which will store settings in
 
 import numpy as np
 import pathlib
+import toml
 import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
@@ -27,11 +28,29 @@ except ImportError:
     DPG_WORKS = False
 
 
+# make config
+_config_file = pathlib.Path.home() / ".toolcraft" / "config.toml"
+if _config_file.exists():
+    _config_data = toml.load(_config_file.as_posix())
+    _root_dnd = pathlib.Path(_config_data["dirs"]["DND"])
+    _root_del = pathlib.Path(_config_data["dirs"]["DEL"])
+    if not _root_dnd.exists():
+        _root_del.mkdir(parents=True, exist_ok=True)
+    if not _root_del.exists():
+        _root_del.mkdir(parents=True, exist_ok=True)
+else:
+    raise Exception(
+        f"Missing toolcraft config file at "
+        f"{_config_file.as_posix()}"
+    )
+
+
 class Dir:
     ROOT_DND = pathlib.Path("C:\\Sdl_DND")
     ROOT_DEL = pathlib.Path("C:\\z_Sdl_DEL")
     DOWNLOAD = ROOT_DND / "Download"
     TEMPORARY = ROOT_DEL / "_tmp"
+    LOG = ROOT_DEL / "log"
 
 
 class FileHash:
