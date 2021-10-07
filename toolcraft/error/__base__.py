@@ -28,7 +28,6 @@ class CustomException:
         self, *,
         msgs: logger.MESSAGES_TYPE,
         unhandled_exception: Exception = None,
-        raise_mode: bool = False,
     ):
         global _SHOW_TRACEBACK
         # -----------------------------------------------------------------01
@@ -140,29 +139,9 @@ class CustomException:
         # -----------------------------------------------------------------09
         # In some case we want to catch exception to handle while testing but
         # this is only for debugging
-        if raise_mode:
-            e = Exception(exception_str)
-            e.custom_exception_class = self.__class__
-            raise e
-        else:
-            sys.exit(0)
-
-            # the below code works with interactive mode but when running
-            # scripts from python installation it does not work as intended
-            # so we just exit .... the side-effect is in interactive mode the
-            # session does not last ... the below solution is not generic
-            # enough ...
-            # todo: figure out generic solution for exiting in
-            #  interactive mode
-            # noinspection PyUnresolvedReferences
-            # import __main__ as m
-            # if hasattr(m, "__file__"):
-            #     # only exit if not in interactive mode
-            #     sys.exit(0)
-            # else:
-            #     # todo: figure out how to exit in interactive mode ...
-            #     #  without traceback
-            #     raise Exception(exception_str)
+        e = Exception(exception_str)
+        e.custom_exception_class = self.__class__
+        raise e
 
     @classmethod
     def matches(cls, exception: Exception) -> bool:
