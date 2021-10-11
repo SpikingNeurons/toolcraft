@@ -1,4 +1,5 @@
 import typing as t
+import dataclasses
 
 from . import __base__
 from . import widget
@@ -112,7 +113,10 @@ def button_bar_from_hashable_callables(
     tab_group_name: str,
     hashable: m.HashableClass,
     title: str,
+    # todo: add icons for this
     close_button: bool,
+    # todo: add icons for this
+    info_button: bool,
     callable_names: t.Dict[str, str],
     no_main_ui: bool = False,
 ) -> __base__.Widget:
@@ -127,13 +131,13 @@ def button_bar_from_hashable_callables(
             label=title, default_open=True,
         )
         # make title and add it main ui
-        _main_ui.add_child(
-            guid="bb_sub_title",
-            widget=widget.Text(
-                f"{hashable.group_by}: {hashable.hex_hash}",
-                bullet=True,
-            )
-        )
+        # _main_ui.add_child(
+        #     guid="bb_sub_title",
+        #     widget=widget.Text(
+        #         f"{hashable.group_by}: {hashable.hex_hash}",
+        #         bullet=True,
+        #     )
+        # )
 
     # ----------------------------------------------------- 03
     # make buttons and add make them plot to _button_receiver
@@ -145,6 +149,10 @@ def button_bar_from_hashable_callables(
         _buttons.append(
             callback.CloseWidgetCallback.get_button_widget()
         )
+    # add info button
+    if info_button:
+        callable_names["Info"] = "info"
+
     # make buttons for callable names
     for _button_label, _callable_name in callable_names.items():
         _b = hashable.get_gui_button(

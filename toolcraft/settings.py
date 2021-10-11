@@ -50,7 +50,7 @@ class Dir:
     ROOT_DEL = _root_del
     DOWNLOAD = ROOT_DND / "Download"
     TEMPORARY = ROOT_DEL / "_tmp"
-    LOG = ROOT_DEL / "log"
+    LOG = ROOT_DEL / "Log"
 
 
 class FileHash:

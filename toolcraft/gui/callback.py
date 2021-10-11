@@ -204,6 +204,7 @@ class HashableMethodsRunnerCallback(Callback):
     hashable: m.HashableClass
     title: str
     close_button: bool
+    info_button: bool
     callable_names: t.List[str]
     callable_labels: t.List[str]
     receiver: Widget
@@ -264,6 +265,7 @@ class HashableMethodsRunnerCallback(Callback):
             hashable=self.hashable,
             title=self.title,
             close_button=self.close_button,
+            info_button=self.info_button,
             callable_names={
                 k: v for k, v in zip(self.callable_labels, self.callable_names)
             },

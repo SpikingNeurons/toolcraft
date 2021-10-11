@@ -1282,6 +1282,17 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         ...
 
+    def info(self, binder: "gui.Binder"):
+        # import
+        from . import gui
+        # make
+        # noinspection PyUnresolvedReferences
+        _ret_widget = gui.Text(
+            default_value=f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
+        )
+        # bind
+        binder(_ret_widget)
+
     def get_gui_button(
         self,
         button_label: str,
