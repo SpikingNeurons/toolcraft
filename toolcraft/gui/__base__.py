@@ -26,46 +26,18 @@ if False:
 
 
 class Color(m.FrozenEnum, enum.Enum):
-    DEFAULT = enum.auto()
-    WHITE = enum.auto()
-    BLACK = enum.auto()
-    CUSTOM = enum.auto()
-    GREY = enum.auto()
-    GREEN = enum.auto()
-    BLUE = enum.auto()
-    RED = enum.auto()
+    DEFAULT = [-1, -1, -1, -1]
+    WHITE = [255, 255, 255, 255]
+    BLACK = [0, 0, 0, 255]
+    GREY = [127, 127, 127, 255]
+    GREEN = [0, 255, 0, 255]
+    BLUE = [0, 0, 255, 255]
+    RED = [255, 0, 0, 255]
+    # CUSTOM = enum.auto()
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_color"
-
-    @property
-    def dpg_value(self) -> t.List[int]:
-        if self is self.DEFAULT:
-            return [-1, -1, -1, -1]
-        elif self is self.WHITE:
-            return [255, 255, 255, 255]
-        elif self is self.BLACK:
-            return [0, 0, 0, 255]
-        elif self is self.RED:
-            return [255, 0, 0, 255]
-        elif self is self.GREEN:
-            return [0, 255, 0, 255]
-        elif self is self.BLUE:
-            return [0, 0, 255, 255]
-        elif self is self.GREY:
-            return [127, 127, 127, 255]
-        elif self is self.CUSTOM:
-            e.code.CodingError(
-                msgs=[
-                    f"Seems like you are using custom color in that case "
-                    f"please pass [r, g, b, a] kwargs i.e. Color.CUSTOM(...)"
-                ]
-            )
-        else:
-            e.code.NotSupported(
-                msgs=[f"Unknown {self}"]
-            )
 
     # noinspection PyMethodOverriding
     def __call__(self, r: int, g: int, b: int, a: int) -> "Color":
@@ -112,7 +84,7 @@ class Callback(m.HashableClass, abc.ABC):
 
 class WidgetInternal(m.Internal):
     guid: str
-    dpg_id: int
+    dpg_id: t.Union[int, str]
     parent: t.Union["Dashboard", "Widget"]
     before: t.Optional["Widget"]
     is_build_done: bool
@@ -137,7 +109,7 @@ class Widget(m.HashableClass, abc.ABC):
         return self.internal.guid
 
     @property
-    def dpg_id(self) -> int:
+    def dpg_id(self) -> t.Union[int, str]:
         return self.internal.dpg_id
 
     @property
@@ -410,11 +382,11 @@ class Widget(m.HashableClass, abc.ABC):
                 self.children[k] = v
 
     @abc.abstractmethod
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         ...
 
     def build_post_runner(
-        self, *, hooked_method_return_value: int
+        self, *, hooked_method_return_value: t.Union[int, str]
     ):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
@@ -559,7 +531,7 @@ class Widget(m.HashableClass, abc.ABC):
         return self.guid, _ret
 
     def set_theme(self, theme: assets.Theme):
-        dpg.set_item_theme(item=self.dpg_id, theme=theme.dpg_id)
+        dpg.set_item_theme(item=self.dpg_id, theme=theme.value)
 
     def set_widget_configuration(self, **kwargs):
         # if any value is widget then get its dpg_id
@@ -713,7 +685,7 @@ class Dashboard(Widget):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.set_item_theme(item=_ret, theme=assets.Theme.Dark.dpg_id)
+        dpg.set_item_theme(item=_ret, theme=assets.Theme.DARK.value)
 
         # -------------------------------------------------- 03
         # return

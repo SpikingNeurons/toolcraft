@@ -48,9 +48,9 @@ class SetThemeCallback(Callback):
     ):
         _theme_str = dpg.get_value(item=sender.dpg_id)
         if _theme_str == "Dark":
-            _theme = assets.Theme.Dark
+            _theme = assets.Theme.DARK
         elif _theme_str == "Light":
-            _theme = assets.Theme.Light
+            _theme = assets.Theme.LIGHT
         else:
             e.code.CodingError(
                 msgs=[

@@ -14,24 +14,327 @@ from ... import marshalling as m
 from .. import Widget, Callback, Color
 
 
-class TableSizingPolicy(m.FrozenEnum, enum.Enum):
+class ColorPicker(m.FrozenEnum, enum.Enum):
 
-    FixedFit = dpg.mvTable_SizingFixedFit
-    FixedSame = dpg.mvTable_SizingFixedSame
-    StretchProp = dpg.mvTable_SizingStretchProp
-    StretchSame = dpg.mvTable_SizingStretchSame
+    DEFAULT = 0
+    bar = dpg.mvColorPicker_bar
+    wheel = dpg.mvColorPicker_wheel
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"!gui_TableSizingPolicy"
+        return f"!gui_ColorPicker"
 
     @property
     def dpg_id(self) -> int:
         return self.value
 
 
-class ColorMap(m.FrozenEnum, enum.Enum):
+class ComboHeight(m.FrozenEnum, enum.Enum):
 
+    DEFAULT = 0
+    Large = dpg.mvComboHeight_Large
+    Largest = dpg.mvComboHeight_Largest
+    Regular = dpg.mvComboHeight_Regular
+    Small = dpg.mvComboHeight_Small
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_ComboHeight"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class DatePickerLevel(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Day = dpg.mvDatePickerLevel_Day
+    Month = dpg.mvDatePickerLevel_Month
+    Year = dpg.mvDatePickerLevel_Year
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_DatePickerLevel"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class Dir(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Down = dpg.mvDir_Down
+    Left = dpg.mvDir_Left
+    NONE = dpg.mvDir_None
+    Right = dpg.mvDir_Right
+    Up = dpg.mvDir_Up
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_Dir"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class FontRangeHint(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Chinese_Full = dpg.mvFontRangeHint_Chinese_Full
+    Chinese_Simplified_Common = dpg.mvFontRangeHint_Chinese_Simplified_Common
+    Cyrillic = dpg.mvFontRangeHint_Cyrillic
+    Default = dpg.mvFontRangeHint_Default
+    Japanese = dpg.mvFontRangeHint_Japanese
+    Korean = dpg.mvFontRangeHint_Korean
+    Thai = dpg.mvFontRangeHint_Thai
+    Vietnamese = dpg.mvFontRangeHint_Vietnamese
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_FontRangeHint"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class FormatFloat(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    rgb = dpg.mvFormat_Float_rgb
+    rgba = dpg.mvFormat_Float_rgba
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_FormatFloat"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class KeyBrowser(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Back = dpg.mvKey_Browser_Back
+    Favorites = dpg.mvKey_Browser_Favorites
+    Forward = dpg.mvKey_Browser_Forward
+    Home = dpg.mvKey_Browser_Home
+    Refresh = dpg.mvKey_Browser_Refresh
+    Search = dpg.mvKey_Browser_Search
+    Stop = dpg.mvKey_Browser_Stop
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_KeyBrowser"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class KeyLaunch(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    App1 = dpg.mvKey_Launch_App1
+    App2 = dpg.mvKey_Launch_App2
+    Mail = dpg.mvKey_Launch_Mail
+    Media_Select = dpg.mvKey_Launch_Media_Select
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_KeyLaunch"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class KeyVolume(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Down = dpg.mvKey_Volume_Down
+    Mute = dpg.mvKey_Volume_Mute
+    Up = dpg.mvKey_Volume_Up
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_KeyVolume"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class MouseButton(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Left = dpg.mvMouseButton_Left
+    Middle = dpg.mvMouseButton_Middle
+    Right = dpg.mvMouseButton_Right
+    X1 = dpg.mvMouseButton_X1
+    X2 = dpg.mvMouseButton_X2
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_MouseButton"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class NodeCol(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    BoxSelector = dpg.mvNodeCol_BoxSelector
+    BoxSelectorOutline = dpg.mvNodeCol_BoxSelectorOutline
+    GridBackground = dpg.mvNodeCol_GridBackground
+    GridLine = dpg.mvNodeCol_GridLine
+    Link = dpg.mvNodeCol_Link
+    LinkHovered = dpg.mvNodeCol_LinkHovered
+    LinkSelected = dpg.mvNodeCol_LinkSelected
+    NodeBackground = dpg.mvNodeCol_NodeBackground
+    NodeBackgroundHovered = dpg.mvNodeCol_NodeBackgroundHovered
+    NodeBackgroundSelected = dpg.mvNodeCol_NodeBackgroundSelected
+    NodeOutline = dpg.mvNodeCol_NodeOutline
+    Pin = dpg.mvNodeCol_Pin
+    PinHovered = dpg.mvNodeCol_PinHovered
+    TitleBar = dpg.mvNodeCol_TitleBar
+    TitleBarHovered = dpg.mvNodeCol_TitleBarHovered
+    TitleBarSelected = dpg.mvNodeCol_TitleBarSelected
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_NodeCol"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class NodeStyleVar(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    GridSpacing = dpg.mvNodeStyleVar_GridSpacing
+    LinkHoverDistance = dpg.mvNodeStyleVar_LinkHoverDistance
+    LinkLineSegmentsPerLength = dpg.mvNodeStyleVar_LinkLineSegmentsPerLength
+    LinkThickness = dpg.mvNodeStyleVar_LinkThickness
+    NodeBorderThickness = dpg.mvNodeStyleVar_NodeBorderThickness
+    NodeCornerRounding = dpg.mvNodeStyleVar_NodeCornerRounding
+    NodePaddingHorizontal = dpg.mvNodeStyleVar_NodePaddingHorizontal
+    NodePaddingVertical = dpg.mvNodeStyleVar_NodePaddingVertical
+    PinCircleRadius = dpg.mvNodeStyleVar_PinCircleRadius
+    PinHoverRadius = dpg.mvNodeStyleVar_PinHoverRadius
+    PinLineThickness = dpg.mvNodeStyleVar_PinLineThickness
+    PinOffset = dpg.mvNodeStyleVar_PinOffset
+    PinQuadSideLength = dpg.mvNodeStyleVar_PinQuadSideLength
+    PinTriangleSideLength = dpg.mvNodeStyleVar_PinTriangleSideLength
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_NodeStyleVar"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class NodeAttr(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Input = dpg.mvNode_Attr_Input
+    Output = dpg.mvNode_Attr_Output
+    Static = dpg.mvNode_Attr_Static
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_NodeAttr"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class NodePinShape(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Circle = dpg.mvNode_PinShape_Circle
+    CircleFilled = dpg.mvNode_PinShape_CircleFilled
+    Quad = dpg.mvNode_PinShape_Quad
+    QuadFilled = dpg.mvNode_PinShape_QuadFilled
+    Triangle = dpg.mvNode_PinShape_Triangle
+    TriangleFilled = dpg.mvNode_PinShape_TriangleFilled
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_NodePinShape"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class PlotBin(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Rice = dpg.mvPlotBin_Rice
+    Scott = dpg.mvPlotBin_Scott
+    Sqrt = dpg.mvPlotBin_Sqrt
+    Sturges = dpg.mvPlotBin_Sturges
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_PlotBin"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class PlotCol(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Crosshairs = dpg.mvPlotCol_Crosshairs
+    ErrorBar = dpg.mvPlotCol_ErrorBar
+    Fill = dpg.mvPlotCol_Fill
+    FrameBg = dpg.mvPlotCol_FrameBg
+    InlayText = dpg.mvPlotCol_InlayText
+    LegendBg = dpg.mvPlotCol_LegendBg
+    LegendBorder = dpg.mvPlotCol_LegendBorder
+    LegendText = dpg.mvPlotCol_LegendText
+    Line = dpg.mvPlotCol_Line
+    MarkerFill = dpg.mvPlotCol_MarkerFill
+    MarkerOutline = dpg.mvPlotCol_MarkerOutline
+    PlotBg = dpg.mvPlotCol_PlotBg
+    PlotBorder = dpg.mvPlotCol_PlotBorder
+    Query = dpg.mvPlotCol_Query
+    Selection = dpg.mvPlotCol_Selection
+    TitleText = dpg.mvPlotCol_TitleText
+    XAxis = dpg.mvPlotCol_XAxis
+    XAxisGrid = dpg.mvPlotCol_XAxisGrid
+    YAxis = dpg.mvPlotCol_YAxis
+    YAxis2 = dpg.mvPlotCol_YAxis2
+    YAxis3 = dpg.mvPlotCol_YAxis3
+    YAxisGrid = dpg.mvPlotCol_YAxisGrid
+    YAxisGrid2 = dpg.mvPlotCol_YAxisGrid2
+    YAxisGrid3 = dpg.mvPlotCol_YAxisGrid3
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_PlotCol"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class PlotColormap(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
     BrBG = dpg.mvPlotColormap_BrBG
     Cool = dpg.mvPlotColormap_Cool
     Dark = dpg.mvPlotColormap_Dark
@@ -52,15 +355,16 @@ class ColorMap(m.FrozenEnum, enum.Enum):
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"!gui_ColorMap"
+        return f"!gui_PlotColormap"
 
     @property
     def dpg_id(self) -> int:
         return self.value
 
 
-class Marker(m.FrozenEnum, enum.Enum):
+class PlotMarker(m.FrozenEnum, enum.Enum):
 
+    DEFAULT = 0
     Asterisk = dpg.mvPlotMarker_Asterisk
     Circle = dpg.mvPlotMarker_Circle
     Cross = dpg.mvPlotMarker_Cross
@@ -75,15 +379,56 @@ class Marker(m.FrozenEnum, enum.Enum):
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"!gui_Marker"
+        return f"!gui_PlotMarker"
 
     @property
     def dpg_id(self) -> int:
         return self.value
 
 
-class Location(m.FrozenEnum, enum.Enum):
+class PlotStyleVar(m.FrozenEnum, enum.Enum):
 
+    DEFAULT = 0
+    AnnotationPadding = dpg.mvPlotStyleVar_AnnotationPadding
+    DigitalBitGap = dpg.mvPlotStyleVar_DigitalBitGap
+    DigitalBitHeight = dpg.mvPlotStyleVar_DigitalBitHeight
+    ErrorBarSize = dpg.mvPlotStyleVar_ErrorBarSize
+    ErrorBarWeight = dpg.mvPlotStyleVar_ErrorBarWeight
+    FillAlpha = dpg.mvPlotStyleVar_FillAlpha
+    FitPadding = dpg.mvPlotStyleVar_FitPadding
+    LabelPadding = dpg.mvPlotStyleVar_LabelPadding
+    LegendInnerPadding = dpg.mvPlotStyleVar_LegendInnerPadding
+    LegendPadding = dpg.mvPlotStyleVar_LegendPadding
+    LegendSpacing = dpg.mvPlotStyleVar_LegendSpacing
+    LineWeight = dpg.mvPlotStyleVar_LineWeight
+    MajorGridSize = dpg.mvPlotStyleVar_MajorGridSize
+    MajorTickLen = dpg.mvPlotStyleVar_MajorTickLen
+    MajorTickSize = dpg.mvPlotStyleVar_MajorTickSize
+    Marker = dpg.mvPlotStyleVar_Marker
+    MarkerSize = dpg.mvPlotStyleVar_MarkerSize
+    MarkerWeight = dpg.mvPlotStyleVar_MarkerWeight
+    MinorAlpha = dpg.mvPlotStyleVar_MinorAlpha
+    MinorGridSize = dpg.mvPlotStyleVar_MinorGridSize
+    MinorTickLen = dpg.mvPlotStyleVar_MinorTickLen
+    MinorTickSize = dpg.mvPlotStyleVar_MinorTickSize
+    MousePosPadding = dpg.mvPlotStyleVar_MousePosPadding
+    PlotBorderSize = dpg.mvPlotStyleVar_PlotBorderSize
+    PlotDefaultSize = dpg.mvPlotStyleVar_PlotDefaultSize
+    PlotMinSize = dpg.mvPlotStyleVar_PlotMinSize
+    PlotPadding = dpg.mvPlotStyleVar_PlotPadding
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_PlotStyleVar"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class PlotLocation(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
     Center = dpg.mvPlot_Location_Center
     East = dpg.mvPlot_Location_East
     North = dpg.mvPlot_Location_North
@@ -96,7 +441,182 @@ class Location(m.FrozenEnum, enum.Enum):
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"!gui_Location"
+        return f"!gui_PlotLocation"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class StyleVar(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Alpha = dpg.mvStyleVar_Alpha
+    ButtonTextAlign = dpg.mvStyleVar_ButtonTextAlign
+    CellPadding = dpg.mvStyleVar_CellPadding
+    ChildBorderSize = dpg.mvStyleVar_ChildBorderSize
+    ChildRounding = dpg.mvStyleVar_ChildRounding
+    FrameBorderSize = dpg.mvStyleVar_FrameBorderSize
+    FramePadding = dpg.mvStyleVar_FramePadding
+    FrameRounding = dpg.mvStyleVar_FrameRounding
+    GrabMinSize = dpg.mvStyleVar_GrabMinSize
+    GrabRounding = dpg.mvStyleVar_GrabRounding
+    IndentSpacing = dpg.mvStyleVar_IndentSpacing
+    ItemInnerSpacing = dpg.mvStyleVar_ItemInnerSpacing
+    ItemSpacing = dpg.mvStyleVar_ItemSpacing
+    PopupBorderSize = dpg.mvStyleVar_PopupBorderSize
+    PopupRounding = dpg.mvStyleVar_PopupRounding
+    ScrollbarRounding = dpg.mvStyleVar_ScrollbarRounding
+    ScrollbarSize = dpg.mvStyleVar_ScrollbarSize
+    SelectableTextAlign = dpg.mvStyleVar_SelectableTextAlign
+    TabRounding = dpg.mvStyleVar_TabRounding
+    WindowBorderSize = dpg.mvStyleVar_WindowBorderSize
+    WindowMinSize = dpg.mvStyleVar_WindowMinSize
+    WindowPadding = dpg.mvStyleVar_WindowPadding
+    WindowRounding = dpg.mvStyleVar_WindowRounding
+    WindowTitleAlign = dpg.mvStyleVar_WindowTitleAlign
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_StyleVar"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class TabOrder(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Fixed = dpg.mvTabOrder_Fixed
+    Leading = dpg.mvTabOrder_Leading
+    Reorderable = dpg.mvTabOrder_Reorderable
+    Trailing = dpg.mvTabOrder_Trailing
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_TabOrder"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class TableSizing(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    FixedFit = dpg.mvTable_SizingFixedFit
+    FixedSame = dpg.mvTable_SizingFixedSame
+    StretchProp = dpg.mvTable_SizingStretchProp
+    StretchSame = dpg.mvTable_SizingStretchSame
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_TableSizing"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class ThemeCat(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Core = dpg.mvThemeCat_Core
+    Nodes = dpg.mvThemeCat_Nodes
+    Plots = dpg.mvThemeCat_Plots
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_ThemeCat"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class ThemeCol(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    Border = dpg.mvThemeCol_Border
+    BorderShadow = dpg.mvThemeCol_BorderShadow
+    Button = dpg.mvThemeCol_Button
+    ButtonActive = dpg.mvThemeCol_ButtonActive
+    ButtonHovered = dpg.mvThemeCol_ButtonHovered
+    CheckMark = dpg.mvThemeCol_CheckMark
+    ChildBg = dpg.mvThemeCol_ChildBg
+    DockingEmptyBg = dpg.mvThemeCol_DockingEmptyBg
+    DockingPreview = dpg.mvThemeCol_DockingPreview
+    DragDropTarget = dpg.mvThemeCol_DragDropTarget
+    FrameBg = dpg.mvThemeCol_FrameBg
+    FrameBgActive = dpg.mvThemeCol_FrameBgActive
+    FrameBgHovered = dpg.mvThemeCol_FrameBgHovered
+    Header = dpg.mvThemeCol_Header
+    HeaderActive = dpg.mvThemeCol_HeaderActive
+    HeaderHovered = dpg.mvThemeCol_HeaderHovered
+    MenuBarBg = dpg.mvThemeCol_MenuBarBg
+    ModalWindowDimBg = dpg.mvThemeCol_ModalWindowDimBg
+    NavHighlight = dpg.mvThemeCol_NavHighlight
+    NavWindowingDimBg = dpg.mvThemeCol_NavWindowingDimBg
+    NavWindowingHighlight = dpg.mvThemeCol_NavWindowingHighlight
+    PlotHistogram = dpg.mvThemeCol_PlotHistogram
+    PlotHistogramHovered = dpg.mvThemeCol_PlotHistogramHovered
+    PlotLines = dpg.mvThemeCol_PlotLines
+    PlotLinesHovered = dpg.mvThemeCol_PlotLinesHovered
+    PopupBg = dpg.mvThemeCol_PopupBg
+    ResizeGrip = dpg.mvThemeCol_ResizeGrip
+    ResizeGripActive = dpg.mvThemeCol_ResizeGripActive
+    ResizeGripHovered = dpg.mvThemeCol_ResizeGripHovered
+    ScrollbarBg = dpg.mvThemeCol_ScrollbarBg
+    ScrollbarGrab = dpg.mvThemeCol_ScrollbarGrab
+    ScrollbarGrabActive = dpg.mvThemeCol_ScrollbarGrabActive
+    ScrollbarGrabHovered = dpg.mvThemeCol_ScrollbarGrabHovered
+    Separator = dpg.mvThemeCol_Separator
+    SeparatorActive = dpg.mvThemeCol_SeparatorActive
+    SeparatorHovered = dpg.mvThemeCol_SeparatorHovered
+    SliderGrab = dpg.mvThemeCol_SliderGrab
+    SliderGrabActive = dpg.mvThemeCol_SliderGrabActive
+    Tab = dpg.mvThemeCol_Tab
+    TabActive = dpg.mvThemeCol_TabActive
+    TabHovered = dpg.mvThemeCol_TabHovered
+    TabUnfocused = dpg.mvThemeCol_TabUnfocused
+    TabUnfocusedActive = dpg.mvThemeCol_TabUnfocusedActive
+    TableBorderLight = dpg.mvThemeCol_TableBorderLight
+    TableBorderStrong = dpg.mvThemeCol_TableBorderStrong
+    TableHeaderBg = dpg.mvThemeCol_TableHeaderBg
+    TableRowBg = dpg.mvThemeCol_TableRowBg
+    TableRowBgAlt = dpg.mvThemeCol_TableRowBgAlt
+    Text = dpg.mvThemeCol_Text
+    TextDisabled = dpg.mvThemeCol_TextDisabled
+    TextSelectedBg = dpg.mvThemeCol_TextSelectedBg
+    TitleBg = dpg.mvThemeCol_TitleBg
+    TitleBgActive = dpg.mvThemeCol_TitleBgActive
+    TitleBgCollapsed = dpg.mvThemeCol_TitleBgCollapsed
+    WindowBg = dpg.mvThemeCol_WindowBg
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_ThemeCol"
+
+    @property
+    def dpg_id(self) -> int:
+        return self.value
+
+
+class Tool(m.FrozenEnum, enum.Enum):
+
+    DEFAULT = 0
+    About = dpg.mvTool_About
+    Debug = dpg.mvTool_Debug
+    Doc = dpg.mvTool_Doc
+    Font = dpg.mvTool_Font
+    ItemRegistry = dpg.mvTool_ItemRegistry
+    Metrics = dpg.mvTool_Metrics
+    Style = dpg.mvTool_Style
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"!gui_Tool"
 
     @property
     def dpg_id(self) -> int:
@@ -193,7 +713,7 @@ class Column(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_table_column(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -255,7 +775,7 @@ class Row(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_table_row(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -308,7 +828,8 @@ class BTable(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -325,7 +846,7 @@ class BTable(Widget):
     inner_width: int = 0
 
     # ...
-    policy: TableSizingPolicy = None
+    policy: TableSizing = None
 
     # ...
     freeze_rows: int = 0
@@ -422,7 +943,7 @@ class BTable(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_table(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -554,7 +1075,7 @@ class TabButton(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_tab_button(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -672,7 +1193,8 @@ class TabBar(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -695,7 +1217,7 @@ class TabBar(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_tab_bar(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -835,7 +1357,7 @@ class Tab(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_tab(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -943,7 +1465,8 @@ class Button(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -967,7 +1490,7 @@ class Button(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_button(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -1102,7 +1625,8 @@ class Combo(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -1132,7 +1656,7 @@ class Combo(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_combo(
             **self.internal.dpg_kwargs,
             items=self.items,
@@ -1249,7 +1773,7 @@ class InSameLine(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_same_line(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -1290,13 +1814,14 @@ class Separator(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     @property
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_separator(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -1354,7 +1879,8 @@ class Child(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -1393,7 +1919,7 @@ class Child(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_child(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -1462,7 +1988,7 @@ class Child(Widget):
 class Window(Widget):
     """
     Refer:
-    >>> dpg.add_window
+    >>> dpg.window
 
     Creates a new window for following items to be added to.
     """
@@ -1491,7 +2017,8 @@ class Window(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Delays searching container for specified items until the end of the
     # app. Possible optimization when a container has many children that are
@@ -1499,10 +2026,12 @@ class Window(Widget):
     delay_search: bool = False
 
     # Minimum window size.
-    min_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    min_size: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Maximum window size.
-    max_size: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    max_size: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Shows or hides the menubar.
     menubar: bool = False
@@ -1562,9 +2091,9 @@ class Window(Widget):
 
     @property
     def is_container(self) -> bool:
-        return False
+        return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_window(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -1652,7 +2181,8 @@ class Text(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -1679,7 +2209,7 @@ class Text(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_text(
             **self.internal.dpg_kwargs,
             default_value=self.default_value,
@@ -1695,7 +2225,7 @@ class Text(Widget):
             track_offset=self.track_offset,
             wrap=self.wrap,
             bullet=self.bullet,
-            color=self.color.dpg_value,
+            color=self.color.value,
             show_label=self.show_label,
         )
         
@@ -1740,7 +2270,8 @@ class CollapsingHeader(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -1779,7 +2310,7 @@ class CollapsingHeader(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_collapsing_header(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -1884,7 +2415,8 @@ class Group(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -1910,7 +2442,7 @@ class Group(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_group(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -2015,7 +2547,7 @@ class Legend(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_legend(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -2129,7 +2661,7 @@ class XAxis(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
             axis=dpg.mvXAxis,
             **self.internal.dpg_kwargs,
@@ -2249,7 +2781,7 @@ class YAxis(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
             axis=dpg.mvYAxis,
             **self.internal.dpg_kwargs,
@@ -2352,7 +2884,8 @@ class SubPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -2369,10 +2902,12 @@ class SubPlot(Widget):
     track_offset: float = 0.5
 
     # ...
-    row_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(default_factory=list)
+    row_ratios: t.Union[t.List[float], t.Tuple[float]] = \
+        dataclasses.field(default_factory=list)
 
     # ...
-    column_ratios: t.Union[t.List[float], t.Tuple[float]] = dataclasses.field(default_factory=list)
+    column_ratios: t.Union[t.List[float], t.Tuple[float]] = \
+        dataclasses.field(default_factory=list)
 
     # ...
     no_title: bool = False
@@ -2408,7 +2943,7 @@ class SubPlot(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_subplots(
             **self.internal.dpg_kwargs,
             rows=self.rows,
@@ -2536,7 +3071,7 @@ class SimplePlot(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_simple_plot(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -2647,7 +3182,8 @@ class BPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -2734,7 +3270,7 @@ class BPlot(Widget):
     def is_container(self) -> bool:
         return True
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -2883,7 +3419,8 @@ class InputIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -2922,7 +3459,7 @@ class InputIntX(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_input_intx(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3057,7 +3594,8 @@ class InputInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -3103,7 +3641,7 @@ class InputInt(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_input_int(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3236,7 +3774,8 @@ class ProgressBar(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -3257,7 +3796,7 @@ class ProgressBar(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_progress_bar(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3364,7 +3903,8 @@ class CheckBox(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -3382,7 +3922,7 @@ class CheckBox(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_checkbox(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3497,7 +4037,8 @@ class ColorMapScale(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # mvPlotColormap_* constants or mvColorMap uuid
     colormap: t.Union[int, str] = 0
@@ -3514,7 +4055,7 @@ class ColorMapScale(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_colormap_scale(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3581,7 +4122,7 @@ class DragLine(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_drag_line(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3591,7 +4132,7 @@ class DragLine(Widget):
             callback=self.callback_fn,
             show=self.show,
             default_value=self.default_value,
-            color=self.color.dpg_value,
+            color=self.color.value,
             thickness=self.thickness,
             show_label=self.show_label,
             vertical=self.vertical,
@@ -3662,7 +4203,7 @@ class DragPoint(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_drag_point(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3672,7 +4213,7 @@ class DragPoint(Widget):
             callback=self.callback_fn,
             show=self.show,
             default_value=self.default_value,
-            color=self.color.dpg_value,
+            color=self.color.value,
             thickness=self.thickness,
             show_label=self.show_label,
         )
@@ -3753,7 +4294,8 @@ class SliderInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -3791,7 +4333,7 @@ class SliderInt(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_int(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -3927,7 +4469,8 @@ class SliderIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -3965,7 +4508,7 @@ class SliderIntX(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_intx(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -4105,7 +4648,8 @@ class SliderFloat(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -4143,7 +4687,7 @@ class SliderFloat(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_float(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -4281,7 +4825,8 @@ class SliderFloatX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -4319,7 +4864,7 @@ class SliderFloatX(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_floatx(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -4454,7 +4999,8 @@ class Slider3D(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = dataclasses.field(default_factory=list)
+    pos: t.Union[t.List[int], t.Tuple[int]] = \
+        dataclasses.field(default_factory=list)
 
     # Used by filter widget.
     filter_key: str = ''
@@ -4493,7 +5039,7 @@ class Slider3D(Widget):
     def is_container(self) -> bool:
         return False
 
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
         _ret = dpg.add_3d_slider(
             **self.internal.dpg_kwargs,
             label=self.label,
@@ -4577,3 +5123,176 @@ class Slider3D(Widget):
             return self.drop_callback.fn(
                 sender=self, app_data=app_data, user_data=user_data
             )
+
+
+@dataclasses.dataclass(frozen=True)
+class ToolTip(Widget):
+    """
+    Refer:
+    >>> dpg.tooltip
+
+    Adds an advanced tool tip for an item. This command must come
+    immediately after the item the tip is for.
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # Attempt to render widget.
+    show: bool = True
+
+    @property
+    def is_container(self) -> bool:
+        return True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = dpg.add_tooltip(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass(frozen=True)
+class Theme(Widget):
+    """
+    Refer:
+    >>> dpg.theme
+
+    Undocumented function
+    """
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # ...
+    default_theme: bool = False
+
+    @property
+    def is_container(self) -> bool:
+        return True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = dpg.add_theme(
+            **self.internal.dpg_kwargs,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            default_theme=self.default_theme,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass(frozen=True)
+class ThemeColor(Widget):
+    """
+    Refer:
+    >>> dpg.add_theme_color
+
+    Undocumented function
+    """
+
+    # ...
+    target: ThemeCol = ThemeCol.DEFAULT
+
+    # ...
+    value: Color = Color.BLACK
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # Options include mvThemeCat_Core, mvThemeCat_Plots, mvThemeCat_Nodes.
+    category: ThemeCat = ThemeCat.DEFAULT
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = dpg.add_theme_color(
+            **self.internal.dpg_kwargs,
+            target=self.target.value,
+            value=self.value.value,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            category=self.category.value,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass(frozen=True)
+class ThemeStyle(Widget):
+    """
+    Refer:
+    >>> dpg.add_theme_style
+
+    Undocumented function
+    """
+
+    # ...
+    target: ThemeCol = ThemeCol.DEFAULT
+
+    # ...
+    x: float = 1.0
+
+    # ...
+    y: float = -1.0
+
+    # Overrides 'name' as label.
+    label: str = None
+
+    # User data for callbacks.
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # Use generated internal label instead of user specified (appends ###
+    # uuid).
+    use_internal_label: bool = True
+
+    # Options include mvThemeCat_Core, mvThemeCat_Plots, mvThemeCat_Nodes.
+    category: ThemeCat = ThemeCat.DEFAULT
+
+    @property
+    def is_container(self) -> bool:
+        return False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = dpg.add_theme_style(
+            **self.internal.dpg_kwargs,
+            target=self.target.value,
+            x=self.x,
+            y=self.y,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            category=self.category.value,
+        )
+        
+        return _ret

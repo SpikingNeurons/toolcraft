@@ -172,7 +172,7 @@ class ButtonPlot(gui.CollapsingHeader):
         _table = gui.Table(
             header_row=False,
             resizable=True,
-            policy=gui.TableSizingPolicy.StretchSame,
+            policy=gui.TableSizing.StretchSame,
             borders_innerH=True,
             borders_outerH=True,
             borders_innerV=True,
@@ -225,12 +225,16 @@ def basic_dashboard():
 
 
 def demo():
+    """
+    Refer
+    >>> from dearpygui import demo
+    """
     gui.demo.show_demo()
     dpg.start_dearpygui()
 
 
 def main():
-    # basic_dashboard()
+    basic_dashboard()
     demo()
 
 

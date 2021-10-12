@@ -18,20 +18,24 @@ def get_methods_related_to_plot():
         if _name in [
             'plot', 'subplots', 'add_plot',
             'add_plot_axis', 'add_plot_legend', 'add_simple_plot',
-            'add_subplots',
+            'add_subplots', 'deprecated',
         ]:
             continue
 
         if _method.__doc__ is None:
             if _name in ['mutex', 'popup']:
                 continue
-            raise Exception(f"no doc for {_name}")
+            raise Exception(f"no doc for `{_name}`")
 
         if _method.__doc__.find("plot") == -1:
             continue
 
+        # skip is handled by dpg_widget_generator
+        if _name in ['plot_axis']:
+            continue
+
         if '__wrapped__' in dir(_method):
-            raise Exception(f"method {_name} has as decorator")
+            raise Exception(f"method `{_name}` has a decorator")
 
         if 'parent' not in inspect.signature(_method).parameters.keys():
             continue
@@ -92,7 +96,7 @@ for _method in get_methods_related_to_plot():
         "\t\t\t  ...",
         "",
         "\t\tReturns:",
-        "\t\t\tint",
+        "\t\t\tt.Union[int, str]",
         ""
     ]
 
@@ -136,6 +140,8 @@ for _method in get_methods_related_to_plot():
                 _parm_str += f" = '{_param_value}',"
             else:
                 _parm_str += f" = {_param_value},"
+        if _param_name == 'kwargs':
+            _parm_str = _parm_str.replace("kwargs", "# kwargs")
 
         # for _s in textwrap.wrap(_docs_dict[_param_name], 70):
         #     _lines.append(f"\t# {_s}")
@@ -144,7 +150,7 @@ for _method in get_methods_related_to_plot():
     # method end
     _lines += [
         "\t\ty_axis_dim: int = 1,",
-        "\t) -> int:",
+        "\t) -> t.Union[int, str]:",
         '\t\t"""',
         "\t\tRefer:",
         f"\t\t>>> dpg.{_method.__name__}",
@@ -162,6 +168,8 @@ for _method in get_methods_related_to_plot():
         if _param in _callback_params:
             _assign_str = f"\t\t\t{_param}=None " \
                           f"if {_param} is None else {_param}.fn,"
+        if _param == 'kwargs':
+            _assign_str = _assign_str.replace("kwargs=kwargs", "# kwargs=kwargs")
         _kwargs.append(_assign_str)
     _lines += [
         f"\t\t_y_axis = self.get_y_axis(axis_dim=y_axis_dim)",

@@ -248,7 +248,7 @@ class Plot(BPlot):
         fill: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_area_series
@@ -282,9 +282,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_area_series(
@@ -316,7 +317,7 @@ class Plot(BPlot):
         weight: float = 1.0,
         horizontal: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_bar_series
@@ -350,9 +351,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_bar_series(
@@ -389,7 +391,7 @@ class Plot(BPlot):
         weight: int = 0.25,
         tooltip: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_candle_series
@@ -433,9 +435,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_candle_series(
@@ -474,7 +477,7 @@ class Plot(BPlot):
         show_label: bool = True,
         vertical: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_drag_line
@@ -512,9 +515,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_drag_line(
@@ -549,7 +553,7 @@ class Plot(BPlot):
         thickness: float = 1.0,
         show_label: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_drag_point
@@ -585,9 +589,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_drag_point(
@@ -622,7 +627,7 @@ class Plot(BPlot):
         contribute_to_bounds: bool = True,
         horizontal: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_error_series
@@ -660,9 +665,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_error_series(
@@ -701,7 +707,7 @@ class Plot(BPlot):
         format: str = '%0.1f',
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_heat_series
@@ -748,9 +754,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_heat_series(
@@ -792,7 +799,7 @@ class Plot(BPlot):
         outliers: bool = True,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_histogram_series
@@ -836,9 +843,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_histogram_series(
@@ -873,7 +881,7 @@ class Plot(BPlot):
         show: bool = True,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_hline_series
@@ -903,9 +911,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_hline_series(
@@ -937,7 +946,7 @@ class Plot(BPlot):
         uv_max: t.Union[t.List[float], t.Tuple[float]] = (1.0, 1.0),
         tint_color: t.Union[t.List[int], t.Tuple[int]] = (255, 255, 255, 255),
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_image_series
@@ -975,9 +984,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_image_series(
@@ -1009,7 +1019,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_line_series
@@ -1039,9 +1049,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_line_series(
@@ -1075,7 +1086,7 @@ class Plot(BPlot):
         angle: float = 90.0,
         normalize: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_pie_series
@@ -1117,9 +1128,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_pie_series(
@@ -1155,7 +1167,7 @@ class Plot(BPlot):
         color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         clamped: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_plot_annotation
@@ -1189,9 +1201,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_plot_annotation(
@@ -1221,7 +1234,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_scatter_series
@@ -1251,9 +1264,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_scatter_series(
@@ -1282,7 +1296,7 @@ class Plot(BPlot):
         show: bool = True,
         y2: t.Any = [],
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_shade_series
@@ -1314,9 +1328,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_shade_series(
@@ -1345,7 +1360,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_stair_series
@@ -1375,9 +1390,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_stair_series(
@@ -1406,7 +1422,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_stem_series
@@ -1439,9 +1455,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_stem_series(
@@ -1473,7 +1490,7 @@ class Plot(BPlot):
         y_offset: int = Ellipsis,
         vertical: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_text_point
@@ -1509,9 +1526,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_text_point(
@@ -1541,7 +1559,7 @@ class Plot(BPlot):
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_vline_series
@@ -1569,9 +1587,10 @@ class Plot(BPlot):
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
 
         _dpg_id = dpg.add_vline_series(

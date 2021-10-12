@@ -20,7 +20,7 @@ def simple_split_window(
     # noinspection PyArgumentList
     _table = widget.Table(
         header_row=False,
-        resizable=True, policy=widget.TableSizingPolicy.StretchSame,
+        resizable=True, policy=widget.TableSizing.StretchSame,
         borders_innerH=False, borders_outerH=True,
         borders_innerV=True, borders_outerV=True,
         rows=1, columns=2,

@@ -24,7 +24,7 @@ class ___:
         fill: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_area_series
@@ -58,9 +58,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_area_series(
@@ -92,7 +93,7 @@ class ___:
         weight: float = 1.0,
         horizontal: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_bar_series
@@ -126,9 +127,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_bar_series(
@@ -165,7 +167,7 @@ class ___:
         weight: int = 0.25,
         tooltip: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_candle_series
@@ -209,9 +211,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_candle_series(
@@ -250,7 +253,7 @@ class ___:
         show_label: bool = True,
         vertical: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_drag_line
@@ -288,9 +291,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_drag_line(
@@ -325,7 +329,7 @@ class ___:
         thickness: float = 1.0,
         show_label: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_drag_point
@@ -361,9 +365,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_drag_point(
@@ -398,7 +403,7 @@ class ___:
         contribute_to_bounds: bool = True,
         horizontal: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_error_series
@@ -436,9 +441,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_error_series(
@@ -477,7 +483,7 @@ class ___:
         format: str = '%0.1f',
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_heat_series
@@ -524,9 +530,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_heat_series(
@@ -568,7 +575,7 @@ class ___:
         outliers: bool = True,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_histogram_series
@@ -612,9 +619,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_histogram_series(
@@ -649,7 +657,7 @@ class ___:
         show: bool = True,
         contribute_to_bounds: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_hline_series
@@ -679,9 +687,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_hline_series(
@@ -713,7 +722,7 @@ class ___:
         uv_max: t.Union[t.List[float], t.Tuple[float]] = (1.0, 1.0),
         tint_color: t.Union[t.List[int], t.Tuple[int]] = (255, 255, 255, 255),
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_image_series
@@ -751,9 +760,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_image_series(
@@ -785,7 +795,7 @@ class ___:
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_line_series
@@ -815,9 +825,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_line_series(
@@ -851,7 +862,7 @@ class ___:
         angle: float = 90.0,
         normalize: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_pie_series
@@ -893,9 +904,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_pie_series(
@@ -931,7 +943,7 @@ class ___:
         color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
         clamped: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_plot_annotation
@@ -965,9 +977,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_plot_annotation(
@@ -997,7 +1010,7 @@ class ___:
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_scatter_series
@@ -1027,9 +1040,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_scatter_series(
@@ -1058,7 +1072,7 @@ class ___:
         show: bool = True,
         y2: t.Any = [],
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_shade_series
@@ -1090,9 +1104,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_shade_series(
@@ -1121,7 +1136,7 @@ class ___:
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_stair_series
@@ -1151,9 +1166,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_stair_series(
@@ -1182,7 +1198,7 @@ class ___:
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_stem_series
@@ -1215,9 +1231,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_stem_series(
@@ -1249,7 +1266,7 @@ class ___:
         y_offset: int = Ellipsis,
         vertical: bool = False,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_text_point
@@ -1285,9 +1302,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_text_point(
@@ -1317,7 +1335,7 @@ class ___:
         source: t.Optional[Widget] = None,
         show: bool = True,
         y_axis_dim: int = 1,
-    ) -> int:
+    ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_vline_series
@@ -1345,9 +1363,10 @@ class ___:
               ...
 
         Returns:
-            int
+            t.Union[int, str]
 
         """
+
         _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
         
         _dpg_id = dpg.add_vline_series(

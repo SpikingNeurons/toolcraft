@@ -1,13 +1,21 @@
 import inspect
 import pathlib
 import textwrap
+import numpy as np
 import dearpygui.dearpygui as dpg
 
 
-def gen_widget(_method, _widget_name, _color_fields):
+def gen_widget(_method, _widget_name, _enum_fields):
 
     _signature = inspect.signature(_method)
     _is_wrapped = '__wrapped__' in dir(_method)
+
+    # if method name starts with add_ check if it has wrapped counterpart in module dpg
+    if _method.__name__.startswith("add_"):
+        if _method.__name__.replace("add_", "") in dir(dpg):
+            raise Exception(
+                f"Looks like there is wrapped counterpart for `{_method.__name__}`"
+            )
 
     # make _docs_dict
     _main_doc = []
@@ -67,8 +75,14 @@ def gen_widget(_method, _widget_name, _color_fields):
             "t.Callable", "Callback"
         )
         _all_params_to_consider.append(_param_name)
-        for _s in textwrap.wrap(_docs_dict[_param_name], 70):
-            _lines.append(f"\t# {_s}")
+        try:
+            for _s in textwrap.wrap(_docs_dict[_param_name], 70):
+                _lines.append(f"\t# {_s}")
+        except KeyError as _ke:
+            if _param_name == 'kwargs':
+                pass
+            else:
+                raise _ke
         if _param_type.find("Callback") != -1:
             _callback_params.append(_param_name)
         _param_value = _param.default
@@ -76,16 +90,18 @@ def gen_widget(_method, _widget_name, _color_fields):
             _param_type = "t.Optional[Widget]"
             _param_value = "None"
         if _param_name == "policy":
-            _param_type = "TableSizingPolicy"
+            _param_type = "TableSizing"
             _param_value = "None"
         if _param_name == "user_data":
             _param_type = "t.Union[Widget, t.List[Widget]]"
             _param_value = "None"
         if _param_name == "on_enter":
             _param_name = "if_entered"
-        if _param_name in _color_fields.keys():
-            _param_type = "Color"
-            _param_value = _color_fields[_param_name]
+        if _param_name == "kwargs":
+            _param_name = "# kwargs"
+        if _param_name in _enum_fields.keys():
+            _param_value = _enum_fields[_param_name]
+            _param_type = _param_value.split('.')[0]
         _parm_str = f"\t{_param_name}: {_param_type}"
         # noinspection PyUnresolvedReferences,PyProtectedMember
         if _param_value != inspect._empty:
@@ -93,7 +109,7 @@ def gen_widget(_method, _widget_name, _color_fields):
                     str(_param_value).startswith('%'):
                 _parm_str += f" = '{_param_value}'"
             elif isinstance(_param_value, list):
-                _parm_str += f" = dataclasses.field(default_factory=list)"
+                _parm_str += f" = \\\n\t\tdataclasses.field(default_factory=list)"
             else:
                 _parm_str += f" = {_param_value}"
 
@@ -118,15 +134,17 @@ def gen_widget(_method, _widget_name, _color_fields):
                 f"{_param}.dpg_id,"
         if _param == "on_enter":
             _assign_str = f"\t\t\t{_param}=self.if_entered,"
-        if _param in _color_fields.keys():
-            _assign_str = f"\t\t\t{_param}=self.{_param}.dpg_value,"
+        if _param in _enum_fields.keys():
+            _assign_str = f"\t\t\t{_param}=self.{_param}.value,"
         if _param in _callback_params:
             _assign_str = f"\t\t\t{_param}=self.{_param}_fn,"
+        if _param == "kwargs":
+            _assign_str = f"\t\t\t# {_param}=self.{_param},"
         _kwargs.append(_assign_str)
 
     _lines += [
         "",
-        "\tdef build(self) -> int:",
+        "\tdef build(self) -> t.Union[int, str]:",
         f"\t\t_ret = dpg.{'add_' if _is_wrapped else ''}{_method.__name__}(",
         *_Axis_axis,
         f"\t\t\t**self.internal.dpg_kwargs,",
@@ -176,6 +194,7 @@ class {_enum_class_name}(m.FrozenEnum, enum.Enum):
 
 '''
 
+    _code += f"\tDEFAULT = 0\n"
     for _ in dir(dpg):
         if _.startswith(_dpg_prefix):
             _enum_item = _.replace(_dpg_prefix, "")
@@ -216,12 +235,28 @@ from ... import marshalling as m
 from .. import Widget, Callback, Color
 '''
     # ---------------------------------------------------- 02
-    _enum_items = [
-        ('TableSizingPolicy', 'mvTable_Sizing'),
-        ('ColorMap', 'mvPlotColormap_'),
-        ('Marker', 'mvPlotMarker_'),
-        ('Location', 'mvPlot_Location_'),
-    ]
+    # see if mv and can be enum
+    _unique_items = []
+    for _item in dir(dpg):
+        if not _item.startswith("mv"):
+            continue
+        if _item.find("_") == -1:
+            continue
+        _item = "_".join(_item.split('_')[:-1]) + "_"
+        _unique_items.append(_item)
+    # see if group
+    _unique_items, _unique_count = np.unique(_unique_items, return_counts=True)
+    _unique_items = list(_unique_items[_unique_count > 1])
+    # make enum items
+    _enum_items = []
+    for _ui in _unique_items:
+        if _ui in ['mvColorEdit_', 'mvColorEdit_input_', 'mvKey_', 'mvReservedUUID_']:
+            continue
+        if _ui == 'mvTable_':
+            _enum_items.append(('TableSizing', 'mvTable_Sizing'))
+        else:
+            _enum_items.append((_ui.replace("_", "").replace("mv", ""), _ui))
+    # create code
     _enum_code = ""
     for _enum_class_name, _dpg_prefix in _enum_items:
         _enum_code += gen_enum(_enum_class_name, _dpg_prefix)
@@ -238,12 +273,15 @@ from .. import Widget, Callback, Color
         (dpg.add_combo, "Combo", {}),
         (dpg.add_same_line, "InSameLine", {}),
         (dpg.add_separator, "Separator", {}),
+        # (dpg.child_window, "ChildWindow", {}),
         (dpg.child, "Child", {}),
-        (dpg.add_window, "Window", {}),
+        (dpg.window, "Window", {}),
         (dpg.add_text, "Text", {'color': 'Color.DEFAULT'}),
         (dpg.collapsing_header, "CollapsingHeader", {}),
         (dpg.group, "Group", {}),
         (dpg.add_plot_legend, "Legend", {}),
+        # (dpg.plot_axis, "XAxis", {}),
+        # (dpg.plot_axis, "YAxis", {}),
         (dpg.add_plot_axis, "XAxis", {}),
         (dpg.add_plot_axis, "YAxis", {}),
         (dpg.subplots, "SubPlot", {}),
@@ -261,10 +299,28 @@ from .. import Widget, Callback, Color
         (dpg.add_slider_float, "SliderFloat", {}),
         (dpg.add_slider_floatx, "SliderFloatX", {}),
         (dpg.add_3d_slider, "Slider3D", {}),
+        (dpg.tooltip, "ToolTip", {}),
+        (dpg.theme, "Theme", {}),
+        # (dpg.theme_component, "ThemeComponent", {}),
+        (
+            dpg.add_theme_color, "ThemeColor",
+            {
+                'value': 'Color.BLACK',
+                'target': 'ThemeCol.DEFAULT',
+                'category': 'ThemeCat.DEFAULT',
+            }
+         ),
+        (
+            dpg.add_theme_style, "ThemeStyle",
+            {
+                'target': 'ThemeCol.DEFAULT',
+                'category': 'ThemeCat.DEFAULT',
+            }
+        ),
     ]
     _widget_lines = []
-    for _method, _widget_name, _color_fields in _widget_items:
-        _widget_lines += gen_widget(_method, _widget_name, _color_fields)
+    for _method, _widget_name, _enum_fields in _widget_items:
+        _widget_lines += gen_widget(_method, _widget_name, _enum_fields)
     _widget_code = "\n".join(_widget_lines + [""])
 
     # ---------------------------------------------------- 04
