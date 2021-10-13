@@ -50,6 +50,14 @@ def gen_widget(_method, _widget_name, _enum_fields):
         "",
     ] + _main_doc + ['\t"""', ""]
 
+    # make sure that _enum_fields keys are valid
+    _all_param_names = [_.name for _ in _signature.parameters.values()]
+    for _enum_field_key in _enum_fields.keys():
+        if _enum_field_key not in _all_param_names:
+            raise Exception(
+                f"The key {_enum_field_key} is not one of {_all_param_names}"
+            )
+
     # make fields
     _callback_params = []
     _all_params_to_consider = []
@@ -279,7 +287,7 @@ from .. import Widget, Callback, Color
         (dpg.add_text, "Text", {'color': 'Color.DEFAULT'}),
         (dpg.collapsing_header, "CollapsingHeader", {}),
         (dpg.group, "Group", {}),
-        (dpg.add_plot_legend, "Legend", {}),
+        (dpg.add_plot_legend, "Legend", {'location': 'PlotLocation.NorthWest'}),
         # (dpg.plot_axis, "XAxis", {}),
         # (dpg.plot_axis, "YAxis", {}),
         (dpg.add_plot_axis, "XAxis", {}),

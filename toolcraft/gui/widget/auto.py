@@ -2535,7 +2535,7 @@ class Legend(Widget):
     show: bool = True
 
     # location, mvPlot_Location_*
-    location: int = 5
+    location: PlotLocation = PlotLocation.NorthWest
 
     # ...
     horizontal: bool = False
@@ -2557,7 +2557,7 @@ class Legend(Widget):
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
             show=self.show,
-            location=self.location,
+            location=self.location.value,
             horizontal=self.horizontal,
             outside=self.outside,
         )
