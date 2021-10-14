@@ -68,11 +68,15 @@ class CloseWidgetCallback(Callback):
     This callback will be added to a Button that will delete its Parent
     """
 
+    widget_to_delete: Widget
+
     @classmethod
-    def get_button_widget(cls) -> widget.Button:
+    def get_button_widget(
+        cls, widget_to_delete: Widget
+    ) -> widget.Button:
         return widget.Button(
             label="Close [X]",
-            callback=cls()
+            callback=cls(widget_to_delete)
         )
 
     def fn(
@@ -81,7 +85,8 @@ class CloseWidgetCallback(Callback):
         app_data: t.Any,
         user_data: t.Union[Widget, t.List[Widget]]
     ):
-        sender.parent.delete()
+        # sender.parent.delete()
+        self.widget_to_delete.delete()
 
 
 @dataclasses.dataclass(frozen=True)

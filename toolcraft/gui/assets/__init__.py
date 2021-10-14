@@ -1,7 +1,9 @@
 import enum
 import pathlib
+import typing as t
+
 import dearpygui.dearpygui as dpg
-from dearpygui import themes
+from dearpygui_ext import themes
 
 from ... import util
 from ... import error as e
@@ -21,10 +23,27 @@ class Font(enum.Enum):
         dpg.set_item_font(item_dpg_id, _dpg_font_id)
 
 
+_THEMES_CACHE = {}
+
+
 class Theme(enum.Enum):
-    DEFAULT = 0
-    DARK = themes.create_theme_imgui_dark()
-    LIGHT = themes.create_theme_imgui_light()
+    DARK = enum.auto()
+    LIGHT = enum.auto()
+
+    def get(self) -> t.Union[int, str]:
+        if self in _THEMES_CACHE.keys():
+            return _THEMES_CACHE[self]
+        if self is self.DARK:
+            _THEMES_CACHE[self] = themes.create_theme_imgui_dark()
+        elif self is self.LIGHT:
+            _THEMES_CACHE[self] = themes.create_theme_imgui_light()
+        else:
+            e.code.NotSupported(
+                msgs=[
+                    f"Theme {self} is not supported"
+                ]
+            )
+        return _THEMES_CACHE[self]
 
 
 

@@ -229,8 +229,21 @@ def demo():
     Refer
     >>> from dearpygui import demo
     """
+
+    dpg.create_context()
+    dpg.create_viewport()
+    dpg.setup_dearpygui()
+
     gui.demo.show_demo()
+
+    # with dpg.window(label="Dear PyGui Demo", width=800, height=800,
+    #                 pos=(100, 100), tag="__demo_id"):
+    #     with dpg.collapsing_header(label="some label", default_open=True,):
+    #         dpg.add_text(default_value="Some text")
+
+    dpg.show_viewport()
     dpg.start_dearpygui()
+    dpg.destroy_context()
 
 
 def main():

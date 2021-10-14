@@ -531,7 +531,7 @@ class Widget(m.HashableClass, abc.ABC):
         return self.guid, _ret
 
     def set_theme(self, theme: assets.Theme):
-        dpg.set_item_theme(item=self.dpg_id, theme=theme.value)
+        dpg.set_item_theme(item=self.dpg_id, theme=theme.get())
 
     def set_widget_configuration(self, **kwargs):
         # if any value is widget then get its dpg_id
@@ -668,8 +668,17 @@ class Dashboard(Widget):
             ]
         )
 
+    def build_pre_runner(self):
+        # setup dpg
+        dpg.create_context()
+        dpg.create_viewport()
+        dpg.setup_dearpygui()
+
+        # call super
+        return super().build_pre_runner()
+
     # noinspection PyMethodMayBeStatic,PyMethodOverriding
-    def build(self) -> int:
+    def build(self) -> t.Union[int, str]:
 
         # -------------------------------------------------- 01
         # add window
@@ -685,7 +694,7 @@ class Dashboard(Widget):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.set_item_theme(item=_ret, theme=assets.Theme.DARK.value)
+        dpg.bind_item_theme(item=_ret, theme=assets.Theme.DARK.get())
 
         # -------------------------------------------------- 03
         # return
@@ -702,9 +711,10 @@ class Dashboard(Widget):
                 ]
             )
 
-        # setup and start
-        dpg.setup_viewport()
+        # dpg related
+        dpg.show_viewport()
         dpg.start_dearpygui()
+        dpg.destroy_context()
 
     def on_close(self, sender, data):
         self.delete()

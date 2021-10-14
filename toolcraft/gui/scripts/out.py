@@ -13,16 +13,18 @@ class ___:
 
     def add_area_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        fill: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
+        fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
         contribute_to_bounds: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -39,10 +41,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -71,27 +76,31 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
             fill=fill,
             contribute_to_bounds=contribute_to_bounds,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_bar_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
         weight: float = 1.0,
         horizontal: bool = False,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -108,10 +117,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -140,32 +152,36 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
             weight=weight,
             horizontal=horizontal,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_candle_series(
         self, *,
-        dates: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        opens: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        closes: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        lows: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        highs: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        dates: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        opens: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        closes: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        lows: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        highs: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        bull_color: t.Union[t.List[int], t.Tuple[int]] = (0, 255, 113, 255),
-        bear_color: t.Union[t.List[int], t.Tuple[int]] = (218, 13, 79, 255),
+        bull_color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 255, 113, 255),
+        bear_color: t.Union[t.List[int], t.Tuple[int, ...]] = (218, 13, 79, 255),
         weight: int = 0.25,
         tooltip: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -188,10 +204,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -227,6 +246,7 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
@@ -234,6 +254,7 @@ class ___:
             bear_color=bear_color,
             weight=weight,
             tooltip=tooltip,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
@@ -243,15 +264,17 @@ class ___:
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         callback: t.Optional[Callback] = None,
         show: bool = True,
         default_value: t.Any = 0.0,
-        color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
+        color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
         thickness: float = 1.0,
         show_label: bool = True,
         vertical: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -264,10 +287,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -302,6 +328,7 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             callback=None if callback is None else callback.fn,
@@ -311,6 +338,7 @@ class ___:
             thickness=thickness,
             show_label=show_label,
             vertical=vertical,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
@@ -320,14 +348,16 @@ class ___:
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         callback: t.Optional[Callback] = None,
         show: bool = True,
         default_value: t.Any = (0.0, 0.0),
-        color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
+        color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
         thickness: float = 1.0,
         show_label: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -340,10 +370,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -376,6 +409,7 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             callback=None if callback is None else callback.fn,
@@ -384,24 +418,27 @@ class ___:
             color=color,
             thickness=thickness,
             show_label=show_label,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_error_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        negative: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        positive: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        negative: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        positive: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
         contribute_to_bounds: bool = True,
         horizontal: bool = False,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -422,10 +459,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -456,23 +496,26 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
             contribute_to_bounds=contribute_to_bounds,
             horizontal=horizontal,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_heat_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         rows: int,
         cols: int,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
@@ -482,14 +525,14 @@ class ___:
         bounds_max: t.Any = (1.0, 1.0),
         format: str = '%0.1f',
         contribute_to_bounds: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_heat_series
 
-        Adds a heat series to a plot. Typically a color scale widget is also
-        added to show the legend.
+        Adds a heat series to a plot.
 
         Args:
             x:
@@ -501,10 +544,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -544,6 +590,7 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
@@ -553,16 +600,18 @@ class ___:
             bounds_max=bounds_max,
             format=format,
             contribute_to_bounds=contribute_to_bounds,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_histogram_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
@@ -574,6 +623,7 @@ class ___:
         density: bool = False,
         outliers: bool = True,
         contribute_to_bounds: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -588,10 +638,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -631,6 +684,7 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
@@ -642,27 +696,29 @@ class ___:
             density=density,
             outliers=outliers,
             contribute_to_bounds=contribute_to_bounds,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_hline_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        contribute_to_bounds: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_hline_series
 
-        Adds a infinite horizontal line series to a plot.
+        Adds an infinite horizontal line series to a plot.
 
         Args:
             x:
@@ -670,10 +726,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -681,8 +740,6 @@ class ___:
               Overrides 'id' as value storage key.
             show:
               Attempt to render widget.
-            contribute_to_bounds:
-              ...
             y_axis_dim:
               ...
 
@@ -699,38 +756,41 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
-            contribute_to_bounds=contribute_to_bounds,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_image_series(
         self, *,
-        texture_id: t.Union[int, str],
-        bounds_min: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        bounds_max: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        texture_tag: t.Union[int, str],
+        bounds_min: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        bounds_max: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        uv_min: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0),
-        uv_max: t.Union[t.List[float], t.Tuple[float]] = (1.0, 1.0),
-        tint_color: t.Union[t.List[int], t.Tuple[int]] = (255, 255, 255, 255),
+        uv_min: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0),
+        uv_max: t.Union[t.List[float], t.Tuple[float, ...]] = (1.0, 1.0),
+        tint_color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255),
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_image_series
 
-        Adds a image series to a plot.
+        Adds an image series to a plot.
 
         Args:
-            texture_id:
+            texture_tag:
               ...
             bounds_min:
               ...
@@ -739,10 +799,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -768,32 +831,36 @@ class ___:
         
         _dpg_id = dpg.add_image_series(
             parent=_y_axis.dpg_id,
-            texture_id=texture_id,
+            texture_tag=texture_tag,
             bounds_min=bounds_min,
             bounds_max=bounds_max,
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
             uv_min=uv_min,
             uv_max=uv_max,
             tint_color=tint_color,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_line_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -810,10 +877,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -838,9 +908,11 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
@@ -850,24 +922,26 @@ class ___:
         x: float,
         y: float,
         radius: float,
-        values: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        labels: t.Union[t.List[str], t.Tuple[str]],
+        values: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        labels: t.Union[t.List[str], t.Tuple[str, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
         format: str = '%0.2f',
         angle: float = 90.0,
         normalize: bool = False,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_pie_series
 
-        Adds a pie series to a plot.
+        Adds an pie series to a plot.
 
         Args:
             x:
@@ -883,10 +957,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -920,12 +997,14 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
             format=format,
             angle=angle,
             normalize=normalize,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
@@ -935,13 +1014,15 @@ class ___:
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
         default_value: t.Any = (0.0, 0.0),
-        offset: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0),
-        color: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, -255),
+        offset: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0),
+        color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
         clamped: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -954,10 +1035,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -988,6 +1072,7 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
@@ -995,20 +1080,23 @@ class ___:
             offset=offset,
             color=color,
             clamped=clamped,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_scatter_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -1025,10 +1113,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1053,24 +1144,83 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
+            # kwargs=kwargs,
+        )
+        
+        return _dpg_id
+        
+    def add_series_value(
+        self, *,
+        label: str = None,
+        user_data: t.Any = None,
+        use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
+        source: t.Optional[Widget] = None,
+        default_value: t.Any = (),
+        # kwargs: inspect._empty,
+        y_axis_dim: int = 1,
+    ) -> t.Union[int, str]:
+        """
+        Refer:
+        >>> dpg.add_series_value
+
+        Adds a plot series value.
+
+        Args:
+            label:
+              Overrides 'name' as label.
+            user_data:
+              User data for callbacks
+            use_internal_label:
+              Use generated internal label instead of user specified
+              (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
+            source:
+              Overrides 'id' as value storage key.
+            default_value:
+              ...
+            y_axis_dim:
+              ...
+
+        Returns:
+            t.Union[int, str]
+
+        """
+
+        _y_axis = self.get_y_axis(axis_dim=y_axis_dim)
+        
+        _dpg_id = dpg.add_series_value(
+            parent=_y_axis.dpg_id,
+            label=label,
+            user_data=user_data,
+            use_internal_label=use_internal_label,
+            tag=tag,
+            source=0 if source is None else source.dpg_id,
+            default_value=default_value,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_shade_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y1: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y1: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
         y2: t.Any = [],
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -1087,10 +1237,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1117,24 +1270,28 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
             y2=y2,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_stair_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -1151,10 +1308,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1179,24 +1339,28 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_stem_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
-        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
+        y: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         indent: int = -1,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
@@ -1213,10 +1377,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             indent:
               Offsets the widget to the right the specified number
               multiplied by the indent style.
@@ -1244,10 +1411,12 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             indent=indent,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
@@ -1259,19 +1428,21 @@ class ___:
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
         x_offset: int = Ellipsis,
         y_offset: int = Ellipsis,
         vertical: bool = False,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_text_point
 
-        Adds a labels series to a plot.
+        Adds a label series to a plot.
 
         Args:
             x:
@@ -1281,10 +1452,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1315,32 +1489,36 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
             x_offset=x_offset,
             y_offset=y_offset,
             vertical=vertical,
+            # kwargs=kwargs,
         )
         
         return _dpg_id
         
     def add_vline_series(
         self, *,
-        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float]],
+        x: t.Union[PLOT_DATA_TYPE, t.Tuple[float, ...]],
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
+        tag: t.Union[int, str] = 0,
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
+        # kwargs: inspect._empty,
         y_axis_dim: int = 1,
     ) -> t.Union[int, str]:
         """
         Refer:
         >>> dpg.add_vline_series
 
-        Adds a infinite vertical line series to a plot.
+        Adds an infinite vertical line series to a plot.
 
         Args:
             x:
@@ -1348,10 +1526,13 @@ class ___:
             label:
               Overrides 'name' as label.
             user_data:
-              User data for callbacks.
+              User data for callbacks
             use_internal_label:
               Use generated internal label instead of user specified
               (appends ### uuid).
+            tag:
+              Unique id used to programmatically refer to the item.If
+              label is unused this will be the label.
             before:
               This item will be displayed before the specified item in the
               parent.
@@ -1375,9 +1556,11 @@ class ___:
             label=label,
             user_data=user_data,
             use_internal_label=use_internal_label,
+            tag=tag,
             before=0 if before is None else before.dpg_id,
             source=0 if source is None else source.dpg_id,
             show=show,
+            # kwargs=kwargs,
         )
         
         return _dpg_id

@@ -1,5 +1,4 @@
 import typing as t
-import dataclasses
 
 from . import __base__
 from . import widget
@@ -33,26 +32,6 @@ def simple_split_window(
     )
 
     return _dash, _button_cell, _display_cell
-
-
-def add_widgets_in_line(
-    guid: str,
-    receiver: __base__.Widget,
-    widgets: t.List[__base__.Widget]
-):
-    receiver.add_child(
-        guid=f"{guid}_{0}",
-        widget=widgets[0],
-    )
-    for i, w in enumerate(widgets[1:]):
-        receiver.add_child(
-            guid=f"{guid}_{i}_il",
-            widget=widget.InSameLine()
-        )
-        receiver.add_child(
-            guid=f"{guid}_{i+1}",
-            widget=w,
-        )
 
 
 def tab_bar_from_widget_dict(
@@ -143,11 +122,13 @@ def button_bar_from_hashable_callables(
     # make buttons and add make them plot to _button_receiver
     _button_receiver = widget.Group()
     # make button bar
-    _buttons = []
+    _buttons_bar = widget.Group(horizontal=True)
     # add close button
     if close_button:
-        _buttons.append(
-            callback.CloseWidgetCallback.get_button_widget()
+        _buttons_bar.add_child(
+            guid="close",
+            widget=callback.CloseWidgetCallback.get_button_widget(
+                widget_to_delete=_main_ui),
         )
     # add info button
     if info_button:
@@ -162,9 +143,13 @@ def button_bar_from_hashable_callables(
             receiver=_button_receiver,
             allow_refresh=True,
         )
-        _buttons.append(_b)
+        _buttons_bar.add_child(
+            guid=_button_label, widget=_b,
+        )
     # add buttons to _main_ui
-    add_widgets_in_line(guid="bb_line1", receiver=_main_ui, widgets=_buttons)
+    _main_ui.add_child(
+        guid="bb", widget=_buttons_bar,
+    )
     # add separator
     # _main_ui.add_child(
     #     guid='bb_sep1', widget=widget.Separator()
@@ -181,6 +166,3 @@ def button_bar_from_hashable_callables(
     # ----------------------------------------------------- 04
     # return
     return _main_ui
-
-
-

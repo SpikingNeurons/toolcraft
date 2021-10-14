@@ -135,7 +135,7 @@ def gen_widget(_method, _widget_name, _enum_fields):
     _kwargs = []
     for _param in _all_params_to_consider:
         _assign_str = f"\t\t\t{_param}=self.{_param},"
-        if _param in ["source", "policy"]:
+        if _param in ["source", ]:
             _assign_str = \
                 f"\t\t\t" \
                 f"{_param}=0 if self.{_param} is None else self." \
@@ -214,10 +214,6 @@ class {_enum_class_name}(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_{_enum_class_name}"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 '''
 
     _code = _code.replace("\t", "    ")
@@ -273,25 +269,21 @@ from .. import Widget, Callback, Color
     _widget_items = [
         (dpg.add_table_column, "Column", {}),
         (dpg.table_row, "Row", {}),
-        (dpg.table, "BTable", {}),
+        (dpg.table, "BTable", {'policy': 'TableSizing.DEFAULT'}),
         (dpg.add_tab_button, "TabButton", {}),
         (dpg.tab_bar, "TabBar", {}),
         (dpg.tab, "Tab", {}),
         (dpg.add_button, "Button", {}),
         (dpg.add_combo, "Combo", {}),
-        (dpg.add_same_line, "InSameLine", {}),
         (dpg.add_separator, "Separator", {}),
-        # (dpg.child_window, "ChildWindow", {}),
-        (dpg.child, "Child", {}),
+        (dpg.child_window, "ChildWindow", {}),
         (dpg.window, "Window", {}),
         (dpg.add_text, "Text", {'color': 'Color.DEFAULT'}),
         (dpg.collapsing_header, "CollapsingHeader", {}),
         (dpg.group, "Group", {}),
         (dpg.add_plot_legend, "Legend", {'location': 'PlotLocation.NorthWest'}),
-        # (dpg.plot_axis, "XAxis", {}),
-        # (dpg.plot_axis, "YAxis", {}),
-        (dpg.add_plot_axis, "XAxis", {}),
-        (dpg.add_plot_axis, "YAxis", {}),
+        (dpg.plot_axis, "XAxis", {}),
+        (dpg.plot_axis, "YAxis", {}),
         (dpg.subplots, "SubPlot", {}),
         (dpg.add_simple_plot, "SimplePlot", {}),
         (dpg.plot, "BPlot", {}),

@@ -48,12 +48,13 @@ python = ">=3.8,<3.10"
 typer = "^0.4.0"
 tqdm = "^4.62.2"
 PyYAML = "^5.4.1"
-dearpygui = "^0.8.64"
+dearpygui = "^1.0.0"
 yaspin = "^2.1.0"
 numpy = "1.19.2"
 pandas = "^1.3.2"
 pyarrow = "^5.0.0"
 toml = "^0.10.2"
+dearpygui-ext = "^0.9.4"
 
 
 #[tool.poetry.group.dev]

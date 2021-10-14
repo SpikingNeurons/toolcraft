@@ -24,10 +24,6 @@ class ColorPicker(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_ColorPicker"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class ComboHeight(m.FrozenEnum, enum.Enum):
 
@@ -41,10 +37,6 @@ class ComboHeight(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_ComboHeight"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class DatePickerLevel(m.FrozenEnum, enum.Enum):
 
@@ -56,10 +48,6 @@ class DatePickerLevel(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_DatePickerLevel"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class Dir(m.FrozenEnum, enum.Enum):
@@ -74,10 +62,6 @@ class Dir(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_Dir"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class FontRangeHint(m.FrozenEnum, enum.Enum):
@@ -96,10 +80,6 @@ class FontRangeHint(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_FontRangeHint"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class FormatFloat(m.FrozenEnum, enum.Enum):
 
@@ -110,10 +90,6 @@ class FormatFloat(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_FormatFloat"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class KeyBrowser(m.FrozenEnum, enum.Enum):
@@ -131,10 +107,6 @@ class KeyBrowser(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_KeyBrowser"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class KeyLaunch(m.FrozenEnum, enum.Enum):
 
@@ -148,10 +120,6 @@ class KeyLaunch(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_KeyLaunch"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class KeyVolume(m.FrozenEnum, enum.Enum):
 
@@ -163,10 +131,6 @@ class KeyVolume(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_KeyVolume"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class MouseButton(m.FrozenEnum, enum.Enum):
@@ -181,10 +145,6 @@ class MouseButton(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_MouseButton"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class NodeCol(m.FrozenEnum, enum.Enum):
@@ -211,10 +171,6 @@ class NodeCol(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_NodeCol"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class NodeStyleVar(m.FrozenEnum, enum.Enum):
 
@@ -238,10 +194,6 @@ class NodeStyleVar(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_NodeStyleVar"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class NodeAttr(m.FrozenEnum, enum.Enum):
 
@@ -253,10 +205,6 @@ class NodeAttr(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_NodeAttr"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class NodePinShape(m.FrozenEnum, enum.Enum):
@@ -273,10 +221,6 @@ class NodePinShape(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_NodePinShape"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class PlotBin(m.FrozenEnum, enum.Enum):
 
@@ -289,10 +233,6 @@ class PlotBin(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_PlotBin"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class PlotCol(m.FrozenEnum, enum.Enum):
@@ -327,10 +267,6 @@ class PlotCol(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_PlotCol"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class PlotColormap(m.FrozenEnum, enum.Enum):
 
@@ -357,10 +293,6 @@ class PlotColormap(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_PlotColormap"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class PlotMarker(m.FrozenEnum, enum.Enum):
 
@@ -380,10 +312,6 @@ class PlotMarker(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_PlotMarker"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class PlotStyleVar(m.FrozenEnum, enum.Enum):
@@ -421,10 +349,6 @@ class PlotStyleVar(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_PlotStyleVar"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class PlotLocation(m.FrozenEnum, enum.Enum):
 
@@ -442,10 +366,6 @@ class PlotLocation(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_PlotLocation"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class StyleVar(m.FrozenEnum, enum.Enum):
@@ -480,10 +400,6 @@ class StyleVar(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_StyleVar"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class TabOrder(m.FrozenEnum, enum.Enum):
 
@@ -496,10 +412,6 @@ class TabOrder(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_TabOrder"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class TableSizing(m.FrozenEnum, enum.Enum):
@@ -514,10 +426,6 @@ class TableSizing(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_TableSizing"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class ThemeCat(m.FrozenEnum, enum.Enum):
 
@@ -529,10 +437,6 @@ class ThemeCat(m.FrozenEnum, enum.Enum):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"!gui_ThemeCat"
-
-    @property
-    def dpg_id(self) -> int:
-        return self.value
 
 
 class ThemeCol(m.FrozenEnum, enum.Enum):
@@ -598,10 +502,6 @@ class ThemeCol(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_ThemeCol"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 class Tool(m.FrozenEnum, enum.Enum):
 
@@ -618,10 +518,6 @@ class Tool(m.FrozenEnum, enum.Enum):
     def yaml_tag(cls) -> str:
         return f"!gui_Tool"
 
-    @property
-    def dpg_id(self) -> int:
-        return self.value
-
 
 @dataclasses.dataclass(frozen=True)
 class Column(Widget):
@@ -629,24 +525,31 @@ class Column(Widget):
     Refer:
     >>> dpg.add_table_column
 
-    Undocumented function
+    Adds a table column.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Width of the item.
     width: int = 0
 
     # Attempt to render widget.
     show: bool = True
+
+    # Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
 
     # ...
     init_width_or_weight: float = 0.0
@@ -709,6 +612,8 @@ class Column(Widget):
     # 0). Indentation changes _within_ the cell will still be honored.
     indent_disable: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -719,8 +624,10 @@ class Column(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             show=self.show,
+            enabled=self.enabled,
             init_width_or_weight=self.init_width_or_weight,
             default_hide=self.default_hide,
             default_sort=self.default_sort,
@@ -738,6 +645,7 @@ class Column(Widget):
             prefer_sort_descending=self.prefer_sort_descending,
             indent_enable=self.indent_enable,
             indent_disable=self.indent_disable,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -749,18 +657,22 @@ class Row(Widget):
     Refer:
     >>> dpg.table_row
 
-    Undocumented function
+    Adds a table row.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Height of the item.
     height: int = 0
@@ -770,6 +682,8 @@ class Row(Widget):
 
     # Used by filter widget.
     filter_key: str = ''
+
+    # kwargs: inspect._empty
 
     @property
     def is_container(self) -> bool:
@@ -781,9 +695,11 @@ class Row(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             height=self.height,
             show=self.show,
             filter_key=self.filter_key,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -795,18 +711,22 @@ class BTable(Widget):
     Refer:
     >>> dpg.table
 
-    Undocumented function
+    Adds a table.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -828,7 +748,7 @@ class BTable(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -842,11 +762,14 @@ class BTable(Widget):
     # show headers at the top of the columns
     header_row: bool = True
 
+    # Use clipper (rows must be same height).
+    clipper: bool = False
+
     # ...
     inner_width: int = 0
 
     # ...
-    policy: TableSizing = None
+    policy: TableSizing = TableSizing.DEFAULT
 
     # ...
     freeze_rows: int = 0
@@ -939,6 +862,8 @@ class BTable(Widget):
     # Never load/save settings in .ini file.
     no_saved_settings: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -949,6 +874,7 @@ class BTable(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -959,8 +885,9 @@ class BTable(Widget):
             filter_key=self.filter_key,
             delay_search=self.delay_search,
             header_row=self.header_row,
+            clipper=self.clipper,
             inner_width=self.inner_width,
-            policy=0 if self.policy is None else self.policy.dpg_id,
+            policy=self.policy.value,
             freeze_rows=self.freeze_rows,
             freeze_columns=self.freeze_columns,
             sort_multi=self.sort_multi,
@@ -986,6 +913,7 @@ class BTable(Widget):
             scrollX=self.scrollX,
             scrollY=self.scrollY,
             no_saved_settings=self.no_saved_settings,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -1021,12 +949,16 @@ class TabButton(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Offsets the widget to the right the specified number multiplied by the
     # indent style.
@@ -1071,6 +1003,8 @@ class TabButton(Widget):
     # Disable tooltip for the given tab.
     no_tooltip: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -1081,6 +1015,7 @@ class TabButton(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             indent=self.indent,
             payload_type=self.payload_type,
             callback=self.callback_fn,
@@ -1094,6 +1029,7 @@ class TabButton(Widget):
             leading=self.leading,
             trailing=self.trailing,
             no_tooltip=self.no_tooltip,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -1165,35 +1101,29 @@ class TabBar(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Offsets the widget to the right the specified number multiplied by the
     # indent style.
     indent: int = -1
 
-    # Sender string type must be the same as the target for the target to
-    # run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
     # Registers a callback.
     callback: Callback = None
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
 
     # Attempt to render widget.
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -1213,6 +1143,8 @@ class TabBar(Widget):
     # Allows for the user to change the order of the tabs.
     reorderable: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -1223,11 +1155,9 @@ class TabBar(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             indent=self.indent,
-            payload_type=self.payload_type,
             callback=self.callback_fn,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
             show=self.show,
             pos=self.pos,
             filter_key=self.filter_key,
@@ -1235,6 +1165,7 @@ class TabBar(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             reorderable=self.reorderable,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -1257,42 +1188,6 @@ class TabBar(Widget):
                 sender=self, app_data=app_data, user_data=user_data
             )
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
 
 @dataclasses.dataclass(frozen=True)
 class Tab(Widget):
@@ -1300,18 +1195,22 @@ class Tab(Widget):
     Refer:
     >>> dpg.tab
 
-    Adds a tab to a tab bar. Must be closed with thes end command.
+    Adds a tab to a tab bar.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Offsets the widget to the right the specified number multiplied by the
     # indent style.
@@ -1320,9 +1219,6 @@ class Tab(Widget):
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
 
     # Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -1353,6 +1249,8 @@ class Tab(Widget):
     # set using a constant
     order_mode: bool = 0
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -1363,9 +1261,9 @@ class Tab(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             indent=self.indent,
             payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
             show=self.show,
             filter_key=self.filter_key,
@@ -1375,27 +1273,10 @@ class Tab(Widget):
             closable=self.closable,
             no_tooltip=self.no_tooltip,
             order_mode=self.order_mode,
+            # kwargs=self.kwargs,
         )
         
         return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
 
     def drop_callback_fn(
         self, 
@@ -1428,12 +1309,16 @@ class Button(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -1465,7 +1350,7 @@ class Button(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -1486,6 +1371,8 @@ class Button(Widget):
     # A cardinal direction for arrow.
     direction: int = 0
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -1496,6 +1383,7 @@ class Button(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -1512,6 +1400,7 @@ class Button(Widget):
             small=self.small,
             arrow=self.arrow,
             direction=self.direction,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -1583,17 +1472,21 @@ class Combo(Widget):
 
     # A tuple of items to be shown in the drop down window. Can consist of
     # any combination of types.
-    items: t.Union[t.List[str], t.Tuple[str]] = ()
+    items: t.Union[t.List[str], t.Tuple[str, ...]] = ()
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -1625,7 +1518,7 @@ class Combo(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -1652,6 +1545,8 @@ class Combo(Widget):
     # mvComboHeight_Small, _Regular, _Large, _Largest
     height_mode: int = 1
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -1663,6 +1558,7 @@ class Combo(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
@@ -1681,6 +1577,7 @@ class Combo(Widget):
             no_arrow_button=self.no_arrow_button,
             no_preview=self.no_preview,
             height_mode=self.height_mode,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -1741,70 +1638,27 @@ class Combo(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class InSameLine(Widget):
-    """
-    Refer:
-    >>> dpg.add_same_line
-
-    Places a widget on the same line as the previous widget. Can also be
-    used for horizontal spacing.
-    """
-
-    # Overrides 'name' as label.
-    label: str = None
-
-    # User data for callbacks.
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # Use generated internal label instead of user specified (appends ###
-    # uuid).
-    use_internal_label: bool = True
-
-    # Attempt to render widget.
-    show: bool = True
-
-    # Offset from containing window.
-    xoffset: float = 0.0
-
-    # Offset from previous widget.
-    spacing: float = -1.0
-
-    @property
-    def is_container(self) -> bool:
-        return False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = dpg.add_same_line(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-            xoffset=self.xoffset,
-            spacing=self.spacing,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass(frozen=True)
 class Separator(Widget):
     """
     Refer:
     >>> dpg.add_separator
 
-    Adds a horizontal line.
+    Adds a horizontal separator.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Offsets the widget to the right the specified number multiplied by the
     # indent style.
@@ -1814,8 +1668,10 @@ class Separator(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
+
+    # kwargs: inspect._empty
 
     @property
     def is_container(self) -> bool:
@@ -1827,33 +1683,39 @@ class Separator(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             indent=self.indent,
             show=self.show,
             pos=self.pos,
+            # kwargs=self.kwargs,
         )
         
         return _ret
 
 
 @dataclasses.dataclass(frozen=True)
-class Child(Widget):
+class ChildWindow(Widget):
     """
     Refer:
-    >>> dpg.child
+    >>> dpg.child_window
 
     Adds an embedded child window. Will show scrollbars when items do not
-    fit. Must be followed by a call to end.
+    fit.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -1869,9 +1731,6 @@ class Child(Widget):
     # run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
 
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
     # Registers a drop callback for drag and drop.
     drop_callback: Callback = None
 
@@ -1879,7 +1738,7 @@ class Child(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -1915,21 +1774,23 @@ class Child(Widget):
     # Shows/Hides the menubar at the top.
     menubar: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
-        _ret = dpg.add_child(
+        _ret = dpg.add_child_window(
             **self.internal.dpg_kwargs,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
             payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
             show=self.show,
             pos=self.pos,
@@ -1943,27 +1804,10 @@ class Child(Widget):
             no_scrollbar=self.no_scrollbar,
             horizontal_scrollbar=self.horizontal_scrollbar,
             menubar=self.menubar,
+            # kwargs=self.kwargs,
         )
         
         return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
 
     def drop_callback_fn(
         self, 
@@ -1996,12 +1840,16 @@ class Window(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -2017,7 +1865,7 @@ class Window(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Delays searching container for specified items until the end of the
@@ -2026,11 +1874,11 @@ class Window(Widget):
     delay_search: bool = False
 
     # Minimum window size.
-    min_size: t.Union[t.List[int], t.Tuple[int]] = \
+    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Maximum window size.
-    max_size: t.Union[t.List[int], t.Tuple[int]] = \
+    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Shows or hides the menubar.
@@ -2089,6 +1937,8 @@ class Window(Widget):
     # Callback ran when window is closed.
     on_close: Callback = None
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -2099,6 +1949,7 @@ class Window(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -2124,6 +1975,7 @@ class Window(Widget):
             popup=self.popup,
             no_saved_settings=self.no_saved_settings,
             on_close=self.on_close_fn,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -2163,12 +2015,16 @@ class Text(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Offsets the widget to the right the specified number multiplied by the
     # indent style.
@@ -2177,11 +2033,21 @@ class Text(Widget):
     # Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
     # Attempt to render widget.
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -2205,6 +2071,8 @@ class Text(Widget):
     # Displays the label.
     show_label: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -2216,8 +2084,12 @@ class Text(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
             show=self.show,
             pos=self.pos,
             filter_key=self.filter_key,
@@ -2227,9 +2099,46 @@ class Text(Widget):
             bullet=self.bullet,
             color=self.color.value,
             show_label=self.show_label,
+            # kwargs=self.kwargs,
         )
         
         return _ret
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -2245,12 +2154,16 @@ class CollapsingHeader(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Offsets the widget to the right the specified number multiplied by the
     # indent style.
@@ -2270,7 +2183,7 @@ class CollapsingHeader(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -2306,6 +2219,8 @@ class CollapsingHeader(Widget):
     # Display a bullet instead of arrow.
     bullet: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -2316,6 +2231,7 @@ class CollapsingHeader(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             indent=self.indent,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
@@ -2332,6 +2248,7 @@ class CollapsingHeader(Widget):
             open_on_arrow=self.open_on_arrow,
             leaf=self.leaf,
             bullet=self.bullet,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -2380,19 +2297,22 @@ class Group(Widget):
     >>> dpg.group
 
     Creates a group that other widgets can belong to. The group allows
-    item commands to be issued for all of its members. Must be closed with
-    the end command.
+    item commands to be issued for all of its members.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -2415,7 +2335,7 @@ class Group(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -2438,6 +2358,11 @@ class Group(Widget):
     # Spacing for the horizontal layout.
     horizontal_spacing: float = -1
 
+    # Offset from containing window x item location within group.
+    xoffset: float = 0.0
+
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -2448,6 +2373,7 @@ class Group(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             indent=self.indent,
             payload_type=self.payload_type,
@@ -2461,6 +2387,8 @@ class Group(Widget):
             track_offset=self.track_offset,
             horizontal=self.horizontal,
             horizontal_spacing=self.horizontal_spacing,
+            xoffset=self.xoffset,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -2514,19 +2442,20 @@ class Legend(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
 
     # Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -2543,6 +2472,8 @@ class Legend(Widget):
     # ...
     outside: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -2553,34 +2484,17 @@ class Legend(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
             show=self.show,
             location=self.location.value,
             horizontal=self.horizontal,
             outside=self.outside,
+            # kwargs=self.kwargs,
         )
         
         return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
 
     def drop_callback_fn(
         self, 
@@ -2605,27 +2519,28 @@ class Legend(Widget):
 class XAxis(Widget):
     """
     Refer:
-    >>> dpg.add_plot_axis
+    >>> dpg.plot_axis
 
-    Adds a plot legend to a plot.
+    Adds an axis to a plot.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
 
     # Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -2657,9 +2572,11 @@ class XAxis(Widget):
     # ...
     time: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
-        return False
+        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
@@ -2668,8 +2585,8 @@ class XAxis(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
             show=self.show,
             no_gridlines=self.no_gridlines,
@@ -2680,27 +2597,10 @@ class XAxis(Widget):
             lock_min=self.lock_min,
             lock_max=self.lock_max,
             time=self.time,
+            # kwargs=self.kwargs,
         )
         
         return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
 
     def drop_callback_fn(
         self, 
@@ -2725,27 +2625,28 @@ class XAxis(Widget):
 class YAxis(Widget):
     """
     Refer:
-    >>> dpg.add_plot_axis
+    >>> dpg.plot_axis
 
-    Adds a plot legend to a plot.
+    Adds an axis to a plot.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Sender string type must be the same as the target for the target to
     # run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
-
-    # Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
 
     # Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -2777,9 +2678,11 @@ class YAxis(Widget):
     # ...
     time: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
-        return False
+        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
@@ -2788,8 +2691,8 @@ class YAxis(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
             show=self.show,
             no_gridlines=self.no_gridlines,
@@ -2800,27 +2703,10 @@ class YAxis(Widget):
             lock_min=self.lock_min,
             lock_max=self.lock_max,
             time=self.time,
+            # kwargs=self.kwargs,
         )
         
         return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
 
     def drop_callback_fn(
         self, 
@@ -2847,8 +2733,7 @@ class SubPlot(Widget):
     Refer:
     >>> dpg.subplots
 
-    Adds a plot which is used to hold series, and can be drawn to with
-    draw commands.
+    Adds a collection of plots.
     """
 
     # ...
@@ -2860,12 +2745,16 @@ class SubPlot(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -2884,7 +2773,7 @@ class SubPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -2902,11 +2791,11 @@ class SubPlot(Widget):
     track_offset: float = 0.5
 
     # ...
-    row_ratios: t.Union[t.List[float], t.Tuple[float]] = \
+    row_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = \
         dataclasses.field(default_factory=list)
 
     # ...
-    column_ratios: t.Union[t.List[float], t.Tuple[float]] = \
+    column_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = \
         dataclasses.field(default_factory=list)
 
     # ...
@@ -2939,6 +2828,8 @@ class SubPlot(Widget):
     # major order
     column_major: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -2951,6 +2842,7 @@ class SubPlot(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -2972,6 +2864,7 @@ class SubPlot(Widget):
             link_all_x=self.link_all_x,
             link_all_y=self.link_all_y,
             column_major=self.column_major,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -3001,18 +2894,22 @@ class SimplePlot(Widget):
     Refer:
     >>> dpg.add_simple_plot
 
-    A simple plot for visualization of a 1 dimensional set of values.
+    Adds a simple plot for visualization of a 1 dimensional set of values.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -3050,7 +2947,7 @@ class SimplePlot(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: t.Union[t.List[float], t.Tuple[float]] = ()
+    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = ()
 
     # overlays text (similar to a plot title)
     overlay: str = ''
@@ -3067,6 +2964,8 @@ class SimplePlot(Widget):
     # ...
     max_scale: float = 0.0
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -3077,6 +2976,7 @@ class SimplePlot(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -3094,6 +2994,7 @@ class SimplePlot(Widget):
             autosize=self.autosize,
             min_scale=self.min_scale,
             max_scale=self.max_scale,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -3148,12 +3049,16 @@ class BPlot(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -3182,7 +3087,7 @@ class BPlot(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -3266,6 +3171,8 @@ class BPlot(Widget):
     # expands active box selection/query vertically to plot edge when held
     vertical_mod: int = 16
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return True
@@ -3276,6 +3183,7 @@ class BPlot(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -3311,6 +3219,7 @@ class BPlot(Widget):
             query_toggle_mod=self.query_toggle_mod,
             horizontal_mod=self.horizontal_mod,
             vertical_mod=self.vertical_mod,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -3382,12 +3291,16 @@ class InputIntX(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -3419,7 +3332,7 @@ class InputIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -3432,7 +3345,7 @@ class InputIntX(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, 0)
+    default_value: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, 0)
 
     # Value for lower limit of input for each cell. Use clamped to turn on.
     min_value: int = 0
@@ -3455,6 +3368,8 @@ class InputIntX(Widget):
     # Activates a read only mode for the inputs.
     readonly: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -3465,6 +3380,7 @@ class InputIntX(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
@@ -3486,6 +3402,7 @@ class InputIntX(Widget):
             max_clamped=self.max_clamped,
             on_enter=self.if_entered,
             readonly=self.readonly,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -3551,18 +3468,22 @@ class InputInt(Widget):
     Refer:
     >>> dpg.add_input_int
 
-    Adds input for an int. Step buttons can be turned on or off.
+    Adds input for an int.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -3594,7 +3515,7 @@ class InputInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -3637,6 +3558,8 @@ class InputInt(Widget):
     # Activates a read only mode for the input.
     readonly: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -3647,6 +3570,7 @@ class InputInt(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
@@ -3669,6 +3593,7 @@ class InputInt(Widget):
             max_clamped=self.max_clamped,
             on_enter=self.if_entered,
             readonly=self.readonly,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -3740,12 +3665,16 @@ class ProgressBar(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -3774,7 +3703,7 @@ class ProgressBar(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -3792,6 +3721,8 @@ class ProgressBar(Widget):
     # Normalized value to fill the bar from 0.0 to 1.0.
     default_value: float = 0.0
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -3802,6 +3733,7 @@ class ProgressBar(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -3816,6 +3748,7 @@ class ProgressBar(Widget):
             track_offset=self.track_offset,
             overlay=self.overlay,
             default_value=self.default_value,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -3869,12 +3802,16 @@ class CheckBox(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Offsets the widget to the right the specified number multiplied by the
     # indent style.
@@ -3903,7 +3840,7 @@ class CheckBox(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -3918,6 +3855,8 @@ class CheckBox(Widget):
     # ...
     default_value: bool = False
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -3928,6 +3867,7 @@ class CheckBox(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
             payload_type=self.payload_type,
@@ -3941,6 +3881,7 @@ class CheckBox(Widget):
             tracked=self.tracked,
             track_offset=self.track_offset,
             default_value=self.default_value,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -4013,12 +3954,16 @@ class ColorMapScale(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -4033,11 +3978,18 @@ class ColorMapScale(Widget):
     # Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
+    # Sender string type must be the same as the target for the target to
+    # run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
     # Attempt to render widget.
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # mvPlotColormap_* constants or mvColorMap uuid
@@ -4051,6 +4003,8 @@ class ColorMapScale(Widget):
     # max scale from the heat series.
     max_scale: float = 1.0
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -4061,18 +4015,40 @@ class ColorMapScale(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
+            payload_type=self.payload_type,
+            drop_callback=self.drop_callback_fn,
             show=self.show,
             pos=self.pos,
             colormap=self.colormap,
             min_scale=self.min_scale,
             max_scale=self.max_scale,
+            # kwargs=self.kwargs,
         )
         
         return _ret
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -4087,12 +4063,16 @@ class DragLine(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
@@ -4118,6 +4098,8 @@ class DragLine(Widget):
     # ...
     vertical: bool = True
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -4128,6 +4110,7 @@ class DragLine(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             source=0 if self.source is None else self.source.dpg_id,
             callback=self.callback_fn,
             show=self.show,
@@ -4136,6 +4119,7 @@ class DragLine(Widget):
             thickness=self.thickness,
             show_label=self.show_label,
             vertical=self.vertical,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -4171,12 +4155,16 @@ class DragPoint(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
@@ -4199,6 +4187,8 @@ class DragPoint(Widget):
     # ...
     show_label: bool = True
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -4209,6 +4199,7 @@ class DragPoint(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             source=0 if self.source is None else self.source.dpg_id,
             callback=self.callback_fn,
             show=self.show,
@@ -4216,6 +4207,7 @@ class DragPoint(Widget):
             color=self.color.value,
             thickness=self.thickness,
             show_label=self.show_label,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -4254,12 +4246,16 @@ class SliderInt(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -4294,7 +4290,7 @@ class SliderInt(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -4329,6 +4325,8 @@ class SliderInt(Widget):
     # ...
     format: str = '%d'
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -4339,6 +4337,7 @@ class SliderInt(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -4360,6 +4359,7 @@ class SliderInt(Widget):
             min_value=self.min_value,
             max_value=self.max_value,
             format=self.format,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -4425,19 +4425,25 @@ class SliderIntX(Widget):
     Refer:
     >>> dpg.add_slider_intx
 
-    Adds multi slider for up to 4 int values. CTRL+Click to directly
-    modify the value.
+    Adds multi slider for up to 4 int values. Directly entry can be done
+    with double click or CTRL+Click. Min and Max alone are a soft limit
+    for the slider. Use clamped keyword to also apply limits to the direct
+    entry modes.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -4469,7 +4475,7 @@ class SliderIntX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -4482,7 +4488,7 @@ class SliderIntX(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: t.Union[t.List[int], t.Tuple[int]] = (0, 0, 0, 0)
+    default_value: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, 0)
 
     # number of components
     size: int = 4
@@ -4504,6 +4510,8 @@ class SliderIntX(Widget):
     # ...
     format: str = '%d'
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -4514,6 +4522,7 @@ class SliderIntX(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
@@ -4534,6 +4543,7 @@ class SliderIntX(Widget):
             min_value=self.min_value,
             max_value=self.max_value,
             format=self.format,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -4608,12 +4618,16 @@ class SliderFloat(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -4648,7 +4662,7 @@ class SliderFloat(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -4683,6 +4697,8 @@ class SliderFloat(Widget):
     # ...
     format: str = '%.3f'
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -4693,6 +4709,7 @@ class SliderFloat(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -4714,6 +4731,7 @@ class SliderFloat(Widget):
             min_value=self.min_value,
             max_value=self.max_value,
             format=self.format,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -4788,12 +4806,16 @@ class SliderFloatX(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -4825,7 +4847,7 @@ class SliderFloatX(Widget):
     enabled: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -4838,7 +4860,7 @@ class SliderFloatX(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
 
     # Number of components.
     size: int = 4
@@ -4860,6 +4882,8 @@ class SliderFloatX(Widget):
     # ...
     format: str = '%.3f'
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -4870,6 +4894,7 @@ class SliderFloatX(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             indent=self.indent,
             source=0 if self.source is None else self.source.dpg_id,
@@ -4890,6 +4915,7 @@ class SliderFloatX(Widget):
             min_value=self.min_value,
             max_value=self.max_value,
             format=self.format,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -4955,19 +4981,22 @@ class Slider3D(Widget):
     Refer:
     >>> dpg.add_3d_slider
 
-    Adds a 3D box slider that allows a 3d point to be show in 2d
-    represented cube space.
+    Adds a 3D box slider.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
+
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
 
     # Width of the item.
     width: int = 0
@@ -4999,7 +5028,7 @@ class Slider3D(Widget):
     show: bool = True
 
     # Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int]] = \
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
     # Used by filter widget.
@@ -5012,7 +5041,7 @@ class Slider3D(Widget):
     track_offset: float = 0.5
 
     # ...
-    default_value: t.Union[t.List[float], t.Tuple[float]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
 
     # Applies upper limit to slider.
     max_x: float = 100.0
@@ -5035,6 +5064,8 @@ class Slider3D(Widget):
     # Size of the widget.
     scale: float = 1.0
 
+    # kwargs: inspect._empty
+
     @property
     def is_container(self) -> bool:
         return False
@@ -5045,6 +5076,7 @@ class Slider3D(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             width=self.width,
             height=self.height,
             indent=self.indent,
@@ -5066,6 +5098,7 @@ class Slider3D(Widget):
             min_y=self.min_y,
             min_z=self.min_z,
             scale=self.scale,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -5131,22 +5164,27 @@ class ToolTip(Widget):
     Refer:
     >>> dpg.tooltip
 
-    Adds an advanced tool tip for an item. This command must come
-    immediately after the item the tip is for.
+    Adds a tooltip window.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Attempt to render widget.
     show: bool = True
+
+    # kwargs: inspect._empty
 
     @property
     def is_container(self) -> bool:
@@ -5158,7 +5196,9 @@ class ToolTip(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             show=self.show,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -5170,21 +5210,24 @@ class Theme(Widget):
     Refer:
     >>> dpg.theme
 
-    Undocumented function
+    Adds a theme.
     """
 
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
-    # ...
-    default_theme: bool = False
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
+    # kwargs: inspect._empty
 
     @property
     def is_container(self) -> bool:
@@ -5196,7 +5239,8 @@ class Theme(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            default_theme=self.default_theme,
+            tag=self.tag,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -5208,7 +5252,7 @@ class ThemeColor(Widget):
     Refer:
     >>> dpg.add_theme_color
 
-    Undocumented function
+    Adds a theme color.
     """
 
     # ...
@@ -5220,15 +5264,21 @@ class ThemeColor(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Options include mvThemeCat_Core, mvThemeCat_Plots, mvThemeCat_Nodes.
     category: ThemeCat = ThemeCat.DEFAULT
+
+    # kwargs: inspect._empty
 
     @property
     def is_container(self) -> bool:
@@ -5242,7 +5292,9 @@ class ThemeColor(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             category=self.category.value,
+            # kwargs=self.kwargs,
         )
         
         return _ret
@@ -5254,7 +5306,7 @@ class ThemeStyle(Widget):
     Refer:
     >>> dpg.add_theme_style
 
-    Undocumented function
+    Adds a theme style.
     """
 
     # ...
@@ -5269,15 +5321,21 @@ class ThemeStyle(Widget):
     # Overrides 'name' as label.
     label: str = None
 
-    # User data for callbacks.
+    # User data for callbacks
     user_data: t.Union[Widget, t.List[Widget]] = None
 
     # Use generated internal label instead of user specified (appends ###
     # uuid).
     use_internal_label: bool = True
 
+    # Unique id used to programmatically refer to the item.If label is
+    # unused this will be the label.
+    tag: t.Union[int, str] = 0
+
     # Options include mvThemeCat_Core, mvThemeCat_Plots, mvThemeCat_Nodes.
     category: ThemeCat = ThemeCat.DEFAULT
+
+    # kwargs: inspect._empty
 
     @property
     def is_container(self) -> bool:
@@ -5292,7 +5350,9 @@ class ThemeStyle(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            tag=self.tag,
             category=self.category.value,
+            # kwargs=self.kwargs,
         )
         
         return _ret

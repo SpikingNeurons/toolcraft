@@ -1597,7 +1597,12 @@ class HookUp:
         # subclass for the same method ... so we need to define new hookup
         # and grab post and pre runners specific to this class
         # So if HookUp we grab method from it and create a new hook up here
+        # Note: the HookUp class from parent becomes useless and is replaced
+        #   by new HookUp for child class
+        # Note: the args pre_method and post_method are the latest one i.e. from
+        #   child class ... so no need for `method.pre_method` and `method.post_method`
         if isinstance(method, HookUp):
+            # noinspection PyUnresolvedReferences
             method = method.method
 
         # save variables in self
