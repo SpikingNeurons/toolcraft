@@ -1039,6 +1039,11 @@ class HashableClass(YamlRepr, abc.ABC):
     @util.CacheResult
     def hex_hash(self) -> str:
         """
+        We will use GUID popular in csharp instead of hex hash
+        + every hashable class and its method will have a GUID to track it down
+          anywhere in distributed platform
+        + https://www.c-sharpcorner.com/article/what-is-guid-in-c-sharp/
+
         NOTE: Never override this property ... In case you need to override
         it always rely on name property which we intend to be unique across
         instances

@@ -128,7 +128,9 @@ class ButtonPlotCallback(gui.Callback):
             self.receiver.add_child(guid=sender.guid, widget=_collapsing_header)
 
             # make close button and add it collapsing header
-            _close_button = gui.callback.CloseWidgetCallback.get_button_widget()
+            _close_button = gui.callback.CloseWidgetCallback.get_button_widget(
+                _collapsing_header
+            )
             _collapsing_header.add_child(
                 guid="close_button",
                 widget=_close_button,
