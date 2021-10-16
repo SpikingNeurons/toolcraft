@@ -615,7 +615,7 @@ class Column(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -686,7 +686,7 @@ class Row(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -865,7 +865,7 @@ class BTable(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -990,6 +990,8 @@ class TabButton(Widget):
     track_offset: float = 0.5
 
     # Disable reordering this tab or having another tab cross over this tab.
+    # Fixes the position of this tab in relation to the order of neighboring
+    # tabs at start.
     no_reorder: bool = False
 
     # Enforce the tab position to the left of the tab bar (after the tab
@@ -1006,7 +1008,7 @@ class TabButton(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -1146,7 +1148,7 @@ class TabBar(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -1252,7 +1254,7 @@ class Tab(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -1362,19 +1364,23 @@ class Button(Widget):
     # 0.0f
     track_offset: float = 0.5
 
-    # Small button, useful for embedding in text.
+    # Shrinks the size of the button to the text of the label it contains.
+    # Useful for embedding in text.
     small: bool = False
 
-    # Arrow button, requires the direction keyword.
+    # Displays an arrow in place of the text string. This requires the
+    # direction keyword.
     arrow: bool = False
 
-    # A cardinal direction for arrow.
+    # Sets the cardinal direction for the arrow buy using constants
+    # mvDir_Left, mvDir_Up, mvDir_Down, mvDir_Right, mvDir_None. Arrow
+    # keyword must be set to True.
     direction: int = 0
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -1467,11 +1473,13 @@ class Combo(Widget):
     >>> dpg.add_combo
 
     Adds a combo dropdown that allows a user to select a single option
-    from a drop down window.
+    from a drop down window. All items will be shown as selectables on the
+    dropdown.
     """
 
     # A tuple of items to be shown in the drop down window. Can consist of
-    # any combination of types.
+    # any combination of types but will convert all items to strings to be
+    # shown.
     items: t.Union[t.List[str], t.Tuple[str, ...]] = ()
 
     # Overrides 'name' as label.
@@ -1530,25 +1538,29 @@ class Combo(Widget):
     # 0.0f
     track_offset: float = 0.5
 
-    # ...
+    # Sets a selected item from the drop down by specifying the string
+    # value.
     default_value: str = ''
 
-    # Align the popup toward the left.
+    # Align the contents on the popup toward the left.
     popup_align_left: bool = False
 
-    # Display the preview box without the square arrow button.
+    # Display the preview box without the square arrow button indicating
+    # dropdown activity.
     no_arrow_button: bool = False
 
-    # Display only the square arrow button.
+    # Display only the square arrow button and not the selected value.
     no_preview: bool = False
 
-    # mvComboHeight_Small, _Regular, _Large, _Largest
+    # Controlls the number of items shown in the dropdown by the constants
+    # mvComboHeight_Small, mvComboHeight_Regular, mvComboHeight_Large,
+    # mvComboHeight_Largest
     height_mode: int = 1
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -1643,7 +1655,7 @@ class Separator(Widget):
     Refer:
     >>> dpg.add_separator
 
-    Adds a horizontal separator.
+    Adds a horizontal line separator.
     """
 
     # Overrides 'name' as label.
@@ -1674,7 +1686,7 @@ class Separator(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -1777,7 +1789,7 @@ class ChildWindow(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -1940,7 +1952,7 @@ class Window(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -2059,22 +2071,22 @@ class Text(Widget):
     # 0.0f
     track_offset: float = 0.5
 
-    # Number of pixels until wrapping starts.
+    # Number of pixels from the start of the item until wrapping starts.
     wrap: int = -1
 
-    # Makes the text bulleted.
+    # Places a bullet to the left of the text.
     bullet: bool = False
 
     # Color of the text (rgba).
     color: Color = Color.DEFAULT
 
-    # Displays the label.
+    # Displays the label to teh right of the text.
     show_label: bool = False
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -2222,7 +2234,7 @@ class CollapsingHeader(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -2364,7 +2376,7 @@ class Group(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -2475,7 +2487,7 @@ class Legend(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -2575,8 +2587,14 @@ class XAxis(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
+
+    @property
+    def allow_children(self) -> bool:
+        # For class `XAxis` we block adding children as this can 
+        # be addressed with special properties or is not needed
+        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
@@ -2681,7 +2699,7 @@ class YAxis(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -2831,7 +2849,7 @@ class SubPlot(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -2967,7 +2985,7 @@ class SimplePlot(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -3174,8 +3192,14 @@ class BPlot(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
+
+    @property
+    def allow_children(self) -> bool:
+        # For class `BPlot` we block adding children as this can 
+        # be addressed with special properties or is not needed
+        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot(
@@ -3347,31 +3371,34 @@ class InputIntX(Widget):
     # ...
     default_value: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, 0)
 
-    # Value for lower limit of input for each cell. Use clamped to turn on.
+    # Value for lower limit of input for each cell. Use min_clamped to turn
+    # on.
     min_value: int = 0
 
-    # Value for upper limit of input for each cell. Use clamped to turn on.
+    # Value for upper limit of input for each cell. Use max_clamped to turn
+    # on.
     max_value: int = 100
 
-    # Number of components.
+    # Number of components displayed for input.
     size: int = 4
 
-    # Activates and deactivates min_value.
+    # Activates and deactivates the enforcment of min_value.
     min_clamped: bool = False
 
-    # Activates and deactivates max_value.
+    # Activates and deactivates the enforcment of max_value.
     max_clamped: bool = False
 
     # Only runs callback on enter.
     if_entered: bool = False
 
-    # Activates a read only mode for the inputs.
+    # Activates read only mode where no text can be input but text can still
+    # be highlighted.
     readonly: bool = False
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -3468,7 +3495,8 @@ class InputInt(Widget):
     Refer:
     >>> dpg.add_input_int
 
-    Adds input for an int.
+    Adds input for an int. +/- buttons can be activated by setting the
+    value of step.
     """
 
     # Overrides 'name' as label.
@@ -3531,11 +3559,11 @@ class InputInt(Widget):
     default_value: int = 0
 
     # Value for lower limit of input. By default this limits the step
-    # buttons. Use clamped to limit manual input.
+    # buttons. Use min_clamped to limit manual input.
     min_value: int = 0
 
     # Value for upper limit of input. By default this limits the step
-    # buttons. Use clamped to limit manual input.
+    # buttons. Use max_clamped to limit manual input.
     max_value: int = 100
 
     # Increment to change value by when the step buttons are pressed.
@@ -3546,22 +3574,23 @@ class InputInt(Widget):
     # switch to this value.
     step_fast: int = 100
 
-    # Activates and deactivates min_value.
+    # Activates and deactivates the enforcment of min_value.
     min_clamped: bool = False
 
-    # Activates and deactivates max_value.
+    # Activates and deactivates the enforcment of max_value.
     max_clamped: bool = False
 
     # Only runs callback on enter key press.
     if_entered: bool = False
 
-    # Activates a read only mode for the input.
+    # Activates read only mode where no text can be input but text can still
+    # be highlighted.
     readonly: bool = False
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -3715,7 +3744,8 @@ class ProgressBar(Widget):
     # 0.0f
     track_offset: float = 0.5
 
-    # Overlayed text.
+    # Overlayed text onto the bar that typically used to display the value
+    # of the progress.
     overlay: str = ''
 
     # Normalized value to fill the bar from 0.0 to 1.0.
@@ -3724,7 +3754,7 @@ class ProgressBar(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -3852,13 +3882,13 @@ class CheckBox(Widget):
     # 0.0f
     track_offset: float = 0.5
 
-    # ...
+    # Sets the default value of the checkmark
     default_value: bool = False
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -3992,7 +4022,8 @@ class ColorMapScale(Widget):
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=list)
 
-    # mvPlotColormap_* constants or mvColorMap uuid
+    # mvPlotColormap_* constants or mvColorMap uuid from a color map
+    # registry
     colormap: t.Union[int, str] = 0
 
     # Sets the min number of the color scale. Typically is the same as the
@@ -4006,7 +4037,7 @@ class ColorMapScale(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -4101,7 +4132,7 @@ class DragLine(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -4190,7 +4221,7 @@ class DragPoint(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -4305,11 +4336,11 @@ class SliderInt(Widget):
     # ...
     default_value: int = 0
 
-    # Sets orientation to vertical.
+    # Sets orientation of the slidebar and slider to vertical.
     vertical: bool = False
 
-    # Disable direct entry methods or Enter key allowing to input text
-    # directly into the widget.
+    # Disable direct entry methods double-click or ctrl+click or Enter key
+    # allowing to input text directly into the item.
     no_input: bool = False
 
     # Applies the min and max limits to direct entry methods also such as
@@ -4322,13 +4353,14 @@ class SliderInt(Widget):
     # Applies a limit only to sliding entry only.
     max_value: int = 100
 
-    # ...
+    # Determines the format the int will be displayed as use python string
+    # formatting.
     format: str = '%d'
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -4490,11 +4522,11 @@ class SliderIntX(Widget):
     # ...
     default_value: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, 0)
 
-    # number of components
+    # Number of ints to be displayed.
     size: int = 4
 
-    # Disable direct entry methods or Enter key allowing to input text
-    # directly into the widget.
+    # Disable direct entry methods double-click or ctrl+click or Enter key
+    # allowing to input text directly into the item.
     no_input: bool = False
 
     # Applies the min and max limits to direct entry methods also such as
@@ -4507,13 +4539,14 @@ class SliderIntX(Widget):
     # Applies a limit only to sliding entry only.
     max_value: int = 100
 
-    # ...
+    # Determines the format the int will be displayed as use python string
+    # formatting.
     format: str = '%d'
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -4677,11 +4710,11 @@ class SliderFloat(Widget):
     # ...
     default_value: float = 0.0
 
-    # Sets orientation to vertical.
+    # Sets orientation of the slidebar and slider to vertical.
     vertical: bool = False
 
-    # Disable direct entry methods or Enter key allowing to input text
-    # directly into the widget.
+    # Disable direct entry methods double-click or ctrl+click or Enter key
+    # allowing to input text directly into the item.
     no_input: bool = False
 
     # Applies the min and max limits to direct entry methods also such as
@@ -4694,13 +4727,14 @@ class SliderFloat(Widget):
     # Applies a limit only to sliding entry only.
     max_value: float = 100.0
 
-    # ...
+    # Determines the format the float will be displayed as use python string
+    # formatting.
     format: str = '%.3f'
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -4862,11 +4896,11 @@ class SliderFloatX(Widget):
     # ...
     default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
 
-    # Number of components.
+    # Number of floats to be displayed.
     size: int = 4
 
-    # Disable direct entry methods or Enter key allowing to input text
-    # directly into the widget.
+    # Disable direct entry methods double-click or ctrl+click or Enter key
+    # allowing to input text directly into the item.
     no_input: bool = False
 
     # Applies the min and max limits to direct entry methods also such as
@@ -4879,13 +4913,14 @@ class SliderFloatX(Widget):
     # Applies a limit only to sliding entry only.
     max_value: float = 100.0
 
-    # ...
+    # Determines the format the int will be displayed as use python string
+    # formatting.
     format: str = '%.3f'
 
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -5067,7 +5102,7 @@ class Slider3D(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -5187,7 +5222,7 @@ class ToolTip(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -5230,7 +5265,7 @@ class Theme(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     def build(self) -> t.Union[int, str]:
@@ -5281,7 +5316,7 @@ class ThemeColor(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
@@ -5338,7 +5373,7 @@ class ThemeStyle(Widget):
     # kwargs: inspect._empty
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return False
 
     def build(self) -> t.Union[int, str]:
