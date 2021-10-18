@@ -287,7 +287,7 @@ class WidgetDef:
             if _param_name == "source":
                 _param_type = "t.Optional[Widget]"
                 _param_value = "None"
-                _param_dpg_value = "0 if self.source is None else self.source.dpg_id"
+                _param_dpg_value = "getattr(self.source, 'dpg_id', 0)"
             if _param_name == "user_data":
                 _param_type = "t.Union[Widget, t.List[Widget]]"
                 _param_value = "None"
