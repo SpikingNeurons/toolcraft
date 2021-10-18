@@ -7,6 +7,7 @@ import abc
 import dataclasses
 import typing as t
 import enum
+from tkinter import Widget
 
 import dearpygui.dearpygui as dpg
 # noinspection PyProtectedMember
@@ -23,6 +24,7 @@ _LOGGER = logger.get_logger()
 # noinspection PyUnreachableCode
 if False:
     from . import Window
+    from .widget import Group
 
 
 class Color(m.FrozenEnum, enum.Enum):
@@ -37,7 +39,7 @@ class Color(m.FrozenEnum, enum.Enum):
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"!gui_color"
+        return f"!gui_Color"
 
     # noinspection PyMethodOverriding
     def __call__(self, r: int, g: int, b: int, a: int) -> "Color":
@@ -83,15 +85,10 @@ class Callback(m.HashableClass, abc.ABC):
 
 
 class WidgetInternal(m.Internal):
-    guid: str
     dpg_id: t.Union[int, str]
     parent: t.Union["Dashboard", "Widget"]
     before: t.Optional["Widget"]
     is_build_done: bool
-
-    @property
-    def name(self) -> str:
-        return f"{self.parent.name}.{self.guid}"
 
     @property
     def dpg_kwargs(self) -> t.Dict[str, t.Any]:
@@ -105,22 +102,11 @@ class WidgetInternal(m.Internal):
 class Widget(m.HashableClass, abc.ABC):
 
     @property
-    def guid(self) -> str:
-        return self.internal.guid
-
-    @property
     def dpg_id(self) -> t.Union[int, str]:
         return self.internal.dpg_id
 
     @property
-    def name(self) -> str:
-        _internal = self.internal
-        return f"{_internal.parent.name}.{_internal.guid}"
-
-    @property
     def parent(self) -> "Widget":
-        if isinstance(self.internal.parent, str):
-            raise Exception(self.internal.parent)
         return self.internal.parent
 
     @property
@@ -134,7 +120,7 @@ class Widget(m.HashableClass, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         """
         If the dpg component needs a call to end
         Needed when the component is container and is used in with context
@@ -143,6 +129,15 @@ class Widget(m.HashableClass, abc.ABC):
         And check which methods decorated with `@contextmanager` are yielding
         """
         ...
+
+    @property
+    def allow_children(self) -> bool:
+        # This is same as property `has_dpg_contextmanager`
+        return self.has_dpg_contextmanager
+
+    @property
+    def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
+        return None
 
     @property
     def dashboard(self) -> "Dashboard":
@@ -156,45 +151,302 @@ class Widget(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def children(self) -> t.Dict[str, "Widget"]:
+    def children(self) -> t.List["Widget"]:
         # if not container raise error
-        if not self.is_container:
+        if not self.allow_children:
             e.code.NotAllowed(
                 msgs=[
-                    f"This property is not available for Widgets that do not "
-                    f"support containers",
+                    f"This property is not available as this Widget does not "
+                    f"support adding children",
                     f"Please check class {self.__class__}"
                 ]
             )
-        # this will be populated when add_child is called
-        return {}
+        # this will be populated when __set_item__ is called
+        return []
 
-    def init(self):
-        # ------------------------------------------------------- 01
+    def init_validate(self):
+
         # call super
-        super().init()
+        super().init_validate()
 
-        # ------------------------------------------------------- 02
         # loop over fields
         for f_name in self.dataclass_field_names:
-            # --------------------------------------------------- 02.01
             # get value
             v = getattr(self, f_name)
 
-            # --------------------------------------------------- 02.02
-            # bind field if Widget or Callback
-            if isinstance(v, (Widget, Callback)):
-                self.duplicate_field(field_name=f_name, value=v)
+            # check if Widget and only allow if Form
+            if isinstance(v, Widget):
+                if not isinstance(self, Form):
+                    e.code.CodingError(
+                        msgs=[
+                            f"You cannot have fields that are Widget. "
+                            f"This is only allowed for widget {Form}"
+                        ]
+                    )
 
     def get_value(self) -> t.Any:
         return dpg.get_value(item=self.dpg_id)
 
-    def duplicate_field(
-        self,
-        field_name: str,
-        value: t.Union["Widget", Callback]
+    @classmethod
+    def hook_up_methods(cls):
+        # call super
+        super().hook_up_methods()
+
+        # hookup build
+        util.HookUp(
+            cls=cls,
+            silent=True,
+            method=cls.build,
+            pre_method=cls.build_pre_runner,
+            post_method=cls.build_post_runner,
+        )
+
+        # hookup delete
+        util.HookUp(
+            cls=cls,
+            silent=True,
+            method=cls.delete,
+            pre_method=cls.delete_pre_runner,
+            post_method=cls.delete_post_runner,
+        )
+
+    def delete_pre_runner(self):
+        ...
+
+    def delete(self):
+        # find index
+        _this_id = id(self)
+        _index = None
+        for _i, _w in enumerate(self.parent.children):
+            if _this_id == id(_w):
+                _index = _i
+                break
+
+        # delete widget
+        if _index is None:
+            e.code.CodingError(
+                msgs=[
+                    f"We were expecting the instance to be present in children of "
+                    f"parent ..."
+                ]
+            )
+            raise
+        else:
+            # delete self from parents children
+            _widget = self.parent.children.pop(_index)
+            # simple assert
+            assert id(_widget) == _this_id, "should match"
+            # delete the UI counterpart
+            dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
+
+        # todo: make widget unusable ... figure out
+
+    def delete_post_runner(
+        self, *, hooked_method_return_value: t.Any
     ):
+        ...
+
+    def build_pre_runner(self):
+
+        # ---------------------------------------------------- 01
+        # check if already built
+        if self.is_built:
+            e.code.CodingError(
+                msgs=[
+                    f"Widget is already built and registered with:",
+                    {
+                        'parent': self.internal.parent.__class__,
+                    },
+                ]
+            )
+
+    @abc.abstractmethod
+    def build(self) -> t.Union[int, str]:
+        ...
+
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Union[int, str]
+    ):
+        # if None raise error ... we expect int
+        if hooked_method_return_value is None:
+            e.code.CodingError(
+                msgs=[
+                    f"We expect build to return int which happens to be dpg_id"
+                ]
+            )
+
+        # set dpg_id
+        self.internal.dpg_id = hooked_method_return_value
+
+        # if container build children
+        if self.has_dpg_contextmanager:
+            # push_container_stack
+            internal_dpg.push_container_stack(hooked_method_return_value)
+
+            # now as layout is completed and build for this widget is completed,
+            # now it is time to render children
+            for child in self.children:
+                child.build()
+
+            # also pop_container_stack as we do not use with context
+            internal_dpg.pop_container_stack()
+
+        # set flag to indicate build is done
+        self.internal.is_build_done = True
+
+    def __getitem__(self, item: t.Tuple[t.Union["Widget", t.List["Widget"]], ...]):
+        for _item in item:
+            if isinstance(_item, Widget):
+                self.add_child(widget=_item)
+            elif isinstance(_item, list):
+                from .widget import Group
+                _g = Group(horizontal=True)
+                for _i in _item:
+                    _g.add_child(widget=_i)
+            else:
+                e.code.CodingError(
+                    msgs=[
+                        f"Unsupported item of type {type(item)}"
+                    ]
+                )
+                raise
+
+    def add_child(
+        self,
+        widget: "Widget",
+        before: "Widget" = None,
+    ):
+        # -------------------------------------------------- 01
+        # validations
+        # -------------------------------------------------- 01.01
+        # if not container we cannot add widgets
+        if not self.has_dpg_contextmanager:
+            e.code.CodingError(
+                msgs=[
+                    f"Widget {self.__class__} is not of container type. We "
+                    f"do not support adding widget as child"
+                ]
+            )
+        # -------------------------------------------------- 01.02
+        # make sure that you are not adding Dashboard
+        if isinstance(widget, Dashboard):
+            e.code.CodingError(
+                msgs=[
+                    f"Note that you are not allowed to add Dashboard as child "
+                    f"to any Widget"
+                ]
+            )
+
+        # -------------------------------------------------- 02
+        # if widget is already built then raise error
+        if widget.is_built:
+            e.code.NotAllowed(
+                msgs=[
+                    f"The widget is already built",
+                ]
+            )
+
+        # -------------------------------------------------- 03
+        # if already in children raise error
+        _widget_id = id(widget)
+        for _c in self.children:
+            if id(_c) == _widget_id:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Looks like the widget is already "
+                        f"added to parent."
+                    ]
+                )
+
+        # -------------------------------------------------- 04
+        # set internals
+        widget.internal.parent = self
+        widget.internal.before = before
+
+        # -------------------------------------------------- 05
+        # we can now store widget to children
+        # Note that guid is used as it is for dict key
+        self.children.append(widget)
+
+        # -------------------------------------------------- 06
+        # if thw parent widget is already built we need to build this widget here
+        # else it will be built when build() on super parent is called
+        if self.is_built:
+            widget.build()
+
+    def hide(self, children_only: bool = False):
+        # todo: needs testing
+        if children_only:
+            for child in dpg.get_item_children(item=self.dpg_id):
+                dpg.configure_item(item=child, show=False)
+        else:
+            dpg.configure_item(item=self.dpg_id, show=False)
+
+    def show(self, children_only: bool = False):
+        # todo: needs testing
+        if children_only:
+            for child in dpg.get_item_children(item=self.dpg_id):
+                dpg.configure_item(item=child, show=True)
+        else:
+            dpg.configure_item(item=self.dpg_id, show=True)
+
+    def set_theme(self, theme: assets.Theme):
+        dpg.set_item_theme(item=self.dpg_id, theme=theme.get())
+
+    def set_widget_configuration(self, **kwargs):
+        # if any value is widget then get its dpg_id
+        _new_kwargs = {}
+        for _k in kwargs.keys():
+            _v = kwargs[_k]
+            if isinstance(_v, Widget):
+                _v = _v.dpg_id
+            _new_kwargs[_k] = _v
+        # configure
+        dpg.configure_item(item=self.dpg_id, **_new_kwargs)
+
+    def display_raw_configuration(self) -> t.Dict:
         """
+        Note that raw dpg_id is not treated
+        """
+        return dpg.get_item_configuration(item=self.dpg_id)
+
+
+@dataclasses.dataclass(frozen=True)
+class Form(Widget, abc.ABC):
+    """
+    Form is a special widget which creates a Group container and add all form fields
+    to it as defined by layout() method.
+
+    Note that Form itself is not a container and no children can be added to it.
+    It only supports UI elements supplied via fields. Non Widget fields like Callbacks
+    and constants will be can also be supplied to form to enhance form but obviously
+    they are not UI elements and hence will be ignored by layout method.
+
+    If you want dynamic widgets simple have a class field defined with container
+    Widgets like Group and dynamically add elements to it.
+
+    todo: the delete can be called on class field Widgets ... mostly we want to not
+      allow fields of form to be dynamically deleted ... but that is not the case now
+      So do only if needed
+    """
+
+    @property
+    @util.CacheResult
+    def form_fields_group(self) -> "Group":
+        """
+        The widget that holds all form fields
+        """
+        from .widget import Group
+        return Group()
+
+    @property
+    def has_dpg_contextmanager(self) -> bool:
+        return False
+
+    def init(self):
+        """
+        WHY DO WE CLONE??
+
         To be called from init. Will be only called for fields that are
         Widget or Callback
 
@@ -233,362 +485,67 @@ class Widget(m.HashableClass, abc.ABC):
           to be done. AVOID GENERALIZING THIS FUNCTION.
 
         """
-        # ------------------------------------------------------ 01
-        # get field and its default value
-        # noinspection PyUnresolvedReferences
-        _field = self.__dataclass_fields__[field_name]
-        _default_value = _field.default
-
-        # ------------------------------------------------------ 02
-        # if value and _default_value are same that means we still have
-        # not tricked dataclass and this is the first time things are
-        # called so update __dict__ here
-        # Note that the below code can also handle
-        # _default_value == dataclasses.MISSING
-        if id(_default_value) == id(value):
-            # this makes a shallow i.e. one level copy
-            # we assume that subsequent nested fields can make their own copies
-            _dict = {}
-            for f_name in value.dataclass_field_names:
-                v = getattr(value, f_name)
-                _dict[f_name] = v
-            value = value.__class__(**_dict)
-            # hack to override field value
-            self.__dict__[field_name] = value
-
-    @classmethod
-    def hook_up_methods(cls):
+        # ------------------------------------------------------- 01
         # call super
-        super().hook_up_methods()
+        super().init()
 
-        # hookup build
-        util.HookUp(
-            cls=cls,
-            silent=True,
-            method=cls.build,
-            pre_method=cls.build_pre_runner,
-            post_method=cls.build_post_runner,
-        )
-
-        # hookup delete
-        util.HookUp(
-            cls=cls,
-            silent=True,
-            method=cls.delete,
-            pre_method=cls.delete_pre_runner,
-            post_method=cls.delete_post_runner,
-        )
-
-    def delete_pre_runner(self):
-        ...
-
-    def delete(self):
-        # delete self from parents children
-        del self.parent.children[self.guid]
-        # delete the UI counterpart
-        dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
-
-    def delete_post_runner(
-        self, *, hooked_method_return_value: t.Any
-    ):
-        ...
+        # ------------------------------------------------------- 02
+        # loop over fields
+        for f_name in self.dataclass_field_names:
+            # --------------------------------------------------- 02.01
+            # get value
+            v = getattr(self, f_name)
+            # --------------------------------------------------- 02.02
+            # if not Hashable class continue
+            # that means Widgets and Callbacks will be clones if default supplied
+            if not isinstance(v, m.HashableClass):
+                continue
+            # --------------------------------------------------- 02.03
+            # get field and its default value
+            # noinspection PyUnresolvedReferences
+            _field = self.__dataclass_fields__[f_name]
+            _default_value = _field.default
+            # --------------------------------------------------- 02.04
+            # if id(_default_value) == id(v) then that means the default value is
+            # supplied ... so now we need to trick dataclass and assigned a clone of
+            # default_value
+            # To understand why we clone ... read __doc_string__
+            # Note that the below code can also handle but we use id(...)
+            #   to be more specific
+            # _default_value == dataclasses.MISSING
+            if id(_default_value) == id(v):
+                # make clone
+                v_cloned = v.clone()
+                # hack to overwrite field value (as this is frozen)
+                self.__dict__[f_name] = v_cloned
 
     def layout(self):
         """
-        Here we decide how to layout all children of this Widget which are
-        class fields.
+        Method to layout widgets in this form and assign Callbacks if any
 
-        Note that any widgets that are added dynamically apart from widget
-        class fields with add_child later will just build newly added
-        components below the last child widget. This can be controlled via
-        `parent` and `before` argument anyways/
+        Note that default behaviour is to layout the UI elements in the order as
+        defined in class fields.
 
-        Default behaviour is to just build all fields that are Widgets one
-        after other. You can of course override this to do more cosmetic
-        changes to UI
+        You can override this method to do layout in any order you wish.
 
-        Note that we cannot simply loop over children dict because
-        + if add_child was called before build() then there will be some
-          items in dict
-        + the widgets that are fields of this class are not yet added to
-          children
-        + before calling layout we keep a copy of items that are added in
-          children dict and clear the dict. So dict will be empty here
+        Note that if you have Callbacks for this form as class fields you need to take
+        care to bind them to widgets. The default implementation is very simple
+
+        For dynamic widgets add Group widget as dataclass field and add dynamic items
+        to it
         """
-        # ----------------------------------------------------- 01
-        # make sure that children dict is empty
-        # this is needed because layout will decide the order of children and
-        # about rendering them
-        if bool(self.children):
-            e.code.CodingError(
-                msgs=[
-                    f"Note that children dict is not empty",
-                    "If you have performed add_child before build the code "
-                    "before call to layout should back them up and clear "
-                    "children dict"
-                ]
-            )
-
-        # ----------------------------------------------------- 02
         # if there is a widget which is field of this widget then add it
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
             if isinstance(v, Widget):
-                self.add_child(guid=f_name, widget=v, before=None)
+                self.form_fields_group.add_child(widget=v, before=None)
 
-    def build_pre_runner(self):
-
-        # ---------------------------------------------------- 01
-        # check if already built
-        if self.is_built:
-            e.code.CodingError(
-                msgs=[
-                    f"Widget is already built and registered with:",
-                    {
-                        'parent': self.internal.parent.name,
-                        'guid': self.guid
-                    },
-                ]
-            )
-
-        # ---------------------------------------------------- 02
-        # layout ... only done for widgets that are containers
-        if self.is_container:
-            # ------------------------------------------------ 02.01
-            # backup children dict before clearing it
-            # this is needed because in some cases there will be add_child
-            # performed before build, but we need to give preference to layout
-            # method and then again append the backed up elements
-            _backup_children = {
-                k: v for k, v in self.children.items()
-            }
-            # ------------------------------------------------ 02.02
-            # clear the children dict
-            self.children.clear()
-            # ------------------------------------------------ 02.03
-            # call layout it will add some widgets if any
-            self.layout()
-            # ------------------------------------------------ 02.04
-            # update children with backup
-            for k, v in _backup_children.items():
-                if k in self.children.keys():
-                    e.code.CodingError(
-                        msgs=[
-                            f"The `layout()` method has added child with guid "
-                            f"`{k}` which was already added before `build()` "
-                            f"was called"
-                        ]
-                    )
-                self.children[k] = v
-
-    @abc.abstractmethod
     def build(self) -> t.Union[int, str]:
-        ...
+        # layout
+        self.layout()
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
-        # if None raise error ... we expect int
-        if hooked_method_return_value is None:
-            e.code.CodingError(
-                msgs=[
-                    f"We expect build to return int which happens to be dpg_id"
-                ]
-            )
-
-        # set dpg_id
-        self.internal.dpg_id = hooked_method_return_value
-
-        # if container build children
-        if self.is_container:
-            # push_container_stack
-            internal_dpg.push_container_stack(hooked_method_return_value)
-
-            # now as layout is completed and build for this widget is completed,
-            # now it is time to render children
-            for child in self.children.values():
-                child.build()
-
-            # also pop_container_stack as we do not use with context
-            internal_dpg.pop_container_stack()
-
-        # set flag to indicate build is done
-        self.internal.is_build_done = True
-
-    def add_child(
-        self,
-        guid: str,
-        widget: "Widget",
-        before: "Widget" = None,
-    ):
-        # -------------------------------------------------- 01
-        # validations
-        # -------------------------------------------------- 01.01
-        # if not container we cannot add widgets
-        if not self.is_container:
-            e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is not of container type. We "
-                    f"do not support adding widget as child"
-                ]
-            )
-        # -------------------------------------------------- 01.02
-        # make sure that you are not adding Dashboard
-        if isinstance(widget, Dashboard):
-            e.code.CodingError(
-                msgs=[
-                    f"Note that you are not allowed to add Dashboard as child "
-                    f"to any Widget"
-                ]
-            )
-
-        # -------------------------------------------------- 02
-        # if widget is already built then raise error
-        if widget.is_built:
-            e.code.NotAllowed(
-                msgs=[
-                    f"The widget is already built with:",
-                    {
-                        'parent': widget.parent.name,
-                        'guid': widget.guid
-                    },
-                    f"You are now attempting to build it again with",
-                    {
-                        'parent': self.name,
-                        'guid': guid
-                    }
-                ]
-            )
-
-        # -------------------------------------------------- 02
-        # if guid in children raise error
-        if guid in self.children.keys():
-            e.validation.NotAllowed(
-                msgs=[
-                    f"Looks like the widget with guid `{guid}` is already "
-                    f"added to parent."
-                ]
-            )
-
-        # -------------------------------------------------- 04
-        # If widget is already assigned to some parent then raise error
-        # Note that this is not similar to being is_built ... this simple
-        # does mean that you cannot share widgets in multiple places i.e. it
-        # must have only one parent and will be unique with peer children of
-        # that parent
-        if widget.internal.has('guid'):
-            e.code.CodingError(
-                msgs=[
-                    f"Seems like widget was already assigned to some parent "
-                    f"and has guid `{widget.guid}`",
-                    f"Your attempt to add to some new parent with guid "
-                    f"`{guid}` is not possible.",
-                ]
-            )
-
-        # -------------------------------------------------- 05
-        # set internals
-        widget.internal.guid = guid
-        widget.internal.parent = self
-        widget.internal.before = before
-
-        # -------------------------------------------------- 06
-        # we can now store widget to children
-        # Note that guid is used as it is for dict key
-        self.children[guid] = widget
-
-        # -------------------------------------------------- 07
-        # if this widget is already built we need to build this widget here
-        # else it will be built when build() on super parent is called
-        if self.is_built:
-            widget.build()
-
-    def hide(self, children_only: bool = False):
-        # todo: needs testing
-        if children_only:
-            for child in dpg.get_item_children(item=self.dpg_id):
-                dpg.configure_item(item=child, show=False)
-        else:
-            dpg.configure_item(item=self.dpg_id, show=False)
-
-    def show(self, children_only: bool = False):
-        # todo: needs testing
-        if children_only:
-            for child in dpg.get_item_children(item=self.dpg_id):
-                dpg.configure_item(item=child, show=True)
-        else:
-            dpg.configure_item(item=self.dpg_id, show=True)
-
-    def guid_dom(self) -> t.Tuple[str, t.Union[None, t.Dict]]:
-        if not self.is_container:
-            return self.guid, None
-
-        _ret = {}
-        for _w in self.children.values():
-            _name, _children = _w.guid_dom()
-            _ret[_name] = _children
-
-        return self.guid, _ret
-
-    def set_theme(self, theme: assets.Theme):
-        dpg.set_item_theme(item=self.dpg_id, theme=theme.get())
-
-    def set_widget_configuration(self, **kwargs):
-        # if any value is widget then get its dpg_id
-        _new_kwargs = {}
-        for _k in kwargs.keys():
-            _v = kwargs[_k]
-            if isinstance(_v, Widget):
-                _v = _v.dpg_id
-            _new_kwargs[_k] = _v
-        # configure
-        dpg.configure_item(item=self.dpg_id, **_new_kwargs)
-
-    def display_raw_configuration(self) -> t.Dict:
-        """
-        Note that raw dpg_id is not treated
-        """
-        return dpg.get_item_configuration(item=self.dpg_id)
-
-
-@dataclasses.dataclass(frozen=True)
-class Binder:
-    """
-    Can bind to parent that is already built
-    """
-    guid: str
-    parent: Widget
-    before: Widget = None
-
-    def __post_init__(self):
-        if not self.parent.is_built:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"The parent is not built so we cannot create binder "
-                    f"instance ...",
-                    f"Make sure to supply parent that is built"
-                ]
-            )
-        if not self.parent.is_container:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"We expect parent to be of container type so that "
-                    f"new widget can be bind ..."
-                ]
-            )
-        if self.guid in self.parent.children.keys():
-            e.validation.NotAllowed(
-                msgs=[
-                    f"You cannot have widget with guid `{self.guid}` to be "
-                    f"bind with this parent"
-                ]
-            )
-
-    def __call__(self, widget: Widget):
-        # bind
-        self.parent.add_child(
-            guid=self.guid, widget=widget, before=self.before,
-        )
+        # return
+        return self.form_fields_group.dpg_id
 
 
 @dataclasses.dataclass(frozen=True)
@@ -636,7 +593,7 @@ class Dashboard(Widget):
         )
 
     @property
-    def is_container(self) -> bool:
+    def has_dpg_contextmanager(self) -> bool:
         return True
 
     @property
@@ -644,7 +601,7 @@ class Dashboard(Widget):
         return self
 
     @property
-    def windows(self) -> t.Dict[str, "Window"]:
+    def windows(self) -> t.List["Window"]:
         """
         Note that windows are only added to Dashboard Widget so this property
         is only available in Dashboard
@@ -654,10 +611,7 @@ class Dashboard(Widget):
         property
         """
         from . import Window
-        return {
-            k: v
-            for k, v in self.children.items() if isinstance(v, Window)
-        }
+        return [_c for _c in self.children if isinstance(_c, Window)]
 
     # noinspection PyTypeChecker,PyMethodMayBeStatic
     def copy(self) -> "Dashboard":

@@ -1,231 +1,583 @@
 import inspect
 import pathlib
 import textwrap
+import dataclasses
 import numpy as np
 import dearpygui.dearpygui as dpg
+from typing import NamedTuple
+import typing as t
+import re
+
+_WRAP_TEXT_WIDTH = 70
+_NEEDED_ENUMS = {}
 
 
-def gen_widget(_method, _widget_name, _enum_fields):
+class WidgetBuildParamDef(NamedTuple):
+    name: str
+    type: str
+    value: str
+    dpg_value: str
+    doc: str
 
-    _signature = inspect.signature(_method)
-    _is_wrapped = '__wrapped__' in dir(_method)
+    @property
+    def class_field_def(self) -> str:
+        return f"\t{self.name}: {self.type} = {self.value}"
 
-    # if method name starts with add_ check if it has wrapped counterpart in module dpg
-    if _method.__name__.startswith("add_"):
-        if _method.__name__.replace("add_", "") in dir(dpg):
+    @property
+    def is_callback(self) -> bool:
+        return self.type.find("Callback") != -1
+
+
+@dataclasses.dataclass(frozen=True)
+class WidgetDef:
+    method: t.Callable
+
+    # used to generate multiple widgets based on parameters supplied that will be
+    # hardcoded in build method
+    parameters: t.Dict[str, str] = None
+
+    @property
+    def name(self) -> str:
+        # ------------------------------------------------------- 01
+        # generate name based on method and parameters
+        if self.method == dpg.plot_axis:
+            if self.parameters['axis'] == 'dpg.mvXAxis':
+                return "BXAxis"
+            if self.parameters['axis'] == 'dpg.mvYAxis':
+                return "BYAxis"
             raise Exception(
-                f"Looks like there is wrapped counterpart for `{_method.__name__}`"
+                f"Unknown parameter value for axis {self.parameters['axis']}"
             )
 
-    # make _docs_dict
-    _main_doc = []
-    _docs_dict = {}
-    _track = False
-    for _l in _method.__doc__.split("\n"):
-        _l_strip = _l.strip()
-        if _l_strip in ['Returns:', 'Yields:']:
-            break
-        if _l_strip == 'Args:':
-            _track = True
-            continue
-        if _track:
-            _k = _l_strip.replace("*", '').split(' ')[0]
-            _v = _l_strip.split(':')[1].strip()
-            if _v == '':
-                _v = '...'
-            _docs_dict[_k] = _v
-        else:
-            for _s in textwrap.wrap(_l_strip, 70):
-                _main_doc.append(f"\t{_s}")
+        # ------------------------------------------------------- 02
+        # if you reach here means parameters are not needed
+        assert self.parameters is None, "You need not supply parameters"
 
-    # header
-    _lines = [
-        "",
-        "",
-        "@dataclasses.dataclass(frozen=True)",
-        f"class {_widget_name}(Widget):",
-        '\t"""',
-        "\tRefer:",
-        f"\t>>> dpg.{_method.__name__}",
-        "",
-    ] + _main_doc + ['\t"""', ""]
+        # ------------------------------------------------------- 03
+        # generate name based on method
+        if self.method == dpg.table:
+            return "BTable"
+        if self.method == dpg.plot:
+            return "BPlot"
+        if self.method == dpg.add_3d_slider:
+            return "Slider3D"
 
-    # make sure that _enum_fields keys are valid
-    _all_param_names = [_.name for _ in _signature.parameters.values()]
-    for _enum_field_key in _enum_fields.keys():
-        if _enum_field_key not in _all_param_names:
-            raise Exception(
-                f"The key {_enum_field_key} is not one of {_all_param_names}"
-            )
+        # ------------------------------------------------------- 04
+        # default name generation
+        _name = self.method.__name__.replace("add_", "")
+        _name = _name.title().replace("_", "")
+        _name = _name.replace("Intx", "IntX").replace("Floatx", "FloatX")
 
-    # make fields
-    _callback_params = []
-    _all_params_to_consider = []
-    _Axis_axis = []
-    for _param in _signature.parameters.values():
-        _param_name = _param.name
-        if _param_name in ['id', 'parent', 'before', ]:
-            continue
-        if _widget_name in ['XAxis', 'YAxis']:
-            if _param_name == 'axis':
-                _Axis_axis.append(
-                    f"\t\t\taxis="
-                    f"{'dpg.mvXAxis' if _widget_name == 'XAxis' else 'dpg.mvYAxis'},"
+        # ------------------------------------------------------- 05
+        return _name
+
+    @property
+    def has_dpg_contextmanager(self) -> bool:
+        return '__wrapped__' in dir(self.method)
+
+    def __post_init__(self):
+        # make checks
+        self.checks()
+
+    def checks(self):
+        # ---------------------------------------------------------- 01
+        # if method name starts with add_ check if it has wrapped counterpart
+        # in module dpg
+        if self.method.__name__.startswith("add_"):
+            if self.method.__name__.replace("add_", "") in dir(dpg):
+                raise Exception(
+                    f"Looks like there is wrapped counterpart for "
+                    f"`{self.method.__name__}`. "
+                    f"May be you need to make widget for that as this method will be "
+                    f"consumed by it."
                 )
+        # ---------------------------------------------------------- 02
+        # calling name property to do more checks
+        _ = self.name
+
+    def get_docs(self) -> t.Dict[str, str]:
+        _main_doc = []
+        _docs_dict = {}
+        _track = False
+        for _l in self.method.__doc__.split("\n"):
+            _l_strip = _l.strip()
+            if _l_strip in ['Returns:', 'Yields:']:
+                break
+            if _l_strip == 'Args:':
+                _track = True
                 continue
-        _param_type = f"{_param.annotation}".replace(
-            'typing', 't'
-        ).replace(
-            "<class '", ""
-        ).replace(
-            "'>", ""
-        ).replace(
-            "t.Callable", "Callback"
-        )
-        _all_params_to_consider.append(_param_name)
-        try:
-            for _s in textwrap.wrap(_docs_dict[_param_name], 70):
-                _lines.append(f"\t# {_s}")
-        except KeyError as _ke:
-            if _param_name == 'kwargs':
-                pass
+            if _track:
+                _k = _l_strip.replace("*", '').split(' ')[0]
+                _v = _l_strip.split(':')[1].strip()
+                if _v == '':
+                    _v = '...'
+                _v = _l_strip.split(':')[0].strip() + ": " + _v
+                _docs_dict[_k] = _v
             else:
-                raise _ke
-        if _param_type.find("Callback") != -1:
-            _callback_params.append(_param_name)
-        _param_value = _param.default
-        if _param_name == "source":
-            _param_type = "t.Optional[Widget]"
-            _param_value = "None"
-        if _param_name == "policy":
-            _param_type = "TableSizing"
-            _param_value = "None"
-        if _param_name == "user_data":
-            _param_type = "t.Union[Widget, t.List[Widget]]"
-            _param_value = "None"
-        if _param_name == "on_enter":
-            _param_name = "if_entered"
-        if _param_name == "kwargs":
-            _param_name = "# kwargs"
-        if _param_name in _enum_fields.keys():
-            _param_value = _enum_fields[_param_name]
-            _param_type = _param_value.split('.')[0]
-        _parm_str = f"\t{_param_name}: {_param_type}"
-        # noinspection PyUnresolvedReferences,PyProtectedMember
-        if _param_value != inspect._empty:
-            if _param_value in ["", "$$DPG_PAYLOAD"] or \
-                    str(_param_value).startswith('%'):
-                _parm_str += f" = '{_param_value}'"
-            elif isinstance(_param_value, list):
-                _parm_str += f" = \\\n\t\tdataclasses.field(default_factory=list)"
+                _main_doc.append(_l)
+        _docs_dict['main_doc'] = "\n".join(_main_doc)
+        return _docs_dict
+
+    def code(self) -> t.List[str]:
+        # ------------------------------------------------------- 01
+        # initial things
+        self.checks()
+
+        # ------------------------------------------------------- 02
+        # get docs dict
+        _docs_dict = self.get_docs()
+        _param_defs = self.get_param_defs()
+
+        # ------------------------------------------------------- 03
+        # make code lines
+        # ------------------------------------------------------- 03.01
+        # code header
+        _lines = [
+                     "",
+                     "",
+                     "@dataclasses.dataclass(frozen=True)",
+                     f"class {self.name}(Widget):",
+                     '\t"""',
+                     "\tRefer:",
+                     f"\t>>> dpg.{self.method.__name__}",
+                     "",
+                 ] + [_docs_dict['main_doc']] + ['\t"""', ""]
+        # ------------------------------------------------------- 03.02
+        # make fields
+        for _pd in _param_defs:
+            _lines += [f"\t# {_pd.doc}"]
+            # noinspection PyUnresolvedReferences,PyProtectedMember
+            if _pd.value is inspect._empty:
+                _lines += [f"\t{_pd.name}: {_pd.type}"]
             else:
-                _parm_str += f" = {_param_value}"
+                _lines += [f"\t{_pd.name}: {_pd.type} = {_pd.value}"]
+            _lines += [""]
 
-        _lines.append(_parm_str)
-        _lines.append("")
-
-    # make property is_container
-    _lines += [
-        "\t@property",
-        "\tdef is_container(self) -> bool:",
-        f"\t\treturn {_is_wrapped}"
-    ]
-
-    # make method build()
-    _kwargs = []
-    for _param in _all_params_to_consider:
-        _assign_str = f"\t\t\t{_param}=self.{_param},"
-        if _param in ["source", ]:
-            _assign_str = \
-                f"\t\t\t" \
-                f"{_param}=0 if self.{_param} is None else self." \
-                f"{_param}.dpg_id,"
-        if _param == "on_enter":
-            _assign_str = f"\t\t\t{_param}=self.if_entered,"
-        if _param in _enum_fields.keys():
-            _assign_str = f"\t\t\t{_param}=self.{_param}.value,"
-        if _param in _callback_params:
-            _assign_str = f"\t\t\t{_param}=self.{_param}_fn,"
-        if _param == "kwargs":
-            _assign_str = f"\t\t\t# {_param}=self.{_param},"
-        _kwargs.append(_assign_str)
-
-    _lines += [
-        "",
-        "\tdef build(self) -> t.Union[int, str]:",
-        f"\t\t_ret = dpg.{'add_' if _is_wrapped else ''}{_method.__name__}(",
-        *_Axis_axis,
-        f"\t\t\t**self.internal.dpg_kwargs,",
-        *_kwargs,
-        f"\t\t)",
-        f"\t\t",
-        f"\t\treturn _ret",
-    ]
-
-    # add methods for callback params
-    for _cp in _callback_params:
+        # ------------------------------------------------------- 03.03
+        # make property has_dpg_contextmanager
         _lines += [
-            "",
-            f"\tdef {_cp}_fn("
-            f"\n\t\tself, "
-            f"\n\t\tsender_dpg_id: int, "
-            f"\n\t\tapp_data: t.Any, "
-            f"\n\t\tuser_data: t.Any"
-            f"\n\t):",
-            # todo: remove this sanity check
-            "\t\t# eventually remove this sanity check ("
-            "dpg_widgets_generator.py)...",
-            "\t\tassert sender_dpg_id == self.dpg_id, \\"
-            "\n\t\t\t'was expecting the dpg_id to match ...'",
-            "",
-            "\t\t# logic ...",
-            f"\t\tif self.{_cp} is None:",
-            f"\t\t\treturn None",
-            f"\t\telse:",
-            f"\t\t\treturn self.{_cp}.fn("
-            f"\n\t\t\t\tsender=self, app_data=app_data, user_data=user_data"
-            f"\n\t\t\t)",
+            "\t@property",
+            "\tdef has_dpg_contextmanager(self) -> bool:",
+            f"\t\treturn {self.has_dpg_contextmanager}"
         ]
 
-    # replace \t to 4 spaces
-    _lines = [_.replace("\t", "    ") for _ in _lines]
+        # ------------------------------------------------------- 03.04
+        # make property allow_children
+        if self.name in ['XAxis', ]:
+            assert self.has_dpg_contextmanager, \
+                "should be true as we intend to limit it"
+            _lines += [
+                "",
+                "\t@property",
+                "\tdef allow_children(self) -> bool:",
+                f"\t\t# For class `{self.name}` we block adding children as ",
+                f"\t\t# this can be addressed with special properties or is not needed",
+                f"\t\treturn False",
+            ]
 
+        # ------------------------------------------------------- 03.05
+        # add build method
+        _params = {} if self.parameters is None else self.parameters
+        _lines += [
+            "",
+            "\tdef build(self) -> t.Union[int, str]:",
+            f"\t\t_ret = dpg.{'add_' if self.has_dpg_contextmanager else ''}"
+            f"{self.method.__name__}(",
+            f"\t\t\t**self.internal.dpg_kwargs,",
+            *[f"\t\t\t{_k}={_v}," for _k, _v in _params.items()],
+            *[
+                f"\t\t\t{_pd.name}={_pd.dpg_value},"
+                for _pd in _param_defs
+            ],
+            f"\t\t)",
+            f"\t\t",
+            f"\t\treturn _ret",
+        ]
+
+        # ------------------------------------------------------- 03.06
+        # add methods for callback params
+        for _pd in _param_defs:
+            if not _pd.is_callback:
+                continue
+            _lines += [
+                "",
+                f"\tdef {_pd.name}_fn("
+                f"\n\t\tself, "
+                f"\n\t\tsender_dpg_id: int, "
+                f"\n\t\tapp_data: t.Any, "
+                f"\n\t\tuser_data: t.Any"
+                f"\n\t):",
+                # todo: remove this sanity check
+                "\t\t# eventually remove this sanity check ("
+                "dpg_widgets_generator.py)...",
+                "\t\tassert sender_dpg_id == self.dpg_id, \\"
+                "\n\t\t\t'was expecting the dpg_id to match ...'",
+                "",
+                "\t\t# logic ...",
+                f"\t\tif self.{_pd.name} is None:",
+                f"\t\t\treturn None",
+                f"\t\telse:",
+                f"\t\t\treturn self.{_pd.name}.fn("
+                f"\n\t\t\t\tsender=self, app_data=app_data, user_data=user_data"
+                f"\n\t\t\t)",
+            ]
+
+        # ------------------------------------------------------- 04
+        # replace \t to 4 spaces
+        _lines = [_.replace("\t", "    ") for _ in _lines]
+        return _lines
+
+    def get_param_defs(self) -> t.List[WidgetBuildParamDef]:
+
+        # initial things
+        _signature = inspect.signature(self.method)
+        _docs_dict = self.get_docs()
+
+        # to return container
+        _ret = []
+
+        # ignore params
+        _ignore_params = ['id', 'parent', 'before', 'tag', 'kwargs']
+
+        # ignore axis param if needed
+        if self.method == dpg.plot_axis:
+            _ignore_params.append('axis')
+
+        # loop over all params
+        for _param in _signature.parameters.values():
+
+            # get name
+            _param_name = _param.name
+
+            # some things are ignored
+            if _param_name in _ignore_params:
+                continue
+
+            # param type
+            _param_type = f"{_param.annotation}".replace(
+                'typing', 't'
+            ).replace(
+                "<class '", ""
+            ).replace(
+                "'>", ""
+            ).replace(
+                "t.Callable", "Callback"
+            )
+
+            # is callback
+            _is_callback = _param_type.find("Callback") != -1
+
+            # param value
+            _param_value = _param.default
+
+            # param dpg value
+            _param_dpg_value = f"self.{_param_name}"
+
+            # param doc
+            _param_doc = _docs_dict[_param_name]
+
+            # if param is enum we will get _enum_def
+            _enum_def = None
+            if _param_name not in ['source']:
+                _enum_def = fetch_enum_def_from_param_doc(
+                    method=self.method, param_name=_param_name, param_doc=_param_doc
+                )
+
+            # some replacements
+            if _param_name == "source":
+                _param_type = "t.Optional[Widget]"
+                _param_value = "None"
+                _param_dpg_value = "0 if self.source is None else self.source.dpg_id"
+            if _param_name == "user_data":
+                _param_type = "t.Union[Widget, t.List[Widget]]"
+                _param_value = "None"
+            if _param_name == "on_enter":
+                _param_name = "if_entered"
+                _param_dpg_value = "self.on_enter"
+            if _is_callback:
+                _param_dpg_value += "_fn"
+            if _enum_def is not None:
+                _param_type = _enum_def.enum_name
+                _param_value = _enum_def.get_enum_instance_str_from_value(
+                    value=_param_value
+                )
+                _param_dpg_value = f"self.{_param_name}.value"
+
+            # update param value if not empty
+            # noinspection PyUnresolvedReferences,PyProtectedMember
+            if _param_value != inspect._empty:
+                if _param_value in ["", "$$DPG_PAYLOAD"] or \
+                        str(_param_value).startswith('%'):
+                    _param_value = f"'{_param_value}'"
+                elif isinstance(_param_value, list):
+                    _param_value = "\\\n\t\tdataclasses.field(default_factory=list)"
+
+            # append
+            _ret.append(
+                WidgetBuildParamDef(
+                    name=_param_name,
+                    type=_param_type,
+                    value=_param_value,
+                    dpg_value=_param_dpg_value,
+                    doc=_param_doc,
+                )
+            )
+
+        # final return
+        return _ret
+
+
+class EnumDef(NamedTuple):
+    dpg_enum_prefix: str
+    dpg_enum_values: t.List[str]
+
+    @property
+    def enum_name(self) -> str:
+        return "En" + self.dpg_enum_prefix.replace("mv", "").replace("_", "")
+
+    def __eq__(self, other):
+        return self.dpg_enum_prefix == other.dpg_enum_prefix and \
+               self.dpg_enum_values == other.dpg_enum_values
+
+    def code(self) -> t.List[str]:
+
+        # add header
+        _lines = [
+            "",
+            "",
+            f"class {self.enum_name}(m.FrozenEnum, enum.Enum):",
+            "",
+            # "\tDEFAULT = 0",
+        ]
+
+        # add enum fields
+        _dpg_prefix = self.dpg_enum_prefix
+        for _dpg_val_str in self.dpg_enum_values:
+
+            # dpg value
+            _dpg_val = getattr(dpg, _dpg_val_str)
+
+            # replace None
+            _enum_val_str = self.get_dpg_val_to_enum_val(_dpg_val_str)
+
+            # append line
+            _lines.append(
+                f"\t{_enum_val_str} = dpg.{_dpg_val_str}  # {_dpg_val}")
+
+        # add yaml tag
+        _lines += [
+            "",
+            "\t@classmethod",
+            "\tdef yaml_tag(cls) -> str:",
+            f"\t\treturn \"!gui_{self.enum_name}\"",
+        ]
+
+        # replace \t to 4 spaces
+        _lines = [_.replace("\t", "    ") for _ in _lines]
+        return _lines
+
+    def get_dpg_val_to_enum_val(self, dpg_val: str) -> str:
+        _ret = dpg_val.replace(self.dpg_enum_prefix, "")
+        if _ret == 'None':
+            _ret = 'NONE'
+        return _ret
+
+    def get_enum_instance_str_from_value(self, value: int) -> str:
+
+        # add enum fields
+        _selected_dpg_v = None
+        _dpg_values = []
+        for _dpg_v in self.dpg_enum_values:
+
+            # dpg value
+            _dpg_val = getattr(dpg, _dpg_v)
+            _dpg_values.append(_dpg_val)
+
+            # if matches set
+            if _dpg_val == value:
+                _selected_dpg_v = _dpg_v
+
+        # if None raise error
+        if _selected_dpg_v is None:
+            raise Exception(
+                f"Cannot fetch enum instance str for enum {self.enum_name}. "
+                f"The value {value} is not one of "
+                f"{_dpg_values} for enum fields {self.dpg_enum_values}"
+            )
+
+        # return
+        _selected_dpg_v = self.get_dpg_val_to_enum_val(_selected_dpg_v)
+        return f"{self.enum_name}.{_selected_dpg_v}"
+
+
+def fetch_enum_def_from_param_doc(
+    method: t.Callable, param_name: str, param_doc: str
+) -> t.Optional[EnumDef]:
+    """
+    If we detect that widget param doc can be a enum field we return tuple i.e.
+    (possible enum name, and the enum fields) else we return None ...
+    """
+    # ----------------------------------------------------------------- 01
+    # enum starts with `mv` then letters and one underscore
+    # multiple underscores can follow
+    _enum_val_s = re.findall(" mv[a-zA-Z0-9]+_[*_a-zA-Z0-9]+", param_doc)
+
+    # ----------------------------------------------------------------- 02
+    # param name has star
+    _param_name_has_star = False
+    if len(_enum_val_s) == 1:
+        _param_name_has_star = _enum_val_s[0].find("*") != -1
+
+    # ----------------------------------------------------------------- 03
+    # is param dog_id type
+    _is_dpg_id = param_doc.find("Union[int, str]") != -1
+
+    # ----------------------------------------------------------------- 04
+    # if dpg field and no enum values raise error if cannot be handled
+    if _is_dpg_id:
+        if not bool(_enum_val_s):
+            raise Exception(
+                f"There are no enum fields detected for "
+                f"\n\tmethod: {method} "
+                f"\n\tparameter: {param_name} "
+                f"\n\tdoc: {param_doc}"
+            )
+
+    # ----------------------------------------------------------------- 05
+    # there is no enum for this then return
+    if not bool(_enum_val_s) and not _is_dpg_id:
+        return None
+
+    # ----------------------------------------------------------------- 06
+    # remove extra space
+    _enum_val_s = [_.strip() for _ in _enum_val_s]
+
+    # ----------------------------------------------------------------- 07
+    # figure out enum name and values if needed
+    # ----------------------------------------------------------------- 07.01
+    if _param_name_has_star:
+        _enum_prefix = _enum_val_s[0].replace("*", "")
+        _enum_val_s = []
+        for _item in dir(dpg):
+            if _item.startswith(_enum_prefix):
+                _enum_val_s.append(_item)
+    # ----------------------------------------------------------------- 07.02
+    # else figure out name from enum values
+    else:
+        _l_of_l = [list(_) for _ in _enum_val_s]
+        _enum_prefix = ""
+        for _ in zip(*_l_of_l):
+            _break = all(__ == _[0] for __ in _)
+            if not _break:
+                break
+            _enum_prefix += _[0]
+
+    # ----------------------------------------------------------------- 08
+    # update enum name further if needed
+    # Note this section is hardcoded and any fixes can be done here
+
+    # ----------------------------------------------------------------- 09
+    # build enum num def and see if proper duplicate
+    _enum_def = EnumDef(
+        dpg_enum_prefix=_enum_prefix, dpg_enum_values=_enum_val_s)
+    if _enum_def.enum_name not in _NEEDED_ENUMS.keys():
+        _NEEDED_ENUMS[_enum_def.enum_name] = _enum_def
+    else:
+        _other_enum_def = _NEEDED_ENUMS[_enum_def.enum_name]
+        if _enum_def != _other_enum_def:
+            raise Exception(
+                f"Inspect enum {_enum_def.enum_name} and update it above so "
+                f"that every enum is unique"
+            )
+
+    # ----------------------------------------------------------------- 10
     # return
-    return _lines
+    return _enum_def
 
 
-def gen_enum(_enum_class_name, _dpg_prefix):
+def fetch_widget_defs() -> t.List[WidgetDef]:
+    """
+    Right now hardcoded but we will automate this later
+    """
+    return [
+        WidgetDef(method=dpg.table, ),
+        WidgetDef(method=dpg.add_table_column, ),
+        WidgetDef(method=dpg.table_row, ),
+        WidgetDef(method=dpg.table_cell, ),
+        WidgetDef(method=dpg.add_tab_button, ),
+        WidgetDef(method=dpg.tab_bar, ),
+        WidgetDef(method=dpg.tab, ),
+        WidgetDef(method=dpg.add_button, ),
+        WidgetDef(method=dpg.add_combo, ),
+        WidgetDef(method=dpg.add_separator, ),
+        WidgetDef(method=dpg.child_window, ),
+        WidgetDef(method=dpg.window, ),
+        WidgetDef(method=dpg.add_text, ),
+        WidgetDef(method=dpg.collapsing_header, ),
+        WidgetDef(method=dpg.group, ),
+        WidgetDef(method=dpg.add_plot_legend, ),
+        WidgetDef(method=dpg.plot_axis, parameters={'axis': 'dpg.mvXAxis'}, ),
+        WidgetDef(method=dpg.plot_axis, parameters={'axis': 'dpg.mvYAxis'}, ),
+        WidgetDef(method=dpg.subplots, ),
+        WidgetDef(method=dpg.add_simple_plot, ),
+        WidgetDef(method=dpg.plot, ),
+        WidgetDef(method=dpg.add_input_intx, ),
+        WidgetDef(method=dpg.add_input_int, ),
+        WidgetDef(method=dpg.add_progress_bar, ),
+        WidgetDef(method=dpg.add_checkbox, ),
+        WidgetDef(method=dpg.add_colormap_scale, ),
+        WidgetDef(method=dpg.add_drag_line, ),
+        WidgetDef(method=dpg.add_drag_point, ),
+        WidgetDef(method=dpg.add_slider_int, ),
+        WidgetDef(method=dpg.add_slider_intx, ),
+        WidgetDef(method=dpg.add_slider_float, ),
+        WidgetDef(method=dpg.add_slider_floatx, ),
+        WidgetDef(method=dpg.add_3d_slider, ),
+        WidgetDef(method=dpg.tooltip, ),
+        # todo: tackle this once below enums are resolved
+        #   + mvThemeCat_
+        #   + mvThemeCol_
+        #   + mvPlotCol_
+        #   + mvNodeCol_
+        #   + mvStyleVar_
+        #   + mvPlotStyleVar_
+        #   + mvNodeStyleVar_
+        #   + mvFontRangeHint_
+        # WidgetDef(
+        #     method=dpg.theme,
+        # ),
+        # WidgetDef(
+        #     method=dpg.theme_component,
+        # ),
+        # WidgetDef(
+        #     method=dpg.add_theme_color,
+        #     widget_name="ThemeColor",
+        #     enum_fields={
+        #         'value': 'Color.BLACK',
+        #         'target': 'ThemeCol.DEFAULT',
+        #         'category': 'ThemeCat.DEFAULT',
+        #     },
+        # ),
+        # WidgetDef(
+        #     method=dpg.add_theme_style,
+        #     widget_name="ThemeStyle",
+        #     enum_fields={
+        #         'target': 'ThemeCol.DEFAULT',
+        #         'category': 'ThemeCat.DEFAULT',
+        #     },
+        # ),
+    ]
 
-    _code = f'''
 
-class {_enum_class_name}(m.FrozenEnum, enum.Enum):
-
-'''
-
-    _code += f"\tDEFAULT = 0\n"
-    for _ in dir(dpg):
-        if _.startswith(_dpg_prefix):
-            _enum_item = _.replace(_dpg_prefix, "")
-            if _enum_item == 'None':
-                _enum_item = 'NONE'
-            _code += f"\t{_enum_item} = dpg.{_}\n"
-
-    _code += f'''
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"!gui_{_enum_class_name}"
-'''
-
-    _code = _code.replace("\t", "    ")
-
-    return _code
-
-
-def gen_auto_widgets_and_enums():
+def create_auto_code_for_widgets_and_enums():
     # ---------------------------------------------------- 01
-    _header = '''"""
+    _script_file = pathlib.Path(__file__)
+    _script_file = _script_file.relative_to(
+        _script_file.parent.parent.parent.parent).as_posix()
+    _header = f'''"""
 ********************************************************************************
-** This code is auto-generated using script `scripts/dpg_widget_generator.py` **
+This code is auto-generated using script:
+    {_script_file}
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -236,92 +588,21 @@ import typing as t
 import enum
 
 from ... import marshalling as m
-from .. import Widget, Callback, Color
+from .. import Widget, Callback
 '''
+
     # ---------------------------------------------------- 02
-    # see if mv and can be enum
-    _unique_items = []
-    for _item in dir(dpg):
-        if not _item.startswith("mv"):
-            continue
-        if _item.find("_") == -1:
-            continue
-        _item = "_".join(_item.split('_')[:-1]) + "_"
-        _unique_items.append(_item)
-    # see if group
-    _unique_items, _unique_count = np.unique(_unique_items, return_counts=True)
-    _unique_items = list(_unique_items[_unique_count > 1])
-    # make enum items
-    _enum_items = []
-    for _ui in _unique_items:
-        if _ui in ['mvColorEdit_', 'mvColorEdit_input_', 'mvKey_', 'mvReservedUUID_']:
-            continue
-        if _ui == 'mvTable_':
-            _enum_items.append(('TableSizing', 'mvTable_Sizing'))
-        else:
-            _enum_items.append((_ui.replace("_", "").replace("mv", ""), _ui))
-    # create code
-    _enum_code = ""
-    for _enum_class_name, _dpg_prefix in _enum_items:
-        _enum_code += gen_enum(_enum_class_name, _dpg_prefix)
+    _widget_code_lines = []
+    for _widget in fetch_widget_defs():
+        _widget_code_lines += _widget.code()
+    _widget_code = "\n".join(_widget_code_lines + [""])
 
     # ---------------------------------------------------- 03
-    _widget_items = [
-        (dpg.add_table_column, "Column", {}),
-        (dpg.table_row, "Row", {}),
-        (dpg.table, "BTable", {'policy': 'TableSizing.DEFAULT'}),
-        (dpg.add_tab_button, "TabButton", {}),
-        (dpg.tab_bar, "TabBar", {}),
-        (dpg.tab, "Tab", {}),
-        (dpg.add_button, "Button", {}),
-        (dpg.add_combo, "Combo", {}),
-        (dpg.add_separator, "Separator", {}),
-        (dpg.child_window, "ChildWindow", {}),
-        (dpg.window, "Window", {}),
-        (dpg.add_text, "Text", {'color': 'Color.DEFAULT'}),
-        (dpg.collapsing_header, "CollapsingHeader", {}),
-        (dpg.group, "Group", {}),
-        (dpg.add_plot_legend, "Legend", {'location': 'PlotLocation.NorthWest'}),
-        (dpg.plot_axis, "XAxis", {}),
-        (dpg.plot_axis, "YAxis", {}),
-        (dpg.subplots, "SubPlot", {}),
-        (dpg.add_simple_plot, "SimplePlot", {}),
-        (dpg.plot, "BPlot", {}),
-        (dpg.add_input_intx, "InputIntX", {}),
-        (dpg.add_input_int, "InputInt", {}),
-        (dpg.add_progress_bar, "ProgressBar", {}),
-        (dpg.add_checkbox, "CheckBox", {}),
-        (dpg.add_colormap_scale, "ColorMapScale", {}),
-        (dpg.add_drag_line, "DragLine", {'color': 'Color.DEFAULT'}),
-        (dpg.add_drag_point, "DragPoint", {'color': 'Color.DEFAULT'}),
-        (dpg.add_slider_int, "SliderInt", {}),
-        (dpg.add_slider_intx, "SliderIntX", {}),
-        (dpg.add_slider_float, "SliderFloat", {}),
-        (dpg.add_slider_floatx, "SliderFloatX", {}),
-        (dpg.add_3d_slider, "Slider3D", {}),
-        (dpg.tooltip, "ToolTip", {}),
-        (dpg.theme, "Theme", {}),
-        # (dpg.theme_component, "ThemeComponent", {}),
-        (
-            dpg.add_theme_color, "ThemeColor",
-            {
-                'value': 'Color.BLACK',
-                'target': 'ThemeCol.DEFAULT',
-                'category': 'ThemeCat.DEFAULT',
-            }
-         ),
-        (
-            dpg.add_theme_style, "ThemeStyle",
-            {
-                'target': 'ThemeCol.DEFAULT',
-                'category': 'ThemeCat.DEFAULT',
-            }
-        ),
-    ]
-    _widget_lines = []
-    for _method, _widget_name, _enum_fields in _widget_items:
-        _widget_lines += gen_widget(_method, _widget_name, _enum_fields)
-    _widget_code = "\n".join(_widget_lines + [""])
+    # create enum code
+    _enum_code_lines = []
+    for _enum_def in _NEEDED_ENUMS.values():
+        _enum_code_lines += _enum_def.code()
+    _enum_code = "\n".join(_enum_code_lines + [""])
 
     # ---------------------------------------------------- 04
     _output_file = pathlib.Path("../widget/auto.py")
@@ -329,5 +610,4 @@ from .. import Widget, Callback, Color
 
 
 if __name__ == '__main__':
-
-    gen_auto_widgets_and_enums()
+    create_auto_code_for_widgets_and_enums()

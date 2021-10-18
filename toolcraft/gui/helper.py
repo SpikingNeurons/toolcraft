@@ -63,7 +63,6 @@ def tab_bar_from_hashable_callables(
     title: str,
     hashable: m.HashableClass,
     callable_names: t.Dict[str, str],
-    binder: __base__.Binder
 ):
     # tab bar
     _tab_bar = widget.TabBar(

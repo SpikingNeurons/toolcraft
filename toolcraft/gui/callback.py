@@ -5,7 +5,7 @@ import typing as t
 from .. import util
 from .. import marshalling as m
 from .. import error as e
-from . import Widget, Callback, Binder
+from . import Widget, Callback
 from . import widget
 from . import assets
 
@@ -141,7 +141,7 @@ class HashableMethodRunnerCallback(Callback):
         super().init_validate()
 
         # check if receiver can accept child
-        if not self.receiver.is_container:
+        if not self.receiver.has_dpg_contextmanager:
             e.validation.NotAllowed(
                 msgs=[
                     f"We expect a receiver that can accept children..."
@@ -220,7 +220,7 @@ class HashableMethodsRunnerCallback(Callback):
         super().init_validate()
 
         # check if receiver can accept child
-        if not self.receiver.is_container:
+        if not self.receiver.has_dpg_contextmanager:
             e.validation.NotAllowed(
                 msgs=[
                     f"We expect a receiver that can accept children..."
