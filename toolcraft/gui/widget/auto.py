@@ -121,7 +121,7 @@ class BTable(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -663,7 +663,7 @@ class TabBar(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -866,7 +866,7 @@ class Button(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -982,7 +982,8 @@ class Combo(Widget):
     """
 
     # items (Union[List[str], Tuple[str, ...]], optional): A tuple of items to be shown in the drop down window. Can consist of any combination of types but will convert all items to strings to be shown.
-    items: t.Union[t.List[str], t.Tuple[str, ...]] = ()
+    items: t.Union[t.List[str], t.Tuple[str, ...]] = \
+        dataclasses.field(default_factory=lambda: [])
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -1022,7 +1023,7 @@ class Combo(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -1163,7 +1164,7 @@ class Separator(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     @property
     def has_dpg_contextmanager(self) -> bool:
@@ -1222,7 +1223,7 @@ class ChildWindow(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -1337,18 +1338,18 @@ class Window(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
     # min_size (Union[List[int], Tuple[int, ...]], optional): Minimum window size.
     min_size: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [100, 100])
 
     # max_size (Union[List[int], Tuple[int, ...]], optional): Maximum window size.
     max_size: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [30000, 30000])
 
     # menubar (bool, optional): Shows or hides the menubar.
     menubar: bool = False
@@ -1501,7 +1502,7 @@ class Text(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -1519,7 +1520,8 @@ class Text(Widget):
     bullet: bool = False
 
     # color (Union[List[float], Tuple[float, ...]], optional): Color of the text (rgba).
-    color: t.Union[t.List[float], t.Tuple[float, ...]] = (-1, -1, -1, -1)
+    color: t.Union[t.List[float], t.Tuple[float, ...]] = \
+        dataclasses.field(default_factory=lambda: [-1, -1, -1, -1])
 
     # show_label (bool, optional): Displays the label to teh right of the text.
     show_label: bool = False
@@ -1626,7 +1628,7 @@ class CollapsingHeader(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -1764,7 +1766,7 @@ class Group(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -1984,6 +1986,12 @@ class BXAxis(Widget):
     def has_dpg_contextmanager(self) -> bool:
         return True
 
+    @property
+    def allow_children(self) -> bool:
+        # For class `BXAxis` we block adding children as 
+        # this can be addressed with special properties or is not needed
+        return False
+
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
             **self.internal.dpg_kwargs,
@@ -2081,6 +2089,12 @@ class BYAxis(Widget):
     def has_dpg_contextmanager(self) -> bool:
         return True
 
+    @property
+    def allow_children(self) -> bool:
+        # For class `BYAxis` we block adding children as 
+        # this can be addressed with special properties or is not needed
+        return False
+
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
             **self.internal.dpg_kwargs,
@@ -2164,7 +2178,7 @@ class Subplots(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -2180,11 +2194,11 @@ class Subplots(Widget):
 
     # row_ratios (Union[List[float], Tuple[float, ...]], optional): ...
     row_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # column_ratios (Union[List[float], Tuple[float, ...]], optional): ...
     column_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # no_title (bool, optional): ...
     no_title: bool = False
@@ -2322,7 +2336,8 @@ class SimplePlot(Widget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = ()
+    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = \
+        dataclasses.field(default_factory=lambda: [])
 
     # overlay (str, optional): overlays text (similar to a plot title)
     overlay: str = ''
@@ -2452,7 +2467,7 @@ class BPlot(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -2684,7 +2699,7 @@ class InputIntX(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -2696,7 +2711,8 @@ class InputIntX(Widget):
     track_offset: float = 0.5
 
     # default_value (Union[List[int], Tuple[int, ...]], optional): ...
-    default_value: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, 0)
+    default_value: t.Union[t.List[int], t.Tuple[int, ...]] = \
+        dataclasses.field(default_factory=lambda: [0, 0, 0, 0])
 
     # min_value (int, optional): Value for lower limit of input for each cell. Use min_clamped to turn on.
     min_value: int = 0
@@ -2857,7 +2873,7 @@ class InputInt(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -3031,7 +3047,7 @@ class ProgressBar(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -3158,7 +3174,7 @@ class Checkbox(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -3296,7 +3312,7 @@ class ColormapScale(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # colormap (Union[int, str], optional): mvPlotColormap_* constants or mvColorMap uuid from a color map registry
     colormap: EnPlotColormap = EnPlotColormap.Default
@@ -3383,7 +3399,8 @@ class DragLine(Widget):
     default_value: t.Any = 0.0
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
+    color: t.Union[t.List[int], t.Tuple[int, ...]] = \
+        dataclasses.field(default_factory=lambda: [0, 0, 0, -255])
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -3464,10 +3481,12 @@ class DragPoint(Widget):
     show: bool = True
 
     # default_value (Any, optional): ...
-    default_value: t.Any = (0.0, 0.0)
+    default_value: t.Any = \
+        dataclasses.field(default_factory=lambda: [0.0, 0.0])
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
+    color: t.Union[t.List[int], t.Tuple[int, ...]] = \
+        dataclasses.field(default_factory=lambda: [0, 0, 0, -255])
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -3566,7 +3585,7 @@ class SliderInt(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -3736,7 +3755,7 @@ class SliderIntX(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -3748,7 +3767,8 @@ class SliderIntX(Widget):
     track_offset: float = 0.5
 
     # default_value (Union[List[int], Tuple[int, ...]], optional): ...
-    default_value: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, 0)
+    default_value: t.Union[t.List[int], t.Tuple[int, ...]] = \
+        dataclasses.field(default_factory=lambda: [0, 0, 0, 0])
 
     # size (int, optional): Number of ints to be displayed.
     size: int = 4
@@ -3908,7 +3928,7 @@ class SliderFloat(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -4078,7 +4098,7 @@ class SliderFloatX(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -4090,7 +4110,8 @@ class SliderFloatX(Widget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = \
+        dataclasses.field(default_factory=lambda: [0.0, 0.0, 0.0, 0.0])
 
     # size (int, optional): Number of floats to be displayed.
     size: int = 4
@@ -4247,7 +4268,7 @@ class Slider3D(Widget):
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
-        dataclasses.field(default_factory=list)
+        dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
@@ -4259,7 +4280,8 @@ class Slider3D(Widget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = \
+        dataclasses.field(default_factory=lambda: [0.0, 0.0, 0.0, 0.0])
 
     # max_x (float, optional): Applies upper limit to slider.
     max_x: float = 100.0

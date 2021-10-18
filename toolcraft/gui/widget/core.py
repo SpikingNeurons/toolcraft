@@ -126,6 +126,10 @@ class XAxis(BXAxis):
     def fit_axis(self):
         dpg.fit_axis_data(axis=self.dpg_id)
 
+    def clear(self):
+        # https://github.com/hoffstadt/DearPyGui/discussions/1328
+        dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
+
 
 @dataclasses.dataclass(frozen=True)
 class YAxis(BYAxis):
@@ -134,11 +138,8 @@ class YAxis(BYAxis):
         dpg.fit_axis_data(axis=self.dpg_id)
 
     def clear(self):
-        # plot series are added to YAxis so we clear its children to clear
-        # the plot
-        for _v in self.children.values():
-            if isinstance(_v, YAxis):
-                dpg.delete_item(item=_v.dpg_id, children_only=True)
+        # https://github.com/hoffstadt/DearPyGui/discussions/1328
+        dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
 
     # noinspection PyMethodMayBeStatic
     def update_series(self, series_dpg_id: int, **kwargs):
@@ -157,7 +158,7 @@ class YAxis(BYAxis):
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
+        fill: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [0, 0, 0, -255]),
         contribute_to_bounds: bool = True,
     ) -> t.Union[int, str]:
         """
@@ -206,9 +207,9 @@ class YAxis(BYAxis):
             fill=fill,
             contribute_to_bounds=contribute_to_bounds,
         )
-        
+
         return _dpg_id
-        
+
     def add_bar_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -268,9 +269,9 @@ class YAxis(BYAxis):
             weight=weight,
             horizontal=horizontal,
         )
-        
+
         return _dpg_id
-        
+
     def add_candle_series(
         self, *,
         dates: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -284,8 +285,8 @@ class YAxis(BYAxis):
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        bull_color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 255, 113, 255),
-        bear_color: t.Union[t.List[int], t.Tuple[int, ...]] = (218, 13, 79, 255),
+        bull_color: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [0, 255, 113, 255]),
+        bear_color: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [218, 13, 79, 255]),
         weight: int = 0.25,
         tooltip: bool = True,
     ) -> t.Union[int, str]:
@@ -350,9 +351,9 @@ class YAxis(BYAxis):
             weight=weight,
             tooltip=tooltip,
         )
-        
+
         return _dpg_id
-        
+
     def add_drag_line(
         self, *,
         label: str = None,
@@ -363,7 +364,7 @@ class YAxis(BYAxis):
         callback: t.Optional[Callback] = None,
         show: bool = True,
         default_value: t.Any = 0.0,
-        color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
+        color: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [0, 0, 0, -255]),
         thickness: float = 1.0,
         show_label: bool = True,
         vertical: bool = True,
@@ -420,9 +421,9 @@ class YAxis(BYAxis):
             show_label=show_label,
             vertical=vertical,
         )
-        
+
         return _dpg_id
-        
+
     def add_drag_point(
         self, *,
         label: str = None,
@@ -432,8 +433,8 @@ class YAxis(BYAxis):
         source: t.Optional[Widget] = None,
         callback: t.Optional[Callback] = None,
         show: bool = True,
-        default_value: t.Any = (0.0, 0.0),
-        color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
+        default_value: t.Any = dataclasses.field(default_factory=lambda: [0.0, 0.0]),
+        color: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [0, 0, 0, -255]),
         thickness: float = 1.0,
         show_label: bool = True,
     ) -> t.Union[int, str]:
@@ -486,9 +487,9 @@ class YAxis(BYAxis):
             thickness=thickness,
             show_label=show_label,
         )
-        
+
         return _dpg_id
-        
+
     def add_error_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -556,9 +557,9 @@ class YAxis(BYAxis):
             contribute_to_bounds=contribute_to_bounds,
             horizontal=horizontal,
         )
-        
+
         return _dpg_id
-        
+
     def add_heat_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -572,8 +573,8 @@ class YAxis(BYAxis):
         show: bool = True,
         scale_min: float = 0.0,
         scale_max: float = 1.0,
-        bounds_min: t.Any = (0.0, 0.0),
-        bounds_max: t.Any = (1.0, 1.0),
+        bounds_min: t.Any = dataclasses.field(default_factory=lambda: [0.0, 0.0]),
+        bounds_max: t.Any = dataclasses.field(default_factory=lambda: [1.0, 1.0]),
         format: str = '%0.1f',
         contribute_to_bounds: bool = True,
     ) -> t.Union[int, str]:
@@ -638,9 +639,9 @@ class YAxis(BYAxis):
             format=format,
             contribute_to_bounds=contribute_to_bounds,
         )
-        
+
         return _dpg_id
-        
+
     def add_histogram_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -720,9 +721,9 @@ class YAxis(BYAxis):
             outliers=outliers,
             contribute_to_bounds=contribute_to_bounds,
         )
-        
+
         return _dpg_id
-        
+
     def add_hline_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -770,9 +771,9 @@ class YAxis(BYAxis):
             source=getattr(source, 'dpg_id', 0),
             show=show,
         )
-        
+
         return _dpg_id
-        
+
     def add_image_series(
         self, *,
         texture_tag: t.Union[int, str],
@@ -784,9 +785,9 @@ class YAxis(BYAxis):
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        uv_min: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0),
-        uv_max: t.Union[t.List[float], t.Tuple[float, ...]] = (1.0, 1.0),
-        tint_color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255),
+        uv_min: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [0.0, 0.0]),
+        uv_max: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [1.0, 1.0]),
+        tint_color: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [255, 255, 255, 255]),
     ) -> t.Union[int, str]:
         """
         Refer:
@@ -840,9 +841,9 @@ class YAxis(BYAxis):
             uv_max=uv_max,
             tint_color=tint_color,
         )
-        
+
         return _dpg_id
-        
+
     def add_line_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -894,9 +895,9 @@ class YAxis(BYAxis):
             source=getattr(source, 'dpg_id', 0),
             show=show,
         )
-        
+
         return _dpg_id
-        
+
     def add_pie_series(
         self, *,
         x: float,
@@ -972,9 +973,9 @@ class YAxis(BYAxis):
             angle=angle,
             normalize=normalize,
         )
-        
+
         return _dpg_id
-        
+
     def add_plot_annotation(
         self, *,
         label: str = None,
@@ -983,9 +984,9 @@ class YAxis(BYAxis):
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        default_value: t.Any = (0.0, 0.0),
-        offset: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0),
-        color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255),
+        default_value: t.Any = dataclasses.field(default_factory=lambda: [0.0, 0.0]),
+        offset: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [0.0, 0.0]),
+        color: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [0, 0, 0, -255]),
         clamped: bool = True,
     ) -> t.Union[int, str]:
         """
@@ -1034,9 +1035,9 @@ class YAxis(BYAxis):
             color=color,
             clamped=clamped,
         )
-        
+
         return _dpg_id
-        
+
     def add_scatter_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -1088,16 +1089,16 @@ class YAxis(BYAxis):
             source=getattr(source, 'dpg_id', 0),
             show=show,
         )
-        
+
         return _dpg_id
-        
+
     def add_series_value(
         self, *,
         label: str = None,
         user_data: t.Any = None,
         use_internal_label: bool = True,
         source: t.Optional[Widget] = None,
-        default_value: t.Any = (),
+        default_value: t.Any = dataclasses.field(default_factory=lambda: []),
     ) -> t.Union[int, str]:
         """
         Refer:
@@ -1130,9 +1131,9 @@ class YAxis(BYAxis):
             source=getattr(source, 'dpg_id', 0),
             default_value=default_value,
         )
-        
+
         return _dpg_id
-        
+
     def add_shade_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -1143,7 +1144,7 @@ class YAxis(BYAxis):
         before: t.Optional[Widget] = None,
         source: t.Optional[Widget] = None,
         show: bool = True,
-        y2: t.Any = [],
+        y2: t.Any = dataclasses.field(default_factory=lambda: []),
     ) -> t.Union[int, str]:
         """
         Refer:
@@ -1188,9 +1189,9 @@ class YAxis(BYAxis):
             show=show,
             y2=y2,
         )
-        
+
         return _dpg_id
-        
+
     def add_stair_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -1242,9 +1243,9 @@ class YAxis(BYAxis):
             source=getattr(source, 'dpg_id', 0),
             show=show,
         )
-        
+
         return _dpg_id
-        
+
     def add_stem_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -1300,9 +1301,9 @@ class YAxis(BYAxis):
             source=getattr(source, 'dpg_id', 0),
             show=show,
         )
-        
+
         return _dpg_id
-        
+
     def add_text_point(
         self, *,
         x: float,
@@ -1366,9 +1367,9 @@ class YAxis(BYAxis):
             y_offset=y_offset,
             vertical=vertical,
         )
-        
+
         return _dpg_id
-        
+
     def add_vline_series(
         self, *,
         x: t.Union[t.List[float], t.Tuple[float, ...]],
@@ -1416,9 +1417,9 @@ class YAxis(BYAxis):
             source=getattr(source, 'dpg_id', 0),
             show=show,
         )
-        
+
         return _dpg_id
-        
+
     # pk; end tag >>>
 
 
@@ -1534,36 +1535,11 @@ class Plot(BPlot):
 
         # add legend and axis which are same as widgets but are immediate
         # part of Plot widget and needs to be added well in advance
-        if self.legend is not None:
-            if isinstance(self.legend, str):
-                self.add_child(
-                    guid="legend",
-                    widget=PlotLegend(label=self.legend)
-                )
-        if self.x_axis is not None:
-            if isinstance(self.x_axis, str):
-                self.add_child(
-                    guid="x_axis",
-                    widget=XAxis(label=self.x_axis)
-                )
-        if self.y1_axis is not None:
-            if isinstance(self.y1_axis, str):
-                self.add_child(
-                    guid="y1_axis",
-                    widget=YAxis(label=self.y1_axis)
-                )
-        if self.y2_axis is not None:
-            if isinstance(self.y2_axis, str):
-                self.add_child(
-                    guid="y2_axis",
-                    widget=YAxis(label=self.y2_axis)
-                )
-        if self.y3_axis is not None:
-            if isinstance(self.y3_axis, str):
-                self.add_child(
-                    guid="y3_axis",
-                    widget=YAxis(label=self.y3_axis)
-                )
+        _ = self.legend, self.x_axis, self.y1_axis
+        if self.num_of_y_axis == 2:
+            _ = self.y2_axis
+        elif self.num_of_y_axis == 3:
+            _ = self.y2_axis, self.y3_axis
 
     def build(self) -> t.Union[int, str]:
         # call super
@@ -1575,10 +1551,18 @@ class Plot(BPlot):
         self.y1_axis.build()
         if self.num_of_y_axis == 2:
             self.y2_axis.build()
-        if self.num_of_y_axis == 3:
+        elif self.num_of_y_axis == 3:
             self.y2_axis.build()
             self.y3_axis.build()
 
         # return
         return _ret
 
+    def clear(self):
+        self.x_axis.clear()
+        self.y1_axis.clear()
+        if self.num_of_y_axis == 2:
+            self.y2_axis.clear()
+        elif self.num_of_y_axis == 3:
+            self.y2_axis.clear()
+            self.y3_axis.clear()

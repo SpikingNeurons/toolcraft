@@ -1,8 +1,6 @@
 import inspect
 import pathlib
-import textwrap
 import dataclasses
-import numpy as np
 import dearpygui.dearpygui as dpg
 from typing import NamedTuple
 import typing as t
@@ -133,15 +131,15 @@ class WidgetDef:
         # ------------------------------------------------------- 03.01
         # code header
         _lines = [
-                     "",
-                     "",
-                     "@dataclasses.dataclass(frozen=True)",
-                     f"class {self.name}(Widget):",
-                     '\t"""',
-                     "\tRefer:",
-                     f"\t>>> dpg.{self.method.__name__}",
-                     "",
-                 ] + [_docs_dict['main_doc']] + ['\t"""', ""]
+            "",
+            "",
+            "@dataclasses.dataclass(frozen=True)",
+            f"class {self.name}(Widget):",
+            '\t"""',
+            "\tRefer:",
+            f"\t>>> dpg.{self.method.__name__}",
+            "",
+        ] + [_docs_dict['main_doc']] + ['\t"""', ""]
         # ------------------------------------------------------- 03.02
         # make fields
         for _pd in _param_defs:
@@ -163,7 +161,7 @@ class WidgetDef:
 
         # ------------------------------------------------------- 03.04
         # make property allow_children
-        if self.name in ['XAxis', ]:
+        if self.name in ['BXAxis', 'BYAxis']:
             assert self.has_dpg_contextmanager, \
                 "should be true as we intend to limit it"
             _lines += [
@@ -309,8 +307,11 @@ class WidgetDef:
                 if _param_value in ["", "$$DPG_PAYLOAD"] or \
                         str(_param_value).startswith('%'):
                     _param_value = f"'{_param_value}'"
-                elif isinstance(_param_value, list):
-                    _param_value = "\\\n\t\tdataclasses.field(default_factory=list)"
+                elif isinstance(_param_value, (list, tuple)):
+                    if isinstance(_param_value, tuple):
+                        _param_value = list(_param_value)
+                    _param_value = f"\\\n\t\tdataclasses.field(" \
+                                   f"default_factory=lambda: {_param_value})"
 
             # append
             _ret.append(

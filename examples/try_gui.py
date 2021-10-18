@@ -41,7 +41,7 @@ class Plotting(gui.CollapsingHeader):
         height=200,
     )
 
-    subplot: gui.SubPlot = gui.SubPlot(
+    subplot: gui.Subplots = gui.Subplots(
         rows=2,
         columns=2,
         label="This is sub plot ...",

@@ -158,6 +158,11 @@ def main():
             if _param_value in ["", "$$DPG_PAYLOAD"] or \
                     str(_param_value).startswith('%'):
                 _param_value = f"'{_param_value}'"
+            elif isinstance(_param_value, (list, tuple)):
+                if isinstance(_param_value, tuple):
+                    _param_value = list(_param_value)
+                _param_value = f"dataclasses.field(" \
+                               f"default_factory=lambda: {_param_value})"
             # ----------------------------------------------- 02.04.04
             # append _param_call_lines
             _param_call_str = f"\t\t{_param_name}: {_param_type}"
