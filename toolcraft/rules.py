@@ -38,7 +38,7 @@ from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
 from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
     ResultsFolder
 from .storage.state import Config, Info, StateFile
-from .gui import Form, Widget, Plot, Table
+from .gui import Form, Widget, Plot, Table, Dashboard
 
 
 LITERAL_CLASS_NAME = "LITERAL"
@@ -74,9 +74,10 @@ def check_things_to_be_cached(
         Folder: ['items'],
         FileGroup: ['file_keys'],
         ResultsFolder: ['store'],
-        Form: ['form_fields_group'],
+        Form: ['form_fields_container'],
         Widget: ['children'],
-        Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis']
+        Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
+        Dashboard: ['primary_window'],
     }
     if to_check is not None:
         _THINGS_TO_BE_CACHED = to_check
@@ -106,6 +107,7 @@ def check_things_not_to_be_cached(
         Tracker: ['is_called', 'iterable_length', 'on_iter', 'on_call',
                   'on_enter', 'on_exit'],
         StateFile: ['is_available'],
+        Widget: ['dpg_state', 'dpg_config'],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_CACHED = to_check
@@ -139,7 +141,7 @@ def check_things_not_to_be_overridden(
         Tracker: ['is_called', 'is_iterable'],
         StorageHashable: ['path'],
         ResultsFolder: ['store'],
-        Form: ['form_fields_group', 'build'],
+        Form: ['build'],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_OVERRIDDEN = to_check

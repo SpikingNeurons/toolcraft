@@ -7,10 +7,8 @@ import abc
 import dataclasses
 import typing as t
 import enum
-from tkinter import Widget
-
 import dearpygui.dearpygui as dpg
-# noinspection PyProtectedMember
+# noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 
 from .. import error as e
@@ -21,13 +19,12 @@ from . import assets
 
 _LOGGER = logger.get_logger()
 
-# noinspection PyUnreachableCode
+# noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
     from . import Window
-    from .widget import Group
 
 
-class Color(m.FrozenEnum, enum.Enum):
+class Color(enum.Enum):
     DEFAULT = [-1, -1, -1, -1]
     WHITE = [255, 255, 255, 255]
     BLACK = [0, 0, 0, 255]
@@ -35,44 +32,15 @@ class Color(m.FrozenEnum, enum.Enum):
     GREEN = [0, 255, 0, 255]
     BLUE = [0, 0, 255, 255]
     RED = [255, 0, 0, 255]
-    # CUSTOM = enum.auto()
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"!gui_Color"
-
-    # noinspection PyMethodOverriding
-    def __call__(self, r: int, g: int, b: int, a: int) -> "Color":
-        """
-        This method return fake Color when called with Color.CUSTOM(...)
-        """
-        if self is self.CUSTOM:
-            class _:
-                ...
-            __ = _()
-            __.dpg_value = [r, g, b, a]
-            # noinspection PyTypeChecker
-            return __
-        else:
-            e.code.CodingError(
-                msgs=[
-                    f"You are allowed to pass custom values only with "
-                    f"{self.CUSTOM} color."
-                ]
-            )
 
 
 @dataclasses.dataclass(frozen=True)
-class Callback(m.HashableClass, abc.ABC):
+class Callback(m.Tracker, abc.ABC):
     """
     Note that `Callback.fn` will as call back function.
     But when it comes to callback data we need not worry as the fields
     of this instance will serve as data ;)
     """
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return super().yaml_tag() + ":GuiCallback"
 
     @abc.abstractmethod
     def fn(
@@ -86,8 +54,9 @@ class Callback(m.HashableClass, abc.ABC):
 
 class WidgetInternal(m.Internal):
     dpg_id: t.Union[int, str]
-    parent: t.Union["Dashboard", "Widget"]
+    parent: "Container"
     before: t.Optional["Widget"]
+    dashboard: "Dashboard"
     is_build_done: bool
 
     @property
@@ -98,15 +67,27 @@ class WidgetInternal(m.Internal):
         return _ret
 
 
-@dataclasses.dataclass(frozen=True)
-class Widget(m.HashableClass, abc.ABC):
+@dataclasses.dataclass
+class Widget(m.Tracker, abc.ABC):
 
     @property
     def dpg_id(self) -> t.Union[int, str]:
         return self.internal.dpg_id
 
     @property
-    def parent(self) -> "Widget":
+    def dpg_state(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
+        return internal_dpg.get_item_state(self.dpg_id)
+
+    @property
+    def dpg_config(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
+        return internal_dpg.get_item_configuration(self.dpg_id)
+
+    @property
+    def dpg_info(self) -> t.Dict[str, t.Any]:
+        return internal_dpg.get_item_info(self.dpg_id)
+
+    @property
+    def parent(self) -> "Container":
         return self.internal.parent
 
     @property
@@ -119,21 +100,88 @@ class Widget(m.HashableClass, abc.ABC):
         return self.internal.has(item="is_build_done")
 
     @property
-    @abc.abstractmethod
-    def has_dpg_contextmanager(self) -> bool:
-        """
-        If the dpg component needs a call to end
-        Needed when the component is container and is used in with context
-        To figure out which component is container refer to
-        >>> import dearpygui.dearpygui as _dpg
-        And check which methods decorated with `@contextmanager` are yielding
-        """
-        ...
+    def is_hovered(self) -> bool:
+        return self.dpg_state['hovered']
 
     @property
-    def allow_children(self) -> bool:
-        # This is same as property `has_dpg_contextmanager`
-        return self.has_dpg_contextmanager
+    def is_active(self) -> bool:
+        return self.dpg_state['active']
+
+    @property
+    def is_focused(self) -> bool:
+        return self.dpg_state['focused']
+
+    @property
+    def is_clicked(self) -> bool:
+        return self.dpg_state['clicked']
+
+    @property
+    def is_left_clicked(self) -> bool:
+        return self.dpg_state['left_clicked']
+
+    @property
+    def is_right_clicked(self) -> bool:
+        return self.dpg_state['right_clicked']
+
+    @property
+    def is_middle_clicked(self) -> bool:
+        return self.dpg_state['middle_clicked']
+
+    @property
+    def is_visible(self) -> bool:
+        return self.dpg_state['visible']
+
+    @property
+    def is_edited(self) -> bool:
+        return self.dpg_state['edited']
+
+    @property
+    def is_activated(self) -> bool:
+        return self.dpg_state['activated']
+
+    @property
+    def is_deactivated(self) -> bool:
+        return self.dpg_state['deactivated']
+
+    @property
+    def is_deactivated_after_edit(self) -> bool:
+        return self.dpg_state['deactivated_after_edit']
+
+    @property
+    def is_toggled_open(self) -> bool:
+        return self.dpg_state['toggled_open']
+
+    @property
+    def is_ok(self) -> bool:
+        return self.dpg_state['ok']
+
+    @property
+    def is_shown(self) -> bool:
+        return self.dpg_config['show']
+
+    @property
+    def is_enabled(self) -> bool:
+        return self.dpg_config['enabled']
+
+    @property
+    def pos(self) -> t.Tuple[int, int]:
+        return tuple(self.dpg_state['pos'])
+
+    @property
+    def available_content_region(self) -> t.Tuple[int, int]:
+        return tuple(self.dpg_state['content_region_avail'])
+
+    @property
+    def rect_size(self) -> t.Tuple[int, int]:
+        return tuple(self.dpg_state['rect_size'])
+
+    @property
+    def rect_min(self) -> t.Tuple[int, int]:
+        return tuple(self.dpg_state['rect_min'])
+
+    @property
+    def rect_max(self) -> t.Tuple[int, int]:
+        return tuple(self.dpg_state['rect_max'])
 
     @property
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
@@ -141,28 +189,7 @@ class Widget(m.HashableClass, abc.ABC):
 
     @property
     def dashboard(self) -> "Dashboard":
-        """
-        This recursively gets to root and gets dashboard ... unnecessarily
-          expensive
-        todo: can we do set_data and get_data from dpg to access this
-          Or is there a global attribute to fetch this info ??
-        """
-        return self.parent.dashboard
-
-    @property
-    @util.CacheResult
-    def children(self) -> t.List["Widget"]:
-        # if not container raise error
-        if not self.allow_children:
-            e.code.NotAllowed(
-                msgs=[
-                    f"This property is not available as this Widget does not "
-                    f"support adding children",
-                    f"Please check class {self.__class__}"
-                ]
-            )
-        # this will be populated when __set_item__ is called
-        return []
+        return self.internal.dashboard
 
     def init_validate(self):
 
@@ -185,7 +212,39 @@ class Widget(m.HashableClass, abc.ABC):
                     )
 
     def get_value(self) -> t.Any:
-        return dpg.get_value(item=self.dpg_id)
+        """
+        Refer:
+        >>> dpg.get_value
+        """
+        return internal_dpg.get_value(self.dpg_id)
+
+    def get_x_scroll(self) -> float:
+        """
+        Refer:
+        >>> dpg.get_x_scroll
+        """
+        return internal_dpg.get_x_scroll(self.dpg_id)
+
+    def get_x_scroll_max(self) -> float:
+        """
+        Refer:
+        >>> dpg.get_x_scroll_max
+        """
+        return internal_dpg.get_x_scroll_max(self.dpg_id)
+
+    def get_y_scroll(self) -> float:
+        """
+        Refer:
+        >>> dpg.get_y_scroll
+        """
+        return internal_dpg.get_y_scroll(self.dpg_id)
+
+    def get_y_scroll_max(self) -> float:
+        """
+        Refer:
+        >>> dpg.get_y_scroll_max
+        """
+        return internal_dpg.get_y_scroll_max(self.dpg_id)
 
     @classmethod
     def hook_up_methods(cls):
@@ -212,6 +271,27 @@ class Widget(m.HashableClass, abc.ABC):
 
     def delete_pre_runner(self):
         ...
+
+    def focus(self):
+        """
+        Refer:
+        >>> dpg.focus_item
+        """
+        dpg.focus_item(self.dpg_id)
+
+    def enable(self):
+        """
+        Refer:
+        >>> dpg.enable_item
+        """
+        internal_dpg.configure_item(self.dpg_id, enabled=True)
+
+    def disable(self):
+        """
+        Refer:
+        >>> dpg.disable_item
+        """
+        internal_dpg.configure_item(self.dpg_id, enabled=False)
 
     def delete(self):
         # find index
@@ -278,101 +358,8 @@ class Widget(m.HashableClass, abc.ABC):
         # set dpg_id
         self.internal.dpg_id = hooked_method_return_value
 
-        # if container build children
-        if self.has_dpg_contextmanager:
-            # push_container_stack
-            internal_dpg.push_container_stack(hooked_method_return_value)
-
-            # now as layout is completed and build for this widget is completed,
-            # now it is time to render children
-            for child in self.children:
-                child.build()
-
-            # also pop_container_stack as we do not use with context
-            internal_dpg.pop_container_stack()
-
         # set flag to indicate build is done
         self.internal.is_build_done = True
-
-    def __getitem__(self, item: t.Tuple[t.Union["Widget", t.List["Widget"]], ...]):
-        for _item in item:
-            if isinstance(_item, Widget):
-                self.add_child(widget=_item)
-            elif isinstance(_item, list):
-                from .widget import Group
-                _g = Group(horizontal=True)
-                for _i in _item:
-                    _g.add_child(widget=_i)
-            else:
-                e.code.CodingError(
-                    msgs=[
-                        f"Unsupported item of type {type(item)}"
-                    ]
-                )
-                raise
-
-    def add_child(
-        self,
-        widget: "Widget",
-        before: "Widget" = None,
-    ):
-        # -------------------------------------------------- 01
-        # validations
-        # -------------------------------------------------- 01.01
-        # if not container we cannot add widgets
-        if not self.has_dpg_contextmanager:
-            e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is not of container type. We "
-                    f"do not support adding widget as child"
-                ]
-            )
-        # -------------------------------------------------- 01.02
-        # make sure that you are not adding Dashboard
-        if isinstance(widget, Dashboard):
-            e.code.CodingError(
-                msgs=[
-                    f"Note that you are not allowed to add Dashboard as child "
-                    f"to any Widget"
-                ]
-            )
-
-        # -------------------------------------------------- 02
-        # if widget is already built then raise error
-        if widget.is_built:
-            e.code.NotAllowed(
-                msgs=[
-                    f"The widget is already built",
-                ]
-            )
-
-        # -------------------------------------------------- 03
-        # if already in children raise error
-        _widget_id = id(widget)
-        for _c in self.children:
-            if id(_c) == _widget_id:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Looks like the widget is already "
-                        f"added to parent."
-                    ]
-                )
-
-        # -------------------------------------------------- 04
-        # set internals
-        widget.internal.parent = self
-        widget.internal.before = before
-
-        # -------------------------------------------------- 05
-        # we can now store widget to children
-        # Note that guid is used as it is for dict key
-        self.children.append(widget)
-
-        # -------------------------------------------------- 06
-        # if thw parent widget is already built we need to build this widget here
-        # else it will be built when build() on super parent is called
-        if self.is_built:
-            widget.build()
 
     def hide(self, children_only: bool = False):
         # todo: needs testing
@@ -412,10 +399,108 @@ class Widget(m.HashableClass, abc.ABC):
 
 
 @dataclasses.dataclass(frozen=True)
+class Container(Widget, abc.ABC):
+    """
+    Widget that can hold children
+    Example Group, ChildWindow etc.
+
+    todo: add support to restrict which children can be added to container
+    """
+
+    @property
+    @util.CacheResult
+    def children(self) -> t.List["Widget"]:
+        # this will be populated when __set_item__ is called
+        return []
+
+    def __getitem__(self, item: t.Tuple[t.Union["Widget", t.List["Widget"]], ...]):
+        for _item in item:
+            if isinstance(_item, Widget):
+                self.add_child(widget=_item)
+            elif isinstance(_item, list):
+                from .widget import Group
+                _g = Group(horizontal=True)
+                for _i in _item:
+                    _g.add_child(widget=_i)
+            else:
+                e.code.CodingError(
+                    msgs=[
+                        f"Unsupported item of type {type(item)}"
+                    ]
+                )
+                raise
+
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Union[int, str]
+    ):
+        # now as layout is completed and build for this widget is completed,
+        # now it is time to render children
+        for child in self.children:
+            child.build()
+
+        # call super
+        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+
+    def add_child(
+        self,
+        widget: "Widget",
+        before: "Widget" = None,
+    ):
+        # -------------------------------------------------- 01
+        # validations
+        # make sure that you are not adding Dashboard
+        if isinstance(widget, Dashboard):
+            e.code.CodingError(
+                msgs=[
+                    f"Note that you are not allowed to add Dashboard as child "
+                    f"to any Widget"
+                ]
+            )
+
+        # -------------------------------------------------- 02
+        # if widget is already built then raise error
+        if widget.is_built:
+            e.code.NotAllowed(
+                msgs=[
+                    f"The widget is already built",
+                ]
+            )
+
+        # -------------------------------------------------- 03
+        # if already in children raise error
+        _widget_id = id(widget)
+        for _c in self.children:
+            if id(_c) == _widget_id:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Looks like the widget is already "
+                        f"added to parent."
+                    ]
+                )
+
+        # -------------------------------------------------- 04
+        # set internals
+        widget.internal.parent = self
+        widget.internal.before = before
+        widget.internal.dashboard = self.internal.dashboard
+
+        # -------------------------------------------------- 05
+        # we can now store widget inside children list
+        # Note that guid is used as it is for dict key
+        self.children.append(widget)
+
+        # -------------------------------------------------- 06
+        # if thw parent widget is already built we need to build this widget here
+        # else it will be built when build() on super parent is called
+        if self.is_built:
+            widget.build()
+
+
+@dataclasses.dataclass(frozen=True)
 class Form(Widget, abc.ABC):
     """
-    Form is a special widget which creates a Group container and add all form fields
-    to it as defined by layout() method.
+    Form is a special widget which creates a `form_fields_container` container and
+    add all form fields to it as defined by layout() method.
 
     Note that Form itself is not a container and no children can be added to it.
     It only supports UI elements supplied via fields. Non Widget fields like Callbacks
@@ -432,16 +517,15 @@ class Form(Widget, abc.ABC):
 
     @property
     @util.CacheResult
-    def form_fields_group(self) -> "Group":
+    def form_fields_container(self) -> Container:
         """
-        The widget that holds all form fields
+        The container that holds all form fields.
+        Default is Group but you can have any widget that allows children.
+        ChildWindow is also better option as it has menubar.
+        Override this property to achieve the same.
         """
         from .widget import Group
         return Group()
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def init(self):
         """
@@ -538,24 +622,26 @@ class Form(Widget, abc.ABC):
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
             if isinstance(v, Widget):
-                self.form_fields_group.add_child(widget=v, before=None)
+                self.form_fields_container.add_child(widget=v, before=None)
 
     def build(self) -> t.Union[int, str]:
         # layout
         self.layout()
 
         # return
-        return self.form_fields_group.dpg_id
+        return self.form_fields_container.dpg_id
 
 
 @dataclasses.dataclass(frozen=True)
-class Dashboard(Widget):
+class Dashboard(Form):
     """
-    Dashboard is nothing but specialized Window. While note that
-    `widget.Window` will be any window that will be inside the Dashboard.
+    Dashboard is a specialized `Form`.
+    As of now we think of having only Window widgets as fields.
 
-    Refer:
-    >>> dpg.add_window
+    The `primary_window` property holds primary Window which will occupy entire screen
+
+    Figure out having more windows that can be popped inside or can be added
+    dynamically.
 
     Here we will take care of things like
     + screen resolution
@@ -574,14 +660,17 @@ class Dashboard(Widget):
       Also maybe add field save_state for Widget so that we know that only
       these widgets state needs to be saved
     """
-    dash_guid: str
     title: str
     width: int = 1370
     height: int = 1200
 
     @property
-    def name(self) -> str:
-        return self.dash_guid
+    def primary_window(self) -> "Window":
+        from . import Window
+        return Window(
+            label=self.title,
+            width=self.width, height=self.height,
+        )
 
     # noinspection PyTypeChecker,PyPropertyDefinition
     @property
@@ -593,34 +682,131 @@ class Dashboard(Widget):
         )
 
     @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
-
-    @property
     def dashboard(self) -> "Dashboard":
         return self
 
-    @property
-    def windows(self) -> t.List["Window"]:
+    @staticmethod
+    def get_active_window(**kwargs) -> int:
         """
-        Note that windows are only added to Dashboard Widget so this property
-        is only available in Dashboard
+        Refer:
+        >>> dpg.get_active_window
 
-        Note do not cache this as children can dynamically alter so not
-        caching will keep this property sync with any window add to children
-        property
+        todo: we will return Window widget later ... once we can track Window's in
+          Dashboard
         """
-        from . import Window
-        return [_c for _c in self.children if isinstance(_c, Window)]
+        # noinspection PyArgumentList
+        return internal_dpg.get_active_window(**kwargs)
 
-    # noinspection PyTypeChecker,PyMethodMayBeStatic
-    def copy(self) -> "Dashboard":
-        e.code.CodingError(
-            msgs=[
-                f"this is dashboard and you need not use this method as "
-                f"already this instance is eligible to be setup ..."
-            ]
-        )
+    @staticmethod
+    def get_windows(**kwargs) -> t.List[int]:
+        """
+        Refer:
+        >>> dpg.get_windows
+
+        todo: we will return Window widgets later ... once we can track Window's in
+          Dashboard
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_windows(**kwargs)
+
+    @staticmethod
+    def get_app_configuration(**kwargs) -> t.Dict:
+        """
+        Refer:
+        >>> dpg.get_app_configuration
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_app_configuration(**kwargs)
+
+    @staticmethod
+    def get_delta_time(**kwargs) -> float:
+        """
+        Refer:
+        >>> dpg.get_delta_time
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_delta_time(**kwargs)
+
+    @staticmethod
+    def get_drawing_mouse_pos(**kwargs) -> t.Tuple[int, int]:
+        """
+        Refer:
+        >>> dpg.get_drawing_mouse_pos
+        """
+        # noinspection PyArgumentList
+        return tuple(internal_dpg.get_drawing_mouse_pos(**kwargs))
+
+    @staticmethod
+    def get_frame_count(**kwargs) -> int:
+        """
+        Refer:
+        >>> dpg.get_frame_count
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_frame_count(**kwargs)
+
+    @staticmethod
+    def get_frame_rate(**kwargs) -> float:
+        """
+        Refer:
+        >>> dpg.get_frame_rate
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_frame_rate(**kwargs)
+
+    @staticmethod
+    def get_global_font_scale(**kwargs) -> float:
+        """
+        Refer:
+        >>> dpg.get_global_font_scale
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_global_font_scale(**kwargs)
+
+    @staticmethod
+    def get_item_types(**kwargs) -> t.Dict:
+        """
+        Refer:
+        >>> dpg.get_item_types
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_item_types(**kwargs)
+
+    @staticmethod
+    def get_mouse_drag_delta(**kwargs) -> float:
+        """
+        Refer:
+        >>> dpg.get_mouse_drag_delta
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_mouse_drag_delta(**kwargs)
+
+    @staticmethod
+    def get_mouse_pos(local: bool = True, **kwargs) -> t.Tuple[int, int]:
+        """
+        Refer:
+        >>> dpg.get_mouse_pos
+        """
+        # noinspection PyArgumentList
+        return tuple(internal_dpg.get_mouse_pos(local=local, **kwargs))
+
+    @staticmethod
+    def get_plot_mouse_pos(**kwargs) -> t.Tuple[int, int]:
+        """
+        Refer:
+        >>> dpg.get_plot_mouse_pos
+        """
+        # noinspection PyArgumentList
+        return tuple(internal_dpg.get_plot_mouse_pos(**kwargs))
+
+    @staticmethod
+    def get_total_time(**kwargs) -> float:
+        """
+        Refer:
+        >>> dpg.get_total_time
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_total_time(**kwargs)
 
     def build_pre_runner(self):
         # setup dpg
@@ -636,11 +822,8 @@ class Dashboard(Widget):
 
         # -------------------------------------------------- 01
         # add window
-        _ret = dpg.add_window(
-            label=self.title,
-            on_close=self.on_close,
-            width=self.width, height=self.height,
-        )
+        self.primary_window.build()
+        _ret = self.primary_window.dpg_id
 
         # -------------------------------------------------- 02
         # set the things for primary window
@@ -669,6 +852,3 @@ class Dashboard(Widget):
         dpg.show_viewport()
         dpg.start_dearpygui()
         dpg.destroy_context()
-
-    def on_close(self, sender, data):
-        self.delete()

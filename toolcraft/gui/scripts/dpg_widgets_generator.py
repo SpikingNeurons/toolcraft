@@ -29,6 +29,7 @@ class WidgetBuildParamDef(NamedTuple):
 @dataclasses.dataclass(frozen=True)
 class WidgetDef:
     method: t.Callable
+    is_container: bool
 
     # used to generate multiple widgets based on parameters supplied that will be
     # hardcoded in build method
@@ -69,27 +70,12 @@ class WidgetDef:
         # ------------------------------------------------------- 05
         return _name
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return '__wrapped__' in dir(self.method)
-
     def __post_init__(self):
         # make checks
         self.checks()
 
     def checks(self):
         # ---------------------------------------------------------- 01
-        # if method name starts with add_ check if it has wrapped counterpart
-        # in module dpg
-        if self.method.__name__.startswith("add_"):
-            if self.method.__name__.replace("add_", "") in dir(dpg):
-                raise Exception(
-                    f"Looks like there is wrapped counterpart for "
-                    f"`{self.method.__name__}`. "
-                    f"May be you need to make widget for that as this method will be "
-                    f"consumed by it."
-                )
-        # ---------------------------------------------------------- 02
         # calling name property to do more checks
         _ = self.name
 
@@ -117,14 +103,19 @@ class WidgetDef:
         return _docs_dict
 
     def code(self) -> t.List[str]:
+        print(f"getting code for `dpg.{self.method.__name__}`")
         # ------------------------------------------------------- 01
         # initial things
         self.checks()
-
-        # ------------------------------------------------------- 02
         # get docs dict
         _docs_dict = self.get_docs()
         _param_defs = self.get_param_defs()
+
+        # ------------------------------------------------------- 02
+        # is widget or container
+        _class_name = "Widget"
+        if self.is_container:
+            _class_name = "Container"
 
         # ------------------------------------------------------- 03
         # make code lines
@@ -134,7 +125,7 @@ class WidgetDef:
             "",
             "",
             "@dataclasses.dataclass(frozen=True)",
-            f"class {self.name}(Widget):",
+            f"class {self.name}({_class_name}):",
             '\t"""',
             "\tRefer:",
             f"\t>>> dpg.{self.method.__name__}",
@@ -152,35 +143,11 @@ class WidgetDef:
             _lines += [""]
 
         # ------------------------------------------------------- 03.03
-        # make property has_dpg_contextmanager
-        _lines += [
-            "\t@property",
-            "\tdef has_dpg_contextmanager(self) -> bool:",
-            f"\t\treturn {self.has_dpg_contextmanager}"
-        ]
-
-        # ------------------------------------------------------- 03.04
-        # make property allow_children
-        if self.name in ['BXAxis', 'BYAxis']:
-            assert self.has_dpg_contextmanager, \
-                "should be true as we intend to limit it"
-            _lines += [
-                "",
-                "\t@property",
-                "\tdef allow_children(self) -> bool:",
-                f"\t\t# For class `{self.name}` we block adding children as ",
-                f"\t\t# this can be addressed with special properties or is not needed",
-                f"\t\treturn False",
-            ]
-
-        # ------------------------------------------------------- 03.05
         # add build method
         _params = {} if self.parameters is None else self.parameters
         _lines += [
-            "",
             "\tdef build(self) -> t.Union[int, str]:",
-            f"\t\t_ret = dpg.{'add_' if self.has_dpg_contextmanager else ''}"
-            f"{self.method.__name__}(",
+            f"\t\t_ret = dpg.{self.method.__name__}(",
             f"\t\t\t**self.internal.dpg_kwargs,",
             *[f"\t\t\t{_k}={_v}," for _k, _v in _params.items()],
             *[
@@ -225,6 +192,15 @@ class WidgetDef:
         _lines = [_.replace("\t", "    ") for _ in _lines]
         return _lines
 
+    def allowed_methods_in_container(self) -> t.List[t.Callable]:
+        if not self.is_container:
+            raise Exception("Should be used with widgets that are containers")
+
+        _ret = []
+
+        for _fn in fetch_fns():
+            ...
+
     def get_param_defs(self) -> t.List[WidgetBuildParamDef]:
 
         # initial things
@@ -238,7 +214,7 @@ class WidgetDef:
         _ignore_params = ['id', 'parent', 'before', 'tag', 'kwargs']
 
         # ignore axis param if needed
-        if self.method == dpg.plot_axis:
+        if self.method == dpg.add_plot_axis:
             _ignore_params.append('axis')
 
         # loop over all params
@@ -346,7 +322,7 @@ class EnumDef(NamedTuple):
         _lines = [
             "",
             "",
-            f"class {self.enum_name}(m.FrozenEnum, enum.Enum):",
+            f"class {self.enum_name}(enum.Enum):",
             "",
             # "\tDEFAULT = 0",
         ]
@@ -364,14 +340,6 @@ class EnumDef(NamedTuple):
             # append line
             _lines.append(
                 f"\t{_enum_val_str} = dpg.{_dpg_val_str}  # {_dpg_val}")
-
-        # add yaml tag
-        _lines += [
-            "",
-            "\t@classmethod",
-            "\tdef yaml_tag(cls) -> str:",
-            f"\t\treturn \"!gui_{self.enum_name}\"",
-        ]
 
         # replace \t to 4 spaces
         _lines = [_.replace("\t", "    ") for _ in _lines]
@@ -496,78 +464,333 @@ def fetch_enum_def_from_param_doc(
     return _enum_def
 
 
-def fetch_widget_defs() -> t.List[WidgetDef]:
+def fetch_fns() -> t.List[t.Callable]:
+
+    _ret = []
+
+    # loop over dpg module
+    for _fn_name in dir(dpg):
+
+        # skip if not function
+        _fn = getattr(dpg, _fn_name)
+        if not inspect.isfunction(_fn):
+            continue
+
+        # fn details
+        _fn_src = inspect.getsource(_fn)
+        _deprecated_dec_present = _fn_src.find("@deprecated") != -1
+
+        # skip if deprecated
+        if _deprecated_dec_present:
+            continue
+
+        # skip this one as it gets detected as container Widget
+        if _fn == dpg.contextmanager:
+            continue
+
+        # skip this too
+        if _fn == dpg.deprecated:
+            continue
+
+        # append
+        _ret.append(_fn)
+
+    return _ret
+
+
+def fetch_container_widget_defs() -> t.Generator[WidgetDef, None, None]:
+    """
+    Yields only widgets that are container
+    """
+    # possible widgets
+    _possible_widgets = []
+    _skip_fn_names = []
+
+    # loop over dpg module
+    for _fn in fetch_fns():
+
+        # fn details
+        _fn_src = inspect.getsource(_fn)
+        _context_manager_dec_present = _fn_src.find("@contextmanager") != -1
+
+        # skip if not _context_manager_dec_present
+        if not _context_manager_dec_present:
+            continue
+
+        # assert check if add_ present
+        assert not _fn.__name__.startswith("add_"), \
+            f"was not expecting to start with add_ >> {_fn}"
+
+        # skip some fns that can be container widgets
+        if _fn in [
+            # todo: the doc is not available for all kwargs so keep this pending
+            dpg.popup,
+
+            # todo: dont know what to do, also there is no corresponding add_mutex
+            dpg.mutex,
+        ]:
+            continue
+
+        # make sure that there is corresponding add method
+        _add_fn_name = f"add_{_fn.__name__}"
+        if _add_fn_name not in dir(dpg):
+            raise Exception(
+                f"Cannot find corresponding add_* fn: {_add_fn_name}"
+            )
+
+        # special parametrization for `dpg.plot_axis`
+        if _fn == dpg.plot_axis:
+            # Note we disable the container for plot_axis
+            yield WidgetDef(
+                method=_fn, is_container=False, parameters={'axis': 'dpg.mvXAxis'}, )
+            yield WidgetDef(
+                method=_fn, is_container=False, parameters={'axis': 'dpg.mvYAxis'}, )
+        # other special treatments
+        # elif _fn == ...:
+        #     ...
+        # else general case
+        else:
+            yield WidgetDef(
+                method=_fn, is_container=_context_manager_dec_present, )
+
+
+def fetch_widget_defs() -> t.Generator[WidgetDef, None, None]:
     """
     Right now hardcoded but we will automate this later
     """
-    return [
-        WidgetDef(method=dpg.table, ),
-        WidgetDef(method=dpg.add_table_column, ),
-        WidgetDef(method=dpg.table_row, ),
-        WidgetDef(method=dpg.table_cell, ),
-        WidgetDef(method=dpg.add_tab_button, ),
-        WidgetDef(method=dpg.tab_bar, ),
-        WidgetDef(method=dpg.tab, ),
-        WidgetDef(method=dpg.add_button, ),
-        WidgetDef(method=dpg.add_combo, ),
-        WidgetDef(method=dpg.add_separator, ),
-        WidgetDef(method=dpg.child_window, ),
-        WidgetDef(method=dpg.window, ),
-        WidgetDef(method=dpg.add_text, ),
-        WidgetDef(method=dpg.collapsing_header, ),
-        WidgetDef(method=dpg.group, ),
-        WidgetDef(method=dpg.add_plot_legend, ),
-        WidgetDef(method=dpg.plot_axis, parameters={'axis': 'dpg.mvXAxis'}, ),
-        WidgetDef(method=dpg.plot_axis, parameters={'axis': 'dpg.mvYAxis'}, ),
-        WidgetDef(method=dpg.subplots, ),
-        WidgetDef(method=dpg.add_simple_plot, ),
-        WidgetDef(method=dpg.plot, ),
-        WidgetDef(method=dpg.add_input_intx, ),
-        WidgetDef(method=dpg.add_input_int, ),
-        WidgetDef(method=dpg.add_progress_bar, ),
-        WidgetDef(method=dpg.add_checkbox, ),
-        WidgetDef(method=dpg.add_colormap_scale, ),
-        WidgetDef(method=dpg.add_drag_line, ),
-        WidgetDef(method=dpg.add_drag_point, ),
-        WidgetDef(method=dpg.add_slider_int, ),
-        WidgetDef(method=dpg.add_slider_intx, ),
-        WidgetDef(method=dpg.add_slider_float, ),
-        WidgetDef(method=dpg.add_slider_floatx, ),
-        WidgetDef(method=dpg.add_3d_slider, ),
-        WidgetDef(method=dpg.tooltip, ),
-        # todo: tackle this once below enums are resolved
-        #   + mvThemeCat_
-        #   + mvThemeCol_
-        #   + mvPlotCol_
-        #   + mvNodeCol_
-        #   + mvStyleVar_
-        #   + mvPlotStyleVar_
-        #   + mvNodeStyleVar_
-        #   + mvFontRangeHint_
-        # WidgetDef(
-        #     method=dpg.theme,
-        # ),
-        # WidgetDef(
-        #     method=dpg.theme_component,
-        # ),
-        # WidgetDef(
-        #     method=dpg.add_theme_color,
-        #     widget_name="ThemeColor",
-        #     enum_fields={
-        #         'value': 'Color.BLACK',
-        #         'target': 'ThemeCol.DEFAULT',
-        #         'category': 'ThemeCat.DEFAULT',
-        #     },
-        # ),
-        # WidgetDef(
-        #     method=dpg.add_theme_style,
-        #     widget_name="ThemeStyle",
-        #     enum_fields={
-        #         'target': 'ThemeCol.DEFAULT',
-        #         'category': 'ThemeCat.DEFAULT',
-        #     },
-        # ),
-    ]
+    # ----------------------------------------------------------- 01
+    # first yield container widgets and also store it for future reference
+    _container_widgets = []
+    for _ in fetch_container_widget_defs():
+        _container_widgets.append(_)
+        yield _
+
+    # ----------------------------------------------------------- 02
+    # decide methods to skip
+    # ----------------------------------------------------------- 02.01
+    # skip method corresponding to _container_widgets
+    _skip_methods = []
+    for _container_widget in _container_widgets:
+        _skip_methods.append(_container_widget.method)
+        _skip_methods.append(getattr(dpg, f"add_{_container_widget.method.__name__}"))
+    # ----------------------------------------------------------- 02.02
+    # some more methods
+    _skip_methods.extend(
+        [
+            # not required
+            dpg.add_alias, dpg.does_alias_exist, dpg.does_item_exist,
+            dpg.generate_uuid, dpg.get_alias_id, dpg.get_aliases, dpg.get_all_items,
+            dpg.get_dearpygui_version, dpg.get_item_alias, dpg.get_values,
+
+            # handled methods
+            dpg.delete_item,  # Widget.delete
+            dpg.enable_item,  # Widget.enable
+            dpg.disable_item,  # Widget.disable
+            dpg.focus_item,  # Widget.focus
+            dpg.fit_axis_data,  # XAxis.fit_data, YAxis.fit_data,
+            dpg.get_axis_limits,  # XAxis.get_limits, YAxis.get_limits,
+            dpg.get_plot_query_area,  # Plot.get_query_area
+            dpg.get_value,  # Widget.get_value
+            dpg.get_x_scroll,  # Widget.get_x_scroll
+            dpg.get_x_scroll_max,  # Widget.get_x_scroll_max
+            dpg.get_y_scroll,  # Widget.get_y_scroll
+            dpg.get_y_scroll_max,  # Widget.get_y_scroll_max
+
+            # handled state commands
+            dpg.get_item_state,  # Widget.dpg_state property
+            dpg.is_item_hovered,
+            dpg.is_item_active,
+            dpg.is_item_focused,
+            dpg.is_item_clicked,
+            dpg.is_item_left_clicked,
+            dpg.is_item_right_clicked,
+            dpg.is_item_middle_clicked,
+            dpg.is_item_visible,
+            dpg.is_item_edited,
+            dpg.is_item_activated,
+            dpg.is_item_deactivated,
+            dpg.is_item_deactivated_after_edit,
+            dpg.is_item_toggled_open,
+            dpg.is_item_ok,
+            dpg.get_item_pos,
+            dpg.get_available_content_region,
+            dpg.get_item_rect_size,
+            dpg.get_item_rect_min,
+            dpg.get_item_rect_max,
+
+            # handled config commands
+            dpg.get_item_configuration,  # Widget.dpg_config property
+            dpg.is_item_shown,
+            dpg.is_item_enabled,
+            dpg.is_item_tracked,
+            dpg.is_item_search_delayed,
+            dpg.get_item_label,
+            dpg.get_item_filter_key,
+            dpg.get_item_indent,
+            dpg.get_item_track_offset,
+            dpg.get_item_width,
+            dpg.get_item_height,
+            dpg.get_item_callback,
+            dpg.get_item_drag_callback,
+            dpg.get_item_drop_callback,
+            dpg.get_item_user_data,
+            dpg.get_item_source,
+
+            # handled info commands
+            dpg.get_item_info,  # Widget.dpg_info property
+            dpg.get_item_slot,
+            dpg.is_item_container,
+            dpg.get_item_parent,
+            dpg.get_item_children,
+            dpg.get_item_type,
+            dpg.get_item_theme,
+            dpg.get_item_font,
+            dpg.get_item_disabled_theme,
+
+            # we assume and keep it at Dashboard level
+            # assuming there will be only one dashboard instance
+            dpg.get_active_window,  # Dashboard.get_active_window
+            dpg.get_delta_time,  # Dashboard.get_delta_time
+            dpg.get_drawing_mouse_pos,  # Dashboard.get_drawing_mouse_pos
+            dpg.get_frame_count,  # Dashboard.get_frame_count
+            dpg.get_frame_rate,  # Dashboard.get_frame_rate
+            dpg.get_global_font_scale,  # Dashboard.get_global_font_scale
+            dpg.get_item_types,  # Dashboard.get_item_types
+            dpg.get_mouse_drag_delta,  # Dashboard.get_mouse_drag_delta
+            dpg.get_mouse_pos,  # Dashboard.get_mouse_pos
+            dpg.get_plot_mouse_pos,  # Dashboard.get_plot_mouse_pos
+            # app configurations
+            dpg.get_app_configuration,  # Dashboard.get_app_configuration
+            dpg.get_major_version,  # Dashboard.get_app_configuration
+            dpg.get_minor_version,  # Dashboard.get_app_configuration
+            dpg.get_dearpygui_version,  # Dashboard.get_app_configuration
+            dpg.get_total_time,  # Dashboard.get_total_time
+            dpg.get_windows,  # Dashboard.get_windows
+
+            # todo: con be supported after having four enums for mvColorEdit_
+            dpg.add_color_edit, dpg.add_color_picker,
+
+            # todo: support later when static and dynamic textures are supported
+            dpg.add_image, dpg.add_image_button, dpg.add_image_series, dpg.draw_image,
+
+            # todo: support when using node editor
+            dpg.node_editor, dpg.add_node_link, dpg.clear_selected_links,
+            dpg.clear_selected_nodes, dpg.get_selected_links, dpg.get_selected_nodes,
+
+            # todo: may be these need to be used as Widget methods and not as Widget's
+            dpg.bind_colormap, dpg.bind_font, dpg.bind_item_font,
+            dpg.bind_item_handler_registry, dpg.bind_item_theme,
+            dpg.bind_template_registry, dpg.bind_theme,
+
+            # todo: viewport ... useful to make visual code style docking
+            dpg.create_viewport,
+            dpg.get_viewport_configuration,
+            dpg.get_viewport_clear_color,
+            dpg.get_viewport_pos,
+            dpg.get_viewport_width,
+            dpg.get_viewport_client_width,
+            dpg.get_viewport_client_height,
+            dpg.get_viewport_height,
+            dpg.get_viewport_min_width,
+            dpg.get_viewport_max_width,
+            dpg.get_viewport_min_height,
+            dpg.get_viewport_max_height,
+            dpg.get_viewport_title,
+            dpg.is_viewport_always_top,
+            dpg.is_viewport_resizable,
+            dpg.is_viewport_vsync_on,
+            dpg.is_viewport_decorated,
+
+            # todo: dpg related
+            dpg.create_context, dpg.destroy_context, dpg.empty_container_stack,
+
+            # todo: dont know what to do
+            dpg.configure_app, dpg.configure_item, dpg.configure_viewport,
+            dpg.capture_next_item, dpg.get_colormap_color,
+            dpg.get_file_dialog_info,  # maybe class method for FileDialog widget
+        ]
+    )
+
+    # ----------------------------------------------------------- 02
+    # loop over dpg module for fetching remaining widgets
+    for _fn in fetch_fns():
+
+        # ------------------------------------------------------- 02.01
+        # skip some functions
+        if _fn in _skip_methods:
+            continue
+        # ------------------------------------------------------- 02.02
+        # yield
+        yield WidgetDef(method=_fn, is_container=False, )
+
+    # return [
+    #     WidgetDef(method=dpg.add_table, ),
+    #     WidgetDef(method=dpg.add_table_column, ),
+    #     WidgetDef(method=dpg.add_table_row, ),
+    #     WidgetDef(method=dpg.add_table_cell, ),
+    #     WidgetDef(method=dpg.add_tab_button, ),
+    #     WidgetDef(method=dpg.add_tab_bar, ),
+    #     WidgetDef(method=dpg.add_tab, ),
+    #     WidgetDef(method=dpg.add_button, ),
+    #     WidgetDef(method=dpg.add_combo, ),
+    #     WidgetDef(method=dpg.add_separator, ),
+    #     WidgetDef(method=dpg.add_child_window, ),
+    #     WidgetDef(method=dpg.add_window, ),
+    #     WidgetDef(method=dpg.add_text, ),
+    #     WidgetDef(method=dpg.add_collapsing_header, ),
+    #     WidgetDef(method=dpg.add_group, ),
+    #     WidgetDef(method=dpg.add_plot_legend, ),
+    #     WidgetDef(method=dpg.add_plot_axis, parameters={'axis': 'dpg.mvXAxis'}, ),
+    #     WidgetDef(method=dpg.add_plot_axis, parameters={'axis': 'dpg.mvYAxis'}, ),
+    #     WidgetDef(method=dpg.add_subplots, ),
+    #     WidgetDef(method=dpg.add_simple_plot, ),
+    #     WidgetDef(method=dpg.add_plot, ),
+    #     WidgetDef(method=dpg.add_input_intx, ),
+    #     WidgetDef(method=dpg.add_input_int, ),
+    #     WidgetDef(method=dpg.add_progress_bar, ),
+    #     WidgetDef(method=dpg.add_checkbox, ),
+    #     WidgetDef(method=dpg.add_colormap_scale, ),
+    #     WidgetDef(method=dpg.add_drag_line, ),
+    #     WidgetDef(method=dpg.add_drag_point, ),
+    #     WidgetDef(method=dpg.add_slider_int, ),
+    #     WidgetDef(method=dpg.add_slider_intx, ),
+    #     WidgetDef(method=dpg.add_slider_float, ),
+    #     WidgetDef(method=dpg.add_slider_floatx, ),
+    #     WidgetDef(method=dpg.add_3d_slider, ),
+    #     WidgetDef(method=dpg.add_tooltip, ),
+    #     # todo: tackle this once below enums are resolved
+    #     #   + mvThemeCat_
+    #     #   + mvThemeCol_
+    #     #   + mvPlotCol_
+    #     #   + mvNodeCol_
+    #     #   + mvStyleVar_
+    #     #   + mvPlotStyleVar_
+    #     #   + mvNodeStyleVar_
+    #     #   + mvFontRangeHint_
+    #     # WidgetDef(
+    #     #     method=dpg.theme,
+    #     # ),
+    #     # WidgetDef(
+    #     #     method=dpg.theme_component,
+    #     # ),
+    #     # WidgetDef(
+    #     #     method=dpg.add_theme_color,
+    #     #     widget_name="ThemeColor",
+    #     #     enum_fields={
+    #     #         'value': 'Color.BLACK',
+    #     #         'target': 'ThemeCol.DEFAULT',
+    #     #         'category': 'ThemeCat.DEFAULT',
+    #     #     },
+    #     # ),
+    #     # WidgetDef(
+    #     #     method=dpg.add_theme_style,
+    #     #     widget_name="ThemeStyle",
+    #     #     enum_fields={
+    #     #         'target': 'ThemeCol.DEFAULT',
+    #     #         'category': 'ThemeCat.DEFAULT',
+    #     #     },
+    #     # ),
+    # ]
 
 
 def create_auto_code_for_widgets_and_enums():
@@ -589,7 +812,7 @@ import typing as t
 import enum
 
 from ... import marshalling as m
-from .. import Widget, Callback
+from .. import Widget, Container, Callback
 '''
 
     # ---------------------------------------------------- 02

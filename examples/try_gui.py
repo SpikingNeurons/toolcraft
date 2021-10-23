@@ -3,11 +3,16 @@ import typing as t
 
 import dearpygui.dearpygui as dpg
 import numpy as np
-from toolcraft import gui
+from toolcraft import gui, util
 
 
 @dataclasses.dataclass(frozen=True)
-class Info(gui.CollapsingHeader):
+class Info(gui.Form):
+
+    @property
+    @util.CacheResult
+    def form_fields_container(self) -> gui.CollapsingHeader:
+        return gui.CollapsingHeader()
 
     label: str = "Topic 1 - Text"
 
@@ -16,18 +21,21 @@ class Info(gui.CollapsingHeader):
     )
 
     bullet_1: gui.Text = gui.Text(
-        "bullet 1 ...",
-        bullet=True,
+        "bullet 1 ...", bullet=True,
     )
 
     bullet_2: gui.Text = gui.Text(
-        "bullet 2 ...",
-        bullet=True,
+        "bullet 2 ...", bullet=True,
     )
 
 
 @dataclasses.dataclass(frozen=True)
-class Plotting(gui.CollapsingHeader):
+class Plotting(gui.Form):
+
+    @property
+    @util.CacheResult
+    def form_fields_container(self) -> gui.CollapsingHeader:
+        return gui.CollapsingHeader()
 
     label: str = "Topic 2 - Plotting"
 
@@ -220,7 +228,7 @@ class MyDashboard(gui.Dashboard):
 
 
 def basic_dashboard():
-    _dash = MyDashboard(dash_guid="my_dashboard", title="My Dashboard")
+    _dash = MyDashboard(title="My Dashboard")
     _dash.build()
     _dash.topic2.plot_some_examples()
     _dash.run()

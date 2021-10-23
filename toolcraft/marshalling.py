@@ -374,6 +374,51 @@ class Tracker:
     def __del__(self):
         self.on_del()
 
+    @classmethod
+    def class_init(cls):
+        """
+        Alternative to avoid using dunder method __init_subclass__
+
+        Note that the class_init is called from __init_subclass__ and is not
+        aware of dataclasses.dataclass related things. SO in order to have
+        some HashableClass related class level thing swe need to do in in
+        __post_init__ only once per class .... as by then the cls is aware
+        that it is dataclass ;)
+        """
+
+        # hook up instance methods
+        # Note this we can also do in init_class but better do it here so
+        # that we need not wait till instance is created ...
+        cls.hook_up_methods()
+
+    @classmethod
+    def hook_up_methods(cls):
+        """
+        todo: The hook up methods create clutter in class definition while
+          browsing code in pycharm via structure pane
+          Solution 1: Have a HookUp class
+            We can easily have hook up class with three methods pre_runner,
+              runner and post_runner. Then this class be added as class
+              variable where we can use property pattern and get the owner
+              of property. In __call__ we can then call three methods in
+              sequence.
+            But disadvantage is we will get some vars displayed as fields in
+              pycharm structure. Remember we want fields to stand out. Also
+              class validate needs to allow those vars (although this is
+              solvable)
+          Solution 2: Have a property which return HookUp class
+            Disadvantage is we need to make sure that this property is
+            cached.
+            But we can have a class method to be used with class validate
+            where we can store names of properties that need to be cached.
+
+        todo: also allow pre runner to return hooked_method_return_value so
+          that it can pe consumed in hooked up method. This I assume can only
+          be possible via when we use one of the solution in above to do
+
+        """
+        ...
+
     def prefetch_stuff_before_first_call(self):
         """
         Handle expensive things that can reduce load on consecutive calls
@@ -458,13 +503,6 @@ class Tracker:
         ])
 
     def on_del(self):
-        ...
-
-    @classmethod
-    def class_init(cls):
-        """
-        Alternative to avoid using dunder method __init_subclass__
-        """
         ...
 
     @classmethod
@@ -606,9 +644,6 @@ class YamlRepr(Tracker):
         """ """
         global YAML_TAG_MAPPING
 
-        # call super
-        super().class_init()
-
         # only do for concrete classes
         if not inspect.isabstract(cls):
 
@@ -636,6 +671,9 @@ class YamlRepr(Tracker):
                         f"Please check if you have overridden `yaml_tag` "
                         f"method appropriately ... ",
                     ])
+
+        # call super
+        super().class_init()
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -1167,23 +1205,6 @@ class HashableClass(YamlRepr, abc.ABC):
         return self.hex_hash == other.hex_hash
 
     @classmethod
-    def class_init(cls):
-        """
-        Note that the class_init is called from __init_subclass__ and is not
-        aware of dataclasses.dataclass related things. SO in order to have
-        some HashableClass related class level thing swe need to do in in
-        __post_init__ only once per class .... as by then the cls is aware
-        that it is dataclass ;)
-        """
-        # call super
-        super().class_init()
-
-        # hook up instance methods
-        # Note this we can also so in init_class but better do it here so
-        # that we need not wait till instance is created ...
-        cls.hook_up_methods()
-
-    @classmethod
     def block_fields_in_subclasses(cls) -> bool:
         """
         Override this if you do not want subclasses to have new fields
@@ -1258,34 +1279,6 @@ class HashableClass(YamlRepr, abc.ABC):
         #  in first call smartly so that logs are not polluted
         if self.__class__.results_folder != HashableClass.results_folder:
             self.results_folder.init_store_df_files()
-
-    @classmethod
-    def hook_up_methods(cls):
-        """
-        todo: The hook up methods create clutter in class definition while
-          browsing code in pycharm via structure pane
-          Solution 1: Have a HookUp class
-            We can easily have hook up class with three methods pre_runner,
-              runner and post_runner. Then this class be added as class
-              variable where we can use property pattern and get the owner
-              of property. In __call__ we can then call three methods in
-              sequence.
-            But disadvantage is we will get some vars displayed as fields in
-              pycharm structure. Remember we want fields to stand out. Also
-              class validate needs to allow those vars (although this is
-              solvable)
-          Solution 2: Have a property which return HookUp class
-            Disadvantage is we need to make sure that this property is
-            cached.
-            But we can have a class method to be used with class validate
-            where we can store names of properties that need to be cached.
-
-        todo: also allow pre runner to return hooked_method_return_value so
-          that it can pe consumed in hooked up method. This I assume can only
-          be possible via when we use one of the solution in above to do
-
-        """
-        ...
 
     def info(self, binder: "gui.Binder"):
         # import

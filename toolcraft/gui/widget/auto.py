@@ -12,7 +12,7 @@ import typing as t
 import enum
 
 from ... import marshalling as m
-from .. import Widget, Callback
+from .. import Widget, Container, Callback
 
 
 class EnDir(m.FrozenEnum, enum.Enum):
@@ -83,10 +83,10 @@ class EnPlotColormap(m.FrozenEnum, enum.Enum):
 
 
 @dataclasses.dataclass(frozen=True)
-class BTable(Widget):
+class BTable(Container):
     """
     Refer:
-    >>> dpg.table
+    >>> dpg.add_table
 
      Adds a table.
 
@@ -215,10 +215,6 @@ class BTable(Widget):
 
     # no_saved_settings (bool, optional): Never load/save settings in .ini file.
     no_saved_settings: bool = False
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_table(
@@ -366,10 +362,6 @@ class TableColumn(Widget):
     # indent_disable (bool, optional): Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
     indent_disable: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_table_column(
             **self.internal.dpg_kwargs,
@@ -402,10 +394,10 @@ class TableColumn(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class TableRow(Widget):
+class TableRow(Container):
     """
     Refer:
-    >>> dpg.table_row
+    >>> dpg.add_table_row
 
      Adds a table row.
 
@@ -429,10 +421,6 @@ class TableRow(Widget):
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_table_row(
             **self.internal.dpg_kwargs,
@@ -448,10 +436,10 @@ class TableRow(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class TableCell(Widget):
+class TableCell(Container):
     """
     Refer:
-    >>> dpg.table_cell
+    >>> dpg.add_table_cell
 
      Adds a table.
 
@@ -474,10 +462,6 @@ class TableCell(Widget):
 
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_table_cell(
@@ -550,10 +534,6 @@ class TabButton(Widget):
 
     # no_tooltip (bool, optional): Disable tooltip for the given tab.
     no_tooltip: bool = False
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_tab_button(
@@ -634,10 +614,10 @@ class TabButton(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class TabBar(Widget):
+class TabBar(Container):
     """
     Refer:
-    >>> dpg.tab_bar
+    >>> dpg.add_tab_bar
 
      Adds a tab bar.
 
@@ -680,10 +660,6 @@ class TabBar(Widget):
     # reorderable (bool, optional): Allows for the user to change the order of the tabs.
     reorderable: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_tab_bar(
             **self.internal.dpg_kwargs,
@@ -723,10 +699,10 @@ class TabBar(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class Tab(Widget):
+class Tab(Container):
     """
     Refer:
-    >>> dpg.tab
+    >>> dpg.add_tab
 
      Adds a tab to a tab bar.
 
@@ -773,10 +749,6 @@ class Tab(Widget):
 
     # order_mode (bool, optional): set using a constant
     order_mode: bool = 0
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_tab(
@@ -885,10 +857,6 @@ class Button(Widget):
 
     # direction (int, optional): Sets the cardinal direction for the arrow buy using constants mvDir_Left, mvDir_Up, mvDir_Down, mvDir_Right, mvDir_None. Arrow keyword must be set to True.
     direction: EnDir = EnDir.Left
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_button(
@@ -1049,10 +1017,6 @@ class Combo(Widget):
     # height_mode (int, optional): Controlls the number of items shown in the dropdown by the constants mvComboHeight_Small, mvComboHeight_Regular, mvComboHeight_Large, mvComboHeight_Largest
     height_mode: EnComboHeight = EnComboHeight.Regular
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_combo(
             **self.internal.dpg_kwargs,
@@ -1166,10 +1130,6 @@ class Separator(Widget):
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = \
         dataclasses.field(default_factory=lambda: [])
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_separator(
             **self.internal.dpg_kwargs,
@@ -1185,10 +1145,10 @@ class Separator(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class ChildWindow(Widget):
+class ChildWindow(Container):
     """
     Refer:
-    >>> dpg.child_window
+    >>> dpg.add_child_window
 
      Adds an embedded child window. Will show scrollbars when items do not fit.
 
@@ -1255,10 +1215,6 @@ class ChildWindow(Widget):
     # menubar (bool, optional): Shows/Hides the menubar at the top.
     menubar: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_child_window(
             **self.internal.dpg_kwargs,
@@ -1306,10 +1262,10 @@ class ChildWindow(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class Window(Widget):
+class Window(Container):
     """
     Refer:
-    >>> dpg.window
+    >>> dpg.add_window
 
      Creates a new window for following items to be added to.
 
@@ -1401,10 +1357,6 @@ class Window(Widget):
 
     # on_close (Callable, optional): Callback ran when window is closed.
     on_close: Callback = None
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_window(
@@ -1526,10 +1478,6 @@ class Text(Widget):
     # show_label (bool, optional): Displays the label to teh right of the text.
     show_label: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_text(
             **self.internal.dpg_kwargs,
@@ -1593,10 +1541,10 @@ class Text(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class CollapsingHeader(Widget):
+class CollapsingHeader(Container):
     """
     Refer:
-    >>> dpg.collapsing_header
+    >>> dpg.add_collapsing_header
 
      Adds a collapsing header to add items to. Must be closed with the end command.
 
@@ -1659,10 +1607,6 @@ class CollapsingHeader(Widget):
 
     # bullet (bool, optional): Display a bullet instead of arrow.
     bullet: bool = False
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_collapsing_header(
@@ -1728,10 +1672,10 @@ class CollapsingHeader(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class Group(Widget):
+class Group(Container):
     """
     Refer:
-    >>> dpg.group
+    >>> dpg.add_group
 
      Creates a group that other widgets can belong to. The group allows item commands to be issued for all of its members.
 
@@ -1788,10 +1732,6 @@ class Group(Widget):
 
     # xoffset (float, optional): Offset from containing window x item location within group.
     xoffset: float = 0.0
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_group(
@@ -1891,10 +1831,6 @@ class PlotLegend(Widget):
     # outside (bool, optional): ...
     outside: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_legend(
             **self.internal.dpg_kwargs,
@@ -1934,7 +1870,7 @@ class PlotLegend(Widget):
 class BXAxis(Widget):
     """
     Refer:
-    >>> dpg.plot_axis
+    >>> dpg.add_plot_axis
 
      Adds an axis to a plot.
 
@@ -1981,16 +1917,6 @@ class BXAxis(Widget):
 
     # time (bool, optional): ...
     time: bool = False
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
-
-    @property
-    def allow_children(self) -> bool:
-        # For class `BXAxis` we block adding children as 
-        # this can be addressed with special properties or is not needed
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
@@ -2037,7 +1963,7 @@ class BXAxis(Widget):
 class BYAxis(Widget):
     """
     Refer:
-    >>> dpg.plot_axis
+    >>> dpg.add_plot_axis
 
      Adds an axis to a plot.
 
@@ -2085,16 +2011,6 @@ class BYAxis(Widget):
     # time (bool, optional): ...
     time: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
-
-    @property
-    def allow_children(self) -> bool:
-        # For class `BYAxis` we block adding children as 
-        # this can be addressed with special properties or is not needed
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot_axis(
             **self.internal.dpg_kwargs,
@@ -2137,10 +2053,10 @@ class BYAxis(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class Subplots(Widget):
+class Subplots(Container):
     """
     Refer:
-    >>> dpg.subplots
+    >>> dpg.add_subplots
 
      Adds a collection of plots.
 
@@ -2226,10 +2142,6 @@ class Subplots(Widget):
 
     # column_major (bool, optional): subplots are added in column major order instead of the default row major order
     column_major: bool = False
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_subplots(
@@ -2354,10 +2266,6 @@ class SimplePlot(Widget):
     # max_scale (float, optional): ...
     max_scale: float = 0.0
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_simple_plot(
             **self.internal.dpg_kwargs,
@@ -2423,10 +2331,10 @@ class SimplePlot(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class BPlot(Widget):
+class BPlot(Container):
     """
     Refer:
-    >>> dpg.plot
+    >>> dpg.add_plot
 
      Adds a plot which is used to hold series, and can be drawn to with draw commands.
 
@@ -2546,10 +2454,6 @@ class BPlot(Widget):
 
     # vertical_mod (int, optional): expands active box selection/query vertically to plot edge when held
     vertical_mod: int = 16
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_plot(
@@ -2735,10 +2639,6 @@ class InputIntX(Widget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_input_intx(
             **self.internal.dpg_kwargs,
@@ -2911,10 +2811,6 @@ class InputInt(Widget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_input_int(
             **self.internal.dpg_kwargs,
@@ -3064,10 +2960,6 @@ class ProgressBar(Widget):
     # default_value (float, optional): Normalized value to fill the bar from 0.0 to 1.0.
     default_value: float = 0.0
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_progress_bar(
             **self.internal.dpg_kwargs,
@@ -3187,10 +3079,6 @@ class Checkbox(Widget):
 
     # default_value (bool, optional): Sets the default value of the checkmark
     default_value: bool = False
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_checkbox(
@@ -3323,10 +3211,6 @@ class ColormapScale(Widget):
     # max_scale (float, optional): Sets the max number of the color scale. Typically is the same as the max scale from the heat series.
     max_scale: float = 1.0
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_colormap_scale(
             **self.internal.dpg_kwargs,
@@ -3411,10 +3295,6 @@ class DragLine(Widget):
     # vertical (bool, optional): ...
     vertical: bool = True
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_drag_line(
             **self.internal.dpg_kwargs,
@@ -3493,10 +3373,6 @@ class DragPoint(Widget):
 
     # show_label (bool, optional): ...
     show_label: bool = True
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_drag_point(
@@ -3616,10 +3492,6 @@ class SliderInt(Widget):
 
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%d'
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_int(
@@ -3787,10 +3659,6 @@ class SliderIntX(Widget):
 
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%d'
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_intx(
@@ -3960,10 +3828,6 @@ class SliderFloat(Widget):
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
     format: str = '%.3f'
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_float(
             **self.internal.dpg_kwargs,
@@ -4130,10 +3994,6 @@ class SliderFloatX(Widget):
 
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%.3f'
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_slider_floatx(
@@ -4304,10 +4164,6 @@ class Slider3D(Widget):
     # scale (float, optional): Size of the widget.
     scale: float = 1.0
 
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return False
-
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_3d_slider(
             **self.internal.dpg_kwargs,
@@ -4395,10 +4251,10 @@ class Slider3D(Widget):
 
 
 @dataclasses.dataclass(frozen=True)
-class Tooltip(Widget):
+class Tooltip(Container):
     """
     Refer:
-    >>> dpg.tooltip
+    >>> dpg.add_tooltip
 
      Adds a tooltip window.
 
@@ -4415,10 +4271,6 @@ class Tooltip(Widget):
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
-
-    @property
-    def has_dpg_contextmanager(self) -> bool:
-        return True
 
     def build(self) -> t.Union[int, str]:
         _ret = dpg.add_tooltip(

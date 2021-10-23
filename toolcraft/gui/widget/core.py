@@ -3,6 +3,8 @@ import dataclasses
 import distutils.archive_util
 import typing as t
 import dearpygui.dearpygui as dpg
+# noinspection PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 
 from ... import error as e
 from ... import util
@@ -123,23 +125,53 @@ class Table(BTable):
 @dataclasses.dataclass(frozen=True)
 class XAxis(BXAxis):
 
-    def fit_axis(self):
-        dpg.fit_axis_data(axis=self.dpg_id)
+    def fit_data(self):
+        """
+        Refer:
+        >>> dpg.fit_axis_data
+        """
+        internal_dpg.fit_axis_data(axis=self.dpg_id)
 
     def clear(self):
+        """
+        Refer:
+        >>> dpg.delete_item
+        """
         # https://github.com/hoffstadt/DearPyGui/discussions/1328
-        dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
+        internal_dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
+
+    def get_limits(self) -> t.List[float]:
+        """
+        Refer:
+        >>> dpg.get_axis_limits
+        """
+        return internal_dpg.get_axis_limits(self.dpg_id)
 
 
 @dataclasses.dataclass(frozen=True)
 class YAxis(BYAxis):
 
-    def fit_axis(self):
-        dpg.fit_axis_data(axis=self.dpg_id)
+    def fit_data(self):
+        """
+        Refer:
+        >>> dpg.fit_axis_data
+        """
+        internal_dpg.fit_axis_data(axis=self.dpg_id)
 
     def clear(self):
+        """
+        Refer:
+        >>> dpg.delete_item
+        """
         # https://github.com/hoffstadt/DearPyGui/discussions/1328
-        dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
+        internal_dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
+
+    def get_limits(self) -> t.List[float]:
+        """
+        Refer:
+        >>> dpg.get_axis_limits
+        """
+        return internal_dpg.get_axis_limits(self.dpg_id)
 
     # noinspection PyMethodMayBeStatic
     def update_series(self, series_dpg_id: int, **kwargs):
@@ -1566,3 +1598,10 @@ class Plot(BPlot):
         elif self.num_of_y_axis == 3:
             self.y2_axis.clear()
             self.y3_axis.clear()
+
+    def get_query_area(self) -> t.Tuple[float, float]:
+        """
+        Refer:
+        >>> dpg.get_plot_query_area
+        """
+        return tuple(internal_dpg.get_plot_query_area(self.dpg_id))

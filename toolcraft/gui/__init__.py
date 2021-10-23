@@ -1,4 +1,4 @@
-from .__base__ import Color, Widget, Dashboard, Callback, Form
+from .__base__ import Color, Widget, Container, Dashboard, Callback, Form
 from .widget import *
 from . import demo
 from . import callback
