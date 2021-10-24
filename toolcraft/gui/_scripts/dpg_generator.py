@@ -1,10 +1,12 @@
 import inspect
 import pathlib
 import dataclasses
+import dearpygui
 import dearpygui.dearpygui as dpg
 from typing import NamedTuple
 import typing as t
 import re
+import datetime
 
 _WRAP_TEXT_WIDTH = 70
 _NEEDED_ENUMS = {}
@@ -12,14 +14,11 @@ _NEEDED_ENUMS = {}
 
 class WidgetBuildParamDef(NamedTuple):
     name: str
+    dpg_name: str
     type: str
     value: str
     dpg_value: str
     doc: str
-
-    @property
-    def class_field_def(self) -> str:
-        return f"\t{self.name}: {self.type} = {self.value}"
 
     @property
     def is_callback(self) -> bool:
@@ -34,6 +33,18 @@ class WidgetDef:
     # used to generate multiple widgets based on parameters supplied that will be
     # hardcoded in build method
     parameters: t.Dict[str, str] = None
+
+    @property
+    def call_prefix(self) -> str:
+
+        _call_prefix = \
+            f"internal_dpg.add_{self.method.__name__}" \
+            if self.is_container else f"internal_dpg.{self.method.__name__}"
+
+        if self.method == dpg.plot_axis:
+            _call_prefix = f"internal_dpg.add_{self.method.__name__}"
+
+        return _call_prefix
 
     @property
     def name(self) -> str:
@@ -149,11 +160,11 @@ class WidgetDef:
         _params = {} if self.parameters is None else self.parameters
         _lines += [
             "\tdef build(self) -> t.Union[int, str]:",
-            f"\t\t_ret = dpg.{self.method.__name__}(",
+            f"\t\t_ret = {self.call_prefix}(",
             f"\t\t\t**self.internal.dpg_kwargs,",
             *[f"\t\t\t{_k}={_v}," for _k, _v in _params.items()],
             *[
-                f"\t\t\t{_pd.name}={_pd.dpg_value},"
+                f"\t\t\t{_pd.dpg_name}={_pd.dpg_value},"
                 for _pd in _param_defs
             ],
             f"\t\t)",
@@ -224,6 +235,7 @@ class WidgetDef:
 
             # get name
             _param_name = _param.name
+            _param_dpg_name = _param.name
 
             # some things are ignored
             if _param_name in _ignore_params:
@@ -269,7 +281,8 @@ class WidgetDef:
                 _param_value = "None"
             if _param_name == "on_enter":
                 _param_name = "if_entered"
-                _param_dpg_value = "self.on_enter"
+                _param_dpg_name = "on_enter"
+                _param_dpg_value = "self.if_entered"
             if _is_callback:
                 _param_dpg_value += "_fn"
             if _enum_def is not None:
@@ -297,6 +310,7 @@ class WidgetDef:
             _ret.append(
                 WidgetBuildParamDef(
                     name=_param_name,
+                    dpg_name=_param_dpg_name,
                     type=_param_type,
                     value=_param_value,
                     dpg_value=_param_dpg_value,
@@ -911,18 +925,22 @@ def create_auto_code_for_widgets_and_enums():
         _script_file.parent.parent.parent.parent).as_posix()
     _header = f'''"""
 ********************************************************************************
-This code is auto-generated using script:
-    {_script_file}
+This code is auto-generated:
+>> Script: {_script_file}
+>> DearPyGui: {dearpygui.__version__}
+>> Time: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
 
-import dataclasses
+# noinspection PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 import dearpygui.dearpygui as dpg
+import dataclasses
 import typing as t
 import enum
 
-from .. import Widget, Container, Callback
+from .__base__ import Widget, Container, Callback
 '''
 
     # ---------------------------------------------------- 02
@@ -939,7 +957,7 @@ from .. import Widget, Container, Callback
     _enum_code = "\n".join(_enum_code_lines + [""])
 
     # ---------------------------------------------------- 04
-    _output_file = pathlib.Path("../widget/auto.py")
+    _output_file = pathlib.Path("../_auto.py")
     _output_file.write_text(_header + _enum_code + _widget_code)
 
 
