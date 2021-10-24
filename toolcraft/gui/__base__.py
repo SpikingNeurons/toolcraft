@@ -18,6 +18,7 @@ from .. import marshalling as m
 from . import assets
 
 _LOGGER = logger.get_logger()
+COLOR_TYPE: t.Tuple[int, int, int, int]
 
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
@@ -25,13 +26,13 @@ if False:
 
 
 class Color(enum.Enum):
-    DEFAULT = [-1, -1, -1, -1]
-    WHITE = [255, 255, 255, 255]
-    BLACK = [0, 0, 0, 255]
-    GREY = [127, 127, 127, 255]
-    GREEN = [0, 255, 0, 255]
-    BLUE = [0, 0, 255, 255]
-    RED = [255, 0, 0, 255]
+    DEFAULT = (-1, -1, -1, -1)
+    WHITE = (255, 255, 255, 255)
+    BLACK = (0, 0, 0, 255)
+    GREY = (127, 127, 127, 255)
+    GREEN = (0, 255, 0, 255)
+    BLUE = (0, 0, 255, 255)
+    RED = (255, 0, 0, 255)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -65,6 +66,11 @@ class WidgetInternal(m.Internal):
         if self.before is not None:
             _ret['before'] = self.before.dpg_id
         return _ret
+
+    def vars_that_can_be_overwritten(self) -> t.List[str]:
+        return super().vars_that_can_be_overwritten() + [
+            "parent", "before",
+        ]
 
 
 @dataclasses.dataclass
@@ -163,9 +169,9 @@ class Widget(m.Tracker, abc.ABC):
     def is_enabled(self) -> bool:
         return self.dpg_config['enabled']
 
-    @property
-    def pos(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['pos'])
+    # @property
+    # def pos(self) -> t.Tuple[int, int]:
+    #     return tuple(self.dpg_state['pos'])
 
     @property
     def available_content_region(self) -> t.Tuple[int, int]:
@@ -191,10 +197,17 @@ class Widget(m.Tracker, abc.ABC):
     def dashboard(self) -> "Dashboard":
         return self.internal.dashboard
 
-    def init_validate(self):
+    def __post_init__(self):
+        self.init_validate()
+        self.init()
 
-        # call super
-        super().init_validate()
+    def __setattr__(self, key, value):
+        # this might not always work especially when key is custom ...
+        # in that case catch exception and figure out how to handle
+        internal_dpg.configure_item(self.dpg_id, **{key: value})
+        return super().__setattr__(key, value)
+
+    def init_validate(self):
 
         # loop over fields
         for f_name in self.dataclass_field_names:
@@ -211,12 +224,29 @@ class Widget(m.Tracker, abc.ABC):
                         ]
                     )
 
+    def init(self):
+        ...
+
     def get_value(self) -> t.Any:
         """
         Refer:
         >>> dpg.get_value
         """
         return internal_dpg.get_value(self.dpg_id)
+
+    def set_value(self, value: t.Any):
+        """
+        Refer:
+        >>> dpg.set_value
+        """
+        return internal_dpg.set_value(self.dpg_id, value)
+
+    def set_x_scroll(self, value: float):
+        """
+        Refer:
+        >>> dpg.set_x_scroll
+        """
+        return internal_dpg.set_x_scroll(self.dpg_id, value)
 
     def get_x_scroll(self) -> float:
         """
@@ -232,6 +262,13 @@ class Widget(m.Tracker, abc.ABC):
         """
         return internal_dpg.get_x_scroll_max(self.dpg_id)
 
+    def set_y_scroll(self, value: float):
+        """
+        Refer:
+        >>> dpg.set_y_scroll
+        """
+        return internal_dpg.set_y_scroll(self.dpg_id, value)
+
     def get_y_scroll(self) -> float:
         """
         Refer:
@@ -239,12 +276,29 @@ class Widget(m.Tracker, abc.ABC):
         """
         return internal_dpg.get_y_scroll(self.dpg_id)
 
+    def show_debug(self):
+        """
+        Refer:
+        >>> dpg.show_item_debug
+        """
+        return internal_dpg.show_item_debug(self.dpg_id)
+
+    def unstage(self):
+        """
+        Refer:
+        >>> dpg.unstage
+        """
+        return internal_dpg.unstage(self.dpg_id)
+
     def get_y_scroll_max(self) -> float:
         """
         Refer:
         >>> dpg.get_y_scroll_max
         """
         return internal_dpg.get_y_scroll_max(self.dpg_id)
+
+    def reset_pos(self):
+        internal_dpg.reset_pos(self.dpg_id)
 
     @classmethod
     def hook_up_methods(cls):
@@ -292,6 +346,88 @@ class Widget(m.Tracker, abc.ABC):
         >>> dpg.disable_item
         """
         internal_dpg.configure_item(self.dpg_id, enabled=False)
+
+    def move(self, parent: "Container", before: "Widget" = None):
+        # ---------------------------------------------- 01
+        # if before is not None check if it is in parent and get its index
+        _before_index = None
+        for _i, _ch in enumerate(parent.children):
+            if id(_ch) == id(before):
+                _before_index = _i
+                break
+        if _before_index is None:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"We cannot find before widget in children of parent"
+                ]
+            )
+
+        # ---------------------------------------------- 02
+        # first pop from self.parent.children
+        # find index
+        _this_id = id(self)
+        _index = None
+        for _i, _w in enumerate(self.parent.children):
+            if _this_id == id(_w):
+                _index = _i
+                break
+        # pop widget
+        if _index is None:
+            e.code.CodingError(
+                msgs=[
+                    f"We were expecting the instance to be present in children of "
+                    f"parent ..."
+                ]
+            )
+            raise
+        else:
+            # delete self from parents children
+            _widget = self.parent.children.pop(_index)
+            # simple assert
+            assert id(_widget) == _this_id, "should match"
+
+        # ---------------------------------------------- 02
+        # make the move
+        _widget.internal.parent = parent
+        _widget.internal.before = before
+        parent.children.insert(_before_index, _widget)
+        internal_dpg.move_item(
+            _widget.dpg_id, parent=parent.dpg_id,
+            before=0 if before is None else before.dpg_id)
+
+    def move_up(self):
+        _children_list = self.parent.children
+        _this_id = id(self)
+        _index = None
+        for _i, _w in enumerate(self.parent.children):
+            if _this_id == id(_w):
+                _index = _i
+                break
+        if _index == 0:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"Already at top in parent children's"
+                ]
+            )
+        _children_list.insert(_index-1, _children_list.pop(_index))
+        internal_dpg.move_item_up(self.dpg_id)
+
+    def move_down(self):
+        _children_list = self.parent.children
+        _this_id = id(self)
+        _index = None
+        for _i, _w in enumerate(self.parent.children):
+            if _this_id == id(_w):
+                _index = _i
+                break
+        if _index == len(_children_list)-1:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"Already at bottom in parent children's"
+                ]
+            )
+        _children_list.insert(_index+1, _children_list.pop(_index))
+        internal_dpg.move_item_down(self.dpg_id)
 
     def delete(self):
         # find index
@@ -361,21 +497,19 @@ class Widget(m.Tracker, abc.ABC):
         # set flag to indicate build is done
         self.internal.is_build_done = True
 
-    def hide(self, children_only: bool = False):
-        # todo: needs testing
-        if children_only:
-            for child in dpg.get_item_children(item=self.dpg_id):
-                dpg.configure_item(item=child, show=False)
-        else:
-            dpg.configure_item(item=self.dpg_id, show=False)
+    def show(self):
+        """
+        Refer:
+        >>> dpg.show_item
+        """
+        internal_dpg.configure_item(self.dpg_id, show=True)
 
-    def show(self, children_only: bool = False):
-        # todo: needs testing
-        if children_only:
-            for child in dpg.get_item_children(item=self.dpg_id):
-                dpg.configure_item(item=child, show=True)
-        else:
-            dpg.configure_item(item=self.dpg_id, show=True)
+    def hide(self):
+        """
+        Refer:
+        >>> dpg.hide_item
+        """
+        internal_dpg.configure_item(self.dpg_id, show=False)
 
     def set_theme(self, theme: assets.Theme):
         dpg.set_item_theme(item=self.dpg_id, theme=theme.get())
@@ -398,7 +532,7 @@ class Widget(m.Tracker, abc.ABC):
         return dpg.get_item_configuration(item=self.dpg_id)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Container(Widget, abc.ABC):
     """
     Widget that can hold children
@@ -495,8 +629,19 @@ class Container(Widget, abc.ABC):
         if self.is_built:
             widget.build()
 
+    def hide(self, children_only: bool = False):
+        """
+        Refer:
+        >>> dpg.hide_item
+        """
+        if children_only:
+            for child in self.children:
+                child.hide()
+        else:
+            internal_dpg.configure_item(self.dpg_id, show=False)
 
-@dataclasses.dataclass(frozen=True)
+
+@dataclasses.dataclass
 class Form(Widget, abc.ABC):
     """
     Form is a special widget which creates a `form_fields_container` container and
@@ -632,7 +777,7 @@ class Form(Widget, abc.ABC):
         return self.form_fields_container.dpg_id
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Dashboard(Form):
     """
     Dashboard is a specialized `Form`.
@@ -684,6 +829,42 @@ class Dashboard(Form):
     @property
     def dashboard(self) -> "Dashboard":
         return self
+
+    @staticmethod
+    def is_dearpygui_running() -> bool:
+        return internal_dpg.is_dearpygui_running()
+
+    @staticmethod
+    def is_key_down(key: int) -> bool:
+        return internal_dpg.is_key_down(key)
+
+    @staticmethod
+    def is_key_pressed(key: int) -> bool:
+        return internal_dpg.is_key_pressed(key)
+
+    @staticmethod
+    def is_key_released(key: int) -> bool:
+        return internal_dpg.is_key_released(key)
+
+    @staticmethod
+    def is_mouse_button_clicked(button: int) -> bool:
+        return internal_dpg.is_mouse_button_clicked(button)
+
+    @staticmethod
+    def is_mouse_button_double_clicked(button: int) -> bool:
+        return internal_dpg.is_mouse_button_double_clicked(button)
+
+    @staticmethod
+    def is_mouse_button_down(button: int) -> bool:
+        return internal_dpg.is_mouse_button_down(button)
+
+    @staticmethod
+    def is_mouse_button_dragging(button: int) -> bool:
+        return internal_dpg.is_mouse_button_down(button)
+
+    @staticmethod
+    def is_mouse_button_released(button: int) -> bool:
+        return internal_dpg.is_mouse_button_down(button)
 
     @staticmethod
     def get_active_window(**kwargs) -> int:
@@ -843,8 +1024,7 @@ class Dashboard(Form):
         if not self.internal.is_build_done:
             e.code.NotAllowed(
                 msgs=[
-                    f"looks like you missed to build dashboard "
-                    f"`{self.name}`"
+                    f"looks like you missed to build dashboard"
                 ]
             )
 

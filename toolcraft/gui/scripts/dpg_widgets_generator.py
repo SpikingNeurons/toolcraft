@@ -60,6 +60,8 @@ class WidgetDef:
             return "BPlot"
         if self.method == dpg.add_3d_slider:
             return "Slider3D"
+        if self.method == dpg.add_2d_histogram_series:
+            return "HistogramSeries2D"
 
         # ------------------------------------------------------- 04
         # default name generation
@@ -124,7 +126,7 @@ class WidgetDef:
         _lines = [
             "",
             "",
-            "@dataclasses.dataclass(frozen=True)",
+            "@dataclasses.dataclass",
             f"class {self.name}({_class_name}):",
             '\t"""',
             "\tRefer:",
@@ -214,7 +216,7 @@ class WidgetDef:
         _ignore_params = ['id', 'parent', 'before', 'tag', 'kwargs']
 
         # ignore axis param if needed
-        if self.method == dpg.add_plot_axis:
+        if self.method in [dpg.plot_axis, dpg.add_plot_axis]:
             _ignore_params.append('axis')
 
         # loop over all params
@@ -280,13 +282,15 @@ class WidgetDef:
             # update param value if not empty
             # noinspection PyUnresolvedReferences,PyProtectedMember
             if _param_value != inspect._empty:
-                if _param_value in ["", "$$DPG_PAYLOAD"] or \
-                        str(_param_value).startswith('%'):
+                if _param_value in [
+                    "", "$$DPG_PAYLOAD", ".", "general",
+                ] or str(_param_value).startswith('%'):
                     _param_value = f"'{_param_value}'"
-                elif isinstance(_param_value, (list, tuple)):
-                    if isinstance(_param_value, tuple):
-                        _param_value = list(_param_value)
-                    _param_value = f"\\\n\t\tdataclasses.field(" \
+                elif isinstance(_param_value, list):
+                    _param_value = f"dataclasses.field(" \
+                                   f"default_factory=lambda: {_param_value})"
+                elif isinstance(_param_value, dict):
+                    _param_value = f"dataclasses.field(" \
                                    f"default_factory=lambda: {_param_value})"
 
             # append
@@ -524,6 +528,7 @@ def fetch_container_widget_defs() -> t.Generator[WidgetDef, None, None]:
         # skip some fns that can be container widgets
         if _fn in [
             # todo: the doc is not available for all kwargs so keep this pending
+            # Note that this si simple it pops out any widget and adds it to Window
             dpg.popup,
 
             # todo: dont know what to do, also there is no corresponding add_mutex
@@ -578,23 +583,81 @@ def fetch_widget_defs() -> t.Generator[WidgetDef, None, None]:
     _skip_methods.extend(
         [
             # not required
-            dpg.add_alias, dpg.does_alias_exist, dpg.does_item_exist,
-            dpg.generate_uuid, dpg.get_alias_id, dpg.get_aliases, dpg.get_all_items,
+            dpg.add_alias, dpg.remove_alias, dpg.does_alias_exist,
+            dpg.get_alias_id, dpg.get_aliases, dpg.set_item_alias,
+            dpg.does_item_exist,
+            dpg.generate_uuid, dpg.get_all_items,
             dpg.get_dearpygui_version, dpg.get_item_alias, dpg.get_values,
 
-            # handled methods
+            # handled methods by Widget
             dpg.delete_item,  # Widget.delete
             dpg.enable_item,  # Widget.enable
             dpg.disable_item,  # Widget.disable
             dpg.focus_item,  # Widget.focus
+            dpg.get_value,  # Widget.get_value
+            dpg.set_value,  # Widget.set_value
+            dpg.set_x_scroll,  # Widget.set_x_scroll
+            dpg.get_x_scroll,  # Widget.get_x_scroll
+            dpg.get_x_scroll_max,  # Widget.get_x_scroll_max
+            dpg.set_y_scroll,  # Widget.set_y_scroll
+            dpg.get_y_scroll,  # Widget.get_y_scroll
+            dpg.get_y_scroll_max,  # Widget.get_y_scroll_max
+            dpg.hide_item,  # Widget.hide
+            dpg.show_item,  # Widget.show
+            dpg.move_item,  # Widget.move
+            dpg.move_item_up,  # Widget.move_up
+            dpg.move_item_down,  # Widget.move_down
+            dpg.reset_pos,  # Widget.reset_pos
+            dpg.show_item_debug,  # Widget.show_debug
+            dpg.unstage,  # Widget.unstage
+
+            # handled methods by Table
+            dpg.highlight_table_cell,  # Table.highlight_cell
+            dpg.highlight_table_column,  # Table.highlight_column
+            dpg.highlight_table_row,  # Table.highlight_row
+            dpg.unhighlight_table_cell,  # Table.unhighlight_cell
+            dpg.unhighlight_table_column,  # Table.unhighlight_column
+            dpg.unhighlight_table_row,  # Table.unhighlight_row
+            dpg.is_table_cell_highlight,  # Table.is_cell_highlight
+            dpg.is_table_column_highlight,  # Table.is_column_highlight
+            dpg.is_table_row_highlight,  # Table.is_row_highlight
+            dpg.set_table_row_color,  # Table.set_row_color
+            dpg.unset_table_row_color,  # Table.unset_row_color
+
+            # handled methods by Plot
             dpg.fit_axis_data,  # XAxis.fit_data, YAxis.fit_data,
             dpg.get_axis_limits,  # XAxis.get_limits, YAxis.get_limits,
             dpg.get_plot_query_area,  # Plot.get_query_area
-            dpg.get_value,  # Widget.get_value
-            dpg.get_x_scroll,  # Widget.get_x_scroll
-            dpg.get_x_scroll_max,  # Widget.get_x_scroll_max
-            dpg.get_y_scroll,  # Widget.get_y_scroll
-            dpg.get_y_scroll_max,  # Widget.get_y_scroll_max
+            dpg.is_plot_queried,  # Plot.is_queried
+            dpg.reset_axis_ticks,  # XAxis.reset_ticks, YAxis.reset_ticks
+            dpg.set_axis_limits,  # XAxis.set_limits, YAxis.set_limits
+            dpg.set_axis_limits_auto,  # XAxis.set_limits_auto, YAxis.set_limits_auto
+            dpg.set_axis_ticks,  # XAxis.set_ticks, YAxis.set_ticks
+
+            # handled methods by Widget.__setattr__
+            dpg.set_item_callback,
+            dpg.set_item_drag_callback,
+            dpg.set_item_drop_callback,
+            dpg.set_item_height,
+            dpg.set_item_indent,
+            dpg.set_item_label,
+            dpg.set_item_payload_type,
+            dpg.set_item_pos,
+            dpg.set_item_source,
+            dpg.set_item_track_offset,
+            dpg.set_item_user_data,
+            dpg.set_item_width,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
+            dpg.set_item_callback,
 
             # handled state commands
             dpg.get_item_state,  # Widget.dpg_state property
@@ -647,18 +710,27 @@ def fetch_widget_defs() -> t.Generator[WidgetDef, None, None]:
             dpg.get_item_font,
             dpg.get_item_disabled_theme,
 
-            # we assume and keep it at Dashboard level
+            # we assume and keep it at Dashboard level i.e. static method
             # assuming there will be only one dashboard instance
-            dpg.get_active_window,  # Dashboard.get_active_window
-            dpg.get_delta_time,  # Dashboard.get_delta_time
-            dpg.get_drawing_mouse_pos,  # Dashboard.get_drawing_mouse_pos
-            dpg.get_frame_count,  # Dashboard.get_frame_count
-            dpg.get_frame_rate,  # Dashboard.get_frame_rate
-            dpg.get_global_font_scale,  # Dashboard.get_global_font_scale
-            dpg.get_item_types,  # Dashboard.get_item_types
-            dpg.get_mouse_drag_delta,  # Dashboard.get_mouse_drag_delta
-            dpg.get_mouse_pos,  # Dashboard.get_mouse_pos
-            dpg.get_plot_mouse_pos,  # Dashboard.get_plot_mouse_pos
+            dpg.get_active_window,
+            dpg.get_delta_time,
+            dpg.get_drawing_mouse_pos,
+            dpg.get_frame_count,
+            dpg.get_frame_rate,
+            dpg.get_global_font_scale,
+            dpg.get_item_types,
+            dpg.get_mouse_drag_delta,
+            dpg.get_mouse_pos,
+            dpg.get_plot_mouse_pos,
+            dpg.is_dearpygui_running,
+            dpg.is_key_down,
+            dpg.is_key_pressed,
+            dpg.is_key_released,
+            dpg.is_mouse_button_clicked,
+            dpg.is_mouse_button_double_clicked,
+            dpg.is_mouse_button_down,
+            dpg.is_mouse_button_dragging,
+            dpg.is_mouse_button_released,
             # app configurations
             dpg.get_app_configuration,  # Dashboard.get_app_configuration
             dpg.get_major_version,  # Dashboard.get_app_configuration
@@ -700,14 +772,53 @@ def fetch_widget_defs() -> t.Generator[WidgetDef, None, None]:
             dpg.is_viewport_resizable,
             dpg.is_viewport_vsync_on,
             dpg.is_viewport_decorated,
+            dpg.is_viewport_ok,
+            dpg.maximize_viewport,
+            dpg.minimize_viewport,
+            dpg.set_viewport_always_top,
+            dpg.set_viewport_clear_color,
+            dpg.set_viewport_decorated,
+            dpg.set_viewport_height,
+            dpg.set_viewport_large_icon,
+            dpg.set_viewport_max_height,
+            dpg.set_viewport_max_width,
+            dpg.set_viewport_min_height,
+            dpg.set_viewport_min_width,
+            dpg.set_viewport_pos,
+            dpg.set_viewport_resizable,
+            dpg.set_viewport_resize_callback,
+            dpg.set_viewport_small_icon,
+            dpg.set_viewport_title,
+            dpg.set_viewport_vsync,
+            dpg.set_viewport_width,
+            dpg.show_viewport, dpg.toggle_viewport_fullscreen,
 
             # todo: dpg related
             dpg.create_context, dpg.destroy_context, dpg.empty_container_stack,
+            dpg.last_container, dpg.last_item, dpg.setup_dearpygui,
+            dpg.last_root,  # is registry or window ... adapt based on that
+            dpg.set_item_children, dpg.set_primary_window,
+            dpg.show_tool, dpg.show_debug, dpg.show_about, dpg.show_documentation,
+            dpg.show_font_manager, dpg.show_item_registry, dpg.show_imgui_demo,
+            dpg.show_implot_demo,
+            dpg.show_metrics,
+            dpg.show_style_editor,
+            dpg.start_dearpygui,
+            dpg.stop_dearpygui,
+            dpg.top_container_stack,
 
             # todo: dont know what to do
             dpg.configure_app, dpg.configure_item, dpg.configure_viewport,
             dpg.capture_next_item, dpg.get_colormap_color,
             dpg.get_file_dialog_info,  # maybe class method for FileDialog widget
+            dpg.load_image, dpg.lock_mutex, dpg.mutex, dpg.unlock_mutex,
+            dpg.pop_container_stack, dpg.push_container_stack,
+            dpg.popup, dpg.add_char_remap,
+            dpg.render_dearpygui_frame, dpg.reorder_items,
+            dpg.sample_colormap, dpg.save_init_file,
+            dpg.set_global_font_scale, dpg.set_frame_callback, dpg.set_exit_callback,
+            dpg.split_frame,
+            dpg.track_item, dpg.untrack_item,
         ]
     )
 
@@ -811,7 +922,6 @@ import dearpygui.dearpygui as dpg
 import typing as t
 import enum
 
-from ... import marshalling as m
 from .. import Widget, Container, Callback
 '''
 

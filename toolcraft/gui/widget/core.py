@@ -1,6 +1,5 @@
 
 import dataclasses
-import distutils.archive_util
 import typing as t
 import dearpygui.dearpygui as dpg
 # noinspection PyProtectedMember
@@ -8,12 +7,12 @@ import dearpygui._dearpygui as internal_dpg
 
 from ... import error as e
 from ... import util
-from .. import Widget, Callback
-from .auto import BTable, BPlot, BXAxis, BYAxis
-from .auto import PlotLegend, TableColumn, TableRow, TableCell, Text
+from .. import Widget, Callback, COLOR_TYPE
+from .auto import BTable, BPlot, BXAxis, BYAxis, TableColumn, TableRow, TableCell
+from .auto import PlotLegend, Text
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Table(BTable):
     # ...
     rows: t.Union[int, t.List[TableRow]] = None
@@ -82,6 +81,20 @@ class Table(BTable):
                     guid=f"{_c}", widget=Group()
                 )
 
+    def set_row_color(self, row: int, color: COLOR_TYPE):
+        """
+        Refer:
+        >>> dpg.set_table_row_color
+        """
+        internal_dpg.set_table_row_color(self.dpg_id, row, color)
+
+    def unset_row_color(self, row: int, color: COLOR_TYPE):
+        """
+        Refer:
+        >>> dpg.unset_table_row_color
+        """
+        internal_dpg.unset_table_row_color(self.dpg_id, row)
+
     def get_cell(self, row: int, column: int) -> "Group":
         # noinspection PyTypeChecker
         return self.children[f"r{row}"].children[f"{column}"]
@@ -121,8 +134,71 @@ class Table(BTable):
                     )
         return _table
 
+    def highlight_cell(self, row: int, col: int, color: COLOR_TYPE):
+        """
+        Refer:
+        >>> dpg.highlight_table_cell
+        """
+        internal_dpg.highlight_table_cell(self.dpg_id, row, col, color)
 
-@dataclasses.dataclass(frozen=True)
+    def unhighlight_cell(self, row: int, col: int):
+        """
+        Refer:
+        >>> dpg.unhighlight_table_cell
+        """
+        internal_dpg.unhighlight_table_cell(self.dpg_id, row, col)
+
+    def is_cell_highlight(self, row: int, col: int) -> bool:
+        """
+        Refer:
+        >>> dpg.is_table_cell_highlight
+        """
+        return internal_dpg.is_table_cell_highlight(self.dpg_id, row, col)
+
+    def highlight_column(self, col: int, color: COLOR_TYPE):
+        """
+        Refer:
+        >>> dpg.highlight_table_column
+        """
+        internal_dpg.highlight_table_column(self.dpg_id, col, color)
+
+    def unhighlight_column(self, col: int):
+        """
+        Refer:
+        >>> dpg.unhighlight_table_column
+        """
+        internal_dpg.unhighlight_table_column(self.dpg_id, col)
+
+    def is_column_highlight(self, col: int) -> bool:
+        """
+        Refer:
+        >>> dpg.is_table_column_highlight
+        """
+        return internal_dpg.is_table_column_highlight(self.dpg_id, col)
+
+    def highlight_row(self, row: int, color: COLOR_TYPE):
+        """
+        Refer:
+        >>> dpg.highlight_table_row
+        """
+        internal_dpg.highlight_table_row(self.dpg_id, row, color)
+
+    def unhighlight_row(self, row: int):
+        """
+        Refer:
+        >>> dpg.unhighlight_table_row
+        """
+        internal_dpg.unhighlight_table_row(self.dpg_id, row)
+
+    def is_row_highlight(self, row: int) -> bool:
+        """
+        Refer:
+        >>> dpg.is_table_row_highlight
+        """
+        return internal_dpg.is_table_row_highlight(self.dpg_id, row)
+
+
+@dataclasses.dataclass
 class XAxis(BXAxis):
 
     def fit_data(self):
@@ -147,8 +223,32 @@ class XAxis(BXAxis):
         """
         return internal_dpg.get_axis_limits(self.dpg_id)
 
+    def reset_ticks(self):
+        internal_dpg.reset_axis_ticks(self.dpg_id)
 
-@dataclasses.dataclass(frozen=True)
+    def set_limits(self, ymin: float, ymax: float):
+        """
+        Refer:
+        >>> dpg.set_axis_limits
+        """
+        internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+
+    def set_limits_auto(self):
+        """
+        Refer:
+        >>> dpg.set_axis_limits_auto
+        """
+        internal_dpg.set_axis_limits_auto(self.dpg_id)
+
+    def set_ticks(self, label_pairs: t.Any):
+        """
+        Refer:
+        >>> dpg.set_axis_ticks
+        """
+        internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+
+
+@dataclasses.dataclass
 class YAxis(BYAxis):
 
     def fit_data(self):
@@ -172,6 +272,30 @@ class YAxis(BYAxis):
         >>> dpg.get_axis_limits
         """
         return internal_dpg.get_axis_limits(self.dpg_id)
+
+    def reset_ticks(self):
+        internal_dpg.reset_axis_ticks(self.dpg_id)
+
+    def set_limits(self, ymin: float, ymax: float):
+        """
+        Refer:
+        >>> dpg.set_axis_limits
+        """
+        internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+
+    def set_limits_auto(self):
+        """
+        Refer:
+        >>> dpg.set_axis_limits_auto
+        """
+        internal_dpg.set_axis_limits_auto(self.dpg_id)
+
+    def set_ticks(self, label_pairs: t.Any):
+        """
+        Refer:
+        >>> dpg.set_axis_ticks
+        """
+        internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
 
     # noinspection PyMethodMayBeStatic
     def update_series(self, series_dpg_id: int, **kwargs):
@@ -1456,7 +1580,7 @@ class YAxis(BYAxis):
 
 
 # noinspection PyDefaultArgument
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Plot(BPlot):
     """
     Refer this to improve more:
@@ -1548,6 +1672,10 @@ class Plot(BPlot):
         _ret.internal.parent = self
         _ret.internal.before = None
         return _ret
+
+    @property
+    def is_queried(self) -> bool:
+        return internal_dpg.is_plot_queried(self.dpg_id)
 
     def init_validate(self):
         # call super
