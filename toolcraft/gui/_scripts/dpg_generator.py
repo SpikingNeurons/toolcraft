@@ -923,12 +923,10 @@ from .__base__ import Widget, Container, Callback
 
         # -------------------------------- 02
         # widget and container lines
-        # _lines = [_dis_inspect, "from . import Widget, Container"]
-        _lines = []
+        _lines = [_dis_inspect, "from .__base__ import Widget, Container"]
         for _widget_def in self.get_widget_defs():
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")
-        _lines += [""]
 
         # -------------------------------- 03
         self.add_auto_imports_to_py_file(_output_file, _lines)

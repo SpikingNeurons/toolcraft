@@ -1,5 +1,7 @@
 # auto import pk; start >>>
 # noinspection PyUnresolvedReferences
+from .__base__ import Widget, Container
+# noinspection PyUnresolvedReferences
 from ._auto import HistogramSeries2D
 # noinspection PyUnresolvedReferences
 from ._auto import Slider3D
@@ -173,5 +175,4 @@ from ._auto import TableRow
 from ._auto import ThemeComponent
 # noinspection PyUnresolvedReferences
 from ._auto import TreeNode
-
 # auto import pk; end <<<

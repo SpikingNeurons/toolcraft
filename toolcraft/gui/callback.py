@@ -62,7 +62,7 @@ class SetThemeCallback(Callback):
 
 
 @dataclasses.dataclass(frozen=True)
-class Closewidget.WidgetCallback(Callback):
+class CloseWidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete its Parent
     """
@@ -89,7 +89,7 @@ class Closewidget.WidgetCallback(Callback):
 
 
 @dataclasses.dataclass(frozen=True)
-class Refreshwidget.WidgetCallback(Callback):
+class RefreshWidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete its Parent and
     then call the refresh function that must ideally add the deleted widget back
