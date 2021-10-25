@@ -286,6 +286,8 @@ class DpgDef:
             _class_name = "Widget"
             if self.is_container:
                 _class_name = "Container"
+        elif self.fn == dpg.window:
+            _class_name = "Dpg"
         else:
             _class_name = "___"
         return _class_name
@@ -304,9 +306,9 @@ class DpgDef:
         # generate name based on method and parameters
         if self.fn == dpg.plot_axis:
             if self.parametrize['axis'] == 'dpg.mvXAxis':
-                return "BXAxis"
+                return "_XAxis"
             if self.parametrize['axis'] == 'dpg.mvYAxis':
-                return "BYAxis"
+                return "_YAxis"
             raise Exception(
                 f"Unknown parameter value for axis {self.parametrize['axis']}"
             )
@@ -318,11 +320,11 @@ class DpgDef:
         # ------------------------------------------------------- 03
         # generate name based on method
         if self.fn == dpg.window:
-            return "BWindow"
+            return "_Window"
         if self.fn == dpg.table:
-            return "BTable"
+            return "_Table"
         if self.fn == dpg.plot:
-            return "BPlot"
+            return "_Plot"
         if self.fn == dpg.add_checkbox:
             return "CheckBox"
         if self.fn == dpg.subplots:
@@ -713,7 +715,7 @@ import dataclasses
 import typing as t
 import enum
 
-from .__base__ import Widget, Container, Callback
+from .__base__ import Dpg, Widget, Container, Callback
 '''
         return _header
 
@@ -885,8 +887,8 @@ from .__base__ import Widget, Container, Callback
     ):
         # ---------------------------------------------------------- 01
         # get tags and their index
-        _start_tag = "# auto import pk; start >>>"
-        _end_tag = "# auto import pk; end <<<"
+        _start_tag = "# auto pk; start >>>"
+        _end_tag = "# auto pk; end <<<"
         _start_tag_index = None
         _end_tag_index = None
         _output_file_lines = output_file.read_text().split("\n")
@@ -915,6 +917,14 @@ from .__base__ import Widget, Container, Callback
             if _.super_class_name in ["Widget", "Container"]
         ]
 
+    def get_window_def(self) -> "DpgDef":
+        _ret = [
+            _ for _ in self.all_dpg_defs
+            if _.fn == dpg.window
+        ]
+        assert len(_ret) == 1
+        return _ret[0]
+
     def make_widget_py(self):
         # -------------------------------- 01
         # init
@@ -923,10 +933,28 @@ from .__base__ import Widget, Container, Callback
 
         # -------------------------------- 02
         # widget and container lines
-        _lines = [_dis_inspect, "from .__base__ import Widget, Container"]
+        # _lines = [_dis_inspect, "from .__base__ import Widget, Container"]
+        _lines = []
         for _widget_def in self.get_widget_defs():
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")
+
+        # -------------------------------- 03
+        self.add_auto_imports_to_py_file(_output_file, _lines)
+
+    def make_window_py(self):
+        # -------------------------------- 01
+        # init
+        _output_file = pathlib.Path("../window.py")
+        # _dis_inspect = "# noinspection PyUnresolvedReferences"
+
+        # -------------------------------- 02
+        # window lines
+        # _lines = [_dis_inspect, "from .__base__ import Widget, Container"]
+        _lines = []
+        _window_def = self.get_window_def()
+        # _lines.append(_dis_inspect)
+        _lines.append(f"from ._auto import {_window_def.name}")
 
         # -------------------------------- 03
         self.add_auto_imports_to_py_file(_output_file, _lines)
@@ -943,19 +971,22 @@ from .__base__ import Widget, Container, Callback
         _enum_lines = []
         for _enum_def in _NEEDED_ENUMS.values():
             _enum_lines += _enum_def.code
-        _enum_lines += [""]
         # -------------------------------- 02.02
+        # window lines
+        _window_lines = []
+        _window_def = self.get_window_def()
+        _window_lines += _window_def.code
+        # -------------------------------- 02.03
         # widget and container lines
         _widget_lines = []
         for _widget_def in self.get_widget_defs():
             _widget_lines += _widget_def.code
-        _widget_lines += [""]
 
         # -------------------------------- 03
         _output_file.write_text(
             self.header +
             "\n".join(
-                _enum_lines + _widget_lines
+                _enum_lines + _window_lines + _widget_lines + [""]
             )
         )
 
@@ -988,6 +1019,7 @@ from .__base__ import Widget, Container, Callback
     def make(self):
         self.make_auto_py()
         self.make_enum_py()
+        self.make_window_py()
         self.make_widget_py()
 
 

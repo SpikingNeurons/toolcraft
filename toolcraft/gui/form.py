@@ -1,2 +1,2 @@
-# auto import pk; start >>>
-# auto import pk; end <<<
+# auto pk; start >>>
+# auto pk; end <<<

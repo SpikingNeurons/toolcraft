@@ -1,4 +1,4 @@
-# auto import pk; start >>>
+# auto pk; start >>>
 # noinspection PyUnresolvedReferences
 from .__base__ import EnColor
 # noinspection PyUnresolvedReferences
@@ -15,4 +15,4 @@ from ._auto import EnPlotLocation
 from ._auto import EnThemeCat
 # noinspection PyUnresolvedReferences
 from ._auto import EnNodeAttr
-# auto import pk; end <<<
+# auto pk; end <<<

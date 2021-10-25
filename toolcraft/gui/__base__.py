@@ -22,7 +22,7 @@ COLOR_TYPE: t.Tuple[int, int, int, int]
 
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
-    from ._auto import Window
+    from . import window
 
 
 class EnColor(enum.Enum):
@@ -35,33 +35,15 @@ class EnColor(enum.Enum):
     RED = (255, 0, 0, 255)
 
 
-@dataclasses.dataclass(frozen=True)
-class Callback(m.Tracker, abc.ABC):
-    """
-    Note that `Callback.fn` will as call back function.
-    But when it comes to callback data we need not worry as the fields
-    of this instance will serve as data ;)
-    """
-
-    @abc.abstractmethod
-    def fn(
-        self,
-        sender: "Widget",
-        app_data: t.Any,
-        user_data: t.Union["Widget", t.List["Widget"]]
-    ):
-        ...
-
-
-class _Internal(m.Internal):
+class DpgInternal(m.Internal):
     dpg_id: t.Union[int, str]
     is_build_done: bool
 
 
-class WidgetInternal(_Internal):
+class WidgetInternal(DpgInternal):
     parent: "Container"
     before: t.Optional["Widget"]
-    root: "Window"
+    root: "window.Window"
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
         return super().vars_that_can_be_overwritten() + [
@@ -70,7 +52,12 @@ class WidgetInternal(_Internal):
 
 
 @dataclasses.dataclass
-class DpgCommon(m.Tracker, abc.ABC):
+class Dpg(m.Tracker, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> DpgInternal:
+        return DpgInternal(owner=self)
 
     @property
     def dpg_id(self) -> t.Union[int, str]:
@@ -90,7 +77,12 @@ class DpgCommon(m.Tracker, abc.ABC):
 
 
 @dataclasses.dataclass
-class Widget(DpgCommon, abc.ABC):
+class Widget(Dpg, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> WidgetInternal:
+        return WidgetInternal(owner=self)
 
     @property
     def parent(self) -> "Container":
@@ -101,13 +93,8 @@ class Widget(DpgCommon, abc.ABC):
         return self.internal.before
 
     @property
-    def root(self) -> "Window":
+    def root(self) -> "window.Window":
         return self.internal.root
-
-    @property
-    @util.CacheResult
-    def internal(self) -> WidgetInternal:
-        return WidgetInternal(owner=self)
 
     @property
     def is_built(self) -> bool:
@@ -790,6 +777,28 @@ class Form(Widget, abc.ABC):
 
 
 @dataclasses.dataclass
+class Callback(m.Tracker, abc.ABC):
+    """
+    Note that `Callback.fn` will as call back function.
+    But when it comes to callback data we need not worry as the fields
+    of this instance will serve as data ;)
+    """
+
+    @abc.abstractmethod
+    def fn(
+        self,
+        sender: Dpg,
+        app_data: t.Any,
+        user_data: t.Union[Dpg, t.List[Dpg]]
+    ):
+        ...
+
+
+class DashboardInternal(m.Internal):
+    is_build_done: bool
+
+
+@dataclasses.dataclass
 class Dashboard(m.Tracker):
     """
     Dashboard is not a Widget.
@@ -825,25 +834,17 @@ class Dashboard(m.Tracker):
     height: int = 1200
 
     @property
-    def primary_window(self) -> "Window":
-        from ._auto import Window
+    @util.CacheResult
+    def internal(self) -> DashboardInternal:
+        return DashboardInternal(owner=self)
+
+    @property
+    def primary_window(self) -> "window.Window":
+        from .window import Window
         return Window(
             label=self.title,
             width=self.width, height=self.height,
         )
-
-    # noinspection PyTypeChecker,PyPropertyDefinition
-    @property
-    def parent(self) -> "Widget":
-        e.code.CodingError(
-            msgs=[
-                f"You need not use this property for dashboard"
-            ]
-        )
-
-    @property
-    def dashboard(self) -> "Dashboard":
-        return self
 
     @staticmethod
     def is_dearpygui_running() -> bool:
@@ -1004,44 +1005,30 @@ class Dashboard(m.Tracker):
         # noinspection PyArgumentList
         return internal_dpg.get_total_time(**kwargs)
 
-    def build_pre_runner(self):
+    def run(self):
+        # -------------------------------------------------- 01
         # setup dpg
         dpg.create_context()
         dpg.create_viewport()
         dpg.setup_dearpygui()
 
-        # call super
-        return super().build_pre_runner()
-
-    # noinspection PyMethodMayBeStatic,PyMethodOverriding
-    def build(self) -> t.Union[int, str]:
-
-        # -------------------------------------------------- 01
-        # add window
-        self.primary_window.build()
-        _ret = self.primary_window.dpg_id
-
         # -------------------------------------------------- 02
+        # build
+        self.primary_window.build()
+
+        # -------------------------------------------------- 03
+        # primary window dpg_id
+        _primary_window_dpg_id = self.primary_window.dpg_id
         # set the things for primary window
-        dpg.set_primary_window(window=_ret, value=True)
+        dpg.set_primary_window(window=_primary_window_dpg_id, value=True)
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.bind_item_theme(item=_ret, theme=asset.Theme.DARK.get())
+        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
 
         # -------------------------------------------------- 03
-        # return
-        return _ret
-
-    def run(self):
-
-        # check if ui was built
-        if not self.internal.is_build_done:
-            e.code.NotAllowed(
-                msgs=[
-                    f"looks like you missed to build dashboard"
-                ]
-            )
+        # indicate build is done
+        self.internal.is_build_done = True
 
         # dpg related
         dpg.show_viewport()

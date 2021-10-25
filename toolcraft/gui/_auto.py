@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-10-25 09:58
+>> Time: 2021-10-25 13:46
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -15,7 +15,7 @@ import dataclasses
 import typing as t
 import enum
 
-from .__base__ import Widget, Container, Callback
+from .__base__ import Dpg, Widget, Container, Callback
 
 
 class EnDir(enum.Enum):
@@ -89,6 +89,152 @@ class EnNodeAttr(enum.Enum):
     Output = dpg.mvNode_Attr_Output  # 1
     Static = dpg.mvNode_Attr_Static  # 2
 
+
+@dataclasses.dataclass
+class _Window(Dpg):
+    """
+    Refer:
+    >>> dpg.window
+
+     Creates a new window for following items to be added to.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # min_size (Union[List[int], Tuple[int, ...]], optional): Minimum window size.
+    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [100, 100])
+
+    # max_size (Union[List[int], Tuple[int, ...]], optional): Maximum window size.
+    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [30000, 30000])
+
+    # menubar (bool, optional): Shows or hides the menubar.
+    menubar: bool = False
+
+    # collapsed (bool, optional): Collapse the window.
+    collapsed: bool = False
+
+    # autosize (bool, optional): Autosized the window to fit it's items.
+    autosize: bool = False
+
+    # no_resize (bool, optional): Allows for the window size to be changed or fixed.
+    no_resize: bool = False
+
+    # no_title_bar (bool, optional): Title name for the title bar of the window.
+    no_title_bar: bool = False
+
+    # no_move (bool, optional): Allows for the window's position to be changed or fixed.
+    no_move: bool = False
+
+    # no_scrollbar (bool, optional): Disable scrollbars. (window can still scroll with mouse or programmatically)
+    no_scrollbar: bool = False
+
+    # no_collapse (bool, optional): Disable user collapsing window by double-clicking on it.
+    no_collapse: bool = False
+
+    # horizontal_scrollbar (bool, optional): Allow horizontal scrollbar to appear. (off by default)
+    horizontal_scrollbar: bool = False
+
+    # no_focus_on_appearing (bool, optional): Disable taking focus when transitioning from hidden to visible state.
+    no_focus_on_appearing: bool = False
+
+    # no_bring_to_front_on_focus (bool, optional): Disable bringing window to front when taking focus. (e.g. clicking on it or programmatically giving it focus)
+    no_bring_to_front_on_focus: bool = False
+
+    # no_close (bool, optional): Disable user closing the window by removing the close button.
+    no_close: bool = False
+
+    # no_background (bool, optional): Sets Background and border alpha to transparent.
+    no_background: bool = False
+
+    # modal (bool, optional): Fills area behind window according to the theme and disables user ability to interact with anything except the window.
+    modal: bool = False
+
+    # popup (bool, optional): Fills area behind window according to the theme, removes title bar, collapse and close. Window can be closed by selecting area in the background behind the window.
+    popup: bool = False
+
+    # no_saved_settings (bool, optional): Never load/save settings in .ini file.
+    no_saved_settings: bool = False
+
+    # on_close (Callable, optional): Callback ran when window is closed.
+    on_close: Callback = None
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_window(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            show=self.show,
+            pos=self.pos,
+            delay_search=self.delay_search,
+            min_size=self.min_size,
+            max_size=self.max_size,
+            menubar=self.menubar,
+            collapsed=self.collapsed,
+            autosize=self.autosize,
+            no_resize=self.no_resize,
+            no_title_bar=self.no_title_bar,
+            no_move=self.no_move,
+            no_scrollbar=self.no_scrollbar,
+            no_collapse=self.no_collapse,
+            horizontal_scrollbar=self.horizontal_scrollbar,
+            no_focus_on_appearing=self.no_focus_on_appearing,
+            no_bring_to_front_on_focus=self.no_bring_to_front_on_focus,
+            no_close=self.no_close,
+            no_background=self.no_background,
+            modal=self.modal,
+            popup=self.popup,
+            no_saved_settings=self.no_saved_settings,
+            on_close=self.on_close_fn,
+        )
+        
+        return _ret
+
+    def on_close_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.on_close is None:
+            return None
+        else:
+            return self.on_close.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
 
 
 @dataclasses.dataclass
@@ -7972,7 +8118,7 @@ class NodeAttribute(Container):
 
 
 @dataclasses.dataclass
-class BPlot(Container):
+class _Plot(Container):
     """
     Refer:
     >>> dpg.plot
@@ -8516,7 +8662,7 @@ class TabBar(Container):
 
 
 @dataclasses.dataclass
-class BTable(Container):
+class _Table(Container):
     """
     Refer:
     >>> dpg.table

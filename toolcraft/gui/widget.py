@@ -1,6 +1,4 @@
-# auto import pk; start >>>
-# noinspection PyUnresolvedReferences
-from .__base__ import Widget, Container
+# auto pk; start >>>
 # noinspection PyUnresolvedReferences
 from ._auto import HistogramSeries2D
 # noinspection PyUnresolvedReferences
@@ -158,7 +156,7 @@ from ._auto import Node
 # noinspection PyUnresolvedReferences
 from ._auto import NodeAttribute
 # noinspection PyUnresolvedReferences
-from ._auto import BPlot
+from ._auto import _Plot
 # noinspection PyUnresolvedReferences
 from ._auto import SubPlots
 # noinspection PyUnresolvedReferences
@@ -166,7 +164,7 @@ from ._auto import Tab
 # noinspection PyUnresolvedReferences
 from ._auto import TabBar
 # noinspection PyUnresolvedReferences
-from ._auto import BTable
+from ._auto import _Table
 # noinspection PyUnresolvedReferences
 from ._auto import TableCell
 # noinspection PyUnresolvedReferences
@@ -175,4 +173,4 @@ from ._auto import TableRow
 from ._auto import ThemeComponent
 # noinspection PyUnresolvedReferences
 from ._auto import TreeNode
-# auto import pk; end <<<
+# auto pk; end <<<
