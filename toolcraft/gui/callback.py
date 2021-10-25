@@ -5,9 +5,8 @@ import typing as t
 from .. import util
 from .. import marshalling as m
 from .. import error as e
-from . import Widget, Callback
-from . import widget
-from . import assets
+from . import Callback
+from . import widget, asset
 
 
 @dataclasses.dataclass(frozen=True)
@@ -42,15 +41,15 @@ class SetThemeCallback(Callback):
 
     def fn(
         self,
-        sender: Widget,
+        sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
     ):
         _theme_str = dpg.get_value(item=sender.dpg_id)
         if _theme_str == "Dark":
-            _theme = assets.Theme.DARK
+            _theme = asset.Theme.DARK
         elif _theme_str == "Light":
-            _theme = assets.Theme.LIGHT
+            _theme = asset.Theme.LIGHT
         else:
             e.code.CodingError(
                 msgs=[
@@ -63,16 +62,16 @@ class SetThemeCallback(Callback):
 
 
 @dataclasses.dataclass(frozen=True)
-class CloseWidgetCallback(Callback):
+class Closewidget.WidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete its Parent
     """
 
-    widget_to_delete: Widget
+    widget_to_delete: widget.Widget
 
     @classmethod
     def get_button_widget(
-        cls, widget_to_delete: Widget
+        cls, widget_to_delete: widget.Widget
     ) -> widget.Button:
         return widget.Button(
             label="Close [X]",
@@ -81,16 +80,16 @@ class CloseWidgetCallback(Callback):
 
     def fn(
         self,
-        sender: Widget,
+        sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
     ):
         # sender.parent.delete()
         self.widget_to_delete.delete()
 
 
 @dataclasses.dataclass(frozen=True)
-class RefreshWidgetCallback(Callback):
+class Refreshwidget.WidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete its Parent and
     then call the refresh function that must ideally add the deleted widget back
@@ -109,9 +108,9 @@ class RefreshWidgetCallback(Callback):
 
     def fn(
         self,
-        sender: Widget,
+        sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
     ):
         sender.parent.delete()
         self.refresh_callback.fn(
@@ -132,7 +131,7 @@ class HashableMethodRunnerCallback(Callback):
     """
     hashable: m.HashableClass
     callable_name: str
-    receiver: Widget
+    receiver: widget.Widget
     allow_refresh: bool
     tab_group_name: str = None
 
@@ -162,9 +161,9 @@ class HashableMethodRunnerCallback(Callback):
 
     def fn(
         self,
-        sender: Widget,
+        sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
     ):
         # get some vars
         # _sender = self.sender
@@ -212,7 +211,7 @@ class HashableMethodsRunnerCallback(Callback):
     info_button: bool
     callable_names: t.List[str]
     callable_labels: t.List[str]
-    receiver: Widget
+    receiver: widget.Widget
     allow_refresh: bool
 
     def init_validate(self):
@@ -238,9 +237,9 @@ class HashableMethodsRunnerCallback(Callback):
 
     def fn(
         self,
-        sender: Widget,
+        sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
     ):
         # import
         from . import helper

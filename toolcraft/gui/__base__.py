@@ -15,17 +15,17 @@ from .. import error as e
 from .. import logger
 from .. import util
 from .. import marshalling as m
-from . import assets
+from . import asset
 
 _LOGGER = logger.get_logger()
 COLOR_TYPE: t.Tuple[int, int, int, int]
 
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
-    from . import Window
+    from ._auto import Window
 
 
-class Color(enum.Enum):
+class EnColor(enum.Enum):
     DEFAULT = (-1, -1, -1, -1)
     WHITE = (255, 255, 255, 255)
     BLACK = (0, 0, 0, 255)
@@ -53,19 +53,15 @@ class Callback(m.Tracker, abc.ABC):
         ...
 
 
-class WidgetInternal(m.Internal):
+class _Internal(m.Internal):
     dpg_id: t.Union[int, str]
-    parent: "Container"
-    before: t.Optional["Widget"]
-    dashboard: "Dashboard"
     is_build_done: bool
 
-    @property
-    def dpg_kwargs(self) -> t.Dict[str, t.Any]:
-        _ret = {'parent': self.parent.dpg_id}
-        if self.before is not None:
-            _ret['before'] = self.before.dpg_id
-        return _ret
+
+class WidgetInternal(_Internal):
+    parent: "Container"
+    before: t.Optional["Widget"]
+    root: "Window"
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
         return super().vars_that_can_be_overwritten() + [
@@ -74,7 +70,7 @@ class WidgetInternal(m.Internal):
 
 
 @dataclasses.dataclass
-class Widget(m.Tracker, abc.ABC):
+class DpgCommon(m.Tracker, abc.ABC):
 
     @property
     def dpg_id(self) -> t.Union[int, str]:
@@ -92,9 +88,21 @@ class Widget(m.Tracker, abc.ABC):
     def dpg_info(self) -> t.Dict[str, t.Any]:
         return internal_dpg.get_item_info(self.dpg_id)
 
+
+@dataclasses.dataclass
+class Widget(DpgCommon, abc.ABC):
+
+    @property
+    def root(self) -> "Window":
+        return self.internal.root
+
     @property
     def parent(self) -> "Container":
         return self.internal.parent
+
+    @property
+    def before(self) -> t.Optional["Widget"]:
+        return self.internal.before
 
     @property
     @util.CacheResult
@@ -194,8 +202,8 @@ class Widget(m.Tracker, abc.ABC):
         return None
 
     @property
-    def dashboard(self) -> "Dashboard":
-        return self.internal.dashboard
+    def root(self) -> "Window":
+        return self.internal.root
 
     def __post_init__(self):
         self.init_validate()
@@ -511,7 +519,7 @@ class Widget(m.Tracker, abc.ABC):
         """
         internal_dpg.configure_item(self.dpg_id, show=False)
 
-    def set_theme(self, theme: assets.Theme):
+    def set_theme(self, theme: asset.Theme):
         dpg.set_item_theme(item=self.dpg_id, theme=theme.get())
 
     def set_widget_configuration(self, **kwargs):
@@ -778,10 +786,13 @@ class Form(Widget, abc.ABC):
 
 
 @dataclasses.dataclass
-class Dashboard(Form):
+class Dashboard(m.Tracker):
     """
-    Dashboard is a specialized `Form`.
-    As of now we think of having only Window widgets as fields.
+    Dashboard is not a Widget.
+    As of now we think of having only items that do not have parent; like
+    + Window
+    + Registry
+    + theme
 
     The `primary_window` property holds primary Window which will occupy entire screen
 
@@ -811,7 +822,7 @@ class Dashboard(Form):
 
     @property
     def primary_window(self) -> "Window":
-        from . import Window
+        from ._auto import Window
         return Window(
             label=self.title,
             width=self.width, height=self.height,
@@ -1012,7 +1023,7 @@ class Dashboard(Form):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.bind_item_theme(item=_ret, theme=assets.Theme.DARK.get())
+        dpg.bind_item_theme(item=_ret, theme=asset.Theme.DARK.get())
 
         # -------------------------------------------------- 03
         # return

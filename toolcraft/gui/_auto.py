@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-10-24 05:18
+>> Time: 2021-10-25 02:15
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -16,13 +16,6 @@ import typing as t
 import enum
 
 from .__base__ import Widget, Container, Callback
-
-
-class EnNodeAttr(enum.Enum):
-
-    Input = dpg.mvNode_Attr_Input  # 0
-    Output = dpg.mvNode_Attr_Output  # 1
-    Static = dpg.mvNode_Attr_Static  # 2
 
 
 class EnDir(enum.Enum):
@@ -90,2956 +83,11 @@ class EnThemeCat(enum.Enum):
     Nodes = dpg.mvThemeCat_Nodes  # 2
 
 
-@dataclasses.dataclass
-class ChildWindow(Container):
-    """
-    Refer:
-    >>> dpg.child_window
-
-     Adds an embedded child window. Will show scrollbars when items do not fit.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # border (bool, optional): Shows/Hides the border around the sides.
-    border: bool = True
-
-    # autosize_x (bool, optional): Autosize the window to fit it's items in the x.
-    autosize_x: bool = False
-
-    # autosize_y (bool, optional): Autosize the window to fit it's items in the y.
-    autosize_y: bool = False
-
-    # no_scrollbar (bool, optional): Disable scrollbars (window can still scroll with mouse or programmatically).
-    no_scrollbar: bool = False
-
-    # horizontal_scrollbar (bool, optional): Allow horizontal scrollbar to appear (off by default).
-    horizontal_scrollbar: bool = False
-
-    # menubar (bool, optional): Shows/Hides the menubar at the top.
-    menubar: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_child_window(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            border=self.border,
-            autosize_x=self.autosize_x,
-            autosize_y=self.autosize_y,
-            no_scrollbar=self.no_scrollbar,
-            horizontal_scrollbar=self.horizontal_scrollbar,
-            menubar=self.menubar,
-        )
-        
-        return _ret
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class Clipper(Container):
-    """
-    Refer:
-    >>> dpg.clipper
-
-     Helper to manually clip large list of items. Increases performance by not searching or drawing widgets outside of the clipped region.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_clipper(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            indent=self.indent,
-            show=self.show,
-            delay_search=self.delay_search,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class CollapsingHeader(Container):
-    """
-    Refer:
-    >>> dpg.collapsing_header
-
-     Adds a collapsing header to add items to. Must be closed with the end command.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # closable (bool, optional): Adds the ability to hide this widget by pressing the (x) in the top right of widget.
-    closable: bool = False
-
-    # default_open (bool, optional): Sets the collapseable header open by default.
-    default_open: bool = False
-
-    # open_on_double_click (bool, optional): Need double-click to open node.
-    open_on_double_click: bool = False
-
-    # open_on_arrow (bool, optional): Only open when clicking on the arrow part.
-    open_on_arrow: bool = False
-
-    # leaf (bool, optional): No collapsing, no arrow (use as a convenience for leaf nodes).
-    leaf: bool = False
-
-    # bullet (bool, optional): Display a bullet instead of arrow.
-    bullet: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_collapsing_header(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            closable=self.closable,
-            default_open=self.default_open,
-            open_on_double_click=self.open_on_double_click,
-            open_on_arrow=self.open_on_arrow,
-            leaf=self.leaf,
-            bullet=self.bullet,
-        )
-        
-        return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class ColormapRegistry(Container):
-    """
-    Refer:
-    >>> dpg.colormap_registry
-
-     Adds a colormap registry.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_colormap_registry(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class DragPayload(Container):
-    """
-    Refer:
-    >>> dpg.drag_payload
-
-     User data payload for drag and drop operations.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # drag_data (Any, optional): Drag data
-    drag_data: t.Any = None
-
-    # drop_data (Any, optional): Drop data
-    drop_data: t.Any = None
-
-    # payload_type (str, optional): ...
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_drag_payload(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-            drag_data=self.drag_data,
-            drop_data=self.drop_data,
-            payload_type=self.payload_type,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class DrawLayer(Container):
-    """
-    Refer:
-    >>> dpg.draw_layer
-
-     Creates a layer useful for grouping drawlist items.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_draw_layer(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Drawlist(Container):
-    """
-    Refer:
-    >>> dpg.drawlist
-
-     Adds a drawing canvas.
-
-    """
-
-    # width (int): ...
-    width: int
-
-    # height (int): ...
-    height: int
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_drawlist(
-            **self.internal.dpg_kwargs,
-            width=self.width,
-            height=self.height,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            callback=self.callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-        )
-        
-        return _ret
-
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class FileDialog(Container):
-    """
-    Refer:
-    >>> dpg.file_dialog
-
-     Displays a file or directory selector depending on keywords. Displays a file dialog by default. Callback will be ran when the file or directory picker is closed. The app_data arguemnt will be populated with information related to the file and directory as a dictionary.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # default_path (str, optional): Path that the file dialog will default to when opened.
-    default_path: str = ''
-
-    # default_filename (str, optional): Default name that will show in the file name input.
-    default_filename: str = '.'
-
-    # file_count (int, optional): Number of visible files in the dialog.
-    file_count: int = 0
-
-    # modal (bool, optional): Forces user interaction with the file selector.
-    modal: bool = False
-
-    # directory_selector (bool, optional): Shows only directory/paths as options. Allows selection of directory/paths only.
-    directory_selector: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_file_dialog(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            height=self.height,
-            callback=self.callback_fn,
-            show=self.show,
-            default_path=self.default_path,
-            default_filename=self.default_filename,
-            file_count=self.file_count,
-            modal=self.modal,
-            directory_selector=self.directory_selector,
-        )
-        
-        return _ret
-
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class FilterSet(Container):
-    """
-    Refer:
-    >>> dpg.filter_set
-
-     Helper to parse and apply text filters (e.g. aaaaa[, bbbbb][, ccccc])
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_filter_set(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            indent=self.indent,
-            show=self.show,
-            delay_search=self.delay_search,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Font(Container):
-    """
-    Refer:
-    >>> dpg.font
-
-     Adds font to a font registry.
-
-    """
-
-    # file (str): ...
-    file: str
-
-    # size (int): ...
-    size: int
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_font(
-            **self.internal.dpg_kwargs,
-            file=self.file,
-            size=self.size,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class FontRegistry(Container):
-    """
-    Refer:
-    >>> dpg.font_registry
-
-     Adds a font registry.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_font_registry(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Group(Container):
-    """
-    Refer:
-    >>> dpg.group
-
-     Creates a group that other widgets can belong to. The group allows item commands to be issued for all of its members.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # horizontal (bool, optional): Forces child widgets to be added in a horizontal layout.
-    horizontal: bool = False
-
-    # horizontal_spacing (float, optional): Spacing for the horizontal layout.
-    horizontal_spacing: float = -1
-
-    # xoffset (float, optional): Offset from containing window x item location within group.
-    xoffset: float = 0.0
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_group(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            horizontal=self.horizontal,
-            horizontal_spacing=self.horizontal_spacing,
-            xoffset=self.xoffset,
-        )
-        
-        return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class HandlerRegistry(Container):
-    """
-    Refer:
-    >>> dpg.handler_registry
-
-     Adds a handler registry.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_handler_registry(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ItemHandlerRegistry(Container):
-    """
-    Refer:
-    >>> dpg.item_handler_registry
-
-     Adds an item handler registry.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_item_handler_registry(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ItemPool(Container):
-    """
-    Refer:
-    >>> dpg.item_pool
-
-     Adds an item pool.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_item_pool(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ItemSet(Container):
-    """
-    Refer:
-    >>> dpg.item_set
-
-     Adds an item set to an item pool.
-
-    """
-
-    # type (int): ...
-    type: int
-
-    # count (int): ...
-    count: int
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_item_set(
-            **self.internal.dpg_kwargs,
-            type=self.type,
-            count=self.count,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Menu(Container):
-    """
-    Refer:
-    >>> dpg.menu
-
-     Adds a menu to an existing menu bar.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
-    enabled: bool = True
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_menu(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            enabled=self.enabled,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-        )
-        
-        return _ret
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class MenuBar(Container):
-    """
-    Refer:
-    >>> dpg.menu_bar
-
-     Adds a menu bar to a window.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_menu_bar(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            show=self.show,
-            delay_search=self.delay_search,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Node(Container):
-    """
-    Refer:
-    >>> dpg.node
-
-     Adds a node to a node editor.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # draggable (bool, optional): Allow node to be draggable.
-    draggable: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_node(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            draggable=self.draggable,
-        )
-        
-        return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class NodeAttribute(Container):
-    """
-    Refer:
-    >>> dpg.node_attribute
-
-     Adds a node attribute to a node.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # attribute_type (int, optional): mvNode_Attr_Input, mvNode_Attr_Output, or mvNode_Attr_Static.
-    attribute_type: EnNodeAttr = EnNodeAttr.Input
-
-    # shape (int, optional): Pin shape.
-    shape: int = 1
-
-    # category (str, optional): Category
-    category: str = 'general'
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_node_attribute(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            show=self.show,
-            filter_key=self.filter_key,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            attribute_type=self.attribute_type.value,
-            shape=self.shape,
-            category=self.category,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class NodeEditor(Container):
-    """
-    Refer:
-    >>> dpg.node_editor
-
-     Adds a node editor.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # delink_callback (Callable, optional): Callback ran when a link is detached.
-    delink_callback: Callback = None
-
-    # menubar (bool, optional): Shows or hides the menubar.
-    menubar: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_node_editor(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            height=self.height,
-            callback=self.callback_fn,
-            show=self.show,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            delink_callback=self.delink_callback_fn,
-            menubar=self.menubar,
-        )
-        
-        return _ret
-
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def delink_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.delink_callback is None:
-            return None
-        else:
-            return self.delink_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class BPlot(Container):
-    """
-    Refer:
-    >>> dpg.plot
-
-     Adds a plot which is used to hold series, and can be drawn to with draw commands.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
-
-    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # no_title (bool, optional): ...
-    no_title: bool = False
-
-    # no_menus (bool, optional): ...
-    no_menus: bool = False
-
-    # no_box_select (bool, optional): ...
-    no_box_select: bool = False
-
-    # no_mouse_pos (bool, optional): ...
-    no_mouse_pos: bool = False
-
-    # no_highlight (bool, optional): ...
-    no_highlight: bool = False
-
-    # no_child (bool, optional): ...
-    no_child: bool = False
-
-    # query (bool, optional): ...
-    query: bool = False
-
-    # crosshairs (bool, optional): ...
-    crosshairs: bool = False
-
-    # anti_aliased (bool, optional): ...
-    anti_aliased: bool = False
-
-    # equal_aspects (bool, optional): ...
-    equal_aspects: bool = False
-
-    # pan_button (int, optional): enables panning when held
-    pan_button: int = 0
-
-    # pan_mod (int, optional): optional modifier that must be held for panning
-    pan_mod: int = -1
-
-    # fit_button (int, optional): fits visible data when double clicked
-    fit_button: int = 0
-
-    # context_menu_button (int, optional): opens plot context menu (if enabled) when clicked
-    context_menu_button: int = 1
-
-    # box_select_button (int, optional): begins box selection when pressed and confirms selection when released
-    box_select_button: int = 1
-
-    # box_select_mod (int, optional): begins box selection when pressed and confirms selection when released
-    box_select_mod: int = -1
-
-    # box_select_cancel_button (int, optional): cancels active box selection when pressed
-    box_select_cancel_button: int = 0
-
-    # query_button (int, optional): begins query selection when pressed and end query selection when released
-    query_button: int = 2
-
-    # query_mod (int, optional): optional modifier that must be held for query selection
-    query_mod: int = -1
-
-    # query_toggle_mod (int, optional): when held, active box selections turn into queries
-    query_toggle_mod: int = 17
-
-    # horizontal_mod (int, optional): expands active box selection/query horizontally to plot edge when held
-    horizontal_mod: int = 18
-
-    # vertical_mod (int, optional): expands active box selection/query vertically to plot edge when held
-    vertical_mod: int = 16
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_plot(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            callback=self.callback_fn,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            no_title=self.no_title,
-            no_menus=self.no_menus,
-            no_box_select=self.no_box_select,
-            no_mouse_pos=self.no_mouse_pos,
-            no_highlight=self.no_highlight,
-            no_child=self.no_child,
-            query=self.query,
-            crosshairs=self.crosshairs,
-            anti_aliased=self.anti_aliased,
-            equal_aspects=self.equal_aspects,
-            pan_button=self.pan_button,
-            pan_mod=self.pan_mod,
-            fit_button=self.fit_button,
-            context_menu_button=self.context_menu_button,
-            box_select_button=self.box_select_button,
-            box_select_mod=self.box_select_mod,
-            box_select_cancel_button=self.box_select_cancel_button,
-            query_button=self.query_button,
-            query_mod=self.query_mod,
-            query_toggle_mod=self.query_toggle_mod,
-            horizontal_mod=self.horizontal_mod,
-            vertical_mod=self.vertical_mod,
-        )
-        
-        return _ret
-
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class BXAxis(Widget):
-    """
-    Refer:
-    >>> dpg.plot_axis
-
-     Adds an axis to a plot.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # no_gridlines (bool, optional): ...
-    no_gridlines: bool = False
-
-    # no_tick_marks (bool, optional): ...
-    no_tick_marks: bool = False
-
-    # no_tick_labels (bool, optional): ...
-    no_tick_labels: bool = False
-
-    # log_scale (bool, optional): ...
-    log_scale: bool = False
-
-    # invert (bool, optional): ...
-    invert: bool = False
-
-    # lock_min (bool, optional): ...
-    lock_min: bool = False
-
-    # lock_max (bool, optional): ...
-    lock_max: bool = False
-
-    # time (bool, optional): ...
-    time: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_plot_axis(
-            **self.internal.dpg_kwargs,
-            axis=dpg.mvXAxis,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            payload_type=self.payload_type,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            no_gridlines=self.no_gridlines,
-            no_tick_marks=self.no_tick_marks,
-            no_tick_labels=self.no_tick_labels,
-            log_scale=self.log_scale,
-            invert=self.invert,
-            lock_min=self.lock_min,
-            lock_max=self.lock_max,
-            time=self.time,
-        )
-        
-        return _ret
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class BYAxis(Widget):
-    """
-    Refer:
-    >>> dpg.plot_axis
-
-     Adds an axis to a plot.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # no_gridlines (bool, optional): ...
-    no_gridlines: bool = False
-
-    # no_tick_marks (bool, optional): ...
-    no_tick_marks: bool = False
-
-    # no_tick_labels (bool, optional): ...
-    no_tick_labels: bool = False
-
-    # log_scale (bool, optional): ...
-    log_scale: bool = False
-
-    # invert (bool, optional): ...
-    invert: bool = False
-
-    # lock_min (bool, optional): ...
-    lock_min: bool = False
-
-    # lock_max (bool, optional): ...
-    lock_max: bool = False
-
-    # time (bool, optional): ...
-    time: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_plot_axis(
-            **self.internal.dpg_kwargs,
-            axis=dpg.mvYAxis,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            payload_type=self.payload_type,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            no_gridlines=self.no_gridlines,
-            no_tick_marks=self.no_tick_marks,
-            no_tick_labels=self.no_tick_labels,
-            log_scale=self.log_scale,
-            invert=self.invert,
-            lock_min=self.lock_min,
-            lock_max=self.lock_max,
-            time=self.time,
-        )
-        
-        return _ret
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class Stage(Container):
-    """
-    Refer:
-    >>> dpg.stage
-
-     Adds a stage.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_stage(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Subplots(Container):
-    """
-    Refer:
-    >>> dpg.subplots
-
-     Adds a collection of plots.
-
-    """
-
-    # rows (int): ...
-    rows: int
-
-    # columns (int): ...
-    columns: int
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # row_ratios (Union[List[float], Tuple[float, ...]], optional): ...
-    row_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # column_ratios (Union[List[float], Tuple[float, ...]], optional): ...
-    column_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # no_title (bool, optional): ...
-    no_title: bool = False
-
-    # no_menus (bool, optional): the user will not be able to open context menus with right-click
-    no_menus: bool = False
-
-    # no_resize (bool, optional): resize splitters between subplot cells will be not be provided
-    no_resize: bool = False
-
-    # no_align (bool, optional): subplot edges will not be aligned vertically or horizontally
-    no_align: bool = False
-
-    # link_rows (bool, optional): link the y-axis limits of all plots in each row (does not apply auxiliary y-axes)
-    link_rows: bool = False
-
-    # link_columns (bool, optional): link the x-axis limits of all plots in each column
-    link_columns: bool = False
-
-    # link_all_x (bool, optional): link the x-axis limits in every plot in the subplot
-    link_all_x: bool = False
-
-    # link_all_y (bool, optional): link the y-axis limits in every plot in the subplot (does not apply to auxiliary y-axes)
-    link_all_y: bool = False
-
-    # column_major (bool, optional): subplots are added in column major order instead of the default row major order
-    column_major: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_subplots(
-            **self.internal.dpg_kwargs,
-            rows=self.rows,
-            columns=self.columns,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            callback=self.callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            row_ratios=self.row_ratios,
-            column_ratios=self.column_ratios,
-            no_title=self.no_title,
-            no_menus=self.no_menus,
-            no_resize=self.no_resize,
-            no_align=self.no_align,
-            link_rows=self.link_rows,
-            link_columns=self.link_columns,
-            link_all_x=self.link_all_x,
-            link_all_y=self.link_all_y,
-            column_major=self.column_major,
-        )
-        
-        return _ret
-
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class Tab(Container):
-    """
-    Refer:
-    >>> dpg.tab
-
-     Adds a tab to a tab bar.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # closable (bool, optional): Creates a button on the tab that can hide the tab.
-    closable: bool = False
-
-    # no_tooltip (bool, optional): Disable tooltip for the given tab.
-    no_tooltip: bool = False
-
-    # order_mode (bool, optional): set using a constant
-    order_mode: bool = 0
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_tab(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            closable=self.closable,
-            no_tooltip=self.no_tooltip,
-            order_mode=self.order_mode,
-        )
-        
-        return _ret
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class TabBar(Container):
-    """
-    Refer:
-    >>> dpg.tab_bar
-
-     Adds a tab bar.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # reorderable (bool, optional): Allows for the user to change the order of the tabs.
-    reorderable: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_tab_bar(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            callback=self.callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            reorderable=self.reorderable,
-        )
-        
-        return _ret
-
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class BTable(Container):
-    """
-    Refer:
-    >>> dpg.table
-
-     Adds a table.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # source (Union[int, str], optional): Overrides 'id' as value storage key.
-    source: t.Optional[Widget] = None
-
-    # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # header_row (bool, optional): show headers at the top of the columns
-    header_row: bool = True
-
-    # clipper (bool, optional): Use clipper (rows must be same height).
-    clipper: bool = False
-
-    # inner_width (int, optional): ...
-    inner_width: int = 0
-
-    # policy (int, optional): ...
-    policy: int = 0
-
-    # freeze_rows (int, optional): ...
-    freeze_rows: int = 0
-
-    # freeze_columns (int, optional): ...
-    freeze_columns: int = 0
-
-    # sort_multi (bool, optional): Hold shift when clicking headers to sort on multiple column.
-    sort_multi: bool = False
-
-    # sort_tristate (bool, optional): Allow no sorting, disable default sorting.
-    sort_tristate: bool = False
-
-    # resizable (bool, optional): Enable resizing columns
-    resizable: bool = False
-
-    # reorderable (bool, optional): Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)
-    reorderable: bool = False
-
-    # hideable (bool, optional): Enable hiding/disabling columns in context menu.
-    hideable: bool = False
-
-    # sortable (bool, optional): Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.
-    sortable: bool = False
-
-    # context_menu_in_body (bool, optional): Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().
-    context_menu_in_body: bool = False
-
-    # row_background (bool, optional): Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)
-    row_background: bool = False
-
-    # borders_innerH (bool, optional): Draw horizontal borders between rows.
-    borders_innerH: bool = False
-
-    # borders_outerH (bool, optional): Draw horizontal borders at the top and bottom.
-    borders_outerH: bool = False
-
-    # borders_innerV (bool, optional): Draw vertical borders between columns.
-    borders_innerV: bool = False
-
-    # borders_outerV (bool, optional): Draw vertical borders on the left and right sides.
-    borders_outerV: bool = False
-
-    # no_host_extendX (bool, optional): Make outer width auto-fit to columns, overriding outer_size.x value. Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
-    no_host_extendX: bool = False
-
-    # no_host_extendY (bool, optional): Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.
-    no_host_extendY: bool = False
-
-    # no_keep_columns_visible (bool, optional): Disable keeping column always minimally visible when ScrollX is off and table gets too small. Not recommended if columns are resizable.
-    no_keep_columns_visible: bool = False
-
-    # precise_widths (bool, optional): Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns
-    precise_widths: bool = False
-
-    # no_clip (bool, optional): Disable clipping rectangle for every individual columns.
-    no_clip: bool = False
-
-    # pad_outerX (bool, optional): Default if BordersOuterV is on. Enable outer-most padding. Generally desirable if you have headers.
-    pad_outerX: bool = False
-
-    # no_pad_outerX (bool, optional): Default if BordersOuterV is off. Disable outer-most padding.
-    no_pad_outerX: bool = False
-
-    # no_pad_innerX (bool, optional): Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
-    no_pad_innerX: bool = False
-
-    # scrollX (bool, optional): Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.
-    scrollX: bool = False
-
-    # scrollY (bool, optional): Enable vertical scrolling.
-    scrollY: bool = False
-
-    # no_saved_settings (bool, optional): Never load/save settings in .ini file.
-    no_saved_settings: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_table(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
-            callback=self.callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            header_row=self.header_row,
-            clipper=self.clipper,
-            inner_width=self.inner_width,
-            policy=self.policy,
-            freeze_rows=self.freeze_rows,
-            freeze_columns=self.freeze_columns,
-            sort_multi=self.sort_multi,
-            sort_tristate=self.sort_tristate,
-            resizable=self.resizable,
-            reorderable=self.reorderable,
-            hideable=self.hideable,
-            sortable=self.sortable,
-            context_menu_in_body=self.context_menu_in_body,
-            row_background=self.row_background,
-            borders_innerH=self.borders_innerH,
-            borders_outerH=self.borders_outerH,
-            borders_innerV=self.borders_innerV,
-            borders_outerV=self.borders_outerV,
-            no_host_extendX=self.no_host_extendX,
-            no_host_extendY=self.no_host_extendY,
-            no_keep_columns_visible=self.no_keep_columns_visible,
-            precise_widths=self.precise_widths,
-            no_clip=self.no_clip,
-            pad_outerX=self.pad_outerX,
-            no_pad_outerX=self.no_pad_outerX,
-            no_pad_innerX=self.no_pad_innerX,
-            scrollX=self.scrollX,
-            scrollY=self.scrollY,
-            no_saved_settings=self.no_saved_settings,
-        )
-        
-        return _ret
-
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.callback is None:
-            return None
-        else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class TableCell(Container):
-    """
-    Refer:
-    >>> dpg.table_cell
-
-     Adds a table.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_table_cell(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            height=self.height,
-            show=self.show,
-            filter_key=self.filter_key,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class TableRow(Container):
-    """
-    Refer:
-    >>> dpg.table_row
-
-     Adds a table row.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_table_row(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            height=self.height,
-            show=self.show,
-            filter_key=self.filter_key,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class TemplateRegistry(Container):
-    """
-    Refer:
-    >>> dpg.template_registry
-
-     Adds a template registry.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_template_registry(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class TextureRegistry(Container):
-    """
-    Refer:
-    >>> dpg.texture_registry
-
-     Adds a dynamic texture.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_texture_registry(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Theme(Container):
-    """
-    Refer:
-    >>> dpg.theme
-
-     Adds a theme.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_theme(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ThemeComponent(Container):
-    """
-    Refer:
-    >>> dpg.theme_component
-
-     Adds a theme component.
-
-    """
-
-    # item_type (int, optional): ...
-    item_type: int = 0
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # enabled_state (bool, optional): ...
-    enabled_state: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_theme_component(
-            **self.internal.dpg_kwargs,
-            item_type=self.item_type,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            enabled_state=self.enabled_state,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Tooltip(Container):
-    """
-    Refer:
-    >>> dpg.tooltip
-
-     Adds a tooltip window.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_tooltip(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class TreeNode(Container):
-    """
-    Refer:
-    >>> dpg.tree_node
-
-     Adds a tree node to add items to.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
-
-    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
-
-    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # tracked (bool, optional): Scroll tracking
-    tracked: bool = False
-
-    # track_offset (float, optional): 0.0f
-    track_offset: float = 0.5
-
-    # default_open (bool, optional): Sets the tree node open by default.
-    default_open: bool = False
-
-    # open_on_double_click (bool, optional): Need double-click to open node.
-    open_on_double_click: bool = False
-
-    # open_on_arrow (bool, optional): Only open when clicking on the arrow part.
-    open_on_arrow: bool = False
-
-    # leaf (bool, optional): No collapsing, no arrow (use as a convenience for leaf nodes).
-    leaf: bool = False
-
-    # bullet (bool, optional): Display a bullet instead of arrow.
-    bullet: bool = False
-
-    # selectable (bool, optional): Makes the tree selectable.
-    selectable: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_tree_node(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            payload_type=self.payload_type,
-            drag_callback=self.drag_callback_fn,
-            drop_callback=self.drop_callback_fn,
-            show=self.show,
-            pos=self.pos,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            tracked=self.tracked,
-            track_offset=self.track_offset,
-            default_open=self.default_open,
-            open_on_double_click=self.open_on_double_click,
-            open_on_arrow=self.open_on_arrow,
-            leaf=self.leaf,
-            bullet=self.bullet,
-            selectable=self.selectable,
-        )
-        
-        return _ret
-
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drag_callback is None:
-            return None
-        else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.drop_callback is None:
-            return None
-        else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
-
-
-@dataclasses.dataclass
-class ValueRegistry(Container):
-    """
-    Refer:
-    >>> dpg.value_registry
-
-     Adds a value registry.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_value_registry(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ViewportDrawlist(Container):
-    """
-    Refer:
-    >>> dpg.viewport_drawlist
-
-     A container that is used to present draw items or layers directly to the viewport. By default this will draw to the back of the viewport. Layers and draw items should be added to this widget as children.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # front (bool, optional): Draws to the front of the view port instead of the back.
-    front: bool = True
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_viewport_drawlist(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            show=self.show,
-            filter_key=self.filter_key,
-            delay_search=self.delay_search,
-            front=self.front,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ViewportMenuBar(Container):
-    """
-    Refer:
-    >>> dpg.viewport_menu_bar
-
-     Adds a menubar to the viewport.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_viewport_menu_bar(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            indent=self.indent,
-            show=self.show,
-            delay_search=self.delay_search,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Window(Container):
-    """
-    Refer:
-    >>> dpg.window
-
-     Creates a new window for following items to be added to.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    # width (int, optional): Width of the item.
-    width: int = 0
-
-    # height (int, optional): Height of the item.
-    height: int = 0
-
-    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
-    indent: int = -1
-
-    # show (bool, optional): Attempt to render widget.
-    show: bool = True
-
-    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
-
-    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
-    delay_search: bool = False
-
-    # min_size (Union[List[int], Tuple[int, ...]], optional): Minimum window size.
-    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [100, 100])
-
-    # max_size (Union[List[int], Tuple[int, ...]], optional): Maximum window size.
-    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [30000, 30000])
-
-    # menubar (bool, optional): Shows or hides the menubar.
-    menubar: bool = False
-
-    # collapsed (bool, optional): Collapse the window.
-    collapsed: bool = False
-
-    # autosize (bool, optional): Autosized the window to fit it's items.
-    autosize: bool = False
-
-    # no_resize (bool, optional): Allows for the window size to be changed or fixed.
-    no_resize: bool = False
-
-    # no_title_bar (bool, optional): Title name for the title bar of the window.
-    no_title_bar: bool = False
-
-    # no_move (bool, optional): Allows for the window's position to be changed or fixed.
-    no_move: bool = False
-
-    # no_scrollbar (bool, optional): Disable scrollbars. (window can still scroll with mouse or programmatically)
-    no_scrollbar: bool = False
-
-    # no_collapse (bool, optional): Disable user collapsing window by double-clicking on it.
-    no_collapse: bool = False
-
-    # horizontal_scrollbar (bool, optional): Allow horizontal scrollbar to appear. (off by default)
-    horizontal_scrollbar: bool = False
-
-    # no_focus_on_appearing (bool, optional): Disable taking focus when transitioning from hidden to visible state.
-    no_focus_on_appearing: bool = False
-
-    # no_bring_to_front_on_focus (bool, optional): Disable bringing window to front when taking focus. (e.g. clicking on it or programmatically giving it focus)
-    no_bring_to_front_on_focus: bool = False
-
-    # no_close (bool, optional): Disable user closing the window by removing the close button.
-    no_close: bool = False
-
-    # no_background (bool, optional): Sets Background and border alpha to transparent.
-    no_background: bool = False
-
-    # modal (bool, optional): Fills area behind window according to the theme and disables user ability to interact with anything except the window.
-    modal: bool = False
-
-    # popup (bool, optional): Fills area behind window according to the theme, removes title bar, collapse and close. Window can be closed by selecting area in the background behind the window.
-    popup: bool = False
-
-    # no_saved_settings (bool, optional): Never load/save settings in .ini file.
-    no_saved_settings: bool = False
-
-    # on_close (Callable, optional): Callback ran when window is closed.
-    on_close: Callback = None
-
-    def build(self) -> t.Union[int, str]:
-        _ret = internal_dpg.add_window(
-            **self.internal.dpg_kwargs,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-            width=self.width,
-            height=self.height,
-            indent=self.indent,
-            show=self.show,
-            pos=self.pos,
-            delay_search=self.delay_search,
-            min_size=self.min_size,
-            max_size=self.max_size,
-            menubar=self.menubar,
-            collapsed=self.collapsed,
-            autosize=self.autosize,
-            no_resize=self.no_resize,
-            no_title_bar=self.no_title_bar,
-            no_move=self.no_move,
-            no_scrollbar=self.no_scrollbar,
-            no_collapse=self.no_collapse,
-            horizontal_scrollbar=self.horizontal_scrollbar,
-            no_focus_on_appearing=self.no_focus_on_appearing,
-            no_bring_to_front_on_focus=self.no_bring_to_front_on_focus,
-            no_close=self.no_close,
-            no_background=self.no_background,
-            modal=self.modal,
-            popup=self.popup,
-            no_saved_settings=self.no_saved_settings,
-            on_close=self.on_close_fn,
-        )
-        
-        return _ret
-
-    def on_close_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: t.Any
-    ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
-
-        # logic ...
-        if self.on_close is None:
-            return None
-        else:
-            return self.on_close.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+class EnNodeAttr(enum.Enum):
+
+    Input = dpg.mvNode_Attr_Input  # 0
+    Output = dpg.mvNode_Attr_Output  # 1
+    Static = dpg.mvNode_Attr_Static  # 2
 
 
 @dataclasses.dataclass
@@ -3099,7 +147,8 @@ class HistogramSeries2D(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_2d_histogram_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -3204,7 +253,8 @@ class Slider3D(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_3d_slider(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3327,7 +377,8 @@ class AreaSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_area_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -3381,7 +432,8 @@ class BarSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_bar_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -3423,7 +475,7 @@ class BoolValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_bool_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3503,7 +555,8 @@ class Button(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_button(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3636,7 +689,8 @@ class CandleSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_candle_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             dates=self.dates,
             opens=self.opens,
             closes=self.closes,
@@ -3657,7 +711,7 @@ class CandleSeries(Widget):
 
 
 @dataclasses.dataclass
-class Checkbox(Widget):
+class CheckBox(Widget):
     """
     Refer:
     >>> dpg.add_checkbox
@@ -3716,7 +770,8 @@ class Checkbox(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_checkbox(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3864,7 +919,8 @@ class ColorButton(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_color_button(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
@@ -3971,7 +1027,7 @@ class ColorValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_color_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4012,7 +1068,7 @@ class Colormap(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_colormap(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             colors=self.colors,
             qualitative=self.qualitative,
             label=self.label,
@@ -4087,7 +1143,8 @@ class ColormapButton(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_colormap_button(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
@@ -4218,7 +1275,8 @@ class ColormapScale(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_colormap_scale(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4313,7 +1371,8 @@ class ColormapSlider(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_colormap_slider(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4448,7 +1507,8 @@ class Combo(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_combo(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
@@ -4587,7 +1647,8 @@ class DatePicker(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_date_picker(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4689,7 +1750,7 @@ class Double4Value(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_double4_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4727,7 +1788,7 @@ class DoubleValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_double_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4819,7 +1880,8 @@ class DragFloat(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_drag_float(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4986,7 +2048,8 @@ class DragFloatX(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_drag_floatx(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5151,7 +2214,8 @@ class DragInt(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_drag_int(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5318,7 +2382,8 @@ class DragIntX(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_drag_intx(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5447,7 +2512,8 @@ class DragLine(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_drag_line(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5524,7 +2590,8 @@ class DragPoint(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_drag_point(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5588,7 +2655,7 @@ class DynamicTexture(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_dynamic_texture(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             width=self.width,
             height=self.height,
             default_value=self.default_value,
@@ -5645,7 +2712,8 @@ class ErrorSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_error_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             negative=self.negative,
@@ -5698,7 +2766,8 @@ class FileExtension(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_file_extension(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             extension=self.extension,
             label=self.label,
             user_data=self.user_data,
@@ -5739,7 +2808,7 @@ class Float4Value(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_float4_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5777,7 +2846,7 @@ class FloatValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_float_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5815,7 +2884,7 @@ class FloatVectValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_float_vect_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5850,7 +2919,7 @@ class FontChars(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_font_chars(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             chars=self.chars,
             label=self.label,
             user_data=self.user_data,
@@ -5887,7 +2956,7 @@ class FontRange(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_font_range(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             first_char=self.first_char,
             last_char=self.last_char,
             label=self.label,
@@ -5922,7 +2991,7 @@ class FontRangeHint(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_font_range_hint(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             hint=self.hint,
             label=self.label,
             user_data=self.user_data,
@@ -5986,7 +3055,8 @@ class HeatSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_heat_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             rows=self.rows,
             cols=self.cols,
@@ -6060,7 +3130,8 @@ class HistogramSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_histogram_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             label=self.label,
             user_data=self.user_data,
@@ -6110,7 +3181,8 @@ class HlineSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_hline_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             label=self.label,
             user_data=self.user_data,
@@ -6212,7 +3284,8 @@ class InputFloat(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_input_float(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6385,7 +3458,8 @@ class InputFloatX(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_input_floatx(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6557,7 +3631,8 @@ class InputInt(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_input_int(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6726,7 +3801,8 @@ class InputIntX(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_input_intx(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6909,7 +3985,8 @@ class InputText(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_input_text(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7025,7 +4102,7 @@ class Int4Value(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_int4_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7063,7 +4140,7 @@ class IntValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_int_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7101,7 +4178,7 @@ class ItemActivatedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_activated_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7157,7 +4234,7 @@ class ItemActiveHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_active_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7216,7 +4293,7 @@ class ItemClickedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_clicked_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -7273,7 +4350,7 @@ class ItemDeactivatedAfterEditHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_deactivated_after_edit_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7329,7 +4406,7 @@ class ItemDeactivatedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_deactivated_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7385,7 +4462,7 @@ class ItemEditedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_edited_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7441,7 +4518,7 @@ class ItemFocusHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_focus_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7497,7 +4574,7 @@ class ItemHoverHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_hover_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7553,7 +4630,7 @@ class ItemResizeHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_resize_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7609,7 +4686,7 @@ class ItemToggledOpenHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_toggled_open_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7665,7 +4742,7 @@ class ItemVisibleHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_item_visible_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7724,7 +4801,7 @@ class KeyDownHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_key_down_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             key=self.key,
             label=self.label,
             user_data=self.user_data,
@@ -7784,7 +4861,7 @@ class KeyPressHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_key_press_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             key=self.key,
             label=self.label,
             user_data=self.user_data,
@@ -7844,7 +4921,7 @@ class KeyReleaseHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_key_release_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             key=self.key,
             label=self.label,
             user_data=self.user_data,
@@ -7943,7 +5020,8 @@ class KnobFloat(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_knob_float(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8055,7 +5133,8 @@ class LineSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_line_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -8137,7 +5216,8 @@ class Listbox(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_listbox(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
@@ -8279,7 +5359,8 @@ class LoadingIndicator(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_loading_indicator(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8377,7 +5458,8 @@ class MenuItem(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_menu_item(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8464,7 +5546,7 @@ class MouseClickHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_mouse_click_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -8524,7 +5606,7 @@ class MouseDoubleClickHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_mouse_double_click_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -8584,7 +5666,7 @@ class MouseDownHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_mouse_down_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -8647,7 +5729,7 @@ class MouseDragHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_mouse_drag_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             button=self.button,
             threshold=self.threshold,
             label=self.label,
@@ -8705,7 +5787,7 @@ class MouseMoveHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_mouse_move_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8764,7 +5846,7 @@ class MouseReleaseHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_mouse_release_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -8821,7 +5903,7 @@ class MouseWheelHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_mouse_wheel_handler(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8901,7 +5983,8 @@ class PieSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_pie_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             radius=self.radius,
@@ -8959,7 +6042,8 @@ class PlotAnnotation(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_plot_annotation(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9013,7 +6097,7 @@ class PlotLegend(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_plot_legend(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9109,7 +6193,8 @@ class ProgressBar(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_progress_bar(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9234,7 +6319,8 @@ class RadioButton(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_radio_button(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
@@ -9345,7 +6431,7 @@ class RawTexture(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_raw_texture(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             width=self.width,
             height=self.height,
             default_value=self.default_value,
@@ -9391,7 +6477,8 @@ class ScatterSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_scatter_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -9473,7 +6560,8 @@ class Selectable(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_selectable(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9582,7 +6670,8 @@ class Separator(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_separator(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9621,7 +6710,7 @@ class SeriesValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_series_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9668,7 +6757,8 @@ class ShadeSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_shade_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y1=self.y1,
             label=self.label,
@@ -9754,7 +6844,8 @@ class SimplePlot(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_simple_plot(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9900,7 +6991,8 @@ class SliderFloat(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_slider_float(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10065,7 +7157,8 @@ class SliderFloatX(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_slider_floatx(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10232,7 +7325,8 @@ class SliderInt(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_slider_int(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10397,7 +7491,8 @@ class SliderIntX(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_slider_intx(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10516,7 +7611,8 @@ class Spacer(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_spacer(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10563,7 +7659,8 @@ class StairSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_stair_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -10606,7 +7703,7 @@ class StaticTexture(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_static_texture(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             width=self.width,
             height=self.height,
             default_value=self.default_value,
@@ -10654,7 +7751,8 @@ class StemSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_stem_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -10695,7 +7793,7 @@ class StringValue(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_string_value(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10766,7 +7864,8 @@ class TabButton(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_tab_button(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10923,7 +8022,8 @@ class TableColumn(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_table_column(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11018,7 +8118,8 @@ class Text(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_text(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
@@ -11120,7 +8221,8 @@ class TextPoint(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_text_point(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
@@ -11166,7 +8268,7 @@ class ThemeColor(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_theme_color(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             target=self.target,
             value=self.value,
             label=self.label,
@@ -11211,7 +8313,7 @@ class ThemeStyle(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_theme_style(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
             target=self.target,
             x=self.x,
             y=self.y,
@@ -11281,7 +8383,8 @@ class TimePicker(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_time_picker(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11386,13 +8489,388 @@ class VlineSeries(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.add_vline_series(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             x=self.x,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             source=getattr(self.source, 'dpg_id', 0),
             show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class ChildWindow(Container):
+    """
+    Refer:
+    >>> dpg.child_window
+
+     Adds an embedded child window. Will show scrollbars when items do not fit.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # border (bool, optional): Shows/Hides the border around the sides.
+    border: bool = True
+
+    # autosize_x (bool, optional): Autosize the window to fit it's items in the x.
+    autosize_x: bool = False
+
+    # autosize_y (bool, optional): Autosize the window to fit it's items in the y.
+    autosize_y: bool = False
+
+    # no_scrollbar (bool, optional): Disable scrollbars (window can still scroll with mouse or programmatically).
+    no_scrollbar: bool = False
+
+    # horizontal_scrollbar (bool, optional): Allow horizontal scrollbar to appear (off by default).
+    horizontal_scrollbar: bool = False
+
+    # menubar (bool, optional): Shows/Hides the menubar at the top.
+    menubar: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_child_window(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            border=self.border,
+            autosize_x=self.autosize_x,
+            autosize_y=self.autosize_y,
+            no_scrollbar=self.no_scrollbar,
+            horizontal_scrollbar=self.horizontal_scrollbar,
+            menubar=self.menubar,
+        )
+        
+        return _ret
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class Clipper(Container):
+    """
+    Refer:
+    >>> dpg.clipper
+
+     Helper to manually clip large list of items. Increases performance by not searching or drawing widgets outside of the clipped region.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_clipper(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            show=self.show,
+            delay_search=self.delay_search,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class CollapsingHeader(Container):
+    """
+    Refer:
+    >>> dpg.collapsing_header
+
+     Adds a collapsing header to add items to. Must be closed with the end command.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # closable (bool, optional): Adds the ability to hide this widget by pressing the (x) in the top right of widget.
+    closable: bool = False
+
+    # default_open (bool, optional): Sets the collapseable header open by default.
+    default_open: bool = False
+
+    # open_on_double_click (bool, optional): Need double-click to open node.
+    open_on_double_click: bool = False
+
+    # open_on_arrow (bool, optional): Only open when clicking on the arrow part.
+    open_on_arrow: bool = False
+
+    # leaf (bool, optional): No collapsing, no arrow (use as a convenience for leaf nodes).
+    leaf: bool = False
+
+    # bullet (bool, optional): Display a bullet instead of arrow.
+    bullet: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_collapsing_header(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            closable=self.closable,
+            default_open=self.default_open,
+            open_on_double_click=self.open_on_double_click,
+            open_on_arrow=self.open_on_arrow,
+            leaf=self.leaf,
+            bullet=self.bullet,
+        )
+        
+        return _ret
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class ColormapRegistry(Container):
+    """
+    Refer:
+    >>> dpg.colormap_registry
+
+     Adds a colormap registry.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_colormap_registry(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class DragPayload(Container):
+    """
+    Refer:
+    >>> dpg.drag_payload
+
+     User data payload for drag and drop operations.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # drag_data (Any, optional): Drag data
+    drag_data: t.Any = None
+
+    # drop_data (Any, optional): Drop data
+    drop_data: t.Any = None
+
+    # payload_type (str, optional): ...
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_drag_payload(
+            parent=self.internal.parent.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+            drag_data=self.drag_data,
+            drop_data=self.drop_data,
+            payload_type=self.payload_type,
         )
         
         return _ret
@@ -11437,7 +8915,8 @@ class DrawArrow(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_arrow(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             p1=self.p1,
             p2=self.p2,
             label=self.label,
@@ -11497,7 +8976,8 @@ class DrawBezierCubic(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_bezier_cubic(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -11556,7 +9036,8 @@ class DrawBezierQuadratic(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_bezier_quadratic(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -11614,7 +9095,8 @@ class DrawCircle(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_circle(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             center=self.center,
             radius=self.radius,
             label=self.label,
@@ -11672,7 +9154,8 @@ class DrawEllipse(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_ellipse(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             pmin=self.pmin,
             pmax=self.pmax,
             label=self.label,
@@ -11683,6 +9166,41 @@ class DrawEllipse(Widget):
             fill=self.fill,
             thickness=self.thickness,
             segments=self.segments,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class DrawLayer(Container):
+    """
+    Refer:
+    >>> dpg.draw_layer
+
+     Creates a layer useful for grouping drawlist items.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_draw_layer(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
         )
         
         return _ret
@@ -11724,7 +9242,8 @@ class DrawLine(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_line(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             p1=self.p1,
             p2=self.p2,
             label=self.label,
@@ -11774,7 +9293,8 @@ class DrawPolygon(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_polygon(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             points=self.points,
             label=self.label,
             user_data=self.user_data,
@@ -11824,7 +9344,8 @@ class DrawPolyline(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_polyline(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             points=self.points,
             label=self.label,
             user_data=self.user_data,
@@ -11883,7 +9404,8 @@ class DrawQuad(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_quad(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -11957,7 +9479,8 @@ class DrawRectangle(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_rectangle(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             pmin=self.pmin,
             pmax=self.pmax,
             label=self.label,
@@ -12014,7 +9537,8 @@ class DrawText(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_text(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             pos=self.pos,
             text=self.text,
             label=self.label,
@@ -12070,7 +9594,8 @@ class DrawTriangle(Widget):
 
     def build(self) -> t.Union[int, str]:
         _ret = internal_dpg.draw_triangle(
-            **self.internal.dpg_kwargs,
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -12084,3 +9609,2445 @@ class DrawTriangle(Widget):
         )
         
         return _ret
+
+
+@dataclasses.dataclass
+class Drawlist(Container):
+    """
+    Refer:
+    >>> dpg.drawlist
+
+     Adds a drawing canvas.
+
+    """
+
+    # width (int): ...
+    width: int
+
+    # height (int): ...
+    height: int
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_drawlist(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            width=self.width,
+            height=self.height,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            callback=self.callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class FileDialog(Container):
+    """
+    Refer:
+    >>> dpg.file_dialog
+
+     Displays a file or directory selector depending on keywords. Displays a file dialog by default. Callback will be ran when the file or directory picker is closed. The app_data arguemnt will be populated with information related to the file and directory as a dictionary.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # default_path (str, optional): Path that the file dialog will default to when opened.
+    default_path: str = ''
+
+    # default_filename (str, optional): Default name that will show in the file name input.
+    default_filename: str = '.'
+
+    # file_count (int, optional): Number of visible files in the dialog.
+    file_count: int = 0
+
+    # modal (bool, optional): Forces user interaction with the file selector.
+    modal: bool = False
+
+    # directory_selector (bool, optional): Shows only directory/paths as options. Allows selection of directory/paths only.
+    directory_selector: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_file_dialog(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            callback=self.callback_fn,
+            show=self.show,
+            default_path=self.default_path,
+            default_filename=self.default_filename,
+            file_count=self.file_count,
+            modal=self.modal,
+            directory_selector=self.directory_selector,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class FilterSet(Container):
+    """
+    Refer:
+    >>> dpg.filter_set
+
+     Helper to parse and apply text filters (e.g. aaaaa[, bbbbb][, ccccc])
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_filter_set(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            show=self.show,
+            delay_search=self.delay_search,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class Font(Container):
+    """
+    Refer:
+    >>> dpg.font
+
+     Adds font to a font registry.
+
+    """
+
+    # file (str): ...
+    file: str
+
+    # size (int): ...
+    size: int
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_font(
+            parent=self.internal.parent.dpg_id,
+            file=self.file,
+            size=self.size,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class FontRegistry(Container):
+    """
+    Refer:
+    >>> dpg.font_registry
+
+     Adds a font registry.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_font_registry(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class Group(Container):
+    """
+    Refer:
+    >>> dpg.group
+
+     Creates a group that other widgets can belong to. The group allows item commands to be issued for all of its members.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # horizontal (bool, optional): Forces child widgets to be added in a horizontal layout.
+    horizontal: bool = False
+
+    # horizontal_spacing (float, optional): Spacing for the horizontal layout.
+    horizontal_spacing: float = -1
+
+    # xoffset (float, optional): Offset from containing window x item location within group.
+    xoffset: float = 0.0
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_group(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            horizontal=self.horizontal,
+            horizontal_spacing=self.horizontal_spacing,
+            xoffset=self.xoffset,
+        )
+        
+        return _ret
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class HandlerRegistry(Container):
+    """
+    Refer:
+    >>> dpg.handler_registry
+
+     Adds a handler registry.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_handler_registry(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class ItemHandlerRegistry(Container):
+    """
+    Refer:
+    >>> dpg.item_handler_registry
+
+     Adds an item handler registry.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_item_handler_registry(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class ItemPool(Container):
+    """
+    Refer:
+    >>> dpg.item_pool
+
+     Adds an item pool.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_item_pool(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class ItemSet(Container):
+    """
+    Refer:
+    >>> dpg.item_set
+
+     Adds an item set to an item pool.
+
+    """
+
+    # type (int): ...
+    type: int
+
+    # count (int): ...
+    count: int
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_item_set(
+            type=self.type,
+            count=self.count,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class Menu(Container):
+    """
+    Refer:
+    >>> dpg.menu
+
+     Adds a menu to an existing menu bar.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_menu(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+        )
+        
+        return _ret
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class MenuBar(Container):
+    """
+    Refer:
+    >>> dpg.menu_bar
+
+     Adds a menu bar to a window.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_menu_bar(
+            parent=self.internal.parent.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            show=self.show,
+            delay_search=self.delay_search,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class Node(Container):
+    """
+    Refer:
+    >>> dpg.node
+
+     Adds a node to a node editor.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # draggable (bool, optional): Allow node to be draggable.
+    draggable: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_node(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            payload_type=self.payload_type,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            draggable=self.draggable,
+        )
+        
+        return _ret
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class NodeAttribute(Container):
+    """
+    Refer:
+    >>> dpg.node_attribute
+
+     Adds a node attribute to a node.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # attribute_type (int, optional): mvNode_Attr_Input, mvNode_Attr_Output, or mvNode_Attr_Static.
+    attribute_type: EnNodeAttr = EnNodeAttr.Input
+
+    # shape (int, optional): Pin shape.
+    shape: int = 1
+
+    # category (str, optional): Category
+    category: str = 'general'
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_node_attribute(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            show=self.show,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            attribute_type=self.attribute_type.value,
+            shape=self.shape,
+            category=self.category,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class BPlot(Container):
+    """
+    Refer:
+    >>> dpg.plot
+
+     Adds a plot which is used to hold series, and can be drawn to with draw commands.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # no_title (bool, optional): ...
+    no_title: bool = False
+
+    # no_menus (bool, optional): ...
+    no_menus: bool = False
+
+    # no_box_select (bool, optional): ...
+    no_box_select: bool = False
+
+    # no_mouse_pos (bool, optional): ...
+    no_mouse_pos: bool = False
+
+    # no_highlight (bool, optional): ...
+    no_highlight: bool = False
+
+    # no_child (bool, optional): ...
+    no_child: bool = False
+
+    # query (bool, optional): ...
+    query: bool = False
+
+    # crosshairs (bool, optional): ...
+    crosshairs: bool = False
+
+    # anti_aliased (bool, optional): ...
+    anti_aliased: bool = False
+
+    # equal_aspects (bool, optional): ...
+    equal_aspects: bool = False
+
+    # pan_button (int, optional): enables panning when held
+    pan_button: int = 0
+
+    # pan_mod (int, optional): optional modifier that must be held for panning
+    pan_mod: int = -1
+
+    # fit_button (int, optional): fits visible data when double clicked
+    fit_button: int = 0
+
+    # context_menu_button (int, optional): opens plot context menu (if enabled) when clicked
+    context_menu_button: int = 1
+
+    # box_select_button (int, optional): begins box selection when pressed and confirms selection when released
+    box_select_button: int = 1
+
+    # box_select_mod (int, optional): begins box selection when pressed and confirms selection when released
+    box_select_mod: int = -1
+
+    # box_select_cancel_button (int, optional): cancels active box selection when pressed
+    box_select_cancel_button: int = 0
+
+    # query_button (int, optional): begins query selection when pressed and end query selection when released
+    query_button: int = 2
+
+    # query_mod (int, optional): optional modifier that must be held for query selection
+    query_mod: int = -1
+
+    # query_toggle_mod (int, optional): when held, active box selections turn into queries
+    query_toggle_mod: int = 17
+
+    # horizontal_mod (int, optional): expands active box selection/query horizontally to plot edge when held
+    horizontal_mod: int = 18
+
+    # vertical_mod (int, optional): expands active box selection/query vertically to plot edge when held
+    vertical_mod: int = 16
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_plot(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            no_title=self.no_title,
+            no_menus=self.no_menus,
+            no_box_select=self.no_box_select,
+            no_mouse_pos=self.no_mouse_pos,
+            no_highlight=self.no_highlight,
+            no_child=self.no_child,
+            query=self.query,
+            crosshairs=self.crosshairs,
+            anti_aliased=self.anti_aliased,
+            equal_aspects=self.equal_aspects,
+            pan_button=self.pan_button,
+            pan_mod=self.pan_mod,
+            fit_button=self.fit_button,
+            context_menu_button=self.context_menu_button,
+            box_select_button=self.box_select_button,
+            box_select_mod=self.box_select_mod,
+            box_select_cancel_button=self.box_select_cancel_button,
+            query_button=self.query_button,
+            query_mod=self.query_mod,
+            query_toggle_mod=self.query_toggle_mod,
+            horizontal_mod=self.horizontal_mod,
+            vertical_mod=self.vertical_mod,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class BXAxis(Container):
+    """
+    Refer:
+    >>> dpg.plot_axis
+
+     Adds an axis to a plot.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # no_gridlines (bool, optional): ...
+    no_gridlines: bool = False
+
+    # no_tick_marks (bool, optional): ...
+    no_tick_marks: bool = False
+
+    # no_tick_labels (bool, optional): ...
+    no_tick_labels: bool = False
+
+    # log_scale (bool, optional): ...
+    log_scale: bool = False
+
+    # invert (bool, optional): ...
+    invert: bool = False
+
+    # lock_min (bool, optional): ...
+    lock_min: bool = False
+
+    # lock_max (bool, optional): ...
+    lock_max: bool = False
+
+    # time (bool, optional): ...
+    time: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_plot_axis(
+            parent=self.internal.parent.dpg_id,
+            axis=dpg.mvXAxis,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            payload_type=self.payload_type,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            no_gridlines=self.no_gridlines,
+            no_tick_marks=self.no_tick_marks,
+            no_tick_labels=self.no_tick_labels,
+            log_scale=self.log_scale,
+            invert=self.invert,
+            lock_min=self.lock_min,
+            lock_max=self.lock_max,
+            time=self.time,
+        )
+        
+        return _ret
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class BYAxis(Container):
+    """
+    Refer:
+    >>> dpg.plot_axis
+
+     Adds an axis to a plot.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # no_gridlines (bool, optional): ...
+    no_gridlines: bool = False
+
+    # no_tick_marks (bool, optional): ...
+    no_tick_marks: bool = False
+
+    # no_tick_labels (bool, optional): ...
+    no_tick_labels: bool = False
+
+    # log_scale (bool, optional): ...
+    log_scale: bool = False
+
+    # invert (bool, optional): ...
+    invert: bool = False
+
+    # lock_min (bool, optional): ...
+    lock_min: bool = False
+
+    # lock_max (bool, optional): ...
+    lock_max: bool = False
+
+    # time (bool, optional): ...
+    time: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_plot_axis(
+            parent=self.internal.parent.dpg_id,
+            axis=dpg.mvYAxis,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            payload_type=self.payload_type,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            no_gridlines=self.no_gridlines,
+            no_tick_marks=self.no_tick_marks,
+            no_tick_labels=self.no_tick_labels,
+            log_scale=self.log_scale,
+            invert=self.invert,
+            lock_min=self.lock_min,
+            lock_max=self.lock_max,
+            time=self.time,
+        )
+        
+        return _ret
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class Stage(Container):
+    """
+    Refer:
+    >>> dpg.stage
+
+     Adds a stage.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_stage(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class SubPlots(Container):
+    """
+    Refer:
+    >>> dpg.subplots
+
+     Adds a collection of plots.
+
+    """
+
+    # rows (int): ...
+    rows: int
+
+    # columns (int): ...
+    columns: int
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # row_ratios (Union[List[float], Tuple[float, ...]], optional): ...
+    row_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # column_ratios (Union[List[float], Tuple[float, ...]], optional): ...
+    column_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # no_title (bool, optional): ...
+    no_title: bool = False
+
+    # no_menus (bool, optional): the user will not be able to open context menus with right-click
+    no_menus: bool = False
+
+    # no_resize (bool, optional): resize splitters between subplot cells will be not be provided
+    no_resize: bool = False
+
+    # no_align (bool, optional): subplot edges will not be aligned vertically or horizontally
+    no_align: bool = False
+
+    # link_rows (bool, optional): link the y-axis limits of all plots in each row (does not apply auxiliary y-axes)
+    link_rows: bool = False
+
+    # link_columns (bool, optional): link the x-axis limits of all plots in each column
+    link_columns: bool = False
+
+    # link_all_x (bool, optional): link the x-axis limits in every plot in the subplot
+    link_all_x: bool = False
+
+    # link_all_y (bool, optional): link the y-axis limits in every plot in the subplot (does not apply to auxiliary y-axes)
+    link_all_y: bool = False
+
+    # column_major (bool, optional): subplots are added in column major order instead of the default row major order
+    column_major: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_subplots(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            rows=self.rows,
+            columns=self.columns,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            callback=self.callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            row_ratios=self.row_ratios,
+            column_ratios=self.column_ratios,
+            no_title=self.no_title,
+            no_menus=self.no_menus,
+            no_resize=self.no_resize,
+            no_align=self.no_align,
+            link_rows=self.link_rows,
+            link_columns=self.link_columns,
+            link_all_x=self.link_all_x,
+            link_all_y=self.link_all_y,
+            column_major=self.column_major,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class Tab(Container):
+    """
+    Refer:
+    >>> dpg.tab
+
+     Adds a tab to a tab bar.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # closable (bool, optional): Creates a button on the tab that can hide the tab.
+    closable: bool = False
+
+    # no_tooltip (bool, optional): Disable tooltip for the given tab.
+    no_tooltip: bool = False
+
+    # order_mode (bool, optional): set using a constant
+    order_mode: bool = 0
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_tab(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            closable=self.closable,
+            no_tooltip=self.no_tooltip,
+            order_mode=self.order_mode,
+        )
+        
+        return _ret
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class TabBar(Container):
+    """
+    Refer:
+    >>> dpg.tab_bar
+
+     Adds a tab bar.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # reorderable (bool, optional): Allows for the user to change the order of the tabs.
+    reorderable: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_tab_bar(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            callback=self.callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            reorderable=self.reorderable,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class BTable(Container):
+    """
+    Refer:
+    >>> dpg.table
+
+     Adds a table.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # header_row (bool, optional): show headers at the top of the columns
+    header_row: bool = True
+
+    # clipper (bool, optional): Use clipper (rows must be same height).
+    clipper: bool = False
+
+    # inner_width (int, optional): ...
+    inner_width: int = 0
+
+    # policy (int, optional): ...
+    policy: int = 0
+
+    # freeze_rows (int, optional): ...
+    freeze_rows: int = 0
+
+    # freeze_columns (int, optional): ...
+    freeze_columns: int = 0
+
+    # sort_multi (bool, optional): Hold shift when clicking headers to sort on multiple column.
+    sort_multi: bool = False
+
+    # sort_tristate (bool, optional): Allow no sorting, disable default sorting.
+    sort_tristate: bool = False
+
+    # resizable (bool, optional): Enable resizing columns
+    resizable: bool = False
+
+    # reorderable (bool, optional): Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)
+    reorderable: bool = False
+
+    # hideable (bool, optional): Enable hiding/disabling columns in context menu.
+    hideable: bool = False
+
+    # sortable (bool, optional): Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.
+    sortable: bool = False
+
+    # context_menu_in_body (bool, optional): Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().
+    context_menu_in_body: bool = False
+
+    # row_background (bool, optional): Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)
+    row_background: bool = False
+
+    # borders_innerH (bool, optional): Draw horizontal borders between rows.
+    borders_innerH: bool = False
+
+    # borders_outerH (bool, optional): Draw horizontal borders at the top and bottom.
+    borders_outerH: bool = False
+
+    # borders_innerV (bool, optional): Draw vertical borders between columns.
+    borders_innerV: bool = False
+
+    # borders_outerV (bool, optional): Draw vertical borders on the left and right sides.
+    borders_outerV: bool = False
+
+    # no_host_extendX (bool, optional): Make outer width auto-fit to columns, overriding outer_size.x value. Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
+    no_host_extendX: bool = False
+
+    # no_host_extendY (bool, optional): Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.
+    no_host_extendY: bool = False
+
+    # no_keep_columns_visible (bool, optional): Disable keeping column always minimally visible when ScrollX is off and table gets too small. Not recommended if columns are resizable.
+    no_keep_columns_visible: bool = False
+
+    # precise_widths (bool, optional): Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns
+    precise_widths: bool = False
+
+    # no_clip (bool, optional): Disable clipping rectangle for every individual columns.
+    no_clip: bool = False
+
+    # pad_outerX (bool, optional): Default if BordersOuterV is on. Enable outer-most padding. Generally desirable if you have headers.
+    pad_outerX: bool = False
+
+    # no_pad_outerX (bool, optional): Default if BordersOuterV is off. Disable outer-most padding.
+    no_pad_outerX: bool = False
+
+    # no_pad_innerX (bool, optional): Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
+    no_pad_innerX: bool = False
+
+    # scrollX (bool, optional): Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.
+    scrollX: bool = False
+
+    # scrollY (bool, optional): Enable vertical scrolling.
+    scrollY: bool = False
+
+    # no_saved_settings (bool, optional): Never load/save settings in .ini file.
+    no_saved_settings: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_table(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            source=getattr(self.source, 'dpg_id', 0),
+            callback=self.callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            header_row=self.header_row,
+            clipper=self.clipper,
+            inner_width=self.inner_width,
+            policy=self.policy,
+            freeze_rows=self.freeze_rows,
+            freeze_columns=self.freeze_columns,
+            sort_multi=self.sort_multi,
+            sort_tristate=self.sort_tristate,
+            resizable=self.resizable,
+            reorderable=self.reorderable,
+            hideable=self.hideable,
+            sortable=self.sortable,
+            context_menu_in_body=self.context_menu_in_body,
+            row_background=self.row_background,
+            borders_innerH=self.borders_innerH,
+            borders_outerH=self.borders_outerH,
+            borders_innerV=self.borders_innerV,
+            borders_outerV=self.borders_outerV,
+            no_host_extendX=self.no_host_extendX,
+            no_host_extendY=self.no_host_extendY,
+            no_keep_columns_visible=self.no_keep_columns_visible,
+            precise_widths=self.precise_widths,
+            no_clip=self.no_clip,
+            pad_outerX=self.pad_outerX,
+            no_pad_outerX=self.no_pad_outerX,
+            no_pad_innerX=self.no_pad_innerX,
+            scrollX=self.scrollX,
+            scrollY=self.scrollY,
+            no_saved_settings=self.no_saved_settings,
+        )
+        
+        return _ret
+
+    def callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class TableCell(Container):
+    """
+    Refer:
+    >>> dpg.table_cell
+
+     Adds a table.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_table_cell(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            height=self.height,
+            show=self.show,
+            filter_key=self.filter_key,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class TableRow(Container):
+    """
+    Refer:
+    >>> dpg.table_row
+
+     Adds a table row.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_table_row(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            height=self.height,
+            show=self.show,
+            filter_key=self.filter_key,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class TemplateRegistry(Container):
+    """
+    Refer:
+    >>> dpg.template_registry
+
+     Adds a template registry.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_template_registry(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class TextureRegistry(Container):
+    """
+    Refer:
+    >>> dpg.texture_registry
+
+     Adds a dynamic texture.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_texture_registry(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class Theme(Container):
+    """
+    Refer:
+    >>> dpg.theme
+
+     Adds a theme.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_theme(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class ThemeComponent(Container):
+    """
+    Refer:
+    >>> dpg.theme_component
+
+     Adds a theme component.
+
+    """
+
+    # item_type (int, optional): ...
+    item_type: int = 0
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # enabled_state (bool, optional): ...
+    enabled_state: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_theme_component(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            item_type=self.item_type,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            enabled_state=self.enabled_state,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class Tooltip(Container):
+    """
+    Refer:
+    >>> dpg.tooltip
+
+     Adds a tooltip window.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_tooltip(
+            parent=self.internal.parent.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class TreeNode(Container):
+    """
+    Refer:
+    >>> dpg.tree_node
+
+     Adds a tree node to add items to.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # default_open (bool, optional): Sets the tree node open by default.
+    default_open: bool = False
+
+    # open_on_double_click (bool, optional): Need double-click to open node.
+    open_on_double_click: bool = False
+
+    # open_on_arrow (bool, optional): Only open when clicking on the arrow part.
+    open_on_arrow: bool = False
+
+    # leaf (bool, optional): No collapsing, no arrow (use as a convenience for leaf nodes).
+    leaf: bool = False
+
+    # bullet (bool, optional): Display a bullet instead of arrow.
+    bullet: bool = False
+
+    # selectable (bool, optional): Makes the tree selectable.
+    selectable: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_tree_node(
+            parent=self.internal.parent.dpg_id,
+            before=self.internal.before.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            payload_type=self.payload_type,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            default_open=self.default_open,
+            open_on_double_click=self.open_on_double_click,
+            open_on_arrow=self.open_on_arrow,
+            leaf=self.leaf,
+            bullet=self.bullet,
+            selectable=self.selectable,
+        )
+        
+        return _ret
+
+    def drag_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+    def drop_callback_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
+
+
+@dataclasses.dataclass
+class ValueRegistry(Container):
+    """
+    Refer:
+    >>> dpg.value_registry
+
+     Adds a value registry.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_value_registry(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class ViewportDrawlist(Container):
+    """
+    Refer:
+    >>> dpg.viewport_drawlist
+
+     A container that is used to present draw items or layers directly to the viewport. By default this will draw to the back of the viewport. Layers and draw items should be added to this widget as children.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # front (bool, optional): Draws to the front of the view port instead of the back.
+    front: bool = True
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_viewport_drawlist(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
+            filter_key=self.filter_key,
+            delay_search=self.delay_search,
+            front=self.front,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class ViewportMenuBar(Container):
+    """
+    Refer:
+    >>> dpg.viewport_menu_bar
+
+     Adds a menubar to the viewport.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_viewport_menu_bar(
+            parent=self.internal.parent.dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            indent=self.indent,
+            show=self.show,
+            delay_search=self.delay_search,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class Window(Container):
+    """
+    Refer:
+    >>> dpg.window
+
+     Creates a new window for following items to be added to.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: t.Union[Widget, t.List[Widget]] = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
+    delay_search: bool = False
+
+    # min_size (Union[List[int], Tuple[int, ...]], optional): Minimum window size.
+    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [100, 100])
+
+    # max_size (Union[List[int], Tuple[int, ...]], optional): Maximum window size.
+    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [30000, 30000])
+
+    # menubar (bool, optional): Shows or hides the menubar.
+    menubar: bool = False
+
+    # collapsed (bool, optional): Collapse the window.
+    collapsed: bool = False
+
+    # autosize (bool, optional): Autosized the window to fit it's items.
+    autosize: bool = False
+
+    # no_resize (bool, optional): Allows for the window size to be changed or fixed.
+    no_resize: bool = False
+
+    # no_title_bar (bool, optional): Title name for the title bar of the window.
+    no_title_bar: bool = False
+
+    # no_move (bool, optional): Allows for the window's position to be changed or fixed.
+    no_move: bool = False
+
+    # no_scrollbar (bool, optional): Disable scrollbars. (window can still scroll with mouse or programmatically)
+    no_scrollbar: bool = False
+
+    # no_collapse (bool, optional): Disable user collapsing window by double-clicking on it.
+    no_collapse: bool = False
+
+    # horizontal_scrollbar (bool, optional): Allow horizontal scrollbar to appear. (off by default)
+    horizontal_scrollbar: bool = False
+
+    # no_focus_on_appearing (bool, optional): Disable taking focus when transitioning from hidden to visible state.
+    no_focus_on_appearing: bool = False
+
+    # no_bring_to_front_on_focus (bool, optional): Disable bringing window to front when taking focus. (e.g. clicking on it or programmatically giving it focus)
+    no_bring_to_front_on_focus: bool = False
+
+    # no_close (bool, optional): Disable user closing the window by removing the close button.
+    no_close: bool = False
+
+    # no_background (bool, optional): Sets Background and border alpha to transparent.
+    no_background: bool = False
+
+    # modal (bool, optional): Fills area behind window according to the theme and disables user ability to interact with anything except the window.
+    modal: bool = False
+
+    # popup (bool, optional): Fills area behind window according to the theme, removes title bar, collapse and close. Window can be closed by selecting area in the background behind the window.
+    popup: bool = False
+
+    # no_saved_settings (bool, optional): Never load/save settings in .ini file.
+    no_saved_settings: bool = False
+
+    # on_close (Callable, optional): Callback ran when window is closed.
+    on_close: Callback = None
+
+    def build(self) -> t.Union[int, str]:
+        _ret = internal_dpg.add_window(
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            show=self.show,
+            pos=self.pos,
+            delay_search=self.delay_search,
+            min_size=self.min_size,
+            max_size=self.max_size,
+            menubar=self.menubar,
+            collapsed=self.collapsed,
+            autosize=self.autosize,
+            no_resize=self.no_resize,
+            no_title_bar=self.no_title_bar,
+            no_move=self.no_move,
+            no_scrollbar=self.no_scrollbar,
+            no_collapse=self.no_collapse,
+            horizontal_scrollbar=self.horizontal_scrollbar,
+            no_focus_on_appearing=self.no_focus_on_appearing,
+            no_bring_to_front_on_focus=self.no_bring_to_front_on_focus,
+            no_close=self.no_close,
+            no_background=self.no_background,
+            modal=self.modal,
+            popup=self.popup,
+            no_saved_settings=self.no_saved_settings,
+            on_close=self.on_close_fn,
+        )
+        
+        return _ret
+
+    def on_close_fn(
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
+        user_data: t.Any
+    ):
+        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.on_close is None:
+            return None
+        else:
+            return self.on_close.fn(
+                sender=self, app_data=app_data, user_data=user_data
+            )
