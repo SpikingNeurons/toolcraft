@@ -8,8 +8,7 @@ import re
 import datetime
 
 _WRAP_TEXT_WIDTH = 70
-_NEEDED_ENUMS = {}
-_ALLOWED_CHILDREN_DICT = {}
+_NEEDED_ENUMS = {}  # type: t.Dict[str, 'EnumDef']
 
 _SKIP_METHODS = [
     # not required
@@ -186,6 +185,7 @@ _SKIP_METHODS = [
     dpg.bind_template_registry, dpg.bind_theme,
 
     # todo: viewport ... useful to make visual code style docking
+    dpg.viewport_drawlist,  # this can be a Container ... but note that it is not a Widget
     dpg.create_viewport,
     dpg.get_viewport_configuration,
     dpg.get_viewport_clear_color,
@@ -282,9 +282,12 @@ class DpgDef:
 
     @property
     def _super_class_name(self) -> str:
-        _class_name = "Widget"
-        if self.is_container:
-            _class_name = "Container"
+        if self.is_parent_param_present and self.is_before_param_present:
+            _class_name = "Widget"
+            if self.is_container:
+                _class_name = "Container"
+        else:
+            _class_name = "___"
         return _class_name
 
     @property
@@ -314,12 +317,14 @@ class DpgDef:
 
         # ------------------------------------------------------- 03
         # generate name based on method
+        if self.fn == dpg.window:
+            return "BWindow"
         if self.fn == dpg.table:
             return "BTable"
-        if self.fn == dpg.add_checkbox:
-            return "CheckBox"
         if self.fn == dpg.plot:
             return "BPlot"
+        if self.fn == dpg.add_checkbox:
+            return "CheckBox"
         if self.fn == dpg.subplots:
             return "SubPlots"
         if self.fn == dpg.add_3d_slider:
@@ -410,9 +415,10 @@ class DpgDef:
             # if param is enum we will get _enum_def
             _enum_def = None
             if _param_name not in ['source']:
-                _enum_def = fetch_enum_def_from_fn_param_doc(
+                _enum_def = CodeMaker.fetch_enum_def_from_fn_param_doc(
                     method=self.fn, param_name=_param_name, param_doc=_param_doc
                 )
+                self.enum_defs_needed.append(_enum_def)
 
             # some replacements
             if _param_name == "source":
@@ -464,45 +470,10 @@ class DpgDef:
         # final return
         return _ret
 
-    def __init__(
-        self,
-        fn: t.Callable,
-        # used to generate multiple widgets based on parameters supplied that will be
-        # hardcoded in build method
-        parametrize: t.Dict[str, str] = None
-    ):
-        # -------------------------------------------------------- 01
-        self.fn = fn
-        self.parametrize = parametrize
-
-        # -------------------------------------------------------- 02
-        self.fn_src = inspect.getsource(self.fn)
-        self.fn_signature = inspect.signature(self.fn)
-        self.is_container = self.fn_src.find("@contextmanager") != -1
-        self.name = self._name
-        self.call_prefix = self._call_prefix
-        self.super_class_name = self._super_class_name
-        self.docs = self._docs
-        self.param_defs = self._param_defs
-
-        # -------------------------------------------------------- 03
-        self.is_before_param_present = False
-        self.is_source_param_present = False
-        self.is_parent_param_present = False
-        for _param in self.fn_signature.parameters.values():
-            if _param.name == 'before':
-                assert _param.annotation == t.Union[int, str]
-                self.is_before_param_present = True
-            if _param.name == 'source':
-                assert _param.annotation == t.Union[int, str]
-                self.is_source_param_present = True
-            if _param.name == 'parent':
-                assert _param.annotation == t.Union[int, str]
-                self.is_parent_param_present = True
-
-    def code(self) -> t.List[str]:
+    @property
+    def _code(self) -> t.List[str]:
         # ------------------------------------------------------- 01
-        print(f"getting code for `dpg.{self.fn.__name__}`")
+        # print(f"getting code for `dpg.{self.fn.__name__}`")
 
         # ------------------------------------------------------- 03
         # make code lines
@@ -587,6 +558,49 @@ class DpgDef:
         _lines = [_.replace("\t", "    ") for _ in _lines]
         return _lines
 
+    def __init__(
+        self,
+        fn: t.Callable,
+        # used to generate multiple widgets based on parameters supplied that will be
+        # hardcoded in build method
+        parametrize: t.Dict[str, str] = None
+    ):
+        # -------------------------------------------------------- 01
+        self.fn = fn
+        self.parametrize = parametrize
+        self.enum_defs_needed = []
+
+        # -------------------------------------------------------- 02
+        self.fn_src = inspect.getsource(self.fn)
+        self.fn_signature = inspect.signature(self.fn)
+        self.is_container = self.fn_src.find("@contextmanager") != -1
+
+        # -------------------------------------------------------- 03
+        self.is_before_param_present = False
+        self.is_source_param_present = False
+        self.is_parent_param_present = False
+        for _param in self.fn_signature.parameters.values():
+            if _param.name == 'before':
+                assert _param.annotation == t.Union[int, str]
+                self.is_before_param_present = True
+            if _param.name == 'source':
+                assert _param.annotation == t.Union[int, str]
+                self.is_source_param_present = True
+            if _param.name == 'parent':
+                assert _param.annotation == t.Union[int, str]
+                self.is_parent_param_present = True
+        if self.is_before_param_present:
+            if not self.is_parent_param_present:
+                raise Exception("If before is present then parent should also be present")
+
+        # -------------------------------------------------------- 04
+        self.name = self._name
+        self.call_prefix = self._call_prefix
+        self.super_class_name = self._super_class_name
+        self.docs = self._docs
+        self.param_defs = self._param_defs
+        self.code = self._code
+
     def allowed_dog_items_in_container(self) -> t.List["DpgDef"]:
         if not self.is_container:
             raise Exception("Should be used with widgets that are containers")
@@ -594,19 +608,10 @@ class DpgDef:
         _ret = []
 
 
-class EnumDef(NamedTuple):
-    dpg_enum_prefix: str
-    dpg_enum_values: t.List[str]
+class EnumDef:
 
     @property
-    def enum_name(self) -> str:
-        return "En" + self.dpg_enum_prefix.replace("mv", "").replace("_", "")
-
-    def __eq__(self, other):
-        return self.dpg_enum_prefix == other.dpg_enum_prefix and \
-               self.dpg_enum_values == other.dpg_enum_values
-
-    def code(self) -> t.List[str]:
+    def _code(self) -> t.List[str]:
 
         # add header
         _lines = [
@@ -634,6 +639,20 @@ class EnumDef(NamedTuple):
         # replace \t to 4 spaces
         _lines = [_.replace("\t", "    ") for _ in _lines]
         return _lines
+
+    def __init__(
+        self,
+        dpg_enum_prefix: str,
+        dpg_enum_values: t.List[str]
+    ):
+        self.dpg_enum_prefix = dpg_enum_prefix
+        self.dpg_enum_values = dpg_enum_values
+        self.enum_name = "En" + self.dpg_enum_prefix.replace("mv", "").replace("_", "")
+        self.code = self._code
+
+    def __eq__(self, other):
+        return self.dpg_enum_prefix == other.dpg_enum_prefix and \
+               self.dpg_enum_values == other.dpg_enum_values
 
     def get_dpg_val_to_enum_val(self, dpg_val: str) -> str:
         _ret = dpg_val.replace(self.dpg_enum_prefix, "")
@@ -669,202 +688,15 @@ class EnumDef(NamedTuple):
         return f"{self.enum_name}.{_selected_dpg_v}"
 
 
-def fetch_enum_def_from_fn_param_doc(
-    method: t.Callable, param_name: str, param_doc: str
-) -> t.Optional[EnumDef]:
-    """
-    If we detect that widget param doc can be a enum field we return tuple i.e.
-    (possible enum name, and the enum fields) else we return None ...
-    """
-    # ----------------------------------------------------------------- 01
-    # enum starts with `mv` then letters and one underscore
-    # multiple underscores can follow
-    _enum_val_s = re.findall(" mv[a-zA-Z0-9]+_[*_a-zA-Z0-9]+", param_doc)
+class CodeMaker:
 
-    # ----------------------------------------------------------------- 02
-    # param name has star
-    _param_name_has_star = False
-    if len(_enum_val_s) == 1:
-        _param_name_has_star = _enum_val_s[0].find("*") != -1
+    @property
+    def header(self) -> str:
 
-    # ----------------------------------------------------------------- 03
-    # is param dog_id type
-    _is_dpg_id = param_doc.find("Union[int, str]") != -1
-
-    # ----------------------------------------------------------------- 04
-    # if dpg field and no enum values raise error if cannot be handled
-    if _is_dpg_id:
-        if not bool(_enum_val_s):
-            raise Exception(
-                f"There are no enum fields detected for "
-                f"\n\tmethod: {method} "
-                f"\n\tparameter: {param_name} "
-                f"\n\tdoc: {param_doc}"
-            )
-
-    # ----------------------------------------------------------------- 05
-    # there is no enum for this then return
-    if not bool(_enum_val_s) and not _is_dpg_id:
-        return None
-
-    # ----------------------------------------------------------------- 06
-    # remove extra space
-    _enum_val_s = [_.strip() for _ in _enum_val_s]
-
-    # ----------------------------------------------------------------- 07
-    # figure out enum name and values if needed
-    # ----------------------------------------------------------------- 07.01
-    if _param_name_has_star:
-        _enum_prefix = _enum_val_s[0].replace("*", "")
-        _enum_val_s = []
-        for _item in dir(dpg):
-            if _item.startswith(_enum_prefix):
-                _enum_val_s.append(_item)
-    # ----------------------------------------------------------------- 07.02
-    # else figure out name from enum values
-    else:
-        _l_of_l = [list(_) for _ in _enum_val_s]
-        _enum_prefix = ""
-        for _ in zip(*_l_of_l):
-            _break = all(__ == _[0] for __ in _)
-            if not _break:
-                break
-            _enum_prefix += _[0]
-
-    # ----------------------------------------------------------------- 08
-    # update enum name further if needed
-    # Note this section is hardcoded and any fixes can be done here
-
-    # ----------------------------------------------------------------- 09
-    # build enum num def and see if proper duplicate
-    _enum_def = EnumDef(
-        dpg_enum_prefix=_enum_prefix, dpg_enum_values=_enum_val_s)
-    if _enum_def.enum_name not in _NEEDED_ENUMS.keys():
-        _NEEDED_ENUMS[_enum_def.enum_name] = _enum_def
-    else:
-        _other_enum_def = _NEEDED_ENUMS[_enum_def.enum_name]
-        if _enum_def != _other_enum_def:
-            raise Exception(
-                f"Inspect enum {_enum_def.enum_name} and update it above so "
-                f"that every enum is unique"
-            )
-
-    # ----------------------------------------------------------------- 10
-    # return
-    return _enum_def
-
-
-def fetch_all_dpg_defs() -> t.List[DpgDef]:
-
-    _ret = []
-    _dir_dpg = dir(dpg)
-
-    # loop over dpg module
-    for _fn_name in _dir_dpg:
-        # ---------------------------------------------------------- 01
-        # skip if not function
-        _fn = getattr(dpg, _fn_name)
-        if not inspect.isfunction(_fn):
-            continue
-
-        # ---------------------------------------------------------- 02
-        # fn details
-        _fn_src = inspect.getsource(_fn)
-
-        # ---------------------------------------------------------- 03
-        # skip if deprecated
-        if _fn_src.find("@deprecated") != -1:
-            continue
-
-        # ---------------------------------------------------------- 04
-        # if in _SKIP_METHODS then skip
-        if _fn in _SKIP_METHODS:
-            continue
-
-        # ---------------------------------------------------------- 05
-        # handle fns with contextmanager
-        # ---------------------------------------------------------- 05.01
-        # if _context_manager_dec_present then check that add_ prefix is not present
-        if _fn_src.find("@contextmanager") != -1:
-            # ------------------------------------------------------ 05.01.01
-            # should not start with add
-            assert not _fn.__name__.startswith("add_"), \
-                f"was not expecting to start with add_ >> {_fn}"
-            # ------------------------------------------------------ 05.01.02
-            # check if corresponding add_ present
-            _fn_name_with_add = "add_" + _fn.__name__
-            if _fn_name_with_add not in _dir_dpg:
-                raise Exception(
-                    f"Corresponding method `{_fn_name_with_add}` is not present"
-                )
-        # ---------------------------------------------------------- 05.02
-        # if starts with add_* and has corresponding fn with
-        # _context_manager_dec_present then skip add_* fn
-        if _fn.__name__.startswith("add_"):
-            _fn_name_without_add = _fn.__name__.replace("add_", "")
-            if _fn_name_without_add in _dir_dpg:
-                # -------------------------------------------------- 05.02.01
-                # also make sure that it has context manager
-                _fn_without_add = getattr(dpg, _fn_name_without_add)
-                if inspect.getsource(_fn_without_add).find("@contextmanager") == -1:
-                    raise Exception(
-                        f"Was expecting {_fn_without_add} to have contextmanager"
-                    )
-                # -------------------------------------------------- 05.02.02
-                # continue
-                continue
-
-        # ---------------------------------------------------------- 06
-        # append
-        if _fn == dpg.plot_axis:
-            _ret.append(DpgDef(fn=_fn, parametrize={'axis': 'dpg.mvXAxis'}, ))
-            _ret.append(DpgDef(fn=_fn, parametrize={'axis': 'dpg.mvYAxis'}, ))
-        else:
-            _ret.append(DpgDef(fn=_fn))
-
-    # return
-    return _ret
-
-
-_ALL_DPG_DEFS = fetch_all_dpg_defs()
-
-
-def add_auto_imports_to_py_file(
-    output_file: pathlib.Path, import_lines: t.List[str]
-):
-    # ---------------------------------------------------------- 01
-    # get tags and their index
-    _start_tag = "# auto import pk; start >>>"
-    _end_tag = "# auto import pk; end <<<"
-    _start_tag_index = None
-    _end_tag_index = None
-    _output_file_lines = output_file.read_text().split("\n")
-    for _i, _l in enumerate(_output_file_lines):
-        if _l == _start_tag:
-            _start_tag_index = _i
-        if _l == _end_tag:
-            _end_tag_index = _i
-    if _start_tag_index is None:
-        raise Exception(f"Did not find start tag `{_start_tag}` in file {output_file}")
-    if _end_tag_index is None:
-        raise Exception(f"Did not find start tag `{_end_tag}` in file {output_file}")
-    if _end_tag_index <= _start_tag_index:
-        raise Exception(f"{_end_tag_index} <= {_start_tag_index}")
-    # ---------------------------------------------------------- 02
-    _start_lines = _output_file_lines[:_start_tag_index+1]
-    _end_lines = _output_file_lines[_end_tag_index:]
-    # ---------------------------------------------------------- 03
-    output_file.write_text(
-        "\n".join(_start_lines + import_lines + _end_lines)
-    )
-
-
-def create_auto_code():
-    # ---------------------------------------------------- 01
-    _script_file = pathlib.Path(__file__)
-    _script_file = _script_file.relative_to(
-        _script_file.parent.parent.parent.parent).as_posix()
-    _header = f'''"""
+        _script_file = pathlib.Path(__file__)
+        _script_file = _script_file.relative_to(
+            _script_file.parent.parent.parent.parent).as_posix()
+        _header = f'''"""
 ********************************************************************************
 This code is auto-generated:
 >> Script: {_script_file}
@@ -883,48 +715,283 @@ import enum
 
 from .__base__ import Widget, Container, Callback
 '''
+        return _header
 
-    # ---------------------------------------------------- 02
-    _widget_defs = []
-    _widget_code_lines = []
-    for _widget_def in _ALL_DPG_DEFS:
-        _widget_defs.append(_widget_def)
-        _widget_code_lines += _widget_def.code()
-    _widget_code = "\n".join(_widget_code_lines + [""])
+    def __init__(self):
+        if bool(_NEEDED_ENUMS):
+            raise Exception("Should be empty ... only call once")
+        self.all_dpg_defs = self.fetch_all_dpg_defs()
 
-    # ---------------------------------------------------- 03
-    # create enum code
-    _enum_code_lines = []
-    for _enum_def in _NEEDED_ENUMS.values():
-        _enum_code_lines += _enum_def.code()
-    _enum_code = "\n".join(_enum_code_lines + [""])
+    @staticmethod
+    def fetch_enum_def_from_fn_param_doc(
+        method: t.Callable, param_name: str, param_doc: str
+    ) -> t.Optional[EnumDef]:
+        """
+        If we detect that widget param doc can be a enum field we return tuple i.e.
+        (possible enum name, and the enum fields) else we return None ...
+        """
+        # ----------------------------------------------------------------- 01
+        # enum starts with `mv` then letters and one underscore
+        # multiple underscores can follow
+        _enum_val_s = re.findall(" mv[a-zA-Z0-9]+_[*_a-zA-Z0-9]+", param_doc)
 
-    # ---------------------------------------------------- 04
-    # write to files
-    # ---------------------------------------------------- 04.01
-    # to _auto.py
-    _output_file = pathlib.Path("../_auto.py")
-    _output_file.write_text(_header + _enum_code + _widget_code)
-    # ---------------------------------------------------- 04.02
-    # to enum.py
-    _output_file = pathlib.Path("../enum.py")
-    _dis_inspect = "# noinspection PyUnresolvedReferences"
-    _lines = [_dis_inspect, "from .__base__ import EnColor"]
-    for _enum_def in _NEEDED_ENUMS.values():
-        _lines.append(_dis_inspect)
-        _lines.append(f"from ._auto import {_enum_def.enum_name}")
-    add_auto_imports_to_py_file(_output_file, _lines)
-    # ---------------------------------------------------- 04.03
-    # to widget.py
-    _output_file = pathlib.Path("../widget.py")
-    _dis_inspect = "# noinspection PyUnresolvedReferences"
-    # _lines = [_dis_inspect, "from . import Widget, Container"]
-    _lines = []
-    for _widget_def in _widget_defs:
-        _lines.append(_dis_inspect)
-        _lines.append(f"from ._auto import {_widget_def.name}")
-    add_auto_imports_to_py_file(_output_file, _lines)
+        # ----------------------------------------------------------------- 02
+        # param name has star
+        _param_name_has_star = False
+        if len(_enum_val_s) == 1:
+            _param_name_has_star = _enum_val_s[0].find("*") != -1
+
+        # ----------------------------------------------------------------- 03
+        # is param dog_id type
+        _is_dpg_id = param_doc.find("Union[int, str]") != -1
+
+        # ----------------------------------------------------------------- 04
+        # if dpg field and no enum values raise error if cannot be handled
+        if _is_dpg_id:
+            if not bool(_enum_val_s):
+                raise Exception(
+                    f"There are no enum fields detected for "
+                    f"\n\tmethod: {method} "
+                    f"\n\tparameter: {param_name} "
+                    f"\n\tdoc: {param_doc}"
+                )
+
+        # ----------------------------------------------------------------- 05
+        # there is no enum for this then return
+        if not bool(_enum_val_s) and not _is_dpg_id:
+            return None
+
+        # ----------------------------------------------------------------- 06
+        # remove extra space
+        _enum_val_s = [_.strip() for _ in _enum_val_s]
+
+        # ----------------------------------------------------------------- 07
+        # figure out enum name and values if needed
+        # ----------------------------------------------------------------- 07.01
+        if _param_name_has_star:
+            _enum_prefix = _enum_val_s[0].replace("*", "")
+            _enum_val_s = []
+            for _item in dir(dpg):
+                if _item.startswith(_enum_prefix):
+                    _enum_val_s.append(_item)
+        # ----------------------------------------------------------------- 07.02
+        # else figure out name from enum values
+        else:
+            _l_of_l = [list(_) for _ in _enum_val_s]
+            _enum_prefix = ""
+            for _ in zip(*_l_of_l):
+                _break = all(__ == _[0] for __ in _)
+                if not _break:
+                    break
+                _enum_prefix += _[0]
+
+        # ----------------------------------------------------------------- 08
+        # update enum name further if needed
+        # Note this section is hardcoded and any fixes can be done here
+
+        # ----------------------------------------------------------------- 09
+        # build enum num def and see if proper duplicate
+        _enum_def = EnumDef(
+            dpg_enum_prefix=_enum_prefix, dpg_enum_values=_enum_val_s)
+        if _enum_def.enum_name not in _NEEDED_ENUMS.keys():
+            _NEEDED_ENUMS[_enum_def.enum_name] = _enum_def
+        else:
+            _other_enum_def = _NEEDED_ENUMS[_enum_def.enum_name]
+            if _enum_def != _other_enum_def:
+                raise Exception(
+                    f"Inspect enum {_enum_def.enum_name} and update it above so "
+                    f"that every enum is unique"
+                )
+
+        # ----------------------------------------------------------------- 10
+        # return
+        return _NEEDED_ENUMS[_enum_def.enum_name]
+
+    @staticmethod
+    def fetch_all_dpg_defs() -> t.List[DpgDef]:
+
+        _ret = []
+        _dir_dpg = dir(dpg)
+
+        # loop over dpg module
+        for _fn_name in _dir_dpg:
+            # ---------------------------------------------------------- 01
+            # skip if not function
+            _fn = getattr(dpg, _fn_name)
+            if not inspect.isfunction(_fn):
+                continue
+
+            # ---------------------------------------------------------- 02
+            # fn details
+            _fn_src = inspect.getsource(_fn)
+
+            # ---------------------------------------------------------- 03
+            # skip if deprecated
+            if _fn_src.find("@deprecated") != -1:
+                continue
+
+            # ---------------------------------------------------------- 04
+            # if in _SKIP_METHODS then skip
+            if _fn in _SKIP_METHODS:
+                continue
+
+            # ---------------------------------------------------------- 05
+            # handle fns with contextmanager
+            # ---------------------------------------------------------- 05.01
+            # if _context_manager_dec_present then check that add_ prefix is not present
+            if _fn_src.find("@contextmanager") != -1:
+                # ------------------------------------------------------ 05.01.01
+                # should not start with add
+                assert not _fn.__name__.startswith("add_"), \
+                    f"was not expecting to start with add_ >> {_fn}"
+                # ------------------------------------------------------ 05.01.02
+                # check if corresponding add_ present
+                _fn_name_with_add = "add_" + _fn.__name__
+                if _fn_name_with_add not in _dir_dpg:
+                    raise Exception(
+                        f"Corresponding method `{_fn_name_with_add}` is not present"
+                    )
+            # ---------------------------------------------------------- 05.02
+            # if starts with add_* and has corresponding fn with
+            # _context_manager_dec_present then skip add_* fn
+            if _fn.__name__.startswith("add_"):
+                _fn_name_without_add = _fn.__name__.replace("add_", "")
+                if _fn_name_without_add in _dir_dpg:
+                    # -------------------------------------------------- 05.02.01
+                    # also make sure that it has context manager
+                    _fn_without_add = getattr(dpg, _fn_name_without_add)
+                    if inspect.getsource(_fn_without_add).find("@contextmanager") == -1:
+                        raise Exception(
+                            f"Was expecting {_fn_without_add} to have contextmanager"
+                        )
+                    # -------------------------------------------------- 05.02.02
+                    # continue
+                    continue
+
+            # ---------------------------------------------------------- 06
+            # append
+            if _fn == dpg.plot_axis:
+                _ret.append(DpgDef(fn=_fn, parametrize={'axis': 'dpg.mvXAxis'}, ))
+                _ret.append(DpgDef(fn=_fn, parametrize={'axis': 'dpg.mvYAxis'}, ))
+            else:
+                _ret.append(DpgDef(fn=_fn))
+
+        # return
+        return _ret
+
+    @staticmethod
+    def add_auto_imports_to_py_file(
+        output_file: pathlib.Path, import_lines: t.List[str]
+    ):
+        # ---------------------------------------------------------- 01
+        # get tags and their index
+        _start_tag = "# auto import pk; start >>>"
+        _end_tag = "# auto import pk; end <<<"
+        _start_tag_index = None
+        _end_tag_index = None
+        _output_file_lines = output_file.read_text().split("\n")
+        for _i, _l in enumerate(_output_file_lines):
+            if _l == _start_tag:
+                _start_tag_index = _i
+            if _l == _end_tag:
+                _end_tag_index = _i
+        if _start_tag_index is None:
+            raise Exception(f"Did not find start tag `{_start_tag}` in file {output_file}")
+        if _end_tag_index is None:
+            raise Exception(f"Did not find start tag `{_end_tag}` in file {output_file}")
+        if _end_tag_index <= _start_tag_index:
+            raise Exception(f"{_end_tag_index} <= {_start_tag_index}")
+        # ---------------------------------------------------------- 02
+        _start_lines = _output_file_lines[:_start_tag_index+1]
+        _end_lines = _output_file_lines[_end_tag_index:]
+        # ---------------------------------------------------------- 03
+        output_file.write_text(
+            "\n".join(_start_lines + import_lines + _end_lines)
+        )
+
+    def get_widget_defs(self) -> t.List["DpgDef"]:
+        return [
+            _ for _ in self.all_dpg_defs
+            if _.super_class_name in ["Widget", "Container"]
+        ]
+
+    def make_widget_py(self):
+        # -------------------------------- 01
+        # init
+        _output_file = pathlib.Path("../widget.py")
+        _dis_inspect = "# noinspection PyUnresolvedReferences"
+
+        # -------------------------------- 02
+        # widget and container lines
+        # _lines = [_dis_inspect, "from . import Widget, Container"]
+        _lines = []
+        for _widget_def in self.get_widget_defs():
+            _lines.append(_dis_inspect)
+            _lines.append(f"from ._auto import {_widget_def.name}")
+        _lines += [""]
+
+        # -------------------------------- 03
+        self.add_auto_imports_to_py_file(_output_file, _lines)
+
+    def make_auto_py(self):
+        # -------------------------------- 01
+        # init
+        _output_file = pathlib.Path("../_auto.py")
+
+        # -------------------------------- 02
+        # make lines
+        # -------------------------------- 02.01
+        # enum lines
+        _enum_lines = []
+        for _enum_def in _NEEDED_ENUMS.values():
+            _enum_lines += _enum_def.code
+        _enum_lines += [""]
+        # -------------------------------- 02.02
+        # widget and container lines
+        _widget_lines = []
+        for _widget_def in self.get_widget_defs():
+            _widget_lines += _widget_def.code
+        _widget_lines += [""]
+
+        # -------------------------------- 03
+        _output_file.write_text(
+            self.header +
+            "\n".join(
+                _enum_lines + _widget_lines
+            )
+        )
+
+    def make_enum_py(self):
+        # -------------------------------- 01
+        # init
+        _output_file = pathlib.Path("../_enum.py")
+
+        # -------------------------------- 02
+        # check
+        if not bool(_NEEDED_ENUMS):
+            raise Exception("Expected this to be filled up by now")
+
+        # -------------------------------- 03
+        # make lines
+        _dis_inspect = "# noinspection PyUnresolvedReferences"
+        _lines = [_dis_inspect, "from .__base__ import EnColor"]
+        for _enum_def in _NEEDED_ENUMS.values():
+            _lines.append(_dis_inspect)
+            _lines.append(f"from ._auto import {_enum_def.enum_name}")
+
+        # -------------------------------- 04
+        # code
+        _code = "\n".join(_lines + [""])
+
+        # -------------------------------- 05
+        # write
+        self.add_auto_imports_to_py_file(_output_file, _lines)
+
+    def make(self):
+        self.make_auto_py()
+        self.make_enum_py()
+        self.make_widget_py()
 
 
 if __name__ == '__main__':
-    create_auto_code()
+    CodeMaker().make()

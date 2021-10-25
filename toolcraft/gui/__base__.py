@@ -65,7 +65,7 @@ class WidgetInternal(_Internal):
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
         return super().vars_that_can_be_overwritten() + [
-            "parent", "before",
+            "parent", "before", "root"
         ]
 
 
@@ -93,16 +93,16 @@ class DpgCommon(m.Tracker, abc.ABC):
 class Widget(DpgCommon, abc.ABC):
 
     @property
-    def root(self) -> "Window":
-        return self.internal.root
-
-    @property
     def parent(self) -> "Container":
         return self.internal.parent
 
     @property
     def before(self) -> t.Optional["Widget"]:
         return self.internal.before
+
+    @property
+    def root(self) -> "Window":
+        return self.internal.root
 
     @property
     @util.CacheResult
@@ -200,10 +200,6 @@ class Widget(DpgCommon, abc.ABC):
     @property
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
         return None
-
-    @property
-    def root(self) -> "Window":
-        return self.internal.root
 
     def __post_init__(self):
         self.init_validate()
@@ -398,6 +394,7 @@ class Widget(DpgCommon, abc.ABC):
         # make the move
         _widget.internal.parent = parent
         _widget.internal.before = before
+        _widget.internal.root = parent.root
         parent.children.insert(_before_index, _widget)
         internal_dpg.move_item(
             _widget.dpg_id, parent=parent.dpg_id,
@@ -611,7 +608,9 @@ class Container(Widget, abc.ABC):
         # -------------------------------------------------- 03
         # if already in children raise error
         _widget_id = id(widget)
-        for _c in self.children:
+        _before_id = id(before)
+        _before_index = None
+        for _i, _c in enumerate(self.children):
             if id(_c) == _widget_id:
                 e.validation.NotAllowed(
                     msgs=[
@@ -619,17 +618,22 @@ class Container(Widget, abc.ABC):
                         f"added to parent."
                     ]
                 )
+            if id(_c) == _before_id:
+                _before_index = _i
 
         # -------------------------------------------------- 04
         # set internals
         widget.internal.parent = self
         widget.internal.before = before
-        widget.internal.dashboard = self.internal.dashboard
+        widget.internal.root = self.root
 
         # -------------------------------------------------- 05
         # we can now store widget inside children list
         # Note that guid is used as it is for dict key
-        self.children.append(widget)
+        if _before_index is None:
+            self.children.append(widget)
+        else:
+            self.children.insert(_before_index, widget)
 
         # -------------------------------------------------- 06
         # if thw parent widget is already built we need to build this widget here
