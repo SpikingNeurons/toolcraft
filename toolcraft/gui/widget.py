@@ -46,7 +46,7 @@ from ._auto import HeatSeries
 # noinspection PyUnresolvedReferences
 from ._auto import HistogramSeries
 # noinspection PyUnresolvedReferences
-from ._auto import HlineSeries
+from ._auto import HLineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import InputFloat
 # noinspection PyUnresolvedReferences
@@ -110,7 +110,7 @@ from ._auto import TextPoint
 # noinspection PyUnresolvedReferences
 from ._auto import TimePicker
 # noinspection PyUnresolvedReferences
-from ._auto import VlineSeries
+from ._auto import VLineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import ChildWindow
 # noinspection PyUnresolvedReferences
@@ -144,7 +144,7 @@ from ._auto import DrawText
 # noinspection PyUnresolvedReferences
 from ._auto import DrawTriangle
 # noinspection PyUnresolvedReferences
-from ._auto import Drawlist
+from ._auto import DrawList
 # noinspection PyUnresolvedReferences
 from ._auto import FilterSet
 # noinspection PyUnresolvedReferences

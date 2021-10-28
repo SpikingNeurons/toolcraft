@@ -25,7 +25,14 @@ if False:
     from . import window
 
 
-class EnColor(enum.Enum):
+class Enum(m.FrozenEnum):
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.enum.{cls.__name__}"
+
+
+class EnColor(Enum, enum.Enum):
     DEFAULT = (-1, -1, -1, -1)
     WHITE = (255, 255, 255, 255)
     BLACK = (0, 0, 0, 255)
@@ -40,24 +47,17 @@ class DpgInternal(m.Internal):
     is_build_done: bool
 
 
-class WidgetInternal(DpgInternal):
-    parent: "Container"
-    before: t.Optional["Widget"]
-    root: "window.Window"
-
-    def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + [
-            "parent", "before", "root"
-        ]
-
-
 @dataclasses.dataclass
-class Dpg(m.Tracker, abc.ABC):
+class Dpg(m.YamlRepr, abc.ABC):
 
     @property
     @util.CacheResult
     def internal(self) -> DpgInternal:
         return DpgInternal(owner=self)
+
+    @property
+    def is_built(self) -> bool:
+        return self.internal.has(item="is_build_done")
 
     @property
     def dpg_id(self) -> t.Union[int, str]:
@@ -74,31 +74,6 @@ class Dpg(m.Tracker, abc.ABC):
     @property
     def dpg_info(self) -> t.Dict[str, t.Any]:
         return internal_dpg.get_item_info(self.dpg_id)
-
-
-@dataclasses.dataclass
-class Widget(Dpg, abc.ABC):
-
-    @property
-    @util.CacheResult
-    def internal(self) -> WidgetInternal:
-        return WidgetInternal(owner=self)
-
-    @property
-    def parent(self) -> "Container":
-        return self.internal.parent
-
-    @property
-    def before(self) -> t.Optional["Widget"]:
-        return self.internal.before
-
-    @property
-    def root(self) -> "window.Window":
-        return self.internal.root
-
-    @property
-    def is_built(self) -> bool:
-        return self.internal.has(item="is_build_done")
 
     @property
     def is_hovered(self) -> bool:
@@ -184,10 +159,6 @@ class Widget(Dpg, abc.ABC):
     def rect_max(self) -> t.Tuple[int, int]:
         return tuple(self.dpg_state['rect_max'])
 
-    @property
-    def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
-        return None
-
     def __post_init__(self):
         self.init_validate()
         self.init()
@@ -198,6 +169,20 @@ class Widget(Dpg, abc.ABC):
         internal_dpg.configure_item(self.dpg_id, **{key: value})
         return super().__setattr__(key, value)
 
+    @classmethod
+    def hook_up_methods(cls):
+        # call super
+        super().hook_up_methods()
+
+        # hookup build
+        util.HookUp(
+            cls=cls,
+            silent=True,
+            method=cls.build,
+            pre_method=cls.build_pre_runner,
+            post_method=cls.build_post_runner,
+        )
+
     def init_validate(self):
 
         # loop over fields
@@ -206,17 +191,65 @@ class Widget(Dpg, abc.ABC):
             v = getattr(self, f_name)
 
             # check if Widget and only allow if Form
-            if isinstance(v, Widget):
-                if not isinstance(self, Form):
+            if isinstance(v, Dpg):
+                if isinstance(self, Form):
+                    if not isinstance(v, Widget):
+                        e.code.CodingError(
+                            msgs=[
+                                f"Check field {self.__class__}.{f_name}",
+                                f"For {Form} you can have fields that are {Widget}. ",
+                                f"But seems like you are adding non widget {Dpg} class "
+                                f"{v.__class__} to this class {self.__class__}"
+                            ]
+                        )
+                else:
                     e.code.CodingError(
                         msgs=[
-                            f"You cannot have fields that are Widget. "
-                            f"This is only allowed for widget {Form}"
+                            f"Check field {self.__class__}.{f_name}",
+                            f"You cannot have instance of class {v.__class__} as "
+                            f"dataclass fields of {self.__class__}.",
+                            f"This is only allowed for {Form} where we only allow "
+                            f"{Widget}"
                         ]
                     )
 
     def init(self):
         ...
+
+    def build_pre_runner(self):
+
+        # ---------------------------------------------------- 01
+        # check if already built
+        if self.is_built:
+            e.code.CodingError(
+                msgs=[
+                    f"Widget is already built and registered with:",
+                    {
+                        'parent': self.internal.parent.__class__,
+                    },
+                ]
+            )
+
+    @abc.abstractmethod
+    def build(self) -> t.Union[int, str]:
+        ...
+
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Union[int, str]
+    ):
+        # if None raise error ... we expect int
+        if hooked_method_return_value is None:
+            e.code.CodingError(
+                msgs=[
+                    f"We expect build to return int which happens to be dpg_id"
+                ]
+            )
+
+        # set dpg_id
+        self.internal.dpg_id = hooked_method_return_value
+
+        # set flag to indicate build is done
+        self.internal.is_build_done = True
 
     def get_value(self) -> t.Any:
         """
@@ -291,204 +324,6 @@ class Widget(Dpg, abc.ABC):
     def reset_pos(self):
         internal_dpg.reset_pos(self.dpg_id)
 
-    @classmethod
-    def hook_up_methods(cls):
-        # call super
-        super().hook_up_methods()
-
-        # hookup build
-        util.HookUp(
-            cls=cls,
-            silent=True,
-            method=cls.build,
-            pre_method=cls.build_pre_runner,
-            post_method=cls.build_post_runner,
-        )
-
-        # hookup delete
-        util.HookUp(
-            cls=cls,
-            silent=True,
-            method=cls.delete,
-            pre_method=cls.delete_pre_runner,
-            post_method=cls.delete_post_runner,
-        )
-
-    def delete_pre_runner(self):
-        ...
-
-    def focus(self):
-        """
-        Refer:
-        >>> dpg.focus_item
-        """
-        dpg.focus_item(self.dpg_id)
-
-    def enable(self):
-        """
-        Refer:
-        >>> dpg.enable_item
-        """
-        internal_dpg.configure_item(self.dpg_id, enabled=True)
-
-    def disable(self):
-        """
-        Refer:
-        >>> dpg.disable_item
-        """
-        internal_dpg.configure_item(self.dpg_id, enabled=False)
-
-    def move(self, parent: "Container", before: "Widget" = None):
-        # ---------------------------------------------- 01
-        # if before is not None check if it is in parent and get its index
-        _before_index = None
-        for _i, _ch in enumerate(parent.children):
-            if id(_ch) == id(before):
-                _before_index = _i
-                break
-        if _before_index is None:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"We cannot find before widget in children of parent"
-                ]
-            )
-
-        # ---------------------------------------------- 02
-        # first pop from self.parent.children
-        # find index
-        _this_id = id(self)
-        _index = None
-        for _i, _w in enumerate(self.parent.children):
-            if _this_id == id(_w):
-                _index = _i
-                break
-        # pop widget
-        if _index is None:
-            e.code.CodingError(
-                msgs=[
-                    f"We were expecting the instance to be present in children of "
-                    f"parent ..."
-                ]
-            )
-            raise
-        else:
-            # delete self from parents children
-            _widget = self.parent.children.pop(_index)
-            # simple assert
-            assert id(_widget) == _this_id, "should match"
-
-        # ---------------------------------------------- 02
-        # make the move
-        _widget.internal.parent = parent
-        _widget.internal.before = before
-        _widget.internal.root = parent.root
-        parent.children.insert(_before_index, _widget)
-        internal_dpg.move_item(
-            _widget.dpg_id, parent=parent.dpg_id,
-            before=0 if before is None else before.dpg_id)
-
-    def move_up(self):
-        _children_list = self.parent.children
-        _this_id = id(self)
-        _index = None
-        for _i, _w in enumerate(self.parent.children):
-            if _this_id == id(_w):
-                _index = _i
-                break
-        if _index == 0:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"Already at top in parent children's"
-                ]
-            )
-        _children_list.insert(_index-1, _children_list.pop(_index))
-        internal_dpg.move_item_up(self.dpg_id)
-
-    def move_down(self):
-        _children_list = self.parent.children
-        _this_id = id(self)
-        _index = None
-        for _i, _w in enumerate(self.parent.children):
-            if _this_id == id(_w):
-                _index = _i
-                break
-        if _index == len(_children_list)-1:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"Already at bottom in parent children's"
-                ]
-            )
-        _children_list.insert(_index+1, _children_list.pop(_index))
-        internal_dpg.move_item_down(self.dpg_id)
-
-    def delete(self):
-        # find index
-        _this_id = id(self)
-        _index = None
-        for _i, _w in enumerate(self.parent.children):
-            if _this_id == id(_w):
-                _index = _i
-                break
-
-        # delete widget
-        if _index is None:
-            e.code.CodingError(
-                msgs=[
-                    f"We were expecting the instance to be present in children of "
-                    f"parent ..."
-                ]
-            )
-            raise
-        else:
-            # delete self from parents children
-            _widget = self.parent.children.pop(_index)
-            # simple assert
-            assert id(_widget) == _this_id, "should match"
-            # delete the UI counterpart
-            dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
-
-        # todo: make widget unusable ... figure out
-
-    def delete_post_runner(
-        self, *, hooked_method_return_value: t.Any
-    ):
-        ...
-
-    def build_pre_runner(self):
-
-        # ---------------------------------------------------- 01
-        # check if already built
-        if self.is_built:
-            e.code.CodingError(
-                msgs=[
-                    f"Widget is already built and registered with:",
-                    {
-                        'parent': self.internal.parent.__class__,
-                    },
-                ]
-            )
-
-    @abc.abstractmethod
-    def build(self) -> t.Union[int, str]:
-        ...
-
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
-        # if None raise error ... we expect int
-        if hooked_method_return_value is None:
-            e.code.CodingError(
-                msgs=[
-                    f"We expect build to return int which happens to be dpg_id"
-                ]
-            )
-
-        # set dpg_id
-        self.internal.dpg_id = hooked_method_return_value
-
-        # set flag to indicate build is done
-        self.internal.is_build_done = True
-
     def show(self):
         """
         Refer:
@@ -523,6 +358,190 @@ class Widget(Dpg, abc.ABC):
         """
         return dpg.get_item_configuration(item=self.dpg_id)
 
+    def focus(self):
+        """
+        Refer:
+        >>> dpg.focus_item
+        """
+        dpg.focus_item(self.dpg_id)
+
+    def enable(self):
+        """
+        Refer:
+        >>> dpg.enable_item
+        """
+        internal_dpg.configure_item(self.dpg_id, enabled=True)
+
+    def disable(self):
+        """
+        Refer:
+        >>> dpg.disable_item
+        """
+        internal_dpg.configure_item(self.dpg_id, enabled=False)
+
+
+class WidgetInternal(DpgInternal):
+    parent: "Container"
+    root: "window.Window"
+
+    def vars_that_can_be_overwritten(self) -> t.List[str]:
+        return super().vars_that_can_be_overwritten() + [
+            "parent", "root"
+        ]
+
+
+@dataclasses.dataclass
+class Widget(Dpg, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> WidgetInternal:
+        return WidgetInternal(owner=self)
+
+    @property
+    def is_built(self) -> bool:
+        _ret = super().internal.has(item="is_build_done")
+        # note that until first build is not called these vars will not be set
+        # so we extra check here for rigorous testing
+        e.code.AssertError(
+            value1=_ret, value2=self.internal.has("parent"),
+            msgs=[
+                "parent must be set by now as widget is already built"
+                if _ret else
+                "parent was not expected to be set as build is not yet done"
+            ]
+        )
+        e.code.AssertError(
+            value1=_ret, value2=self.internal.has("root"),
+            msgs=[
+                "root must be set by now as widget is already built"
+                if _ret else
+                "root was not expected to be set as build is not yet done"
+            ]
+        )
+        return _ret
+
+    @property
+    def parent(self) -> "Container":
+        return self.internal.parent
+
+    @property
+    def root(self) -> "window.Window":
+        return self.internal.root
+
+    @property
+    def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
+        return None
+
+    @property
+    @abc.abstractmethod
+    def supports_before(self) -> bool:
+        ...
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.widget.{cls.__name__}"
+
+    @classmethod
+    def hook_up_methods(cls):
+        # call super
+        super().hook_up_methods()
+
+        # hookup delete
+        util.HookUp(
+            cls=cls,
+            silent=True,
+            method=cls.delete,
+            pre_method=cls.delete_pre_runner,
+            post_method=cls.delete_post_runner,
+        )
+
+    def move(self, parent: "Container", before: "Widget" = None):
+        """
+        Move the item in `parent` and put it before `before`
+        """
+        # ---------------------------------------------- 01
+        # related to kwarg `before`
+        _before_index = None
+        if before is not None:
+            # raise error if before is not supported by this widget
+            if 'before' not in self.dataclass_field_names:
+                e.code.CodingError(
+                    msgs=[
+                        f"Widget {self.__class__} does not support `before` field "
+                        f"so supply None"
+                    ]
+                )
+            # if before is not None check if it is in parent and get its index
+            try:
+                _before_index = parent.children.index(before)
+            except ValueError:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"We cannot find `before` widget in children of `parent` "
+                        f"you want to move in",
+                        "Provide `before` from same `parent` you want to move in or "
+                        "supply `None`",
+                    ]
+                )
+
+        # ---------------------------------------------- 02
+        # first pop from self.parent.children
+        _src_children = self.parent.children
+        _src_children.pop(_src_children.index(self))
+
+        # ---------------------------------------------- 02
+        # make the move
+        self.internal.parent = parent
+        self.internal.root = parent.root
+        self.internal.before = before
+        parent.children.insert(_before_index, _widget)
+        internal_dpg.move_item(
+            _widget.dpg_id, parent=parent.dpg_id,
+            before=0 if before is None else before.dpg_id)
+
+    def move_up(self) -> bool:
+        """
+        If already on top returns False
+        Else moves up by one index and returns True as it moved up
+        """
+        _children_list = self.parent.children
+        _index = self.parent.children.index(self)
+        if _index == 0:
+            return False
+        _children_list.insert(_index-1, _children_list.pop(_index))
+        internal_dpg.move_item_up(self.dpg_id)
+        return True
+
+    def move_down(self) -> bool:
+        """
+        If already at bottom returns False
+        Else moves down by one index and returns True as it moved down
+        """
+        _children_list = self.parent.children
+        _index = self.parent.children.index(self)
+        if _index == len(_children_list)-1:
+            return False
+        _children_list.insert(_index+1, _children_list.pop(_index))
+        internal_dpg.move_item_down(self.dpg_id)
+        return True
+
+    def delete_pre_runner(self):
+        ...
+
+    def delete(self):
+        _children_list = self.parent.children
+        _index = self.parent.children.index(self)
+        _widget = self.parent.children.pop(_index)
+        # delete the dpg UI counterpart
+        dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
+        # todo: make _widget unusable ... figure out
+
+    def delete_post_runner(
+        self, *, hooked_method_return_value: t.Any
+    ):
+        ...
+
 
 @dataclasses.dataclass
 class Container(Widget, abc.ABC):
@@ -556,6 +575,10 @@ class Container(Widget, abc.ABC):
                 )
                 raise
 
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.container.{cls.__name__}"
+
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
     ):
@@ -572,49 +595,53 @@ class Container(Widget, abc.ABC):
         widget: "Widget",
         before: "Widget" = None,
     ):
-        # -------------------------------------------------- 01
-        # validations
-        # make sure that you are not adding Dashboard
-        if isinstance(widget, Dashboard):
-            e.code.CodingError(
-                msgs=[
-                    f"Note that you are not allowed to add Dashboard as child "
-                    f"to any Widget"
-                ]
-            )
 
-        # -------------------------------------------------- 02
+        # -------------------------------------------------- 01
+        # validate
+        # -------------------------------------------------- 01.01
         # if widget is already built then raise error
+        # Note that this will also check if parent and root were not set already ;)
         if widget.is_built:
             e.code.NotAllowed(
                 msgs=[
                     f"The widget is already built",
                 ]
             )
-
-        # -------------------------------------------------- 03
-        # if already in children raise error
-        _widget_id = id(widget)
-        _before_id = id(before)
-        _before_index = None
-        for _i, _c in enumerate(self.children):
-            if id(_c) == _widget_id:
+        # -------------------------------------------------- 01.02
+        # if before is specified then make sure that parent of before and self is same
+        if before is not None:
+            if id(before.parent) != id(self):
                 e.validation.NotAllowed(
                     msgs=[
-                        f"Looks like the widget is already "
-                        f"added to parent."
+                        f"The parent of before is not self and hence cannot be added "
+                        f"as child to this parent",
+                        f"Try to check if you want to use move() instead."
                     ]
                 )
-            if id(_c) == _before_id:
-                _before_index = _i
 
-        # -------------------------------------------------- 04
+        # -------------------------------------------------- 02
+        # if already in children raise error
+        _before_index = None
+        _widget_id = id(widget)
+        if before is not None:
+            _before_id = id(before)
+            for _i, _c in enumerate(self.children):
+                if id(_c) == _widget_id:
+                    e.validation.NotAllowed(
+                        msgs=[
+                            f"Looks like the widget is already "
+                            f"added to parent."
+                        ]
+                    )
+                if id(_c) == _before_id:
+                    _before_index = _i
+
+        # -------------------------------------------------- 03
         # set internals
         widget.internal.parent = self
-        widget.internal.before = before
         widget.internal.root = self.root
 
-        # -------------------------------------------------- 05
+        # -------------------------------------------------- 04
         # we can now store widget inside children list
         # Note that guid is used as it is for dict key
         if _before_index is None:
@@ -622,7 +649,7 @@ class Container(Widget, abc.ABC):
         else:
             self.children.insert(_before_index, widget)
 
-        # -------------------------------------------------- 06
+        # -------------------------------------------------- 05
         # if thw parent widget is already built we need to build this widget here
         # else it will be built when build() on super parent is called
         if self.is_built:
@@ -670,6 +697,10 @@ class Form(Widget, abc.ABC):
         """
         from .widget import Group
         return Group()
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.form.{cls.__name__}"
 
     def init(self):
         """
@@ -724,9 +755,12 @@ class Form(Widget, abc.ABC):
             # get value
             v = getattr(self, f_name)
             # --------------------------------------------------- 02.02
-            # if not Hashable class continue
-            # that means Widgets and Callbacks will be clones if default supplied
-            if not isinstance(v, m.HashableClass):
+            # if not Widget class continue
+            # that means Widgets and Containers will be clones if default supplied
+            # While Hashable class and even Callbacks will not be cloned
+            # note that for UI we only need Dpg elements to be clones as they have
+            # build() method
+            if not isinstance(v, Widget):
                 continue
             # --------------------------------------------------- 02.03
             # get field and its default value
@@ -777,12 +811,16 @@ class Form(Widget, abc.ABC):
 
 
 @dataclasses.dataclass
-class Callback(m.Tracker, abc.ABC):
+class Callback(m.YamlRepr, abc.ABC):
     """
     Note that `Callback.fn` will as call back function.
     But when it comes to callback data we need not worry as the fields
     of this instance will serve as data ;)
     """
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.callback.{cls.__name__}"
 
     @abc.abstractmethod
     def fn(
@@ -795,11 +833,11 @@ class Callback(m.Tracker, abc.ABC):
 
 
 class DashboardInternal(m.Internal):
-    is_build_done: bool
+    is_run_called: bool
 
 
 @dataclasses.dataclass
-class Dashboard(m.Tracker):
+class Dashboard(m.YamlRepr):
     """
     Dashboard is not a Widget.
     As of now we think of having only items that do not have parent; like
@@ -845,6 +883,10 @@ class Dashboard(m.Tracker):
             label=self.title,
             width=self.width, height=self.height,
         )
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.dashboard.{cls.__name__}"
 
     @staticmethod
     def is_dearpygui_running() -> bool:
@@ -1005,18 +1047,29 @@ class Dashboard(m.Tracker):
         # noinspection PyArgumentList
         return internal_dpg.get_total_time(**kwargs)
 
+    def build(self):
+        self.primary_window.build()
+
     def run(self):
         # -------------------------------------------------- 01
+        # make sure if was already called
+        if self.internal.has("is_run_called"):
+            e.code.NotAllowed(
+                msgs=[
+                    f"You can run only once ..."
+                ]
+            )
+        # -------------------------------------------------- 02
         # setup dpg
         dpg.create_context()
         dpg.create_viewport()
         dpg.setup_dearpygui()
 
-        # -------------------------------------------------- 02
-        # build
-        self.primary_window.build()
-
         # -------------------------------------------------- 03
+        # build
+        self.build()
+
+        # -------------------------------------------------- 04
         # primary window dpg_id
         _primary_window_dpg_id = self.primary_window.dpg_id
         # set the things for primary window
@@ -1026,9 +1079,9 @@ class Dashboard(m.Tracker):
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
         dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
 
-        # -------------------------------------------------- 03
+        # -------------------------------------------------- 05
         # indicate build is done
-        self.internal.is_build_done = True
+        self.internal.is_run_called = True
 
         # dpg related
         dpg.show_viewport()

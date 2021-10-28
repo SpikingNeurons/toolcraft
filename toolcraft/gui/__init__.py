@@ -1,3 +1,4 @@
+from .__base__ import COLOR_TYPE
 from ._enum import *
 from . import window
 from . import widget

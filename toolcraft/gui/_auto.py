@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-10-25 13:46
+>> Time: 2021-10-28 04:23
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -12,13 +12,13 @@ This code is auto-generated:
 import dearpygui._dearpygui as internal_dpg
 import dearpygui.dearpygui as dpg
 import dataclasses
-import typing as t
 import enum
+import typing as t
 
-from .__base__ import Dpg, Widget, Container, Callback
+from .__base__ import Enum, Dpg, Widget, Container, Callback
 
 
-class EnDir(enum.Enum):
+class EnDir(Enum, enum.Enum):
 
     Left = dpg.mvDir_Left  # 0
     Up = dpg.mvDir_Up  # 2
@@ -27,7 +27,7 @@ class EnDir(enum.Enum):
     NONE = dpg.mvDir_None  # -1
 
 
-class EnPlotColormap(enum.Enum):
+class EnPlotColormap(Enum, enum.Enum):
 
     BrBG = dpg.mvPlotColormap_BrBG  # 12
     Cool = dpg.mvPlotColormap_Cool  # 7
@@ -48,7 +48,7 @@ class EnPlotColormap(enum.Enum):
     Viridis = dpg.mvPlotColormap_Viridis  # 4
 
 
-class EnComboHeight(enum.Enum):
+class EnComboHeight(Enum, enum.Enum):
 
     Small = dpg.mvComboHeight_Small  # 0
     Regular = dpg.mvComboHeight_Regular  # 1
@@ -56,14 +56,14 @@ class EnComboHeight(enum.Enum):
     Largest = dpg.mvComboHeight_Largest  # 3
 
 
-class EnDatePickerLevel(enum.Enum):
+class EnDatePickerLevel(Enum, enum.Enum):
 
     Day = dpg.mvDatePickerLevel_Day  # 0
     Month = dpg.mvDatePickerLevel_Month  # 1
     Year = dpg.mvDatePickerLevel_Year  # 2
 
 
-class EnPlotLocation(enum.Enum):
+class EnPlotLocation(Enum, enum.Enum):
 
     Center = dpg.mvPlot_Location_Center  # 0
     East = dpg.mvPlot_Location_East  # 8
@@ -76,14 +76,14 @@ class EnPlotLocation(enum.Enum):
     West = dpg.mvPlot_Location_West  # 4
 
 
-class EnThemeCat(enum.Enum):
+class EnThemeCat(Enum, enum.Enum):
 
     Core = dpg.mvThemeCat_Core  # 0
     Plots = dpg.mvThemeCat_Plots  # 1
     Nodes = dpg.mvThemeCat_Nodes  # 2
 
 
-class EnNodeAttr(enum.Enum):
+class EnNodeAttr(Enum, enum.Enum):
 
     Input = dpg.mvNode_Attr_Input  # 0
     Output = dpg.mvNode_Attr_Output  # 1
@@ -184,7 +184,12 @@ class _Window(Dpg):
     # on_close (Callable, optional): Callback ran when window is closed.
     on_close: Callback = None
 
+    @property
+    def supports_before(self) -> bool:
+        return False
+
     def build(self) -> t.Union[int, str]:
+
         _ret = internal_dpg.add_window(
             label=self.label,
             user_data=self.user_data,
@@ -292,16 +297,23 @@ class HistogramSeries2D(Widget):
     # outliers (bool, optional): ...
     outliers: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_2d_histogram_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             xbins=self.xbins,
             ybins=self.ybins,
@@ -398,17 +410,24 @@ class Slider3D(Widget):
     # scale (float, optional): Size of the widget.
     scale: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_3d_slider(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -522,16 +541,23 @@ class AreaSeries(Widget):
     # contribute_to_bounds (bool, optional): ...
     contribute_to_bounds: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_area_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             fill=self.fill,
             contribute_to_bounds=self.contribute_to_bounds,
@@ -577,16 +603,23 @@ class BarSeries(Widget):
     # horizontal (bool, optional): ...
     horizontal: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_bar_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             weight=self.weight,
             horizontal=self.horizontal,
@@ -662,10 +695,16 @@ class Button(Widget):
     # direction (int, optional): Sets the cardinal direction for the arrow buy using constants mvDir_Left, mvDir_Up, mvDir_Down, mvDir_Right, mvDir_None. Arrow keyword must be set to True.
     direction: EnDir = EnDir.Left
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_button(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -796,10 +835,17 @@ class CandleSeries(Widget):
     # tooltip (bool, optional): ...
     tooltip: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_candle_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             dates=self.dates,
             opens=self.opens,
             closes=self.closes,
@@ -808,7 +854,7 @@ class CandleSeries(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             bull_color=self.bull_color,
             bear_color=self.bear_color,
@@ -877,15 +923,22 @@ class CheckBox(Widget):
     # default_value (bool, optional): Sets the default value of the checkmark
     default_value: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_checkbox(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -1026,10 +1079,16 @@ class ColorButton(Widget):
     # no_drag_drop (bool, optional): Disable ability to drag and drop small preview (color square) to apply colors to other items.
     no_drag_drop: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_color_button(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
@@ -1170,10 +1229,16 @@ class ColormapButton(Widget):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_colormap_button(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
@@ -1302,17 +1367,24 @@ class ColormapScale(Widget):
     # max_scale (float, optional): Sets the max number of the color scale. Typically is the same as the max scale from the heat series.
     max_scale: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_colormap_scale(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,
@@ -1398,10 +1470,16 @@ class ColormapSlider(Widget):
     # default_value (float, optional): ...
     default_value: float = 0.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_colormap_slider(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -1534,17 +1612,24 @@ class Combo(Widget):
     # height_mode (int, optional): Controlls the number of items shown in the dropdown by the constants mvComboHeight_Small, mvComboHeight_Regular, mvComboHeight_Large, mvComboHeight_Largest
     height_mode: EnComboHeight = EnComboHeight.Regular
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_combo(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -1674,10 +1759,16 @@ class DatePicker(Widget):
     # level (int, optional): Use avaliable constants. mvDatePickerLevel_Day, mvDatePickerLevel_Month, mvDatePickerLevel_Year
     level: EnDatePickerLevel = EnDatePickerLevel.Day
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_date_picker(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -1831,16 +1922,23 @@ class DragFloat(Widget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_drag_float(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -1999,16 +2097,23 @@ class DragFloatX(Widget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_drag_floatx(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -2165,16 +2270,23 @@ class DragInt(Widget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_drag_int(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -2333,16 +2445,23 @@ class DragIntX(Widget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_drag_intx(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -2463,14 +2582,21 @@ class DragLine(Widget):
     # vertical (bool, optional): ...
     vertical: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_drag_line(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             callback=self.callback_fn,
             show=self.show,
             default_value=self.default_value,
@@ -2541,14 +2667,21 @@ class DragPoint(Widget):
     # show_label (bool, optional): ...
     show_label: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_drag_point(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             callback=self.callback_fn,
             show=self.show,
             default_value=self.default_value,
@@ -2621,10 +2754,17 @@ class ErrorSeries(Widget):
     # horizontal (bool, optional): ...
     horizontal: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_error_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             negative=self.negative,
@@ -2632,7 +2772,7 @@ class ErrorSeries(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             contribute_to_bounds=self.contribute_to_bounds,
             horizontal=self.horizontal,
@@ -2675,10 +2815,16 @@ class FileExtension(Widget):
     # color (Union[List[float], Tuple[float, ...]], optional): Color for the text that will be shown with specified extensions.
     color: t.Union[t.List[float], t.Tuple[float, ...]] = (-255, 0, 0, 255)
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_file_extension(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             extension=self.extension,
             label=self.label,
             user_data=self.user_data,
@@ -2744,17 +2890,24 @@ class HeatSeries(Widget):
     # contribute_to_bounds (bool, optional): ...
     contribute_to_bounds: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_heat_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             rows=self.rows,
             cols=self.cols,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             scale_min=self.scale_min,
             scale_max=self.scale_max,
@@ -2819,15 +2972,22 @@ class HistogramSeries(Widget):
     # contribute_to_bounds (bool, optional): ...
     contribute_to_bounds: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_histogram_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             bins=self.bins,
             bar_scale=self.bar_scale,
@@ -2843,7 +3003,7 @@ class HistogramSeries(Widget):
 
 
 @dataclasses.dataclass
-class HlineSeries(Widget):
+class HLineSeries(Widget):
     """
     Refer:
     >>> dpg.add_hline_series
@@ -2870,15 +3030,22 @@ class HlineSeries(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_hline_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
         )
         
@@ -2973,16 +3140,23 @@ class InputFloat(Widget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_input_float(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3147,16 +3321,23 @@ class InputFloatX(Widget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_input_floatx(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3320,16 +3501,23 @@ class InputInt(Widget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_input_int(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3490,16 +3678,23 @@ class InputIntX(Widget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_input_intx(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3674,17 +3869,24 @@ class InputText(Widget):
     # on_enter (bool, optional): Only runs callback on enter key press.
     if_entered: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_input_text(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3833,17 +4035,24 @@ class KnobFloat(Widget):
     # max_value (float, optional): Applies upper limit to value.
     max_value: float = 100.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_knob_float(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3946,16 +4155,23 @@ class LineSeries(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_line_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
         )
         
@@ -4029,17 +4245,24 @@ class Listbox(Widget):
     # num_items (int, optional): Expands the height of the listbox to show specified number of items.
     num_items: int = 3
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_listbox(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -4172,10 +4395,16 @@ class LoadingIndicator(Widget):
     # secondary_color (Union[List[int], Tuple[int, ...]], optional): Background of the dots in dot mode.
     secondary_color: t.Union[t.List[int], t.Tuple[int, ...]] = (29, 151, 236, 103)
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_loading_indicator(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4271,10 +4500,16 @@ class MenuItem(Widget):
     # check (bool, optional): Displays a checkmark on the menu item when it is selected and placed in a menu.
     check: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_menu_item(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4380,10 +4615,17 @@ class PieSeries(Widget):
     # normalize (bool, optional): ...
     normalize: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_pie_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             radius=self.radius,
@@ -4392,7 +4634,7 @@ class PieSeries(Widget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             format=self.format,
             angle=self.angle,
@@ -4439,14 +4681,21 @@ class PlotAnnotation(Widget):
     # clamped (bool, optional): ...
     clamped: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_plot_annotation(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             default_value=self.default_value,
             offset=self.offset,
@@ -4518,17 +4767,24 @@ class ProgressBar(Widget):
     # default_value (float, optional): Normalized value to fill the bar from 0.0 to 1.0.
     default_value: float = 0.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_progress_bar(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
@@ -4644,16 +4900,23 @@ class RadioButton(Widget):
     # horizontal (bool, optional): Displays the radio options horizontally.
     horizontal: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_radio_button(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -4756,16 +5019,23 @@ class ScatterSeries(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_scatter_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
         )
         
@@ -4839,17 +5109,24 @@ class Selectable(Widget):
     # span_columns (bool, optional): Forces the selectable to span the width of all columns if placed in a table.
     span_columns: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_selectable(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -4949,10 +5226,16 @@ class Separator(Widget):
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_separator(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4998,16 +5281,23 @@ class ShadeSeries(Widget):
     # y2 (Any, optional): ...
     y2: t.Any = dataclasses.field(default_factory=lambda: [])
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_shade_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y1=self.y1,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             y2=self.y2,
         )
@@ -5085,17 +5375,24 @@ class SimplePlot(Widget):
     # max_scale (float, optional): ...
     max_scale: float = 0.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_simple_plot(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
@@ -5232,17 +5529,24 @@ class SliderFloat(Widget):
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
     format: str = '%.3f'
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_slider_float(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -5398,16 +5702,23 @@ class SliderFloatX(Widget):
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%.3f'
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_slider_floatx(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -5566,17 +5877,24 @@ class SliderInt(Widget):
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%d'
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_slider_int(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -5732,16 +6050,23 @@ class SliderIntX(Widget):
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%d'
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_slider_intx(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -5852,10 +6177,16 @@ class Spacer(Widget):
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_spacer(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5900,16 +6231,23 @@ class StairSeries(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_stair_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
         )
         
@@ -5950,17 +6288,24 @@ class StemSeries(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_stem_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
         )
         
@@ -6025,10 +6370,16 @@ class TabButton(Widget):
     # no_tooltip (bool, optional): Disable tooltip for the given tab.
     no_tooltip: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_tab_button(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6183,10 +6534,16 @@ class TableColumn(Widget):
     # indent_disable (bool, optional): Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
     indent_disable: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_table_column(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6279,16 +6636,23 @@ class Text(Widget):
     # show_label (bool, optional): Displays the label to teh right of the text.
     show_label: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_text(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
@@ -6382,16 +6746,23 @@ class TextPoint(Widget):
     # vertical (bool, optional): ...
     vertical: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_text_point(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
             x_offset=self.x_offset,
             y_offset=self.y_offset,
@@ -6456,10 +6827,16 @@ class TimePicker(Widget):
     # hour24 (bool, optional): Show 24 hour clock instead of 12 hour.
     hour24: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_time_picker(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6535,7 +6912,7 @@ class TimePicker(Widget):
 
 
 @dataclasses.dataclass
-class VlineSeries(Widget):
+class VLineSeries(Widget):
     """
     Refer:
     >>> dpg.add_vline_series
@@ -6562,15 +6939,22 @@ class VlineSeries(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_vline_series(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             x=self.x,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             show=self.show,
         )
         
@@ -6647,10 +7031,16 @@ class ChildWindow(Container):
     # menubar (bool, optional): Shows/Hides the menubar at the top.
     menubar: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_child_window(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6725,10 +7115,16 @@ class Clipper(Container):
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_clipper(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6808,10 +7204,16 @@ class CollapsingHeader(Container):
     # bullet (bool, optional): Display a bullet instead of arrow.
     bullet: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_collapsing_header(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6909,10 +7311,16 @@ class DrawArrow(Widget):
     # size (int, optional): ...
     size: int = 4
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_arrow(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             p1=self.p1,
             p2=self.p2,
             label=self.label,
@@ -6970,10 +7378,16 @@ class DrawBezierCubic(Widget):
     # segments (int, optional): Number of segments to approximate bezier curve.
     segments: int = 0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_bezier_cubic(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -7030,10 +7444,16 @@ class DrawBezierQuadratic(Widget):
     # segments (int, optional): Number of segments to approximate bezier curve.
     segments: int = 0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_bezier_quadratic(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -7089,10 +7509,16 @@ class DrawCircle(Widget):
     # segments (int, optional): Number of segments to approximate circle.
     segments: int = 0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_circle(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             center=self.center,
             radius=self.radius,
             label=self.label,
@@ -7148,10 +7574,16 @@ class DrawEllipse(Widget):
     # segments (int, optional): Number of segments to approximate bezier curve.
     segments: int = 32
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_ellipse(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             pmin=self.pmin,
             pmax=self.pmax,
             label=self.label,
@@ -7189,10 +7621,16 @@ class DrawLayer(Container):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_draw_layer(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7236,10 +7674,16 @@ class DrawLine(Widget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_line(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             p1=self.p1,
             p2=self.p2,
             label=self.label,
@@ -7287,10 +7731,16 @@ class DrawPolygon(Widget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_polygon(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             points=self.points,
             label=self.label,
             user_data=self.user_data,
@@ -7338,10 +7788,16 @@ class DrawPolyline(Widget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_polyline(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             points=self.points,
             label=self.label,
             user_data=self.user_data,
@@ -7398,10 +7854,16 @@ class DrawQuad(Widget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_quad(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -7473,10 +7935,16 @@ class DrawRectangle(Widget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_rectangle(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             pmin=self.pmin,
             pmax=self.pmax,
             label=self.label,
@@ -7531,10 +7999,16 @@ class DrawText(Widget):
     # size (float, optional): ...
     size: float = 10.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_text(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             pos=self.pos,
             text=self.text,
             label=self.label,
@@ -7588,10 +8062,16 @@ class DrawTriangle(Widget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.draw_triangle(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             p1=self.p1,
             p2=self.p2,
             p3=self.p3,
@@ -7608,7 +8088,7 @@ class DrawTriangle(Widget):
 
 
 @dataclasses.dataclass
-class Drawlist(Container):
+class DrawList(Container):
     """
     Refer:
     >>> dpg.drawlist
@@ -7653,10 +8133,16 @@ class Drawlist(Container):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_drawlist(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             width=self.width,
             height=self.height,
             label=self.label,
@@ -7723,10 +8209,16 @@ class FilterSet(Container):
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_filter_set(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7800,10 +8292,16 @@ class Group(Container):
     # xoffset (float, optional): Offset from containing window x item location within group.
     xoffset: float = 0.0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_group(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7908,10 +8406,16 @@ class Menu(Container):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_menu(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7996,10 +8500,16 @@ class Node(Container):
     # draggable (bool, optional): Allow node to be draggable.
     draggable: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_node(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8097,10 +8607,16 @@ class NodeAttribute(Container):
     # category (str, optional): Category
     category: str = 'general'
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_node_attribute(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8241,10 +8757,16 @@ class _Plot(Container):
     # vertical_mod (int, optional): expands active box selection/query vertically to plot edge when held
     vertical_mod: int = 16
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_plot(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8430,10 +8952,16 @@ class SubPlots(Container):
     # column_major (bool, optional): subplots are added in column major order instead of the default row major order
     column_major: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_subplots(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             rows=self.rows,
             columns=self.columns,
             label=self.label,
@@ -8535,10 +9063,16 @@ class Tab(Container):
     # order_mode (bool, optional): set using a constant
     order_mode: bool = 0
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_tab(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8622,10 +9156,16 @@ class TabBar(Container):
     # reorderable (bool, optional): Allows for the user to change the order of the tabs.
     reorderable: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_tab_bar(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8794,17 +9334,24 @@ class _Table(Container):
     # no_saved_settings (bool, optional): Never load/save settings in .ini file.
     no_saved_settings: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
         _ret = internal_dpg.add_table(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=getattr(self.source, 'dpg_id', 0),
+            source=_source_dpg_id,
             callback=self.callback_fn,
             show=self.show,
             pos=self.pos,
@@ -8890,10 +9437,16 @@ class TableCell(Container):
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_table_cell(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8933,10 +9486,16 @@ class TableRow(Container):
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_table_row(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8973,10 +9532,16 @@ class ThemeComponent(Container):
     # enabled_state (bool, optional): ...
     enabled_state: bool = True
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_theme_component(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             item_type=self.item_type,
             label=self.label,
             user_data=self.user_data,
@@ -9054,10 +9619,16 @@ class TreeNode(Container):
     # selectable (bool, optional): Makes the tree selectable.
     selectable: bool = False
 
+    @property
+    def supports_before(self) -> bool:
+        return True
+
     def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
         _ret = internal_dpg.add_tree_node(
-            parent=self.internal.parent.dpg_id,
-            before=self.internal.before.dpg_id,
+            parent=_parent_dpg_id,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,

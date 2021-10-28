@@ -1,3 +1,3 @@
 from .core import *
 from .auto import *
-from .forms import *
+from .form import *

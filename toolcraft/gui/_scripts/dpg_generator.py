@@ -327,8 +327,14 @@ class DpgDef:
             return "_Plot"
         if self.fn == dpg.add_checkbox:
             return "CheckBox"
+        if self.fn == dpg.drawlist:
+            return "DrawList"
         if self.fn == dpg.subplots:
             return "SubPlots"
+        if self.fn == dpg.add_vline_series:
+            return "VLineSeries"
+        if self.fn == dpg.add_hline_series:
+            return "HLineSeries"
         if self.fn == dpg.add_3d_slider:
             return "Slider3D"
         if self.fn == dpg.add_2d_histogram_series:
@@ -374,7 +380,7 @@ class DpgDef:
         _ret = []
 
         # ignore params
-        _ignore_params = ['id', 'parent', 'before', 'tag', 'kwargs']
+        _ignore_params = ['id', 'parent', 'tag', 'before', 'kwargs']
 
         # ignore axis param if needed
         if self.fn in [dpg.plot_axis, dpg.add_plot_axis]:
@@ -416,17 +422,18 @@ class DpgDef:
 
             # if param is enum we will get _enum_def
             _enum_def = None
-            if _param_name not in ['source']:
+            if _param_name not in ['source', 'before']:
                 _enum_def = CodeMaker.fetch_enum_def_from_fn_param_doc(
                     method=self.fn, param_name=_param_name, param_doc=_param_doc
                 )
-                self.enum_defs_needed.append(_enum_def)
+                if _enum_def is not None:
+                    self.enum_defs_needed.append(_enum_def)
 
             # some replacements
             if _param_name == "source":
                 _param_type = "t.Optional[Widget]"
                 _param_value = "None"
-                _param_dpg_value = "getattr(self.source, 'dpg_id', 0)"
+                _param_dpg_value = "_source_dpg_id"
             if _param_name == "user_data":
                 _param_type = "t.Union[Widget, t.List[Widget]]"
                 _param_value = "None"
@@ -503,18 +510,39 @@ class DpgDef:
             _lines += [""]
 
         # ------------------------------------------------------- 03.03
-        # add build method
+        # add properties
         # ------------------------------------------------------- 03.03.01
+        # property supports_before
+        _lines += [
+            "\t@property",
+            "\tdef supports_before(self) -> bool:",
+            f"\t\treturn {self.is_before_param_present}",
+            "",
+        ]
+
+        # ------------------------------------------------------- 03.04
+        # add build method
+        # ------------------------------------------------------- 03.04.01
+        # get same values in local vars
+        _local_val_lines = []
+        if self.is_parent_param_present:
+            _local_val_lines += ["\t\t_parent_dpg_id = self.internal.parent.dpg_id"]
+        if self.is_source_param_present:
+            _local_val_lines += ["\t\t_source_dpg_id = getattr(self.source, 'dpg_id', 0)"]
+        if bool(_local_val_lines):
+            _local_val_lines = [""] + _local_val_lines
+        # ------------------------------------------------------- 03.04.02
+        # add some internal params needed for dpg call
         _internal_params = {}
         if self.is_parent_param_present:
-            _internal_params['parent'] = "self.internal.parent.dpg_id"
-        if self.is_before_param_present:
-            _internal_params['before'] = "self.internal.before.dpg_id"
-        # ------------------------------------------------------- 03.03.02
+            _internal_params['parent'] = "_parent_dpg_id"
+        # ------------------------------------------------------- 03.04.03
         _parametrized_params = {} if self.parametrize is None else self.parametrize
-        # ------------------------------------------------------- 03.03.03
+        # ------------------------------------------------------- 03.04.04
         _lines += [
             "\tdef build(self) -> t.Union[int, str]:",
+            *_local_val_lines,
+            "",
             f"\t\t_ret = {self.call_prefix}(",
             *[f"\t\t\t{_k}={_v}," for _k, _v in _internal_params.items()],
             *[f"\t\t\t{_k}={_v}," for _k, _v in _parametrized_params.items()],
@@ -527,7 +555,7 @@ class DpgDef:
             f"\t\treturn _ret",
         ]
 
-        # ------------------------------------------------------- 03.04
+        # ------------------------------------------------------- 03.05
         # add methods for callback params
         for _pd in self.param_defs:
             if not _pd.is_callback:
@@ -619,7 +647,7 @@ class EnumDef:
         _lines = [
             "",
             "",
-            f"class {self.enum_name}(enum.Enum):",
+            f"class {self.enum_name}(Enum, enum.Enum):",
             "",
             # "\tDEFAULT = 0",
         ]
@@ -712,10 +740,10 @@ This code is auto-generated:
 import dearpygui._dearpygui as internal_dpg
 import dearpygui.dearpygui as dpg
 import dataclasses
-import typing as t
 import enum
+import typing as t
 
-from .__base__ import Dpg, Widget, Container, Callback
+from .__base__ import Enum, Dpg, Widget, Container, Callback
 '''
         return _header
 
@@ -1023,5 +1051,13 @@ from .__base__ import Dpg, Widget, Container, Callback
         self.make_widget_py()
 
 
+def main():
+    _cm = CodeMaker()
+    _cm.make()
+    for _dpg_def in _cm.all_dpg_defs:
+        if not _dpg_def.is_before_param_present:
+            print(_dpg_def.is_parent_param_present, _dpg_def.fn)
+
+
 if __name__ == '__main__':
-    CodeMaker().make()
+    main()

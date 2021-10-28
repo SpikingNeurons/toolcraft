@@ -145,6 +145,7 @@ def check_things_not_to_be_overridden(
         StorageHashable: ['path'],
         ResultsFolder: ['store'],
         Form: ['build'],
+        Dashboard: ['run'],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_OVERRIDDEN = to_check
