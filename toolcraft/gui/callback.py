@@ -131,21 +131,13 @@ class HashableMethodRunnerCallback(Callback):
     """
     hashable: m.HashableClass
     callable_name: str
-    receiver: widget.Widget
+    receiver: widget.ContainerWidget
     allow_refresh: bool
     tab_group_name: str = None
 
     def init_validate(self):
         # call super
         super().init_validate()
-
-        # check if receiver can accept child
-        if not self.receiver.has_dpg_contextmanager:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"We expect a receiver that can accept children..."
-                ]
-            )
 
         # if tab_group_name is supplied that means you are sharing receiver
         # object across multiple Callbacks with same tab_group_name
@@ -211,20 +203,12 @@ class HashableMethodsRunnerCallback(Callback):
     info_button: bool
     callable_names: t.List[str]
     callable_labels: t.List[str]
-    receiver: widget.Widget
+    receiver: widget.ContainerWidget
     allow_refresh: bool
 
     def init_validate(self):
         # call super
         super().init_validate()
-
-        # check if receiver can accept child
-        if not self.receiver.has_dpg_contextmanager:
-            e.validation.NotAllowed(
-                msgs=[
-                    f"We expect a receiver that can accept children..."
-                ]
-            )
 
         # length must be same
         if len(self.callable_names) != len(self.callable_labels):
@@ -275,7 +259,6 @@ class HashableMethodsRunnerCallback(Callback):
             },
         )
         _receiver.add_child(
-            guid=_unique_guid,
             widget=_result_widget
         )
 

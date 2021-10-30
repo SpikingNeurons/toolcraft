@@ -1,4 +1,5 @@
-from .__base__ import Widget
+# noinspection PyUnresolvedReferences
+from .__base__ import Widget, ContainerWidget, MovableWidget, MovableContainerWidget
 
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
@@ -248,10 +249,6 @@ from ._auto import HandlerRegistry
 # noinspection PyUnresolvedReferences
 from ._auto import ItemHandlerRegistry
 # noinspection PyUnresolvedReferences
-from ._auto import ItemPool
-# noinspection PyUnresolvedReferences
-from ._auto import ItemSet
-# noinspection PyUnresolvedReferences
 from ._auto import Menu
 # noinspection PyUnresolvedReferences
 from ._auto import MenuBar
@@ -259,8 +256,6 @@ from ._auto import MenuBar
 from ._auto import Node
 # noinspection PyUnresolvedReferences
 from ._auto import NodeAttribute
-# noinspection PyUnresolvedReferences
-from ._auto import Stage
 # noinspection PyUnresolvedReferences
 from ._auto import SubPlots
 # noinspection PyUnresolvedReferences
@@ -271,8 +266,6 @@ from ._auto import TabBar
 from ._auto import TemplateRegistry
 # noinspection PyUnresolvedReferences
 from ._auto import TextureRegistry
-# noinspection PyUnresolvedReferences
-from ._auto import Theme
 # noinspection PyUnresolvedReferences
 from ._auto import ThemeComponent
 # noinspection PyUnresolvedReferences

@@ -22,12 +22,12 @@ class WindowInternal(__base__.DpgInternal):
             )
 
 
-@dataclasses.dataclass
-class Window(_auto.Window):
+class _DowngradeContainerWidget:
 
     @property
     @util.CacheResult
     def internal(self) -> WindowInternal:
+        # noinspection PyTypeChecker
         return WindowInternal(owner=self)
 
     @property
@@ -60,3 +60,13 @@ class Window(_auto.Window):
 
     def setup(self, dash_board: dashboard.Dashboard):
         self.internal.dash_board = dash_board
+
+
+@dataclasses.dataclass
+class Window(_DowngradeContainerWidget, _auto.Window):
+    ...
+
+
+@dataclasses.dataclass
+class FileDialog(_DowngradeContainerWidget, _auto.FileDialog):
+    ...

@@ -811,6 +811,16 @@ class Callback(m.YamlRepr, abc.ABC):
     of this instance will serve as data ;)
     """
 
+    def __post_init__(self):
+        self.init_validate()
+        self.init()
+
+    def init_validate(self):
+        ...
+
+    def init(self):
+        ...
+
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.callback.{cls.__name__}"
@@ -823,3 +833,21 @@ class Callback(m.YamlRepr, abc.ABC):
         user_data: t.Union[Widget, t.List[Widget]]
     ):
         ...
+
+
+@dataclasses.dataclass(frozen=True)
+class Registry(m.YamlRepr, abc.ABC):
+
+    def __post_init__(self):
+        self.init_validate()
+        self.init()
+
+    def init_validate(self):
+        ...
+
+    def init(self):
+        ...
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.registry.{cls.__name__}"

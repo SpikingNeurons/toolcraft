@@ -250,6 +250,7 @@ _SKIP_METHODS = [
     dpg.set_global_font_scale, dpg.set_frame_callback, dpg.set_exit_callback,
     dpg.split_frame,
     dpg.track_item, dpg.untrack_item,
+    dpg.theme, dpg.item_pool, dpg.item_set, dpg.stage,
 ]
 
 
@@ -283,6 +284,12 @@ class DpgDef:
             return False
 
     @property
+    def is_frozen(self) -> bool:
+        if self.is_registry:
+            return True
+        return False
+
+    @property
     def _call_prefix(self) -> str:
 
         _call_prefix = \
@@ -308,8 +315,12 @@ class DpgDef:
                     _class_name = "ContainerWidget"
                 else:
                     _class_name = "Widget"
+        elif self.is_registry:
+            _class_name = "Registry"
         else:
-            if self.fn == dpg.window:
+            if self.fn in [
+                dpg.window, dpg.file_dialog,
+            ]:
                 _class_name = "ContainerWidget"
         return _class_name
 
@@ -502,11 +513,14 @@ class DpgDef:
         # ------------------------------------------------------- 03
         # make code lines
         # ------------------------------------------------------- 03.01
+        _frozen = ""
+        if self.is_frozen:
+            _frozen = "(frozen=True)"
         # code header
         _lines = [
             "",
             "",
-            "@dataclasses.dataclass",
+            f"@dataclasses.dataclass{_frozen}",
             f"class {self.name}({self.super_class_name}):",
             '\t"""',
             "\tRefer:",
@@ -615,6 +629,9 @@ class DpgDef:
         self.is_container = self.fn_src.find("@contextmanager") != -1
 
         # -------------------------------------------------------- 03
+        self.is_registry = self.fn.__name__.find("registry") != -1
+
+        # -------------------------------------------------------- 04
         self.is_before_param_present = False
         self.is_source_param_present = False
         self.is_parent_param_present = False
@@ -632,7 +649,7 @@ class DpgDef:
             if not self.is_parent_param_present:
                 raise Exception("If before is present then parent should also be present")
 
-        # -------------------------------------------------------- 04
+        # -------------------------------------------------------- 05
         self.name = self._name
         self.call_prefix = self._call_prefix
         self.super_class_name = self._super_class_name
@@ -758,6 +775,7 @@ from .__base__ import MovableWidget
 from .__base__ import ContainerWidget
 from .__base__ import MovableContainerWidget
 from .__base__ import Callback
+from .__base__ import Registry
 '''
         return _header
 

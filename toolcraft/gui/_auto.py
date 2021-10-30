@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-10-30 13:30
+>> Time: 2021-10-30 18:34
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -21,6 +21,7 @@ from .__base__ import MovableWidget
 from .__base__ import ContainerWidget
 from .__base__ import MovableContainerWidget
 from .__base__ import Callback
+from .__base__ import Registry
 
 
 class EnDir(Enum, enum.Enum):
@@ -9100,8 +9101,8 @@ class CollapsingHeader(MovableContainerWidget):
             )
 
 
-@dataclasses.dataclass
-class ColormapRegistry(___):
+@dataclasses.dataclass(frozen=True)
+class ColormapRegistry(Registry):
     """
     Refer:
     >>> dpg.colormap_registry
@@ -10032,7 +10033,7 @@ class DrawList(MovableContainerWidget):
 
 
 @dataclasses.dataclass
-class FileDialog(___):
+class FileDialog(ContainerWidget):
     """
     Refer:
     >>> dpg.file_dialog
@@ -10205,8 +10206,8 @@ class Font(ContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
-class FontRegistry(___):
+@dataclasses.dataclass(frozen=True)
+class FontRegistry(Registry):
     """
     Refer:
     >>> dpg.font_registry
@@ -10364,8 +10365,8 @@ class Group(MovableContainerWidget):
             )
 
 
-@dataclasses.dataclass
-class HandlerRegistry(___):
+@dataclasses.dataclass(frozen=True)
+class HandlerRegistry(Registry):
     """
     Refer:
     >>> dpg.handler_registry
@@ -10398,8 +10399,8 @@ class HandlerRegistry(___):
         return _ret
 
 
-@dataclasses.dataclass
-class ItemHandlerRegistry(___):
+@dataclasses.dataclass(frozen=True)
+class ItemHandlerRegistry(Registry):
     """
     Refer:
     >>> dpg.item_handler_registry
@@ -10427,74 +10428,6 @@ class ItemHandlerRegistry(___):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ItemPool(___):
-    """
-    Refer:
-    >>> dpg.item_pool
-
-     Adds an item pool.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-
-        _ret = internal_dpg.add_item_pool(
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class ItemSet(___):
-    """
-    Refer:
-    >>> dpg.item_set
-
-     Adds an item set to an item pool.
-
-    """
-
-    # type (int): ...
-    type: int
-
-    # count (int): ...
-    count: int
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-
-        _ret = internal_dpg.add_item_set(
-            type=self.type,
-            count=self.count,
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
         )
         
         return _ret
@@ -11226,36 +11159,6 @@ class YAxis(ContainerWidget):
 
 
 @dataclasses.dataclass
-class Stage(___):
-    """
-    Refer:
-    >>> dpg.stage
-
-     Adds a stage.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-
-        _ret = internal_dpg.add_stage(
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
 class SubPlots(MovableContainerWidget):
     """
     Refer:
@@ -11874,8 +11777,8 @@ class TableRow(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
-class TemplateRegistry(___):
+@dataclasses.dataclass(frozen=True)
+class TemplateRegistry(Registry):
     """
     Refer:
     >>> dpg.template_registry
@@ -11904,8 +11807,8 @@ class TemplateRegistry(___):
         return _ret
 
 
-@dataclasses.dataclass
-class TextureRegistry(___):
+@dataclasses.dataclass(frozen=True)
+class TextureRegistry(Registry):
     """
     Refer:
     >>> dpg.texture_registry
@@ -11933,36 +11836,6 @@ class TextureRegistry(___):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             show=self.show,
-        )
-        
-        return _ret
-
-
-@dataclasses.dataclass
-class Theme(___):
-    """
-    Refer:
-    >>> dpg.theme
-
-     Adds a theme.
-
-    """
-
-    # label (str, optional): Overrides 'name' as label.
-    label: str = None
-
-    # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
-    def build(self) -> t.Union[int, str]:
-
-        _ret = internal_dpg.add_theme(
-            label=self.label,
-            user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
         )
         
         return _ret
@@ -12179,8 +12052,8 @@ class TreeNode(MovableContainerWidget):
             )
 
 
-@dataclasses.dataclass
-class ValueRegistry(___):
+@dataclasses.dataclass(frozen=True)
+class ValueRegistry(Registry):
     """
     Refer:
     >>> dpg.value_registry
