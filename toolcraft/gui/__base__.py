@@ -803,7 +803,7 @@ class Form(MovableWidget, abc.ABC):
         return self.form_fields_container.dpg_id
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class Callback(m.YamlRepr, abc.ABC):
     """
     Note that `Callback.fn` will as call back function.
@@ -818,8 +818,8 @@ class Callback(m.YamlRepr, abc.ABC):
     @abc.abstractmethod
     def fn(
         self,
-        sender: Dpg,
+        sender: Widget,
         app_data: t.Any,
-        user_data: t.Union[Dpg, t.List[Dpg]]
+        user_data: t.Union[Widget, t.List[Widget]]
     ):
         ...

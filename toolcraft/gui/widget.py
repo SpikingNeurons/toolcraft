@@ -1,3 +1,5 @@
+from .__base__ import Widget
+
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
 from ._auto import HistogramSeries2D

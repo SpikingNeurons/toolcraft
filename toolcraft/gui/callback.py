@@ -9,7 +9,7 @@ from . import widget, asset
 from .__base__ import Callback
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class SetThemeCallback(Callback):
     """
     todo: we will get rid of this callback in favour of assets module ...
@@ -43,7 +43,7 @@ class SetThemeCallback(Callback):
         self,
         sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]],
     ):
         _theme_str = dpg.get_value(item=sender.dpg_id)
         if _theme_str == "Dark":
@@ -82,7 +82,7 @@ class CloseWidgetCallback(Callback):
         self,
         sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]],
     ):
         # sender.parent.delete()
         self.widget_to_delete.delete()
@@ -110,7 +110,7 @@ class RefreshWidgetCallback(Callback):
         self,
         sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]],
     ):
         sender.parent.delete()
         self.refresh_callback.fn(
@@ -163,7 +163,7 @@ class HashableMethodRunnerCallback(Callback):
         self,
         sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]],
     ):
         # get some vars
         # _sender = self.sender
