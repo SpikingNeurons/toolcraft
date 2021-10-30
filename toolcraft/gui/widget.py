@@ -8,6 +8,8 @@ from ._auto import AreaSeries
 # noinspection PyUnresolvedReferences
 from ._auto import BarSeries
 # noinspection PyUnresolvedReferences
+from ._auto import BoolValue
+# noinspection PyUnresolvedReferences
 from ._auto import Button
 # noinspection PyUnresolvedReferences
 from ._auto import CandleSeries
@@ -15,6 +17,10 @@ from ._auto import CandleSeries
 from ._auto import CheckBox
 # noinspection PyUnresolvedReferences
 from ._auto import ColorButton
+# noinspection PyUnresolvedReferences
+from ._auto import ColorValue
+# noinspection PyUnresolvedReferences
+from ._auto import Colormap
 # noinspection PyUnresolvedReferences
 from ._auto import ColormapButton
 # noinspection PyUnresolvedReferences
@@ -25,6 +31,10 @@ from ._auto import ColormapSlider
 from ._auto import Combo
 # noinspection PyUnresolvedReferences
 from ._auto import DatePicker
+# noinspection PyUnresolvedReferences
+from ._auto import Double4Value
+# noinspection PyUnresolvedReferences
+from ._auto import DoubleValue
 # noinspection PyUnresolvedReferences
 from ._auto import DragFloat
 # noinspection PyUnresolvedReferences
@@ -38,9 +48,23 @@ from ._auto import DragLine
 # noinspection PyUnresolvedReferences
 from ._auto import DragPoint
 # noinspection PyUnresolvedReferences
+from ._auto import DynamicTexture
+# noinspection PyUnresolvedReferences
 from ._auto import ErrorSeries
 # noinspection PyUnresolvedReferences
 from ._auto import FileExtension
+# noinspection PyUnresolvedReferences
+from ._auto import Float4Value
+# noinspection PyUnresolvedReferences
+from ._auto import FloatValue
+# noinspection PyUnresolvedReferences
+from ._auto import FloatVectValue
+# noinspection PyUnresolvedReferences
+from ._auto import FontChars
+# noinspection PyUnresolvedReferences
+from ._auto import FontRange
+# noinspection PyUnresolvedReferences
+from ._auto import FontRangeHint
 # noinspection PyUnresolvedReferences
 from ._auto import HeatSeries
 # noinspection PyUnresolvedReferences
@@ -58,6 +82,38 @@ from ._auto import InputIntX
 # noinspection PyUnresolvedReferences
 from ._auto import InputText
 # noinspection PyUnresolvedReferences
+from ._auto import Int4Value
+# noinspection PyUnresolvedReferences
+from ._auto import IntValue
+# noinspection PyUnresolvedReferences
+from ._auto import ItemActivatedHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemActiveHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemClickedHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemDeactivatedAfterEditHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemDeactivatedHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemEditedHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemFocusHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemHoverHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemResizeHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemToggledOpenHandler
+# noinspection PyUnresolvedReferences
+from ._auto import ItemVisibleHandler
+# noinspection PyUnresolvedReferences
+from ._auto import KeyDownHandler
+# noinspection PyUnresolvedReferences
+from ._auto import KeyPressHandler
+# noinspection PyUnresolvedReferences
+from ._auto import KeyReleaseHandler
+# noinspection PyUnresolvedReferences
 from ._auto import KnobFloat
 # noinspection PyUnresolvedReferences
 from ._auto import LineSeries
@@ -68,19 +124,39 @@ from ._auto import LoadingIndicator
 # noinspection PyUnresolvedReferences
 from ._auto import MenuItem
 # noinspection PyUnresolvedReferences
+from ._auto import MouseClickHandler
+# noinspection PyUnresolvedReferences
+from ._auto import MouseDoubleClickHandler
+# noinspection PyUnresolvedReferences
+from ._auto import MouseDownHandler
+# noinspection PyUnresolvedReferences
+from ._auto import MouseDragHandler
+# noinspection PyUnresolvedReferences
+from ._auto import MouseMoveHandler
+# noinspection PyUnresolvedReferences
+from ._auto import MouseReleaseHandler
+# noinspection PyUnresolvedReferences
+from ._auto import MouseWheelHandler
+# noinspection PyUnresolvedReferences
 from ._auto import PieSeries
 # noinspection PyUnresolvedReferences
 from ._auto import PlotAnnotation
 # noinspection PyUnresolvedReferences
+from ._auto import PlotLegend
+# noinspection PyUnresolvedReferences
 from ._auto import ProgressBar
 # noinspection PyUnresolvedReferences
 from ._auto import RadioButton
+# noinspection PyUnresolvedReferences
+from ._auto import RawTexture
 # noinspection PyUnresolvedReferences
 from ._auto import ScatterSeries
 # noinspection PyUnresolvedReferences
 from ._auto import Selectable
 # noinspection PyUnresolvedReferences
 from ._auto import Separator
+# noinspection PyUnresolvedReferences
+from ._auto import SeriesValue
 # noinspection PyUnresolvedReferences
 from ._auto import ShadeSeries
 # noinspection PyUnresolvedReferences
@@ -98,15 +174,21 @@ from ._auto import Spacer
 # noinspection PyUnresolvedReferences
 from ._auto import StairSeries
 # noinspection PyUnresolvedReferences
+from ._auto import StaticTexture
+# noinspection PyUnresolvedReferences
 from ._auto import StemSeries
 # noinspection PyUnresolvedReferences
-from ._auto import TabButton
+from ._auto import StringValue
 # noinspection PyUnresolvedReferences
-from ._auto import TableColumn
+from ._auto import TabButton
 # noinspection PyUnresolvedReferences
 from ._auto import Text
 # noinspection PyUnresolvedReferences
 from ._auto import TextPoint
+# noinspection PyUnresolvedReferences
+from ._auto import ThemeColor
+# noinspection PyUnresolvedReferences
+from ._auto import ThemeStyle
 # noinspection PyUnresolvedReferences
 from ._auto import TimePicker
 # noinspection PyUnresolvedReferences
@@ -117,6 +199,10 @@ from ._auto import ChildWindow
 from ._auto import Clipper
 # noinspection PyUnresolvedReferences
 from ._auto import CollapsingHeader
+# noinspection PyUnresolvedReferences
+from ._auto import ColormapRegistry
+# noinspection PyUnresolvedReferences
+from ._auto import DragPayload
 # noinspection PyUnresolvedReferences
 from ._auto import DrawArrow
 # noinspection PyUnresolvedReferences
@@ -146,17 +232,33 @@ from ._auto import DrawTriangle
 # noinspection PyUnresolvedReferences
 from ._auto import DrawList
 # noinspection PyUnresolvedReferences
+from ._auto import FileDialog
+# noinspection PyUnresolvedReferences
 from ._auto import FilterSet
+# noinspection PyUnresolvedReferences
+from ._auto import Font
+# noinspection PyUnresolvedReferences
+from ._auto import FontRegistry
 # noinspection PyUnresolvedReferences
 from ._auto import Group
 # noinspection PyUnresolvedReferences
+from ._auto import HandlerRegistry
+# noinspection PyUnresolvedReferences
+from ._auto import ItemHandlerRegistry
+# noinspection PyUnresolvedReferences
+from ._auto import ItemPool
+# noinspection PyUnresolvedReferences
+from ._auto import ItemSet
+# noinspection PyUnresolvedReferences
 from ._auto import Menu
+# noinspection PyUnresolvedReferences
+from ._auto import MenuBar
 # noinspection PyUnresolvedReferences
 from ._auto import Node
 # noinspection PyUnresolvedReferences
 from ._auto import NodeAttribute
 # noinspection PyUnresolvedReferences
-from ._auto import _Plot
+from ._auto import Stage
 # noinspection PyUnresolvedReferences
 from ._auto import SubPlots
 # noinspection PyUnresolvedReferences
@@ -164,13 +266,21 @@ from ._auto import Tab
 # noinspection PyUnresolvedReferences
 from ._auto import TabBar
 # noinspection PyUnresolvedReferences
-from ._auto import _Table
+from ._auto import TemplateRegistry
 # noinspection PyUnresolvedReferences
-from ._auto import TableCell
+from ._auto import TextureRegistry
 # noinspection PyUnresolvedReferences
-from ._auto import TableRow
+from ._auto import Theme
 # noinspection PyUnresolvedReferences
 from ._auto import ThemeComponent
 # noinspection PyUnresolvedReferences
+from ._auto import Tooltip
+# noinspection PyUnresolvedReferences
 from ._auto import TreeNode
+# noinspection PyUnresolvedReferences
+from ._auto import ValueRegistry
+# noinspection PyUnresolvedReferences
+from ._auto import ViewportMenuBar
+# noinspection PyUnresolvedReferences
+from ._auto import Window
 # auto pk; end <<<

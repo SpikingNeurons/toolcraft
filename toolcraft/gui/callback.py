@@ -5,11 +5,11 @@ import typing as t
 from .. import util
 from .. import marshalling as m
 from .. import error as e
-from . import Callback
 from . import widget, asset
+from .__base__ import Callback
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class SetThemeCallback(Callback):
     """
     todo: we will get rid of this callback in favour of assets module ...

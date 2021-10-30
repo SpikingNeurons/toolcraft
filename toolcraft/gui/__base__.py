@@ -46,6 +46,11 @@ class DpgInternal(m.Internal):
     dpg_id: t.Union[int, str]
     is_build_done: bool
 
+    def test_if_others_set(self):
+        raise NotImplementedError(
+            f"Implement in class {self.__class__}"
+        )
+
 
 @dataclasses.dataclass
 class Dpg(m.YamlRepr, abc.ABC):
@@ -245,6 +250,9 @@ class Dpg(m.YamlRepr, abc.ABC):
                 ]
             )
 
+        # test if remaining internals are set
+        self.internal.test_if_others_set()
+
         # set dpg_id
         self.internal.dpg_id = hooked_method_return_value
 
@@ -381,13 +389,22 @@ class Dpg(m.YamlRepr, abc.ABC):
 
 
 class WidgetInternal(DpgInternal):
-    parent: "Container"
+    parent: "ContainerWidget"
     root: "window.Window"
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
         return super().vars_that_can_be_overwritten() + [
             "parent", "root"
         ]
+
+    def test_if_others_set(self):
+        if not self.internal.has("parent") or not self.internal.has("root"):
+            e.code.CodingError(
+                msgs=[
+                    f"Widget {self.__class__} is not a children to any parent",
+                    f"Please use some container widget and add this Widget",
+                ]
+            )
 
 
 @dataclasses.dataclass
@@ -399,30 +416,7 @@ class Widget(Dpg, abc.ABC):
         return WidgetInternal(owner=self)
 
     @property
-    def is_built(self) -> bool:
-        _ret = super().internal.has(item="is_build_done")
-        # note that until first build is not called these vars will not be set
-        # so we extra check here for rigorous testing
-        e.code.AssertError(
-            value1=_ret, value2=self.internal.has("parent"),
-            msgs=[
-                "parent must be set by now as widget is already built"
-                if _ret else
-                "parent was not expected to be set as build is not yet done"
-            ]
-        )
-        e.code.AssertError(
-            value1=_ret, value2=self.internal.has("root"),
-            msgs=[
-                "root must be set by now as widget is already built"
-                if _ret else
-                "root was not expected to be set as build is not yet done"
-            ]
-        )
-        return _ret
-
-    @property
-    def parent(self) -> "Container":
+    def parent(self) -> "ContainerWidget":
         return self.internal.parent
 
     @property
@@ -433,45 +427,47 @@ class Widget(Dpg, abc.ABC):
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
         return None
 
-    @property
-    @abc.abstractmethod
-    def supports_before(self) -> bool:
-        ...
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.widget.{cls.__name__}"
 
+    def delete(self):
+        # delete the dpg UI counterpart
+        dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
+        # todo: make _widget unusable ... figure out
+
+
+@dataclasses.dataclass
+class MovableWidget(Widget, abc.ABC):
+
     @classmethod
-    def hook_up_methods(cls):
-        # call super
-        super().hook_up_methods()
+    def yaml_tag(cls) -> str:
+        return f"gui.movable_widget.{cls.__name__}"
 
-        # hookup delete
-        util.HookUp(
-            cls=cls,
-            silent=True,
-            method=cls.delete,
-            pre_method=cls.delete_pre_runner,
-            post_method=cls.delete_post_runner,
-        )
-
-    def move(self, parent: "Container", before: "Widget" = None):
+    def move(self, parent: "ContainerWidget" = None, before: "MovableWidget" = None):
         """
         Move the item in `parent` and put it before `before`
         """
         # ---------------------------------------------- 01
+        # check
+        # ---------------------------------------------- 01.01
+        # either parent or before should be supplied
+        if not((parent is None) ^ (before is None)):
+            e.code.CodingError(
+                msgs=[
+                    "Either supply parent or before",
+                    "No need to provide both as parent can extracted from before",
+                    "While if you supply parent that means you want to add to "
+                    "bottom of its children",
+                ]
+            )
+
+        # ---------------------------------------------- 02
         # related to kwarg `before`
+        if parent is None:
+            parent = before.parent
         _before_index = None
         if before is not None:
-            # raise error if before is not supported by this widget
-            if 'before' not in self.dataclass_field_names:
-                e.code.CodingError(
-                    msgs=[
-                        f"Widget {self.__class__} does not support `before` field "
-                        f"so supply None"
-                    ]
-                )
             # if before is not None check if it is in parent and get its index
             try:
                 _before_index = parent.children.index(before)
@@ -485,19 +481,24 @@ class Widget(Dpg, abc.ABC):
                     ]
                 )
 
-        # ---------------------------------------------- 02
+        # ---------------------------------------------- 03
         # first pop from self.parent.children
         _src_children = self.parent.children
         _src_children.pop(_src_children.index(self))
 
-        # ---------------------------------------------- 02
-        # make the move
+        # ---------------------------------------------- 04
+        # now move it to new parent.children
+        if _before_index is None:
+            parent.children.append(self)
+        else:
+            parent.children.insert(_before_index, self)
+
+        # ---------------------------------------------- 05
+        # sync the move
         self.internal.parent = parent
         self.internal.root = parent.root
-        self.internal.before = before
-        parent.children.insert(_before_index, _widget)
         internal_dpg.move_item(
-            _widget.dpg_id, parent=parent.dpg_id,
+            self.dpg_id, parent=parent.dpg_id,
             before=0 if before is None else before.dpg_id)
 
     def move_up(self) -> bool:
@@ -526,25 +527,15 @@ class Widget(Dpg, abc.ABC):
         internal_dpg.move_item_down(self.dpg_id)
         return True
 
-    def delete_pre_runner(self):
-        ...
-
     def delete(self):
         _children_list = self.parent.children
         _index = self.parent.children.index(self)
         _widget = self.parent.children.pop(_index)
-        # delete the dpg UI counterpart
-        dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
-        # todo: make _widget unusable ... figure out
-
-    def delete_post_runner(
-        self, *, hooked_method_return_value: t.Any
-    ):
-        ...
+        return super().delete()
 
 
 @dataclasses.dataclass
-class Container(Widget, abc.ABC):
+class ContainerWidget(Widget, abc.ABC):
     """
     Widget that can hold children
     Example Group, ChildWindow etc.
@@ -554,30 +545,40 @@ class Container(Widget, abc.ABC):
 
     @property
     @util.CacheResult
-    def children(self) -> t.List["Widget"]:
+    def children(self) -> t.List[MovableWidget]:
         # this will be populated when __set_item__ is called
         return []
 
-    def __getitem__(self, item: t.Tuple[t.Union["Widget", t.List["Widget"]], ...]):
+    def __getitem__(
+        self, item: t.Tuple[t.Union[MovableWidget, t.List[MovableWidget]], ...]
+    ) -> None:
+        """
+        The square bracket will layout components. We do not use it to get items in
+        container but instead use it to add items. Hence we return None here as it
+        has nothing to return. Instead it calls `add_child`
+        """
         for _item in item:
-            if isinstance(_item, Widget):
+            if isinstance(_item, MovableWidget):
                 self.add_child(widget=_item)
             elif isinstance(_item, list):
                 from .widget import Group
                 _g = Group(horizontal=True)
                 for _i in _item:
                     _g.add_child(widget=_i)
+                self.add_child(widget=_g)
             else:
                 e.code.CodingError(
                     msgs=[
-                        f"Unsupported item of type {type(item)}"
+                        f"Unsupported item of type {type(item)}",
+                        f"If not movable widget then you might think of having it as "
+                        f"property ... instead of using add_child mechanism",
                     ]
                 )
                 raise
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"gui.container.{cls.__name__}"
+        return f"gui.container_widget.{cls.__name__}"
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
@@ -590,51 +591,34 @@ class Container(Widget, abc.ABC):
         # call super
         super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
 
-    def add_child(
-        self,
-        widget: "Widget",
-        before: "Widget" = None,
-    ):
+    def add_child(self, widget: MovableWidget):
 
         # -------------------------------------------------- 01
         # validate
         # -------------------------------------------------- 01.01
+        # check if supports before
+        if not isinstance(widget, MovableWidget):
+            e.code.CodingError(
+                msgs=[
+                    f"{self.__class__} is not {MovableWidget} i.e. it does not "
+                    f"supports before so you cannot "
+                    f"add it as children",
+                    f"Check if it is possible to have {widget.__class__} as a "
+                    f"property of class {self.__class__} instead",
+                    f"If not movable widget then you might think of having it as "
+                    f"property ... instead of using add_child mechanism",
+                ]
+            )
+        # -------------------------------------------------- 01.02
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
         if widget.is_built:
             e.code.NotAllowed(
                 msgs=[
-                    f"The widget is already built",
+                    "The widget you are trying to add is already built",
+                    "May be you want to `move()` widget instead.",
                 ]
             )
-        # -------------------------------------------------- 01.02
-        # if before is specified then make sure that parent of before and self is same
-        if before is not None:
-            if id(before.parent) != id(self):
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"The parent of before is not self and hence cannot be added "
-                        f"as child to this parent",
-                        f"Try to check if you want to use move() instead."
-                    ]
-                )
-
-        # -------------------------------------------------- 02
-        # if already in children raise error
-        _before_index = None
-        _widget_id = id(widget)
-        if before is not None:
-            _before_id = id(before)
-            for _i, _c in enumerate(self.children):
-                if id(_c) == _widget_id:
-                    e.validation.NotAllowed(
-                        msgs=[
-                            f"Looks like the widget is already "
-                            f"added to parent."
-                        ]
-                    )
-                if id(_c) == _before_id:
-                    _before_index = _i
 
         # -------------------------------------------------- 03
         # set internals
@@ -643,11 +627,7 @@ class Container(Widget, abc.ABC):
 
         # -------------------------------------------------- 04
         # we can now store widget inside children list
-        # Note that guid is used as it is for dict key
-        if _before_index is None:
-            self.children.append(widget)
-        else:
-            self.children.insert(_before_index, widget)
+        self.children.append(widget)
 
         # -------------------------------------------------- 05
         # if thw parent widget is already built we need to build this widget here
@@ -664,11 +644,19 @@ class Container(Widget, abc.ABC):
             for child in self.children:
                 child.hide()
         else:
-            internal_dpg.configure_item(self.dpg_id, show=False)
+            super().hide()
 
 
 @dataclasses.dataclass
-class Form(Widget, abc.ABC):
+class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.movable_container_widget.{cls.__name__}"
+
+
+@dataclasses.dataclass
+class Form(MovableWidget, abc.ABC):
     """
     Form is a special widget which creates a `form_fields_container` container and
     add all form fields to it as defined by layout() method.
@@ -688,11 +676,16 @@ class Form(Widget, abc.ABC):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> Container:
+    def form_fields_container(self) -> MovableContainerWidget:
         """
         The container that holds all form fields.
+
+        Note that this should be movable too .. i.e. you cannot use
+        widgets like Window.
+
         Default is Group but you can have any widget that allows children.
         ChildWindow is also better option as it has menubar.
+
         Override this property to achieve the same.
         """
         from .widget import Group
@@ -799,8 +792,8 @@ class Form(Widget, abc.ABC):
         # if there is a widget which is field of this widget then add it
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
-            if isinstance(v, Widget):
-                self.form_fields_container.add_child(widget=v, before=None)
+            if isinstance(v, MovableWidget):
+                self.form_fields_container.add_child(widget=v)
 
     def build(self) -> t.Union[int, str]:
         # layout
@@ -830,260 +823,3 @@ class Callback(m.YamlRepr, abc.ABC):
         user_data: t.Union[Dpg, t.List[Dpg]]
     ):
         ...
-
-
-class DashboardInternal(m.Internal):
-    is_run_called: bool
-
-
-@dataclasses.dataclass
-class Dashboard(m.YamlRepr):
-    """
-    Dashboard is not a Widget.
-    As of now we think of having only items that do not have parent; like
-    + Window
-    + Registry
-    + theme
-
-    The `primary_window` property holds primary Window which will occupy entire screen
-
-    Figure out having more windows that can be popped inside or can be added
-    dynamically.
-
-    Here we will take care of things like
-    + screen resolution
-    + theme
-    + closing even handlers
-    + favicon
-    + login mechanism
-
-    Note that we make this as primary window when we start GUI
-
-    todo: add less important fields to config and save it to disk ... on
-      config field change trigger ui update ... plus also update ui when
-      config loaded from disk ... this will indirectly help save ui state :)
-      Or maybe have only one config for Dashboard alone and make key value
-      pairs ... may be introduce new State file for that
-      Also maybe add field save_state for Widget so that we know that only
-      these widgets state needs to be saved
-    """
-    title: str
-    width: int = 1370
-    height: int = 1200
-
-    @property
-    @util.CacheResult
-    def internal(self) -> DashboardInternal:
-        return DashboardInternal(owner=self)
-
-    @property
-    def primary_window(self) -> "window.Window":
-        from .window import Window
-        return Window(
-            label=self.title,
-            width=self.width, height=self.height,
-        )
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.dashboard.{cls.__name__}"
-
-    @staticmethod
-    def is_dearpygui_running() -> bool:
-        return internal_dpg.is_dearpygui_running()
-
-    @staticmethod
-    def is_key_down(key: int) -> bool:
-        return internal_dpg.is_key_down(key)
-
-    @staticmethod
-    def is_key_pressed(key: int) -> bool:
-        return internal_dpg.is_key_pressed(key)
-
-    @staticmethod
-    def is_key_released(key: int) -> bool:
-        return internal_dpg.is_key_released(key)
-
-    @staticmethod
-    def is_mouse_button_clicked(button: int) -> bool:
-        return internal_dpg.is_mouse_button_clicked(button)
-
-    @staticmethod
-    def is_mouse_button_double_clicked(button: int) -> bool:
-        return internal_dpg.is_mouse_button_double_clicked(button)
-
-    @staticmethod
-    def is_mouse_button_down(button: int) -> bool:
-        return internal_dpg.is_mouse_button_down(button)
-
-    @staticmethod
-    def is_mouse_button_dragging(button: int) -> bool:
-        return internal_dpg.is_mouse_button_down(button)
-
-    @staticmethod
-    def is_mouse_button_released(button: int) -> bool:
-        return internal_dpg.is_mouse_button_down(button)
-
-    @staticmethod
-    def get_active_window(**kwargs) -> int:
-        """
-        Refer:
-        >>> dpg.get_active_window
-
-        todo: we will return Window widget later ... once we can track Window's in
-          Dashboard
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_active_window(**kwargs)
-
-    @staticmethod
-    def get_windows(**kwargs) -> t.List[int]:
-        """
-        Refer:
-        >>> dpg.get_windows
-
-        todo: we will return Window widgets later ... once we can track Window's in
-          Dashboard
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_windows(**kwargs)
-
-    @staticmethod
-    def get_app_configuration(**kwargs) -> t.Dict:
-        """
-        Refer:
-        >>> dpg.get_app_configuration
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_app_configuration(**kwargs)
-
-    @staticmethod
-    def get_delta_time(**kwargs) -> float:
-        """
-        Refer:
-        >>> dpg.get_delta_time
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_delta_time(**kwargs)
-
-    @staticmethod
-    def get_drawing_mouse_pos(**kwargs) -> t.Tuple[int, int]:
-        """
-        Refer:
-        >>> dpg.get_drawing_mouse_pos
-        """
-        # noinspection PyArgumentList
-        return tuple(internal_dpg.get_drawing_mouse_pos(**kwargs))
-
-    @staticmethod
-    def get_frame_count(**kwargs) -> int:
-        """
-        Refer:
-        >>> dpg.get_frame_count
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_frame_count(**kwargs)
-
-    @staticmethod
-    def get_frame_rate(**kwargs) -> float:
-        """
-        Refer:
-        >>> dpg.get_frame_rate
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_frame_rate(**kwargs)
-
-    @staticmethod
-    def get_global_font_scale(**kwargs) -> float:
-        """
-        Refer:
-        >>> dpg.get_global_font_scale
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_global_font_scale(**kwargs)
-
-    @staticmethod
-    def get_item_types(**kwargs) -> t.Dict:
-        """
-        Refer:
-        >>> dpg.get_item_types
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_item_types(**kwargs)
-
-    @staticmethod
-    def get_mouse_drag_delta(**kwargs) -> float:
-        """
-        Refer:
-        >>> dpg.get_mouse_drag_delta
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_mouse_drag_delta(**kwargs)
-
-    @staticmethod
-    def get_mouse_pos(local: bool = True, **kwargs) -> t.Tuple[int, int]:
-        """
-        Refer:
-        >>> dpg.get_mouse_pos
-        """
-        # noinspection PyArgumentList
-        return tuple(internal_dpg.get_mouse_pos(local=local, **kwargs))
-
-    @staticmethod
-    def get_plot_mouse_pos(**kwargs) -> t.Tuple[int, int]:
-        """
-        Refer:
-        >>> dpg.get_plot_mouse_pos
-        """
-        # noinspection PyArgumentList
-        return tuple(internal_dpg.get_plot_mouse_pos(**kwargs))
-
-    @staticmethod
-    def get_total_time(**kwargs) -> float:
-        """
-        Refer:
-        >>> dpg.get_total_time
-        """
-        # noinspection PyArgumentList
-        return internal_dpg.get_total_time(**kwargs)
-
-    def build(self):
-        self.primary_window.build()
-
-    def run(self):
-        # -------------------------------------------------- 01
-        # make sure if was already called
-        if self.internal.has("is_run_called"):
-            e.code.NotAllowed(
-                msgs=[
-                    f"You can run only once ..."
-                ]
-            )
-        # -------------------------------------------------- 02
-        # setup dpg
-        dpg.create_context()
-        dpg.create_viewport()
-        dpg.setup_dearpygui()
-
-        # -------------------------------------------------- 03
-        # build
-        self.build()
-
-        # -------------------------------------------------- 04
-        # primary window dpg_id
-        _primary_window_dpg_id = self.primary_window.dpg_id
-        # set the things for primary window
-        dpg.set_primary_window(window=_primary_window_dpg_id, value=True)
-        # todo: have to figure out theme, font etc.
-        # themes.set_theme(theme="Dark Grey")
-        # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
-
-        # -------------------------------------------------- 05
-        # indicate build is done
-        self.internal.is_run_called = True
-
-        # dpg related
-        dpg.show_viewport()
-        dpg.start_dearpygui()
-        dpg.destroy_context()

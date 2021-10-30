@@ -1,2 +1,1 @@
-# auto pk; start >>>
-# auto pk; end <<<
+from .__base__ import Form

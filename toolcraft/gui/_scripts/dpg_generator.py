@@ -269,6 +269,20 @@ class DpgBuildParamDef(NamedTuple):
 class DpgDef:
 
     @property
+    def is_plot_related(self) -> bool:
+        if self.fn in [dpg.plot, dpg.plot_axis]:
+            return True
+        else:
+            return False
+
+    @property
+    def is_table_related(self) -> bool:
+        if self.fn in [dpg.table, dpg.table_cell, dpg.table_row, dpg.add_table_column]:
+            return True
+        else:
+            return False
+
+    @property
     def _call_prefix(self) -> str:
 
         _call_prefix = \
@@ -282,14 +296,21 @@ class DpgDef:
 
     @property
     def _super_class_name(self) -> str:
-        if self.is_parent_param_present and self.is_before_param_present:
-            _class_name = "Widget"
-            if self.is_container:
-                _class_name = "Container"
-        elif self.fn == dpg.window:
-            _class_name = "Dpg"
+        _class_name = "___"
+        if self.is_parent_param_present:
+            if self.is_before_param_present:
+                if self.is_container:
+                    _class_name = "MovableContainerWidget"
+                else:
+                    _class_name = "MovableWidget"
+            else:
+                if self.is_container:
+                    _class_name = "ContainerWidget"
+                else:
+                    _class_name = "Widget"
         else:
-            _class_name = "___"
+            if self.fn == dpg.window:
+                _class_name = "ContainerWidget"
         return _class_name
 
     @property
@@ -306,9 +327,9 @@ class DpgDef:
         # generate name based on method and parameters
         if self.fn == dpg.plot_axis:
             if self.parametrize['axis'] == 'dpg.mvXAxis':
-                return "_XAxis"
+                return "XAxis"
             if self.parametrize['axis'] == 'dpg.mvYAxis':
-                return "_YAxis"
+                return "YAxis"
             raise Exception(
                 f"Unknown parameter value for axis {self.parametrize['axis']}"
             )
@@ -319,12 +340,6 @@ class DpgDef:
 
         # ------------------------------------------------------- 03
         # generate name based on method
-        if self.fn == dpg.window:
-            return "_Window"
-        if self.fn == dpg.table:
-            return "_Table"
-        if self.fn == dpg.plot:
-            return "_Plot"
         if self.fn == dpg.add_checkbox:
             return "CheckBox"
         if self.fn == dpg.drawlist:
@@ -512,13 +527,7 @@ class DpgDef:
         # ------------------------------------------------------- 03.03
         # add properties
         # ------------------------------------------------------- 03.03.01
-        # property supports_before
-        _lines += [
-            "\t@property",
-            "\tdef supports_before(self) -> bool:",
-            f"\t\treturn {self.is_before_param_present}",
-            "",
-        ]
+        # property ...
 
         # ------------------------------------------------------- 03.04
         # add build method
@@ -743,7 +752,12 @@ import dataclasses
 import enum
 import typing as t
 
-from .__base__ import Enum, Dpg, Widget, Container, Callback
+from .__base__ import Enum
+from .__base__ import Widget
+from .__base__ import MovableWidget
+from .__base__ import ContainerWidget
+from .__base__ import MovableContainerWidget
+from .__base__ import Callback
 '''
         return _header
 
@@ -939,20 +953,6 @@ from .__base__ import Enum, Dpg, Widget, Container, Callback
             "\n".join(_start_lines + import_lines + _end_lines)
         )
 
-    def get_widget_defs(self) -> t.List["DpgDef"]:
-        return [
-            _ for _ in self.all_dpg_defs
-            if _.super_class_name in ["Widget", "Container"]
-        ]
-
-    def get_window_def(self) -> "DpgDef":
-        _ret = [
-            _ for _ in self.all_dpg_defs
-            if _.fn == dpg.window
-        ]
-        assert len(_ret) == 1
-        return _ret[0]
-
     def make_widget_py(self):
         # -------------------------------- 01
         # init
@@ -961,28 +961,48 @@ from .__base__ import Enum, Dpg, Widget, Container, Callback
 
         # -------------------------------- 02
         # widget and container lines
-        # _lines = [_dis_inspect, "from .__base__ import Widget, Container"]
         _lines = []
-        for _widget_def in self.get_widget_defs():
+        for _widget_def in self.all_dpg_defs:
+            if _widget_def.is_plot_related or _widget_def.is_table_related:
+                continue
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")
 
         # -------------------------------- 03
         self.add_auto_imports_to_py_file(_output_file, _lines)
 
-    def make_window_py(self):
+    def make_plot_py(self):
         # -------------------------------- 01
         # init
-        _output_file = pathlib.Path("../window.py")
-        # _dis_inspect = "# noinspection PyUnresolvedReferences"
+        _output_file = pathlib.Path("../plot.py")
+        _dis_inspect = "# noinspection PyUnresolvedReferences"
 
         # -------------------------------- 02
-        # window lines
-        # _lines = [_dis_inspect, "from .__base__ import Widget, Container"]
+        # widget and container lines
         _lines = []
-        _window_def = self.get_window_def()
-        # _lines.append(_dis_inspect)
-        _lines.append(f"from ._auto import {_window_def.name}")
+        for _widget_def in self.all_dpg_defs:
+            if not _widget_def.is_plot_related:
+                continue
+            _lines.append(_dis_inspect)
+            _lines.append(f"from ._auto import {_widget_def.name}")
+
+        # -------------------------------- 03
+        self.add_auto_imports_to_py_file(_output_file, _lines)
+
+    def make_table_py(self):
+        # -------------------------------- 01
+        # init
+        _output_file = pathlib.Path("../table.py")
+        _dis_inspect = "# noinspection PyUnresolvedReferences"
+
+        # -------------------------------- 02
+        # widget and container lines
+        _lines = []
+        for _widget_def in self.all_dpg_defs:
+            if not _widget_def.is_table_related:
+                continue
+            _lines.append(_dis_inspect)
+            _lines.append(f"from ._auto import {_widget_def.name}")
 
         # -------------------------------- 03
         self.add_auto_imports_to_py_file(_output_file, _lines)
@@ -1000,21 +1020,16 @@ from .__base__ import Enum, Dpg, Widget, Container, Callback
         for _enum_def in _NEEDED_ENUMS.values():
             _enum_lines += _enum_def.code
         # -------------------------------- 02.02
-        # window lines
-        _window_lines = []
-        _window_def = self.get_window_def()
-        _window_lines += _window_def.code
-        # -------------------------------- 02.03
         # widget and container lines
         _widget_lines = []
-        for _widget_def in self.get_widget_defs():
+        for _widget_def in self.all_dpg_defs:
             _widget_lines += _widget_def.code
 
         # -------------------------------- 03
         _output_file.write_text(
             self.header +
             "\n".join(
-                _enum_lines + _window_lines + _widget_lines + [""]
+                _enum_lines + _widget_lines + [""]
             )
         )
 
@@ -1047,8 +1062,9 @@ from .__base__ import Enum, Dpg, Widget, Container, Callback
     def make(self):
         self.make_auto_py()
         self.make_enum_py()
-        self.make_window_py()
         self.make_widget_py()
+        self.make_plot_py()
+        self.make_table_py()
 
 
 def main():

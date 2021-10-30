@@ -96,7 +96,7 @@ class Internal:
         # also store owner instance reference
         self.__owner__ = owner
 
-        # if annotations have default values the make them available in
+        # if annotations have default values then make them available in
         # container
         for _vn in self.__variable_names__:
             try:
