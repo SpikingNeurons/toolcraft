@@ -550,25 +550,10 @@ class ContainerWidget(Widget, abc.ABC):
         return []
 
     # noinspection PyMethodOverriding
-    def __call__(self, item: MovableWidget):
-        return self.add_child(widget=item)
+    def __call__(self, widget: MovableWidget):
+        self._add_child(widget=widget)
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.container_widget.{cls.__name__}"
-
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
-        # now as layout is completed and build for this widget is completed,
-        # now it is time to render children
-        for child in self.children:
-            child.build()
-
-        # call super
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
-
-    def add_child(self, widget: MovableWidget):
+    def _add_child(self, widget: MovableWidget):
 
         # -------------------------------------------------- 01
         # validate
@@ -611,6 +596,21 @@ class ContainerWidget(Widget, abc.ABC):
         # else it will be built when build() on super parent is called
         if self.is_built:
             widget.build()
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.container_widget.{cls.__name__}"
+
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Union[int, str]
+    ):
+        # now as layout is completed and build for this widget is completed,
+        # now it is time to render children
+        for child in self.children:
+            child.build()
+
+        # call super
+        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
 
     def hide(self, children_only: bool = False):
         """
@@ -828,3 +828,11 @@ class Registry(m.YamlRepr, abc.ABC):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.registry.{cls.__name__}"
+
+
+@dataclasses.dataclass
+class PlotSeries(MovableWidget, abc.ABC):
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.plot.{cls.__name__}"

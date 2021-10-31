@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-10-31 08:39
+>> Time: 2021-10-31 13:10
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -22,6 +22,7 @@ from .__base__ import ContainerWidget
 from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
+from .__base__ import PlotSeries
 
 
 class EnDir(Enum, enum.Enum):
@@ -97,7 +98,7 @@ class EnNodeAttr(Enum, enum.Enum):
 
 
 @dataclasses.dataclass
-class HistogramSeries2D(MovableWidget):
+class HistogramSeries2D(PlotSeries):
     """
     Refer:
     >>> dpg.add_2d_histogram_series
@@ -351,7 +352,7 @@ class Slider3D(MovableWidget):
 
 
 @dataclasses.dataclass
-class AreaSeries(MovableWidget):
+class AreaSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_area_series
@@ -409,7 +410,7 @@ class AreaSeries(MovableWidget):
 
 
 @dataclasses.dataclass
-class BarSeries(MovableWidget):
+class BarSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_bar_series
@@ -660,7 +661,7 @@ class Button(MovableWidget):
 
 
 @dataclasses.dataclass
-class CandleSeries(MovableWidget):
+class CandleSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_candle_series
@@ -2748,7 +2749,7 @@ class DynamicTexture(Widget):
 
 
 @dataclasses.dataclass
-class ErrorSeries(MovableWidget):
+class ErrorSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_error_series
@@ -3108,7 +3109,7 @@ class FontRangeHint(Widget):
 
 
 @dataclasses.dataclass
-class HeatSeries(MovableWidget):
+class HeatSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_heat_series
@@ -3186,7 +3187,7 @@ class HeatSeries(MovableWidget):
 
 
 @dataclasses.dataclass
-class HistogramSeries(MovableWidget):
+class HistogramSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_histogram_series
@@ -3264,7 +3265,7 @@ class HistogramSeries(MovableWidget):
 
 
 @dataclasses.dataclass
-class HLineSeries(MovableWidget):
+class HLineSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_hline_series
@@ -5284,7 +5285,7 @@ class KnobFloat(MovableWidget):
 
 
 @dataclasses.dataclass
-class LineSeries(MovableWidget):
+class LineSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_line_series
@@ -6147,7 +6148,7 @@ class MouseWheelHandler(Widget):
 
 
 @dataclasses.dataclass
-class PieSeries(MovableWidget):
+class PieSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_pie_series
@@ -6677,7 +6678,7 @@ class RawTexture(Widget):
 
 
 @dataclasses.dataclass
-class ScatterSeries(MovableWidget):
+class ScatterSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_scatter_series
@@ -6966,7 +6967,7 @@ class SeriesValue(Widget):
 
 
 @dataclasses.dataclass
-class ShadeSeries(MovableWidget):
+class ShadeSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_shade_series
@@ -7891,7 +7892,7 @@ class Spacer(MovableWidget):
 
 
 @dataclasses.dataclass
-class StairSeries(MovableWidget):
+class StairSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_stair_series
@@ -7986,7 +7987,7 @@ class StaticTexture(Widget):
 
 
 @dataclasses.dataclass
-class StemSeries(MovableWidget):
+class StemSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_stem_series
@@ -8755,7 +8756,7 @@ class TimePicker(MovableWidget):
 
 
 @dataclasses.dataclass
-class VLineSeries(MovableWidget):
+class VLineSeries(PlotSeries):
     """
     Refer:
     >>> dpg.add_vline_series

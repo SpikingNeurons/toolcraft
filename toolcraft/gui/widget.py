@@ -145,8 +145,6 @@ from ._auto import PieSeries
 # noinspection PyUnresolvedReferences
 from ._auto import PlotAnnotation
 # noinspection PyUnresolvedReferences
-from ._auto import PlotLegend
-# noinspection PyUnresolvedReferences
 from ._auto import ProgressBar
 # noinspection PyUnresolvedReferences
 from ._auto import RadioButton

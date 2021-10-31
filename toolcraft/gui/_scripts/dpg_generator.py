@@ -271,7 +271,16 @@ class DpgDef:
 
     @property
     def is_plot_related(self) -> bool:
-        if self.fn in [dpg.plot, dpg.plot_axis, dpg.subplots]:
+        if self.fn in [
+            dpg.plot, dpg.plot_axis, dpg.subplots, dpg.add_plot_legend,
+        ]:
+            return True
+        else:
+            return False
+
+    @property
+    def is_plot_series_related(self) -> bool:
+        if self.fn.__name__.startswith("add") and self.fn.__name__.endswith("series"):
             return True
         else:
             return False
@@ -310,6 +319,8 @@ class DpgDef:
                     _class_name = "MovableContainerWidget"
                 else:
                     _class_name = "MovableWidget"
+                    if self.is_plot_series_related:
+                        _class_name = "PlotSeries"
             else:
                 if self.is_container:
                     _class_name = "ContainerWidget"
@@ -779,6 +790,7 @@ from .__base__ import ContainerWidget
 from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
+from .__base__ import PlotSeries
 '''
         return _header
 
@@ -1002,7 +1014,7 @@ from .__base__ import Registry
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if not _widget_def.is_plot_related:
+            if not _widget_def.is_plot_series_related:
                 continue
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")

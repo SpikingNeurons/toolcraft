@@ -40,9 +40,9 @@ from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
 from .storage.state import Config, Info, StateFile
 from .gui.__base__ import Form, Widget
 from .gui.dashboard import Dashboard, BasicDashboard
-# from .gui.window import Window
-# from .gui.plot import Plot
-# from .gui.table import Table
+from .gui.window import Window
+from .gui.plot import Plot
+from .gui.table import Table
 
 
 LITERAL_CLASS_NAME = "LITERAL"
@@ -80,7 +80,7 @@ def check_things_to_be_cached(
         ResultsFolder: ['store'],
         Form: ['form_fields_container'],
         Widget: ['children'],
-        # Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
+        Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
         BasicDashboard: ['primary_window'],
     }
     if to_check is not None:

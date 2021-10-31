@@ -45,7 +45,7 @@ class Row(_auto.TableRow):
                 ]
             )
         for _ in range(_num_columns):
-            self.add_child(widget=Cell())
+            super()(widget=Cell())
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -55,10 +55,10 @@ class Row(_auto.TableRow):
 @dataclasses.dataclass
 class Table(_auto.Table):
     # ...
-    rows: t.Union[int, t.List[Row]] = None
+    rows: t.List[Row] = None
 
     # ...
-    columns: t.Union[int, t.List[t.Union[str, Column]]] = None
+    columns: t.List[Column] = None
 
     @property
     @util.CacheResult
@@ -66,17 +66,17 @@ class Table(_auto.Table):
         # noinspection PyTypeChecker
         return self.rows
 
-    def __call__(self, item: Row):
+    def __call__(self, widget: Row):
 
         # we also need to add cells in row
-        if isinstance(item, Row):
+        if isinstance(widget, Row):
             # this will add cells based on number of columns
-            item()
+            widget()
         else:
-            e.code.ShouldNeverHappen(msgs=[])
+            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 
         # call super to add in children
-        _ret = super().__call__(item)
+        _ret = super().__call__(widget)
 
         # return
         return _ret
@@ -131,32 +131,6 @@ class Table(_auto.Table):
         # call super
         super().init()
 
-        # -------------------------------------------------- 02
-        # make columns list
-        if isinstance(self.columns, int):
-            _num_columns = self.columns
-            self.__dict__['columns'] = []
-            assert self.columns == []
-            for _ in range(_num_columns):
-                # noinspection PyUnresolvedReferences
-                self.columns.append(TableColumn())
-        elif isinstance(self.columns, list):
-            _num_columns = len(self.columns)
-            _backup_cols = self.columns
-            self.__dict__['columns'] = []
-            assert self.columns == []
-            for _c in _backup_cols:
-                if isinstance(_c, str):
-                    self.columns.append(Column(label=_c))
-                elif isinstance(_c, Column):
-                    self.columns.append(_c)
-                else:
-                    e.code.ShouldNeverHappen(msgs=[])
-                    raise
-        else:
-            e.code.ShouldNeverHappen(msgs=[])
-            raise
-
         # -------------------------------------------------- 03
         # do things for columns that we do when add_child is called
         _c: Column
@@ -176,26 +150,9 @@ class Table(_auto.Table):
 
         # -------------------------------------------------- 04
         # make rows list
-        if isinstance(self.rows, int):
-            _num_rows = self.rows
-            self.__dict__['rows'] = []
-            assert id(self.rows) == id(self.children)
-            for _ in range(_num_rows):
-                self(Row())
-        elif isinstance(self.rows, list):
-            _num_rows = len(self.rows)
-            _backup_rows = self.rows
-            self.__dict__['rows'] = []
-            assert id(self.rows) == id(self.children)
-            for _r in _backup_rows:
-                if isinstance(_r, Row):
-                    self(_r)
-                else:
-                    e.code.ShouldNeverHappen(msgs=[])
-                    raise
-        else:
-            e.code.ShouldNeverHappen(msgs=[])
-            raise
+        for _r in self.rows:
+            self(_r)
+        assert id(self.rows) == id(self.children)
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
@@ -209,14 +166,42 @@ class Table(_auto.Table):
         super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
 
     @classmethod
+    def table_from_literals(
+        cls, rows: int, cols: t.Union[int, t.List[str]],
+    ) -> "Table":
+
+        # make cols
+        _cols = []
+        if isinstance(cols, int):
+            for _ in range(cols):
+                _cols.append(Column())
+        elif isinstance(cols, list):
+            for _ in cols:
+                _cols.append(Column(label=_))
+        else:
+            e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
+            raise
+
+        # make rows
+        _rows = []
+        if isinstance(rows, int):
+            for _ in range(rows):
+                _rows.append(Row())
+        else:
+            e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
+            raise
+
+        return Table(rows=_rows, columns=_cols)
+
+    @classmethod
     def table_from_dict(
         cls, input_dict: t.Dict,
     ) -> "Table":
         from .. import gui
         _rows = list(input_dict.keys())
         _columns = ["\\"] + list(input_dict[_rows[0]].keys())
-        _table = Table(
-            rows=len(_rows), columns=_columns,
+        _table = cls.table_from_literals(
+            rows=len(_rows), cols=_columns,
         )
         for _rid, _r in enumerate(_rows):
             for _cid, _c in enumerate(_columns):
