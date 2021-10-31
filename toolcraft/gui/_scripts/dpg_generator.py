@@ -996,7 +996,7 @@ from .__base__ import PlotSeries
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if _widget_def.is_plot_related or _widget_def.is_table_related:
+            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related:
                 continue
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")

@@ -3,19 +3,11 @@ from .__base__ import Widget, ContainerWidget, MovableWidget, MovableContainerWi
 
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries2D
-# noinspection PyUnresolvedReferences
 from ._auto import Slider3D
-# noinspection PyUnresolvedReferences
-from ._auto import AreaSeries
-# noinspection PyUnresolvedReferences
-from ._auto import BarSeries
 # noinspection PyUnresolvedReferences
 from ._auto import BoolValue
 # noinspection PyUnresolvedReferences
 from ._auto import Button
-# noinspection PyUnresolvedReferences
-from ._auto import CandleSeries
 # noinspection PyUnresolvedReferences
 from ._auto import CheckBox
 # noinspection PyUnresolvedReferences
@@ -53,8 +45,6 @@ from ._auto import DragPoint
 # noinspection PyUnresolvedReferences
 from ._auto import DynamicTexture
 # noinspection PyUnresolvedReferences
-from ._auto import ErrorSeries
-# noinspection PyUnresolvedReferences
 from ._auto import FileExtension
 # noinspection PyUnresolvedReferences
 from ._auto import Float4Value
@@ -68,12 +58,6 @@ from ._auto import FontChars
 from ._auto import FontRange
 # noinspection PyUnresolvedReferences
 from ._auto import FontRangeHint
-# noinspection PyUnresolvedReferences
-from ._auto import HeatSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HLineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import InputFloat
 # noinspection PyUnresolvedReferences
@@ -119,8 +103,6 @@ from ._auto import KeyReleaseHandler
 # noinspection PyUnresolvedReferences
 from ._auto import KnobFloat
 # noinspection PyUnresolvedReferences
-from ._auto import LineSeries
-# noinspection PyUnresolvedReferences
 from ._auto import Listbox
 # noinspection PyUnresolvedReferences
 from ._auto import LoadingIndicator
@@ -141,8 +123,6 @@ from ._auto import MouseReleaseHandler
 # noinspection PyUnresolvedReferences
 from ._auto import MouseWheelHandler
 # noinspection PyUnresolvedReferences
-from ._auto import PieSeries
-# noinspection PyUnresolvedReferences
 from ._auto import PlotAnnotation
 # noinspection PyUnresolvedReferences
 from ._auto import ProgressBar
@@ -151,15 +131,11 @@ from ._auto import RadioButton
 # noinspection PyUnresolvedReferences
 from ._auto import RawTexture
 # noinspection PyUnresolvedReferences
-from ._auto import ScatterSeries
-# noinspection PyUnresolvedReferences
 from ._auto import Selectable
 # noinspection PyUnresolvedReferences
 from ._auto import Separator
 # noinspection PyUnresolvedReferences
 from ._auto import SeriesValue
-# noinspection PyUnresolvedReferences
-from ._auto import ShadeSeries
 # noinspection PyUnresolvedReferences
 from ._auto import SimplePlot
 # noinspection PyUnresolvedReferences
@@ -173,11 +149,7 @@ from ._auto import SliderIntX
 # noinspection PyUnresolvedReferences
 from ._auto import Spacer
 # noinspection PyUnresolvedReferences
-from ._auto import StairSeries
-# noinspection PyUnresolvedReferences
 from ._auto import StaticTexture
-# noinspection PyUnresolvedReferences
-from ._auto import StemSeries
 # noinspection PyUnresolvedReferences
 from ._auto import StringValue
 # noinspection PyUnresolvedReferences
@@ -192,8 +164,6 @@ from ._auto import ThemeColor
 from ._auto import ThemeStyle
 # noinspection PyUnresolvedReferences
 from ._auto import TimePicker
-# noinspection PyUnresolvedReferences
-from ._auto import VLineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import ChildWindow
 # noinspection PyUnresolvedReferences

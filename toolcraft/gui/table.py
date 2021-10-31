@@ -151,6 +151,7 @@ class Table(_auto.Table):
         # -------------------------------------------------- 04
         # make rows list
         for _r in self.rows:
+            # note that internals are set when we add row widget
             self(_r)
         assert id(self.rows) == id(self.children)
 
