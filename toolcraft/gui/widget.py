@@ -123,8 +123,6 @@ from ._auto import MouseReleaseHandler
 # noinspection PyUnresolvedReferences
 from ._auto import MouseWheelHandler
 # noinspection PyUnresolvedReferences
-from ._auto import PlotAnnotation
-# noinspection PyUnresolvedReferences
 from ._auto import ProgressBar
 # noinspection PyUnresolvedReferences
 from ._auto import RadioButton
@@ -136,8 +134,6 @@ from ._auto import Selectable
 from ._auto import Separator
 # noinspection PyUnresolvedReferences
 from ._auto import SeriesValue
-# noinspection PyUnresolvedReferences
-from ._auto import SimplePlot
 # noinspection PyUnresolvedReferences
 from ._auto import SliderFloat
 # noinspection PyUnresolvedReferences

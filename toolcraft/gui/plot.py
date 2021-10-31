@@ -44,6 +44,14 @@ from ._auto import VLineSeries
 
 
 @dataclasses.dataclass
+class Simple(_auto.SimplePlot):
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.plot.{cls.__name__}"
+
+
+@dataclasses.dataclass
 class Annotation(_auto.PlotAnnotation):
 
     @classmethod

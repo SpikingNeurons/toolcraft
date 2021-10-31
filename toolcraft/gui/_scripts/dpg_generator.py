@@ -272,7 +272,7 @@ class DpgDef:
     @property
     def is_plot_related(self) -> bool:
         if self.fn in [
-            dpg.plot, dpg.plot_axis, dpg.subplots, dpg.add_plot_legend,
+            dpg.plot, dpg.plot_axis, dpg.subplots, dpg.add_plot_legend, dpg.add_plot_annotation, dpg.add_simple_plot,
         ]:
             return True
         else:
