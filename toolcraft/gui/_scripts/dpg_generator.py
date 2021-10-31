@@ -271,7 +271,7 @@ class DpgDef:
 
     @property
     def is_plot_related(self) -> bool:
-        if self.fn in [dpg.plot, dpg.plot_axis]:
+        if self.fn in [dpg.plot, dpg.plot_axis, dpg.subplots]:
             return True
         else:
             return False
@@ -323,14 +323,6 @@ class DpgDef:
             ]:
                 _class_name = "ContainerWidget"
         return _class_name
-
-    @property
-    def _allowed_children_widget_defs(self) -> t.Optional[t.List["DpgDef"]]:
-        # ---------------------------------------------------- 01
-        # if not container then no children can be added
-        if not self.is_container:
-            return None
-        raise
 
     @property
     def _name(self) -> str:
@@ -657,11 +649,22 @@ class DpgDef:
         self.param_defs = self._param_defs
         self.code = self._code
 
-    def allowed_dog_items_in_container(self) -> t.List["DpgDef"]:
-        if not self.is_container:
-            raise Exception("Should be used with widgets that are containers")
+    def fn_fake_call(self, parent):
+        _kwargs = {}
 
-        _ret = []
+        if 'x' in self.fn_signature.parameters.keys():
+            _kwargs['x'] = [1., 2.]
+            _kwargs['y'] = [1., 2.]
+
+        if bool(self.parametrize):
+            # noinspection PyTypeChecker
+            _kwargs.update(self.parametrize)
+
+        if self.is_container:
+            with self.fn(parent=parent, **_kwargs) as _child_dpg_id:
+                ...
+        else:
+            self.fn(parent=parent, **_kwargs)
 
 
 class EnumDef:
@@ -1007,24 +1010,6 @@ from .__base__ import Registry
         # -------------------------------- 03
         self.add_auto_imports_to_py_file(_output_file, _lines)
 
-    def make_table_py(self):
-        # -------------------------------- 01
-        # init
-        _output_file = pathlib.Path("../table.py")
-        _dis_inspect = "# noinspection PyUnresolvedReferences"
-
-        # -------------------------------- 02
-        # widget and container lines
-        _lines = []
-        for _widget_def in self.all_dpg_defs:
-            if not _widget_def.is_table_related:
-                continue
-            _lines.append(_dis_inspect)
-            _lines.append(f"from ._auto import {_widget_def.name}")
-
-        # -------------------------------- 03
-        self.add_auto_imports_to_py_file(_output_file, _lines)
-
     def make_auto_py(self):
         # -------------------------------- 01
         # init
@@ -1082,15 +1067,46 @@ from .__base__ import Registry
         self.make_enum_py()
         self.make_widget_py()
         self.make_plot_py()
-        self.make_table_py()
+
+
+def try_dpg_children(_dpg_def: DpgDef, _all_dpg_defs: t.List[DpgDef]):
+
+    dpg.create_context()
+    dpg.create_viewport()
+    dpg.setup_dearpygui()
+
+    with dpg.window(label="Dear PyGui Demo", width=800, height=800,
+                    pos=(100, 100), tag="__demo_id") as w1:
+
+        _ret = []
+        if _dpg_def.is_container:
+            with _dpg_def.fn() as _dpg_id:
+                for _child_dpg_def in _all_dpg_defs:
+                    try:
+                        _child_dpg_def.fn_fake_call(parent=_dpg_id)
+                        _ret.append(_child_dpg_def)
+                    except Exception:
+                        ...
+
+    dpg.show_viewport()
+    dpg.start_dearpygui()
+    dpg.destroy_context()
+
+    return _ret
 
 
 def main():
     _cm = CodeMaker()
     _cm.make()
-    for _dpg_def in _cm.all_dpg_defs:
-        if not _dpg_def.is_before_param_present:
-            print(_dpg_def.is_parent_param_present, _dpg_def.fn)
+
+    # figure out child automatically ... DIFFICULT
+    # for _dpg_def in _cm.all_dpg_defs:
+    #     if not _dpg_def.is_container:
+    #         continue
+    #     print("> ", _dpg_def.fn)
+    #     _ret = try_dpg_children(_dpg_def, _cm.all_dpg_defs)
+    #     for _child_dpg_def in _ret:
+    #         print("\t\t\t: ", _child_dpg_def.fn)
 
 
 if __name__ == '__main__':

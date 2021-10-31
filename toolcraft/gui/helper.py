@@ -10,7 +10,7 @@ from .. import error as e
 def simple_split_window(
     dash_guid: str,
     title: str
-) -> t.Tuple[__base__.Dashboard, widget.Group, widget.Group]:
+) -> t.Tuple["__base__.Dashboard", widget.Group, widget.Group]:
     _dash = __base__.Dashboard(
         dash_guid=dash_guid,
         title=title, width=1200, height=2400,

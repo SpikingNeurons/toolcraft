@@ -257,8 +257,6 @@ from ._auto import Node
 # noinspection PyUnresolvedReferences
 from ._auto import NodeAttribute
 # noinspection PyUnresolvedReferences
-from ._auto import SubPlots
-# noinspection PyUnresolvedReferences
 from ._auto import Tab
 # noinspection PyUnresolvedReferences
 from ._auto import TabBar

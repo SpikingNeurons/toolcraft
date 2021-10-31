@@ -18,7 +18,7 @@ from .. import marshalling as m
 from . import asset
 
 _LOGGER = logger.get_logger()
-COLOR_TYPE: t.Tuple[int, int, int, int]
+COLOR_TYPE = t.Tuple[int, int, int, int]
 
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
@@ -549,32 +549,9 @@ class ContainerWidget(Widget, abc.ABC):
         # this will be populated when __set_item__ is called
         return []
 
-    def __getitem__(
-        self, item: t.Tuple[t.Union[MovableWidget, t.List[MovableWidget]], ...]
-    ) -> None:
-        """
-        The square bracket will layout components. We do not use it to get items in
-        container but instead use it to add items. Hence we return None here as it
-        has nothing to return. Instead it calls `add_child`
-        """
-        for _item in item:
-            if isinstance(_item, MovableWidget):
-                self.add_child(widget=_item)
-            elif isinstance(_item, list):
-                from .widget import Group
-                _g = Group(horizontal=True)
-                for _i in _item:
-                    _g.add_child(widget=_i)
-                self.add_child(widget=_g)
-            else:
-                e.code.CodingError(
-                    msgs=[
-                        f"Unsupported item of type {type(item)}",
-                        f"If not movable widget then you might think of having it as "
-                        f"property ... instead of using add_child mechanism",
-                    ]
-                )
-                raise
+    # noinspection PyMethodOverriding
+    def __call__(self, item: MovableWidget):
+        return self.add_child(widget=item)
 
     @classmethod
     def yaml_tag(cls) -> str:

@@ -5,4 +5,6 @@ from ._auto import Plot
 from ._auto import XAxis
 # noinspection PyUnresolvedReferences
 from ._auto import YAxis
+# noinspection PyUnresolvedReferences
+from ._auto import SubPlots
 # auto pk; end <<<

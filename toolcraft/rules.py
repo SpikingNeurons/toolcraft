@@ -38,7 +38,8 @@ from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
 from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
     ResultsFolder
 from .storage.state import Config, Info, StateFile
-from .gui.__base__ import Form, Widget, Dashboard
+from .gui.__base__ import Form, Widget
+from .gui.dashboard import Dashboard, BasicDashboard
 # from .gui.window import Window
 # from .gui.plot import Plot
 # from .gui.table import Table
@@ -80,7 +81,7 @@ def check_things_to_be_cached(
         Form: ['form_fields_container'],
         Widget: ['children'],
         # Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
-        Dashboard: ['primary_window'],
+        BasicDashboard: ['primary_window'],
     }
     if to_check is not None:
         _THINGS_TO_BE_CACHED = to_check
