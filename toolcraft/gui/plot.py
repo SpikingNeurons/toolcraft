@@ -361,3 +361,18 @@ class Plot(_auto.Plot):
 
         # return
         return _ret
+
+
+@dataclasses.dataclass
+class SubPlots(_auto.SubPlots):
+
+    def __call__(self, widget: Plot):
+        # we also need to add cells in row
+        if isinstance(widget, Plot):
+            super().__call__(widget)
+        else:
+            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.plot.{cls.__name__}"

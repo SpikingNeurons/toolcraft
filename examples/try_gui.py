@@ -2,54 +2,55 @@ import dataclasses
 import typing as t
 
 import dearpygui.dearpygui as dpg
+from toolcraft.gui import _demo
 import numpy as np
 from toolcraft import gui, util
 
 
-@dataclasses.dataclass(frozen=True)
-class Info(gui.Form):
+@dataclasses.dataclass
+class InfoForm(gui.form.Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> gui.CollapsingHeader:
-        return gui.CollapsingHeader()
+    def form_fields_container(self) -> gui.widget.CollapsingHeader:
+        return gui.widget.CollapsingHeader()
 
     label: str = "Topic 1 - Text"
 
-    message: gui.Text = gui.Text(
+    message: gui.widget.Text = gui.widget.Text(
         "This is topic 1. We will just add some bullet points below ...",
     )
 
-    bullet_1: gui.Text = gui.Text(
+    bullet_1: gui.widget.Text = gui.widget.Text(
         "bullet 1 ...", bullet=True,
     )
 
-    bullet_2: gui.Text = gui.Text(
+    bullet_2: gui.widget.Text = gui.widget.Text(
         "bullet 2 ...", bullet=True,
     )
 
 
-@dataclasses.dataclass(frozen=True)
-class Plotting(gui.Form):
+@dataclasses.dataclass
+class Plotting(gui.form.Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> gui.CollapsingHeader:
-        return gui.CollapsingHeader()
+    def form_fields_container(self) -> gui.widget.CollapsingHeader:
+        return gui.widget.CollapsingHeader()
 
     label: str = "Topic 2 - Plotting"
 
-    line_plot: gui.Plot = gui.Plot(
+    line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
         height=200,
     )
 
-    scatter_plot: gui.Plot = gui.Plot(
+    scatter_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is scatter plot ...",
         height=200,
     )
 
-    subplot: gui.Subplots = gui.Subplots(
+    subplot: gui.plot.SubPlots = gui.plot.SubPlots(
         rows=2,
         columns=2,
         label="This is sub plot ...",
@@ -62,78 +63,99 @@ class Plotting(gui.Form):
 
         # ------------------------------------------------------- 02
         # _line_plot
-        _line_plot = self.line_plot
-        _line_plot.add_line_series(
-            label="line 1",
-            x=np.arange(100),
-            y=np.random.normal(0.0, scale=2.0, size=100),
+        _line_plot_y1_axis = self.line_plot.y1_axis
+        _line_plot_y1_axis(
+            gui.plot.LineSeries(
+                label="line 1",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
+            )
         )
-        _line_plot.add_line_series(
-            label="line 2",
-            x=np.arange(100),
-            y=np.random.normal(0.0, scale=2.0, size=100),
+        _line_plot_y1_axis(
+            gui.plot.LineSeries(
+                label="line 2",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
+            )
         )
-        _line_plot.add_vline_series(x=[1.0, 2.0], label="vline 1")
-        _line_plot.add_vline_series(x=[10.0, 11.0], label="vline 2")
-        _line_plot.add_hline_series(x=[1.0, 2.0], label="hline 1")
-        _line_plot.add_hline_series(x=[10.0, 11.0], label="hline 2")
+        _line_plot_y1_axis(
+            gui.plot.VLineSeries(x=[1.0, 2.0], label="vline 1")
+        )
+        _line_plot_y1_axis(
+            gui.plot.VLineSeries(x=[10.0, 11.0], label="vline 2")
+        )
+        _line_plot_y1_axis(
+            gui.plot.HLineSeries(x=[1.0, 2.0], label="hline 1")
+        )
+        _line_plot_y1_axis(
+            gui.plot.HLineSeries(x=[10.0, 11.0], label="hline 2")
+        )
 
         # ------------------------------------------------------- 03
-        _scatter_plot = self.scatter_plot
-        _scatter_plot.add_scatter_series(
-            label="scatter 1",
-            x=np.random.normal(1.0, scale=2.0, size=100),
-            y=np.random.normal(0.0, scale=2.0, size=100),
+        _scatter_plot_y1_axis = self.scatter_plot.y1_axis
+        _scatter_plot_y1_axis(
+            gui.plot.ScatterSeries(
+                label="scatter 1",
+                x=np.random.normal(1.0, scale=2.0, size=100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
+            )
         )
-        _scatter_plot.add_scatter_series(
-            label="scatter 2",
-            x=np.random.normal(0.0, scale=2.0, size=100),
-            y=np.random.normal(1.0, scale=2.0, size=100),
+        _scatter_plot_y1_axis(
+            gui.plot.ScatterSeries(
+                label="scatter 2",
+                x=np.random.normal(0.0, scale=2.0, size=100),
+                y=np.random.normal(1.0, scale=2.0, size=100),
+            )
         )
 
         # ------------------------------------------------------- 04
         _subplot = self.subplot
         for i in range(4):
-            _plot = gui.Plot(height=200)
-            _subplot.add_child(guid=f"plot_{i}", widget=_plot)
-            _plot.add_line_series(
-                label="line 1",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
+            _plot = gui.plot.Plot(height=200)
+            _subplot(widget=_plot)
+            _plot_y1_axis = _plot.y1_axis
+            _plot_y1_axis(
+                gui.plot.LineSeries(
+                    label="line 1",
+                    x=np.arange(100),
+                    y=np.random.normal(0.0, scale=2.0, size=100),
+                )
             )
-            _plot.add_line_series(
-                label="line 2",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
+            _plot_y1_axis(
+                gui.plot.LineSeries(
+                    label="line 2",
+                    x=np.arange(100),
+                    y=np.random.normal(0.0, scale=2.0, size=100),
+                )
             )
 
 
 @dataclasses.dataclass(frozen=True)
-class ButtonPlotCallback(gui.Callback):
+class ButtonPlotCallback(gui.callback.Callback):
 
-    receiver: gui.Widget
+    receiver: gui.widget.ContainerWidget
 
     def fn(
         self,
-        sender: gui.Widget,
+        sender: gui.widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[gui.Widget, t.List[gui.Widget]],
+        user_data: t.Union[gui.widget.Widget, t.List[gui.widget.Widget]],
     ):
         # provide type
-        sender: gui.Button
+        sender: gui.widget.Button
 
         # display to receiver i.e. add_child if not there
-        if sender.guid not in self.receiver.children.keys():
+        if self.receiver.index_in_children(sender) == -1:
 
             # make collapsing header
-            _collapsing_header = gui.CollapsingHeader(
+            _collapsing_header = gui.widget.CollapsingHeader(
                 label=sender.label,
                 closable=False,
                 default_open=True,
             )
 
             # add child to receiver
-            self.receiver.add_child(guid=sender.guid, widget=_collapsing_header)
+            self.receiver(widget=_collapsing_header)
 
             # make close button and add it collapsing header
             _close_button = gui.callback.CloseWidgetCallback.get_button_widget(
@@ -173,8 +195,8 @@ class ButtonPlotCallback(gui.Callback):
             ...
 
 
-@dataclasses.dataclass(frozen=True)
-class ButtonPlot(gui.CollapsingHeader):
+@dataclasses.dataclass
+class ButtonPlot(gui.widget.CollapsingHeader):
 
     label: str = "Topic 3 - Button with action"
 
@@ -204,33 +226,25 @@ class ButtonPlot(gui.CollapsingHeader):
         self.add_child(guid="columns", widget=_table)
 
 
-@dataclasses.dataclass(frozen=True)
-class MyDashboard(gui.Dashboard):
+@dataclasses.dataclass
+class MyDashboard(gui.dashboard.BasicDashboard):
 
-    theme_selector: gui.Combo = gui.callback.SetThemeCallback.get_combo_widget()
+    theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
 
-    welcome_msg: gui.Text = gui.Text(
+    welcome_msg: gui.widget.Text = gui.widget.Text(
         "Welcome to my dashboard ..... toolcraft ..... ",
     )
 
-    topic1: Info = Info()
+    topic1: InfoForm = InfoForm()
 
-    topic2: Plotting = Plotting()
+    # topic2: Plotting = Plotting()
 
-    topic3: ButtonPlot = ButtonPlot()
-
-    def layout(self):
-        self.add_child(guid="theme_selector", widget=self.theme_selector)
-        self.add_child(guid="welcome_msg", widget=self.welcome_msg)
-        self.add_child(guid="topic2", widget=self.topic2)
-        self.add_child(guid="topic1", widget=self.topic1, before=self.topic2)
-        self.add_child(guid="topic3", widget=self.topic3)
+    # topic3: ButtonPlot = ButtonPlot()
 
 
 def basic_dashboard():
     _dash = MyDashboard(title="My Dashboard")
-    _dash.build()
-    _dash.topic2.plot_some_examples()
+    # _dash.topic2.plot_some_examples()
     _dash.run()
 
 
@@ -244,7 +258,7 @@ def demo():
     dpg.create_viewport()
     dpg.setup_dearpygui()
 
-    gui.demo.show_demo()
+    _demo.show_demo()
 
     # with dpg.window(label="Dear PyGui Demo", width=800, height=800,
     #                 pos=(100, 100), tag="__demo_id"):
@@ -258,7 +272,7 @@ def demo():
 
 def main():
     basic_dashboard()
-    demo()
+    # demo()
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ class WindowInternal(__base__.DpgInternal):
     dash_board: dashboard.Dashboard
 
     def test_if_others_set(self):
-        if not self.internal.has("dash_board"):
+        if not self.has("dash_board"):
             e.code.CodingError(
                 msgs=[
                     f"Window {self.__class__} has no dash_board",
@@ -41,16 +41,6 @@ class _DowngradeContainerWidget:
         raise
 
     @property
-    def root(self) -> None:
-        e.code.CodingError(
-            msgs=[
-                "Use of `root` for `Window` is not allowed.",
-                "Please use `dash_board` instead.",
-            ]
-        )
-        raise
-
-    @property
     def dash_board(self) -> dashboard.Dashboard:
         return self.internal.dash_board
 
@@ -64,9 +54,15 @@ class _DowngradeContainerWidget:
 
 @dataclasses.dataclass
 class Window(_DowngradeContainerWidget, _auto.Window):
-    ...
+
+    @property
+    def root(self) -> "Window":
+        return self
 
 
 @dataclasses.dataclass
 class FileDialog(_DowngradeContainerWidget, _auto.FileDialog):
-    ...
+
+    @property
+    def root(self) -> "FileDialog":
+        return self

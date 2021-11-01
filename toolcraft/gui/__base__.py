@@ -10,6 +10,7 @@ import enum
 import dearpygui.dearpygui as dpg
 # noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import numpy as np
 
 from .. import error as e
 from .. import logger
@@ -19,6 +20,8 @@ from . import asset
 
 _LOGGER = logger.get_logger()
 COLOR_TYPE = t.Tuple[int, int, int, int]
+# PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
+PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
@@ -171,7 +174,8 @@ class Dpg(m.YamlRepr, abc.ABC):
     def __setattr__(self, key, value):
         # this might not always work especially when key is custom ...
         # in that case catch exception and figure out how to handle
-        internal_dpg.configure_item(self.dpg_id, **{key: value})
+        if self.is_built:
+            internal_dpg.configure_item(self.dpg_id, **{key: value})
         return super().__setattr__(key, value)
 
     @classmethod
@@ -258,6 +262,12 @@ class Dpg(m.YamlRepr, abc.ABC):
 
         # set flag to indicate build is done
         self.internal.is_build_done = True
+
+    def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+        _ret = {}
+        for f_name in self.dataclass_field_names:
+            _ret[f_name] = getattr(self, f_name)
+        return _ret
 
     def get_value(self) -> t.Any:
         """
@@ -346,8 +356,8 @@ class Dpg(m.YamlRepr, abc.ABC):
         """
         internal_dpg.configure_item(self.dpg_id, show=False)
 
-    def set_theme(self, theme: asset.Theme):
-        dpg.set_item_theme(item=self.dpg_id, theme=theme.get())
+    def bind_theme(self, theme: asset.Theme):
+        dpg.bind_item_theme(item=self.dpg_id, theme=theme.get())
 
     def set_widget_configuration(self, **kwargs):
         # if any value is widget then get its dpg_id
@@ -398,7 +408,7 @@ class WidgetInternal(DpgInternal):
         ]
 
     def test_if_others_set(self):
-        if not self.internal.has("parent") or not self.internal.has("root"):
+        if not self.has("parent") or not self.has("root"):
             e.code.CodingError(
                 msgs=[
                     f"Widget {self.__class__} is not a children to any parent",
@@ -545,7 +555,7 @@ class ContainerWidget(Widget, abc.ABC):
 
     @property
     @util.CacheResult
-    def children(self) -> t.List[MovableWidget]:
+    def children(self) -> t.List[t.Union[MovableWidget]]:
         # this will be populated when __set_item__ is called
         return []
 
@@ -585,6 +595,9 @@ class ContainerWidget(Widget, abc.ABC):
         # -------------------------------------------------- 03
         # set internals
         widget.internal.parent = self
+        print("eeee", widget.__class__)
+        print("???????????", self.__class__)
+        print("???????????.....", self.root.__class__)
         widget.internal.root = self.root
 
         # -------------------------------------------------- 04
@@ -601,16 +614,22 @@ class ContainerWidget(Widget, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.container_widget.{cls.__name__}"
 
+    def index_in_children(self, child: MovableWidget) -> int:
+        try:
+            return self.children.index(child)
+        except ValueError:
+            return -1
+
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
     ):
+        # call super
+        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
         for child in self.children:
             child.build()
-
-        # call super
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
 
     def hide(self, children_only: bool = False):
         """
@@ -770,7 +789,7 @@ class Form(MovableWidget, abc.ABC):
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
             if isinstance(v, MovableWidget):
-                self.form_fields_container.add_child(widget=v)
+                self.form_fields_container(widget=v)
 
     def build(self) -> t.Union[int, str]:
         # layout
@@ -811,6 +830,12 @@ class Callback(m.YamlRepr, abc.ABC):
     ):
         ...
 
+    def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+        _ret = {}
+        for f_name in self.dataclass_field_names:
+            _ret[f_name] = getattr(self, f_name)
+        return _ret
+
 
 @dataclasses.dataclass(frozen=True)
 class Registry(m.YamlRepr, abc.ABC):
@@ -828,6 +853,12 @@ class Registry(m.YamlRepr, abc.ABC):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.registry.{cls.__name__}"
+
+    def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+        _ret = {}
+        for f_name in self.dataclass_field_names:
+            _ret[f_name] = getattr(self, f_name)
+        return _ret
 
 
 @dataclasses.dataclass

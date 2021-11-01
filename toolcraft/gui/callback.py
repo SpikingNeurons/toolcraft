@@ -58,7 +58,7 @@ class SetThemeCallback(Callback):
             )
             raise
         # we change theme of parent to which this Combo widget is child
-        sender.parent.set_theme(theme=_theme)
+        sender.parent.bind_theme(theme=_theme)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -122,8 +122,8 @@ class HashableMethodRunnerCallback(Callback):
     """
     This callback can call a method of HashableClass.
 
-    If tab_group_name is None then we make unique guid for all callable_name
-    else we reuse tab_group_name across different callables this will just
+    If group_tag is None then we make unique guid for all callable_name
+    else we reuse group_tag across different callables this will just
     mimic the TabGroup behaviour where one receiver widget will be updated.
 
     Note that this will mean that allow_refresh will be True when
@@ -133,7 +133,12 @@ class HashableMethodRunnerCallback(Callback):
     callable_name: str
     receiver: widget.ContainerWidget
     allow_refresh: bool
-    tab_group_name: str = None
+    group_tag: str = None
+
+    @property
+    @util.CacheResult
+    def temp_store(self) -> t.Dict[str, widget.MovableWidget]:
+        return {}
 
     def init_validate(self):
         # call super
@@ -142,11 +147,11 @@ class HashableMethodRunnerCallback(Callback):
         # if tab_group_name is supplied that means you are sharing receiver
         # object across multiple Callbacks with same tab_group_name
         # So ensure that the allow_refresh is True
-        if self.tab_group_name is not None:
+        if self.group_tag is not None:
             if not self.allow_refresh:
                 e.code.NotAllowed(
                     msgs=[
-                        f"looks like you are using tab_group_name. So please "
+                        f"looks like you are using group_tag. So please "
                         f"ensure that allow_refresh is set to True"
                     ]
                 )
@@ -161,33 +166,35 @@ class HashableMethodRunnerCallback(Callback):
         # _sender = self.sender
         _hashable = self.hashable
         _receiver = self.receiver
-        if self.tab_group_name is None:
+        if self.group_tag is None:
             _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.callable_name}"
         else:
             # this make sure that same guid is shared across multiple
             # callbacks that use same tab_group_name.
             # Note this applies if _hashable and receiver are same
-            _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.tab_group_name}"
+            _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.group_tag}"
 
         # if present in children
-        if _unique_guid in _receiver.children.keys():
+        if _unique_guid in self.temp_store.keys():
             # if allow refresh delete so that it can be added later
             if self.allow_refresh:
-                _receiver.children[_unique_guid].delete()
+                # deletes from dpg and the children list of parent
+                self.temp_store[_unique_guid].delete()
+                # del from temp storage
+                del self.temp_store[_unique_guid]
             # else return as nothing to do
             else:
                 return
 
         # get actual result widget we are interested to display ... and make
         # it child to receiver
-        util.rgetattr(
-            _hashable, self.callable_name
-        )(
-            binder=Binder(
-                guid=_unique_guid, parent=_receiver,
-                # before=None
-            )
-        )
+        _widget = util.rgetattr(_hashable, self.callable_name)()
+
+        # add to temp storage
+        self.temp_store[_unique_guid] = _widget
+
+        # add to receiver children
+        _receiver(_widget)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -196,7 +203,7 @@ class HashableMethodsRunnerCallback(Callback):
     Special class just to create a button bar if you do not want to have a
     special method that generates button bar
     """
-    tab_group_name: str
+    group_tag: str
     hashable: m.HashableClass
     title: str
     close_button: bool
@@ -205,6 +212,11 @@ class HashableMethodsRunnerCallback(Callback):
     callable_labels: t.List[str]
     receiver: widget.ContainerWidget
     allow_refresh: bool
+
+    @property
+    @util.CacheResult
+    def temp_store(self) -> t.Dict[str, widget.MovableWidget]:
+        return {}
 
     def init_validate(self):
         # call super
@@ -235,13 +247,16 @@ class HashableMethodsRunnerCallback(Callback):
         # this make sure that same guid is shared across multiple
         # callbacks that use same tab_group_name.
         # Note this applies if _hashable and receiver are same
-        _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.tab_group_name}"
+        _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.group_tag}"
 
         # if present in children
-        if _unique_guid in _receiver.children.keys():
-            # if allow refresh delete so that it can be deleted later
+        if _unique_guid in self.temp_store.keys():
+            # if allow refresh delete so that it can be added later
             if self.allow_refresh:
-                _receiver.children[_unique_guid].delete()
+                # deletes from dpg and the children list of parent
+                self.temp_store[_unique_guid].delete()
+                # del from temp storage
+                del self.temp_store[_unique_guid]
             # else return as nothing to do
             else:
                 return
@@ -249,7 +264,7 @@ class HashableMethodsRunnerCallback(Callback):
         # get actual result widget we are interested to display ... and make
         # it child to receiver
         _result_widget = helper.button_bar_from_hashable_callables(
-            tab_group_name=self.tab_group_name,
+            group_tag=self.group_tag,
             hashable=self.hashable,
             title=self.title,
             close_button=self.close_button,
@@ -258,9 +273,12 @@ class HashableMethodsRunnerCallback(Callback):
                 k: v for k, v in zip(self.callable_labels, self.callable_names)
             },
         )
-        _receiver.add_child(
-            widget=_result_widget
-        )
+
+        # add to temp storage
+        self.temp_store[_unique_guid] = _result_widget
+
+        # add to receiver children
+        _receiver(_result_widget)
 
 
 

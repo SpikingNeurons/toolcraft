@@ -10,6 +10,7 @@ from .. import util
 from .. import error as e
 from . import window
 from . import asset
+from . import widget
 
 
 class DashboardInternal(m.Internal):
@@ -55,6 +56,91 @@ class Dashboard(m.YamlRepr, abc.ABC):
     @util.CacheResult
     def internal(self) -> DashboardInternal:
         return DashboardInternal(owner=self)
+
+    def __post_init__(self):
+        self.init_validate()
+        self.init()
+
+    def init_validate(self):
+        ...
+
+    def init(self):
+        """
+        WHY DO WE CLONE??
+
+        To be called from init. Will be only called for fields that are
+        Widget or Callback
+
+        Purpose:
+        + When defaults are provided copy them to mimic immutability
+        + Each immutable field can have his own parent
+
+        Why is this needed??
+          Here we trick dataclass to treat some Hashable classes that were
+          assigned as default to be treated as non mutable ... this helps us
+          avoid using default_factory
+
+        Who is using it ??
+          + gui.Widget
+            Needed only while building UI to reuse UI components and keep code
+            readable. This will be in line with declarative syntax.
+          + gui.Callback
+            Although not needed we still allow this behaviour as it will be
+            used by users that build GUI and they might get to used to assigning
+            callbacks while defining class ... so just for convenience we allow
+            this to happen
+
+        Needed for fields that has default values
+          When a instance is assigned during class definition then it is not
+          longer usable with multiple instances of that classes. This applies in
+          case of UI components. But not needed for fields like prepared_data as
+          we actually might be interested to share that field with other
+          instances.
+
+          When such fields are bound for certain instance especially using the
+          property internal we might want an immutable duplicate made for each
+          instance.
+
+        todo: Dont be tempted to use this behaviour in other cases like
+          Model, HashableClass. Brainstorm if you think this needs
+          to be done. AVOID GENERALIZING THIS FUNCTION.
+
+        """
+        # ------------------------------------------------------- 01
+        # ...
+
+        # ------------------------------------------------------- 02
+        # loop over fields
+        for f_name in self.dataclass_field_names:
+            # --------------------------------------------------- 02.01
+            # get value
+            v = getattr(self, f_name)
+            # --------------------------------------------------- 02.02
+            # if not Widget class continue
+            # that means Widgets and Containers will be clones if default supplied
+            # While Hashable class and even Callbacks will not be cloned
+            # note that for UI we only need Dpg elements to be clones as they have
+            # build() method
+            if not isinstance(v, widget.Widget):
+                continue
+            # --------------------------------------------------- 02.03
+            # get field and its default value
+            # noinspection PyUnresolvedReferences
+            _field = self.__dataclass_fields__[f_name]
+            _default_value = _field.default
+            # --------------------------------------------------- 02.04
+            # if id(_default_value) == id(v) then that means the default value is
+            # supplied ... so now we need to trick dataclass and assigned a clone of
+            # default_value
+            # To understand why we clone ... read __doc_string__
+            # Note that the below code can also handle but we use id(...)
+            #   to be more specific
+            # _default_value == dataclasses.MISSING
+            if id(_default_value) == id(v):
+                # make clone
+                v_cloned = v.clone()
+                # hack to overwrite field value (as this is frozen)
+                self.__dict__[f_name] = v_cloned
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -265,6 +351,9 @@ class Dashboard(m.YamlRepr, abc.ABC):
 
 @dataclasses.dataclass
 class BasicDashboard(Dashboard):
+    """
+    A dashboard with one primary window ... and can layout all fields inside it
+    """
 
     @property
     @util.CacheResult
@@ -278,7 +367,11 @@ class BasicDashboard(Dashboard):
         self.primary_window.setup(dash_board=self)
 
     def layout(self):
-        ...
+        _primary_window = self.primary_window
+        for _fn in self.dataclass_field_names:
+            _fv = getattr(self, _fn)
+            if isinstance(_fv, widget.MovableWidget):
+                _primary_window(widget=_fv)
 
     def build(self):
         self.primary_window.build()

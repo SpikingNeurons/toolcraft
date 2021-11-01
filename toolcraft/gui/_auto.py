@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-10-31 13:44
+>> Time: 2021-11-01 11:15
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -23,6 +23,7 @@ from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
+from .__base__ import PLOT_DATA_TYPE
 
 
 class EnDir(Enum, enum.Enum):
@@ -108,10 +109,10 @@ class HistogramSeries2D(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -238,7 +239,7 @@ class Slider3D(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
     # max_x (float, optional): Applies upper limit to slider.
     max_x: float = 100.0
@@ -362,10 +363,10 @@ class AreaSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -420,10 +421,10 @@ class BarSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -671,19 +672,19 @@ class CandleSeries(PlotSeries):
     """
 
     # dates (Any): ...
-    dates: t.Union[t.List[float], t.Tuple[float, ...]]
+    dates: PLOT_DATA_TYPE
 
     # opens (Any): ...
-    opens: t.Union[t.List[float], t.Tuple[float, ...]]
+    opens: PLOT_DATA_TYPE
 
     # closes (Any): ...
-    closes: t.Union[t.List[float], t.Tuple[float, ...]]
+    closes: PLOT_DATA_TYPE
 
     # lows (Any): ...
-    lows: t.Union[t.List[float], t.Tuple[float, ...]]
+    lows: PLOT_DATA_TYPE
 
     # highs (Any): ...
-    highs: t.Union[t.List[float], t.Tuple[float, ...]]
+    highs: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -1056,7 +1057,7 @@ class ColorValue(Widget):
     source: t.Optional[Widget] = None
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
     def build(self) -> t.Union[int, str]:
 
@@ -2086,7 +2087,7 @@ class DragFloatX(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
     # size (int, optional): Number of floats to be displayed.
     size: int = 4
@@ -2720,7 +2721,7 @@ class DynamicTexture(Widget):
     height: int
 
     # default_value (Union[List[float], Tuple[float, ...]]): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]]
+    default_value: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -2759,16 +2760,16 @@ class ErrorSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # negative (Any): ...
-    negative: t.Union[t.List[float], t.Tuple[float, ...]]
+    negative: PLOT_DATA_TYPE
 
     # positive (Any): ...
-    positive: t.Union[t.List[float], t.Tuple[float, ...]]
+    positive: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -2846,7 +2847,7 @@ class FileExtension(MovableWidget):
     custom_text: str = ''
 
     # color (Union[List[float], Tuple[float, ...]], optional): Color for the text that will be shown with specified extensions.
-    color: t.Union[t.List[float], t.Tuple[float, ...]] = (-255, 0, 0, 255)
+    color: PLOT_DATA_TYPE = (-255, 0, 0, 255)
 
     def build(self) -> t.Union[int, str]:
 
@@ -2890,7 +2891,7 @@ class Float4Value(Widget):
     source: t.Optional[Widget] = None
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
     def build(self) -> t.Union[int, str]:
 
@@ -2974,7 +2975,7 @@ class FloatVectValue(Widget):
     source: t.Optional[Widget] = None
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = ()
+    default_value: PLOT_DATA_TYPE = ()
 
     def build(self) -> t.Union[int, str]:
 
@@ -3119,7 +3120,7 @@ class HeatSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # rows (int): ...
     rows: int
@@ -3197,7 +3198,7 @@ class HistogramSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -3275,7 +3276,7 @@ class HLineSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -3549,7 +3550,7 @@ class InputFloatX(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
     format: str = '%.3f'
@@ -5295,10 +5296,10 @@ class LineSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -6167,7 +6168,7 @@ class PieSeries(PlotSeries):
     radius: float
 
     # values (Any): ...
-    values: t.Union[t.List[float], t.Tuple[float, ...]]
+    values: PLOT_DATA_TYPE
 
     # labels (Union[List[str], Tuple[str, ...]]): ...
     labels: t.Union[t.List[str], t.Tuple[str, ...]]
@@ -6250,7 +6251,7 @@ class PlotAnnotation(MovableWidget):
     default_value: t.Any = (0.0, 0.0)
 
     # offset (Union[List[float], Tuple[float, ...]], optional): ...
-    offset: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0)
+    offset: PLOT_DATA_TYPE = (0.0, 0.0)
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
     color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
@@ -6645,7 +6646,7 @@ class RawTexture(Widget):
     height: int
 
     # default_value (Union[List[float], Tuple[float, ...]]): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]]
+    default_value: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -6688,10 +6689,10 @@ class ScatterSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -6977,10 +6978,10 @@ class ShadeSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y1 (Any): ...
-    y1: t.Union[t.List[float], t.Tuple[float, ...]]
+    y1: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -7073,7 +7074,7 @@ class SimplePlot(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = ()
+    default_value: PLOT_DATA_TYPE = ()
 
     # overlay (str, optional): overlays text (similar to a plot title)
     overlay: str = ''
@@ -7389,7 +7390,7 @@ class SliderFloatX(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]] = (0.0, 0.0, 0.0, 0.0)
+    default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
     # size (int, optional): Number of floats to be displayed.
     size: int = 4
@@ -7902,10 +7903,10 @@ class StairSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -7958,7 +7959,7 @@ class StaticTexture(Widget):
     height: int
 
     # default_value (Union[List[float], Tuple[float, ...]]): ...
-    default_value: t.Union[t.List[float], t.Tuple[float, ...]]
+    default_value: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -7997,10 +7998,10 @@ class StemSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # y (Any): ...
-    y: t.Union[t.List[float], t.Tuple[float, ...]]
+    y: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -8393,7 +8394,7 @@ class Text(MovableWidget):
     bullet: bool = False
 
     # color (Union[List[float], Tuple[float, ...]], optional): Color of the text (rgba).
-    color: t.Union[t.List[float], t.Tuple[float, ...]] = (-1, -1, -1, -1)
+    color: PLOT_DATA_TYPE = (-1, -1, -1, -1)
 
     # show_label (bool, optional): Displays the label to teh right of the text.
     show_label: bool = False
@@ -8766,7 +8767,7 @@ class VLineSeries(PlotSeries):
     """
 
     # x (Any): ...
-    x: t.Union[t.List[float], t.Tuple[float, ...]]
+    x: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9196,10 +9197,10 @@ class DrawArrow(MovableWidget):
     """
 
     # p1 (Union[List[float], Tuple[float, ...]]): Arrow tip.
-    p1: t.Union[t.List[float], t.Tuple[float, ...]]
+    p1: PLOT_DATA_TYPE
 
     # p2 (Union[List[float], Tuple[float, ...]]): Arrow tail.
-    p2: t.Union[t.List[float], t.Tuple[float, ...]]
+    p2: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9253,16 +9254,16 @@ class DrawBezierCubic(MovableWidget):
     """
 
     # p1 (Union[List[float], Tuple[float, ...]]): First point in curve.
-    p1: t.Union[t.List[float], t.Tuple[float, ...]]
+    p1: PLOT_DATA_TYPE
 
     # p2 (Union[List[float], Tuple[float, ...]]): Second point in curve.
-    p2: t.Union[t.List[float], t.Tuple[float, ...]]
+    p2: PLOT_DATA_TYPE
 
     # p3 (Union[List[float], Tuple[float, ...]]): Third point in curve.
-    p3: t.Union[t.List[float], t.Tuple[float, ...]]
+    p3: PLOT_DATA_TYPE
 
     # p4 (Union[List[float], Tuple[float, ...]]): Fourth point in curve.
-    p4: t.Union[t.List[float], t.Tuple[float, ...]]
+    p4: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9318,13 +9319,13 @@ class DrawBezierQuadratic(MovableWidget):
     """
 
     # p1 (Union[List[float], Tuple[float, ...]]): First point in curve.
-    p1: t.Union[t.List[float], t.Tuple[float, ...]]
+    p1: PLOT_DATA_TYPE
 
     # p2 (Union[List[float], Tuple[float, ...]]): Second point in curve.
-    p2: t.Union[t.List[float], t.Tuple[float, ...]]
+    p2: PLOT_DATA_TYPE
 
     # p3 (Union[List[float], Tuple[float, ...]]): Third point in curve.
-    p3: t.Union[t.List[float], t.Tuple[float, ...]]
+    p3: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9379,7 +9380,7 @@ class DrawCircle(MovableWidget):
     """
 
     # center (Union[List[float], Tuple[float, ...]]): ...
-    center: t.Union[t.List[float], t.Tuple[float, ...]]
+    center: PLOT_DATA_TYPE
 
     # radius (float): ...
     radius: float
@@ -9440,10 +9441,10 @@ class DrawEllipse(MovableWidget):
     """
 
     # pmin (Union[List[float], Tuple[float, ...]]): Min point of bounding rectangle.
-    pmin: t.Union[t.List[float], t.Tuple[float, ...]]
+    pmin: PLOT_DATA_TYPE
 
     # pmax (Union[List[float], Tuple[float, ...]]): Max point of bounding rectangle.
-    pmax: t.Union[t.List[float], t.Tuple[float, ...]]
+    pmax: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9538,10 +9539,10 @@ class DrawLine(MovableWidget):
     """
 
     # p1 (Union[List[float], Tuple[float, ...]]): Start of line.
-    p1: t.Union[t.List[float], t.Tuple[float, ...]]
+    p1: PLOT_DATA_TYPE
 
     # p2 (Union[List[float], Tuple[float, ...]]): End of line.
-    p2: t.Union[t.List[float], t.Tuple[float, ...]]
+    p2: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9697,16 +9698,16 @@ class DrawQuad(MovableWidget):
     """
 
     # p1 (Union[List[float], Tuple[float, ...]]): ...
-    p1: t.Union[t.List[float], t.Tuple[float, ...]]
+    p1: PLOT_DATA_TYPE
 
     # p2 (Union[List[float], Tuple[float, ...]]): ...
-    p2: t.Union[t.List[float], t.Tuple[float, ...]]
+    p2: PLOT_DATA_TYPE
 
     # p3 (Union[List[float], Tuple[float, ...]]): ...
-    p3: t.Union[t.List[float], t.Tuple[float, ...]]
+    p3: PLOT_DATA_TYPE
 
     # p4 (Union[List[float], Tuple[float, ...]]): ...
-    p4: t.Union[t.List[float], t.Tuple[float, ...]]
+    p4: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9762,10 +9763,10 @@ class DrawRectangle(MovableWidget):
     """
 
     # pmin (Union[List[float], Tuple[float, ...]]): Min point of bounding rectangle.
-    pmin: t.Union[t.List[float], t.Tuple[float, ...]]
+    pmin: PLOT_DATA_TYPE
 
     # pmax (Union[List[float], Tuple[float, ...]]): Max point of bounding rectangle.
-    pmax: t.Union[t.List[float], t.Tuple[float, ...]]
+    pmax: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -9843,7 +9844,7 @@ class DrawText(MovableWidget):
     """
 
     # pos (Union[List[float], Tuple[float, ...]]): Top left point of bounding text rectangle.
-    pos: t.Union[t.List[float], t.Tuple[float, ...]]
+    pos: PLOT_DATA_TYPE
 
     # text (str): Text to draw.
     text: str
@@ -9896,13 +9897,13 @@ class DrawTriangle(MovableWidget):
     """
 
     # p1 (Union[List[float], Tuple[float, ...]]): ...
-    p1: t.Union[t.List[float], t.Tuple[float, ...]]
+    p1: PLOT_DATA_TYPE
 
     # p2 (Union[List[float], Tuple[float, ...]]): ...
-    p2: t.Union[t.List[float], t.Tuple[float, ...]]
+    p2: PLOT_DATA_TYPE
 
     # p3 (Union[List[float], Tuple[float, ...]]): ...
-    p3: t.Union[t.List[float], t.Tuple[float, ...]]
+    p3: PLOT_DATA_TYPE
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -11215,10 +11216,10 @@ class SubPlots(MovableContainerWidget):
     track_offset: float = 0.5
 
     # row_ratios (Union[List[float], Tuple[float, ...]], optional): ...
-    row_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [])
+    row_ratios: PLOT_DATA_TYPE = dataclasses.field(default_factory=lambda: [])
 
     # column_ratios (Union[List[float], Tuple[float, ...]], optional): ...
-    column_ratios: t.Union[t.List[float], t.Tuple[float, ...]] = dataclasses.field(default_factory=lambda: [])
+    column_ratios: PLOT_DATA_TYPE = dataclasses.field(default_factory=lambda: [])
 
     # no_title (bool, optional): ...
     no_title: bool = False

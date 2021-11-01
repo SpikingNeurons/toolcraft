@@ -1,4 +1,4 @@
-from .__base__ import COLOR_TYPE
+from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE
 from ._enum import *
 from . import window
 from . import widget

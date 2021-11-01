@@ -437,6 +437,10 @@ class DpgDef:
                 "t.Callable", "Callback"
             )
 
+            # if below type then it is PLOT_DATA_TYPE
+            if _param_type == "t.Union[t.List[float], t.Tuple[float, ...]]":
+                _param_type = "PLOT_DATA_TYPE"
+
             # is callback
             _is_callback = _param_type.find("Callback") != -1
 
@@ -791,6 +795,7 @@ from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
+from .__base__ import PLOT_DATA_TYPE
 '''
         return _header
 

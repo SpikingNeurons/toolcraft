@@ -737,7 +737,7 @@ class YamlRepr(Tracker):
 
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         e.code.CodingError(msgs=[
-            f"We expect you to override this method in class "
+            f"We expect you to override `as_dict()` method in class "
             f"{self.__class__}"
         ])
         return {}
@@ -1295,10 +1295,10 @@ class HashableClass(YamlRepr, abc.ABC):
         self,
         button_label: str,
         callable_name: str,
-        receiver: "gui.Widget",
+        receiver: "gui.widget.ContainerWidget",
         allow_refresh: bool,
-        tab_group_name: str = None,
-    ) -> "gui.Button":
+        group_tag: str = None,
+    ) -> "gui.widget.Button":
         """
         todo: support refresh
         """
@@ -1321,12 +1321,12 @@ class HashableClass(YamlRepr, abc.ABC):
             callable_name=callable_name,
             receiver=receiver,
             allow_refresh=allow_refresh,
-            tab_group_name=tab_group_name,
+            group_tag=group_tag,
         )
 
         # ---------------------------------------------------- 04
         # create and return button
-        return gui.Button(
+        return gui.widget.Button(
             label=button_label,
             callback=_callback,
         )
