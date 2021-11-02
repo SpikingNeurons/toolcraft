@@ -237,7 +237,7 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic1: InfoForm = InfoForm()
 
-    # topic2: Plotting = Plotting()
+    topic2: Plotting = Plotting()
 
     # topic3: ButtonPlot = ButtonPlot()
 

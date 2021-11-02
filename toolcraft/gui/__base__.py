@@ -595,9 +595,6 @@ class ContainerWidget(Widget, abc.ABC):
         # -------------------------------------------------- 03
         # set internals
         widget.internal.parent = self
-        print("eeee", widget.__class__)
-        print("???????????", self.__class__)
-        print("???????????.....", self.root.__class__)
         widget.internal.root = self.root
 
         # -------------------------------------------------- 04
@@ -785,6 +782,7 @@ class Form(MovableWidget, abc.ABC):
         For dynamic widgets add Group widget as dataclass field and add dynamic items
         to it
         """
+
         # if there is a widget which is field of this widget then add it
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
@@ -792,11 +790,16 @@ class Form(MovableWidget, abc.ABC):
                 self.form_fields_container(widget=v)
 
     def build(self) -> t.Union[int, str]:
+        # set internals
+        _form_fields_container = self.form_fields_container
+        _form_fields_container.internal.parent = self.parent
+        _form_fields_container.internal.root = self.root
+
         # layout
         self.layout()
 
         # return
-        return self.form_fields_container.dpg_id
+        return _form_fields_container.build()
 
 
 @dataclasses.dataclass(frozen=True)
