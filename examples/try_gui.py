@@ -207,6 +207,12 @@ def basic_dashboard():
     _dash.topic3.add(
         hashable=SimpleHashableClass(some_value="second hashable ...")
     )
+    _dash.topic3.add(
+        hashable=SimpleHashableClass(some_value="third hashable ...")
+    )
+    _dash.topic3.add(
+        hashable=SimpleHashableClass(some_value="fourth hashable ...")
+    )
     _dash.run()
 
 
