@@ -252,7 +252,6 @@ class Plot(_auto.Plot):
     def legend(self) -> Legend:
         _ret = Legend()
         _ret.internal.parent = self
-        _ret.internal.root = self.root
         return _ret
 
     @property
@@ -260,7 +259,6 @@ class Plot(_auto.Plot):
     def x_axis(self) -> XAxis:
         _ret = XAxis()
         _ret.internal.parent = self
-        _ret.internal.root = self.root
         return _ret
 
     @property
@@ -268,7 +266,6 @@ class Plot(_auto.Plot):
     def y1_axis(self) -> YAxis:
         _ret = YAxis()
         _ret.internal.parent = self
-        _ret.internal.root = self.root
         return _ret
 
     @property
@@ -283,7 +280,6 @@ class Plot(_auto.Plot):
             )
         _ret = YAxis()
         _ret.internal.parent = self
-        _ret.internal.root = self.root
         return _ret
 
     @property
@@ -343,9 +339,13 @@ class Plot(_auto.Plot):
             self.y2_axis.clear()
             self.y3_axis.clear()
 
-    def build(self) -> t.Union[int, str]:
-        # call super ... which will build the parent plot and get its dpg_id
-        _ret = super().build()
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Union[int, str]
+    ):
+
+        # call super
+        super().build_post_runner(
+            hooked_method_return_value=hooked_method_return_value)
 
         # build other things
         # note that annotations if any will be taken care by build_post_runner as
@@ -358,9 +358,6 @@ class Plot(_auto.Plot):
         elif self.num_of_y_axis == 3:
             self.y2_axis.build()
             self.y3_axis.build()
-
-        # return
-        return _ret
 
 
 @dataclasses.dataclass

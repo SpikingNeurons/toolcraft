@@ -28,6 +28,86 @@ if False:
     from . import window
 
 
+class Tag:
+    _container = {}  # type: t.Dict[str, Widget]
+
+    @classmethod
+    def add(cls, tag: str, widget: 'Widget'):
+        if tag in cls._container.keys():
+            e.code.NotAllowed(
+                msgs=[
+                    f"A widget with tag `{tag}` already exists."
+                ]
+            )
+        if widget.is_tagged:
+            e.code.NotAllowed(
+                msgs=[
+                    f"The widget is already tagged with tag {widget.internal.tag} "
+                    f"so we cannot assign new tag {tag} ..."
+                ]
+            )
+        cls._container[tag] = widget
+
+    @classmethod
+    def get_tag(cls, widget: 'Widget') -> t.Optional[str]:
+        for k, v in cls._container.items():
+            if id(widget) == id(v):
+                return k
+        return None
+
+    @classmethod
+    def get_widget(cls, tag: str) -> t.Optional['Widget']:
+        return getattr(cls._container, tag, None)
+
+    @classmethod
+    def exists(cls, tag_or_widget: t.Union[str, 'Widget']) -> bool:
+        if isinstance(tag_or_widget, str):
+            return tag_or_widget in cls._container.keys()
+        elif isinstance(tag_or_widget, Widget):
+            return cls.get_tag(widget=tag_or_widget) is not None
+        else:
+            e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(tag_or_widget)}"])
+            raise
+
+    @classmethod
+    def remove(cls, tag_or_widget: t.Union[str, 'Widget'], not_exists_ok: bool):
+        if isinstance(tag_or_widget, str):
+            if tag_or_widget in cls._container.keys():
+                del cls._container[tag_or_widget]
+            else:
+                if not_exists_ok:
+                    return
+                e.code.NotAllowed(
+                    msgs=[
+                        "There is no widget tagged with the tag name "
+                        f"`{tag_or_widget}` hence there is nothing to remove"
+                    ]
+                )
+                raise
+        elif isinstance(tag_or_widget, Widget):
+            # get tag
+            _tag = cls.get_tag(widget=tag_or_widget)
+            # if the widget was not tagged then raise error
+            if _tag is None:
+                if not_exists_ok:
+                    return
+                e.code.CodingError(
+                    msgs=[
+                        f"The widget you want to untag was never tagged"
+                    ]
+                )
+                raise
+            # remove the tagged widget
+            del cls._container[_tag]
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"Unknown type {type(tag_or_widget)} ..."
+                ]
+            )
+            raise
+
+
 class Enum(m.FrozenEnum):
 
     @classmethod
@@ -400,15 +480,12 @@ class Dpg(m.YamlRepr, abc.ABC):
 
 class WidgetInternal(DpgInternal):
     parent: "ContainerWidget"
-    root: "window.Window"
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + [
-            "parent", "root"
-        ]
+        return super().vars_that_can_be_overwritten() + ["parent", ]
 
     def test_if_others_set(self):
-        if not self.has("parent") or not self.has("root"):
+        if not self.has("parent"):
             e.code.CodingError(
                 msgs=[
                     f"Widget {self.__class__} is not a children to any parent",
@@ -426,12 +503,16 @@ class Widget(Dpg, abc.ABC):
         return WidgetInternal(owner=self)
 
     @property
+    def is_tagged(self) -> bool:
+        return Tag.exists(tag_or_widget=self)
+
+    @property
     def parent(self) -> "ContainerWidget":
         return self.internal.parent
 
     @property
     def root(self) -> "window.Window":
-        return self.internal.root
+        return self.parent.root
 
     @property
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
@@ -441,7 +522,19 @@ class Widget(Dpg, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.widget.{cls.__name__}"
 
+    def get_tag(self) -> str:
+        return Tag.get_tag(widget=self)
+
+    def tag_it(self, tag: str):
+        Tag.add(tag=tag, widget=self)
+
+    def untag_it(self):
+        Tag.remove(tag_or_widget=self, not_exists_ok=False)
+
     def delete(self):
+        # if tagged then untag
+        Tag.remove(tag_or_widget=self, not_exists_ok=True)
+
         # delete the dpg UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
         # todo: make _widget unusable ... figure out
@@ -479,9 +572,8 @@ class MovableWidget(Widget, abc.ABC):
         _before_index = None
         if before is not None:
             # if before is not None check if it is in parent and get its index
-            try:
-                _before_index = parent.children.index(before)
-            except ValueError:
+            _before_index = parent.index_in_children(before)
+            if _before_index is None:
                 e.validation.NotAllowed(
                     msgs=[
                         f"We cannot find `before` widget in children of `parent` "
@@ -493,8 +585,7 @@ class MovableWidget(Widget, abc.ABC):
 
         # ---------------------------------------------- 03
         # first pop from self.parent.children
-        _src_children = self.parent.children
-        _src_children.pop(_src_children.index(self))
+        self.parent.children.pop(self.parent.index_in_children(self))
 
         # ---------------------------------------------- 04
         # now move it to new parent.children
@@ -517,7 +608,7 @@ class MovableWidget(Widget, abc.ABC):
         Else moves up by one index and returns True as it moved up
         """
         _children_list = self.parent.children
-        _index = self.parent.children.index(self)
+        _index = self.parent.index_in_children(self)
         if _index == 0:
             return False
         _children_list.insert(_index-1, _children_list.pop(_index))
@@ -530,7 +621,7 @@ class MovableWidget(Widget, abc.ABC):
         Else moves down by one index and returns True as it moved down
         """
         _children_list = self.parent.children
-        _index = self.parent.children.index(self)
+        _index = self.parent.index_in_children(self)
         if _index == len(_children_list)-1:
             return False
         _children_list.insert(_index+1, _children_list.pop(_index))
@@ -539,7 +630,7 @@ class MovableWidget(Widget, abc.ABC):
 
     def delete(self):
         _children_list = self.parent.children
-        _index = self.parent.children.index(self)
+        _index = self.parent.index_in_children(self)
         _widget = self.parent.children.pop(_index)
         return super().delete()
 
@@ -595,7 +686,6 @@ class ContainerWidget(Widget, abc.ABC):
         # -------------------------------------------------- 03
         # set internals
         widget.internal.parent = self
-        widget.internal.root = self.root
 
         # -------------------------------------------------- 04
         # we can now store widget inside children list
@@ -611,11 +701,22 @@ class ContainerWidget(Widget, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.container_widget.{cls.__name__}"
 
-    def index_in_children(self, child: MovableWidget) -> int:
+    def index_in_children(self, child: MovableWidget) -> t.Optional[int]:
         try:
             return self.children.index(child)
         except ValueError:
-            return -1
+            return None
+
+    def clone(self) -> "ContainerWidget":
+        if bool(self.children):
+            e.code.CodingError(
+                msgs=[
+                    "Cannot clone as you have added some widgets as children for "
+                    f"the container widget {self.__class__}"
+                ]
+            )
+        # noinspection PyTypeChecker
+        return super().clone()
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
@@ -793,7 +894,6 @@ class Form(MovableWidget, abc.ABC):
         # set internals
         _form_fields_container = self.form_fields_container
         _form_fields_container.internal.parent = self.parent
-        _form_fields_container.internal.root = self.root
 
         # layout
         self.layout()

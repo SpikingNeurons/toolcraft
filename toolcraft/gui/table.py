@@ -4,6 +4,7 @@ import dearpygui.dearpygui as dpg
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 
+from . import __base__
 from . import COLOR_TYPE
 from . import _auto
 from .. import error as e
@@ -29,6 +30,12 @@ class Cell(_auto.TableCell):
 @dataclasses.dataclass
 class Row(_auto.TableRow):
 
+    def __getitem__(
+        self, item: int
+    ) -> Cell:
+        # noinspection PyTypeChecker
+        return self.children[item]
+
     # noinspection PyMethodOverriding
     def __call__(self):
         """
@@ -45,7 +52,7 @@ class Row(_auto.TableRow):
                 ]
             )
         for _ in range(_num_columns):
-            super()(widget=Cell())
+            super().__call__(widget=Cell())
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -146,25 +153,46 @@ class Table(_auto.Table):
             # ---------------------------------------------- 03.02
             # set internals
             _c.internal.parent = self
-            _c.internal.root = self.root
 
         # -------------------------------------------------- 04
         # make rows list
-        for _r in self.rows:
+        # hack as the call below will add to `self.children` i.e. even `self.rows`
+        _backup_rows = self.__dict__['rows']
+        self.__dict__['rows'] = []
+        for _r in _backup_rows:
+            # set internals
+            _r.internal.parent = self
             # note that internals are set when we add row widget
             self(_r)
+        # this is because they both need to point to same list container and helpful
+        # to avoid any bugs
         assert id(self.rows) == id(self.children)
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
     ):
-        # build columns first
+        # Note that the rows will be handled by `build_post_runner` which calls `build`
+        # on children where children are nothing but rows
+        assert id(self.children) == id(self.rows), "check for sanity ..."
+
+        # call super
+        # Note ancestry
+        #   > MovableContainerWidget > (ContainerWidget, MovableWidget) > Widget > Dpg
+        # We want to bypass `ContainerWidget.build_post_runner` to account for adding
+        #   `Column` as they are not treated as `children`
+        super(
+            __base__.Widget, self
+        ).build_post_runner(hooked_method_return_value=hooked_method_return_value)
+
+        # the columns will not be handled by children mechanism as it is fixed so
+        # we build it here
         for _c in self.columns:
             _c.build()
 
-        # call super to add children i.e. nothing but rows
-        assert id(self.children) == id(self.rows)
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+        # now as layout is completed and build for this widget is completed,
+        # now it is time to render children
+        for child in self.children:
+            child.build()
 
     @classmethod
     def table_from_literals(

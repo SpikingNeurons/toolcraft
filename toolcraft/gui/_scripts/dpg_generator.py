@@ -266,6 +266,11 @@ class DpgBuildParamDef(NamedTuple):
     def is_callback(self) -> bool:
         return self.type.find("Callback") != -1
 
+    @property
+    def is_mandatory(self) -> bool:
+        # noinspection PyUnresolvedReferences,PyProtectedMember
+        return self.value == inspect._empty
+
 
 class DpgDef:
 
@@ -574,11 +579,16 @@ class DpgDef:
             *_local_val_lines,
             "",
             f"\t\t_ret = {self.call_prefix}(",
+            *[
+                f"\t\t\t{_pd.dpg_value},"
+                for _pd in self.param_defs if _pd.is_mandatory
+            ],
+            # *[f"\t\t\t{_k}={_v}," for _k, _v in _parametrized_params.items()],
+            *[f"\t\t\t{_v}," for _k, _v in _parametrized_params.items()],
             *[f"\t\t\t{_k}={_v}," for _k, _v in _internal_params.items()],
-            *[f"\t\t\t{_k}={_v}," for _k, _v in _parametrized_params.items()],
             *[
                 f"\t\t\t{_pd.dpg_name}={_pd.dpg_value},"
-                for _pd in self.param_defs
+                for _pd in self.param_defs if not _pd.is_mandatory
             ],
             f"\t\t)",
             f"\t\t",

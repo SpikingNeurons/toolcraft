@@ -6,7 +6,7 @@ from .. import util
 from .. import marshalling as m
 from .. import error as e
 from . import widget, asset
-from .__base__ import Callback
+from .__base__ import Callback, Tag
 
 
 @dataclasses.dataclass(frozen=True)
@@ -135,11 +135,6 @@ class HashableMethodRunnerCallback(Callback):
     allow_refresh: bool
     group_tag: str = None
 
-    @property
-    @util.CacheResult
-    def temp_store(self) -> t.Dict[str, widget.MovableWidget]:
-        return {}
-
     def init_validate(self):
         # call super
         super().init_validate()
@@ -167,34 +162,42 @@ class HashableMethodRunnerCallback(Callback):
         _hashable = self.hashable
         _receiver = self.receiver
         if self.group_tag is None:
-            _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.callable_name}"
+            _tag = f"{_hashable.__class__.__name__}:" \
+                   f"{_hashable.hex_hash[-10:]}.{self.callable_name}"
         else:
             # this make sure that same guid is shared across multiple
             # callbacks that use same tab_group_name.
             # Note this applies if _hashable and receiver are same
-            _unique_guid = f"{_hashable.hex_hash[-6:]}_{self.group_tag}"
+            _tag = f"{_hashable.__class__.__name__}:" \
+                   f"{_hashable.hex_hash[-10:]}.{self.group_tag}"
 
-        # if present in children
-        if _unique_guid in self.temp_store.keys():
-            # if allow refresh delete so that it can be added later
-            if self.allow_refresh:
-                # deletes from dpg and the children list of parent
-                self.temp_store[_unique_guid].delete()
-                # del from temp storage
-                del self.temp_store[_unique_guid]
-            # else return as nothing to do
-            else:
-                return
+        # get widget for given tag if present
+        # noinspection PyTypeChecker
+        _widget = Tag.get_widget(tag=_tag)
 
-        # get actual result widget we are interested to display ... and make
-        # it child to receiver
-        _widget = util.rgetattr(_hashable, self.callable_name)()
+        # if allow refresh then delete widget and set it to None so that it
+        # can be created again
+        if self.allow_refresh and _widget is not None:
+            # this will delete itself
+            # this will also remove itself from `parent.children`
+            # this will also untag itself if tagged
+            _widget.delete()
+            # set back to None so that it can be recreated
+            # noinspection PyTypeChecker
+            _widget = None
 
-        # add to temp storage
-        self.temp_store[_unique_guid] = _widget
+        # if widget is not present create it
+        if _widget is None:
+            # get actual result widget we are interested to display ... and make
+            # it child to receiver
+            _widget = util.rgetattr(
+                _hashable, self.callable_name)()  # type: widget.MovableWidget
 
-        # add to receiver children
-        _receiver(_widget)
+            # tag it as it was newly created
+            _widget.tag_it(tag=_tag)
+
+            # add to receiver children
+            _receiver(_widget)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -212,24 +215,6 @@ class HashableMethodsRunnerCallback(Callback):
     callable_labels: t.List[str]
     receiver: widget.ContainerWidget
     allow_refresh: bool
-
-    @property
-    @util.CacheResult
-    def temp_store(self) -> t.Dict[str, widget.MovableWidget]:
-        return {}
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # length must be same
-        if len(self.callable_names) != len(self.callable_labels):
-            e.validation.NotAllowed(
-                msgs=[
-                    f"We expect fields `callable_names` and `callable_labels` "
-                    f"to have same length"
-                ]
-            )
 
     def fn(
         self,

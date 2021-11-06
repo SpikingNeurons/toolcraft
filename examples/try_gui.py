@@ -4,16 +4,15 @@ import typing as t
 import dearpygui.dearpygui as dpg
 from toolcraft.gui import _demo
 import numpy as np
-from toolcraft import gui, util
+from toolcraft import gui, util, marshalling, logger
+
+_LOGGER = logger.get_logger()
+
+_LOGGER.info(msg="try gui ...")
 
 
 @dataclasses.dataclass
 class InfoForm(gui.form.Form):
-
-    @property
-    @util.CacheResult
-    def form_fields_container(self) -> gui.widget.CollapsingHeader:
-        return gui.widget.CollapsingHeader()
 
     label: str = "Topic 1 - Text"
 
@@ -29,14 +28,14 @@ class InfoForm(gui.form.Form):
         "bullet 2 ...", bullet=True,
     )
 
-
-@dataclasses.dataclass
-class Plotting(gui.form.Form):
-
     @property
     @util.CacheResult
     def form_fields_container(self) -> gui.widget.CollapsingHeader:
-        return gui.widget.CollapsingHeader()
+        return gui.widget.CollapsingHeader(label=self.label)
+
+
+@dataclasses.dataclass
+class Plotting(gui.form.Form):
 
     label: str = "Topic 2 - Plotting"
 
@@ -55,6 +54,11 @@ class Plotting(gui.form.Form):
         columns=2,
         label="This is sub plot ...",
     )
+
+    @property
+    @util.CacheResult
+    def form_fields_container(self) -> gui.widget.CollapsingHeader:
+        return gui.widget.CollapsingHeader(label=self.label)
 
     def plot_some_examples(self):
         # ------------------------------------------------------- 01
@@ -92,6 +96,7 @@ class Plotting(gui.form.Form):
         )
 
         # ------------------------------------------------------- 03
+        # scatter plot
         _scatter_plot_y1_axis = self.scatter_plot.y1_axis
         _scatter_plot_y1_axis(
             gui.plot.ScatterSeries(
@@ -109,6 +114,7 @@ class Plotting(gui.form.Form):
         )
 
         # ------------------------------------------------------- 04
+        # sub plots
         _subplot = self.subplot
         for i in range(4):
             _plot = gui.plot.Plot(height=200)
@@ -131,99 +137,47 @@ class Plotting(gui.form.Form):
 
 
 @dataclasses.dataclass(frozen=True)
-class ButtonPlotCallback(gui.callback.Callback):
+class SimpleHashableClass(marshalling.HashableClass):
 
-    receiver: gui.widget.ContainerWidget
+    some_value: str
 
-    def fn(
-        self,
-        sender: gui.widget.Widget,
-        app_data: t.Any,
-        user_data: t.Union[gui.widget.Widget, t.List[gui.widget.Widget]],
-    ):
-        # provide type
-        sender: gui.widget.Button
-
-        # display to receiver i.e. add_child if not there
-        if self.receiver.index_in_children(sender) == -1:
-
-            # make collapsing header
-            _collapsing_header = gui.widget.CollapsingHeader(
-                label=sender.label,
-                closable=False,
-                default_open=True,
-            )
-
-            # add child to receiver
-            self.receiver(widget=_collapsing_header)
-
-            # make close button and add it collapsing header
-            _close_button = gui.callback.CloseWidgetCallback.get_button_widget(
-                _collapsing_header
-            )
-            _collapsing_header.add_child(
-                guid="close_button",
-                widget=_close_button,
-            )
-
-            # make plot and add to collapsing header
-            _plot = gui.Plot(
-                label=f"This is plot for {sender.label} ...",
-                height=200,
-                width=-1,
-            )
-            _collapsing_header.add_child(guid="plot", widget=_plot)
-
-            # add some data
-            _plot.add_line_series(
+    def some_plot(self) -> gui.plot.Plot:
+        _plot = gui.plot.Plot(
+            label=f"This is line plot for `{self.some_value}`...",
+            height=200,
+        )
+        _plot_y1_axis = _plot.y1_axis
+        _plot_y1_axis(
+            gui.plot.LineSeries(
                 label="line 1",
-                x=np.random.normal(0.0, scale=2.0, size=100),
-                y=np.random.normal(1.0, scale=2.0, size=100),
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
             )
-            _plot.add_scatter_series(
-                label="scatter 1",
-                x=np.random.normal(0.0, scale=2.0, size=100),
-                y=np.random.normal(1.0, scale=2.0, size=100),
+        )
+        _plot_y1_axis(
+            gui.plot.LineSeries(
+                label="line 2",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
             )
-
-        # else we do nothing as things are already plotted
-        else:
-            # in case user has close collapsable header we can attempt to
-            # show it again
-            # _collapsable_header = self.receiver.children[_sender.label]
-            # _collapsable_header.show()
-            ...
+        )
+        return _plot
 
 
 @dataclasses.dataclass
-class ButtonPlot(gui.widget.CollapsingHeader):
+class SimpleHashablesMethodRunnerForm(gui.form.HashablesMethodRunnerForm):
 
-    label: str = "Topic 3 - Button with action"
+    title: str = "Topic 3 - SimpleHashable's method runner form"
+    callable_name: str = "some_plot"
+    allow_refresh: bool = False
 
-    def layout(self):
-        _table = gui.Table(
-            header_row=False,
-            resizable=True,
-            policy=gui.TableSizing.StretchSame,
-            borders_innerH=True,
-            borders_outerH=True,
-            borders_innerV=True,
-            borders_outerV=True,
-            rows=1,
-            columns=2,
-        )
-        _button_cell = _table.get_cell(row=0, column=0)
-        _display_cell = _table.get_cell(row=0, column=1)
-        for i in range(5):
-            _button_cell.add_child(
-                guid=f"button{i}",
-                widget=gui.Button(
-                    width=300,
-                    label=f"Button {i}",
-                    callback=ButtonPlotCallback(receiver=_display_cell),
-                ),
-            )
-        self.add_child(guid="columns", widget=_table)
+    @property
+    @util.CacheResult
+    def form_fields_container(self) -> gui.widget.CollapsingHeader:
+        _collapse_header = gui.widget.CollapsingHeader(label=self.title)
+        _ret = super().form_fields_container
+        _collapse_header(_ret)
+        return _collapse_header
 
 
 @dataclasses.dataclass
@@ -239,12 +193,15 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic2: Plotting = Plotting()
 
-    # topic3: ButtonPlot = ButtonPlot()
+    topic3: SimpleHashablesMethodRunnerForm = SimpleHashablesMethodRunnerForm()
 
 
 def basic_dashboard():
     _dash = MyDashboard(title="My Dashboard")
-    # _dash.topic2.plot_some_examples()
+    _dash.topic2.plot_some_examples()
+    _dash.topic3.add(
+        hashable=SimpleHashableClass(some_value="first hashable ...")
+    )
     _dash.run()
 
 

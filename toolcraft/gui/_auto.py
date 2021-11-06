@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-11-01 11:15
+>> Time: 2021-11-02 07:51
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -159,9 +159,9 @@ class HistogramSeries2D(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_2d_histogram_series(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -176,7 +176,7 @@ class HistogramSeries2D(PlotSeries):
             density=self.density,
             outliers=self.outliers,
         )
-
+        
         return _ret
 
 
@@ -294,13 +294,13 @@ class Slider3D(MovableWidget):
             min_z=self.min_z,
             scale=self.scale,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -316,9 +316,9 @@ class Slider3D(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -334,9 +334,9 @@ class Slider3D(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -395,9 +395,9 @@ class AreaSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_area_series(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -406,7 +406,7 @@ class AreaSeries(PlotSeries):
             fill=self.fill,
             contribute_to_bounds=self.contribute_to_bounds,
         )
-
+        
         return _ret
 
 
@@ -453,9 +453,9 @@ class BarSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_bar_series(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -464,7 +464,7 @@ class BarSeries(PlotSeries):
             weight=self.weight,
             horizontal=self.horizontal,
         )
-
+        
         return _ret
 
 
@@ -506,7 +506,7 @@ class BoolValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -603,13 +603,13 @@ class Button(MovableWidget):
             arrow=self.arrow,
             direction=self.direction.value,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -625,9 +625,9 @@ class Button(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -643,9 +643,9 @@ class Button(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -719,12 +719,12 @@ class CandleSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_candle_series(
+            self.dates,
+            self.opens,
+            self.closes,
+            self.lows,
+            self.highs,
             parent=_parent_dpg_id,
-            dates=self.dates,
-            opens=self.opens,
-            closes=self.closes,
-            lows=self.lows,
-            highs=self.highs,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -735,7 +735,7 @@ class CandleSeries(PlotSeries):
             weight=self.weight,
             tooltip=self.tooltip,
         )
-
+        
         return _ret
 
 
@@ -821,13 +821,13 @@ class CheckBox(MovableWidget):
             track_offset=self.track_offset,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -843,9 +843,9 @@ class CheckBox(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -861,9 +861,9 @@ class CheckBox(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -976,13 +976,13 @@ class ColorButton(MovableWidget):
             no_border=self.no_border,
             no_drag_drop=self.no_drag_drop,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -998,9 +998,9 @@ class ColorButton(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1016,9 +1016,9 @@ class ColorButton(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1072,7 +1072,7 @@ class ColorValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -1109,15 +1109,15 @@ class Colormap(Widget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_colormap(
+            self.colors,
+            self.qualitative,
             parent=_parent_dpg_id,
-            colors=self.colors,
-            qualitative=self.qualitative,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -1206,13 +1206,13 @@ class ColormapButton(MovableWidget):
             tracked=self.tracked,
             track_offset=self.track_offset,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1228,9 +1228,9 @@ class ColormapButton(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1246,9 +1246,9 @@ class ColormapButton(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1270,7 +1270,7 @@ class ColormapScale(MovableWidget):
     Refer:
     >>> dpg.add_colormap_scale
 
-     Adds a legend that pairs values with colors. This is typically used with a heat series.
+     Adds a legend that pairs values with colors. This is typically used with a heat series. 
 
     """
 
@@ -1338,13 +1338,13 @@ class ColormapScale(MovableWidget):
             min_scale=self.min_scale,
             max_scale=self.max_scale,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1437,13 +1437,13 @@ class ColormapSlider(MovableWidget):
             track_offset=self.track_offset,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1459,9 +1459,9 @@ class ColormapSlider(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1583,13 +1583,13 @@ class Combo(MovableWidget):
             no_preview=self.no_preview,
             height_mode=self.height_mode.value,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1605,9 +1605,9 @@ class Combo(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1623,9 +1623,9 @@ class Combo(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1718,13 +1718,13 @@ class DatePicker(MovableWidget):
             default_value=self.default_value,
             level=self.level.value,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1740,9 +1740,9 @@ class DatePicker(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1758,9 +1758,9 @@ class DatePicker(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1814,7 +1814,7 @@ class Double4Value(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -1856,7 +1856,7 @@ class DoubleValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -1970,13 +1970,13 @@ class DragFloat(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -1992,9 +1992,9 @@ class DragFloat(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2010,9 +2010,9 @@ class DragFloat(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2142,13 +2142,13 @@ class DragFloatX(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2164,9 +2164,9 @@ class DragFloatX(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2182,9 +2182,9 @@ class DragFloatX(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2310,13 +2310,13 @@ class DragInt(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2332,9 +2332,9 @@ class DragInt(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2350,9 +2350,9 @@ class DragInt(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2482,13 +2482,13 @@ class DragIntX(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2504,9 +2504,9 @@ class DragIntX(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2522,9 +2522,9 @@ class DragIntX(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2602,13 +2602,13 @@ class DragLine(MovableWidget):
             show_label=self.show_label,
             vertical=self.vertical,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2682,13 +2682,13 @@ class DragPoint(MovableWidget):
             thickness=self.thickness,
             show_label=self.show_label,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -2737,15 +2737,15 @@ class DynamicTexture(Widget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_dynamic_texture(
+            self.width,
+            self.height,
+            self.default_value,
             parent=_parent_dpg_id,
-            width=self.width,
-            height=self.height,
-            default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -2798,11 +2798,11 @@ class ErrorSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_error_series(
+            self.x,
+            self.y,
+            self.negative,
+            self.positive,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
-            negative=self.negative,
-            positive=self.positive,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -2811,7 +2811,7 @@ class ErrorSeries(PlotSeries):
             contribute_to_bounds=self.contribute_to_bounds,
             horizontal=self.horizontal,
         )
-
+        
         return _ret
 
 
@@ -2854,8 +2854,8 @@ class FileExtension(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_file_extension(
+            self.extension,
             parent=_parent_dpg_id,
-            extension=self.extension,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -2864,7 +2864,7 @@ class FileExtension(MovableWidget):
             custom_text=self.custom_text,
             color=self.color,
         )
-
+        
         return _ret
 
 
@@ -2906,7 +2906,7 @@ class Float4Value(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -2948,7 +2948,7 @@ class FloatValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -2990,7 +2990,7 @@ class FloatVectValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -3021,13 +3021,13 @@ class FontChars(Widget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_font_chars(
+            self.chars,
             parent=_parent_dpg_id,
-            chars=self.chars,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -3061,14 +3061,14 @@ class FontRange(Widget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_font_range(
+            self.first_char,
+            self.last_char,
             parent=_parent_dpg_id,
-            first_char=self.first_char,
-            last_char=self.last_char,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -3099,13 +3099,13 @@ class FontRangeHint(Widget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_font_range_hint(
+            self.hint,
             parent=_parent_dpg_id,
-            hint=self.hint,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -3167,10 +3167,10 @@ class HeatSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_heat_series(
+            self.x,
+            self.rows,
+            self.cols,
             parent=_parent_dpg_id,
-            x=self.x,
-            rows=self.rows,
-            cols=self.cols,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3183,7 +3183,7 @@ class HeatSeries(PlotSeries):
             format=self.format,
             contribute_to_bounds=self.contribute_to_bounds,
         )
-
+        
         return _ret
 
 
@@ -3245,8 +3245,8 @@ class HistogramSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_histogram_series(
+            self.x,
             parent=_parent_dpg_id,
-            x=self.x,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3261,7 +3261,7 @@ class HistogramSeries(PlotSeries):
             outliers=self.outliers,
             contribute_to_bounds=self.contribute_to_bounds,
         )
-
+        
         return _ret
 
 
@@ -3299,15 +3299,15 @@ class HLineSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_hline_series(
+            self.x,
             parent=_parent_dpg_id,
-            x=self.x,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -3433,13 +3433,13 @@ class InputFloat(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3455,9 +3455,9 @@ class InputFloat(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3473,9 +3473,9 @@ class InputFloat(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3609,13 +3609,13 @@ class InputFloatX(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3631,9 +3631,9 @@ class InputFloatX(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3649,9 +3649,9 @@ class InputFloatX(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3785,13 +3785,13 @@ class InputInt(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3807,9 +3807,9 @@ class InputInt(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3825,9 +3825,9 @@ class InputInt(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3957,13 +3957,13 @@ class InputIntX(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3979,9 +3979,9 @@ class InputIntX(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -3997,9 +3997,9 @@ class InputIntX(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4149,13 +4149,13 @@ class InputText(MovableWidget):
             scientific=self.scientific,
             on_enter=self.if_entered,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4171,9 +4171,9 @@ class InputText(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4189,9 +4189,9 @@ class InputText(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4245,7 +4245,7 @@ class Int4Value(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -4287,7 +4287,7 @@ class IntValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -4328,13 +4328,13 @@ class ItemActivatedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4387,13 +4387,13 @@ class ItemActiveHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4450,13 +4450,13 @@ class ItemClickedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4509,13 +4509,13 @@ class ItemDeactivatedAfterEditHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4568,13 +4568,13 @@ class ItemDeactivatedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4627,13 +4627,13 @@ class ItemEditedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4686,13 +4686,13 @@ class ItemFocusHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4745,13 +4745,13 @@ class ItemHoverHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4804,13 +4804,13 @@ class ItemResizeHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4863,13 +4863,13 @@ class ItemToggledOpenHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4922,13 +4922,13 @@ class ItemVisibleHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -4985,13 +4985,13 @@ class KeyDownHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5048,13 +5048,13 @@ class KeyPressHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5111,13 +5111,13 @@ class KeyReleaseHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5227,13 +5227,13 @@ class KnobFloat(MovableWidget):
             min_value=self.min_value,
             max_value=self.max_value,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5249,9 +5249,9 @@ class KnobFloat(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5267,9 +5267,9 @@ class KnobFloat(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5322,16 +5322,16 @@ class LineSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_line_series(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -5429,13 +5429,13 @@ class Listbox(MovableWidget):
             default_value=self.default_value,
             num_items=self.num_items,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5451,9 +5451,9 @@ class Listbox(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5469,9 +5469,9 @@ class Listbox(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5572,13 +5572,13 @@ class LoadingIndicator(MovableWidget):
             color=self.color,
             secondary_color=self.secondary_color,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5671,13 +5671,13 @@ class MenuItem(MovableWidget):
             shortcut=self.shortcut,
             check=self.check,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5693,9 +5693,9 @@ class MenuItem(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5752,13 +5752,13 @@ class MouseClickHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5815,13 +5815,13 @@ class MouseDoubleClickHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5878,13 +5878,13 @@ class MouseDownHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -5945,13 +5945,13 @@ class MouseDragHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6004,13 +6004,13 @@ class MouseMoveHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6067,13 +6067,13 @@ class MouseReleaseHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6126,13 +6126,13 @@ class MouseWheelHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6203,12 +6203,12 @@ class PieSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_pie_series(
+            self.x,
+            self.y,
+            self.radius,
+            self.values,
+            self.labels,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
-            radius=self.radius,
-            values=self.values,
-            labels=self.labels,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6218,7 +6218,7 @@ class PieSeries(PlotSeries):
             angle=self.angle,
             normalize=self.normalize,
         )
-
+        
         return _ret
 
 
@@ -6276,7 +6276,7 @@ class PlotAnnotation(MovableWidget):
             color=self.color,
             clamped=self.clamped,
         )
-
+        
         return _ret
 
 
@@ -6333,13 +6333,13 @@ class PlotLegend(Widget):
             horizontal=self.horizontal,
             outside=self.outside,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6441,13 +6441,13 @@ class ProgressBar(MovableWidget):
             overlay=self.overlay,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6463,9 +6463,9 @@ class ProgressBar(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6571,13 +6571,13 @@ class RadioButton(MovableWidget):
             default_value=self.default_value,
             horizontal=self.horizontal,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6593,9 +6593,9 @@ class RadioButton(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6611,9 +6611,9 @@ class RadioButton(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6665,16 +6665,16 @@ class RawTexture(Widget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_raw_texture(
+            self.width,
+            self.height,
+            self.default_value,
             parent=_parent_dpg_id,
-            width=self.width,
-            height=self.height,
-            default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             format=self.format,
         )
-
+        
         return _ret
 
 
@@ -6715,16 +6715,16 @@ class ScatterSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_scatter_series(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -6822,13 +6822,13 @@ class Selectable(MovableWidget):
             default_value=self.default_value,
             span_columns=self.span_columns,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6844,9 +6844,9 @@ class Selectable(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6862,9 +6862,9 @@ class Selectable(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -6921,7 +6921,7 @@ class Separator(MovableWidget):
             show=self.show,
             pos=self.pos,
         )
-
+        
         return _ret
 
 
@@ -6963,7 +6963,7 @@ class SeriesValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -7007,9 +7007,9 @@ class ShadeSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_shade_series(
+            self.x,
+            self.y1,
             parent=_parent_dpg_id,
-            x=self.x,
-            y1=self.y1,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -7017,7 +7017,7 @@ class ShadeSeries(PlotSeries):
             show=self.show,
             y2=self.y2,
         )
-
+        
         return _ret
 
 
@@ -7119,13 +7119,13 @@ class SimplePlot(MovableWidget):
             min_scale=self.min_scale,
             max_scale=self.max_scale,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7141,9 +7141,9 @@ class SimplePlot(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7273,13 +7273,13 @@ class SliderFloat(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7295,9 +7295,9 @@ class SliderFloat(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7313,9 +7313,9 @@ class SliderFloat(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7441,13 +7441,13 @@ class SliderFloatX(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7463,9 +7463,9 @@ class SliderFloatX(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7481,9 +7481,9 @@ class SliderFloatX(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7613,13 +7613,13 @@ class SliderInt(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7635,9 +7635,9 @@ class SliderInt(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7653,9 +7653,9 @@ class SliderInt(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7781,13 +7781,13 @@ class SliderIntX(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7803,9 +7803,9 @@ class SliderIntX(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7821,9 +7821,9 @@ class SliderIntX(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -7888,7 +7888,7 @@ class Spacer(MovableWidget):
             show=self.show,
             pos=self.pos,
         )
-
+        
         return _ret
 
 
@@ -7929,16 +7929,16 @@ class StairSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_stair_series(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -7975,15 +7975,15 @@ class StaticTexture(Widget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_static_texture(
+            self.width,
+            self.height,
+            self.default_value,
             parent=_parent_dpg_id,
-            width=self.width,
-            height=self.height,
-            default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -8027,9 +8027,9 @@ class StemSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_stem_series(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8037,7 +8037,7 @@ class StemSeries(PlotSeries):
             source=_source_dpg_id,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -8079,7 +8079,7 @@ class StringValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-
+        
         return _ret
 
 
@@ -8164,13 +8164,13 @@ class TabButton(MovableWidget):
             trailing=self.trailing,
             no_tooltip=self.no_tooltip,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8186,9 +8186,9 @@ class TabButton(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8204,9 +8204,9 @@ class TabButton(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8331,7 +8331,7 @@ class TableColumn(MovableWidget):
             indent_enable=self.indent_enable,
             indent_disable=self.indent_disable,
         )
-
+        
         return _ret
 
 
@@ -8425,13 +8425,13 @@ class Text(MovableWidget):
             color=self.color,
             show_label=self.show_label,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8447,9 +8447,9 @@ class Text(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8511,9 +8511,9 @@ class TextPoint(MovableWidget):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_text_point(
+            self.x,
+            self.y,
             parent=_parent_dpg_id,
-            x=self.x,
-            y=self.y,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8523,7 +8523,7 @@ class TextPoint(MovableWidget):
             y_offset=self.y_offset,
             vertical=self.vertical,
         )
-
+        
         return _ret
 
 
@@ -8568,7 +8568,7 @@ class ThemeColor(Widget):
             use_internal_label=self.use_internal_label,
             category=self.category.value,
         )
-
+        
         return _ret
 
 
@@ -8617,7 +8617,7 @@ class ThemeStyle(Widget):
             use_internal_label=self.use_internal_label,
             category=self.category.value,
         )
-
+        
         return _ret
 
 
@@ -8698,13 +8698,13 @@ class TimePicker(MovableWidget):
             default_value=self.default_value,
             hour24=self.hour24,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8720,9 +8720,9 @@ class TimePicker(MovableWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8738,9 +8738,9 @@ class TimePicker(MovableWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8790,15 +8790,15 @@ class VLineSeries(PlotSeries):
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_vline_series(
+            self.x,
             parent=_parent_dpg_id,
-            x=self.x,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -8899,13 +8899,13 @@ class ChildWindow(MovableContainerWidget):
             horizontal_scrollbar=self.horizontal_scrollbar,
             menubar=self.menubar,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -8966,7 +8966,7 @@ class Clipper(MovableContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-
+        
         return _ret
 
 
@@ -9063,13 +9063,13 @@ class CollapsingHeader(MovableContainerWidget):
             leaf=self.leaf,
             bullet=self.bullet,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -9085,9 +9085,9 @@ class CollapsingHeader(MovableContainerWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -9133,7 +9133,7 @@ class ColormapRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -9182,7 +9182,7 @@ class DragPayload(ContainerWidget):
             drop_data=self.drop_data,
             payload_type=self.payload_type,
         )
-
+        
         return _ret
 
 
@@ -9228,9 +9228,9 @@ class DrawArrow(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_arrow(
+            self.p1,
+            self.p2,
             parent=_parent_dpg_id,
-            p1=self.p1,
-            p2=self.p2,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9239,7 +9239,7 @@ class DrawArrow(MovableWidget):
             thickness=self.thickness,
             size=self.size,
         )
-
+        
         return _ret
 
 
@@ -9291,11 +9291,11 @@ class DrawBezierCubic(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_bezier_cubic(
+            self.p1,
+            self.p2,
+            self.p3,
+            self.p4,
             parent=_parent_dpg_id,
-            p1=self.p1,
-            p2=self.p2,
-            p3=self.p3,
-            p4=self.p4,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9304,7 +9304,7 @@ class DrawBezierCubic(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-
+        
         return _ret
 
 
@@ -9353,10 +9353,10 @@ class DrawBezierQuadratic(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_bezier_quadratic(
+            self.p1,
+            self.p2,
+            self.p3,
             parent=_parent_dpg_id,
-            p1=self.p1,
-            p2=self.p2,
-            p3=self.p3,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9365,7 +9365,7 @@ class DrawBezierQuadratic(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-
+        
         return _ret
 
 
@@ -9414,9 +9414,9 @@ class DrawCircle(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_circle(
+            self.center,
+            self.radius,
             parent=_parent_dpg_id,
-            center=self.center,
-            radius=self.radius,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9426,7 +9426,7 @@ class DrawCircle(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-
+        
         return _ret
 
 
@@ -9475,9 +9475,9 @@ class DrawEllipse(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_ellipse(
+            self.pmin,
+            self.pmax,
             parent=_parent_dpg_id,
-            pmin=self.pmin,
-            pmax=self.pmax,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9487,7 +9487,7 @@ class DrawEllipse(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-
+        
         return _ret
 
 
@@ -9524,7 +9524,7 @@ class DrawLayer(MovableContainerWidget):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -9567,9 +9567,9 @@ class DrawLine(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_line(
+            self.p1,
+            self.p2,
             parent=_parent_dpg_id,
-            p1=self.p1,
-            p2=self.p2,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9577,7 +9577,7 @@ class DrawLine(MovableWidget):
             color=self.color,
             thickness=self.thickness,
         )
-
+        
         return _ret
 
 
@@ -9620,8 +9620,8 @@ class DrawPolygon(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_polygon(
+            self.points,
             parent=_parent_dpg_id,
-            points=self.points,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9630,7 +9630,7 @@ class DrawPolygon(MovableWidget):
             fill=self.fill,
             thickness=self.thickness,
         )
-
+        
         return _ret
 
 
@@ -9673,8 +9673,8 @@ class DrawPolyline(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_polyline(
+            self.points,
             parent=_parent_dpg_id,
-            points=self.points,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9683,7 +9683,7 @@ class DrawPolyline(MovableWidget):
             color=self.color,
             thickness=self.thickness,
         )
-
+        
         return _ret
 
 
@@ -9735,11 +9735,11 @@ class DrawQuad(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_quad(
+            self.p1,
+            self.p2,
+            self.p3,
+            self.p4,
             parent=_parent_dpg_id,
-            p1=self.p1,
-            p2=self.p2,
-            p3=self.p3,
-            p4=self.p4,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9748,7 +9748,7 @@ class DrawQuad(MovableWidget):
             fill=self.fill,
             thickness=self.thickness,
         )
-
+        
         return _ret
 
 
@@ -9812,9 +9812,9 @@ class DrawRectangle(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_rectangle(
+            self.pmin,
+            self.pmax,
             parent=_parent_dpg_id,
-            pmin=self.pmin,
-            pmax=self.pmax,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9829,7 +9829,7 @@ class DrawRectangle(MovableWidget):
             rounding=self.rounding,
             thickness=self.thickness,
         )
-
+        
         return _ret
 
 
@@ -9872,9 +9872,9 @@ class DrawText(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_text(
+            self.pos,
+            self.text,
             parent=_parent_dpg_id,
-            pos=self.pos,
-            text=self.text,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9882,7 +9882,7 @@ class DrawText(MovableWidget):
             color=self.color,
             size=self.size,
         )
-
+        
         return _ret
 
 
@@ -9931,10 +9931,10 @@ class DrawTriangle(MovableWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.draw_triangle(
+            self.p1,
+            self.p2,
+            self.p3,
             parent=_parent_dpg_id,
-            p1=self.p1,
-            p2=self.p2,
-            p3=self.p3,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9943,7 +9943,7 @@ class DrawTriangle(MovableWidget):
             fill=self.fill,
             thickness=self.thickness,
         )
-
+        
         return _ret
 
 
@@ -9998,9 +9998,9 @@ class DrawList(MovableContainerWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_drawlist(
+            self.width,
+            self.height,
             parent=_parent_dpg_id,
-            width=self.width,
-            height=self.height,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10012,13 +10012,13 @@ class DrawList(MovableContainerWidget):
             tracked=self.tracked,
             track_offset=self.track_offset,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10096,13 +10096,13 @@ class FileDialog(ContainerWidget):
             modal=self.modal,
             directory_selector=self.directory_selector,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10163,7 +10163,7 @@ class FilterSet(MovableContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-
+        
         return _ret
 
 
@@ -10197,14 +10197,14 @@ class Font(ContainerWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_font(
+            self.file,
+            self.size,
             parent=_parent_dpg_id,
-            file=self.file,
-            size=self.size,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -10238,7 +10238,7 @@ class FontRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -10327,13 +10327,13 @@ class Group(MovableContainerWidget):
             horizontal_spacing=self.horizontal_spacing,
             xoffset=self.xoffset,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10349,9 +10349,9 @@ class Group(MovableContainerWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10397,7 +10397,7 @@ class HandlerRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -10431,7 +10431,7 @@ class ItemHandlerRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -10500,13 +10500,13 @@ class Menu(MovableContainerWidget):
             tracked=self.tracked,
             track_offset=self.track_offset,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10563,7 +10563,7 @@ class MenuBar(ContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-
+        
         return _ret
 
 
@@ -10636,13 +10636,13 @@ class Node(MovableContainerWidget):
             track_offset=self.track_offset,
             draggable=self.draggable,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10658,9 +10658,9 @@ class Node(MovableContainerWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10737,7 +10737,7 @@ class NodeAttribute(MovableContainerWidget):
             shape=self.shape,
             category=self.category,
         )
-
+        
         return _ret
 
 
@@ -10910,13 +10910,13 @@ class Plot(MovableContainerWidget):
             horizontal_mod=self.horizontal_mod,
             vertical_mod=self.vertical_mod,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10932,9 +10932,9 @@ class Plot(MovableContainerWidget):
             )
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -10950,9 +10950,9 @@ class Plot(MovableContainerWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -11025,8 +11025,8 @@ class XAxis(ContainerWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_plot_axis(
+            dpg.mvXAxis,
             parent=_parent_dpg_id,
-            axis=dpg.mvXAxis,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11042,13 +11042,13 @@ class XAxis(ContainerWidget):
             lock_max=self.lock_max,
             time=self.time,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -11121,8 +11121,8 @@ class YAxis(ContainerWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_plot_axis(
+            dpg.mvYAxis,
             parent=_parent_dpg_id,
-            axis=dpg.mvYAxis,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11138,13 +11138,13 @@ class YAxis(ContainerWidget):
             lock_max=self.lock_max,
             time=self.time,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -11253,9 +11253,9 @@ class SubPlots(MovableContainerWidget):
         _parent_dpg_id = self.internal.parent.dpg_id
 
         _ret = internal_dpg.add_subplots(
+            self.rows,
+            self.columns,
             parent=_parent_dpg_id,
-            rows=self.rows,
-            columns=self.columns,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11281,13 +11281,13 @@ class SubPlots(MovableContainerWidget):
             link_all_y=self.link_all_y,
             column_major=self.column_major,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -11376,13 +11376,13 @@ class Tab(MovableContainerWidget):
             no_tooltip=self.no_tooltip,
             order_mode=self.order_mode,
         )
-
+        
         return _ret
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -11463,13 +11463,13 @@ class TabBar(MovableContainerWidget):
             track_offset=self.track_offset,
             reorderable=self.reorderable,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -11667,13 +11667,13 @@ class Table(MovableContainerWidget):
             scrollY=self.scrollY,
             no_saved_settings=self.no_saved_settings,
         )
-
+        
         return _ret
 
     def callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -11730,7 +11730,7 @@ class TableCell(MovableContainerWidget):
             show=self.show,
             filter_key=self.filter_key,
         )
-
+        
         return _ret
 
 
@@ -11775,7 +11775,7 @@ class TableRow(MovableContainerWidget):
             show=self.show,
             filter_key=self.filter_key,
         )
-
+        
         return _ret
 
 
@@ -11805,7 +11805,7 @@ class TemplateRegistry(Registry):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -11839,7 +11839,7 @@ class TextureRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -11880,7 +11880,7 @@ class ThemeComponent(MovableContainerWidget):
             use_internal_label=self.use_internal_label,
             enabled_state=self.enabled_state,
         )
-
+        
         return _ret
 
 
@@ -11917,7 +11917,7 @@ class Tooltip(ContainerWidget):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-
+        
         return _ret
 
 
@@ -12014,13 +12014,13 @@ class TreeNode(MovableContainerWidget):
             bullet=self.bullet,
             selectable=self.selectable,
         )
-
+        
         return _ret
 
     def drag_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -12036,9 +12036,9 @@ class TreeNode(MovableContainerWidget):
             )
 
     def drop_callback_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
@@ -12080,7 +12080,7 @@ class ValueRegistry(Registry):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-
+        
         return _ret
 
 
@@ -12125,7 +12125,7 @@ class ViewportMenuBar(ContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-
+        
         return _ret
 
 
@@ -12255,13 +12255,13 @@ class Window(ContainerWidget):
             no_saved_settings=self.no_saved_settings,
             on_close=self.on_close_fn,
         )
-
+        
         return _ret
 
     def on_close_fn(
-        self,
-        sender_dpg_id: int,
-        app_data: t.Any,
+        self, 
+        sender_dpg_id: int, 
+        app_data: t.Any, 
         user_data: t.Any
     ):
         # eventually remove this sanity check (dpg_widgets_generator.py)...
