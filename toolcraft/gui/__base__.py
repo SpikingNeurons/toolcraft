@@ -57,7 +57,7 @@ class Tag:
 
     @classmethod
     def get_widget(cls, tag: str) -> t.Optional['Widget']:
-        return getattr(cls._container, tag, None)
+        return cls._container.get(tag, None)
 
     @classmethod
     def exists(cls, tag_or_widget: t.Union[str, 'Widget']) -> bool:
@@ -543,6 +543,10 @@ class Widget(Dpg, abc.ABC):
 @dataclasses.dataclass
 class MovableWidget(Widget, abc.ABC):
 
+    @property
+    def index_in_parent_children(self) -> int:
+        return self.parent.index_in_children(self)
+
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.movable_widget.{cls.__name__}"
@@ -597,7 +601,6 @@ class MovableWidget(Widget, abc.ABC):
         # ---------------------------------------------- 05
         # sync the move
         self.internal.parent = parent
-        self.internal.root = parent.root
         internal_dpg.move_item(
             self.dpg_id, parent=parent.dpg_id,
             before=0 if before is None else before.dpg_id)
@@ -630,8 +633,7 @@ class MovableWidget(Widget, abc.ABC):
 
     def delete(self):
         _children_list = self.parent.children
-        _index = self.parent.index_in_children(self)
-        _widget = self.parent.children.pop(_index)
+        _widget = self.parent.children.pop(self.index_in_parent_children)
         return super().delete()
 
 

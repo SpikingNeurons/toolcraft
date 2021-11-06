@@ -38,7 +38,7 @@ from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
 from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
     ResultsFolder
 from .storage.state import Config, Info, StateFile
-from .gui.__base__ import Form, Dpg, Widget
+from .gui.__base__ import Form, Dpg, Widget, MovableWidget
 from .gui.dashboard import Dashboard, BasicDashboard
 from .gui.window import Window
 from .gui.plot import Plot
@@ -113,6 +113,7 @@ def check_things_not_to_be_cached(
         StateFile: ['is_available'],
         Dpg: ['dpg_state', 'dpg_config', ],
         Widget: ['is_tagged', ],
+        MovableWidget: ['index_in_parent_children', ],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_CACHED = to_check

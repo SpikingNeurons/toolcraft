@@ -70,7 +70,8 @@ class HashablesMethodRunnerForm(Form):
             button_label=label, callable_name=self.callable_name,
             receiver=self.receiver_panel,
             allow_refresh=self.allow_refresh,
-            # as we want to stack the result widget from multiple buttons
+            # we can maintain this as we will be using single `callable_name` and hence
+            # no use for this kwarg
             group_tag=None,
         )
 

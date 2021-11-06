@@ -193,7 +193,9 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic2: Plotting = Plotting()
 
-    topic3: SimpleHashablesMethodRunnerForm = SimpleHashablesMethodRunnerForm()
+    topic3: SimpleHashablesMethodRunnerForm = SimpleHashablesMethodRunnerForm(
+        allow_refresh=True
+    )
 
 
 def basic_dashboard():
@@ -201,6 +203,9 @@ def basic_dashboard():
     _dash.topic2.plot_some_examples()
     _dash.topic3.add(
         hashable=SimpleHashableClass(some_value="first hashable ...")
+    )
+    _dash.topic3.add(
+        hashable=SimpleHashableClass(some_value="second hashable ...")
     )
     _dash.run()
 

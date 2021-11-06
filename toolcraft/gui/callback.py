@@ -174,17 +174,31 @@ class HashableMethodRunnerCallback(Callback):
         # get widget for given tag if present
         # noinspection PyTypeChecker
         _widget = Tag.get_widget(tag=_tag)
+        _before_widget = None
 
         # if allow refresh then delete widget and set it to None so that it
         # can be created again
-        if self.allow_refresh and _widget is not None:
-            # this will delete itself
-            # this will also remove itself from `parent.children`
-            # this will also untag itself if tagged
-            _widget.delete()
-            # set back to None so that it can be recreated
-            # noinspection PyTypeChecker
-            _widget = None
+        if self.allow_refresh:
+            # if widget is available i.e. it is tagged then delete it
+            if _widget is not None:
+                # fetch _before_widget
+                # we are assuming this will be MovableWidget ... Note that we want to
+                # keep this way and if possible modify other code ... this is possible
+                # for container widgets and we do not see that this callback will be
+                # used non movable Widgets
+                try:
+                    _before_widget = _widget.parent.children[
+                        _widget.index_in_parent_children + 1
+                    ]
+                except IndexError:
+                    ...
+                # this will delete itself
+                # this will also remove itself from `parent.children`
+                # this will also untag itself if tagged
+                _widget.delete()
+                # set back to None so that it can be recreated
+                # noinspection PyTypeChecker
+                _widget = None
 
         # if widget is not present create it
         if _widget is None:
@@ -198,6 +212,10 @@ class HashableMethodRunnerCallback(Callback):
 
             # add to receiver children
             _receiver(_widget)
+
+            # move widget
+            if _before_widget is not None:
+                _widget.move(before=_before_widget)
 
 
 @dataclasses.dataclass(frozen=True)
