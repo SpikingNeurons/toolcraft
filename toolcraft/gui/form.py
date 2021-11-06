@@ -8,6 +8,86 @@ from .__base__ import Form
 from .. import gui
 from . import widget
 from . import table
+from . import callback
+
+
+@dataclasses.dataclass
+class HashableMethodsRunnerForm(Form):
+
+    hashable: m.HashableClass
+    title: str
+    # a single receiver will be used for all methods so we share it with `group_tag`
+    group_tag: str
+    # todo: add icons for this
+    close_button: bool
+    # todo: add icons for this
+    info_button: bool
+    callable_names: t.List[str]
+    callable_labels: t.List[str]
+
+    @property
+    @util.CacheResult
+    def form_fields_container(self) -> widget.CollapsingHeader:
+        _ch = widget.CollapsingHeader(
+            label=self.title, default_open=True,
+        )
+        _ch(widget=self.button_bar)
+        _ch(widget=self.receiver)
+        return _ch
+
+    @property
+    @util.CacheResult
+    def button_bar(self) -> widget.Group:
+        return widget.Group(horizontal=True)
+
+    @property
+    @util.CacheResult
+    def receiver(self) -> widget.Group:
+        return widget.Group()
+
+    def init_validate(self):
+
+        super().init_validate()
+
+        if len(self.callable_labels) != len(self.callable_names):
+            e.validation.NotAllowed(
+                msgs=[
+                    f"Was expecting number of elements to be same"
+                ]
+            )
+
+    def init(self):
+        # call super
+        super().init()
+
+        # get some vars
+        _buttons_bar = self.button_bar
+        _callable_labels = self.callable_labels
+        _callable_names = self.callable_names
+        _receiver = self.receiver
+
+        # add close button
+        if self.close_button:
+            _buttons_bar(
+                widget=callback.CloseWidgetCallback.get_button_widget(
+                    widget_to_delete=self),
+            )
+
+        # add info button
+        if self.info_button:
+            _callable_labels += ["Info"]
+            _callable_names += ["info"]
+
+        # make buttons for callable names
+        for _button_label, _callable_name in zip(_callable_labels, _callable_names):
+            _b = self.hashable.get_gui_button(
+                group_tag=self.group_tag,
+                button_label=_button_label,
+                callable_name=_callable_name,
+                receiver=_receiver,
+                allow_refresh=True,
+            )
+            _buttons_bar(widget=_b)
 
 
 @dataclasses.dataclass
@@ -33,9 +113,6 @@ class HashablesMethodRunnerForm(Form):
         _table.borders_innerV = True
         _table.borders_outerV = True
 
-        # add to form_fields_container
-        self.form_fields_container(widget=_table)
-
         # return
         return _table
 
@@ -44,6 +121,7 @@ class HashablesMethodRunnerForm(Form):
     def form_fields_container(self) -> widget.Group:
         _grp = widget.Group(horizontal=False)
         _grp(widget=widget.Text(default_value=self.title))
+        _grp(widget=self._table)
         return _grp
 
     @property

@@ -1280,16 +1280,16 @@ class HashableClass(YamlRepr, abc.ABC):
         if self.__class__.results_folder != HashableClass.results_folder:
             self.results_folder.init_store_df_files()
 
-    def info(self, binder: "gui.Binder"):
+    def info(self) -> "gui.widget.Text":
         # import
         from . import gui
         # make
         # noinspection PyUnresolvedReferences
-        _ret_widget = gui.Text(
+        _ret_widget = gui.widget.Text(
             default_value=f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
         )
-        # bind
-        binder(_ret_widget)
+        # return
+        return _ret_widget
 
     def get_gui_button(
         self,

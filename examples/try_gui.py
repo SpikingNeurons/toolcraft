@@ -141,10 +141,21 @@ class SimpleHashableClass(marshalling.HashableClass):
 
     some_value: str
 
-    def some_plot(self) -> gui.plot.Plot:
+    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
+        return gui.form.HashableMethodsRunnerForm(
+            title=f"SimpleHashable method's runner form for {self.some_value}",
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=["some_line_plot", "some_scatter_plot"],
+            callable_labels=["line", "scatter"],
+        )
+
+    def some_line_plot(self) -> gui.plot.Plot:
         _plot = gui.plot.Plot(
-            label=f"This is line plot for `{self.some_value}`...",
-            height=200,
+            label=f"This is line plot for {self.some_value}",
+            height=200, width=-1,
         )
         _plot_y1_axis = _plot.y1_axis
         _plot_y1_axis(
@@ -163,12 +174,50 @@ class SimpleHashableClass(marshalling.HashableClass):
         )
         return _plot
 
+    def some_scatter_plot(self) -> gui.plot.Plot:
+        _plot = gui.plot.Plot(
+            label=f"This is scatter plot for {self.some_value}",
+            height=200, width=-1,
+        )
+        _plot_y1_axis = _plot.y1_axis
+        _plot_y1_axis(
+            gui.plot.ScatterSeries(
+                label="line 1",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
+            )
+        )
+        _plot_y1_axis(
+            gui.plot.ScatterSeries(
+                label="line 2",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
+            )
+        )
+        return _plot
+
 
 @dataclasses.dataclass
 class SimpleHashablesMethodRunnerForm(gui.form.HashablesMethodRunnerForm):
 
     title: str = "Topic 3 - SimpleHashable's method runner form"
-    callable_name: str = "some_plot"
+    callable_name: str = "some_line_plot"
+    allow_refresh: bool = False
+
+    @property
+    @util.CacheResult
+    def form_fields_container(self) -> gui.widget.CollapsingHeader:
+        _collapse_header = gui.widget.CollapsingHeader(label=self.title)
+        _ret = super().form_fields_container
+        _collapse_header(_ret)
+        return _collapse_header
+
+
+@dataclasses.dataclass
+class SimpleHashablesMethodsRunnerForm(gui.form.HashablesMethodRunnerForm):
+
+    title: str = "Topic 4 - SimpleHashable's method's runner form"
+    callable_name: str = "all_plots"
     allow_refresh: bool = False
 
     @property
@@ -197,6 +246,10 @@ class MyDashboard(gui.dashboard.BasicDashboard):
         allow_refresh=True
     )
 
+    topic4: SimpleHashablesMethodsRunnerForm = SimpleHashablesMethodsRunnerForm(
+        allow_refresh=True
+    )
+
 
 def basic_dashboard():
     _dash = MyDashboard(title="My Dashboard")
@@ -212,6 +265,12 @@ def basic_dashboard():
     )
     _dash.topic3.add(
         hashable=SimpleHashableClass(some_value="fourth hashable ...")
+    )
+    _dash.topic4.add(
+        hashable=SimpleHashableClass(some_value="first hashable ...")
+    )
+    _dash.topic4.add(
+        hashable=SimpleHashableClass(some_value="second hashable ...")
     )
     _dash.run()
 
