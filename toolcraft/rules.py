@@ -38,7 +38,7 @@ from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
 from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
     ResultsFolder
 from .storage.state import Config, Info, StateFile
-from .gui.__base__ import Form, Dpg, Widget, MovableWidget
+from .gui.__base__ import Form, Dpg, Widget, MovableWidget, ContainerWidget
 from .gui.dashboard import Dashboard, BasicDashboard
 from .gui.window import Window
 from .gui.plot import Plot
@@ -79,7 +79,7 @@ def check_things_to_be_cached(
         FileGroup: ['file_keys'],
         ResultsFolder: ['store'],
         Form: ['form_fields_container'],
-        Widget: ['children'],
+        ContainerWidget: ['children'],
         Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
         BasicDashboard: ['primary_window'],
     }
@@ -461,7 +461,7 @@ def check_FrozenEnum():
                 e.code.CodingError(
                     msgs=[
                         f"While subclassing `FrozenEnum` make sure "
-                        f"that you it also extends `enum.Enum`",
+                        f"that it also extends `enum.Enum`",
                         f"Check class {cls}"
                     ]
                 )

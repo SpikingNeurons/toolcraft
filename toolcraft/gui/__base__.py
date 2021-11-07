@@ -108,7 +108,7 @@ class Tag:
             raise
 
 
-class Enum(m.FrozenEnum):
+class Enum(m.FrozenEnum, enum.Enum):
 
     @classmethod
     def yaml_tag(cls) -> str:

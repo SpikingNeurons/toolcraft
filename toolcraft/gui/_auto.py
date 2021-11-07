@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-11-02 07:51
+>> Time: 2021-11-07 11:39
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -24,6 +24,7 @@ from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PLOT_DATA_TYPE
+from .__base__ import COLOR_TYPE
 
 
 class EnDir(Enum, enum.Enum):
@@ -702,10 +703,10 @@ class CandleSeries(PlotSeries):
     show: bool = True
 
     # bull_color (Union[List[int], Tuple[int, ...]], optional): ...
-    bull_color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 255, 113, 255)
+    bull_color: COLOR_TYPE = (0, 255, 113, 255)
 
     # bear_color (Union[List[int], Tuple[int, ...]], optional): ...
-    bear_color: t.Union[t.List[int], t.Tuple[int, ...]] = (218, 13, 79, 255)
+    bear_color: COLOR_TYPE = (218, 13, 79, 255)
 
     # weight (int, optional): ...
     weight: int = 0.25
@@ -1087,7 +1088,7 @@ class Colormap(Widget):
     """
 
     # colors (Any): colors that will be mapped to the normalized value 0.0->1.0
-    colors: t.List[t.List[int]]
+    colors: t.List[COLOR_TYPE]
 
     # qualitative (bool): Qualitative will create hard transitions for color boundries across the value range when enabled.
     qualitative: bool
@@ -2572,7 +2573,7 @@ class DragLine(MovableWidget):
     default_value: t.Any = 0.0
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
+    color: COLOR_TYPE = (0, 0, 0, -255)
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -2656,7 +2657,7 @@ class DragPoint(MovableWidget):
     default_value: t.Any = (0.0, 0.0)
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
+    color: COLOR_TYPE = (0, 0, 0, -255)
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -2847,7 +2848,7 @@ class FileExtension(MovableWidget):
     custom_text: str = ''
 
     # color (Union[List[float], Tuple[float, ...]], optional): Color for the text that will be shown with specified extensions.
-    color: PLOT_DATA_TYPE = (-255, 0, 0, 255)
+    color: COLOR_TYPE = (-255, 0, 0, 255)
 
     def build(self) -> t.Union[int, str]:
 
@@ -5543,10 +5544,10 @@ class LoadingIndicator(MovableWidget):
     thickness: float = 1.0
 
     # color (Union[List[int], Tuple[int, ...]], optional): Color of the growing center circle.
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (51, 51, 55, 255)
+    color: COLOR_TYPE = (51, 51, 55, 255)
 
     # secondary_color (Union[List[int], Tuple[int, ...]], optional): Background of the dots in dot mode.
-    secondary_color: t.Union[t.List[int], t.Tuple[int, ...]] = (29, 151, 236, 103)
+    secondary_color: COLOR_TYPE = (29, 151, 236, 103)
 
     def build(self) -> t.Union[int, str]:
 
@@ -6254,7 +6255,7 @@ class PlotAnnotation(MovableWidget):
     offset: PLOT_DATA_TYPE = (0.0, 0.0)
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
+    color: COLOR_TYPE = (0, 0, 0, -255)
 
     # clamped (bool, optional): ...
     clamped: bool = True
@@ -8394,7 +8395,7 @@ class Text(MovableWidget):
     bullet: bool = False
 
     # color (Union[List[float], Tuple[float, ...]], optional): Color of the text (rgba).
-    color: PLOT_DATA_TYPE = (-1, -1, -1, -1)
+    color: COLOR_TYPE = (-1, -1, -1, -1)
 
     # show_label (bool, optional): Displays the label to teh right of the text.
     show_label: bool = False
@@ -9215,7 +9216,7 @@ class DrawArrow(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -9278,7 +9279,7 @@ class DrawBezierCubic(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -9340,7 +9341,7 @@ class DrawBezierQuadratic(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -9398,7 +9399,7 @@ class DrawCircle(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # fill (Union[List[int], Tuple[int, ...]], optional): ...
     fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
@@ -9459,7 +9460,7 @@ class DrawEllipse(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # fill (Union[List[int], Tuple[int, ...]], optional): ...
     fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
@@ -9557,7 +9558,7 @@ class DrawLine(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -9607,7 +9608,7 @@ class DrawPolygon(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # fill (Union[List[int], Tuple[int, ...]], optional): ...
     fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
@@ -9663,7 +9664,7 @@ class DrawPolyline(MovableWidget):
     closed: bool = False
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # thickness (float, optional): ...
     thickness: float = 1.0
@@ -9722,7 +9723,7 @@ class DrawQuad(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # fill (Union[List[int], Tuple[int, ...]], optional): ...
     fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
@@ -9781,19 +9782,19 @@ class DrawRectangle(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # color_upper_left (Union[List[int], Tuple[int, ...]], optional): 'multicolor' must be set to 'True'
-    color_upper_left: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color_upper_left: COLOR_TYPE = (255, 255, 255, 255)
 
     # color_upper_right (Union[List[int], Tuple[int, ...]], optional): 'multicolor' must be set to 'True'
-    color_upper_right: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color_upper_right: COLOR_TYPE = (255, 255, 255, 255)
 
     # color_bottom_right (Union[List[int], Tuple[int, ...]], optional): 'multicolor' must be set to 'True'
-    color_bottom_right: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color_bottom_right: COLOR_TYPE = (255, 255, 255, 255)
 
     # color_bottom_left (Union[List[int], Tuple[int, ...]], optional): 'multicolor' must be set to 'True'
-    color_bottom_left: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color_bottom_left: COLOR_TYPE = (255, 255, 255, 255)
 
     # fill (Union[List[int], Tuple[int, ...]], optional): ...
     fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)
@@ -9862,7 +9863,7 @@ class DrawText(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # size (float, optional): ...
     size: float = 10.0
@@ -9918,7 +9919,7 @@ class DrawTriangle(MovableWidget):
     show: bool = True
 
     # color (Union[List[int], Tuple[int, ...]], optional): ...
-    color: t.Union[t.List[int], t.Tuple[int, ...]] = (255, 255, 255, 255)
+    color: COLOR_TYPE = (255, 255, 255, 255)
 
     # fill (Union[List[int], Tuple[int, ...]], optional): ...
     fill: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, -255)

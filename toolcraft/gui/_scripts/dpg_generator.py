@@ -445,6 +445,28 @@ class DpgDef:
             # if below type then it is PLOT_DATA_TYPE
             if _param_type == "t.Union[t.List[float], t.Tuple[float, ...]]":
                 _param_type = "PLOT_DATA_TYPE"
+            # if below type then it is COLOR_TYPE
+            if _param_name.find("color") != -1 and \
+                    _param_name not in ["colormap", "multicolor"]:
+                if self.fn == dpg.add_colormap:
+                    if _param_name == "colors":
+                        _param_type = "t.List[COLOR_TYPE]"
+                elif _param_type == "t.Union[t.List[int], t.Tuple[int, ...]]":
+                    _param_type = "COLOR_TYPE"
+                else:
+                    if self.fn in [
+                        dpg.add_file_extension, dpg.add_text,
+                    ]:
+                        # todo: remove this after the below issue is resolved
+                        #   https://github.com/hoffstadt/DearPyGui/issues/1405
+                        _param_type = "COLOR_TYPE"
+                    else:
+                        raise Exception(
+                            f"We assume that fn param `{self.fn.__name__}:{_param_name}` "
+                            f"is a color type so dpg param type must be "
+                            f"<t.Union[t.List[int], t.Tuple[int, ...]]>, but found type "
+                            f"<{_param_type}>"
+                        )
 
             # is callback
             _is_callback = _param_type.find("Callback") != -1
@@ -806,6 +828,7 @@ from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PLOT_DATA_TYPE
+from .__base__ import COLOR_TYPE
 '''
         return _header
 
@@ -926,6 +949,7 @@ from .__base__ import PLOT_DATA_TYPE
             # if in _SKIP_METHODS then skip
             if _fn in _SKIP_METHODS:
                 continue
+            print(f"Making DpgDef for {_fn}")
 
             # ---------------------------------------------------------- 05
             # handle fns with contextmanager
