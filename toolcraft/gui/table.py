@@ -73,7 +73,7 @@ class Table(_auto.Table):
         # noinspection PyTypeChecker
         return self.rows
 
-    def __call__(self, widget: Row):
+    def __call__(self, widget: Row, before: Row = None):
 
         # we also need to add cells in row
         if isinstance(widget, Row):
@@ -83,7 +83,7 @@ class Table(_auto.Table):
             e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 
         # call super to add in children
-        _ret = super().__call__(widget)
+        _ret = super().__call__(widget, before)
 
         # return
         return _ret

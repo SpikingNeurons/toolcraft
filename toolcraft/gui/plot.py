@@ -154,10 +154,10 @@ class XAxis(_auto.XAxis):
 @dataclasses.dataclass
 class YAxis(_auto.YAxis):
 
-    def __call__(self, widget: t.Union[PlotSeries]):
+    def __call__(self, widget: PlotSeries, before: PlotSeries = None):
         # we also need to add cells in row
         if isinstance(widget, PlotSeries):
-            super().__call__(widget)
+            super().__call__(widget, before)
         else:
             e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 
@@ -317,10 +317,14 @@ class Plot(_auto.Plot):
     def is_queried(self) -> bool:
         return internal_dpg.is_plot_queried(self.dpg_id)
 
-    def __call__(self, widget: t.Union[Annotation, DragLine, DragPoint]):
+    def __call__(
+        self,
+        widget: t.Union[Annotation, DragLine, DragPoint],
+        before: t.Union[Annotation, DragLine, DragPoint] = None
+    ):
         # we also need to add cells in row
         if isinstance(widget, (Annotation, DragLine, DragPoint)):
-            super().__call__(widget)
+            super().__call__(widget, before)
         else:
             e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 
@@ -379,10 +383,10 @@ class Plot(_auto.Plot):
 @dataclasses.dataclass
 class SubPlots(_auto.SubPlots):
 
-    def __call__(self, widget: Plot):
+    def __call__(self, widget: Plot, before: Plot = None):
         # we also need to add cells in row
         if isinstance(widget, Plot):
-            super().__call__(widget)
+            super().__call__(widget, before)
         else:
             e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 

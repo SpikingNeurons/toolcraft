@@ -653,8 +653,10 @@ class ContainerWidget(Widget, abc.ABC):
         return []
 
     # noinspection PyMethodOverriding
-    def __call__(self, widget: MovableWidget):
+    def __call__(self, widget: MovableWidget, before: MovableWidget = None):
         self._add_child(widget=widget)
+        if before is not None:
+            widget.move(before=before)
 
     def _add_child(self, widget: MovableWidget):
 
