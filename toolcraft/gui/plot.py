@@ -60,6 +60,22 @@ class Annotation(_auto.PlotAnnotation):
 
 
 @dataclasses.dataclass
+class DragLine(_auto.DragLine):
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.plot.{cls.__name__}"
+
+
+@dataclasses.dataclass
+class DragPoint(_auto.DragPoint):
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.plot.{cls.__name__}"
+
+
+@dataclasses.dataclass
 class Legend(_auto.PlotLegend):
 
     @classmethod
@@ -301,9 +317,9 @@ class Plot(_auto.Plot):
     def is_queried(self) -> bool:
         return internal_dpg.is_plot_queried(self.dpg_id)
 
-    def __call__(self, widget: t.Union[Annotation]):
+    def __call__(self, widget: t.Union[Annotation, DragLine, DragPoint]):
         # we also need to add cells in row
-        if isinstance(widget, Annotation):
+        if isinstance(widget, (Annotation, DragLine, DragPoint)):
             super().__call__(widget)
         else:
             e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
