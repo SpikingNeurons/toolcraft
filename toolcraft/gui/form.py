@@ -1,14 +1,12 @@
 import dataclasses
 import typing as t
 
-from .. import util
 from .. import error as e
-from .. import marshalling as m
-from .__base__ import Form
 from .. import gui
-from . import widget
-from . import table
-from . import callback
+from .. import marshalling as m
+from .. import util
+from . import callback, table, widget
+from .__base__ import Form
 
 
 @dataclasses.dataclass
@@ -29,7 +27,8 @@ class HashableMethodsRunnerForm(Form):
     @util.CacheResult
     def form_fields_container(self) -> widget.CollapsingHeader:
         _ch = widget.CollapsingHeader(
-            label=self.title, default_open=True,
+            label=self.title,
+            default_open=True,
         )
         _ch(widget=self.button_bar)
         _ch(widget=self.receiver)
@@ -51,10 +50,7 @@ class HashableMethodsRunnerForm(Form):
 
         if len(self.callable_labels) != len(self.callable_names):
             e.validation.NotAllowed(
-                msgs=[
-                    f"Was expecting number of elements to be same"
-                ]
-            )
+                msgs=[f"Was expecting number of elements to be same"])
 
     def init(self):
         # call super
@@ -68,10 +64,8 @@ class HashableMethodsRunnerForm(Form):
 
         # add close button
         if self.close_button:
-            _buttons_bar(
-                widget=callback.CloseWidgetCallback.get_button_widget(
-                    widget_to_delete=self),
-            )
+            _buttons_bar(widget=callback.CloseWidgetCallback.get_button_widget(
+                widget_to_delete=self), )
 
         # add info button
         if self.info_button:
@@ -79,7 +73,8 @@ class HashableMethodsRunnerForm(Form):
             _callable_names += ["info"]
 
         # make buttons for callable names
-        for _button_label, _callable_name in zip(_callable_labels, _callable_names):
+        for _button_label, _callable_name in zip(_callable_labels,
+                                                 _callable_names):
             _b = self.hashable.get_gui_button(
                 group_tag=self.group_tag,
                 button_label=_button_label,
@@ -145,7 +140,8 @@ class HashablesMethodRunnerForm(Form):
         if label is None:
             label = f"{hashable.__class__.__name__}.{hashable.hex_hash[:-6]}"
         _button = hashable.get_gui_button(
-            button_label=label, callable_name=self.callable_name,
+            button_label=label,
+            callable_name=self.callable_name,
             receiver=self.receiver_panel,
             allow_refresh=self.allow_refresh,
             # we can maintain this as we will be using single `callable_name` and hence

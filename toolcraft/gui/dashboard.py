@@ -1,16 +1,15 @@
-import dataclasses
 import abc
+import dataclasses
 import typing as t
-import dearpygui.dearpygui as dpg
+
 # noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
+from .. import error as e
 from .. import marshalling as m
 from .. import util
-from .. import error as e
-from . import window
-from . import asset
-from . import widget
+from . import asset, widget, window
 
 
 class DashboardInternal(m.Internal):
@@ -48,6 +47,7 @@ class Dashboard(m.YamlRepr, abc.ABC):
       Also maybe add field save_state for Widget so that we know that only
       these widgets state needs to be saved
     """
+
     title: str
     width: int = 1370
     height: int = 1200
@@ -321,11 +321,7 @@ class Dashboard(m.YamlRepr, abc.ABC):
         # -------------------------------------------------- 01
         # make sure if was already called
         if self.internal.has("is_run_called"):
-            e.code.NotAllowed(
-                msgs=[
-                    f"You can run only once ..."
-                ]
-            )
+            e.code.NotAllowed(msgs=[f"You can run only once ..."])
         # -------------------------------------------------- 02
         # setup dpg
         dpg.create_context()
@@ -354,13 +350,15 @@ class BasicDashboard(Dashboard):
     """
     A dashboard with one primary window ... and can layout all fields inside it
     """
-
     @property
     @util.CacheResult
     def primary_window(self) -> "window.Window":
         from .window import Window
+
         return Window(
-            label=self.title, width=self.width, height=self.height,
+            label=self.title,
+            width=self.width,
+            height=self.height,
         )
 
     def setup(self):
@@ -382,4 +380,5 @@ class BasicDashboard(Dashboard):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
+        dpg.bind_item_theme(item=_primary_window_dpg_id,
+                            theme=asset.Theme.DARK.get())

@@ -1,11 +1,9 @@
-import typing as t
 import dataclasses
+import typing as t
 
 from .. import error as e
 from .. import util
-from . import dashboard
-from . import __base__
-from . import _auto
+from . import __base__, _auto, dashboard
 
 
 class WindowInternal(__base__.DpgInternal):
@@ -13,17 +11,14 @@ class WindowInternal(__base__.DpgInternal):
 
     def test_if_others_set(self):
         if not self.has("dash_board"):
-            e.code.CodingError(
-                msgs=[
-                    f"Window {self.__class__} has no dash_board",
-                    f"Make sure you have called `Window.setup(dash_board)` "
-                    f"before building window",
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"Window {self.__class__} has no dash_board",
+                f"Make sure you have called `Window.setup(dash_board)` "
+                f"before building window",
+            ])
 
 
 class _DowngradeContainerWidget:
-
     @property
     @util.CacheResult
     def internal(self) -> WindowInternal:
@@ -32,12 +27,10 @@ class _DowngradeContainerWidget:
 
     @property
     def parent(self) -> None:
-        e.code.CodingError(
-            msgs=[
-                "Use of `parent` for `Window` is not allowed.",
-                "Please use `dash_board` instead.",
-            ]
-        )
+        e.code.CodingError(msgs=[
+            "Use of `parent` for `Window` is not allowed.",
+            "Please use `dash_board` instead.",
+        ])
         raise
 
     @property
@@ -54,7 +47,6 @@ class _DowngradeContainerWidget:
 
 @dataclasses.dataclass
 class Window(_DowngradeContainerWidget, _auto.Window):
-
     @property
     def root(self) -> "Window":
         return self
@@ -62,7 +54,6 @@ class Window(_DowngradeContainerWidget, _auto.Window):
 
 @dataclasses.dataclass
 class FileDialog(_DowngradeContainerWidget, _auto.FileDialog):
-
     @property
     def root(self) -> "FileDialog":
         return self

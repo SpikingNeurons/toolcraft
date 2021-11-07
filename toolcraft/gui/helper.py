@@ -1,13 +1,12 @@
 import typing as t
 
-from . import widget
-from .. import marshalling as m
 from .. import error as e
+from .. import marshalling as m
+from . import widget
 
 
-def tab_bar_from_widget_dict(
-    widget_dict: t.Dict, parent: widget.ContainerWidget
-):
+def tab_bar_from_widget_dict(widget_dict: t.Dict,
+                             parent: widget.ContainerWidget):
     _tab_bar = widget.TabBar()
     parent(widget=_tab_bar)
     for _k in widget_dict.keys():
@@ -20,11 +19,7 @@ def tab_bar_from_widget_dict(
             for _i, __v in enumerate(_v):
                 _tab(widget=__v)
         else:
-            e.code.CodingError(
-                msgs=[
-                    f"Unrecognized type {type(_v)}"
-                ]
-            )
+            e.code.CodingError(msgs=[f"Unrecognized type {type(_v)}"])
 
 
 def tab_bar_from_hashable_callables(
@@ -33,9 +28,7 @@ def tab_bar_from_hashable_callables(
     callable_names: t.Dict[str, str],
 ):
     # tab bar
-    _tab_bar = widget.TabBar(
-        label=title
-    )
+    _tab_bar = widget.TabBar(label=title)
 
     # loop over callable names
     for k, v in callable_names.items():

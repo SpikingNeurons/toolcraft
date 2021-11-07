@@ -1,11 +1,12 @@
 import dataclasses
-import dearpygui.dearpygui as dpg
 import typing as t
 
-from .. import util
-from .. import marshalling as m
+import dearpygui.dearpygui as dpg
+
 from .. import error as e
-from . import widget, asset
+from .. import marshalling as m
+from .. import util
+from . import asset, widget
 from .__base__ import Callback, Tag
 
 
@@ -16,11 +17,11 @@ class SetThemeCallback(Callback):
       once we understand theme, icon, font, background, color etc styling
       related things
     """
-
     @staticmethod
     def themes() -> t.List[str]:
         return [
-            "Dark", "Light",
+            "Dark",
+            "Light",
             # "Classic",
             # "Dark 2", "Grey", "Purple",
             # "Dark Grey", "Cherry", "Gold", "Red"
@@ -36,7 +37,7 @@ class SetThemeCallback(Callback):
             items=cls.themes(),
             default_value=cls.default_theme(),
             callback=cls(),
-            label="Select Theme"
+            label="Select Theme",
         )
 
     def fn(
@@ -51,11 +52,7 @@ class SetThemeCallback(Callback):
         elif _theme_str == "Light":
             _theme = asset.Theme.LIGHT
         else:
-            e.code.CodingError(
-                msgs=[
-                    f"unknown theme {_theme_str}"
-                ]
-            )
+            e.code.CodingError(msgs=[f"unknown theme {_theme_str}"])
             raise
         # we change theme of parent to which this Combo widget is child
         sender.parent.bind_theme(theme=_theme)
@@ -70,13 +67,9 @@ class CloseWidgetCallback(Callback):
     widget_to_delete: widget.Widget
 
     @classmethod
-    def get_button_widget(
-        cls, widget_to_delete: widget.Widget
-    ) -> widget.Button:
-        return widget.Button(
-            label="Close [X]",
-            callback=cls(widget_to_delete)
-        )
+    def get_button_widget(cls,
+                          widget_to_delete: widget.Widget) -> widget.Button:
+        return widget.Button(label="Close [X]", callback=cls(widget_to_delete))
 
     def fn(
         self,
@@ -98,13 +91,11 @@ class RefreshWidgetCallback(Callback):
     refresh_callback: Callback
 
     @classmethod
-    def get_button_widget(
-        cls, refresh_callback: Callback, label: str = "Refresh [R]"
-    ) -> widget.Button:
-        return widget.Button(
-            label=label,
-            callback=cls(refresh_callback=refresh_callback)
-        )
+    def get_button_widget(cls,
+                          refresh_callback: Callback,
+                          label: str = "Refresh [R]") -> widget.Button:
+        return widget.Button(label=label,
+                             callback=cls(refresh_callback=refresh_callback))
 
     def fn(
         self,
@@ -113,8 +104,9 @@ class RefreshWidgetCallback(Callback):
         user_data: t.Union[widget.Widget, t.List[widget.Widget]],
     ):
         sender.parent.delete()
-        self.refresh_callback.fn(
-            sender=sender, app_data=app_data, user_data=user_data)
+        self.refresh_callback.fn(sender=sender,
+                                 app_data=app_data,
+                                 user_data=user_data)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -129,6 +121,7 @@ class HashableMethodRunnerCallback(Callback):
     Note that this will mean that allow_refresh will be True when
     tab_group_name is not None.
     """
+
     hashable: m.HashableClass
     callable_name: str
     receiver: widget.ContainerWidget
@@ -144,12 +137,10 @@ class HashableMethodRunnerCallback(Callback):
         # So ensure that the allow_refresh is True
         if self.group_tag is not None:
             if not self.allow_refresh:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"looks like you are using group_tag. So please "
-                        f"ensure that allow_refresh is set to True"
-                    ]
-                )
+                e.code.NotAllowed(msgs=[
+                    f"looks like you are using group_tag. So please "
+                    f"ensure that allow_refresh is set to True"
+                ])
 
     def fn(
         self,
@@ -162,14 +153,14 @@ class HashableMethodRunnerCallback(Callback):
         _hashable = self.hashable
         _receiver = self.receiver
         if self.group_tag is None:
-            _tag = f"{_hashable.__class__.__name__}:" \
-                   f"{_hashable.hex_hash[-10:]}.{self.callable_name}"
+            _tag = (f"{_hashable.__class__.__name__}:"
+                    f"{_hashable.hex_hash[-10:]}.{self.callable_name}")
         else:
             # this make sure that same guid is shared across multiple
             # callbacks that use same tab_group_name.
             # Note this applies if _hashable and receiver are same
-            _tag = f"{_hashable.__class__.__name__}:" \
-                   f"{_hashable.hex_hash[-10:]}.{self.group_tag}"
+            _tag = (f"{_hashable.__class__.__name__}:"
+                    f"{_hashable.hex_hash[-10:]}.{self.group_tag}")
 
         # get widget for given tag if present
         # noinspection PyTypeChecker
@@ -188,8 +179,7 @@ class HashableMethodRunnerCallback(Callback):
                 # used non movable Widgets
                 try:
                     _before_widget = _widget.parent.children[
-                        _widget.index_in_parent_children + 1
-                    ]
+                        _widget.index_in_parent_children + 1]
                 except IndexError:
                     ...
                 # this will delete itself
@@ -224,6 +214,7 @@ class HashableMethodsRunnerCallback(Callback):
     Special class just to create a button bar if you do not want to have a
     special method that generates button bar
     """
+
     group_tag: str
     hashable: m.HashableClass
     title: str
@@ -238,7 +229,7 @@ class HashableMethodsRunnerCallback(Callback):
         self,
         sender: widget.Widget,
         app_data: t.Any,
-        user_data: t.Union[widget.Widget, t.List[widget.Widget]]
+        user_data: t.Union[widget.Widget, t.List[widget.Widget]],
     ):
         # import
         from . import helper
@@ -273,7 +264,8 @@ class HashableMethodsRunnerCallback(Callback):
             close_button=self.close_button,
             info_button=self.info_button,
             callable_names={
-                k: v for k, v in zip(self.callable_labels, self.callable_names)
+                k: v
+                for k, v in zip(self.callable_labels, self.callable_names)
             },
         )
 
@@ -282,6 +274,3 @@ class HashableMethodsRunnerCallback(Callback):
 
         # add to receiver children
         _receiver(_result_widget)
-
-
-
