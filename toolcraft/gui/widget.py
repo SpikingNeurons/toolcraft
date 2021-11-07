@@ -39,10 +39,6 @@ from ._auto import DragInt
 # noinspection PyUnresolvedReferences
 from ._auto import DragIntX
 # noinspection PyUnresolvedReferences
-from ._auto import DragLine
-# noinspection PyUnresolvedReferences
-from ._auto import DragPoint
-# noinspection PyUnresolvedReferences
 from ._auto import DynamicTexture
 # noinspection PyUnresolvedReferences
 from ._auto import FileExtension
