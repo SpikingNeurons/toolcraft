@@ -39,6 +39,7 @@ from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
     ResultsFolder
 from .storage.state import Config, Info, StateFile
 from .gui.__base__ import Form, Dpg, Widget, MovableWidget, ContainerWidget
+from . import gui
 from .gui.dashboard import Dashboard, BasicDashboard
 from .gui.window import Window
 from .gui.plot import Plot
@@ -114,6 +115,7 @@ def check_things_not_to_be_cached(
         Dpg: ['dpg_state', 'dpg_config', ],
         Widget: ['is_tagged', ],
         MovableWidget: ['index_in_parent_children', ],
+        gui.plot.YAxis: ['available_plot_series', ]
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_CACHED = to_check

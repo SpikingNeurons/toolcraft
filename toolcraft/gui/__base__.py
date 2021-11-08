@@ -255,7 +255,11 @@ class Dpg(m.YamlRepr, abc.ABC):
         # this might not always work especially when key is custom ...
         # in that case catch exception and figure out how to handle
         if self.is_built:
-            internal_dpg.configure_item(self.dpg_id, **{key: value})
+            # The default behaviour is to update configure the dpg item but
+            # note that Form is not a typical Widget and hence we have no need for
+            # "`internal_dpg.configure_item` ...",
+            if not isinstance(self, Form):
+                internal_dpg.configure_item(self.dpg_id, **{key: value})
         return super().__setattr__(key, value)
 
     @classmethod
@@ -538,6 +542,14 @@ class Widget(Dpg, abc.ABC):
         # delete the dpg UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
         # todo: make _widget unusable ... figure out
+
+
+USER_DATA = t.Dict[
+    str, t.Union[
+        int, float, str, slice, tuple, list, dict, None,
+        m.FrozenEnum, m.HashableClass, Widget,
+    ]
+]
 
 
 @dataclasses.dataclass
@@ -933,7 +945,7 @@ class Callback(m.YamlRepr, abc.ABC):
         self,
         sender: Widget,
         app_data: t.Any,
-        user_data: t.Union[Widget, t.List[Widget]]
+        user_data: USER_DATA
     ):
         ...
 

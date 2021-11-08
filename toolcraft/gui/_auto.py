@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-11-07 13:22
+>> Time: 2021-11-08 22:36
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -25,6 +25,7 @@ from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
+from .__base__ import USER_DATA
 
 
 class EnDir(Enum, enum.Enum):
@@ -119,7 +120,7 @@ class HistogramSeries2D(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -195,7 +196,7 @@ class Slider3D(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -302,11 +303,13 @@ class Slider3D(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -320,11 +323,13 @@ class Slider3D(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -338,11 +343,13 @@ class Slider3D(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -373,7 +380,7 @@ class AreaSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -431,7 +438,7 @@ class BarSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -483,7 +490,7 @@ class BoolValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -525,7 +532,7 @@ class Button(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -611,11 +618,13 @@ class Button(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -629,11 +638,13 @@ class Button(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -647,11 +658,13 @@ class Button(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -691,7 +704,7 @@ class CandleSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -754,7 +767,7 @@ class CheckBox(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -829,11 +842,13 @@ class CheckBox(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -847,11 +862,13 @@ class CheckBox(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -865,11 +882,13 @@ class CheckBox(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -897,7 +916,7 @@ class ColorButton(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -984,11 +1003,13 @@ class ColorButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -1002,11 +1023,13 @@ class ColorButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -1020,11 +1043,13 @@ class ColorButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -1049,7 +1074,7 @@ class ColorValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1097,7 +1122,7 @@ class Colormap(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1139,7 +1164,7 @@ class ColormapButton(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1214,11 +1239,13 @@ class ColormapButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -1232,11 +1259,13 @@ class ColormapButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -1250,11 +1279,13 @@ class ColormapButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -1279,7 +1310,7 @@ class ColormapScale(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1346,11 +1377,13 @@ class ColormapScale(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -1375,7 +1408,7 @@ class ColormapSlider(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1445,11 +1478,13 @@ class ColormapSlider(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -1463,11 +1498,13 @@ class ColormapSlider(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -1495,7 +1532,7 @@ class Combo(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1591,11 +1628,13 @@ class Combo(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -1609,11 +1648,13 @@ class Combo(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -1627,11 +1668,13 @@ class Combo(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -1656,7 +1699,7 @@ class DatePicker(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1726,11 +1769,13 @@ class DatePicker(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -1744,11 +1789,13 @@ class DatePicker(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -1762,11 +1809,13 @@ class DatePicker(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -1791,7 +1840,7 @@ class Double4Value(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1833,7 +1882,7 @@ class DoubleValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1875,7 +1924,7 @@ class DragFloat(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -1978,11 +2027,13 @@ class DragFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -1996,11 +2047,13 @@ class DragFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -2014,11 +2067,13 @@ class DragFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -2043,7 +2098,7 @@ class DragFloatX(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2150,11 +2205,13 @@ class DragFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -2168,11 +2225,13 @@ class DragFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -2186,11 +2245,13 @@ class DragFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -2215,7 +2276,7 @@ class DragInt(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2318,11 +2379,13 @@ class DragInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -2336,11 +2399,13 @@ class DragInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -2354,11 +2419,13 @@ class DragInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -2383,7 +2450,7 @@ class DragIntX(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2490,11 +2557,13 @@ class DragIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -2508,11 +2577,13 @@ class DragIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -2526,11 +2597,13 @@ class DragIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -2555,7 +2628,7 @@ class DragLine(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2610,11 +2683,13 @@ class DragLine(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -2639,7 +2714,7 @@ class DragPoint(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2690,11 +2765,13 @@ class DragPoint(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -2728,7 +2805,7 @@ class DynamicTexture(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2776,7 +2853,7 @@ class ErrorSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2833,7 +2910,7 @@ class FileExtension(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2883,7 +2960,7 @@ class Float4Value(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2925,7 +3002,7 @@ class FloatValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -2967,7 +3044,7 @@ class FloatVectValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3012,7 +3089,7 @@ class FontChars(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3052,7 +3129,7 @@ class FontRange(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3090,7 +3167,7 @@ class FontRangeHint(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3133,7 +3210,7 @@ class HeatSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3205,7 +3282,7 @@ class HistogramSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3283,7 +3360,7 @@ class HLineSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3326,7 +3403,7 @@ class InputFloat(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3441,11 +3518,13 @@ class InputFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -3459,11 +3538,13 @@ class InputFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -3477,11 +3558,13 @@ class InputFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -3506,7 +3589,7 @@ class InputFloatX(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3617,11 +3700,13 @@ class InputFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -3635,11 +3720,13 @@ class InputFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -3653,11 +3740,13 @@ class InputFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -3682,7 +3771,7 @@ class InputInt(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3793,11 +3882,13 @@ class InputInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -3811,11 +3902,13 @@ class InputInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -3829,11 +3922,13 @@ class InputInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -3858,7 +3953,7 @@ class InputIntX(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -3965,11 +4060,13 @@ class InputIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -3983,11 +4080,13 @@ class InputIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -4001,11 +4100,13 @@ class InputIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -4030,7 +4131,7 @@ class InputText(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4157,11 +4258,13 @@ class InputText(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4175,11 +4278,13 @@ class InputText(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -4193,11 +4298,13 @@ class InputText(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -4222,7 +4329,7 @@ class Int4Value(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4264,7 +4371,7 @@ class IntValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4306,7 +4413,7 @@ class ItemActivatedHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4336,11 +4443,13 @@ class ItemActivatedHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4365,7 +4474,7 @@ class ItemActiveHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4395,11 +4504,13 @@ class ItemActiveHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4427,7 +4538,7 @@ class ItemClickedHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4458,11 +4569,13 @@ class ItemClickedHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4487,7 +4600,7 @@ class ItemDeactivatedAfterEditHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4517,11 +4630,13 @@ class ItemDeactivatedAfterEditHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4546,7 +4661,7 @@ class ItemDeactivatedHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4576,11 +4691,13 @@ class ItemDeactivatedHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4605,7 +4722,7 @@ class ItemEditedHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4635,11 +4752,13 @@ class ItemEditedHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4664,7 +4783,7 @@ class ItemFocusHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4694,11 +4813,13 @@ class ItemFocusHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4723,7 +4844,7 @@ class ItemHoverHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4753,11 +4874,13 @@ class ItemHoverHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4782,7 +4905,7 @@ class ItemResizeHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4812,11 +4935,13 @@ class ItemResizeHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4841,7 +4966,7 @@ class ItemToggledOpenHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4871,11 +4996,13 @@ class ItemToggledOpenHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4900,7 +5027,7 @@ class ItemVisibleHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4930,11 +5057,13 @@ class ItemVisibleHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -4962,7 +5091,7 @@ class KeyDownHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -4993,11 +5122,13 @@ class KeyDownHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5025,7 +5156,7 @@ class KeyPressHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5056,11 +5187,13 @@ class KeyPressHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5088,7 +5221,7 @@ class KeyReleaseHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5119,11 +5252,13 @@ class KeyReleaseHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5148,7 +5283,7 @@ class KnobFloat(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5235,11 +5370,13 @@ class KnobFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5253,11 +5390,13 @@ class KnobFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -5271,11 +5410,13 @@ class KnobFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -5306,7 +5447,7 @@ class LineSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5353,7 +5494,7 @@ class Listbox(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5437,11 +5578,13 @@ class Listbox(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5455,11 +5598,13 @@ class Listbox(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -5473,11 +5618,13 @@ class Listbox(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -5502,7 +5649,7 @@ class LoadingIndicator(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5580,11 +5727,13 @@ class LoadingIndicator(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -5609,7 +5758,7 @@ class MenuItem(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5679,11 +5828,13 @@ class MenuItem(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5697,11 +5848,13 @@ class MenuItem(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -5729,7 +5882,7 @@ class MouseClickHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5760,11 +5913,13 @@ class MouseClickHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5792,7 +5947,7 @@ class MouseDoubleClickHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5823,11 +5978,13 @@ class MouseDoubleClickHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5855,7 +6012,7 @@ class MouseDownHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5886,11 +6043,13 @@ class MouseDownHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5921,7 +6080,7 @@ class MouseDragHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -5953,11 +6112,13 @@ class MouseDragHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -5982,7 +6143,7 @@ class MouseMoveHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6012,11 +6173,13 @@ class MouseMoveHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -6044,7 +6207,7 @@ class MouseReleaseHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6075,11 +6238,13 @@ class MouseReleaseHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -6104,7 +6269,7 @@ class MouseWheelHandler(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6134,11 +6299,13 @@ class MouseWheelHandler(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -6178,7 +6345,7 @@ class PieSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6237,7 +6404,7 @@ class PlotAnnotation(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6295,7 +6462,7 @@ class PlotLegend(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6341,11 +6508,13 @@ class PlotLegend(Widget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -6370,7 +6539,7 @@ class ProgressBar(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6449,11 +6618,13 @@ class ProgressBar(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -6467,11 +6638,13 @@ class ProgressBar(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -6499,7 +6672,7 @@ class RadioButton(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6579,11 +6752,13 @@ class RadioButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -6597,11 +6772,13 @@ class RadioButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -6615,11 +6792,13 @@ class RadioButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -6653,7 +6832,7 @@ class RawTexture(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6699,7 +6878,7 @@ class ScatterSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6743,7 +6922,7 @@ class Selectable(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6830,11 +7009,13 @@ class Selectable(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -6848,11 +7029,13 @@ class Selectable(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -6866,11 +7049,13 @@ class Selectable(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -6895,7 +7080,7 @@ class Separator(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6940,7 +7125,7 @@ class SeriesValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -6988,7 +7173,7 @@ class ShadeSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7036,7 +7221,7 @@ class SimplePlot(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7127,11 +7312,13 @@ class SimplePlot(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -7145,11 +7332,13 @@ class SimplePlot(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -7174,7 +7363,7 @@ class SliderFloat(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7281,11 +7470,13 @@ class SliderFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -7299,11 +7490,13 @@ class SliderFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -7317,11 +7510,13 @@ class SliderFloat(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -7346,7 +7541,7 @@ class SliderFloatX(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7449,11 +7644,13 @@ class SliderFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -7467,11 +7664,13 @@ class SliderFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -7485,11 +7684,13 @@ class SliderFloatX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -7514,7 +7715,7 @@ class SliderInt(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7621,11 +7822,13 @@ class SliderInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -7639,11 +7842,13 @@ class SliderInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -7657,11 +7862,13 @@ class SliderInt(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -7686,7 +7893,7 @@ class SliderIntX(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7789,11 +7996,13 @@ class SliderIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -7807,11 +8016,13 @@ class SliderIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -7825,11 +8036,13 @@ class SliderIntX(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -7854,7 +8067,7 @@ class Spacer(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7913,7 +8126,7 @@ class StairSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -7966,7 +8179,7 @@ class StaticTexture(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8008,7 +8221,7 @@ class StemSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8056,7 +8269,7 @@ class StringValue(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8098,7 +8311,7 @@ class TabButton(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8172,11 +8385,13 @@ class TabButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -8190,11 +8405,13 @@ class TabButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -8208,11 +8425,13 @@ class TabButton(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -8237,7 +8456,7 @@ class TableColumn(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8353,7 +8572,7 @@ class Text(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8433,11 +8652,13 @@ class Text(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -8451,11 +8672,13 @@ class Text(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -8486,7 +8709,7 @@ class TextPoint(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8548,7 +8771,7 @@ class ThemeColor(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8596,7 +8819,7 @@ class ThemeStyle(Widget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8636,7 +8859,7 @@ class TimePicker(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8706,11 +8929,13 @@ class TimePicker(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -8724,11 +8949,13 @@ class TimePicker(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -8742,11 +8969,13 @@ class TimePicker(MovableWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -8774,7 +9003,7 @@ class VLineSeries(PlotSeries):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8817,7 +9046,7 @@ class ChildWindow(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8907,11 +9136,13 @@ class ChildWindow(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -8936,7 +9167,7 @@ class Clipper(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -8985,7 +9216,7 @@ class CollapsingHeader(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9071,11 +9302,13 @@ class CollapsingHeader(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -9089,11 +9322,13 @@ class CollapsingHeader(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -9118,7 +9353,7 @@ class ColormapRegistry(Registry):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9152,7 +9387,7 @@ class DragPayload(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9207,7 +9442,7 @@ class DrawArrow(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9270,7 +9505,7 @@ class DrawBezierCubic(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9332,7 +9567,7 @@ class DrawBezierQuadratic(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9390,7 +9625,7 @@ class DrawCircle(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9451,7 +9686,7 @@ class DrawEllipse(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9506,7 +9741,7 @@ class DrawLayer(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9549,7 +9784,7 @@ class DrawLine(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9599,7 +9834,7 @@ class DrawPolygon(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9652,7 +9887,7 @@ class DrawPolyline(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9714,7 +9949,7 @@ class DrawQuad(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9773,7 +10008,7 @@ class DrawRectangle(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9854,7 +10089,7 @@ class DrawText(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9910,7 +10145,7 @@ class DrawTriangle(MovableWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -9968,7 +10203,7 @@ class DrawList(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10020,11 +10255,13 @@ class DrawList(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -10049,7 +10286,7 @@ class FileDialog(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10104,11 +10341,13 @@ class FileDialog(ContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -10133,7 +10372,7 @@ class FilterSet(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10188,7 +10427,7 @@ class Font(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10223,7 +10462,7 @@ class FontRegistry(Registry):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10257,7 +10496,7 @@ class Group(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10335,11 +10574,13 @@ class Group(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -10353,11 +10594,13 @@ class Group(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -10382,7 +10625,7 @@ class HandlerRegistry(Registry):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10416,7 +10659,7 @@ class ItemHandlerRegistry(Registry):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10450,7 +10693,7 @@ class Menu(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10508,11 +10751,13 @@ class Menu(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -10537,7 +10782,7 @@ class MenuBar(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10582,7 +10827,7 @@ class Node(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10644,11 +10889,13 @@ class Node(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -10662,11 +10909,13 @@ class Node(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -10691,7 +10940,7 @@ class NodeAttribute(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10756,7 +11005,7 @@ class Plot(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -10918,11 +11167,13 @@ class Plot(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -10936,11 +11187,13 @@ class Plot(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -10954,11 +11207,13 @@ class Plot(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -10983,7 +11238,7 @@ class XAxis(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11050,11 +11305,13 @@ class XAxis(ContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -11079,7 +11336,7 @@ class YAxis(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11146,11 +11403,13 @@ class YAxis(ContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -11181,7 +11440,7 @@ class SubPlots(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11289,11 +11548,13 @@ class SubPlots(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -11318,7 +11579,7 @@ class Tab(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11384,11 +11645,13 @@ class Tab(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -11413,7 +11676,7 @@ class TabBar(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11471,11 +11734,13 @@ class TabBar(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -11500,7 +11765,7 @@ class Table(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11675,11 +11940,13 @@ class Table(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
@@ -11704,7 +11971,7 @@ class TableCell(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11749,7 +12016,7 @@ class TableRow(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11794,7 +12061,7 @@ class TemplateRegistry(Registry):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11824,7 +12091,7 @@ class TextureRegistry(Registry):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11861,7 +12128,7 @@ class ThemeComponent(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11899,7 +12166,7 @@ class Tooltip(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -11936,7 +12203,7 @@ class TreeNode(MovableContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -12022,11 +12289,13 @@ class TreeNode(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
@@ -12040,11 +12309,13 @@ class TreeNode(MovableContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
@@ -12069,7 +12340,7 @@ class ValueRegistry(Registry):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -12099,7 +12370,7 @@ class ViewportMenuBar(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -12144,7 +12415,7 @@ class Window(ContainerWidget):
     label: str = None
 
     # user_data (Any, optional): User data for callbacks
-    user_data: t.Union[Widget, t.List[Widget]] = None
+    user_data: USER_DATA = None
 
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
@@ -12263,11 +12534,13 @@ class Window(ContainerWidget):
         self, 
         sender_dpg_id: int, 
         app_data: t.Any, 
-        user_data: t.Any
+        user_data: USER_DATA, 
     ):
-        # eventually remove this sanity check (dpg_widgets_generator.py)...
+        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
+        assert id(user_data) == id(self.user_data), \
+            'was expecting the user_data to match ...'
 
         # logic ...
         if self.on_close is None:

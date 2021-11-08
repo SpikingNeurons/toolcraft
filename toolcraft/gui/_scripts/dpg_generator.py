@@ -496,7 +496,7 @@ class DpgDef:
                 _param_value = "None"
                 _param_dpg_value = "_source_dpg_id"
             if _param_name == "user_data":
-                _param_type = "t.Union[Widget, t.List[Widget]]"
+                _param_type = "USER_DATA"
                 _param_value = "None"
             if _param_name == "on_enter":
                 _param_name = "if_entered"
@@ -629,13 +629,15 @@ class DpgDef:
                 f"\n\t\tself, "
                 f"\n\t\tsender_dpg_id: int, "
                 f"\n\t\tapp_data: t.Any, "
-                f"\n\t\tuser_data: t.Any"
+                f"\n\t\tuser_data: USER_DATA, "
                 f"\n\t):",
                 # todo: remove this sanity check
-                "\t\t# eventually remove this sanity check ("
+                "\t\t# todo: eventually remove this sanity check in ("
                 "dpg_widgets_generator.py)...",
                 "\t\tassert sender_dpg_id == self.dpg_id, \\"
                 "\n\t\t\t'was expecting the dpg_id to match ...'",
+                "\t\tassert id(user_data) == id(self.user_data), \\"
+                "\n\t\t\t'was expecting the user_data to match ...'",
                 "",
                 "\t\t# logic ...",
                 f"\t\tif self.{_pd.name} is None:",
@@ -830,6 +832,7 @@ from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
+from .__base__ import USER_DATA
 '''
         return _header
 

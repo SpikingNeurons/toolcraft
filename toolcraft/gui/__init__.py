@@ -1,4 +1,4 @@
-from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE, Tag
+from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE, USER_DATA, Tag
 from ._enum import *
 from . import window
 from . import widget

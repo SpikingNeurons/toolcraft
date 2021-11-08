@@ -111,14 +111,6 @@ class XAxis(_auto.XAxis):
         """
         internal_dpg.fit_axis_data(axis=self.dpg_id)
 
-    def clear(self):
-        """
-        Refer:
-        >>> dpg.delete_item
-        """
-        # https://github.com/hoffstadt/DearPyGui/discussions/1328
-        internal_dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
-
     def get_limits(self) -> t.List[float]:
         """
         Refer:
@@ -154,6 +146,17 @@ class XAxis(_auto.XAxis):
 @dataclasses.dataclass
 class YAxis(_auto.YAxis):
 
+    @property
+    @util.CacheResult
+    def children(self) -> t.List[PlotSeries]:
+        # noinspection PyTypeChecker
+        return super().children
+
+    @property
+    def available_plot_series(self) -> t.List[str]:
+        # noinspection PyTypeChecker,PyUnresolvedReferences
+        return [_.label for _ in self.children]
+
     def __call__(self, widget: PlotSeries, before: PlotSeries = None):
         # we also need to add cells in row
         if isinstance(widget, PlotSeries):
@@ -178,7 +181,11 @@ class YAxis(_auto.YAxis):
         >>> dpg.delete_item
         """
         # https://github.com/hoffstadt/DearPyGui/discussions/1328
-        internal_dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
+        # internal_dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
+        _children_copy = self.children.copy()
+        for _c in _children_copy:
+            _c.delete()
+        del _children_copy
 
     def get_limits(self) -> t.List[float]:
         """
@@ -210,12 +217,6 @@ class YAxis(_auto.YAxis):
         >>> dpg.set_axis_ticks
         """
         internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
-
-    # noinspection PyMethodMayBeStatic
-    def update_series(self, series_dpg_id: int, **kwargs):
-        # todo: test code to see if series_dpg_id belongs to this plot ...
-        #  this will need some tracking code when series are added
-        dpg.configure_item(series_dpg_id, **kwargs)
 
 
 @dataclasses.dataclass
@@ -259,7 +260,7 @@ class Plot(_auto.Plot):
 
     @property
     @util.CacheResult
-    def children(self) -> t.List[t.Union[Annotation]]:
+    def children(self) -> t.List[t.Union[Annotation, DragLine, DragPoint]]:
         # noinspection PyTypeChecker
         return super().children
 
@@ -350,14 +351,37 @@ class Plot(_auto.Plot):
         """
         return tuple(internal_dpg.get_plot_query_area(self.dpg_id))
 
-    def clear(self):
-        self.x_axis.clear()
-        self.y1_axis.clear()
+    def clear(
+        self,
+        y1_axis: bool = True,
+        y2_axis: bool = True,
+        y3_axis: bool = True,
+        annotations: bool = True,
+        drag_lines: bool = True,
+        drag_points: bool = True,
+    ):
+        # to delete any plot series
+        if y1_axis:
+            self.y1_axis.clear()
         if self.num_of_y_axis == 2:
-            self.y2_axis.clear()
+            if y2_axis:
+                self.y2_axis.clear()
         elif self.num_of_y_axis == 3:
-            self.y2_axis.clear()
-            self.y3_axis.clear()
+            if y2_axis:
+                self.y2_axis.clear()
+            if y3_axis:
+                self.y3_axis.clear()
+
+        # to delete annotations, drag_line, drag_plot
+        _children_copy = self.children.copy()
+        for _c in _children_copy:
+            if isinstance(_c, Annotation) and annotations:
+                _c.delete()
+            if isinstance(_c, DragLine) and drag_lines:
+                _c.delete()
+            if isinstance(_c, DragPoint) and drag_points:
+                _c.delete()
+        del _children_copy
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
