@@ -299,6 +299,20 @@ class DpgDef:
             return False
 
     @property
+    def is_container(self) -> bool:
+        # if dec by @contextmanager then is container
+        _is_container = self.fn_src.find("@contextmanager") != -1
+
+        # x_axis is not container anyways and y_axis we will handle so in case of
+        # plot_axis fn we force it to be not container
+        # >>> check 'gui.plot.XAxis' and `gui.plot.YAxis`
+        if self.fn == dpg.plot_axis:
+            _is_container = False
+
+        # return
+        return _is_container
+
+    @property
     def is_frozen(self) -> bool:
         if self.is_registry:
             return True
@@ -625,27 +639,20 @@ class DpgDef:
                 continue
             _lines += [
                 "",
-                f"\tdef {_pd.name}_fn("
-                f"\n\t\tself, "
-                f"\n\t\tsender_dpg_id: int, "
-                f"\n\t\tapp_data: t.Any, "
-                f"\n\t\tuser_data: USER_DATA, "
-                f"\n\t):",
+                f"\tdef {_pd.name}_fn(self, sender_dpg_id: int):",
                 # todo: remove this sanity check
                 "\t\t# todo: eventually remove this sanity check in ("
                 "dpg_widgets_generator.py)...",
                 "\t\tassert sender_dpg_id == self.dpg_id, \\"
                 "\n\t\t\t'was expecting the dpg_id to match ...'",
-                "\t\tassert id(user_data) == id(self.user_data), \\"
-                "\n\t\t\t'was expecting the user_data to match ...'",
+                # "\t\tassert id(user_data) == id(self.user_data), \\"
+                # "\n\t\t\t'was expecting the user_data to match ...'",
                 "",
                 "\t\t# logic ...",
                 f"\t\tif self.{_pd.name} is None:",
                 f"\t\t\treturn None",
                 f"\t\telse:",
-                f"\t\t\treturn self.{_pd.name}.fn("
-                f"\n\t\t\t\tsender=self, app_data=app_data, user_data=user_data"
-                f"\n\t\t\t)",
+                f"\t\t\treturn self.{_pd.name}.fn(sender=self)",
             ]
 
         # ------------------------------------------------------- 04
@@ -668,7 +675,6 @@ class DpgDef:
         # -------------------------------------------------------- 02
         self.fn_src = inspect.getsource(self.fn)
         self.fn_signature = inspect.signature(self.fn)
-        self.is_container = self.fn_src.find("@contextmanager") != -1
 
         # -------------------------------------------------------- 03
         self.is_registry = self.fn.__name__.find("registry") != -1

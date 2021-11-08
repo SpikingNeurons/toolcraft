@@ -86,20 +86,6 @@ class Legend(_auto.PlotLegend):
 @dataclasses.dataclass
 class XAxis(_auto.XAxis):
 
-    # noinspection PyMethodOverriding
-    def __call__(self):
-        """
-        This will block container behaviour which is intended
-        """
-        e.code.CodingError(
-            msgs=[
-                "We do not support adding any children to XAxis",
-                "Note that the behaviour is shared with YAxis which allows children "
-                "but XAxis does not allow it",
-                f"Please check {dpg.plot_axis} for more support"
-            ]
-        )
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -148,25 +134,39 @@ class YAxis(_auto.YAxis):
 
     @property
     @util.CacheResult
-    def children(self) -> t.List[PlotSeries]:
-        # noinspection PyTypeChecker
-        return super().children
+    def all_plot_series(self) -> t.Dict[str, PlotSeries]:
+        return {}
 
-    @property
-    def available_plot_series(self) -> t.List[str]:
-        # noinspection PyTypeChecker,PyUnresolvedReferences
-        return [_.label for _ in self.children]
-
-    def __call__(self, widget: PlotSeries, before: PlotSeries = None):
-        # we also need to add cells in row
-        if isinstance(widget, PlotSeries):
-            super().__call__(widget, before)
+    # noinspection PyMethodOverriding
+    def __call__(self, plot_series: PlotSeries):
+        if isinstance(plot_series, PlotSeries):
+            if plot_series.key in self.all_plot_series.keys():
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"There already exists a plot_series with label "
+                        f"`{plot_series.key}`"
+                    ]
+                )
+            self.all_plot_series[plot_series.key] = plot_series
+            plot_series.internal.parent = self
+            if self.is_built:
+                plot_series.build()
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
+            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_series)}"])
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
+
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Union[int, str]
+    ):
+        # call super
+        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+
+        # now it is time to render children
+        for _ps in self.all_plot_series.values():
+            _ps.build()
 
     def fit_data(self):
         """
@@ -182,10 +182,9 @@ class YAxis(_auto.YAxis):
         """
         # https://github.com/hoffstadt/DearPyGui/discussions/1328
         # internal_dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
-        _children_copy = self.children.copy()
-        for _c in _children_copy:
-            _c.delete()
-        del _children_copy
+        _ks = list(self.all_plot_series.keys())
+        for _k in _ks:
+            self.all_plot_series[_k].delete()
 
     def get_limits(self) -> t.List[float]:
         """

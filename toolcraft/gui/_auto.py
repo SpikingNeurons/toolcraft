@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-11-08 22:36
+>> Time: 2021-11-08 23:32
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -299,65 +299,38 @@ class Slider3D(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -614,65 +587,38 @@ class Button(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -838,65 +784,38 @@ class CheckBox(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -999,65 +918,38 @@ class ColorButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -1235,65 +1127,38 @@ class ColormapButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -1373,25 +1238,16 @@ class ColormapScale(MovableWidget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -1474,45 +1330,27 @@ class ColormapSlider(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -1624,65 +1462,38 @@ class Combo(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -1765,65 +1576,38 @@ class DatePicker(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -2023,65 +1807,38 @@ class DragFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -2201,65 +1958,38 @@ class DragFloatX(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -2375,65 +2105,38 @@ class DragInt(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -2553,65 +2256,38 @@ class DragIntX(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -2679,25 +2355,16 @@ class DragLine(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -2761,25 +2428,16 @@ class DragPoint(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -3514,65 +3172,38 @@ class InputFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -3696,65 +3327,38 @@ class InputFloatX(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -3878,65 +3482,38 @@ class InputInt(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4056,65 +3633,38 @@ class InputIntX(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4254,65 +3804,38 @@ class InputText(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4439,25 +3962,16 @@ class ItemActivatedHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4500,25 +4014,16 @@ class ItemActiveHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4565,25 +4070,16 @@ class ItemClickedHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4626,25 +4122,16 @@ class ItemDeactivatedAfterEditHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4687,25 +4174,16 @@ class ItemDeactivatedHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4748,25 +4226,16 @@ class ItemEditedHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4809,25 +4278,16 @@ class ItemFocusHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4870,25 +4330,16 @@ class ItemHoverHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4931,25 +4382,16 @@ class ItemResizeHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -4992,25 +4434,16 @@ class ItemToggledOpenHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5053,25 +4486,16 @@ class ItemVisibleHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5118,25 +4542,16 @@ class KeyDownHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5183,25 +4598,16 @@ class KeyPressHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5248,25 +4654,16 @@ class KeyReleaseHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5366,65 +4763,38 @@ class KnobFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5574,65 +4944,38 @@ class Listbox(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5723,25 +5066,16 @@ class LoadingIndicator(MovableWidget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5824,45 +5158,27 @@ class MenuItem(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5909,25 +5225,16 @@ class MouseClickHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5974,25 +5281,16 @@ class MouseDoubleClickHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6039,25 +5337,16 @@ class MouseDownHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6108,25 +5397,16 @@ class MouseDragHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6169,25 +5449,16 @@ class MouseMoveHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6234,25 +5505,16 @@ class MouseReleaseHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6295,25 +5557,16 @@ class MouseWheelHandler(Widget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6504,25 +5757,16 @@ class PlotLegend(Widget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6614,45 +5858,27 @@ class ProgressBar(MovableWidget):
         
         return _ret
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -6748,65 +5974,38 @@ class RadioButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -7005,65 +6204,38 @@ class Selectable(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -7308,45 +6480,27 @@ class SimplePlot(MovableWidget):
         
         return _ret
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -7466,65 +6620,38 @@ class SliderFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -7640,65 +6767,38 @@ class SliderFloatX(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -7818,65 +6918,38 @@ class SliderInt(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -7992,65 +7065,38 @@ class SliderIntX(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -8381,65 +7427,38 @@ class TabButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -8648,45 +7667,27 @@ class Text(MovableWidget):
         
         return _ret
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -8925,65 +7926,38 @@ class TimePicker(MovableWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -9132,25 +8106,16 @@ class ChildWindow(MovableContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -9298,45 +8263,27 @@ class CollapsingHeader(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -10251,25 +9198,16 @@ class DrawList(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -10337,25 +9275,16 @@ class FileDialog(ContainerWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -10570,45 +9499,27 @@ class Group(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -10747,25 +9658,16 @@ class Menu(MovableContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -10885,45 +9787,27 @@ class Node(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -11163,69 +10047,42 @@ class Plot(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
-class XAxis(ContainerWidget):
+class XAxis(Widget):
     """
     Refer:
     >>> dpg.plot_axis
@@ -11301,29 +10158,20 @@ class XAxis(ContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
-class YAxis(ContainerWidget):
+class YAxis(Widget):
     """
     Refer:
     >>> dpg.plot_axis
@@ -11399,25 +10247,16 @@ class YAxis(ContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -11544,25 +10383,16 @@ class SubPlots(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -11641,25 +10471,16 @@ class Tab(MovableContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -11730,25 +10551,16 @@ class TabBar(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -11936,25 +10748,16 @@ class Table(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.callback is None:
             return None
         else:
-            return self.callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -12285,45 +11088,27 @@ class TreeNode(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drag_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drag_callback is None:
             return None
         else:
-            return self.drag_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def drop_callback_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.drop_callback is None:
             return None
         else:
-            return self.drop_callback.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -12530,22 +11315,13 @@ class Window(ContainerWidget):
         
         return _ret
 
-    def on_close_fn(
-        self, 
-        sender_dpg_id: int, 
-        app_data: t.Any, 
-        user_data: USER_DATA, 
-    ):
+    def on_close_fn(self, sender_dpg_id: int):
         # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
-        assert id(user_data) == id(self.user_data), \
-            'was expecting the user_data to match ...'
 
         # logic ...
         if self.on_close is None:
             return None
         else:
-            return self.on_close.fn(
-                sender=self, app_data=app_data, user_data=user_data
-            )
+            return self.on_close.fn(sender=self)

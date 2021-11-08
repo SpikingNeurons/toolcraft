@@ -26,6 +26,7 @@ PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
     from . import window
+    from . import plot
 
 
 class Tag:
@@ -526,6 +527,25 @@ class Widget(Dpg, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.widget.{cls.__name__}"
 
+    def get_user_data(self) -> 'USER_DATA':
+        """
+        Almost every subclassed Widget will have this field but we cannot have it here
+        as dataclass mechanism does not allow it. So we offer this utility method
+
+        todo: raise issue with dpg for why they need user_data for Widgets which do
+          not support any callbacks
+        """
+        try:
+            # noinspection PyUnresolvedReferences
+            return self.user_data
+        except AttributeError:
+            e.code.CodingError(
+                msgs=[
+                    f"Was expecting class {self.__class__} to have field `user_data`",
+                    "This is intended to be used by callback mechanism"
+                ]
+            )
+
     def get_tag(self) -> str:
         return Tag.get_tag(widget=self)
 
@@ -941,12 +961,7 @@ class Callback(m.YamlRepr, abc.ABC):
         return f"gui.callback.{cls.__name__}"
 
     @abc.abstractmethod
-    def fn(
-        self,
-        sender: Widget,
-        app_data: t.Any,
-        user_data: USER_DATA
-    ):
+    def fn(self, sender: Widget):
         ...
 
     def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
@@ -973,6 +988,25 @@ class Registry(m.YamlRepr, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.registry.{cls.__name__}"
 
+    def get_user_data(self) -> 'USER_DATA':
+        """
+        Almost every subclassed Registry will have this field but we cannot have it here
+        as dataclass mechanism does not allow it. So we offer this utility method
+
+        todo: raise issue with dpg for why they need user_data for registry if they
+          do not use any callbacks
+        """
+        try:
+            # noinspection PyUnresolvedReferences
+            return self.user_data
+        except AttributeError:
+            e.code.CodingError(
+                msgs=[
+                    f"Was expecting class {self.__class__} to have field `user_data`",
+                    "This is intended to be used by callback mechanism"
+                ]
+            )
+
     def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
         for f_name in self.dataclass_field_names:
@@ -980,9 +1014,58 @@ class Registry(m.YamlRepr, abc.ABC):
         return _ret
 
 
+class PlotSeriesInternal(DpgInternal):
+    parent: "plot.YAxis"
+
+    def vars_that_can_be_overwritten(self) -> t.List[str]:
+        return super().vars_that_can_be_overwritten() + ["parent", ]
+
+    def test_if_others_set(self):
+        if not self.has("parent"):
+            e.code.CodingError(
+                msgs=[
+                    f"Widget {self.__class__} is not a children to any parent",
+                    f"Please use some `YAxis` and add this Widget",
+                ]
+            )
+
+
 @dataclasses.dataclass
-class PlotSeries(MovableWidget, abc.ABC):
+class PlotSeries(Widget, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> PlotSeriesInternal:
+        return PlotSeriesInternal(owner=self)
+
+    @property
+    def parent(self) -> "plot.YAxis":
+        return self.internal.parent
+
+    @property
+    def key(self) -> str:
+        try:
+            # noinspection PyUnresolvedReferences
+            return self.label
+        except AttributeError:
+            e.code.CodingError(
+                msgs=[
+                    f"We were expecting class {self.__class__} to have field `label`"
+                ]
+            )
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
+
+    # noinspection PyMethodMayBeStatic
+    def update_series(self, series_dpg_id: int, **kwargs):
+        # todo: test code to see if series_dpg_id belongs to this plot ...
+        #  this will need some tracking code when series are added
+        dpg.configure_item(series_dpg_id, **kwargs)
+
+        internal_dpg.configure_item(self.dpg_id, **{key: value})
+
+    def delete(self):
+        del self.parent.all_plot_series[self.key]
+        return super().delete()

@@ -162,14 +162,9 @@ class PlottingWithUpdates(gui.form.Form):
 
         class __Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
-            def fn(
-                _self,
-                sender: gui.widget.Widget,
-                app_data: t.Any,
-                user_data: USER_DATA,
-            ):
+            def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
-                _form: PlottingWithUpdates = user_data['form']
+                _form: PlottingWithUpdates = sender.get_user_data()['form']
                 _form.lines_count += 1
                 _l = f"line {_form.lines_count}"
                 _ls = gui.plot.LineSeries(
@@ -179,7 +174,7 @@ class PlottingWithUpdates(gui.form.Form):
                 )
                 _y1_axis = _form.line_plot.y1_axis
                 _y1_axis(_ls)
-                _ls_ks = _y1_axis.available_plot_series
+                _ls_ks = list(_y1_axis.all_plot_series.keys())
                 _form.combo_select.items = _ls_ks
                 _form.combo_select.default_value = _ls_ks[-1]
 
@@ -194,14 +189,9 @@ class PlottingWithUpdates(gui.form.Form):
 
         class __Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
-            def fn(
-                _self,
-                sender: gui.widget.Widget,
-                app_data: t.Any,
-                user_data: USER_DATA,
-            ):
+            def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
-                _form: PlottingWithUpdates = user_data['form']
+                _form: PlottingWithUpdates = sender.get_user_data()['form']
                 _form.line_plot.clear()
                 _form.combo_select.items = []
                 _form.combo_select.default_value = ''
@@ -222,9 +212,24 @@ class PlottingWithUpdates(gui.form.Form):
     @property
     @util.CacheResult
     def update_button(self) -> gui.widget.Button:
+
+        class __Callback(gui.callback.Callback):
+            # noinspection PyMethodParameters
+            def fn(_self, sender: gui.widget.Widget):
+                # noinspection PyTypeChecker
+                _form: PlottingWithUpdates = sender.get_user_data()['form']
+                _y1_axis = _form.line_plot.y1_axis
+                _combo_select_value = _form.combo_select.get_value()
+                if _combo_select_value == '':
+                    return
+                _plot_series = _y1_axis.all_plot_series[_combo_select_value]
+                _plot_series.x = np.arange(100)
+                _plot_series.y = np.random.normal(0.0, scale=2.0, size=100)
+
         _button = gui.widget.Button(
-            label="Update"
+            label="Update", callback=__Callback(), user_data={"form": self},
         )
+
         return _button
 
     @property
@@ -233,26 +238,25 @@ class PlottingWithUpdates(gui.form.Form):
 
         class __Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
-            def fn(
-                _self,
-                sender: gui.widget.Widget,
-                app_data: t.Any,
-                user_data: USER_DATA,
-            ):
+            def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
-                _form: PlottingWithUpdates = user_data['form']
-                # self.line_plot.clear()
-                # self.combo_select.items = []
-                # self.combo_select.default_value = ''
-                print("delete ....")
-                print(sender)
-                print(sender.get_value())
-                print(app_data)
-                print(user_data)
+                _form: PlottingWithUpdates = sender.get_user_data()['form']
+                _y1_axis = _form.line_plot.y1_axis
+                _combo_select_value = _form.combo_select.get_value()
+                if _combo_select_value == '':
+                    return
+                _y1_axis.all_plot_series[_combo_select_value].delete()
+                _ls_ks = list(_y1_axis.all_plot_series.keys())
+                _form.combo_select.items = _ls_ks
+                try:
+                    _form.combo_select.default_value = _ls_ks[-1]
+                except IndexError:
+                    _form.combo_select.default_value = ''
 
         _button = gui.widget.Button(
             label="Delete", callback=__Callback(), user_data={"form": self},
         )
+
         return _button
 
     # noinspection PyMethodMayBeStatic
