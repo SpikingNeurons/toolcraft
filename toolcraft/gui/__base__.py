@@ -1058,14 +1058,6 @@ class PlotSeries(Widget, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
 
-    # noinspection PyMethodMayBeStatic
-    def update_series(self, series_dpg_id: int, **kwargs):
-        # todo: test code to see if series_dpg_id belongs to this plot ...
-        #  this will need some tracking code when series are added
-        dpg.configure_item(series_dpg_id, **kwargs)
-
-        internal_dpg.configure_item(self.dpg_id, **{key: value})
-
     def delete(self):
         del self.parent.all_plot_series[self.key]
         return super().delete()
