@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-11-08 23:32
+>> Time: 2021-11-09 00:55
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -300,7 +300,7 @@ class Slider3D(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -311,7 +311,7 @@ class Slider3D(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -322,7 +322,7 @@ class Slider3D(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -588,7 +588,7 @@ class Button(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -599,7 +599,7 @@ class Button(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -610,7 +610,7 @@ class Button(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -785,7 +785,7 @@ class CheckBox(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -796,7 +796,7 @@ class CheckBox(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -807,7 +807,7 @@ class CheckBox(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -919,7 +919,7 @@ class ColorButton(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -930,7 +930,7 @@ class ColorButton(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -941,7 +941,7 @@ class ColorButton(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1128,7 +1128,7 @@ class ColormapButton(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1139,7 +1139,7 @@ class ColormapButton(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1150,7 +1150,7 @@ class ColormapButton(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1239,7 +1239,7 @@ class ColormapScale(MovableWidget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1331,7 +1331,7 @@ class ColormapSlider(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1342,7 +1342,7 @@ class ColormapSlider(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1463,7 +1463,7 @@ class Combo(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1474,7 +1474,7 @@ class Combo(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1485,7 +1485,7 @@ class Combo(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1577,7 +1577,7 @@ class DatePicker(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1588,7 +1588,7 @@ class DatePicker(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1599,7 +1599,7 @@ class DatePicker(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1808,7 +1808,7 @@ class DragFloat(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1819,7 +1819,7 @@ class DragFloat(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1830,7 +1830,7 @@ class DragFloat(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1959,7 +1959,7 @@ class DragFloatX(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1970,7 +1970,7 @@ class DragFloatX(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -1981,7 +1981,7 @@ class DragFloatX(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2106,7 +2106,7 @@ class DragInt(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2117,7 +2117,7 @@ class DragInt(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2128,7 +2128,7 @@ class DragInt(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2257,7 +2257,7 @@ class DragIntX(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2268,7 +2268,7 @@ class DragIntX(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2279,7 +2279,7 @@ class DragIntX(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2356,7 +2356,7 @@ class DragLine(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -2429,7 +2429,7 @@ class DragPoint(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3173,7 +3173,7 @@ class InputFloat(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3184,7 +3184,7 @@ class InputFloat(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3195,7 +3195,7 @@ class InputFloat(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3328,7 +3328,7 @@ class InputFloatX(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3339,7 +3339,7 @@ class InputFloatX(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3350,7 +3350,7 @@ class InputFloatX(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3483,7 +3483,7 @@ class InputInt(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3494,7 +3494,7 @@ class InputInt(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3505,7 +3505,7 @@ class InputInt(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3634,7 +3634,7 @@ class InputIntX(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3645,7 +3645,7 @@ class InputIntX(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3656,7 +3656,7 @@ class InputIntX(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3805,7 +3805,7 @@ class InputText(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3816,7 +3816,7 @@ class InputText(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3827,7 +3827,7 @@ class InputText(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -3963,7 +3963,7 @@ class ItemActivatedHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4015,7 +4015,7 @@ class ItemActiveHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4071,7 +4071,7 @@ class ItemClickedHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4123,7 +4123,7 @@ class ItemDeactivatedAfterEditHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4175,7 +4175,7 @@ class ItemDeactivatedHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4227,7 +4227,7 @@ class ItemEditedHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4279,7 +4279,7 @@ class ItemFocusHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4331,7 +4331,7 @@ class ItemHoverHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4383,7 +4383,7 @@ class ItemResizeHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4435,7 +4435,7 @@ class ItemToggledOpenHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4487,7 +4487,7 @@ class ItemVisibleHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4543,7 +4543,7 @@ class KeyDownHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4599,7 +4599,7 @@ class KeyPressHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4655,7 +4655,7 @@ class KeyReleaseHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4764,7 +4764,7 @@ class KnobFloat(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4775,7 +4775,7 @@ class KnobFloat(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4786,7 +4786,7 @@ class KnobFloat(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4945,7 +4945,7 @@ class Listbox(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4956,7 +4956,7 @@ class Listbox(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -4967,7 +4967,7 @@ class Listbox(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5067,7 +5067,7 @@ class LoadingIndicator(MovableWidget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5159,7 +5159,7 @@ class MenuItem(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5170,7 +5170,7 @@ class MenuItem(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5226,7 +5226,7 @@ class MouseClickHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5282,7 +5282,7 @@ class MouseDoubleClickHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5338,7 +5338,7 @@ class MouseDownHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5398,7 +5398,7 @@ class MouseDragHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5450,7 +5450,7 @@ class MouseMoveHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5506,7 +5506,7 @@ class MouseReleaseHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5558,7 +5558,7 @@ class MouseWheelHandler(Widget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5758,7 +5758,7 @@ class PlotLegend(Widget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5859,7 +5859,7 @@ class ProgressBar(MovableWidget):
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5870,7 +5870,7 @@ class ProgressBar(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5975,7 +5975,7 @@ class RadioButton(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5986,7 +5986,7 @@ class RadioButton(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -5997,7 +5997,7 @@ class RadioButton(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6205,7 +6205,7 @@ class Selectable(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6216,7 +6216,7 @@ class Selectable(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6227,7 +6227,7 @@ class Selectable(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6481,7 +6481,7 @@ class SimplePlot(MovableWidget):
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6492,7 +6492,7 @@ class SimplePlot(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6621,7 +6621,7 @@ class SliderFloat(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6632,7 +6632,7 @@ class SliderFloat(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6643,7 +6643,7 @@ class SliderFloat(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6768,7 +6768,7 @@ class SliderFloatX(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6779,7 +6779,7 @@ class SliderFloatX(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6790,7 +6790,7 @@ class SliderFloatX(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6919,7 +6919,7 @@ class SliderInt(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6930,7 +6930,7 @@ class SliderInt(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -6941,7 +6941,7 @@ class SliderInt(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7066,7 +7066,7 @@ class SliderIntX(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7077,7 +7077,7 @@ class SliderIntX(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7088,7 +7088,7 @@ class SliderIntX(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7428,7 +7428,7 @@ class TabButton(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7439,7 +7439,7 @@ class TabButton(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7450,7 +7450,7 @@ class TabButton(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7668,7 +7668,7 @@ class Text(MovableWidget):
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7679,7 +7679,7 @@ class Text(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7927,7 +7927,7 @@ class TimePicker(MovableWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7938,7 +7938,7 @@ class TimePicker(MovableWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -7949,7 +7949,7 @@ class TimePicker(MovableWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -8107,7 +8107,7 @@ class ChildWindow(MovableContainerWidget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -8264,7 +8264,7 @@ class CollapsingHeader(MovableContainerWidget):
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -8275,7 +8275,7 @@ class CollapsingHeader(MovableContainerWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -9199,7 +9199,7 @@ class DrawList(MovableContainerWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -9276,7 +9276,7 @@ class FileDialog(ContainerWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -9500,7 +9500,7 @@ class Group(MovableContainerWidget):
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -9511,7 +9511,7 @@ class Group(MovableContainerWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -9659,7 +9659,7 @@ class Menu(MovableContainerWidget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -9788,7 +9788,7 @@ class Node(MovableContainerWidget):
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -9799,7 +9799,7 @@ class Node(MovableContainerWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10048,7 +10048,7 @@ class Plot(MovableContainerWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10059,7 +10059,7 @@ class Plot(MovableContainerWidget):
             return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10070,7 +10070,7 @@ class Plot(MovableContainerWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10159,7 +10159,7 @@ class XAxis(Widget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10248,7 +10248,7 @@ class YAxis(Widget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10384,7 +10384,7 @@ class SubPlots(MovableContainerWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10472,7 +10472,7 @@ class Tab(MovableContainerWidget):
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10552,7 +10552,7 @@ class TabBar(MovableContainerWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -10749,7 +10749,7 @@ class Table(MovableContainerWidget):
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -11089,7 +11089,7 @@ class TreeNode(MovableContainerWidget):
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -11100,7 +11100,7 @@ class TreeNode(MovableContainerWidget):
             return self.drag_callback.fn(sender=self)
 
     def drop_callback_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 
@@ -11316,7 +11316,7 @@ class Window(ContainerWidget):
         return _ret
 
     def on_close_fn(self, sender_dpg_id: int):
-        # todo: eventually remove this sanity check in (dpg_widgets_generator.py)...
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
         assert sender_dpg_id == self.dpg_id, \
             'was expecting the dpg_id to match ...'
 

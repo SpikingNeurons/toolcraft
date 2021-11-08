@@ -640,8 +640,8 @@ class DpgDef:
             _lines += [
                 "",
                 f"\tdef {_pd.name}_fn(self, sender_dpg_id: int):",
-                # todo: remove this sanity check
-                "\t\t# todo: eventually remove this sanity check in ("
+                # todo: eventually remove this sanity check
+                "\t\t# eventually remove this sanity check in ("
                 "dpg_widgets_generator.py)...",
                 "\t\tassert sender_dpg_id == self.dpg_id, \\"
                 "\n\t\t\t'was expecting the dpg_id to match ...'",
