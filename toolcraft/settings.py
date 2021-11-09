@@ -39,6 +39,7 @@ else:
             "DEL": (_config_file.parent / ".del").as_posix(),
         }
     }
+    _config_file.parent.mkdir(parents=True, exist_ok=True)
     _config_file.write_text(toml.dumps(_config_data))
 
 _root_dnd = pathlib.Path(_config_data["dirs"]["DND"])
