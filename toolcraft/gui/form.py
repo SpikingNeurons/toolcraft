@@ -23,16 +23,22 @@ class HashableMethodsRunnerForm(Form):
     # todo: add icons for this
     info_button: bool
     callable_names: t.Dict[str, str]
+    use_collapsing_header: bool = True
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> widget.Group:
-        _gp = widget.Group(label=self.title)
-        _gp(widget=widget.Separator())
+    def form_fields_container(self) -> t.Union[widget.Group, widget.CollapsingHeader]:
+        if self.use_collapsing_header:
+            _ret = widget.CollapsingHeader(label=self.title)
+            _gp = widget.Group()
+            _ret(_gp)
+        else:
+            _ret = widget.Group()
+            _gp = _ret
+            _gp(widget=widget.Text(default_value=self.title))
         _gp(widget=self.button_bar)
         _gp(widget=self.receiver)
-        _gp(widget=widget.Separator())
-        return _gp
+        return _ret
 
     @property
     @util.CacheResult
