@@ -26,13 +26,13 @@ class HashableMethodsRunnerForm(Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> widget.CollapsingHeader:
-        _ch = widget.CollapsingHeader(
-            label=self.title, default_open=True,
-        )
-        _ch(widget=self.button_bar)
-        _ch(widget=self.receiver)
-        return _ch
+    def form_fields_container(self) -> widget.Group:
+        _gp = widget.Group(label=self.title)
+        _gp(widget=widget.Separator())
+        _gp(widget=self.button_bar)
+        _gp(widget=self.receiver)
+        _gp(widget=widget.Separator())
+        return _gp
 
     @property
     @util.CacheResult

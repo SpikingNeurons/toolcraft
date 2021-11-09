@@ -633,9 +633,10 @@ class MovableWidget(Widget, abc.ABC):
         # ---------------------------------------------- 05
         # sync the move
         self.internal.parent = parent
-        internal_dpg.move_item(
-            self.dpg_id, parent=parent.dpg_id,
-            before=0 if before is None else before.dpg_id)
+        if self.is_built:
+            internal_dpg.move_item(
+                self.dpg_id, parent=parent.dpg_id,
+                before=0 if before is None else before.dpg_id)
 
     def move_up(self) -> bool:
         """
