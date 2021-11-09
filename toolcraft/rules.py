@@ -83,6 +83,7 @@ def check_things_to_be_cached(
         ContainerWidget: ['children'],
         Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
         BasicDashboard: ['primary_window'],
+        gui.plot.YAxis: ['all_plot_series', ]
     }
     if to_check is not None:
         _THINGS_TO_BE_CACHED = to_check
@@ -115,7 +116,6 @@ def check_things_not_to_be_cached(
         Dpg: ['dpg_state', 'dpg_config', ],
         Widget: ['is_tagged', ],
         MovableWidget: ['index_in_parent_children', ],
-        gui.plot.YAxis: ['available_plot_series', ]
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_CACHED = to_check
