@@ -32,17 +32,21 @@ except ImportError:
 _config_file = pathlib.Path.home() / ".toolcraft" / "config.toml"
 if _config_file.exists():
     _config_data = toml.load(_config_file.as_posix())
-    _root_dnd = pathlib.Path(_config_data["dirs"]["DND"])
-    _root_del = pathlib.Path(_config_data["dirs"]["DEL"])
-    if not _root_dnd.exists():
-        _root_dnd.mkdir(parents=True, exist_ok=True)
-    if not _root_del.exists():
-        _root_del.mkdir(parents=True, exist_ok=True)
 else:
-    raise Exception(
-        f"Missing toolcraft config file at "
-        f"{_config_file.as_posix()}"
-    )
+    _config_data = {
+        "dirs": {
+            "DND": (_config_file.parent / ".dnd").as_posix(),
+            "DEL": (_config_file.parent / ".del").as_posix(),
+        }
+    }
+    _config_file.write_text(toml.dumps(_config_data))
+
+_root_dnd = pathlib.Path(_config_data["dirs"]["DND"])
+_root_del = pathlib.Path(_config_data["dirs"]["DEL"])
+if not _root_dnd.exists():
+    _root_dnd.mkdir(parents=True, exist_ok=True)
+if not _root_del.exists():
+    _root_del.mkdir(parents=True, exist_ok=True)
 
 
 class Dir:
