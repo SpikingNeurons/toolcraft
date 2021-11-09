@@ -145,7 +145,8 @@ class HashablesMethodRunnerForm(Form):
         if label is None:
             label = f"{hashable.__class__.__name__}.{hashable.hex_hash[:-6]}"
         _button = hashable.get_gui_button(
-            button_label=label, callable_name=self.callable_name,
+            button_label=label,
+            callable_name=self.callable_name,
             receiver=self.receiver_panel,
             allow_refresh=self.allow_refresh,
             # we can maintain this as we will be using single `callable_name` and hence
