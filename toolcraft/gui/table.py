@@ -1,19 +1,17 @@
 import dataclasses
 import typing as t
-import dearpygui.dearpygui as dpg
+
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
-from . import __base__
-from . import COLOR_TYPE
-from . import _auto
 from .. import error as e
 from .. import util
+from . import COLOR_TYPE, __base__, _auto
 
 
 @dataclasses.dataclass
 class Column(_auto.TableColumn):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.table.{cls.__name__}"
@@ -21,7 +19,6 @@ class Column(_auto.TableColumn):
 
 @dataclasses.dataclass
 class Cell(_auto.TableCell):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.table.{cls.__name__}"
@@ -29,10 +26,7 @@ class Cell(_auto.TableCell):
 
 @dataclasses.dataclass
 class Row(_auto.TableRow):
-
-    def __getitem__(
-        self, item: int
-    ) -> Cell:
+    def __getitem__(self, item: int) -> Cell:
         # noinspection PyTypeChecker
         return self.children[item]
 
@@ -48,7 +42,7 @@ class Row(_auto.TableRow):
                 msgs=[
                     "must be empty when being called for first time",
                     "you cannot call this for multiple times as cells "
-                    "will be added only once"
+                    "will be added only once",
                 ]
             )
         for _ in range(_num_columns):
@@ -122,16 +116,10 @@ class Table(_auto.Table):
         # check mandatory fields
         if self.rows is None:
             e.validation.NotAllowed(
-                msgs=[
-                    f"Please supply mandatory field `rows`"
-                ]
-            )
+                msgs=[f"Please supply mandatory field `rows`"])
         if self.columns is None:
             e.validation.NotAllowed(
-                msgs=[
-                    f"Please supply mandatory field `columns`"
-                ]
-            )
+                msgs=[f"Please supply mandatory field `columns`"])
 
     def init(self):
         # -------------------------------------------------- 01
@@ -145,11 +133,7 @@ class Table(_auto.Table):
             # ---------------------------------------------- 03.01
             # should not be built
             if _c.is_built:
-                e.code.NotAllowed(
-                    msgs=[
-                        "The column should not be built ..."
-                    ]
-                )
+                e.code.NotAllowed(msgs=["The column should not be built ..."])
             # ---------------------------------------------- 03.02
             # set internals
             _c.internal.parent = self
@@ -157,8 +141,8 @@ class Table(_auto.Table):
         # -------------------------------------------------- 04
         # make rows list
         # hack as the call below will add to `self.children` i.e. even `self.rows`
-        _backup_rows = self.__dict__['rows']
-        self.__dict__['rows'] = []
+        _backup_rows = self.__dict__["rows"]
+        self.__dict__["rows"] = []
         for _r in _backup_rows:
             # set internals
             _r.internal.parent = self
@@ -168,9 +152,7 @@ class Table(_auto.Table):
         # to avoid any bugs
         assert id(self.rows) == id(self.children)
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int, str]):
         # Note that the rows will be handled by `build_post_runner` which calls `build`
         # on children where children are nothing but rows
         assert id(self.children) == id(self.rows), "check for sanity ..."
@@ -180,9 +162,9 @@ class Table(_auto.Table):
         #   > MovableContainerWidget > (ContainerWidget, MovableWidget) > Widget > Dpg
         # We want to bypass `ContainerWidget.build_post_runner` to account for adding
         #   `Column` as they are not treated as `children`
-        super(
-            __base__.Widget, self
-        ).build_post_runner(hooked_method_return_value=hooked_method_return_value)
+        super(__base__.Widget, self).build_post_runner(
+            hooked_method_return_value=hooked_method_return_value
+        )
 
         # the columns will not be handled by children mechanism as it is fixed so
         # we build it here
@@ -196,7 +178,9 @@ class Table(_auto.Table):
 
     @classmethod
     def table_from_literals(
-        cls, rows: int, cols: t.Union[int, t.List[str]],
+        cls,
+        rows: int,
+        cols: t.Union[int, t.List[str]],
     ) -> "Table":
 
         # make cols
@@ -224,20 +208,21 @@ class Table(_auto.Table):
 
     @classmethod
     def table_from_dict(
-        cls, input_dict: t.Dict,
+        cls,
+        input_dict: t.Dict,
     ) -> "Table":
         from .. import gui
+
         _rows = list(input_dict.keys())
         _columns = ["\\"] + list(input_dict[_rows[0]].keys())
         _table = cls.table_from_literals(
-            rows=len(_rows), cols=_columns,
+            rows=len(_rows),
+            cols=_columns,
         )
         for _rid, _r in enumerate(_rows):
             for _cid, _c in enumerate(_columns):
                 if _c == "\\":
-                    _table[_rid, _cid](
-                        gui.widget.Text(default_value=f"{_r}")
-                    )
+                    _table[_rid, _cid](gui.widget.Text(default_value=f"{_r}"))
                 else:
                     _table[_rid, _cid](
                         gui.widget.Text(default_value=f"{input_dict[_r][_c]}")

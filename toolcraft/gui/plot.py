@@ -1,51 +1,54 @@
 import dataclasses
 import typing as t
-import dearpygui.dearpygui as dpg
+
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
-from .__base__ import PlotSeries
-from . import _auto
 from .. import error as e
 from .. import util
+from . import _auto
+from .__base__ import PlotSeries
 
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries2D
-# noinspection PyUnresolvedReferences
-from ._auto import AreaSeries
-# noinspection PyUnresolvedReferences
-from ._auto import BarSeries
-# noinspection PyUnresolvedReferences
-from ._auto import CandleSeries
-# noinspection PyUnresolvedReferences
-from ._auto import ErrorSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HeatSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HLineSeries
-# noinspection PyUnresolvedReferences
-from ._auto import LineSeries
-# noinspection PyUnresolvedReferences
-from ._auto import PieSeries
-# noinspection PyUnresolvedReferences
-from ._auto import ScatterSeries
-# noinspection PyUnresolvedReferences
-from ._auto import ShadeSeries
-# noinspection PyUnresolvedReferences
-from ._auto import StairSeries
-# noinspection PyUnresolvedReferences
-from ._auto import StemSeries
-# noinspection PyUnresolvedReferences
-from ._auto import VLineSeries
+from ._auto import (
+    AreaSeries,
+    BarSeries,
+    CandleSeries,
+    ErrorSeries,
+    HeatSeries,
+    HistogramSeries,
+    HistogramSeries2D,
+    HLineSeries,
+    LineSeries,
+    PieSeries,
+    ScatterSeries,
+    ShadeSeries,
+    StairSeries,
+    StemSeries,
+    VLineSeries,
+)
+
 # auto pk; end <<<
 
 
 @dataclasses.dataclass
 class Simple(_auto.SimplePlot):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -53,7 +56,6 @@ class Simple(_auto.SimplePlot):
 
 @dataclasses.dataclass
 class Annotation(_auto.PlotAnnotation):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -61,7 +63,6 @@ class Annotation(_auto.PlotAnnotation):
 
 @dataclasses.dataclass
 class DragLine(_auto.DragLine):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -69,7 +70,6 @@ class DragLine(_auto.DragLine):
 
 @dataclasses.dataclass
 class DragPoint(_auto.DragPoint):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -77,7 +77,6 @@ class DragPoint(_auto.DragPoint):
 
 @dataclasses.dataclass
 class Legend(_auto.PlotLegend):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -85,7 +84,6 @@ class Legend(_auto.PlotLegend):
 
 @dataclasses.dataclass
 class XAxis(_auto.XAxis):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -131,7 +129,6 @@ class XAxis(_auto.XAxis):
 
 @dataclasses.dataclass
 class YAxis(_auto.YAxis):
-
     @property
     @util.CacheResult
     def all_plot_series(self) -> t.Dict[str, PlotSeries]:
@@ -152,15 +149,14 @@ class YAxis(_auto.YAxis):
             if self.is_built:
                 plot_series.build()
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_series)}"])
+            e.code.ShouldNeverHappen(
+                msgs=[f"unknown type {type(plot_series)}"])
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int, str]):
         # call super
         super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
 
@@ -320,7 +316,7 @@ class Plot(_auto.Plot):
     def __call__(
         self,
         widget: t.Union[Annotation, DragLine, DragPoint],
-        before: t.Union[Annotation, DragLine, DragPoint] = None
+        before: t.Union[Annotation, DragLine, DragPoint] = None,
     ):
         # we also need to add cells in row
         if isinstance(widget, (Annotation, DragLine, DragPoint)):
@@ -337,10 +333,9 @@ class Plot(_auto.Plot):
         super().init_validate()
         # check num_of_y_axis
         e.validation.ShouldBeOneOf(
-            value=self.num_of_y_axis, values=[1, 2, 3],
-            msgs=[
-                "Please crosscheck the value for field num_of_y_axis"
-            ]
+            value=self.num_of_y_axis,
+            values=[1, 2, 3],
+            msgs=["Please crosscheck the value for field num_of_y_axis"],
         )
 
     def get_query_area(self) -> t.Tuple[float, float]:
@@ -382,13 +377,10 @@ class Plot(_auto.Plot):
                 _c.delete()
         del _children_copy
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int, str]):
 
         # call super
-        super().build_post_runner(
-            hooked_method_return_value=hooked_method_return_value)
+        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
 
         # build other things
         # note that annotations if any will be taken care by build_post_runner as
@@ -405,7 +397,6 @@ class Plot(_auto.Plot):
 
 @dataclasses.dataclass
 class SubPlots(_auto.SubPlots):
-
     def __call__(self, widget: Plot, before: Plot = None):
         # we also need to add cells in row
         if isinstance(widget, Plot):

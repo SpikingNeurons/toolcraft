@@ -27,32 +27,27 @@ todo: add a decorator to dataclass where we can configure class about the
 todo: All LITERAL nested classes and Config class should subclass immediate
   parents nested class
 """
+import dataclasses
 import enum
 import types
-import dataclasses
 import typing as t
 
 from . import error as e
-from . import util
-from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
-from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
-    ResultsFolder
-from .storage.state import Config, Info, StateFile
-from .gui.__base__ import Form, Dpg, Widget, MovableWidget, ContainerWidget
-from . import gui
-from .gui.dashboard import Dashboard, BasicDashboard
-from .gui.window import Window
+from . import gui, util
+from .gui.__base__ import ContainerWidget, Dpg, Form, MovableWidget, Widget
+from .gui.dashboard import BasicDashboard, Dashboard
 from .gui.plot import Plot
 from .gui.table import Table
-
+from .gui.window import Window
+from .marshalling import FrozenEnum, HashableClass, Tracker, YamlRepr
+from .storage import FileGroup, Folder, NpyFileGroup, ResultsFolder, StorageHashable
+from .storage.state import Config, Info, StateFile
 
 LITERAL_CLASS_NAME = "LITERAL"
 
 
 def check_classes_that_should_not_be_overridden():
-    _CLASSES_THAT_SHOULD_NOT_BE_OVERRIDDEN = [
-        Info
-    ]
+    _CLASSES_THAT_SHOULD_NOT_BE_OVERRIDDEN = [Info]
     for cls in _CLASSES_THAT_SHOULD_NOT_BE_OVERRIDDEN:
         _sub_classes = cls.available_sub_classes()
         if len(_sub_classes) > 1:
@@ -60,30 +55,36 @@ def check_classes_that_should_not_be_overridden():
                 msgs=[
                     f"You are not allowed to subclass class {cls}",
                     f"Please check classes: ",
-                    _sub_classes[1:]
+                    _sub_classes[1:],
                 ]
             )
 
 
-def check_things_to_be_cached(
-    to_check: dict = None
-):
+def check_things_to_be_cached(to_check: dict = None):
     _THINGS_TO_BE_CACHED = {
-        Tracker: ['internal', ],
+        Tracker: [
+            "internal",
+        ],
         HashableClass: [
-            'hex_hash', 'results_folder',
+            "hex_hash",
+            "results_folder",
         ],
         StorageHashable: [
-            'config', 'info', 'path', 'root_dir',
+            "config",
+            "info",
+            "path",
+            "root_dir",
         ],
-        Folder: ['items'],
-        FileGroup: ['file_keys'],
-        ResultsFolder: ['store'],
-        Form: ['form_fields_container'],
-        ContainerWidget: ['children'],
-        Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
-        BasicDashboard: ['primary_window'],
-        gui.plot.YAxis: ['all_plot_series', ]
+        Folder: ["items"],
+        FileGroup: ["file_keys"],
+        ResultsFolder: ["store"],
+        Form: ["form_fields_container"],
+        ContainerWidget: ["children"],
+        Plot: ["legend", "x_axis", "y1_axis", "y2_axis", "y3_axis"],
+        BasicDashboard: ["primary_window"],
+        gui.plot.YAxis: [
+            "all_plot_series",
+        ],
     }
     if to_check is not None:
         _THINGS_TO_BE_CACHED = to_check
@@ -93,7 +94,7 @@ def check_things_to_be_cached(
                 # get
                 _method_or_prop = getattr(cls, _t)
                 # if abstract no sense in checking if cached
-                if getattr(_method_or_prop, '__isabstractmethod__', False):
+                if getattr(_method_or_prop, "__isabstractmethod__", False):
                     continue
                 # check if cached
                 if not util.is_cached(_method_or_prop):
@@ -106,16 +107,27 @@ def check_things_to_be_cached(
                     )
 
 
-def check_things_not_to_be_cached(
-    to_check: dict = None
-):
+def check_things_not_to_be_cached(to_check: dict = None):
     _THINGS_NOT_TO_BE_CACHED = {
-        Tracker: ['is_called', 'iterable_length', 'on_iter', 'on_call',
-                  'on_enter', 'on_exit'],
-        StateFile: ['is_available'],
-        Dpg: ['dpg_state', 'dpg_config', ],
-        Widget: ['is_tagged', ],
-        MovableWidget: ['index_in_parent_children', ],
+        Tracker: [
+            "is_called",
+            "iterable_length",
+            "on_iter",
+            "on_call",
+            "on_enter",
+            "on_exit",
+        ],
+        StateFile: ["is_available"],
+        Dpg: [
+            "dpg_state",
+            "dpg_config",
+        ],
+        Widget: [
+            "is_tagged",
+        ],
+        MovableWidget: [
+            "index_in_parent_children",
+        ],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_CACHED = to_check
@@ -125,7 +137,7 @@ def check_things_not_to_be_cached(
                 # get
                 _method_or_prop = getattr(cls, _t)
                 # if abstract no sense in checking if cached
-                if getattr(_method_or_prop, '__isabstractmethod__', False):
+                if getattr(_method_or_prop, "__isabstractmethod__", False):
                     continue
                 # check if cached
                 if util.is_cached(_method_or_prop):
@@ -139,18 +151,18 @@ def check_things_not_to_be_cached(
                     )
 
 
-def check_things_not_to_be_overridden(
-    to_check: dict = None
-):
+def check_things_not_to_be_overridden(to_check: dict = None):
     _THINGS_NOT_TO_BE_OVERRIDDEN = {
-        YamlRepr: ['yaml'],
-        HashableClass: ['hex_hash'],
-        NpyFileGroup: ['get_files', ],
-        Tracker: ['is_called', 'is_iterable'],
-        StorageHashable: ['path'],
-        ResultsFolder: ['store'],
-        Form: ['build'],
-        Dashboard: ['run'],
+        YamlRepr: ["yaml"],
+        HashableClass: ["hex_hash"],
+        NpyFileGroup: [
+            "get_files",
+        ],
+        Tracker: ["is_called", "is_iterable"],
+        StorageHashable: ["path"],
+        ResultsFolder: ["store"],
+        Form: ["build"],
+        Dashboard: ["run"],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_OVERRIDDEN = to_check
@@ -167,9 +179,7 @@ def check_things_not_to_be_overridden(
 
 
 def check_things_to_be_dataclasses():
-    _THINGS_TO_BE_DATACLASSES = [
-        HashableClass, StateFile
-    ]
+    _THINGS_TO_BE_DATACLASSES = [HashableClass, StateFile]
     for sup_cls in _THINGS_TO_BE_DATACLASSES:
         for cls in sup_cls.available_sub_classes():
             # we expected all subclasses to be decorated with
@@ -177,8 +187,8 @@ def check_things_to_be_dataclasses():
             _cls_dict_keys = cls.__dict__.keys()
             # noinspection PyProtectedMember
             if not (
-                dataclasses._FIELDS in _cls_dict_keys or
-                dataclasses._PARAMS in _cls_dict_keys
+                dataclasses._FIELDS in _cls_dict_keys
+                or dataclasses._PARAMS in _cls_dict_keys
             ):
                 e.code.NotAllowed(
                     msgs=[
@@ -214,12 +224,13 @@ def check_YamlRepr():
         except AttributeError:
             _parent_literal_class = YamlRepr.LITERAL
         e.validation.ShouldBeSubclassOf(
-            value=cls.LITERAL, value_types=(_parent_literal_class, ),
+            value=cls.LITERAL,
+            value_types=(_parent_literal_class,),
             msgs=[
                 f"We expect a nested class of class {cls} with name "
                 f"{LITERAL_CLASS_NAME!r} to "
                 f"extend the class {_parent_literal_class}"
-            ]
+            ],
         )
 
         # ------------------------------------------------------02
@@ -232,9 +243,7 @@ def check_YamlRepr():
                 msgs=[
                     f"The same yaml tag `{_yaml_tag}` seems to appear in both "
                     f"classes: ",
-                    [
-                        cls, _yaml_tag_check[_yaml_tag]
-                    ]
+                    [cls, _yaml_tag_check[_yaml_tag]],
                 ]
             )
 
@@ -244,19 +253,25 @@ def check_HashableClass():
     # some useful vars
     _general_dunders_to_ignore = [
         # python adds it
-        '__module__', '__dict__', '__weakref__', '__doc__',
-
+        "__module__",
+        "__dict__",
+        "__weakref__",
+        "__doc__",
         # dataclass related
-        '__annotations__', '__abstractmethods__', '__dataclass_params__',
-        '__dataclass_fields__',
-
+        "__annotations__",
+        "__abstractmethods__",
+        "__dataclass_params__",
+        "__dataclass_fields__",
         # dataclass adds this default dunders to all dataclasses ... we have
         # no control over this ;(
-        '__init__', '__repr__', '__eq__', '__setattr__',
-        '__delattr__', '__hash__',
-
+        "__init__",
+        "__repr__",
+        "__eq__",
+        "__setattr__",
+        "__delattr__",
+        "__hash__",
         # we allow this
-        '__call__',
+        "__call__",
     ]
 
     cls: t.Type[HashableClass]
@@ -268,9 +283,8 @@ def check_HashableClass():
             e.validation.NotAllowed(
                 msgs=[
                     f"Hashable classes can only be first class classes.",
-                    f"Do not define classes locally, declare them at module "
-                    f"level.",
-                    f"Check class {cls}"
+                    f"Do not define classes locally, declare them at module " f"level.",
+                    f"Check class {cls}",
                 ]
             )
 
@@ -293,17 +307,17 @@ def check_HashableClass():
 
             # ------------------------------------------------------ 02.02
             # no attribute should start with _
-            if _attr_k.startswith('_'):
+            if _attr_k.startswith("_"):
                 # if abstract class used this will be present
                 # the only field that starts with _ which we allow
-                if _attr_k == '_abc_impl':
+                if _attr_k == "_abc_impl":
                     continue
                 # anything else raise error
                 e.validation.NotAllowed(
                     msgs=[
                         f"Attribute {_attr_k} is not one of {_allowed_types} "
                         f"and it starts with `_`",
-                        f"Please check attribute {_attr_k} of class {cls}"
+                        f"Please check attribute {_attr_k} of class {cls}",
                     ]
                 )
 
@@ -324,12 +338,12 @@ def check_HashableClass():
             #  there is no easy way
             _attr_ks = []
             for _c in cls.__mro__:
-                if hasattr(_c, '__annotations__'):
+                if hasattr(_c, "__annotations__"):
                     _attr_ks += list(_c.__annotations__.keys())
             if _attr_k in _attr_ks:
                 # _ann_value is a typing.ClassVar raise error
                 # simple way to see if typing was used as annotation value
-                if hasattr(_attr_v, '__origin__'):
+                if hasattr(_attr_v, "__origin__"):
                     if _attr_v.__origin__ == t.ClassVar:
                         e.code.CodingError(
                             msgs=[
@@ -343,7 +357,7 @@ def check_HashableClass():
                         msgs=[
                             f"We co not allow using dataclass.InitVar.",
                             f"Please check annotated field {_attr_k} in "
-                            f"class {cls}"
+                            f"class {cls}",
                         ]
                     )
                 # if a valid dataclass field continue
@@ -382,7 +396,7 @@ def check_HashableClass():
                                 f"You are not allowed to override dunder "
                                 f"methods in any subclass of {HashableClass}",
                                 f"Please check class {cls} and avoid defining "
-                                f"dunder method `{k}` inside it"
+                                f"dunder method `{k}` inside it",
                             ]
                         )
 
@@ -393,9 +407,7 @@ def check_HashableClass():
         #  things are slow ... but for now ignore
         if cls.block_fields_in_subclasses():
             # fields that are allowed
-            cls_fields = [
-                f.name for f in dataclasses.fields(cls)
-            ]
+            cls_fields = [f.name for f in dataclasses.fields(cls)]
             # sort
             cls_fields.sort()
             # now get all available subclasses of cls
@@ -405,9 +417,7 @@ def check_HashableClass():
                 if sub_cls == cls:
                     continue
                 # get fields in subclass
-                sub_cls_fields = [
-                    f.name for f in dataclasses.fields(sub_cls)
-                ]
+                sub_cls_fields = [f.name for f in dataclasses.fields(sub_cls)]
                 # sort
                 sub_cls_fields.sort()
                 # compare
@@ -419,8 +429,8 @@ def check_HashableClass():
                             f"{cls}",
                             {
                                 "fields restricted to": cls_fields,
-                                "found": sub_cls_fields
-                            }
+                                "found": sub_cls_fields,
+                            },
                         ]
                     )
 
@@ -464,7 +474,7 @@ def check_FrozenEnum():
                     msgs=[
                         f"While subclassing `FrozenEnum` make sure "
                         f"that it also extends `enum.Enum`",
-                        f"Check class {cls}"
+                        f"Check class {cls}",
                     ]
                 )
 
@@ -483,5 +493,5 @@ def main():
     check_FrozenEnum()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
