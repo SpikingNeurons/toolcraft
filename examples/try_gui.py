@@ -68,21 +68,24 @@ class Plotting(gui.form.Form):
 
         # ------------------------------------------------------- 02
         # _line_plot
+        self.line_plot.legend.show = False
         _line_plot_y1_axis = self.line_plot.y1_axis
-        _line_plot_y1_axis(
-            gui.plot.LineSeries(
-                label="line 1",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
+        for _i in range(4):
+            _line_plot_y1_axis(
+                gui.plot.LineSeries(
+                    label=f"line {_i}",
+                    x=np.arange(100),
+                    y=np.random.normal(0.0, scale=2.0, size=100),
+                )
             )
-        )
-        _line_plot_y1_axis(
-            gui.plot.LineSeries(
-                label="line 2",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
+        for _i in range(4):
+            _line_plot_y1_axis(
+                gui.plot.LineSeries(
+                    label=f"grouped_lines#{_i}",
+                    x=np.arange(100),
+                    y=np.random.normal(0.0, scale=2.0, size=100),
+                )
             )
-        )
         _line_plot_y1_axis(
             gui.plot.VLineSeries(x=[1.0, 2.0], label="vline 1")
         )

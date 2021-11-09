@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-11-09 00:55
+>> Time: 2021-11-09 01:32
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -122,9 +122,6 @@ class HistogramSeries2D(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -164,9 +161,9 @@ class HistogramSeries2D(PlotSeries):
             self.x,
             self.y,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             xbins=self.xbins,
@@ -355,9 +352,6 @@ class AreaSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -379,9 +373,9 @@ class AreaSeries(PlotSeries):
             self.x,
             self.y,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             fill=self.fill,
@@ -413,9 +407,6 @@ class BarSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -437,9 +428,9 @@ class BarSeries(PlotSeries):
             self.x,
             self.y,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             weight=self.weight,
@@ -652,9 +643,6 @@ class CandleSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -685,9 +673,9 @@ class CandleSeries(PlotSeries):
             self.lows,
             self.highs,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             bull_color=self.bull_color,
@@ -2513,9 +2501,6 @@ class ErrorSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -2539,9 +2524,9 @@ class ErrorSeries(PlotSeries):
             self.negative,
             self.positive,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             contribute_to_bounds=self.contribute_to_bounds,
@@ -2870,9 +2855,6 @@ class HeatSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -2907,9 +2889,9 @@ class HeatSeries(PlotSeries):
             self.rows,
             self.cols,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             scale_min=self.scale_min,
@@ -2941,9 +2923,6 @@ class HistogramSeries(PlotSeries):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
@@ -2983,9 +2962,9 @@ class HistogramSeries(PlotSeries):
         _ret = internal_dpg.add_histogram_series(
             self.x,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             bins=self.bins,
@@ -3020,9 +2999,6 @@ class HLineSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -3037,9 +3013,9 @@ class HLineSeries(PlotSeries):
         _ret = internal_dpg.add_hline_series(
             self.x,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
@@ -4819,9 +4795,6 @@ class LineSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -4837,9 +4810,9 @@ class LineSeries(PlotSeries):
             self.x,
             self.y,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
@@ -5600,9 +5573,6 @@ class PieSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -5630,9 +5600,9 @@ class PieSeries(PlotSeries):
             self.values,
             self.labels,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             format=self.format,
@@ -6079,9 +6049,6 @@ class ScatterSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -6097,9 +6064,9 @@ class ScatterSeries(PlotSeries):
             self.x,
             self.y,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
@@ -6347,9 +6314,6 @@ class ShadeSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -6368,9 +6332,9 @@ class ShadeSeries(PlotSeries):
             self.x,
             self.y1,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             y2=self.y2,
@@ -7174,9 +7138,6 @@ class StairSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -7192,9 +7153,9 @@ class StairSeries(PlotSeries):
             self.x,
             self.y,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )
@@ -7269,9 +7230,6 @@ class StemSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
     indent: int = -1
 
@@ -7290,9 +7248,9 @@ class StemSeries(PlotSeries):
             self.x,
             self.y,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             indent=self.indent,
             source=_source_dpg_id,
             show=self.show,
@@ -7979,9 +7937,6 @@ class VLineSeries(PlotSeries):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
 
@@ -7996,9 +7951,9 @@ class VLineSeries(PlotSeries):
         _ret = internal_dpg.add_vline_series(
             self.x,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
         )

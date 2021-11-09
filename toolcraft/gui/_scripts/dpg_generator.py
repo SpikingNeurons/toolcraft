@@ -435,6 +435,16 @@ class DpgDef:
         if self.fn in [dpg.plot_axis, dpg.add_plot_axis]:
             _ignore_params.append('axis')
 
+        if self.is_plot_series_related:
+            _ignore_params.append("use_internal_label")
+            if "use_internal_label" not in [
+                _param.name for _param in self.fn_signature.parameters.values()
+            ]:
+                raise Exception(
+                    f"This looks like plot series related method so we expect "
+                    f"param use_internal_label"
+                )
+
         # loop over all params
         for _param in self.fn_signature.parameters.values():
 
@@ -516,6 +526,9 @@ class DpgDef:
                 _param_name = "if_entered"
                 _param_dpg_name = "on_enter"
                 _param_dpg_value = "self.if_entered"
+            if _param_name == "label":
+                if self.is_plot_series_related:
+                    _param_dpg_value = "self.label.split('#')[0]"
             if _is_callback:
                 _param_dpg_value += "_fn"
             if _enum_def is not None:
@@ -608,6 +621,8 @@ class DpgDef:
         _internal_params = {}
         if self.is_parent_param_present:
             _internal_params['parent'] = "_parent_dpg_id"
+        if self.is_plot_series_related:
+            _internal_params['use_internal_label'] = "False"
         # ------------------------------------------------------- 03.04.03
         _parametrized_params = {} if self.parametrize is None else self.parametrize
         # ------------------------------------------------------- 03.04.04
