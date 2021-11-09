@@ -323,8 +323,9 @@ class SimpleHashableClass(marshalling.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["some_line_plot", "some_scatter_plot"],
-            callable_labels=["line", "scatter"],
+            callable_names={
+                "line": "some_line_plot", "scatter": "some_scatter_plot"
+            }
         )
 
     def some_line_plot(self) -> gui.plot.Plot:

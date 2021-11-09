@@ -22,8 +22,7 @@ class HashableMethodsRunnerForm(Form):
     close_button: bool
     # todo: add icons for this
     info_button: bool
-    callable_names: t.List[str]
-    callable_labels: t.List[str]
+    callable_names: t.Dict[str, str]
 
     @property
     @util.CacheResult
@@ -45,24 +44,12 @@ class HashableMethodsRunnerForm(Form):
     def receiver(self) -> widget.Group:
         return widget.Group()
 
-    def init_validate(self):
-
-        super().init_validate()
-
-        if len(self.callable_labels) != len(self.callable_names):
-            e.validation.NotAllowed(
-                msgs=[
-                    f"Was expecting number of elements to be same"
-                ]
-            )
-
     def init(self):
         # call super
         super().init()
 
         # get some vars
         _buttons_bar = self.button_bar
-        _callable_labels = self.callable_labels
         _callable_names = self.callable_names
         _receiver = self.receiver
 
@@ -75,11 +62,10 @@ class HashableMethodsRunnerForm(Form):
 
         # add info button
         if self.info_button:
-            _callable_labels += ["Info"]
-            _callable_names += ["info"]
+            _callable_names["Info"] = "info"
 
         # make buttons for callable names
-        for _button_label, _callable_name in zip(_callable_labels, _callable_names):
+        for _button_label, _callable_name in _callable_names.items():
             _b = self.hashable.get_gui_button(
                 group_tag=self.group_tag,
                 button_label=_button_label,
