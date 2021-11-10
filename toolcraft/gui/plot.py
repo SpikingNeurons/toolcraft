@@ -397,6 +397,10 @@ class Plot(_auto.Plot):
             self.y2_axis.build()
             self.y3_axis.build()
 
+        # now it is time to render children
+        for _ps in self.all_plot_items.values():
+            _ps.build()
+
 
 @dataclasses.dataclass
 class SubPlots(_auto.SubPlots):
