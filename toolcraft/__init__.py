@@ -38,8 +38,8 @@ __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a4"
 
-from . import logger, settings, marshalling, util, error, helper, parallel, \
-    rules, storage
+from . import logger, settings, marshalling, util, error, helper, parallel, storage
 
 if settings.DPG_WORKS:
-    from . import gui
+    # as some rules use dpg
+    from . import gui, rules
