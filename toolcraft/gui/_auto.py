@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.0.2
->> Time: 2021-11-09 01:32
+>> Time: 2021-11-10 01:40
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -23,6 +23,7 @@ from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
+from .__base__ import PlotItem
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
 from .__base__ import USER_DATA
@@ -162,7 +163,7 @@ class HistogramSeries2D(PlotSeries):
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -374,7 +375,7 @@ class AreaSeries(PlotSeries):
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -429,7 +430,7 @@ class BarSeries(PlotSeries):
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -674,7 +675,7 @@ class CandleSeries(PlotSeries):
             self.highs,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -2279,7 +2280,7 @@ class DragIntX(MovableWidget):
 
 
 @dataclasses.dataclass
-class DragLine(MovableWidget):
+class DragLine(PlotItem):
     """
     Refer:
     >>> dpg.add_drag_line
@@ -2293,9 +2294,6 @@ class DragLine(MovableWidget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
@@ -2328,9 +2326,9 @@ class DragLine(MovableWidget):
 
         _ret = internal_dpg.add_drag_line(
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             callback=self.callback_fn,
             show=self.show,
@@ -2356,7 +2354,7 @@ class DragLine(MovableWidget):
 
 
 @dataclasses.dataclass
-class DragPoint(MovableWidget):
+class DragPoint(PlotItem):
     """
     Refer:
     >>> dpg.add_drag_point
@@ -2370,9 +2368,6 @@ class DragPoint(MovableWidget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
@@ -2402,9 +2397,9 @@ class DragPoint(MovableWidget):
 
         _ret = internal_dpg.add_drag_point(
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             callback=self.callback_fn,
             show=self.show,
@@ -2525,7 +2520,7 @@ class ErrorSeries(PlotSeries):
             self.positive,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -2890,7 +2885,7 @@ class HeatSeries(PlotSeries):
             self.cols,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -2963,7 +2958,7 @@ class HistogramSeries(PlotSeries):
             self.x,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -3014,7 +3009,7 @@ class HLineSeries(PlotSeries):
             self.x,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -4811,7 +4806,7 @@ class LineSeries(PlotSeries):
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -5601,7 +5596,7 @@ class PieSeries(PlotSeries):
             self.labels,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -5614,7 +5609,7 @@ class PieSeries(PlotSeries):
 
 
 @dataclasses.dataclass
-class PlotAnnotation(MovableWidget):
+class Annotation(PlotItem):
     """
     Refer:
     >>> dpg.add_plot_annotation
@@ -5628,9 +5623,6 @@ class PlotAnnotation(MovableWidget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # source (Union[int, str], optional): Overrides 'id' as value storage key.
     source: t.Optional[Widget] = None
@@ -5657,9 +5649,9 @@ class PlotAnnotation(MovableWidget):
 
         _ret = internal_dpg.add_plot_annotation(
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             source=_source_dpg_id,
             show=self.show,
             default_value=self.default_value,
@@ -6065,7 +6057,7 @@ class ScatterSeries(PlotSeries):
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -6333,7 +6325,7 @@ class ShadeSeries(PlotSeries):
             self.y1,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -7154,7 +7146,7 @@ class StairSeries(PlotSeries):
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -7249,7 +7241,7 @@ class StemSeries(PlotSeries):
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             indent=self.indent,
             source=_source_dpg_id,
@@ -7952,7 +7944,7 @@ class VLineSeries(PlotSeries):
             self.x,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=self.label.split('#')[0],
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -9831,7 +9823,7 @@ class NodeAttribute(MovableContainerWidget):
 
 
 @dataclasses.dataclass
-class Plot(MovableContainerWidget):
+class Plot(MovableWidget):
     """
     Refer:
     >>> dpg.plot

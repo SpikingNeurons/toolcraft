@@ -277,8 +277,16 @@ class DpgDef:
     @property
     def is_plot_related(self) -> bool:
         if self.fn in [
-            dpg.plot, dpg.plot_axis, dpg.subplots, dpg.add_plot_legend, dpg.add_plot_annotation, dpg.add_simple_plot,
-            dpg.add_drag_line, dpg.add_drag_point,
+            dpg.plot, dpg.plot_axis, dpg.subplots, dpg.add_plot_legend, dpg.add_simple_plot,
+        ]:
+            return True
+        else:
+            return False
+
+    @property
+    def is_plot_items_related(self) -> bool:
+        if self.fn in [
+            dpg.add_plot_annotation, dpg.add_drag_line, dpg.add_drag_point,
         ]:
             return True
         else:
@@ -337,10 +345,15 @@ class DpgDef:
             if self.is_before_param_present:
                 if self.is_container:
                     _class_name = "MovableContainerWidget"
+                    if self.fn == dpg.plot:
+                        # as we will handle this i.e. the container part
+                        _class_name = "MovableWidget"
                 else:
                     _class_name = "MovableWidget"
                     if self.is_plot_series_related:
                         _class_name = "PlotSeries"
+                    if self.is_plot_items_related:
+                        _class_name = "PlotItem"
             else:
                 if self.is_container:
                     _class_name = "ContainerWidget"
@@ -388,6 +401,8 @@ class DpgDef:
             return "Slider3D"
         if self.fn == dpg.add_2d_histogram_series:
             return "HistogramSeries2D"
+        if self.fn == dpg.add_plot_annotation:
+            return "Annotation"
 
         # ------------------------------------------------------- 04
         # default name generation
@@ -435,7 +450,7 @@ class DpgDef:
         if self.fn in [dpg.plot_axis, dpg.add_plot_axis]:
             _ignore_params.append('axis')
 
-        if self.is_plot_series_related:
+        if self.is_plot_series_related or self.is_plot_items_related:
             _ignore_params.append("use_internal_label")
             if "use_internal_label" not in [
                 _param.name for _param in self.fn_signature.parameters.values()
@@ -527,8 +542,8 @@ class DpgDef:
                 _param_dpg_name = "on_enter"
                 _param_dpg_value = "self.if_entered"
             if _param_name == "label":
-                if self.is_plot_series_related:
-                    _param_dpg_value = "self.label.split('#')[0]"
+                if self.is_plot_series_related or self.is_plot_items_related:
+                    _param_dpg_value = "None if self.label is None else self.label.split('#')[0]"
             if _is_callback:
                 _param_dpg_value += "_fn"
             if _enum_def is not None:
@@ -621,7 +636,7 @@ class DpgDef:
         _internal_params = {}
         if self.is_parent_param_present:
             _internal_params['parent'] = "_parent_dpg_id"
-        if self.is_plot_series_related:
+        if self.is_plot_series_related or self.is_plot_items_related:
             _internal_params['use_internal_label'] = "False"
         # ------------------------------------------------------- 03.04.03
         _parametrized_params = {} if self.parametrize is None else self.parametrize
@@ -851,6 +866,7 @@ from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
+from .__base__ import PlotItem
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
 from .__base__ import USER_DATA
@@ -1060,7 +1076,7 @@ from .__base__ import USER_DATA
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related:
+            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related or _widget_def.is_plot_items_related:
                 continue
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")
@@ -1078,10 +1094,9 @@ from .__base__ import USER_DATA
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if not _widget_def.is_plot_series_related:
-                continue
-            _lines.append(_dis_inspect)
-            _lines.append(f"from ._auto import {_widget_def.name}")
+            if _widget_def.is_plot_series_related or _widget_def.is_plot_items_related:
+                _lines.append(_dis_inspect)
+                _lines.append(f"from ._auto import {_widget_def.name}")
 
         # -------------------------------- 03
         self.add_auto_imports_to_py_file(_output_file, _lines)

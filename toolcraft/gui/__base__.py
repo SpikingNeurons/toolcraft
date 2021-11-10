@@ -777,6 +777,16 @@ class ContainerWidget(Widget, abc.ABC):
         else:
             super().hide()
 
+    def clear(self):
+        _children_copy = self.children.copy()
+        for _c in _children_copy:
+            _c.delete()
+        del _children_copy
+
+    def delete(self):
+        self.clear()
+        return super().delete()
+
 
 @dataclasses.dataclass
 class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
@@ -784,6 +794,14 @@ class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.movable_container_widget.{cls.__name__}"
+
+    def delete(self):
+        self.clear()
+        _children_list = self.parent.children
+        _widget = self.parent.children.pop(self.index_in_parent_children)
+        # super of ContainerWidget is MovableWidget and
+        # super of MovableWidget is Widget
+        return super(MovableWidget, self).delete()
 
 
 @dataclasses.dataclass
@@ -938,6 +956,16 @@ class Form(MovableWidget, abc.ABC):
         # return
         return _form_fields_container.build()
 
+    def clear(self):
+        _children_copy = self.form_fields_container.children.copy()
+        for _c in _children_copy:
+            _c.delete()
+        del _children_copy
+
+    def delete(self):
+        self.clear()
+        return super().delete()
+
 
 @dataclasses.dataclass(frozen=True)
 class Callback(m.YamlRepr, abc.ABC):
@@ -1043,22 +1071,49 @@ class PlotSeries(Widget, abc.ABC):
     def parent(self) -> "plot.YAxis":
         return self.internal.parent
 
-    @property
-    def key(self) -> str:
-        try:
-            # noinspection PyUnresolvedReferences
-            return self.label
-        except AttributeError:
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.plot.{cls.__name__}"
+
+    def delete(self):
+        # noinspection PyUnresolvedReferences
+        del self.parent.all_plot_series[self.label]
+        return super().delete()
+
+
+class PlotItemInternal(DpgInternal):
+    parent: "plot.Plot"
+
+    def vars_that_can_be_overwritten(self) -> t.List[str]:
+        return super().vars_that_can_be_overwritten() + ["parent", ]
+
+    def test_if_others_set(self):
+        if not self.has("parent"):
             e.code.CodingError(
                 msgs=[
-                    f"We were expecting class {self.__class__} to have field `label`"
+                    f"Widget {self.__class__} is not a children to any parent",
+                    f"Please use some `Plot` and add this Widget",
                 ]
             )
+
+
+@dataclasses.dataclass
+class PlotItem(Widget, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> PlotItemInternal:
+        return PlotItemInternal(owner=self)
+
+    @property
+    def parent(self) -> "plot.Plot":
+        return self.internal.parent
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
 
     def delete(self):
-        del self.parent.all_plot_series[self.key]
+        # noinspection PyUnresolvedReferences
+        del self.parent.all_plot_items[self.label]
         return super().delete()

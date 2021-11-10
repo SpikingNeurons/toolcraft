@@ -4,7 +4,7 @@ import dearpygui.dearpygui as dpg
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 
-from .__base__ import PlotSeries
+from .__base__ import PlotSeries, PlotItem
 from . import _auto
 from .. import error as e
 from .. import util
@@ -19,6 +19,10 @@ from ._auto import BarSeries
 # noinspection PyUnresolvedReferences
 from ._auto import CandleSeries
 # noinspection PyUnresolvedReferences
+from ._auto import DragLine
+# noinspection PyUnresolvedReferences
+from ._auto import DragPoint
+# noinspection PyUnresolvedReferences
 from ._auto import ErrorSeries
 # noinspection PyUnresolvedReferences
 from ._auto import HeatSeries
@@ -30,6 +34,8 @@ from ._auto import HLineSeries
 from ._auto import LineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import PieSeries
+# noinspection PyUnresolvedReferences
+from ._auto import Annotation
 # noinspection PyUnresolvedReferences
 from ._auto import ScatterSeries
 # noinspection PyUnresolvedReferences
@@ -45,30 +51,6 @@ from ._auto import VLineSeries
 
 @dataclasses.dataclass
 class Simple(_auto.SimplePlot):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
-
-
-@dataclasses.dataclass
-class Annotation(_auto.PlotAnnotation):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
-
-
-@dataclasses.dataclass
-class DragLine(_auto.DragLine):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
-
-
-@dataclasses.dataclass
-class DragPoint(_auto.DragPoint):
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -137,17 +119,17 @@ class YAxis(_auto.YAxis):
     def all_plot_series(self) -> t.Dict[str, PlotSeries]:
         return {}
 
-    # noinspection PyMethodOverriding
+    # noinspection PyMethodOverriding,PyUnresolvedReferences
     def __call__(self, plot_series: PlotSeries):
         if isinstance(plot_series, PlotSeries):
-            if plot_series.key in self.all_plot_series.keys():
+            if plot_series.label in self.all_plot_series.keys():
                 e.validation.NotAllowed(
                     msgs=[
                         f"There already exists a plot_series with label "
-                        f"`{plot_series.key}`"
+                        f"`{plot_series.label}`"
                     ]
                 )
-            self.all_plot_series[plot_series.key] = plot_series
+            self.all_plot_series[plot_series.label] = plot_series
             plot_series.internal.parent = self
             if self.is_built:
                 plot_series.build()
@@ -167,6 +149,10 @@ class YAxis(_auto.YAxis):
         # now it is time to render children
         for _ps in self.all_plot_series.values():
             _ps.build()
+
+    def delete(self):
+        self.clear()
+        return super().delete()
 
     def fit_data(self):
         """
@@ -251,17 +237,16 @@ class Plot(_auto.Plot):
     children using delete_item(...) with children_only set to True and slot set to 1.
     """
 
-    # width: int = -1
-    #
-    # height: int = 400
+    width: int = -1
+
+    height: int = 400
 
     num_of_y_axis: t.Literal[1, 2, 3] = 1
 
     @property
     @util.CacheResult
-    def children(self) -> t.List[t.Union[Annotation, DragLine, DragPoint]]:
-        # noinspection PyTypeChecker
-        return super().children
+    def all_plot_items(self) -> t.Dict[str, PlotItem]:
+        return {}
 
     @property
     @util.CacheResult
@@ -317,16 +302,22 @@ class Plot(_auto.Plot):
     def is_queried(self) -> bool:
         return internal_dpg.is_plot_queried(self.dpg_id)
 
-    def __call__(
-        self,
-        widget: t.Union[Annotation, DragLine, DragPoint],
-        before: t.Union[Annotation, DragLine, DragPoint] = None
-    ):
-        # we also need to add cells in row
-        if isinstance(widget, (Annotation, DragLine, DragPoint)):
-            super().__call__(widget, before)
+    # noinspection PyMethodOverriding,PyUnresolvedReferences
+    def __call__(self, plot_item: PlotItem):
+        if isinstance(plot_item, PlotItem):
+            if plot_item.label in self.all_plot_items.keys():
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"There already exists a plot_series with label "
+                        f"`{plot_item.label}`"
+                    ]
+                )
+            self.all_plot_items[plot_item.label] = plot_item
+            plot_item.internal.parent = self
+            if self.is_built:
+                plot_item.build()
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
+            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_item)}"])
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -342,6 +333,10 @@ class Plot(_auto.Plot):
                 "Please crosscheck the value for field num_of_y_axis"
             ]
         )
+
+    def delete(self):
+        self.clear()
+        return super().delete()
 
     def get_query_area(self) -> t.Tuple[float, float]:
         """
@@ -372,15 +367,15 @@ class Plot(_auto.Plot):
                 self.y3_axis.clear()
 
         # to delete annotations, drag_line, drag_plot
-        _children_copy = self.children.copy()
-        for _c in _children_copy:
-            if isinstance(_c, Annotation) and annotations:
-                _c.delete()
-            if isinstance(_c, DragLine) and drag_lines:
-                _c.delete()
-            if isinstance(_c, DragPoint) and drag_points:
-                _c.delete()
-        del _children_copy
+        _plot_items_keys = list(self.all_plot_items.keys())
+        for _k in _plot_items_keys:
+            _plot_item = self.all_plot_items[_k]
+            if isinstance(_plot_item, Annotation) and annotations:
+                _plot_item.delete()
+            elif isinstance(_plot_item, DragLine) and drag_lines:
+                _plot_item.delete()
+            elif isinstance(_plot_item, DragPoint) and drag_points:
+                _plot_item.delete()
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]

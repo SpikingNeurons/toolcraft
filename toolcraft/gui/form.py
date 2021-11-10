@@ -29,7 +29,7 @@ class HashableMethodsRunnerForm(Form):
     @util.CacheResult
     def form_fields_container(self) -> t.Union[widget.Group, widget.CollapsingHeader]:
         if self.use_collapsing_header:
-            _ret = widget.CollapsingHeader(label=self.title)
+            _ret = widget.CollapsingHeader(label=self.title, default_open=True)
             _gp = widget.Group()
             _ret(_gp)
         else:
