@@ -4,42 +4,45 @@ import pathlib
 import shutil
 import sys
 
-if len(sys.argv) != 2:
-    raise Exception(
-        f"Please call this script with an arg that indicates `pypi_root_dir`"
-    )
+if __name__ == '__main__':
 
-pypi_root_dir = sys.argv[1]
+    if len(sys.argv) != 2:
+        raise Exception(
+            f"Please call this script with an arg that indicates `pypi_root_dir`"
+        )
 
-# get all items in dir
-all_fs = pathlib.Path(pypi_root_dir).glob("*")
+    pypi_root_dir = sys.argv[1]
 
-# get only files
-dirs = [d for d in all_fs if d.is_dir()]
+    # get all items in dir
+    all_fs = pathlib.Path(pypi_root_dir).glob("*")
 
-# skip somethings
-dirs = [d for d in dirs]
+    # get only files
+    dirs = [d for d in all_fs if d.is_dir()]
 
-# header
-print()
-print("--------------------------------------------------------")
-print("Multiple versions if any will be displayed below ... !!!")
-print("--------------------------------------------------------")
-print()
+    # skip somethings
+    dirs = [d for d in dirs]
 
-# detect multiple versions in a package
-print()
-for d in dirs:
-    fs = [f for f in d.glob("*")]
-    if len(fs) > 1:
-        print()
-        print(f"package: {d.name}")
-        for f in fs:
-            print(f"          > {f.name}")
+    # header
+    print()
+    print("--------------------------------------------------------")
+    print("Multiple versions if any will be displayed below ... !!!")
+    print("--------------------------------------------------------")
+    print()
 
-print()
-print()
-print("--------------------------------------------------------")
-print("--------------------------------------------------------")
-input("PRESS ANY KEY TO EXIT ...")
-print()
+    # detect multiple versions in a package
+    print()
+    for d in dirs:
+        fs = [f for f in d.glob("*")]
+        if len(fs) > 1:
+            print()
+            print(f"package: {d.name}")
+            for f in fs:
+                print(f"          > {f.name}")
+
+    print()
+    print()
+    print("--------------------------------------------------------")
+    print("--------------------------------------------------------")
+    input("PRESS ANY KEY TO EXIT ...")
+    print()
+

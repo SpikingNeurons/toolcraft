@@ -52,12 +52,14 @@ def move_packages(pypi_root_dir: str):
         shutil.copy(str(f), str(dst_f))
 
 
-print()
-if len(sys.argv) != 2:
-    raise Exception(
-        f"Please call this script with an arg that indicates `pypi_root_dir`"
-    )
-_pypi_root_dir = sys.argv[1]
-print(f"Moving packages to pypi_root_dir {_pypi_root_dir}")
-move_packages(pypi_root_dir=_pypi_root_dir)
-input("PRESS ANY KEY TO EXIT ...")
+if __name__ == '__main__':
+
+    print()
+    if len(sys.argv) != 2:
+        raise Exception(
+            f"Please call this script with an arg that indicates `pypi_root_dir`"
+        )
+    _pypi_root_dir = sys.argv[1]
+    print(f"Moving packages to pypi_root_dir {_pypi_root_dir}")
+    move_packages(pypi_root_dir=_pypi_root_dir)
+    input("PRESS ANY KEY TO EXIT ...")
