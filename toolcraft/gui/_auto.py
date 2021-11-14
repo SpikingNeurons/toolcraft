@@ -2,8 +2,8 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.0.2
->> Time: 2021-11-10 01:40
+>> DearPyGui: 1.1
+>> Time: 2021-11-14 02:30
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -92,6 +92,13 @@ class EnThemeCat(Enum, enum.Enum):
     Core = dpg.mvThemeCat_Core  # 0
     Plots = dpg.mvThemeCat_Plots  # 1
     Nodes = dpg.mvThemeCat_Nodes  # 2
+
+
+class EnCullMode(Enum, enum.Enum):
+
+    Back = dpg.mvCullMode_Back  # 1
+    Front = dpg.mvCullMode_Front  # 2
+    NONE = dpg.mvCullMode_None  # 0
 
 
 class EnNodeAttr(Enum, enum.Enum):
@@ -2562,7 +2569,7 @@ class FileExtension(MovableWidget):
     # custom_text (str, optional): Replaces the displayed text in the drop down for this extension.
     custom_text: str = ''
 
-    # color (Union[List[float], Tuple[float, ...]], optional): Color for the text that will be shown with specified extensions.
+    # color (Union[List[int], Tuple[int, ...]], optional): Color for the text that will be shown with specified extensions.
     color: COLOR_TYPE = (-255, 0, 0, 255)
 
     def build(self) -> t.Union[int, str]:
@@ -7582,10 +7589,10 @@ class Text(MovableWidget):
     # bullet (bool, optional): Places a bullet to the left of the text.
     bullet: bool = False
 
-    # color (Union[List[float], Tuple[float, ...]], optional): Color of the text (rgba).
-    color: COLOR_TYPE = (-1, -1, -1, -1)
+    # color (Union[List[int], Tuple[int, ...]], optional): Color of the text (rgba).
+    color: COLOR_TYPE = (-255, 0, 0, 255)
 
-    # show_label (bool, optional): Displays the label to teh right of the text.
+    # show_label (bool, optional): Displays the label to the right of the text.
     show_label: bool = False
 
     def build(self) -> t.Union[int, str]:
@@ -8627,7 +8634,7 @@ class DrawLayer(MovableContainerWidget):
     Refer:
     >>> dpg.draw_layer
 
-     Creates a layer useful for grouping drawlist items.
+     New in 1.1. Creates a layer useful for grouping drawlist items.
 
     """
 
@@ -8643,6 +8650,15 @@ class DrawLayer(MovableContainerWidget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    # perspective_divide (bool, optional): New in 1.1. apply perspective divide
+    perspective_divide: bool = False
+
+    # depth_clipping (bool, optional): New in 1.1. apply depth clipping
+    depth_clipping: bool = False
+
+    # cull_mode (int, optional): New in 1.1. culling mode, mvCullMode_* constants. Only works with triangles currently.
+    cull_mode: EnCullMode = EnCullMode.NONE
+
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
@@ -8653,6 +8669,9 @@ class DrawLayer(MovableContainerWidget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             show=self.show,
+            perspective_divide=self.perspective_divide,
+            depth_clipping=self.depth_clipping,
+            cull_mode=self.cull_mode.value,
         )
         
         return _ret
@@ -8706,6 +8725,43 @@ class DrawLine(MovableWidget):
             show=self.show,
             color=self.color,
             thickness=self.thickness,
+        )
+        
+        return _ret
+
+
+@dataclasses.dataclass
+class DrawNode(MovableContainerWidget):
+    """
+    Refer:
+    >>> dpg.draw_node
+
+     New in 1.1. Creates a drawing node to associate a transformation matrix. Child node matricies will concatenate.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+
+        _ret = internal_dpg.add_draw_node(
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            show=self.show,
         )
         
         return _ret

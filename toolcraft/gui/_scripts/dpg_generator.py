@@ -174,6 +174,7 @@ _SKIP_METHODS = [
 
     # todo: support later when static and dynamic textures are supported
     dpg.add_image, dpg.add_image_button, dpg.add_image_series, dpg.draw_image,
+    dpg.draw_image_quad,
 
     # todo: support when using node editor
     dpg.node_editor, dpg.add_node_link, dpg.clear_selected_links,
@@ -182,7 +183,12 @@ _SKIP_METHODS = [
     # todo: may be these need to be used as Widget methods and not as Widget's
     dpg.bind_colormap, dpg.bind_font, dpg.bind_item_font,
     dpg.bind_item_handler_registry, dpg.bind_item_theme,
-    dpg.bind_template_registry, dpg.bind_theme,
+    dpg.bind_template_registry, dpg.bind_theme, dpg.get_text_size,
+
+    # todo: transform related animation things
+    dpg.apply_transform, dpg.create_fps_matrix, dpg.create_lookat_matrix,
+    dpg.create_orthographic_matrix, dpg.create_perspective_matrix,
+    dpg.create_rotation_matrix, dpg.create_scale_matrix, dpg.create_translation_matrix,
 
     # todo: viewport ... useful to make visual code style docking
     dpg.viewport_drawlist,  # this can be a Container ... but note that it is not a Widget
@@ -206,6 +212,7 @@ _SKIP_METHODS = [
     dpg.is_viewport_ok,
     dpg.maximize_viewport,
     dpg.minimize_viewport,
+    dpg.set_clip_space,
     dpg.set_viewport_always_top,
     dpg.set_viewport_clear_color,
     dpg.set_viewport_decorated,
@@ -494,19 +501,12 @@ class DpgDef:
                 elif _param_type == "t.Union[t.List[int], t.Tuple[int, ...]]":
                     _param_type = "COLOR_TYPE"
                 else:
-                    if self.fn in [
-                        dpg.add_file_extension, dpg.add_text,
-                    ]:
-                        # todo: remove this after the below issue is resolved
-                        #   https://github.com/hoffstadt/DearPyGui/issues/1405
-                        _param_type = "COLOR_TYPE"
-                    else:
-                        raise Exception(
-                            f"We assume that fn param `{self.fn.__name__}:{_param_name}` "
-                            f"is a color type so dpg param type must be "
-                            f"<t.Union[t.List[int], t.Tuple[int, ...]]>, but found type "
-                            f"<{_param_type}>"
-                        )
+                    raise Exception(
+                        f"We assume that fn param `{self.fn.__name__}:{_param_name}` "
+                        f"is a color type so dpg param type must be "
+                        f"<t.Union[t.List[int], t.Tuple[int, ...]]>, but found type "
+                        f"<{_param_type}>"
+                    )
 
             # is callback
             _is_callback = _param_type.find("Callback") != -1

@@ -181,6 +181,8 @@ from ._auto import DrawLayer
 # noinspection PyUnresolvedReferences
 from ._auto import DrawLine
 # noinspection PyUnresolvedReferences
+from ._auto import DrawNode
+# noinspection PyUnresolvedReferences
 from ._auto import DrawPolygon
 # noinspection PyUnresolvedReferences
 from ._auto import DrawPolyline
