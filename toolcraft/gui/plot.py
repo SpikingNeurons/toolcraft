@@ -126,7 +126,10 @@ class YAxis(_auto.YAxis):
                 e.validation.NotAllowed(
                     msgs=[
                         f"There already exists a plot_series with label "
-                        f"`{plot_series.label}`"
+                        f"`{plot_series.label}`",
+                        f"Note that if you want to share label across multiple series "
+                        f"then append `#<some unique name>` to label to make it unique "
+                        f"per plot series",
                     ]
                 )
             self.all_plot_series[plot_series.label] = plot_series

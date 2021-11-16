@@ -1688,68 +1688,61 @@ class HookUp:
 
         # -----------------------------------------------------------03
         # call business logic
-        # execution
-        with logger.Spinner(
-            title=_title,
-            logger=logger.get_logger(self.cls.__module__),
-        ) as spinner:
+        # -----------------------------------------------------------03.01
+        # enter spinner
+        if not self.silent:
+            spinner = logger.Spinner(
+                title=_title,
+                logger=logger.get_logger(self.cls.__module__),
+            )
+            spinner.__enter__()
+        # -----------------------------------------------------------03.02
+        # call pre_method is provided
+        if self.pre_method is not None:
+            _pre_ret = self.pre_method(self.method_self, **kwargs)
+            # pre_method should not return anything
+            if _pre_ret is not None:
+                e.code.CodingError(
+                    msgs=[
+                        f"{HookUp} protocol enforces the "
+                        f"pre_method {self.pre_method} of method "
+                        f"{self.method} to "
+                        f"not return anything ...",
+                        f"Found return value {_pre_ret}"
+                    ]
+                )
+        # -----------------------------------------------------------03.03
+        # call actual method
+        _ret = self.method(self.method_self, **kwargs)
+        # -----------------------------------------------------------03.04
+        # if post_method not provided return what we have
+        if self.post_method is not None:
+            # call post_method as it is provided
+            # spinner.info(msg=f"pre: {pre_method}")
+            # spinner.info(msg=f"{method}")
+            # spinner.info(msg=f"post: {post_method}")
+            _post_ret = self.post_method(
+                self.method_self, hooked_method_return_value=_ret)
+            # post_method should not return anything
+            if _post_ret is not None:
+                e.code.CodingError(
+                    msgs=[
+                        f"{HookUp} protocol enforces the "
+                        f"post_method {self.post_method} of method"
+                        f" {self.method} to "
+                        f"not return anything ...",
+                        f"Found return value {_post_ret}"
+                    ]
+                )
+        # -----------------------------------------------------------03.05
+        # enter spinner
+        if not self.silent:
+            # noinspection PyUnboundLocalVariable
+            spinner.__exit__(None, None, None)
 
-            # -------------------------------------------------------03.01
-            # call pre_method is provided
-            if self.pre_method is not None:
-                if self.silent:
-                    spinner.text += ">>"
-                else:
-                    spinner.info(msg="pre processing")
-                _pre_ret = self.pre_method(self.method_self, **kwargs)
-                # pre_method should not return anything
-                if _pre_ret is not None:
-                    e.code.CodingError(
-                        msgs=[
-                            f"{HookUp} protocol enforces the "
-                            f"pre_method {self.pre_method} of method "
-                            f"{self.method} to "
-                            f"not return anything ...",
-                            f"Found return value {_pre_ret}"
-                        ]
-                    )
-
-            # -------------------------------------------------------03.02
-            # call actual method
-            if self.silent:
-                spinner.text += " ++ "
-            else:
-                spinner.info(msg="processing ...")
-            _ret = self.method(self.method_self, **kwargs)
-
-            # -------------------------------------------------------03.03
-            # if post_method not provided return what we have
-            if self.post_method is not None:
-                # call post_method as it is provided
-                if self.silent:
-                    spinner.text += "<<"
-                else:
-                    spinner.info(msg="post processing ...")
-                # spinner.info(msg=f"pre: {pre_method}")
-                # spinner.info(msg=f"{method}")
-                # spinner.info(msg=f"post: {post_method}")
-                _post_ret = self.post_method(
-                    self.method_self, hooked_method_return_value=_ret)
-                # post_method should not return anything
-                if _post_ret is not None:
-                    e.code.CodingError(
-                        msgs=[
-                            f"{HookUp} protocol enforces the "
-                            f"post_method {self.post_method} of method"
-                            f" {self.method} to "
-                            f"not return anything ...",
-                            f"Found return value {_pre_ret}"
-                        ]
-                    )
-
-            # -------------------------------------------------------03.04
-            # return the return value of method
-            return _ret
+        # -----------------------------------------------------------04
+        # return the return value of method
+        return _ret
 
 
 def import_from_str(

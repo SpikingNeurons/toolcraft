@@ -11,6 +11,10 @@ from .. import error as e
 from . import window
 from . import asset
 from . import widget
+from .. import logger
+
+
+_LOGGER = logger.get_logger()
 
 
 class DashboardInternal(m.Internal):
@@ -333,12 +337,14 @@ class Dashboard(m.YamlRepr, abc.ABC):
         dpg.setup_dearpygui()
 
         # -------------------------------------------------- 03
-        # layout and build
+        # setup and layout
+        _LOGGER.info(msg="Setup and layout dashboard ...")
         self.setup()
         self.layout()
 
         # -------------------------------------------------- 04
         # call build and indicate build is done
+        _LOGGER.info(msg="Build dashboard ...")
         self.build()
         self.internal.is_run_called = True
 
