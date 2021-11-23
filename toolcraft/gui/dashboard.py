@@ -344,7 +344,7 @@ class Dashboard(m.YamlRepr, abc.ABC):
 
         # -------------------------------------------------- 04
         # call build and indicate build is done
-        _LOGGER.info(msg="Build dashboard ...")
+        _LOGGER.info(msg="Building dashboard ...")
         self.build()
         self.internal.is_run_called = True
 

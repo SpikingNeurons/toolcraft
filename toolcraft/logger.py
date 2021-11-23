@@ -311,7 +311,6 @@ class ProgressBar(tqdm):
         maxinterval: float = 10.0,
         miniters: t.Union[int, float] = None,
         ascii: t.Union[str, bool] = None,
-        disable=False,
         unit: str = ' it',
         unit_scale: t.Union[bool, int, float] = False,
         dynamic_ncols: bool = True,
@@ -450,8 +449,8 @@ class ProgressBar(tqdm):
         super().__init__(
             iterable=iterable, desc=desc, total=total, leave=leave, file=file,
             ncols=ncols, mininterval=mininterval, maxinterval=maxinterval,
-            miniters=miniters, ascii=ascii, disable=disable, unit=unit,
-            unit_scale=unit_scale, dynamic_ncols=dynamic_ncols,
+            miniters=miniters, ascii=ascii, disable=settings.DISABLE_PROGRESS_BAR,
+            unit=unit, unit_scale=unit_scale, dynamic_ncols=dynamic_ncols,
             smoothing=smoothing, bar_format=bar_format, initial=initial,
             position=position, postfix=postfix, unit_divisor=unit_divisor,
             write_bytes=write_bytes, lock_args=lock_args, nrows=nrows,

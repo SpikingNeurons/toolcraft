@@ -1740,7 +1740,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
                         f"The data type for loaded numpy file from disk for "
                         f"file_key `{file_key}` does not match.",
                         f"Expected {self.dtype[file_key]} but found "
-                        f"{_npy_memmap.dtype}"
+                        f"{_npy_memmap.dtype}",
+                        f"Check file path: {self.path}"
                     ]
                 )
             # ------------------------------------------------------------02.03

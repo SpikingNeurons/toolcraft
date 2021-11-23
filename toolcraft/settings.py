@@ -21,6 +21,8 @@ if gettrace is not None:
 # detect if in interactive mode
 INTERACTIVE = not hasattr(main, '__file__')
 
+DISABLE_PROGRESS_BAR = False
+
 try:
     import dearpygui.dearpygui as dpg
     DPG_WORKS = True
