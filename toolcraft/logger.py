@@ -928,7 +928,7 @@ class DpgLogger:
 class _LoggerClass:
     module: types.ModuleType
     use_stream_handler: bool = True
-    use_file_handler: bool = True
+    use_file_handler: bool = settings.LOGGER_USE_FILE_HANDLER
     use_separate_file: bool = False
     use_dpg_logger: bool = False
     level: int = logging.DEBUG

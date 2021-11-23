@@ -22,6 +22,7 @@ if gettrace is not None:
 INTERACTIVE = not hasattr(main, '__file__')
 
 DISABLE_PROGRESS_BAR = False
+LOGGER_USE_FILE_HANDLER = False
 
 try:
     import dearpygui.dearpygui as dpg
