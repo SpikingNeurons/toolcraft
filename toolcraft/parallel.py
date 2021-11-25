@@ -43,6 +43,7 @@ class _Task(Task):
         return f"Task result {self.name} {id(task_runner)}"
 
 
+@dataclasses.dataclass
 class TaskRunner:
 
     def setup(self):
@@ -185,9 +186,9 @@ class TaskRunnerPool:
                 TaskRunner() for _ in range(2)
             ]
         )
-        _trp.start()
-        for _res in _trp.get_results():
-            print(_res)
+        with _trp:
+            for _res in _trp.get_results():
+                print(_res)
 
 
 # if __name__ == '__main__':
