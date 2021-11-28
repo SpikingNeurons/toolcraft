@@ -970,7 +970,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # todo: make it like progress bar
             _total_keys = len(self.file_keys)
             _s_fmt = len(str(_total_keys))
-            spinner = self.spinner
+            spinner = logger.Spinner.get_last_spinner()
 
             # -----------------------------------------------------------03.02
             # delete all files for the group
@@ -978,8 +978,9 @@ class FileGroup(StorageHashable, abc.ABC):
 
                 _key_path = self.path / fk
 
-                spinner.text = f"{_key_path.name!r}: " \
-                               f"{i: {_s_fmt}d}/{_total_keys} deleted ..."
+                if spinner is not None:
+                    spinner.text = f"{_key_path.name!r}: " \
+                                   f"{i: {_s_fmt}d}/{_total_keys} deleted ..."
 
                 if _key_path.is_file() or _key_path.is_dir():
                     util.io_path_delete(_key_path, force=force)
