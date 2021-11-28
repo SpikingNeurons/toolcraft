@@ -16,6 +16,14 @@ todo: add support https://arrow.apache.org/docs/python/filesystems.html#filesyst
   check
     import gcsfs
     import adlfs
+
+
+todo: This is new (go on to fsspec) even pyarrow file-system allows fsspec and pafs
+  offers limited subset of functions of what fsspec offers i.e. related to pa.dataset
+  storage ... but other extensive stuff for flie system can come from fsspec
+  + https://filesystem-spec.readthedocs.io/en/latest/features.html#caching-files-locally
+  Also see the exhaustive implementaions
+  + https://github.com/fsspec/filesystem_spec/tree/master/fsspec/implementations
 """
 import pathlib
 import typing as t

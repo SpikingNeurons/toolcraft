@@ -15,7 +15,6 @@ import typing as t
 import numpy as np
 import pandas as pd
 import pyarrow as pa
-import tensorflow.keras as tk
 from toolcraft import marshalling as m
 from toolcraft import settings
 from toolcraft import storage as s
@@ -36,15 +35,11 @@ class NewEnum(m.FrozenEnum, enum.Enum):
 class HashableTryChild(m.HashableClass):
 
     a: int
-    l: m.FrozenKeras
 
 
 @dataclasses.dataclass(frozen=True)
 class HashableTry(m.HashableClass):
     a: int
-    l: m.FrozenKeras
-    o: m.FrozenKeras
-    d: m.FrozenDict
     e: NewEnum
     child: HashableTryChild
 
@@ -53,23 +48,9 @@ def try_hashable_ser():
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>1")
     _hashable = HashableTry(
         a=33,
-        l=m.FrozenKeras(tk.losses.CategoricalCrossentropy(label_smoothing=1.0)),
-        o=m.FrozenKeras(
-            tk.optimizers.Adam(
-                learning_rate=tk.optimizers.schedules.ExponentialDecay(
-                    0.1,
-                    2,
-                    0.3,
-                ),
-            ),
-        ),
-        d=m.FrozenDict({11: 1, "2": 2, "3": 33}),
         e=NewEnum.a1,
         child=HashableTryChild(
             a=66,
-            l=m.FrozenKeras(
-                tk.losses.CategoricalCrossentropy(label_smoothing=2.0),
-            ),
         ),
     )
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
@@ -85,27 +66,8 @@ def try_hashable_ser():
     # assert if yaml repr is correct
     assert _hashable.yaml() == _de_ser_hashable.yaml()
 
-    # check if when object created in the program the keras obj remains keras
-    assert isinstance(_hashable.l.get(), tk.losses.Loss)
-    assert isinstance(_hashable.child.l.get(), tk.losses.Loss)
-
-    # check if when load from yaml-str the resulting object converts the
-    # _KerasParse object to keras actual object
-    assert isinstance(_de_ser_hashable.l.get(), tk.losses.Loss)
-    assert isinstance(_de_ser_hashable.child.l.get(), tk.losses.Loss)
-
     # check enum
     assert _hashable.e == NewEnum.a1, "enums are not same"
-
-    # check if deserialization always lead to new instances for FrozenKeras
-    assert id(_hashable.l) == id(_hashable.l)
-    _1, _2 = _hashable.l.get(), _hashable.l.get()
-    assert id(_1) != id(_2), "should be different"
-
-    # check if deserialization always lead to new instances for FrozenDict
-    assert id(_hashable.d) == id(_hashable.d)
-    _1, _2 = _hashable.d.get(), _hashable.d.get()
-    assert id(_1) != id(_2), "should be different"
 
 
 class DnTestFile(s.DownloadFileGroup):
@@ -185,10 +147,10 @@ def try_metainfo_file():
     for _ in range(5):
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _)
         print(df.yaml())
-        print(df.config.make_dict_from_current_state().get())
+        print(df.config)
         df.get_file(file_key="file")
         print(df.yaml())
-        print(df.config.make_dict_from_current_state().get())
+        print(df.config)
         time.sleep(1)
 
     df.delete(force=True)
@@ -778,11 +740,11 @@ def try_main():
         util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
-    # try_hashable_ser()
-    # try_download_file()
-    # try_auto_hashed_download_file()
-    # try_metainfo_file()
-    # try_creating_folders()
+    try_hashable_ser()
+    try_download_file()
+    try_auto_hashed_download_file()
+    try_metainfo_file()
+    try_creating_folders()
     try_arrow_storage()
     _TEMP_PATH.rmdir()
 

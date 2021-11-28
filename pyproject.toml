@@ -71,6 +71,7 @@ dearpygui-ext = "0.9.3"
 #flake8-docstrings = "^1.6.0"
 # commit and check
 #twine = "^3.4.2"
+fsspec = "^2021.11.1"
 #toml = "^0.10.2"
 
 
