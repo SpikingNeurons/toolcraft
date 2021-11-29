@@ -24,6 +24,9 @@ todo: This is new (go on to fsspec) even pyarrow file-system allows fsspec and p
   + https://filesystem-spec.readthedocs.io/en/latest/features.html#caching-files-locally
   Also see the exhaustive implementaions
   + https://github.com/fsspec/filesystem_spec/tree/master/fsspec/implementations
+
+todo: remote caching
+  https://www.anaconda.com/blog/fsspec-remote-caching
 """
 import pathlib
 import typing as t
