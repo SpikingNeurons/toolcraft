@@ -6,6 +6,9 @@ todo: add support for keepsake for saving blobs
   This library is very simple but may be we can do better storage or may be
   we add more fields to their existing proto buffers
 
+todo: Lets figure out cloud hash mechanisms to confirm uploads or check downloaded files
+  based on hashes in metadata of cloud file
+  https://cloud.google.com/storage/docs/hashes-etags
 """
 
 import sys
