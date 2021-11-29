@@ -1280,7 +1280,7 @@ class HashableClass(YamlRepr, abc.ABC):
         if self.__class__.results_folder != HashableClass.results_folder:
             self.results_folder.init_store_df_files()
 
-    def info(self) -> "gui.widget.Text":
+    def info_widget(self) -> "gui.widget.Text":
         # import
         from . import gui
         # make
