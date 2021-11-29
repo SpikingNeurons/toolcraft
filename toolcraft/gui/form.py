@@ -68,7 +68,7 @@ class HashableMethodsRunnerForm(Form):
 
         # add info button
         if self.info_button:
-            _callable_names["Info"] = "info"
+            _callable_names["Info"] = "info_widget"
 
         # make buttons for callable names
         for _button_label, _callable_name in _callable_names.items():
