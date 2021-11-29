@@ -72,6 +72,7 @@ dearpygui-ext = "0.9.3"
 # commit and check
 #twine = "^3.4.2"
 fsspec = "^2021.11.1"
+panel = "^0.12.5"
 #toml = "^0.10.2"
 
 
