@@ -73,7 +73,7 @@ class Internal:
 
     @property
     @util.CacheResult
-    def __variable_names__(self) -> t.List[str]:
+    def __field_names__(self) -> t.List[str]:
         _ret = []
         for _c in self.__class__.__mro__:
             if hasattr(_c, "__annotations__"):
@@ -96,9 +96,12 @@ class Internal:
         # also store owner instance reference
         self.__owner__ = owner
 
+        # dynamic container to track locked fields
+        self.__locked_fields__ = []  # type: t.List[str]
+
         # if annotations have default values then make them available in
         # container
-        for _vn in self.__variable_names__:
+        for _vn in self.__field_names__:
             try:
                 setattr(self, _vn, getattr(self.__class__, _vn))
             except AttributeError:
@@ -112,7 +115,7 @@ class Internal:
         # only keys that are annotated can be set
         e.validation.ShouldBeOneOf(
             value=key,
-            values=self.__variable_names__,
+            values=self.__field_names__,
             msgs=[
                 f"Member `{key}` is not annotated in class "
                 f"{self.__class__} so you cannot set it."
@@ -137,6 +140,12 @@ class Internal:
                     f"method `self.vars_that_can_be_overwritten` so "
                     f"that we allow you to overwrite it.",
                 ])
+
+        # if item is locked do not allow to overwrite it
+        if key in self.__locked_fields__:
+            e.code.CodingError(
+                msgs=[f"Internal field `{key}` is locked so you cannot update it"]
+            )
 
         # set attribute
         return super().__setattr__(key, value)
@@ -163,13 +172,39 @@ class Internal:
         return ["on_call_kwargs", "progress_bar", "part_iterator_state"]
 
     def has(self, item: str) -> bool:
-        if item not in self.__variable_names__:
+        if item not in self.__field_names__:
             e.code.CodingError(msgs=[
-                f"You can only test has(...) for items that are annotated",
+                f"You can only test has(...) for fields that are annotated",
                 f"Item `{item}` is not one of "
-                f"{self.__variable_names__}",
+                f"{self.__field_names__}",
             ])
         return item in self.__dict__.keys()
+
+    def lock_field(self, item: str):
+        if item not in self.__field_names__:
+            e.code.CodingError(msgs=[
+                f"You can only lock fields that are annotated",
+                f"Item `{item}` is not one of "
+                f"{self.__field_names__}",
+            ])
+        if item in self.__locked_fields__:
+            e.code.NotAllowed(
+                msgs=[f"Field `{item}` is already locked"]
+            )
+        self.__locked_fields__.append(item)
+
+    def unlock_field(self, item: str):
+        if item not in self.__field_names__:
+            e.code.CodingError(msgs=[
+                f"You can only unlock fields that are annotated",
+                f"Item `{item}` is not one of "
+                f"{self.__field_names__}",
+            ])
+        if item not in self.__locked_fields__:
+            e.code.NotAllowed(
+                msgs=[f"Field `{item}` was not locked to unlock"]
+            )
+        self.__locked_fields__.remove(item)
 
 
 class Tracker:
