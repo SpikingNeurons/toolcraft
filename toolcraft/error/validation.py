@@ -240,6 +240,21 @@ class ShouldBeGreaterThan(CustomException):
         ])
 
 
+class ShouldBeLessThanEqTo(CustomException):
+    def __init__(
+        self,
+        *,
+        value: t.Union[int, float],
+        maximum_value: t.Union[int, float],
+        msgs: MESSAGES_TYPE,
+    ):
+        if value <= maximum_value:
+            return
+        super().__init__(msgs=[
+            *msgs, f"Value {value} should be <= {maximum_value}."
+        ])
+
+
 class ShouldBeInstanceOf(CustomException):
     def __init__(self, *, value: t.Any, value_types: t.Tuple,
                  msgs: MESSAGES_TYPE):

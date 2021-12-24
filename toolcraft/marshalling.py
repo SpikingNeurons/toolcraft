@@ -63,6 +63,7 @@ class Internal:
     on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
     progress_bar: logger.ProgressBar = None
     prefetched_on_first_call: bool
+    in_with_context: bool = False
 
     class LITERAL:
         store_key = "INTERNAL"
@@ -169,7 +170,8 @@ class Internal:
 
     # noinspection PyMethodMayBeStatic
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ["on_call_kwargs", "progress_bar", "part_iterator_state"]
+        return ["on_call_kwargs", "progress_bar", "part_iterator_state",
+                "in_with_context"]
 
     def has(self, item: str) -> bool:
         if item not in self.__field_names__:
@@ -230,6 +232,10 @@ class Tracker:
         return Internal(self)
 
     @property
+    def in_with_context(self) -> bool:
+        return self.internal.in_with_context
+
+    @property
     def is_called(self) -> bool:
         """
         Detects is hashable is called ... and hence can be used in with
@@ -270,6 +276,14 @@ class Tracker:
     # noinspection PyPropertyDefinition,PyTypeChecker
     @property
     def iterable_unit(self) -> str:
+        e.code.NotSupported(msgs=[
+            f"Override this property in class "
+            f"{self.__class__} if you want to iterate "
+            f"over tracker"
+        ])
+
+    @property
+    def iterates_infinitely(self) -> bool:
         e.code.NotSupported(msgs=[
             f"Override this property in class "
             f"{self.__class__} if you want to iterate "
@@ -381,9 +395,6 @@ class Tracker:
         # hashable class without using with statement ... but nonetheless we
         # expect you to call __call__ while looping over
         with self:
-            # get iterable
-            _iterable = self.on_iter()
-
             # get some vars
             _show_progress_bar = self.internal.on_call_kwargs[
                 "iter_show_progress_bar"]
@@ -391,19 +402,26 @@ class Tracker:
 
             # iterate
             if _show_progress_bar:
+                if self.iterates_infinitely:
+                    e.code.NotAllowed(
+                        msgs=[
+                            "We cannot show_progress_bar as this class iterates "
+                            "infinitely",
+                        ]
+                    )
                 with logger.ProgressBar(
                         total=self.iterable_length,
                         unit=self.iterable_unit,
                         desc=_iter_desc,
                 ) as pg:
                     self.internal.progress_bar = pg
-                    for _ in _iterable:
+                    for _ in self.on_iter():
                         pg.update(1)
                         yield _
                     self.internal.progress_bar = None
             else:
                 self.internal.progress_bar = None
-                for _ in _iterable:
+                for _ in self.on_iter():
                     yield _
 
     def __del__(self):
@@ -507,6 +525,7 @@ class Tracker:
                 f"__call__ is called which sets kwargs related to "
                 f"iteration or anything else",
             ])
+        self.internal.in_with_context = True
 
     def on_exit(self):
         """
@@ -524,6 +543,7 @@ class Tracker:
 
         # reset on_call_kwargs
         self.internal.on_call_kwargs = None
+        self.internal.in_with_context = False
 
     # noinspection PyTypeChecker
     def on_iter(self) -> t.Iterable[t.Any]:
