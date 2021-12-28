@@ -797,9 +797,10 @@ class Folder(StorageHashable):
         # when contains is None we delete everything ... this is default
         # behaviour if you want to do something special please override this
         # method
+        # todo: fix later
         if self.contains is None:
             # note that this will also delete folder self.path
-            util.pathlib_rmtree(path=self.path, recursive=True, force=False)
+            util.pathlib_rmtree(path=self.path, recursive=True, force=force)
             # remember to make empty dir as per API ... this will be deleted
             # by delete_post_runner while deleting state files
             self.path.mkdir(exist_ok=True)
