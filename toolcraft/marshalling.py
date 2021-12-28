@@ -679,7 +679,8 @@ class YamlLoader(yaml.UnsafeLoader):
                 f"We expect yaml str is for correct class ",
                 {
                     "expected": cls,
-                    "found": _instance.__class__
+                    "found": _instance.__class__,
+                    "yaml_txt": _text,
                 },
             ])
 
