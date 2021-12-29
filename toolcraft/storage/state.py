@@ -333,19 +333,22 @@ class Config(StateFile):
         # update
         if self.path.exists():
             _disk_state = self.path.read_text()
-            if _current_state == _disk_state:
-                e.code.CodingError(
-                    msgs=[
-                        f"We expect the state on disk to be different to "
-                        f"internal state for config ...",
-                        {
-                            "_current_state": _current_state,
-                            "_disk_state": _disk_state
-                        },
-                        f"This looks like unexpected sync as nothing has "
-                        f"changed in config"
-                    ]
-                )
+            # todo: this fails with distributed computing as multiple processes have
+            #  no updates to their config ... we have to update design for config
+            #  using some sort of database that can track things over multiple processes
+            # if _current_state == _disk_state:
+            #     e.code.CodingError(
+            #         msgs=[
+            #             f"We expect the state on disk to be different to "
+            #             f"internal state for config ...",
+            #             {
+            #                 "_current_state": _current_state,
+            #                 "_disk_state": _disk_state
+            #             },
+            #             f"This looks like unexpected sync as nothing has "
+            #             f"changed in config"
+            #         ]
+            #     )
 
         # -------------------------------------------------- 03
         # write to disk
