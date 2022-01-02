@@ -315,6 +315,9 @@ def _write_table(
         # todo: side effect we can use timestamp i.e. name as file to achieve
         #  timestamp based streaming ;)
         basename_template=_file_name,
+        # todo: use overwrite_or_ignore='error' ... i.e. do not allow overwrite or
+        #  ignore ... need to support append write properly ... decide later
+        existing_data_behavior='overwrite_or_ignore',
     )
 
 
