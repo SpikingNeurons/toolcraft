@@ -18,6 +18,7 @@ _SKIP_METHODS = [
     dpg.does_item_exist,
     dpg.generate_uuid, dpg.get_all_items,
     dpg.get_dearpygui_version, dpg.get_item_alias, dpg.get_values,
+    dpg.run_callbacks, dpg.get_callback_queue,
 
     # handled methods by Widget
     dpg.delete_item,  # Widget.delete
@@ -48,9 +49,9 @@ _SKIP_METHODS = [
     dpg.unhighlight_table_cell,  # Table.unhighlight_cell
     dpg.unhighlight_table_column,  # Table.unhighlight_column
     dpg.unhighlight_table_row,  # Table.unhighlight_row
-    dpg.is_table_cell_highlight,  # Table.is_cell_highlight
-    dpg.is_table_column_highlight,  # Table.is_column_highlight
-    dpg.is_table_row_highlight,  # Table.is_row_highlight
+    dpg.is_table_cell_highlighted,  # Table.is_cell_highlighted
+    dpg.is_table_column_highlighted,  # Table.is_column_highlighted
+    dpg.is_table_row_highlighted,  # Table.is_row_highlighted
     dpg.set_table_row_color,  # Table.set_row_color
     dpg.unset_table_row_color,  # Table.unset_row_color
 
@@ -257,7 +258,7 @@ _SKIP_METHODS = [
     dpg.set_global_font_scale, dpg.set_frame_callback, dpg.set_exit_callback,
     dpg.split_frame,
     dpg.track_item, dpg.untrack_item,
-    dpg.theme, dpg.item_pool, dpg.item_set, dpg.stage,
+    dpg.theme, dpg.stage,
 ]
 
 

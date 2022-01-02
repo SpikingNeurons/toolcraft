@@ -5,6 +5,7 @@ import dearpygui.dearpygui as dpg
 # noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 
+from .. import settings
 from .. import marshalling as m
 from .. import util
 from .. import error as e
@@ -332,7 +333,9 @@ class Dashboard(m.YamlRepr, abc.ABC):
             )
         # -------------------------------------------------- 02
         # setup dpg
+        _pyc_debug = settings.PYC_DEBUGGING
         dpg.create_context()
+        dpg.configure_app(manual_callback_management=_pyc_debug)
         dpg.create_viewport()
         dpg.setup_dearpygui()
 
@@ -351,7 +354,16 @@ class Dashboard(m.YamlRepr, abc.ABC):
         # -------------------------------------------------- 05
         # dpg related
         dpg.show_viewport()
-        dpg.start_dearpygui()
+        if _pyc_debug:
+            if not internal_dpg.is_viewport_ok():
+                raise RuntimeError("Viewport was not created and shown.")
+            while internal_dpg.is_dearpygui_running():
+                # add this extra line for callback debug
+                # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
+                dpg.run_callbacks(dpg.get_callback_queue())
+                internal_dpg.render_dearpygui_frame()
+        else:
+            dpg.start_dearpygui()
         dpg.destroy_context()
 
 

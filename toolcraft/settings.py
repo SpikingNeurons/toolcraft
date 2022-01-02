@@ -12,11 +12,11 @@ import __main__ as main
 
 
 # check if debugger is used
-DEBUGGING = False
+PYC_DEBUGGING = False
 gettrace = getattr(sys, 'gettrace', None)
 if gettrace is not None:
     if gettrace():
-        DEBUGGING = True
+        PYC_DEBUGGING = True
 
 # detect if in interactive mode
 INTERACTIVE = not hasattr(main, '__file__')

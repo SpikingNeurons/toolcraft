@@ -2,8 +2,8 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.1
->> Time: 2021-11-14 02:30
+>> DearPyGui: 1.2
+>> Time: 2022-01-02 14:20
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -8015,10 +8015,10 @@ class ChildWindow(MovableContainerWidget):
     # border (bool, optional): Shows/Hides the border around the sides.
     border: bool = True
 
-    # autosize_x (bool, optional): Autosize the window to fit it's items in the x.
+    # autosize_x (bool, optional): Autosize the window to its parents size in x.
     autosize_x: bool = False
 
-    # autosize_y (bool, optional): Autosize the window to fit it's items in the y.
+    # autosize_y (bool, optional): Autosize the window to its parents size in y.
     autosize_y: bool = False
 
     # no_scrollbar (bool, optional): Disable scrollbars (window can still scroll with mouse or programmatically).
@@ -9259,6 +9259,12 @@ class FileDialog(ContainerWidget):
     # directory_selector (bool, optional): Shows only directory/paths as options. Allows selection of directory/paths only.
     directory_selector: bool = False
 
+    # min_size (Union[List[int], Tuple[int, ...]], optional): Minimum window size.
+    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [100, 100])
+
+    # max_size (Union[List[int], Tuple[int, ...]], optional): Maximum window size.
+    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [30000, 30000])
+
     def build(self) -> t.Union[int, str]:
 
         _ret = internal_dpg.add_file_dialog(
@@ -9274,6 +9280,8 @@ class FileDialog(ContainerWidget):
             file_count=self.file_count,
             modal=self.modal,
             directory_selector=self.directory_selector,
+            min_size=self.min_size,
+            max_size=self.max_size,
         )
         
         return _ret
@@ -11280,6 +11288,9 @@ class Window(ContainerWidget):
     # no_saved_settings (bool, optional): Never load/save settings in .ini file.
     no_saved_settings: bool = False
 
+    # no_open_over_existing_popup (bool, optional): Don't open if there's already a popup
+    no_open_over_existing_popup: bool = True
+
     # on_close (Callable, optional): Callback ran when window is closed.
     on_close: Callback = None
 
@@ -11313,6 +11324,7 @@ class Window(ContainerWidget):
             modal=self.modal,
             popup=self.popup,
             no_saved_settings=self.no_saved_settings,
+            no_open_over_existing_popup=self.no_open_over_existing_popup,
             on_close=self.on_close_fn,
         )
         

@@ -1238,7 +1238,7 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         # In debug method this will return something meaningful as debugger
         # keeps accessing this method to get str representation of any object
-        if settings.DEBUGGING:
+        if settings.PYC_DEBUGGING:
             return f"... debugging ... {self.name}"
 
         # if interactive mode then allow use of __str__
