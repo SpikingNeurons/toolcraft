@@ -30,8 +30,10 @@ todo: remote caching
 """
 import pathlib
 import typing as t
+
 import pyarrow as pa
 import pyarrow.fs as pafs
+
 from .. import error as e
 from .. import util
 
@@ -57,7 +59,7 @@ class LocalFileSystem(pafs.LocalFileSystem):
                     f"Make sure that you override pyarrow.localfs or any "
                     f"other code that calls parents get_instance and inits "
                     f"self._instance variable to wrong value ..."
-                ]
+                ],
             )
         return cls._instance
 

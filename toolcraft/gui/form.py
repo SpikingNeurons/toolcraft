@@ -1,14 +1,12 @@
 import dataclasses
 import typing as t
 
-from .. import util
 from .. import error as e
-from .. import marshalling as m
-from .__base__ import Form
 from .. import gui
-from . import widget
-from . import table
-from . import callback
+from .. import marshalling as m
+from .. import util
+from . import callback, table, widget
+from .__base__ import Form
 
 
 @dataclasses.dataclass
@@ -27,7 +25,8 @@ class HashableMethodsRunnerForm(Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> t.Union[widget.Group, widget.CollapsingHeader]:
+    def form_fields_container(
+            self) -> t.Union[widget.Group, widget.CollapsingHeader]:
         if self.use_collapsing_header:
             _ret = widget.CollapsingHeader(label=self.title, default_open=True)
             _gp = widget.Group()
@@ -61,10 +60,8 @@ class HashableMethodsRunnerForm(Form):
 
         # add close button
         if self.close_button:
-            _buttons_bar(
-                widget=callback.CloseWidgetCallback.get_button_widget(
-                    widget_to_delete=self),
-            )
+            _buttons_bar(widget=callback.CloseWidgetCallback.get_button_widget(
+                widget_to_delete=self), )
 
         # add info button
         if self.info_button:

@@ -250,9 +250,8 @@ class ShouldBeLessThanEqTo(CustomException):
     ):
         if value <= maximum_value:
             return
-        super().__init__(msgs=[
-            *msgs, f"Value {value} should be <= {maximum_value}."
-        ])
+        super().__init__(
+            msgs=[*msgs, f"Value {value} should be <= {maximum_value}."])
 
 
 class ShouldBeInstanceOf(CustomException):

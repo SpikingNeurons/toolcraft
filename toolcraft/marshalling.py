@@ -144,9 +144,9 @@ class Internal:
 
         # if item is locked do not allow to overwrite it
         if key in self.__locked_fields__:
-            e.code.CodingError(
-                msgs=[f"Internal field `{key}` is locked so you cannot update it"]
-            )
+            e.code.CodingError(msgs=[
+                f"Internal field `{key}` is locked so you cannot update it"
+            ])
 
         # set attribute
         return super().__setattr__(key, value)
@@ -170,8 +170,12 @@ class Internal:
 
     # noinspection PyMethodMayBeStatic
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ["on_call_kwargs", "progress_bar", "part_iterator_state",
-                "in_with_context"]
+        return [
+            "on_call_kwargs",
+            "progress_bar",
+            "part_iterator_state",
+            "in_with_context",
+        ]
 
     def has(self, item: str) -> bool:
         if item not in self.__field_names__:
@@ -190,9 +194,7 @@ class Internal:
                 f"{self.__field_names__}",
             ])
         if item in self.__locked_fields__:
-            e.code.NotAllowed(
-                msgs=[f"Field `{item}` is already locked"]
-            )
+            e.code.NotAllowed(msgs=[f"Field `{item}` is already locked"])
         self.__locked_fields__.append(item)
 
     def unlock_field(self, item: str):
@@ -204,8 +206,7 @@ class Internal:
             ])
         if item not in self.__locked_fields__:
             e.code.NotAllowed(
-                msgs=[f"Field `{item}` was not locked to unlock"]
-            )
+                msgs=[f"Field `{item}` was not locked to unlock"])
         self.__locked_fields__.remove(item)
 
 
@@ -403,12 +404,10 @@ class Tracker:
             # iterate
             if _show_progress_bar:
                 if self.iterates_infinitely:
-                    e.code.NotAllowed(
-                        msgs=[
-                            "We cannot show_progress_bar as this class iterates "
-                            "infinitely",
-                        ]
-                    )
+                    e.code.NotAllowed(msgs=[
+                        "We cannot show_progress_bar as this class iterates "
+                        "infinitely",
+                    ])
                 with logger.ProgressBar(
                         total=self.iterable_length,
                         unit=self.iterable_unit,
@@ -1196,8 +1195,8 @@ class HashableClass(YamlRepr, abc.ABC):
         # --------------------------------------------------------------01
         # do instance related things
         with logger.Spinner(
-            title=f"Init {self.__class__.__module__}.{self.__class__.__name__}",
-            logger=_LOGGER,
+                title=f"Init {self.__class__.__module__}.{self.__class__.__name__}",
+                logger=_LOGGER,
         ) as _s:
             # ----------------------------------------------------------01.01
             # dict field if any will be transformed
@@ -1339,11 +1338,11 @@ class HashableClass(YamlRepr, abc.ABC):
     def info_widget(self) -> "gui.widget.Text":
         # import
         from . import gui
+
         # make
         # noinspection PyUnresolvedReferences
         _ret_widget = gui.widget.Text(
-            default_value=f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
-        )
+            default_value=f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}")
         # return
         return _ret_widget
 

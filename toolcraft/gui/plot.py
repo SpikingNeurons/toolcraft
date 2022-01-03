@@ -1,57 +1,60 @@
 import dataclasses
 import typing as t
-import dearpygui.dearpygui as dpg
+
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
-from .__base__ import PlotSeries, PlotItem
-from . import _auto
 from .. import error as e
 from .. import util
+from . import _auto
+from .__base__ import PlotItem, PlotSeries
 
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries2D
-# noinspection PyUnresolvedReferences
-from ._auto import AreaSeries
-# noinspection PyUnresolvedReferences
-from ._auto import BarSeries
-# noinspection PyUnresolvedReferences
-from ._auto import CandleSeries
-# noinspection PyUnresolvedReferences
-from ._auto import DragLine
-# noinspection PyUnresolvedReferences
-from ._auto import DragPoint
-# noinspection PyUnresolvedReferences
-from ._auto import ErrorSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HeatSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HLineSeries
-# noinspection PyUnresolvedReferences
-from ._auto import LineSeries
-# noinspection PyUnresolvedReferences
-from ._auto import PieSeries
-# noinspection PyUnresolvedReferences
-from ._auto import Annotation
-# noinspection PyUnresolvedReferences
-from ._auto import ScatterSeries
-# noinspection PyUnresolvedReferences
-from ._auto import ShadeSeries
-# noinspection PyUnresolvedReferences
-from ._auto import StairSeries
-# noinspection PyUnresolvedReferences
-from ._auto import StemSeries
-# noinspection PyUnresolvedReferences
-from ._auto import VLineSeries
+from ._auto import (
+    Annotation,
+    AreaSeries,
+    BarSeries,
+    CandleSeries,
+    DragLine,
+    DragPoint,
+    ErrorSeries,
+    HeatSeries,
+    HistogramSeries,
+    HistogramSeries2D,
+    HLineSeries,
+    LineSeries,
+    PieSeries,
+    ScatterSeries,
+    ShadeSeries,
+    StairSeries,
+    StemSeries,
+    VLineSeries,
+)
+
 # auto pk; end <<<
 
 
 @dataclasses.dataclass
 class Simple(_auto.SimplePlot):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -59,7 +62,6 @@ class Simple(_auto.SimplePlot):
 
 @dataclasses.dataclass
 class Legend(_auto.PlotLegend):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -67,7 +69,6 @@ class Legend(_auto.PlotLegend):
 
 @dataclasses.dataclass
 class XAxis(_auto.XAxis):
-
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
@@ -113,7 +114,6 @@ class XAxis(_auto.XAxis):
 
 @dataclasses.dataclass
 class YAxis(_auto.YAxis):
-
     @property
     @util.CacheResult
     def all_plot_series(self) -> t.Dict[str, PlotSeries]:
@@ -123,31 +123,30 @@ class YAxis(_auto.YAxis):
     def __call__(self, plot_series: PlotSeries):
         if isinstance(plot_series, PlotSeries):
             if plot_series.label in self.all_plot_series.keys():
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"There already exists a plot_series with label "
-                        f"`{plot_series.label}`",
-                        f"Note that if you want to share label across multiple series "
-                        f"then append `#<some unique name>` to label to make it unique "
-                        f"per plot series",
-                    ]
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"There already exists a plot_series with label "
+                    f"`{plot_series.label}`",
+                    f"Note that if you want to share label across multiple series "
+                    f"then append `#<some unique name>` to label to make it unique "
+                    f"per plot series",
+                ])
             self.all_plot_series[plot_series.label] = plot_series
             plot_series.internal.parent = self
             if self.is_built:
                 plot_series.build()
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_series)}"])
+            e.code.ShouldNeverHappen(
+                msgs=[f"unknown type {type(plot_series)}"])
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
         # call super
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+        super().build_post_runner(
+            hooked_method_return_value=hooked_method_return_value)
 
         # now it is time to render children
         for _ps in self.all_plot_series.values():
@@ -276,12 +275,10 @@ class Plot(_auto.Plot):
     @util.CacheResult
     def y2_axis(self) -> YAxis:
         if self.num_of_y_axis not in [2, 3]:
-            e.code.CodingError(
-                msgs=[
-                    f"You cannot access this property. "
-                    f"Please set the field `num_of_y_axis` to be one of [2, 3]"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"You cannot access this property. "
+                f"Please set the field `num_of_y_axis` to be one of [2, 3]"
+            ])
         _ret = YAxis()
         _ret.internal.parent = self
         return _ret
@@ -290,12 +287,10 @@ class Plot(_auto.Plot):
     @util.CacheResult
     def y3_axis(self) -> YAxis:
         if self.num_of_y_axis != 3:
-            e.code.CodingError(
-                msgs=[
-                    f"You cannot access this property. "
-                    f"Please set the field `num_of_y_axis` to be 3 to use this property"
-                ]
-            )
+            e.code.CodingError(msgs=[
+                f"You cannot access this property. "
+                f"Please set the field `num_of_y_axis` to be 3 to use this property"
+            ])
         _ret = YAxis()
         _ret.internal.parent = self
         _ret.internal.root = self.root
@@ -309,12 +304,10 @@ class Plot(_auto.Plot):
     def __call__(self, plot_item: PlotItem):
         if isinstance(plot_item, PlotItem):
             if plot_item.label in self.all_plot_items.keys():
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"There already exists a plot_series with label "
-                        f"`{plot_item.label}`"
-                    ]
-                )
+                e.validation.NotAllowed(msgs=[
+                    f"There already exists a plot_series with label "
+                    f"`{plot_item.label}`"
+                ])
             self.all_plot_items[plot_item.label] = plot_item
             plot_item.internal.parent = self
             if self.is_built:
@@ -331,10 +324,9 @@ class Plot(_auto.Plot):
         super().init_validate()
         # check num_of_y_axis
         e.validation.ShouldBeOneOf(
-            value=self.num_of_y_axis, values=[1, 2, 3],
-            msgs=[
-                "Please crosscheck the value for field num_of_y_axis"
-            ]
+            value=self.num_of_y_axis,
+            values=[1, 2, 3],
+            msgs=["Please crosscheck the value for field num_of_y_axis"],
         )
 
     def delete(self):
@@ -380,9 +372,8 @@ class Plot(_auto.Plot):
             elif isinstance(_plot_item, DragPoint) and drag_points:
                 _plot_item.delete()
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
 
         # call super
         super().build_post_runner(
@@ -407,7 +398,6 @@ class Plot(_auto.Plot):
 
 @dataclasses.dataclass
 class SubPlots(_auto.SubPlots):
-
     def __call__(self, widget: Plot, before: Plot = None):
         # we also need to add cells in row
         if isinstance(widget, Plot):

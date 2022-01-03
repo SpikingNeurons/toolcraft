@@ -12,13 +12,14 @@ There are multiple patterns we would like to implement
 
 """
 
-import multiprocessing as mp
-import typing as t
+import abc
 import dataclasses
+import multiprocessing as mp
 import queue
 import time
+import typing as t
+
 import numpy as np
-import abc
 
 from . import util
 
@@ -27,7 +28,6 @@ _KILL_PILL = "__KILL_PILL__"
 
 @dataclasses.dataclass
 class Task(abc.ABC):
-
     @abc.abstractmethod
     def do_it(self, task_runner: "TaskRunner") -> t.Any:
         ...
@@ -45,18 +45,16 @@ class _Task(Task):
 
 @dataclasses.dataclass
 class TaskRunner:
-
     def setup(self):
         ...
 
 
 class ProcessWithQueues(mp.Process):
-
     def __init__(
         self,
         task_queue: mp.JoinableQueue,
         result_queue: mp.Queue,
-        task_runner: TaskRunner
+        task_runner: TaskRunner,
     ):
         # call super
         super().__init__()
@@ -74,22 +72,20 @@ class ProcessWithQueues(mp.Process):
                 # Poison pill means shutdown
                 self.task_queue.task_done()
                 break
-            _result = next_task.do_it(
-                self.task_runner
-            )
+            _result = next_task.do_it(self.task_runner)
             self.task_queue.task_done()
             self.result_queue.put(_result)
 
 
 class TaskRunnerPool:
-
     @property
     @util.CacheResult
     def processes(self) -> t.List[mp.Process]:
         return [
             ProcessWithQueues(
-                task_queue=self.task_queue, result_queue=self.result_queue,
-                task_runner=_tr
+                task_queue=self.task_queue,
+                result_queue=self.result_queue,
+                task_runner=_tr,
             ) for _tr in self.task_runners
         ]
 
@@ -125,7 +121,7 @@ class TaskRunnerPool:
             _p.start()
 
         # at start we will put some tasks
-        for _ in range(3*len(self.task_runners)):
+        for _ in range(3 * len(self.task_runners)):
             self.task_queue.put(next(self.task_iterator))
 
     def stop(self):
@@ -134,7 +130,7 @@ class TaskRunnerPool:
             _p.terminate()
 
     def get_results(self) -> t.Iterable[t.Any]:
-        _time_for_retrieval = 2.
+        _time_for_retrieval = 2.0
         _num_task_runners = len(self.task_runners)
         _tasks_available = True
 
@@ -146,7 +142,7 @@ class TaskRunnerPool:
 
             # grow task queue if small
             if _tasks_available:
-                if self.task_queue.qsize() < 2*_num_task_runners:
+                if self.task_queue.qsize() < 2 * _num_task_runners:
                     for _ in range(_num_task_runners):
                         try:
                             self.task_queue.put(next(self.task_iterator))
@@ -182,9 +178,7 @@ class TaskRunnerPool:
                 _Task(f"{_i}_{_}", _)
                 for _i, _ in enumerate(np.random.randint(5, 6, 20))
             ],
-            task_runners=[
-                TaskRunner() for _ in range(2)
-            ]
+            task_runners=[TaskRunner() for _ in range(2)],
         )
         with _trp:
             for _res in _trp.get_results():

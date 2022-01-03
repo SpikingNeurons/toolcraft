@@ -38,7 +38,7 @@ __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a4"
 
-from . import logger, settings, marshalling, util, error, helper, parallel, storage
+from . import error, helper, logger, marshalling, parallel, settings, storage, util
 
 if settings.DPG_WORKS:
     # as some rules use dpg
