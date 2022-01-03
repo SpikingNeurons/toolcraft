@@ -168,19 +168,23 @@ def changelog(c, new_tag=None):
     # https://docs.github.com/en/rest/reference/repos#commits
     # https://docs.github.com/en/rest/reference/repos#compare-two-commits
     # [USING GITHUB]
-    _commits = _GH_REMOTE_REPO.compare(base=_last_stable_tag_name,
-                                       head=None or "HEAD").commits
     _changelog_list = [
-        f"## Changelog for {_last_stable_tag_name} >> {new_tag}", ""
+        f"## Full Changelog: [{_last_stable_tag_name} >> {new_tag}](https://github.com/SpikingNeurons/toolcraft/compare/{_last_stable_tag_name}...{new_tag})", ""
     ]
-    for _commit in _commits:
-        _commit_str = (
-            f"+ "
-            f"{_commit.sha[:7]} "
-            f"[ {_commit.committer.updated_at.strftime('%Y-%m-%d')} ] "
-            f"@{_commit.committer.login} : "
-            f"{_commit.commit.message}")
-        _changelog_list.append(_commit_str)
+
+    # we will avoid this for now
+    # noinspection PyUnreachableCode
+    if False:
+        _commits = _GH_REMOTE_REPO.compare(base=_last_stable_tag_name,
+                                           head=None or "HEAD").commits
+        for _commit in _commits:
+            _commit_str = (
+                f"+ "
+                f"{_commit.sha[:7]} "
+                f"[ {_commit.committer.updated_at.strftime('%Y-%m-%d')} ] "
+                f"@{_commit.committer.login} : "
+                f"{_commit.commit.message}")
+            _changelog_list.append(_commit_str)
 
     # make changelog
     _changelog = "\n".join(_changelog_list)
