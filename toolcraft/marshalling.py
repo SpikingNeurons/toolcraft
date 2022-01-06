@@ -282,6 +282,7 @@ class Tracker:
             f"over tracker"
         ])
 
+    # noinspection PyTypeChecker
     @property
     def iterates_infinitely(self) -> bool:
         e.code.NotSupported(msgs=[
@@ -289,6 +290,7 @@ class Tracker:
             f"{self.__class__} if you want to iterate "
             f"over tracker"
         ])
+        raise
 
     @property
     @util.CacheResult
