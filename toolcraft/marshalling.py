@@ -677,13 +677,16 @@ class YamlLoader(yaml.UnsafeLoader):
 
         # check
         if _instance.__class__ != cls:
+            _msgs = {
+                "expected": cls,
+                "found": _instance.__class__,
+                "yaml_txt": _text,
+            }
+            if isinstance(file_or_text, pathlib.Path):
+                _msgs["file_or_text"] = file_or_text.as_posix()
             e.code.CodingError(msgs=[
                 f"We expect yaml str is for correct class ",
-                {
-                    "expected": cls,
-                    "found": _instance.__class__,
-                    "yaml_txt": _text,
-                },
+                _msgs,
             ])
 
         # return
