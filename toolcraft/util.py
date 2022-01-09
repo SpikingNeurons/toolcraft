@@ -6,6 +6,7 @@ Module to hold simple utilities that can be built with minimal dependencies.
 import typing as t
 import pyarrow as pa
 import numpy as np
+import pickle
 import sys
 import inspect
 import abc
@@ -1279,15 +1280,51 @@ def input_response(question: str, options: t.List[str]) -> str:
         return response
 
 
+def save_pickle(py_obj, file_path: pathlib.Path):
+    # raise error if needed
+    e.io.FileMustNotBeOnDiskOrNetwork(
+        path=file_path, msgs=[]
+    )
+    # save
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with file_path.open(mode='wb') as _f:
+        pickle.dump(py_obj, _f)
+
+
+def read_pickle(file_path: pathlib.Path):
+    # raise error if needed
+    e.io.FileMustBeOnDiskOrNetwork(
+        path=file_path, msgs=[]
+    )
+    # save
+    with file_path.open(mode='rb') as _f:
+        return pickle.load(_f)
+
+
 def print_file_mod(file: pathlib.Path):
     print(stat.filemode(file.stat().st_mode))
+
+
+def extract_files_in_memory(
+    archive_file_path: pathlib.Path,
+    members: t.Union[t.List[str], None] = None,
+) -> t.Dict:
+
+    archive = zipfile.ZipFile(archive_file_path, 'r')
+    if members is None:
+        _ms = archive.namelist()
+    else:
+        _ms = members
+
+    return {
+        k: archive.read(k) for k in _ms
+    }
 
 
 def extract_file(
     archive_file_path: pathlib.Path,
     extract_dir: pathlib.Path,
-    extract_all: bool,
-    members: t.Union[t.List[str], None]
+    members: t.Union[t.List[str], None] = None,
 ):
     # print(
     #     f"\n"
@@ -1295,24 +1332,9 @@ def extract_file(
     # )
 
     archive = zipfile.ZipFile(archive_file_path, 'r')
-    if extract_all:
-        if members is not None:
-            e.code.NotAllowed(
-                msgs=[
-                    "We expect `members` to be None when `extract_all` is "
-                    "True.",
-                    "No need to pass members when you want to extract all ..."
-                ]
-            )
+    if members is None:
         _ms = archive.namelist()
     else:
-        if members is None:
-            e.code.NotAllowed(
-                msgs=[
-                    "Argument `extract_all` is False.",
-                    "Please pass the list of archive members you need ...."
-                ]
-            )
         _ms = members
 
     for _zip_info in _ms:

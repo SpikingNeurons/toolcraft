@@ -6,6 +6,7 @@ todo: Formalize with a parent Settings class which will store settings in
 import numpy as np
 import pathlib
 import toml
+import typing as t
 import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
@@ -32,21 +33,23 @@ except ImportError:
 
 
 # make config
-_config_file = pathlib.Path.home() / ".toolcraft" / "config.toml"
+TC_HOME = pathlib.Path.home() / ".toolcraft"
+_config_file = TC_HOME / "config.toml"
 if _config_file.exists():
-    _config_data = toml.load(_config_file.as_posix())
+    TC_CONFIG = toml.load(_config_file.as_posix())
+    if "dirs" not in TC_CONFIG.keys():
+        raise Exception(
+            f"Missing mandatory `dirs` setting in toolcraft config file at "
+            f"`{_config_file.as_posix()}`"
+        )
 else:
-    _config_data = {
-        "dirs": {
-            "DND": (_config_file.parent / ".dnd").as_posix(),
-            "DEL": (_config_file.parent / ".del").as_posix(),
-        }
-    }
-    _config_file.parent.mkdir(parents=True, exist_ok=True)
-    _config_file.write_text(toml.dumps(_config_data))
+    raise Exception(
+        f"missing toolcraft config file at {_config_file.as_posix()}"
+    )
 
-_root_dnd = pathlib.Path(_config_data["dirs"]["DND"])
-_root_del = pathlib.Path(_config_data["dirs"]["DEL"])
+
+_root_dnd = pathlib.Path(TC_CONFIG["dirs"]["DND"])
+_root_del = pathlib.Path(TC_CONFIG["dirs"]["DEL"])
 if not _root_dnd.exists():
     _root_dnd.mkdir(parents=True, exist_ok=True)
 if not _root_del.exists():

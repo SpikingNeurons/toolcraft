@@ -14,11 +14,16 @@ todo: Lets figure out cloud hash mechanisms to confirm uploads or check download
 import sys
 import typing as t
 import pathlib
+import subprocess
 import dataclasses
 import abc
 import numpy as np
 import gc
 import datetime
+import io
+import zipfile
+import gcsfs
+import platform
 import random
 
 from .. import util, logger, settings
@@ -340,6 +345,90 @@ class FileGroup(StorageHashable, abc.ABC):
     #     # a way to detect if field is class var
     #     # dataclasses._is_classvar('aa', typing)
     #     ...
+
+    def explore(self):
+        # for open with select
+        # subprocess.Popen(r'explorer /select,"sadasdfas"')
+        subprocess.Popen(f'explorer {self.path}')
+
+    # noinspection PyMethodMayBeStatic
+    def get_gcp_file_system(self) -> gcsfs.GCSFileSystem:
+        """
+        Refer:
+        https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login
+        https://cloud.google.com/docs/authentication/getting-started#auth-cloud-implicit-python
+        https://stackoverflow.com/questions/37003862/how-to-upload-a-file-to-google-cloud-storage-on-python-3
+        """
+        if platform.system() != "Windows":
+            e.code.CodingError(
+                msgs=[
+                    "Only supported for windows platform"
+                ]
+            )
+
+        # todo: update path for linux/unix
+        _cred_file = pathlib.Path.home() / "AppData" / "Roaming" / "gcloud" / \
+            "application_default_credentials.json"
+
+        if not _cred_file.exists():
+            e.code.NotAllowed(
+                msgs=[
+                    "Please make sure that gcloud is installed ...",
+                    "Then run command `gcloud auth application-default login`",
+                    f"This should ideally generate credential file {_cred_file} ...",
+                    "Refer: https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login"
+                ]
+            )
+
+        _fs = gcsfs.GCSFileSystem(token=_cred_file.as_posix())
+
+        return _fs
+
+    def upload_to_gcp(self, bucket_name: str, folder_name: str, file_name: str):
+        """
+        Refer:
+        https://filesystem-spec.readthedocs.io/en/latest/features.html
+
+        Explore metadata option in `_fs.open()` for storing `self.info` and `self.config` states
+        https://github.com/fsspec/gcsfs/issues/119
+        """
+        # get some vars
+        _fs = self.get_gcp_file_system()
+        _file_to_make = f"{bucket_name}/{folder_name}/{file_name}"
+
+        # check if already exists
+        if _fs.exists(_file_to_make):
+            _LOGGER.warning(
+                msg=f"The file `{_file_to_make}` already exists on GCS "
+                    f"Use different name/location ..."
+            )
+            return
+
+        # this can get buckets but does not work for now
+        # todo: explore later
+        # _fs.buckets
+
+        # Zip in memory
+        _LOGGER.info(msg=f"Make in memory zip file for {file_name}")
+        _zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(
+            file=_zip_buffer, mode='a', compression=zipfile.ZIP_DEFLATED
+        ) as _zf:
+            for _f in logger.ProgressBar(
+                iterable=[
+                    self.info.path, self.config.path
+                ] + [self.path / _fk for _fk in self.file_keys],
+                desc="Zipping files", unit=" file"
+            ):
+                _zf.write(_f, arcname=_f.name)
+            _zf.close()
+
+        # write to cloud
+        # todo: make progressbar for streamed write
+        # with _fs.transaction:  # todo: some issues with transaction
+        _LOGGER.info(msg=f"Uploading `{file_name}` to cloud")
+        with _fs.open(_file_to_make, 'wb') as _zf_on_gc:
+            _zf_on_gc.write(_zip_buffer.getvalue())
 
     def get_hashes(self) -> t.Dict[str, str]:
         """
