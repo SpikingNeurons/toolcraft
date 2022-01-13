@@ -2,7 +2,7 @@
 Module to hold simple utilities that can be built with minimal dependencies.
 # todo: Cut down on dependencies ...
 """
-
+import os
 import typing as t
 import pyarrow as pa
 import numpy as np
@@ -30,6 +30,8 @@ from six.moves.urllib.error import HTTPError
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlretrieve
 import socket
+import sys
+import enum
 import contextlib
 # import inspect
 # import addict

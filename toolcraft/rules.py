@@ -44,6 +44,7 @@ from .gui.dashboard import Dashboard, BasicDashboard
 from .gui.window import Window
 from .gui.plot import Plot
 from .gui.table import Table
+from . import job
 
 
 LITERAL_CLASS_NAME = "LITERAL"
@@ -144,13 +145,13 @@ def check_things_not_to_be_overridden(
 ):
     _THINGS_NOT_TO_BE_OVERRIDDEN = {
         YamlRepr: ['yaml'],
-        HashableClass: ['hex_hash'],
+        HashableClass: ['hex_hash', ],
         NpyFileGroup: ['get_files', ],
-        Tracker: ['is_called', 'is_iterable'],
-        StorageHashable: ['path'],
-        ResultsFolder: ['store'],
-        Form: ['build'],
-        Dashboard: ['run'],
+        Tracker: ['is_called', 'is_iterable', ],
+        StorageHashable: ['path', ],
+        ResultsFolder: ['store', ],
+        Form: ['build', ],
+        Dashboard: ['run', ],
     }
     if to_check is not None:
         _THINGS_NOT_TO_BE_OVERRIDDEN = to_check
