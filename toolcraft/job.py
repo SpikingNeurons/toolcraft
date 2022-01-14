@@ -218,6 +218,29 @@ class JobRunner:
             # -------------------------------------- 01.01
             # resolve tuple
             (_fn, _fn_kwargs) = _t
+            # make sure that _fn is not one of reserved methods
+            e.validation.ShouldNotBeOneOf(
+                value=_fn, values=[self.flow, ],
+                msgs=[
+                    f"We do not expect you to reserve methods in the flow ..."
+                ]
+            )
+            # check if all kwargs are supplied
+            for _sk in inspect.signature(_fn).parameters.keys():
+                if _sk not in _fn_kwargs.keys():
+                    e.code.CodingError(
+                        msgs=[
+                            f"You did not supply kwarg `{_sk}` while defining flow ..."
+                        ]
+                    )
+            # check is some non-supported kwargs are supplied
+            for _dk in _fn_kwargs.keys():
+                if _dk not in inspect.signature(_fn).parameters.keys():
+                    e.code.CodingError(
+                        msgs=[
+                            f"Supplied key `{_dk}` if not valid kwarg for method {_fn}"
+                        ]
+                    )
 
             # -------------------------------------- 01.02
             # check
@@ -268,7 +291,7 @@ class JobRunner:
 
         # ------------------------------------------ 03
         # helper recursive function
-        def _fn(
+        def _run_flow(
             _col_jobs: t.Union[
                 t.List[t.List[t.Union[t.Tuple[t.Callable, t.Dict], t.List]]],
                 t.Tuple[t.Callable, t.Dict]
@@ -338,7 +361,7 @@ class JobRunner:
                 _curr_row_prev_jobs = []
                 for _eid, _elem in enumerate(_row_job):
                     _c_msg = _msg + f'.r{_rid}[{_eid}]'
-                    _last_job = _fn(_elem, _c_msg, _last_row_prev_jobs)
+                    _last_job = _run_flow(_elem, _c_msg, _last_row_prev_jobs)
                     if isinstance(_last_job, list):
                         _curr_row_prev_jobs.extend(_last_job)
                     else:
@@ -357,7 +380,7 @@ class JobRunner:
             return _curr_row_prev_jobs
 
         # ------------------------------------------ 04
-        _fn(_flow, "", [])
+        _run_flow(_flow, "", [])
 
     # noinspection PyMethodMayBeStatic
     def flow(self) -> t.List[
