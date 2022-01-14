@@ -181,6 +181,35 @@ class JobRunner:
     """
     Can use click or pyinvoke also but not bothered about it as we don't intend to
     call ourselves from cli ... todo: check and do if it is interesting
+
+    todo: add .trash folder
+      + this will move any deleted items so that recovery is possible of any
+        deleted models, metrics, artifacts and tags
+
+    todo: log file viewing
+      Already we are logging in file `self.storage_dir/.jog` ... read this or
+      stream it to view live logs in console
+
+    todo: Add tags supports ... it is super easy and useful [SUPER IMPORTANT]
+      basically we will make a file with tag name in folder `self.storage_dir/tags`
+      and the tag will have some text inside it
+      Come up with `@job.Tag` decorator for methods. Also not that the tagged methods
+      will then not be useful for job defined in method flow
+      (add that check in `run_flow._tuple_2_job` local method)
+      Some features:
+      + With tags users can communicate with jobs from client
+          Like kill job, delete job, migrate data to cloud
+      + tags can save information about lifecycle of job ... i.e if it is started,
+        how many steps are over and is it finished
+      + tags can be used to store
+          review comments from users
+          job description ...
+
+    todo: add metrics support (in folder `self.storage_dir/metrics`)
+
+    todo: add artifacts support (in folder `self.storage_dir/artifacts`)
+
+    todo: add models support (in folder `self.storage_dir/models`)
     """
     cluster_type: JobRunnerClusterType
 
