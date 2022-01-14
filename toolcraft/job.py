@@ -5,6 +5,7 @@ import typing as t
 import dataclasses
 import os
 import sys
+import pickle
 
 from . import logger
 from . import error as e
@@ -15,13 +16,24 @@ from . import util
 _LOGGER = logger.get_logger()
 
 
+@dataclasses.dataclass
+class Viewer:
+    runner: "JobRunner"
+    fn: t.Callable
+    fn_kwargs: t.Dict
+
+
 class JobRunnerClusterType(enum.Enum):
+    """
+    todo: support ibm_lsf over ssh using https://www.fabfile.org
+    """
     ibm_lsf = enum.auto()
     local = enum.auto()
 
 
 @dataclasses.dataclass
 class JobRunnerHelper:
+
     runner: "JobRunner"
     root_dir: pathlib.Path
     run_file: pathlib.Path
@@ -186,6 +198,13 @@ class JobRunner:
       + this will move any deleted items so that recovery is possible of any
         deleted models, metrics, artifacts and tags
 
+    todo: implement decorator `@job.JobStep` to indicate that the method can be used
+      while running as job ... note that we might want to use normal methods so that
+      JobRunner classes can be reused by overriding
+
+    todo: auto understand metrics, artifacts, models, tags
+      + provide standard view elements for metrics
+
     todo: log file viewing
       Already we are logging in file `self.storage_dir/.jog` ... read this or
       stream it to view live logs in console
@@ -235,6 +254,17 @@ class JobRunner:
                     f"sun on cluster ... check {JobRunnerHelper.__call__}"
                 ]
             )
+
+    def log_artifact(self, name: str, data: t.Any):
+        _file = self.storage_dir / "artifacts" / name
+        if _file.exists():
+            e.code.CodingError(
+                msgs=[
+                    f"Artifact {name} already exists ... cannot write"
+                ]
+            )
+        with open(_file.as_posix(), 'wb') as _file:
+            pickle.dump(data, _file)
 
     def run_flow(self, run_file: pathlib.Path, root_dir: pathlib.Path):
 
@@ -400,7 +430,7 @@ class JobRunner:
                             msgs=[[f"{_c_msg}", f"{_last_job.id}"]]
                         )
                         _LOGGER.info(
-                            msg=f"Waiting over previous jobs ",
+                            msg=f"Will wait over previous jobs ",
                             msgs=[[_.id for _ in _last_row_prev_jobs]]
                         )
                         _last_job.launch_on_cluster()
@@ -449,3 +479,9 @@ class JobRunner:
                 jobs_from_last_stage=[],
             )
             _helper()
+
+    def viewer(self) -> Viewer:
+        """
+        Allows you to view what job is doing or already done
+        """
+        ...
