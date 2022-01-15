@@ -258,7 +258,7 @@ _SKIP_METHODS = [
     dpg.set_global_font_scale, dpg.set_frame_callback, dpg.set_exit_callback,
     dpg.split_frame,
     dpg.track_item, dpg.untrack_item,
-    dpg.theme, dpg.stage,
+    dpg.theme, dpg.stage, dpg.get_clipboard_text, dpg.set_clipboard_text,
 ]
 
 
