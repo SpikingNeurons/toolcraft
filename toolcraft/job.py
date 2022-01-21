@@ -251,7 +251,7 @@ class JobRunner:
                 msgs=[
                     f"This is property is available only when job is running on "
                     f"cluster, as this hidden variable is updated only while jobs "
-                    f"sun on cluster ... check {JobRunnerHelper.__call__}"
+                    f"run on cluster ... check {JobRunnerHelper.__call__}"
                 ]
             )
 

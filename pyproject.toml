@@ -74,6 +74,8 @@ gcsfs = "^2022.1.0"
 # commit and check
 #twine = "^3.4.2"
 #panel = "^0.12.5"
+dapr = "^1.4.1"
+dapr-ext-grpc = "^1.4.1"
 #toml = "^0.10.2"
 
 
@@ -96,6 +98,9 @@ twine = "^3.4.2"
 bump2version = "^1.0.1"
 GitPython = "^3.1.24"
 PyGithub = "^1.55"
+grpcio-tools = "^1.43.0"
+grpc-tools = "^1.0.0"
+
 
 #[tool.poetry.group.docs]
 #optional = true
@@ -108,6 +113,7 @@ PyGithub = "^1.55"
 #mkdocstrings = "^0.15.2"
 #mkdocs-material-extensions = "^1.0.3"
 #mkdocs-autorefs = "^0.2"
+
 
 
 
