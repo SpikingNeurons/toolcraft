@@ -11,6 +11,11 @@ import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
 
+# serving mode (dapr server)
+DAPR_SERVE_MODE = False
+# noinspection PyTypeChecker
+DAPR_SESSION_DIR = None  # type: pathlib.Path
+
 
 # check if debugger is used
 PYC_DEBUGGING = False
@@ -61,7 +66,6 @@ class Dir:
     ROOT_DEL = _root_del
     DOWNLOAD = ROOT_DND / "Download"
     TEMPORARY = ROOT_DEL / "_tmp"
-    LOG = ROOT_DEL / "Log"
 
 
 class FileHash:

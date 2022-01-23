@@ -118,7 +118,7 @@ grpc-tools = "^1.0.0"
 
 
 [tool.poetry.scripts]
-toolcraft = 'toolcraft.tools:main'
+toolcraft = 'toolcraft.tools'
 
 
 [build-system]

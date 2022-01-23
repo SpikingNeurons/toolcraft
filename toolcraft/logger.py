@@ -4,10 +4,24 @@ NOTE: we do not use scandal.error as it is not possible here
 
 todo: removing exceptions is difficult ... as it is problematic to import
   .error module ... we can just pretty log the exceptions instead
+
+todo: adapt logger to use `toolcraft.dapr.tracker` telemetry for distributed logging
+
+todo: Need to dump tqdm and yaspin (never use typer)
+  + toolcraft is not intended for CLI as it has a GUI
+  + for server we need file logging so no use for yaspin
+  + in rare case of cli base toolcraft usage maybe add lightweight support for
+    alive_progress instead (new but fun lib with yaspin+tqdm features)
+  + type is pure cli tool and we use it only to run toolcraft on servers with
+    command prompt ... never be tempted to introduce it here ... as it is clearly
+    out of scope
+
+todo: never use typer
+  + we only use it with toolcraft.tools for using with CLI
 """
 
 import logging
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import typing as t
 import dataclasses
 import inspect
@@ -25,16 +39,8 @@ from . import settings
 if settings.DPG_WORKS:
     import dearpygui.dearpygui as dpg
 
-# log dirs
-# todo: use `tooling.tool.config` to get these settings from user or
-#  configure them
-LOG_DIR = settings.Dir.LOG
-MULTIPROCESSING_LOG_DIR = LOG_DIR / "multiprocessing"
-# todo: still not supported
-MAX_LOG_FILE_SIZE = 20 * 1024 * 1024  # 20MB
-
 # a container to store loggers for the modules
-_LOGGERS = {}  # type: t.Dict[str, _LoggerClass]
+_LOGGERS = {}  # type: t.Dict[str, Logger]
 
 # a mapping for replacing text with emoji
 #      https://emojipedia.org/
@@ -253,19 +259,6 @@ def _wrap_message(
         return _ret
 
 
-def file_incremental_rename(file: pathlib.Path):
-    _files = []
-    for f in file.parent.iterdir():
-        if f.name.startswith(file.name + "_"):
-            _files.append(f)
-
-    _incr_counts = [int(f.name.split("_")[1]) for f in _files] + [1]
-    _max_count = max(_incr_counts)
-
-    _renamed_file = file.parent / f"{file.name}_{_max_count+1}"
-    file.replace(_renamed_file)
-
-
 class Formatters:
     default = logging.Formatter(
         # f'%(emoji_level)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
@@ -297,6 +290,9 @@ class EmojiMapperFilter(logging.Filter):
 
 
 class ProgressBar(tqdm):
+    """
+    todo: try alive_progress (yaspin+tqdm features)
+    """
 
     # noinspection PyShadowingBuiltins
     def __init__(
@@ -491,12 +487,15 @@ class ProgressBar(tqdm):
         >>> request.urlretrieve()
         """
         if tsize is not None:
+            # noinspection PyAttributeOutsideInit
             self.total = tsize
         return self.update(b * bsize - self.n)  # also sets self.n = b * bsize
 
 
 class Spinner(Yaspin):
     """
+    todo: try alive_progress (yaspin+tqdm features)
+
     todo: find use case and see where to use ;)
     The spinner also works with generator .... but note that the the
     generator should be iterated completely or else there will be side effects:
@@ -509,14 +508,6 @@ class Spinner(Yaspin):
     for i in ii:
         ...
         # break  # uncomment this to see side effects
-
-    todo: Yaspin needs to go in favor of typer
-      printing and colors -> https://typer.tiangolo.com/tutorial/printing/
-      progress bar -> https://typer.tiangolo.com/tutorial/progressbar/
-      fast-api -> typer is fast-api for cli also we will get same color
-        support etc
-      asks for prompt -> https://typer.tiangolo.com/tutorial/prompt/
-      nice terminating -> https://typer.tiangolo.com/tutorial/terminating/
     """
     COLOR = "yellow"
     SPINNER_WRAP_WIDTH = int(WRAP_WIDTH*1.5)
@@ -536,7 +527,7 @@ class Spinner(Yaspin):
     def __init__(
         self, *,
         title: str,
-        logger: "_LoggerClass",
+        logger: "Logger",
         timeout_seconds: int = None,
         track_timeout_seconds: int = None,
         hard_timeout_seconds: int = None,
@@ -804,138 +795,23 @@ class Spinner(Yaspin):
             return None
 
 
-class DpgLogger:
-    """
-    This class cannot be moved to gui module as it will cause cyclic import
+class Logger:
 
-    This can be easy and fun
+    @property
+    def level(self) -> int:
+        return self.log.level
 
-    For every module there will be instance for dpg_log with unique name
-    self.logger_module
+    @level.setter
+    def level(self, value: int):
+        self.log.setLevel(value)
 
-    We need to make tab bar for each module and have child window inside
-    which we will have this tab bar
+    @property
+    def propagate(self) -> bool:
+        return self.log.propagate
 
-    Now when logging module changes the active tab in tab bar will switch and
-    the logging text will be scrolled ;)
-
-    Also for progress bar we can have add_progress_bar instead of add_text
-    in self._log method
-
-    This will have an effect of dynamic log window which can switch itself ...
-
-    todo: DO all this when grpc is in place and we have client and backend
-      code segregated ... do not rush as then there will be performance issue
-      ... let logging in backend be synced to client in async updates from
-      backend ... may be when we have blazor based UI we can think of this
-    """
-    def __init__(self, logger_module):
-        self.logger_module = logger_module
-
-    def setup(self, parent=None):
-
-        self._auto_scroll = True
-        self.filter_id = None
-        if parent:
-            self.window_id = parent
-        else:
-            self.window_id = dpg.add_window(
-                label="mvLogger", pos=(200, 200), width=500, height=500)
-        self.count = 0
-        self.flush_count = 1000
-
-        with dpg.group(horizontal=True, parent=self.window_id):
-            dpg.add_checkbox(
-                label="Auto-scroll",
-                default_value=True,
-                callback=lambda sender:self.auto_scroll(dpg.get_value(sender)))
-            dpg.add_button(
-                label="Clear",
-                callback=lambda: dpg.delete_item(
-                    self.filter_id, children_only=True
-                )
-            )
-
-        dpg.add_input_text(
-            label="Filter",
-            callback=lambda sender: dpg.set_value(
-                self.filter_id, dpg.get_value(sender)
-            ),
-            parent=self.window_id)
-        self.child_id = dpg.add_child(
-            parent=self.window_id, autosize_x=True, autosize_y=True)
-        self.filter_id = dpg.add_filter_set(parent=self.child_id)
-
-        with dpg.theme() as self.trace_theme:
-            dpg.add_theme_color(dpg.mvThemeCol_Text, (0, 255, 0, 255))
-
-        with dpg.theme() as self.debug_theme:
-            dpg.add_theme_color(dpg.mvThemeCol_Text, (64, 128, 255, 255))
-
-        with dpg.theme() as self.info_theme:
-            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 255, 255))
-
-        with dpg.theme() as self.warning_theme:
-            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 0, 255))
-
-        with dpg.theme() as self.error_theme:
-            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 0, 0, 255))
-
-        with dpg.theme() as self.critical_theme:
-            dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 0, 0, 255))
-
-    def auto_scroll(self, value):
-        self._auto_scroll = value
-
-    def _log(self, message, theme):
-
-        self.count += 1
-
-        if self.count > self.flush_count:
-            self.clear()
-
-        new_log = dpg.add_text(
-            message, parent=self.filter_id, filter_key=message)
-        dpg.set_item_theme(new_log, theme)
-        if self._auto_scroll:
-            scroll_max = dpg.get_y_scroll_max(self.child_id)
-            dpg.set_y_scroll(self.child_id, -1.0)
-
-    def log(self, message):
-        self._log(message, self.trace_theme)
-
-    def debug(self, message):
-        self._log(message, self.debug_theme)
-
-    def info(self, message):
-        self._log(message, self.info_theme)
-
-    def warning(self, message):
-        self._log(message, self.warning_theme)
-
-    def error(self, message):
-        self._log(message, self.error_theme)
-
-    def critical(self, message):
-        self._log(message, self.critical_theme)
-
-    def clear(self):
-        dpg.delete_item(self.filter_id, children_only=True)
-        self.count = 0
-
-
-@dataclasses.dataclass
-class _LoggerClass:
-    module: types.ModuleType
-    use_stream_handler: bool = True
-    use_file_handler: bool = settings.LOGGER_USE_FILE_HANDLER
-    use_separate_file: bool = False
-    use_dpg_logger: bool = False
-    level: int = logging.DEBUG
-    stream_handler_level: int = logging.DEBUG
-    file_handler_level: int = logging.DEBUG
-    stream_handler_format: logging.Formatter = Formatters.default
-    file_handler_format: logging.Formatter = Formatters.default
+    @propagate.setter
+    def propagate(self, value: bool):
+        self.log.propagate = value
 
     @property
     def emoji_name(self) -> str:
@@ -952,70 +828,51 @@ class _LoggerClass:
         # return
         return _emoji_logger_name
 
-    def __post_init__(self):
+    def __init__(
+        self,
+        module: types.ModuleType,
+        level: int = logging.NOTSET,
+        propagate: bool = False,
+    ):
+        """
+
+        Args:
+            module: module to log for
+            level:
+              default is show all logs ...
+              all handlers can log for logs above or at same level
+            propagate: propagate log to handlers of parent loggers
+        """
         global _LOGGER
 
-        # init init_validate
-        self.init_validate()
+        # ---------------------------------------------------- 01
+        # validate ... check if in LOGGERS dict
+        if module.__name__ in _LOGGERS.keys():
+            raise KeyError(
+                f"Logger for module {module.__name__} was already "
+                f"registered in _LOGGERS dict ... Make sure you are "
+                f"using `get_logger()` method instead of creating instances "
+                f"on your own."
+            )
 
-        # make logger display name
-        _emoji_logger_name = self.emoji_name
-
+        # ---------------------------------------------------- 02
         # make and keep instance of logging logger
-        self.log = logging.getLogger(_emoji_logger_name)
+        self.log = logging.getLogger(self.emoji_name)
 
+        # ---------------------------------------------------- 03
+        # save references
+        self.module = module
+
+        # ---------------------------------------------------- 04
+        # set log level and propagate
+        self.level = level
+        self.propagate = propagate
+
+        # ---------------------------------------------------- 05
         # add emoji filter
         self.log.addFilter(EmojiMapperFilter())
 
-        # configure logger level
-        self.log.setLevel(self.level)
-
-        # reset handlers
-        # todo: this avoids double print of logs in console ... contents of
-        #  file are fine but FileHandler propagates to parent which prints
-        #  the log again
-        self.log.propagate = False
-
-        # configure stream handler
-        if self.use_stream_handler:
-            # get stream handler
-            _sh = logging.StreamHandler(_LOGGER_STREAM)
-
-            # configure stream handler
-            _sh.setLevel(self.stream_handler_level)
-            _sh.setFormatter(self.stream_handler_format)
-
-            # register handler
-            self.log.addHandler(_sh)
-
-        # configure file handler
-        if self.use_file_handler:
-
-            # get file
-            if not LOG_DIR.exists():
-                LOG_DIR.mkdir(parents=True)
-            _file_name = f"{self.module.__name__}.logs" \
-                if self.use_separate_file else "common.logs"
-            _file = LOG_DIR / _file_name
-
-            # get file handler
-            _fh = handlers.RotatingFileHandler(
-                _file,
-                encoding="utf-8",
-                maxBytes=MAX_LOG_FILE_SIZE, backupCount=100,
-            )
-
-            # configure file handler
-            _fh.setLevel(self.file_handler_level)
-            _fh.setFormatter(self.file_handler_format)
-
-            # register handler
-            self.log.addHandler(_fh)
-
-        # if dpg logger
-        if self.use_dpg_logger:
-            self.dpg_log = DpgLogger()
-
+        # ---------------------------------------------------- 06
         # Check for global key _LOGGER if set properly ...
         # NOTE: If LOGGER variable is not available that means we are
         #       creating Logger for this (i.e. logger.py) module. Then in
@@ -1032,6 +889,7 @@ class _LoggerClass:
                 f"available then then no other module can have name " \
                 f"{__name__}"
 
+        # ---------------------------------------------------- xx
         # Send message using the LOGGER for `logger.py`
         # _LOGGER.info(
         #     msg=f"Logger configured for:",
@@ -1043,38 +901,81 @@ class _LoggerClass:
         #     ]
         # )
 
-    def init_validate(self):
+    def setup_handlers(
+        self,
+        # level
+        level: bool = logging.NOTSET,
+        # stream
+        use_stream_handler: bool = True,
+        stream_handler_level: int = logging.DEBUG,
+        stream_handler_format: logging.Formatter = Formatters.default,
+        # for logging to file
+        use_file_handler: bool = False,
+        max_log_file_size: int = 1 * 1024 * 1024,  # 1 MB
+        max_log_file_backups: int = 5,
+        log_dir: pathlib.Path = None,
+        file_handler_level: int = logging.DEBUG,
+        file_handler_format: logging.Formatter = Formatters.default,
+        # todo: add special handler for this by extending `logging.Handler` and
+        #  making it work alongside dapr.pubsub or dapr.tracker
+        # todo: explore `toolcraft.dapr.tracker` to have log listener widgets binded
+        #  with `use_segregated_logging` feature ... we can have pubsub model where the
+        #  logger widgets are subscribed to telemetry of dapr server
+        #  For now easy thing is to see log dir and create same number of widgets as
+        #  there are files inside log dir
+        use_remote_handler: bool = False,
+        remote_handler_level: int = logging.DEBUG,
+        remote_handler_format: logging.Formatter = Formatters.default,
+        # segregate logging ... currently only used by file handler
+        use_segregated_logging: bool = False,
+    ):
+        # -------------------------------------------------- 01
+        # remove handlers if any
+        self.log.handlers.clear()
 
-        # check if in LOGGERS dict
-        if self.module.__name__ in _LOGGERS.keys():
-            raise KeyError(
-                f"Logger for module {self.module.__name__} was already "
-                f"registered in _LOGGERS dict ... Make sure you are "
-                f"using `get_logger()` method instead of creating instances "
-                f"on your own."
-            )
+        # -------------------------------------------------- 02
+        # set level
+        self.level = level
 
-        # check if use_separate_file setting needed
-        if not self.use_file_handler:
-            if self.use_separate_file:
-                raise ValueError(
-                    f"Setting self.use_separate_file does not matter as you "
-                    f"are not using file handler"
+        # -------------------------------------------------- 03
+        # stream handler
+        if use_stream_handler:
+            # get stream handler
+            _sh = logging.StreamHandler(_LOGGER_STREAM)
+            # configure stream handler
+            _sh.setLevel(stream_handler_level)
+            _sh.setFormatter(stream_handler_format)
+            # register handler
+            self.log.addHandler(_sh)
+
+        # -------------------------------------------------- 04
+        # file handler
+        if use_file_handler:
+            # check if log dir provided
+            if log_dir is None:
+                raise Exception(
+                    "Please provide log dir if you are using file handler ..."
                 )
-
-        # check logging levels
-        if self.stream_handler_level > self.level:
-            raise ValueError(
-                f"The stream handler log level is greater than the logger "
-                f"level ... this is meaningless ..."
+            # create dir
+            log_dir.mkdir(parents=True, exist_ok=True)
+            # log file
+            _log_file_name = f"{self.module.__name__}.logs" \
+                if use_segregated_logging else "common.logs"
+            # make handler
+            _fh = handlers.RotatingFileHandler(
+                log_dir / _log_file_name, encoding="utf-8", maxBytes=max_log_file_size,
+                backupCount=max_log_file_backups,
             )
+            # set fh
+            _fh.setLevel(file_handler_level)
+            _fh.setFormatter(file_handler_format)
+            # register
+            self.log.addHandler(_fh)
 
-        # check logging levels
-        if self.file_handler_level > self.level:
-            raise ValueError(
-                f"The file handler log level is greater than the logger "
-                f"level ... this is meaningless ..."
-            )
+        # -------------------------------------------------- 04
+        # pubsub handler
+        if use_remote_handler:
+            raise Exception("remote handler is not yet supported ...")
 
     # level: 10
     def debug(
@@ -1085,8 +986,6 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.debug(_msg)
-            if self.use_dpg_logger:
-                self.dpg_log.debug(_msg)
 
     # level: 20
     def info(
@@ -1097,8 +996,6 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.info(_msg)
-            if self.use_dpg_logger:
-                self.dpg_log.info(_msg)
 
     # level: 30
     def warning(
@@ -1109,8 +1006,6 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.warning(_msg)
-            if self.use_dpg_logger:
-                self.dpg_log.warning(_msg)
 
     # level: 40
     def error(
@@ -1123,8 +1018,6 @@ class _LoggerClass:
             msg=msg, msgs=msgs, prefix=prefix, no_wrap=no_wrap)
         for _msg in wrap_msgs:
             self.log.error(_msg)
-            if self.use_dpg_logger:
-                self.dpg_log.error(_msg)
 
     # level: 50
     def critical(
@@ -1135,15 +1028,13 @@ class _LoggerClass:
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.critical(_msg)
-            if self.use_dpg_logger:
-                self.dpg_log.critical(_msg)
 
 
 def get_logger(
     module: t.Optional[
         t.Union[types.ModuleType, str]
     ] = None
-) -> _LoggerClass:
+) -> Logger:
     # global dict to store _LOGGERS
     global _LOGGERS
 
@@ -1157,7 +1048,7 @@ def get_logger(
 
     # if not registered register
     if module.__name__ not in _LOGGERS.keys():
-        _LOGGERS[module.__name__] = _LoggerClass(module)
+        _LOGGERS[module.__name__] = Logger(module)
 
     # return the logger instance stored in container
     return _LOGGERS[module.__name__]
@@ -1174,7 +1065,7 @@ def get_logger(
 # - Next step
 # - in __post_init__ method of Logger
 # todo: can this be don any simpler
-_LOGGER = get_logger()  # type: _LoggerClass
+_LOGGER = get_logger()  # type: Logger
 
 # configure logger if loading for first time
 # container to store all loggers in application

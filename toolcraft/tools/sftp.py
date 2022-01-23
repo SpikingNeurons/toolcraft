@@ -7,8 +7,6 @@ from .. import error as e
 from .. import logger
 from .. import util
 
-_LOGGER = logger.get_logger()
-
 
 class SftpTool(Tool):
 
@@ -43,7 +41,7 @@ class SftpTool(Tool):
 
         # ------------------------------------------------------- 03
         # iterate over files to download and check hash
-        _LOGGER.info(
+        cls.info(
             msg="Downloading and uploading files to SFTP server at:",
             msgs=[
                 sftp_details

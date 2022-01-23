@@ -20,7 +20,6 @@ import typer
 import toml
 
 from . import Tool
-from .. import error as e
 
 
 class ConfigTool(Tool):
@@ -33,4 +32,7 @@ class ConfigTool(Tool):
         #     help="The toml style file name to load.",
         # )
     ):
+        # todo: use https://typer.tiangolo.com/tutorial/app-dir/ and get rid of
+        #  our config
+        # todo: allow users to set config as Q&A session with typer
         typer.echo(f"Called tool {cls.tool_name()}")

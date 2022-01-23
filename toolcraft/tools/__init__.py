@@ -5,11 +5,20 @@ todo: read typer docs
 
 todo: to expand
   https://typer.tiangolo.com/#other-tools-and-plug-ins
+
+todo: do not use `toolcraft.logger` and `toolcraft.error` instead have your
+  own typer based interface as toolcraft.tools deals with only CLI things
+  + printing and colors -> https://typer.tiangolo.com/tutorial/printing/
+  + progress bar -> https://typer.tiangolo.com/tutorial/progressbar/
+  + fast-api -> typer is fast-api for cli also we will get same color
+    support etc
+  + asks for prompt -> https://typer.tiangolo.com/tutorial/prompt/
+  + nice terminating -> https://typer.tiangolo.com/tutorial/terminating/
+
 """
 
 import pathlib
 import importlib
-import typer
 import sys
 
 from .__base__ import Tool, APP
