@@ -1,7 +1,11 @@
 """
 This file is just until you do not install toolcraft with pip install ...
 """
+import sys
 import pathlib
+
+sys.path.append("..")
+
 from toolcraft.tools import dapr
 
 

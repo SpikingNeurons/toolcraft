@@ -51,8 +51,15 @@ class Tool(abc.ABC):
         # -------------------------------------------------------- 01
         # Validations
         # -------------------------------------------------------- 01.01
-        # method tool_name should never be overriden
-        if Tool.tool_name != cls.tool_name:
+        # method tool_name should never be overridden
+        # todo: dont know how to make this work ... python automatically bounded class
+        #   method in subclass ... even id() does not work
+        # if id(Tool.tool_name) != id(cls.tool_name:
+        # if Tool.tool_name != cls.tool_name:
+        # this seems to work the trick is to get the underlying func
+        # noinspection PyUnresolvedReferences
+        if id(Tool.tool_name.__func__) != id(cls.tool_name.__func__):
+            print(Tool.tool_name, cls.tool_name)
             raise Exception(
                 f"Please never override method {Tool.tool_name}"
             )
@@ -100,3 +107,27 @@ class Tool(abc.ABC):
             f"Please implement this method in the respective "
             f"subclass ..."
         )
+
+    @classmethod
+    def log(
+        cls,
+        msg: str, msgs: t.List[str] = None,
+        color: str = typer.colors.BRIGHT_WHITE,
+        err: bool = False,
+    ):
+        _tool_name = typer.style(f"{cls.tool_name()}:", fg=color, bold=True)
+        typer.echo(f"{_tool_name} {msg}", err=err, color=True)
+        if bool(msgs):
+            _indent = typer.style("   >>> ", fg=color, bold=True)
+            for _m in msgs:
+                typer.echo(f"{_indent}{_m}", err=err, color=True)
+
+    @classmethod
+    def info(cls, msg: str, msgs: t.List[str] = None):
+        cls.log(msg, msgs, typer.colors.GREEN)
+
+    @classmethod
+    def abort(cls, msg: str, msgs: t.List[str] = None) -> typer.Abort:
+        msg = typer.style(msg, fg=typer.colors.YELLOW)
+        cls.log(msg, msgs, typer.colors.BRIGHT_RED, err=True)
+        return typer.Abort()

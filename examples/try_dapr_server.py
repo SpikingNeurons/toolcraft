@@ -1,5 +1,8 @@
-import pathlib
+
 import dataclasses
+import sys
+
+sys.path.append("..")
 
 from toolcraft import marshalling as m
 from toolcraft.tools import dapr

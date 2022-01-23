@@ -856,12 +856,12 @@ class Logger:
             )
 
         # ---------------------------------------------------- 02
-        # make and keep instance of logging logger
-        self.log = logging.getLogger(self.emoji_name)
-
-        # ---------------------------------------------------- 03
         # save references
         self.module = module
+
+        # ---------------------------------------------------- 03
+        # make and keep instance of logging logger
+        self.log = logging.getLogger(self.emoji_name)
 
         # ---------------------------------------------------- 04
         # set log level and propagate

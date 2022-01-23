@@ -1,9 +1,7 @@
 
 import pathlib
-import typer
 import socket
 import shutil
-import importlib
 import typing as t
 from dapr.ext.grpc import App, InvokeMethodRequest, InvokeMethodResponse
 import os
@@ -13,6 +11,7 @@ import zlib
 import pyarrow as pa
 import json
 import traceback
+import typer
 import sys
 
 from . import Tool
@@ -124,9 +123,10 @@ def launch_dapr_app():
     # noinspection PyUnresolvedReferences,PyProtectedMember
     _mod = sys._getframe(1).f_globals["__name__"]
     if _mod != '__main__':
-        typer.echo(f"Function {launch_dapr_app} is intended to be called from __main__ "
-                   f"of your main script")
-        raise typer.Abort()
+        raise DaprTool.abort(
+            f"Function {launch_dapr_app} is intended to be called from __main__ "
+            f"of your main script"
+        )
 
     # get script path
     _script_path = pathlib.Path(
@@ -135,11 +135,15 @@ def launch_dapr_app():
 
     # check if script is called from same dir
     if pathlib.Path.cwd() != _script_path.parent:
-        typer.echo(f"The script dir is {_script_path.parent.as_posix()}")
-        typer.echo(f"While current working dir is {pathlib.Path.cwd().as_posix()}")
-        typer.echo(f"We expect both to match ... please call this script from "
-                   f"same dir as `{_script_path.name}`")
-        raise typer.Abort()
+        raise DaprTool.abort(
+            msg="Improper current working dir ...",
+            msgs=[
+                f"Script dir is {_script_path.parent.as_posix()}",
+                f"Current working dir is {pathlib.Path.cwd().as_posix()}",
+                f"We expect both to match ...",
+                f"Please call this script from same dir as `{_script_path.name}`"
+            ]
+        )
 
     # import script ... no need as the main script will handle it
     # _module_name = _script_path.name.split(".")[0]
@@ -147,15 +151,19 @@ def launch_dapr_app():
 
     # show which hashables can be served by this server
     _hcs = m.HashableClass.available_concrete_sub_classes()
-    typer.echo(f"Below {len(_hcs)} classes are supported by this server")
-    for _hc in _hcs:
-        typer.echo(f"  >> {_hc}")
+    DaprTool.info(
+        msg=f"Below {len(_hcs)} classes are supported by this server",
+        msgs=[f"{_hc}" for _hc in _hcs]
+    )
 
     # indicates that toolcraft and libs/apps that will use it are running on server
     if settings.DAPR_SERVE_MODE:
-        typer.echo("This is coding error ...")
-        typer.echo(f"Setting DAPR_SERVE_MODE was not expected to be set to True ")
-        raise typer.Abort()
+        raise DaprTool.abort(
+            msg="Coding ERROR ...",
+            msgs=[
+                "Setting DAPR_SERVE_MODE was not expected to be set to True "
+            ]
+        )
     settings.DAPR_SERVE_MODE = True
 
     # set the session dir
@@ -163,15 +171,20 @@ def launch_dapr_app():
     if settings.DAPR_SESSION_DIR is None:
         settings.DAPR_SESSION_DIR = _script_path.parent / _session_name
     else:
-        typer.echo("This is some bug ...")
-        typer.echo(f"There is already a session running with name "
-                   f"`{_session_name}`")
-        raise typer.Abort()
+        raise DaprTool.abort(
+            msg="Coding ERROR ...",
+            msgs=[
+                f"There is already a session running with name `{_session_name}`"
+            ]
+        )
 
     # log before launch
-    typer.echo(f"Running DAPR app hashable-receiver in dir {_script_path.parent}")
-    typer.echo(
-        f"Listen to this IP {socket.gethostbyname(socket.gethostname())}:{_PORT}")
+    DaprTool.info(
+        msg=f"Running DAPR app `hashable-receiver` in dir {_script_path.parent}"
+    )
+    DaprTool.info(
+        msg=f"Listen to this IP {socket.gethostbyname(socket.gethostname())}:{_PORT}"
+    )
 
     print("gffffffffffffff")
 
@@ -198,16 +211,16 @@ class DaprTool(Tool):
 
         # check if python script available
         if not py_script.exists():
-            typer.echo(f"Cannot find py_script {py_script.absolute().as_posix()}")
-            raise typer.Abort()
+            raise cls.abort(
+                msg=f"Cannot find py_script {py_script.absolute().as_posix()}"
+            )
 
         # check if dapr installed
         if shutil.which("dapr") is None:
-            typer.echo("dapr is not installed")
-            raise typer.Abort()
+            raise cls.abort(msg="dapr is not available on this system")
 
         # log details
-        typer.echo(f"Called tool {cls.tool_name()}")
+        cls.info(msg=f"Called tool {cls.tool_name()}")
 
         # final call to dapr sidecar
         os.system(
