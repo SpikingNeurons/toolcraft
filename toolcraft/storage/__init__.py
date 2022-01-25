@@ -17,4 +17,5 @@ from .file_group import FileGroup, NpyMemMap, SHUFFLE_SEED_TYPE, \
     SELECT_TYPE, NON_DETERMINISTIC_SHUFFLE, FileGroupConfig
 from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup
 from . import dec
+from .dec import MODE_TYPE
 from .table import FILTERS_TYPE, FILTER_TYPE

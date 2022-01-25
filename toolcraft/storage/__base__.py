@@ -281,7 +281,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             # if parent_folder supplied check what it can contain
             _contains = _parent_folder.contains
             # if None
-            if _contains is not None:
+            if _contains != t.Any:
                 # note we do not use isinstance() as all folder
                 # subclasses will be concrete and subclassing is not anything
                 # special as there is no hierarchy in folder types

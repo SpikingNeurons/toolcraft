@@ -30,21 +30,19 @@ todo: https://xnd.io/
 import typing as t
 import inspect
 import pyarrow as pa
-import pathlib
 import enum
 import pyarrow.dataset as pds
 import dataclasses
 
 from .. import marshalling as m
 from .. import error as e
-from .. import util
 from . import table
 from . import Folder, StorageHashable
 
 
 MODE_TYPE = t.Literal['r', 'rw', 'd', 'e', 'a', 'w']
 
-_IS_STORE_FIELD = '_is_store_field'
+_IS_DECORATED = '_is_decorated'
 
 
 # noinspection PyDataclass
@@ -58,14 +56,6 @@ class StoreFolder(Folder):
       `parent_folder=None`
     """
     for_hashable: m.HashableClass
-
-    @property
-    def contains(self) -> t.Type[StorageHashable]:
-        # As StorageHashable covers both
-        #  + storage.table.Table
-        #  + storage.file_group.FileGroup
-        # This is what we intend to store inside StoreFolder
-        return StorageHashable
 
     def init_validate(self):
         # call super
@@ -89,8 +79,361 @@ class StoreFolder(Folder):
             )
 
 
+class _Dec:
+
+    class LITERAL:
+        reserved_kwarg_names = []
+        reserved_kwarg_ann_defs = {}
+        reserved_kwarg_default_values = {}
+        return_ann_def = None
+
+        @classmethod
+        def mandatory_kwarg_names(cls) -> t.List[str]:
+            # reserved kwarg that does not have default is mandatory
+            return [
+                _k for _k in cls.reserved_kwarg_names
+                if _k not in cls.reserved_kwarg_default_values.keys()
+            ]
+
+    def __init__(self, *, store_name: str = 'base'):
+        # save vars
+        self.store_name = store_name
+
+        # validate - note that this is decorator so you can afford to do lot
+        # of validations
+        self.validate()
+
+    def __call__(self, dec_fn: t.Callable) -> t.Callable:
+        """
+        Remember this only happens when the decorator instance is created
+        during class load.
+
+        Note that this only wraps the decorated function and does not get
+        called when the decorated method is actually called. The actual code
+        that will get called is in method `on_call`. This is how class based
+        decorators work. Note that the code for decorated method will be
+        wrapped in `on_call`
+
+        Hence we use this method to register the function we decorated,
+        its name and the info associated for debugging.
+        """
+        # ------------------------------------------------------- 01
+        # store decorated fn in decorator instance
+        self.dec_fn = dec_fn
+        self.dec_fn_name = dec_fn.__name__
+        # noinspection PyUnresolvedReferences
+        self.dec_fn_info = {
+            "module": dec_fn.__module__,
+            "class": dec_fn.__qualname__.split(".")[0],
+            "function": dec_fn.__name__
+        }
+        self.dec_fn_args = inspect.getfullargspec(dec_fn).args
+
+        # ------------------------------------------------------- 02
+        # validate dec_fn
+        self.validate_dec_fn()
+
+        # ------------------------------------------------------- 03
+        # return wrapped method that will be called instead of decorated method
+        # Note that the method used for wrapping will anyways call the
+        # original dec_fn
+        def _wrap_fn(*args, **kwargs):
+            if len(args) != 1:
+                e.code.CodingError(
+                    msgs=[
+                        f"Please refrain from passing args for this specially "
+                        f"decorated methods meant to be used for storing Table "
+                        f"and FileGroup's etc."
+                    ]
+                )
+            # validate on_call first
+            self.validate_on_call(for_hashable=args[0], **kwargs)
+            return self.on_call(for_hashable=args[0], **kwargs)
+        setattr(_wrap_fn, _IS_DECORATED, True)
+        return _wrap_fn
+
+    def on_call(
+        self, for_hashable: m.HashableClass, **kwargs
+    ) -> t.Any:
+        e.code.CodingError(
+            msgs=[
+                f"You expect you to always override this method in subclassed class "
+                f"{self.__class__}"
+            ]
+        )
+        raise
+
+    def validate(self):
+        # ------------------------------------------------------- 01
+        # todo: this class level check should move to rules.py eventually
+        if self.LITERAL.return_ann_def is None:
+            e.code.CodingError(
+                msgs=[
+                    f"Please define return annotation type in {self.LITERAL} for "
+                    f"performing type checks ..."
+                ]
+            )
+
+    def validate_dec_fn(self):
+
+        # ------------------------------------------------------- 01
+        # check function name and __qualname__
+        _fn_qualname_split = self.dec_fn.__qualname__.split(".")
+        if len(_fn_qualname_split) != 2:
+            e.code.CodingError(
+                msgs=[
+                    f"Cannot understand fn qualifier name "
+                    f"{self.dec_fn.__qualname__}",
+                    f"Was expecting format `<class_name>.<method_name>`",
+                    f"Please check: ",
+                    self.dec_fn_info
+                ]
+            )
+        # noinspection PyUnresolvedReferences
+        _fn_module_name = self.dec_fn.__module__
+        _fn_class_name = _fn_qualname_split[0]
+        _fn_name = _fn_qualname_split[1]
+        if _fn_name != self.dec_fn.__name__:
+            e.code.CodingError(
+                msgs=[
+                    f"Should be ideally same",
+                    {
+                        "_fn_name from __qualname__": _fn_name,
+                        "fn.__name__": self.dec_fn.__name__
+                    },
+                    f"Please check: ",
+                    self.dec_fn_info
+                ]
+            )
+
+        # ------------------------------------------------------- 02
+        # get function kwargs defined in the method
+        _dec_fn_full_arg_spec = inspect.getfullargspec(self.dec_fn)
+        _dec_fn_arg_names = _dec_fn_full_arg_spec.args
+        # get some more vars
+        _reserved_kwargs = self.LITERAL.reserved_kwarg_names
+        _mandatory_kwargs = self.LITERAL.mandatory_kwarg_names()
+        _reserved_kwarg_ann_defs = self.LITERAL.reserved_kwarg_ann_defs
+        _reserved_kwarg_default_values = self.LITERAL.reserved_kwarg_default_values
+
+        # ------------------------------------------------------- 03
+        # make sure that first arg is self and update fn_args to ignore name
+        # self
+        if _dec_fn_arg_names[0] != "self":
+            e.code.CodingError(
+                msgs=[
+                    f"We expect first arg of decorated function to be self "
+                    f"as it will be instance method and also we want to stick "
+                    f"to python naming conventions.",
+                    f"Please check function: ",
+                    self.dec_fn_info,
+                ]
+            )
+        # update to ignore the name self
+        _dec_fn_arg_names = _dec_fn_arg_names[1:]
+
+        # ------------------------------------------------------- 04
+        # make sure that mandatory kwargs are defined in function
+        for k in _mandatory_kwargs:
+            if k not in _dec_fn_arg_names:
+                e.code.CodingError(
+                    msgs=[
+                        f"Make sure to define mandatory kwarg {k} in function "
+                        f"below ... ",
+                        self.dec_fn_info,
+                    ]
+                )
+
+        # ------------------------------------------------------- 05
+        # check the annotations for reserved kwargs if provided in method
+        # definition
+        # ------------------------------------------------------- 05.01
+        # get
+        _dec_fn_annotations = _dec_fn_full_arg_spec.annotations
+        # ------------------------------------------------------- 05.02
+        # check if return annotation correct
+        if 'return' not in _dec_fn_annotations.keys():
+            e.code.CodingError(
+                msgs=[
+                    f"Please annotate return type for method",
+                    self.dec_fn_info,
+                ]
+            )
+        if _dec_fn_annotations['return'] != self.LITERAL.return_ann_def:
+            e.code.CodingError(
+                msgs=[
+                    f"The return annotation should be {self.LITERAL.return_ann_def}, "
+                    f"instead found annotation to be "
+                    f"{_dec_fn_annotations['return']} ...",
+                    f"Please check function: ",
+                    self.dec_fn_info,
+                ]
+            )
+        # ------------------------------------------------------- 05.03
+        # check annotations for reserved kwargs
+        for k in _dec_fn_arg_names:
+            if k in _reserved_kwargs:
+                if _reserved_kwarg_ann_defs[k] != _dec_fn_annotations[k]:
+                    e.code.CodingError(
+                        msgs=[
+                            f"For reserved kwarg `{k}` the supplied "
+                            f"annotation is not correct.",
+                            {
+                                "supplied": _dec_fn_annotations[k],
+                                "expected": _reserved_kwarg_ann_defs[k],
+                            },
+                            f"Please check function: ",
+                            self.dec_fn_info,
+                        ]
+                    )
+
+        # ------------------------------------------------------- 06
+        # check for defaults supplied
+        # ------------------------------------------------------- 06.01
+        # extract default values ... from function definition
+        # note that default is tuple and ending args in function definition
+        # have default values
+        if _dec_fn_full_arg_spec.defaults is None:
+            _default_value_pairs = {}
+        else:
+            _default_value_pairs = dict(
+                zip(
+                    _dec_fn_full_arg_spec.args[::-1],
+                    _dec_fn_full_arg_spec.defaults[::-1]
+                )
+            )
+        # ------------------------------------------------------- 06.02
+        # if default values are specified then make sure that same default values are
+        # defined in the function
+        for _rk, _default_value in _reserved_kwarg_default_values.items():
+            # if reserved kwarg is defined in fn args then default value should match
+            if _rk in _dec_fn_arg_names:
+                # if default value is not supplied
+                if _rk not in _default_value_pairs.keys():
+                    e.code.CodingError(
+                        msgs=[
+                            f"You did not supply default value for kwarg `{_rk}`",
+                            f"We expect you to supply default value `{_default_value}`",
+                            f"Please check function: ",
+                            self.dec_fn_info,
+                        ]
+                    )
+                # if default value is supplied iot should match
+                if _default_value != _default_value_pairs[_rk]:
+                    e.code.CodingError(
+                        msgs=[
+                            f"Incorrect default value for kwarg `{_rk}`",
+                            f"We expect you to supply default value `{_default_value}`",
+                            f"But instead found value `{_default_value_pairs[_rk]}`"
+                            f"Please check function: ",
+                            self.dec_fn_info,
+                        ]
+                    )
+
+    def validate_on_call(
+        self, for_hashable: m.HashableClass, **kwargs
+    ):
+        """
+        validate things that are new for every call to decorated method
+        i.e. when the actual decorated method gets called
+        """
+
+        # ------------------------------------------------------- 01
+        # test for_hashable
+        # Make sure that it is HashableClass
+        e.validation.ShouldBeInstanceOf(
+            value=for_hashable, value_types=(m.HashableClass,),
+            msgs=[
+                f"We expect you to use {self.__class__} decorator on "
+                f"methods of classes that are subclasses of "
+                f"{m.HashableClass}",
+            ]
+        )
+
+        # ------------------------------------------------------- 02
+        # check if mandatory kwargs are supplied
+        for mk in self.LITERAL.mandatory_kwarg_names():
+            if mk not in kwargs.keys():
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect mandatory kwarg {mk} to be supplied "
+                        f"while calling decorated function ",
+                        self.dec_fn_info,
+                    ]
+                )
+
+        # ------------------------------------------------------- 03
+        # if any reserved kwarg is supplied make sure to test if it was
+        # provided in method definition ... note that passing kwargs happens at
+        # runtime so this cannot be tested at code load time
+        for rk in self.LITERAL.reserved_kwarg_names:
+            if rk in kwargs.keys():
+                if rk not in self.dec_fn_args:
+                    e.code.CodingError(
+                        msgs=[
+                            f"Looks like you are supplying one of the reserved "
+                            f"kwarg i.e. `{rk}` used by StoreField mechanism.",
+                            f"Please make sure to provide it in method "
+                            f"definition even if you are not consuming it.",
+                            f"StoreField mechanism will internally consume it "
+                            f"while it is optional for you to consume it "
+                            f"within your decorated method.",
+                            f"Please check method:",
+                            self.dec_fn_info,
+                        ]
+                    )
+
+        # ------------------------------------------------------- 04
+        # check if store_name is available with for_hashable
+        # todo: this happens everytime and to make it happen only once that is when
+        #  for_hashable instance is created ... this needs to somehow moved to
+        #  for_hashable.init_validate ... we will keep this separate as that will
+        #  complicate `separation of concerns`
+        if self.store_name not in for_hashable.stores.keys():
+            e.code.CodingError(
+                msgs=[
+                    f"The store_name {self.store_name} is not provided by property "
+                    f"`stores` of class {for_hashable.__class__}",
+                    f"Please check method:",
+                    self.dec_fn_info,
+                ]
+            )
+
+
+# todo: depends on dapr state tracking (alternate to mlflow tags)
+#   most likely we will dump this idea as having tag methods to HashableClass might
+#   not be convenient ... but might be interesting to use to check status of operations
+#   Most likely we will not use StorageHashable to save state but there will be some
+#   sort of dapr telemetry that needs to be explored
+class State(_Dec):
+    """
+    Will be used as a storage decorator that can save `storage.state.XYZ`
+    when applied on HashableClass methods.
+    """
+    ...
+
+
+# todo: do after stream module is supported ... i.e. pyarrow streaming tables
+class Stream(_Dec):
+    """
+    Will be used as a storage decorator that can save `storage.stream.XYZ`
+    when applied on HashableClass methods.
+    """
+    ...
+
+
+class FileGroup(_Dec):
+    """
+    Will be used as a storage decorator that can save `storage.file_group.FileGroup`
+    when applied on HashableClass methods.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+
 @enum.unique
-class Mode(enum.Enum):
+class _TableMode(enum.Enum):
     read = "r"
     write = "w"
     append = "a"
@@ -145,7 +488,7 @@ class Mode(enum.Enum):
             )
 
     @classmethod
-    def mode_from_str(cls, mode: MODE_TYPE) -> "Mode":
+    def mode_from_str(cls, mode: MODE_TYPE) -> "_TableMode":
         for _m in cls:
             if _m.value == mode:
                 return _m
@@ -162,8 +505,8 @@ class Mode(enum.Enum):
         raise
 
 
-class OnCallReturn(t.NamedTuple):
-    mode: Mode
+class _TableOnCallReturn(t.NamedTuple):
+    mode: _TableMode
     filters: t.Optional[table.FILTERS_TYPE]
     filter_expression: t.Optional[pds.Expression]
     mode_options: t.Optional[t.Dict[str, t.Any]]
@@ -172,23 +515,15 @@ class OnCallReturn(t.NamedTuple):
     def process(
         self,
         for_hashable: m.HashableClass,
-        store_field: "StoreField",
+        store_dec: "Table",
         df_file: table.Table,
         **kwargs
     ) -> t.Union[bool, pa.Table]:
         """
         Process based on mode
-
-        Args:
-            for_hashable:
-            store_field:
-            df_file:
-
-        Returns:
-
         """
         # ------------------------------------------------------- 01
-        if self.mode is Mode.read:
+        if self.mode is _TableMode.read:
             _exists = df_file.exists(
                 columns=self.columns,
                 filter_expression=self.filter_expression,
@@ -218,7 +553,7 @@ class OnCallReturn(t.NamedTuple):
                 )
                 raise
         # ------------------------------------------------------- 02
-        elif self.mode is Mode.write:
+        elif self.mode is _TableMode.write:
             _exists = df_file.exists(
                 columns=self.columns,
                 filter_expression=self.filter_expression,
@@ -235,28 +570,28 @@ class OnCallReturn(t.NamedTuple):
             else:
                 # noinspection PyTypeChecker
                 return df_file.append(
-                    value=store_field.dec_fn(for_hashable, **kwargs),
-                    yields=store_field.yields,
+                    value=store_dec.dec_fn(for_hashable, **kwargs),
+                    yields=store_dec.yields,
                 )
         # ------------------------------------------------------- 03
-        elif self.mode is Mode.append:
+        elif self.mode is _TableMode.append:
             # noinspection PyTypeChecker
             return df_file.append(
-                value=store_field.dec_fn(for_hashable, **kwargs),
-                yields=store_field.yields,
+                value=store_dec.dec_fn(for_hashable, **kwargs),
+                yields=store_dec.yields,
             )
         # ------------------------------------------------------- 04
-        elif self.mode is Mode.delete:
+        elif self.mode is _TableMode.delete:
             return df_file.delete_(filters=self.filters)
         # ------------------------------------------------------- 05
-        elif self.mode is Mode.exists:
+        elif self.mode is _TableMode.exists:
             return df_file.exists(
                 columns=self.columns,
                 filter_expression=self.filter_expression,
                 return_table=False
             )
         # ------------------------------------------------------- 06
-        elif self.mode is Mode.read_write:
+        elif self.mode is _TableMode.read_write:
             # check if exists
             _exists = df_file.exists(
                 columns=self.columns,
@@ -279,8 +614,8 @@ class OnCallReturn(t.NamedTuple):
                     )
                 # else create table
                 else:
-                    _yields = store_field.yields
-                    _value = store_field.dec_fn(for_hashable, **kwargs)
+                    _yields = store_dec.yields
+                    _value = store_dec.dec_fn(for_hashable, **kwargs)
                     # noinspection PyTypeChecker
                     df_file.append(
                         value=_value,
@@ -312,43 +647,13 @@ class OnCallReturn(t.NamedTuple):
             raise
 
 
-# todo: depends on dapr state tracking (alternate to mlflow tags)
-#   most likely we will dump this idea as having tag methods to HashableClass might
-#   not be convenient ... but might be interesting to use to check status of operations
-#   Most likely we will not use StorageHashable to save state but there will be some
-#   sort of dapr telemetry that needs to be explored
-class State:
-    """
-    Will be used as a storage decorator that can save `storage.state.XYZ`
-    when applied on HashableClass methods.
-    """
-    ...
-
-
-# todo: do after stream module is supported ... i.e. pyarrow streaming tables
-class Stream:
-    """
-    Will be used as a storage decorator that can save `storage.stream.XYZ`
-    when applied on HashableClass methods.
-    """
-    ...
-
-
-class FileGroup:
-    """
-    Will be used as a storage decorator that can save `storage.file_group.FileGroup`
-    when applied on HashableClass methods.
-    """
-    ...
-
-
-class Table:
+class Table(_Dec):
     """
     Will be used as a storage decorator that can save `storage.table.Table`
     when applied on HashableClass methods.
     """
 
-    class LITERAL:
+    class LITERAL(_Dec.LITERAL):
         mode = "mode"
         mode_options = "mode_options"
         partition_kwargs = "partition_kwargs"
@@ -357,17 +662,23 @@ class Table:
         reserved_kwarg_names = [
             mode, mode_options, filters, columns
         ]
-        mandatory_kwarg_names = [mode]
-        res_kwarg_ann_defs = {
+        reserved_kwarg_ann_defs = {
             mode: MODE_TYPE,
             filters: table.FILTERS_TYPE,
             mode_options: t.Dict[str, t.Any],
             columns: t.List[str],
         }
+        reserved_kwarg_default_values = {
+            filters: None,
+            mode_options: None,
+            columns: None,
+        }
+        return_ann_def = pa.Table
 
     # noinspection PyUnusedLocal
     def __init__(
         self, *,
+        store_name: str = 'base',
         streamed_write: bool = False,
         partition_cols: t.Optional[t.List[str]] = None,
         yields: bool = False,
@@ -400,6 +711,7 @@ class Table:
                  written .... later we can overwrite self._table_schema so
                  that it happens only once
         """
+
         # ------------------------------------------------------- 01
         # store inside instance
         self.streamed_write = streamed_write
@@ -408,82 +720,27 @@ class Table:
         self.table_schema = table_schema
 
         # ------------------------------------------------------- 02
-        # validate - note that this is decorator so you can afford to do lot
-        # of validations
-        self.validate()
-
-    def __call__(self, dec_fn: t.Callable) -> t.Callable:
-        """
-        Remember this only happens when the decorator instance is created
-        during class load.
-
-        Note that this only wraps the decorated function and does not get
-        called when the decorated method is actually called. The actual code
-        that will get called is in method `on_call`. This is how class based
-        decorators work. Note that the code for decorated method will be
-        wrapped in `on_call`
-
-        Hence we use this method to register the function we decorated,
-        its name and the info associated for debugging.
-        """
-        # ------------------------------------------------------- 01
-        # store decorated fn in decorator instance
-        self.dec_fn = dec_fn
-        self.dec_fn_name = dec_fn.__name__
-        # noinspection PyUnresolvedReferences
-        self.dec_fn_info = {
-            "module": dec_fn.__module__,
-            "class": dec_fn.__qualname__.split(".")[0],
-            "function": dec_fn.__name__
-        }
-        self.dec_fn_args = inspect.getfullargspec(dec_fn).args
-
-        # ------------------------------------------------------- 02
-        # validate dec_fn
-        self.validate_dec_fn()
-
-        # ------------------------------------------------------- 03
-        # return wrapped method that will be called instead of decorated method
-        # Note that the method used for wrapping will anyways call the
-        # original dec_fn
-        def _wrap_fn(*args, **kwargs):
-            if len(args) != 1:
-                e.code.CodingError(
-                    msgs=[
-                        f"The class methods decorated with {Table} do "
-                        f"not allow args ... only use kwargs ..."
-                    ]
-                )
-            return self.on_call(for_hashable=args[0], **kwargs)
-        setattr(_wrap_fn, _IS_STORE_FIELD, True)
-        return _wrap_fn
+        # call super
+        super().__init__(store_name=store_name)
 
     def on_call(
-        self, for_hashable: m.HashableClass, *args, **kwargs
+        self, for_hashable: m.HashableClass, **kwargs
     ) -> t.Union[bool, pa.Table]:
         """
         Note that this method gets called everytime the decorated method is
         called.
-
-        Args:
-            for_hashable:
-            *args:
-            **kwargs:
-
-        Returns:
-
         """
         # ------------------------------------------------------- 01
         # first validate things that are new for every call to decorated method
         # i.e. when this method gets called
-        _on_call_ret_tuple = self.validate_on_call_and_get_things(
-            for_hashable, *args, **kwargs
+        _on_call_ret_tuple = self.get_special_on_call_tuple(
+            for_hashable, **kwargs
         )
 
         # ------------------------------------------------------- 02
         # get store_fields_folder the Folder that manages all Tables for
         # for_hashable
-        _folder = for_hashable.stores.store  # type: StoreFolder
+        _folder = for_hashable.stores[self.store_name]  # type: StoreFolder
 
         # ------------------------------------------------------- 03
         # get Table
@@ -512,7 +769,7 @@ class Table:
         # now process
         _ret_table = _on_call_ret_tuple.process(
             for_hashable=for_hashable,
-            store_field=self,
+            store_dec=self,
             df_file=_df_file,
             **kwargs
         )
@@ -520,59 +777,25 @@ class Table:
         # ------------------------------------------------------- 05
         return _ret_table
 
-    def validate_on_call_and_get_things(
-        self, for_hashable: m.HashableClass,
-        *args, **kwargs
-    ) -> OnCallReturn:
+    def get_special_on_call_tuple(
+        self, for_hashable: m.HashableClass, **kwargs
+    ) -> _TableOnCallReturn:
+        """
+        Note that we do some validations here instead of using validate_on_call as
+        they are also used for building _TableOnCallReturn
+        """
 
         # ------------------------------------------------------- 01
-        # test for_hashable
-        # Make sure that it is HashableClass
-        e.validation.ShouldBeInstanceOf(
-            value=for_hashable, value_types=(m.HashableClass,),
-            msgs=[
-                f"We expect you to use {self.__class__} decorator on "
-                f"methods of classes that are subclasses of "
-                f"{m.HashableClass}",
-            ]
-        )
-
-        # ------------------------------------------------------- 02
-        # do not allow args
-        if bool(args):
-            e.code.NotAllowed(
-                msgs=[
-                    f"We do not allow you to pass args to function "
-                    f"which is decorated by {Table}",
-                    f"\t > Found args: {args}",
-                    f"Please check call to: ",
-                    self.dec_fn_info,
-                ]
-            )
-
-        # ------------------------------------------------------- 03
-        # check if mandatory kwargs are supplied
-        for mk in self.LITERAL.mandatory_kwarg_names:
-            if mk not in kwargs.keys():
-                e.code.CodingError(
-                    msgs=[
-                        f"We expect mandatory kwarg {mk} to be supplied "
-                        f"while calling decorated function ",
-                        self.dec_fn_info,
-                    ]
-                )
-
-        # ------------------------------------------------------- 04
         # get mode ... need to fetch it earlier as it is important
         # check if mode is one of supported modes
         # Also if not instance of Mode then we make it here as it will be
         # used in validation that follows later
         _mode = kwargs[self.LITERAL.mode]
-        if not isinstance(_mode, Mode):
+        if not isinstance(_mode, _TableMode):
             # note that this will raise error if invalid str
-            _mode = Mode.mode_from_str(_mode)
+            _mode = _TableMode.mode_from_str(_mode)
 
-        # ------------------------------------------------------- 05
+        # ------------------------------------------------------- 02
         # if store_field is for `streamed_write` then check if corresponding
         # mode allows it
         if self.streamed_write:
@@ -587,31 +810,9 @@ class Table:
                     ]
                 )
 
-        # ------------------------------------------------------- 06
-        # if any reserved kwarg is supplied make sure to test if it was
-        # provided in method definition
-        # todo: as of now it is impossible to do this check only once at
-        #  class load time
-        for rk in self.LITERAL.reserved_kwarg_names:
-            if rk in kwargs.keys():
-                if rk not in self.dec_fn_args:
-                    e.code.CodingError(
-                        msgs=[
-                            f"Looks like you are supplying one of the reserved "
-                            f"kwarg i.e. `{rk}` used by StoreField mechanism.",
-                            f"Please make sure to provide it in method "
-                            f"definition even if you are not consuming it.",
-                            f"StoreField mechanism will internally consume it "
-                            f"while it is optional for you to consume it "
-                            f"within your decorated method.",
-                            f"Please check method:",
-                            self.dec_fn_info,
-                        ]
-                    )
-
-        # ------------------------------------------------------- 07
+        # ------------------------------------------------------- 03
         # related to filters and partition_cols
-        # ------------------------------------------------------- 07.01
+        # ------------------------------------------------------- 03.01
         # first get filters from partition cols related kwargs
         # noinspection PyTypeChecker
         _f_for_pivots = []  # type: table.FILTERS_TYPE
@@ -627,7 +828,7 @@ class Table:
         )  # type: table.FILTERS_TYPE
         if _f_from_filters is None:
             _f_from_filters = []
-        # ------------------------------------------------------- 07.02
+        # ------------------------------------------------------- 03.02
         # Bake expression for filters
         # if something to filter then validate and bake expression
         # Note on validation
@@ -646,14 +847,14 @@ class Table:
             _f_all = None
         # else something to filter then create _filter_expression
         else:
-            # --------------------------------------------------- 07.02.01
+            # --------------------------------------------------- 03.02.01
             # if pivot only filters i.e. modes related to write and delete
             if _mode.is_write_or_delete_mode:
                 # extra check not delete mode
                 # + filters kwarg must not be supplied i.e. _f_from_filters
                 #   should be empty
                 # + all pivot columns must be specified
-                if _mode is not Mode.delete:
+                if _mode is not _TableMode.delete:
                     if bool(_f_from_filters):
                         e.code.NotAllowed(
                             msgs=[
@@ -679,7 +880,7 @@ class Table:
                              f"appropriate ....",
                     _columns_allowed=self.partition_cols,
                 )
-            # --------------------------------------------------- 07.02.02
+            # --------------------------------------------------- 03.02.02
             # when read related modes i.e. read and exists allow anything
             else:
                 _filter_expression = table.bake_expression(
@@ -689,7 +890,7 @@ class Table:
                     _columns_allowed=None,
                 )
 
-        # ------------------------------------------------------- 08
+        # ------------------------------------------------------- 04
         # get mode options if supplied
         # todo: use in future if you want to do something more with mode like
         #  buffered reads .... wipe cache etc ...
@@ -698,7 +899,7 @@ class Table:
             _mode_options = \
                 kwargs[self.LITERAL.mode_options]  # type: t.Dict[str, t.Any]
 
-        # ------------------------------------------------------- 09
+        # ------------------------------------------------------- 05
         # get columns options if supplied
         _columns = None  # type: t.Optional[t.List[str]]
         if self.LITERAL.columns in kwargs.keys():
@@ -739,7 +940,7 @@ class Table:
 
         # ------------------------------------------------------- xx
         # return
-        return OnCallReturn(
+        return _TableOnCallReturn(
             mode=_mode,
             filters=_f_all,
             filter_expression=_filter_expression,
@@ -747,185 +948,9 @@ class Table:
             columns=_columns
         )
 
-    def validate_dec_fn(self):
-
-        # ------------------------------------------------------- 01
-        # check function name and __qualname__
-        _fn_qualname_split = self.dec_fn.__qualname__.split(".")
-        if len(_fn_qualname_split) != 2:
-            e.code.CodingError(
-                msgs=[
-                    f"Cannot understand fn qualifier name "
-                    f"{self.dec_fn.__qualname__}",
-                    f"Was expecting format `<class_name>.<method_name>`",
-                    f"Please check: ",
-                    self.dec_fn_info
-                ]
-            )
-        # noinspection PyUnresolvedReferences
-        _fn_module_name = self.dec_fn.__module__
-        _fn_class_name = _fn_qualname_split[0]
-        _fn_name = _fn_qualname_split[1]
-        if _fn_name != self.dec_fn.__name__:
-            e.code.CodingError(
-                msgs=[
-                    f"Should be ideally same",
-                    {
-                        "_fn_name from __qualname__": _fn_name,
-                        "fn.__name__": self.dec_fn.__name__
-                    },
-                    f"Please check: ",
-                    self.dec_fn_info
-                ]
-            )
-
-        # ------------------------------------------------------- 02
-        # get function kwargs defined in the method
-        _dec_fn_full_arg_spec = inspect.getfullargspec(self.dec_fn)
-        _dec_fn_arg_names = _dec_fn_full_arg_spec.args
-        # get some more vars
-        _partition_cols = self.partition_cols
-        _reserved_kwargs = self.LITERAL.reserved_kwarg_names
-        _mandatory_kwargs = self.LITERAL.mandatory_kwarg_names
-        _res_kwarg_ann_defs = self.LITERAL.res_kwarg_ann_defs
-
-        # ------------------------------------------------------- 03
-        # make sure that first arg is self and update fn_args to ignore name
-        # self
-        if _dec_fn_arg_names[0] != "self":
-            e.code.CodingError(
-                msgs=[
-                    f"We expect first arg of decorated function to be self "
-                    f"as it will be instance method and also we want to stick "
-                    f"to python naming conventions.",
-                    f"Please check function: ",
-                    self.dec_fn_info,
-                ]
-            )
-        # update so as to ignore the name self
-        _dec_fn_arg_names = _dec_fn_arg_names[1:]
-
-        # ------------------------------------------------------- 04
-        # make sure that mandatory kwargs are defined in function
-        for k in _mandatory_kwargs:
-            if k not in _dec_fn_arg_names:
-                e.code.CodingError(
-                    msgs=[
-                        f"Make sure to define mandatory kwarg {k} in function "
-                        f"below ... ",
-                        self.dec_fn_info,
-                    ]
-                )
-
-        # ------------------------------------------------------- 05
-        # make sure that all kwargs specified in partition_cols are defined in
-        # method definition
-        if bool(_partition_cols):
-            for k in _partition_cols:
-                if k not in _dec_fn_arg_names:
-                    e.code.CodingError(
-                        msgs=[
-                            f"You specified key `{k}` as a partition column "
-                            f"while decorating method with StoreField. ",
-                            f"So please make sure to define it in method "
-                            f"definition and also make sure to consume it.",
-                            f"Please check function: ",
-                            self.dec_fn_info,
-                        ]
-                    )
-
-        # ------------------------------------------------------- 06
-        # check the annotations for reserved kwargs if provided in method
-        # definition
-        # ------------------------------------------------------- 06.01
-        # get
-        _dec_fn_annotations = _dec_fn_full_arg_spec.annotations
-        # ------------------------------------------------------- 06.02
-        # check if return annotation correct
-        if 'return' not in _dec_fn_annotations.keys():
-            e.code.CodingError(
-                msgs=[
-                    f"Please annotate return type for method",
-                    self.dec_fn_info,
-                ]
-            )
-        else:
-            if _dec_fn_annotations['return'] != pa.Table:
-                e.code.CodingError(
-                    msgs=[
-                        f"The return annotation should be {pa.Table}, "
-                        f"instead found annotation to be "
-                        f"{_dec_fn_annotations['return']} ...",
-                        f"Please check function: ",
-                        self.dec_fn_info,
-                    ]
-                )
-        # ------------------------------------------------------- 06.03
-        # check annotations for reserved kwargs
-        for k in _dec_fn_arg_names:
-            if k in _reserved_kwargs:
-                if _res_kwarg_ann_defs[k] != _dec_fn_annotations[k]:
-                    e.code.CodingError(
-                        msgs=[
-                            f"For reserved kwarg `{k}` the supplied "
-                            f"annotation is not correct.",
-                            {
-                                "supplied": _dec_fn_annotations[k],
-                                "expected": _res_kwarg_ann_defs[k],
-                            },
-                            f"Please check function: ",
-                            self.dec_fn_info,
-                        ]
-                    )
-        # ------------------------------------------------------- 06.04
-        # check if defaults supplied are None except for mode
-        # ------------------------------------------------------- 06.04.01
-        # extract default values
-        # note that default is tuple and ending args in function definition
-        # have default values
-        if _dec_fn_full_arg_spec.defaults is None:
-            _default_value_pairs = {}
-        else:
-            _default_value_pairs = dict(
-                zip(
-                    _dec_fn_full_arg_spec.args[::-1],
-                    _dec_fn_full_arg_spec.defaults[::-1]
-                )
-            )
-        # ------------------------------------------------------- 06.04.02
-        # if reserved kwarg specified then it should have default value None
-        # except mode
-        for rk in _reserved_kwargs:
-            # skip reserved kwarg mode
-            if rk == self.LITERAL.mode:
-                continue
-            # if reserved kwarg is defined in fn args
-            if rk in _dec_fn_arg_names:
-                # if default not specified raise error
-                if rk not in _default_value_pairs.keys():
-                    e.code.CodingError(
-                        msgs=[
-                            f"We expect you to supply default value None to "
-                            f"reserved kwarg `{rk}`",
-                            f"Please check function: ",
-                            self.dec_fn_info,
-                        ]
-                    )
-                # else if default value specified it should be None
-                else:
-                    if _default_value_pairs[rk] is not None:
-                        e.code.CodingError(
-                            msgs=[
-                                f"We expect default value to be None for "
-                                f"reserved kwarg `{rk}`",
-                                f"Please check function: ",
-                                self.dec_fn_info,
-                            ]
-                        )
-
     def validate(self):
         """
-        note that this is decorator so you can afford to do lot  of validations
+        note that this is decorator, so you can afford to do a lot of validations
         """
         # ------------------------------------------------------- 01
         # check partition_cols
@@ -948,9 +973,46 @@ class Table:
                         ]
                     )
 
+    def validate_dec_fn(self):
 
-def is_store_field(_fn) -> bool:
+        # ------------------------------------------------------- 01
+        # call super
+        super().validate_dec_fn()
+
+        # ------------------------------------------------------- 02
+        # get function kwargs defined in the method
+        _dec_fn_full_arg_spec = inspect.getfullargspec(self.dec_fn)
+        _dec_fn_arg_names = _dec_fn_full_arg_spec.args[1:]  # leaves out first arg self
+        # get some more vars
+        _partition_cols = self.partition_cols
+
+        # ------------------------------------------------------- 05
+        # make sure that all kwargs specified in partition_cols are defined in
+        # method definition
+        if bool(_partition_cols):
+            for k in _partition_cols:
+                if k not in _dec_fn_arg_names:
+                    e.code.CodingError(
+                        msgs=[
+                            f"You specified key `{k}` as a partition column "
+                            f"while decorating method with StoreField. ",
+                            f"So please make sure to define it in method "
+                            f"definition and also make sure to consume it.",
+                            f"Please check function: ",
+                            self.dec_fn_info,
+                        ]
+                    )
+
+    def validate_on_call(
+        self, for_hashable: m.HashableClass, **kwargs
+    ):
+        # Nothing to do as most of these validations are handled in
+        # get_special_on_call_tuple()
+        return super().validate_on_call(for_hashable, **kwargs)
+
+
+def is_decorated(_fn) -> bool:
     if inspect.ismethod(_fn) or inspect.isfunction(_fn):
-        return hasattr(_fn, _IS_STORE_FIELD)
+        return hasattr(_fn, _IS_DECORATED)
     else:
         return False

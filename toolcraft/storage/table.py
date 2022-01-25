@@ -478,6 +478,10 @@ class Table(Folder):
         write exists based file methods to be overriden in child class of
         FileDf ... the sole purpose of subclasses to provide extra arguments
         and do extra validations when required.
+
+    todo: get rid of info and config files if needed but then Table will no
+      longer be Folder. Explore using pyarrow metadata feature
+      https://stackify.dev/292501-how-to-assign-arbitrary-metadata-to-pyarrow-table-parquet-columns
     """
 
     # we override type as this is always method name which was decorated with

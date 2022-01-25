@@ -16,6 +16,12 @@ todo: Need to dump tqdm and yaspin (never use typer)
     command prompt ... never be tempted to introduce it here ... as it is clearly
     out of scope
 
+todo: move to rich/textual instead of yaspin or tqdm https://github.com/Textualize
+  + https://github.com/Textualize/rich
+  + https://github.com/Textualize/textual
+  You can provide rich console to hashable classes and have pretty tracebacks,
+  multiple progress bars: https://rich.readthedocs.io/en/latest/protocol.html
+
 todo: never use typer
   + we only use it with toolcraft.tools for using with CLI
 """

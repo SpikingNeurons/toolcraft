@@ -278,8 +278,8 @@ class FileGroup(StorageHashable, abc.ABC):
                 if f.name in self.file_keys and f.is_file():
                     continue
                 # anything starting with `_` will be ignored
-                # helpful in case you want to store results cached by `@s.StoreField`
-                # which uses results_folder property
+                # helpful in case you want to store results cached by `@s.dec.XYZ`
+                # which uses `stores` property
                 if f.name.startswith("_"):
                     continue
                 _unknown_files.append(f)
@@ -1064,12 +1064,6 @@ class FileGroup(StorageHashable, abc.ABC):
                             f"{_key_path}"
                         ]
                     )
-
-            # -----------------------------------------------------------03.03
-            # delete results folder as most likely we will not need it
-            # todo: if you want to retain the items inside this folder odify
-            #  this code
-            self.results_folder.delete(force=force)
         else:
             e.code.ExitGracefully(
                 msgs=[

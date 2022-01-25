@@ -128,42 +128,27 @@ class Folder(StorageHashable):
 
     @property
     def contains(self) -> t.Union[
-        None, t.Type[StorageHashable]
+        t.Any, t.Type[StorageHashable]
     ]:
         """
-        todo: for contains and read_only we can have a class decorator for
-          Folder like StoreField ... although that means we need to avoid
-          subclassing the Folder decorator ... but can figure it out later
-        Indicates what this folder should contain ... it can be one of Folder
-        or FileGroup or None (i.e. Files that will not use auto hashing
-        mechanism)
+        You can either opt for returning t.Any or any subclass of StorageHashable
 
-        Default is None that means we have files whose hash is not tested ...
-        in that case we also will not have state manager files like
-        *.info and *.hash
+        If you return t.Any
+        + any arbitrary Folder or FileGroup can be added
 
-        If you return t.Any then any arbitrary thing can be added including
-        Folder's and FileGroup's. It is upto user to take care of name
-        clashes and managing the state manager files that will be generated.
+        If you return some subclass of StorageHashable
+        + You will not be allowed to add any other types
+
         """
-        return None
+        return t.Any
 
     @property
     @util.CacheResult
     def items(self) -> util.SmartDict:
-        if self.contains is None:
-            e.code.CodingError(
-                msgs=[
-                    f"You have set contains to None so we do not know what "
-                    f"will be stored .... so ideally you will never track "
-                    f"things in the folder so you should not be using this "
-                    f"property .... check class {self.__class__}"
-                ]
-            )
         return util.SmartDict(
             allow_nested_dict_or_list=False,
             supplied_items=None,
-            use_specific_class=self.contains,
+            use_specific_class=None if self.contains == t.Any else self.contains,
         )
 
     def init_validate(self):
@@ -219,8 +204,7 @@ class Folder(StorageHashable):
 
         # this is like `get()` for Folder .... note that all
         # FileGroups/Folders will be added here via add_item
-        if self.contains is not None:
-            self.sync()
+        self.sync()
 
     def create(self) -> pathlib.Path:
         """
@@ -307,15 +291,6 @@ class Folder(StorageHashable):
           indexing operation
         """
         # -----------------------------------------------------------------01
-        # Validations
-        if self.contains is None:
-            e.code.CodingError(
-                msgs=[
-                    f"The caller code should take care to check if there is "
-                    f"anything trackable inside this Folder",
-                    f"Property contains is None so do not call sync"
-                ]
-            )
         # tracking dict should be empty
         if len(self.items) != 0:
             e.code.CodingError(
@@ -350,10 +325,25 @@ class Folder(StorageHashable):
             # Note that when instance for hashable is created it will check
             # things on its own periodically
             # Note the __post_init__ call will also sync things if it is folder
-            # noinspection PyTypeChecker
-            _hashable = self.contains.from_yaml(
-                f, parent_folder=self,
-            )  # type: StorageHashable
+            if self.contains == t.Any:
+                _cls = m.YamlRepr.get_class(f)
+                if _cls is None:
+                    e.validation.NotAllowed(
+                        msgs=[
+                            f"Cannot process tag at the start ",
+                            f"Check: ",
+                            f.read_text()
+                        ]
+                    )
+                # noinspection PyTypeChecker
+                _hashable = _cls.from_yaml(
+                    f, parent_folder=self,
+                )  # type: StorageHashable
+            else:
+                # noinspection PyTypeChecker
+                _hashable = self.contains.from_yaml(
+                    f, parent_folder=self,
+                )  # type: StorageHashable
 
             # add tuple for tracking
             # todo: no longer needed to add here as when we create instance

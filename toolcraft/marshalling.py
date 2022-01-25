@@ -794,6 +794,19 @@ class YamlRepr(Tracker):
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
+    @staticmethod
+    def get_class(
+        file_or_text: t.Union[pathlib.Path, str]
+    ) -> t.Optional[t.Type["YamlRepr"]]:
+        _text = file_or_text
+        if isinstance(file_or_text, pathlib.Path):
+            _text = file_or_text.read_text()
+        _tag = _text.split("\n")[0]
+        try:
+            return YAML_TAG_MAPPING[_tag]
+        except KeyError:
+            return None
+
     def clone(self) -> "YamlRepr":
         return self.from_yaml(self.yaml())
 
@@ -1331,16 +1344,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 )
 
     def init(self):
-        # create store fields in advance
-        # todo: this we do unnecessarily and folders will be created even if
-        #  we do not use the store fields ... this also adds small overhead
-        #  while creating instances of HashableClasses instances ...
-        #  Ideally if this is connected the respective Tables are read on
-        #  first call ... Currently we so this in advance only to avoid
-        #  polluting logs .... check if we can handle logging of Table init
-        #  in first call smartly so that logs are not polluted
-        if self.__class__.results_folder != HashableClass.results_folder:
-            self.results_folder.init_store_df_files()
+        ...
 
     def info_widget(self) -> "gui.widget.Text":
         # import
