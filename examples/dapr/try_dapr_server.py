@@ -1,4 +1,7 @@
-
+"""
+Call using try_dapr_server_runner.py
+As we need to call this from toolcraft cli i.e. when we install it via pip
+"""
 import dataclasses
 import sys
 

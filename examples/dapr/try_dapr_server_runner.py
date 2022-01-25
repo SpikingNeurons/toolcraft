@@ -1,5 +1,5 @@
 """
-This file is just until you do not install toolcraft with pip install ...
+This file is just helpful until you do not install toolcraft with pip install ...
 """
 import sys
 import pathlib
