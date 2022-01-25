@@ -39,6 +39,10 @@ http://wesmckinney.com/blog/python-parquet-multithreading/
 '''
 
 todo: explore `pds.Expression` and `pds.Dataset.scan`
+
+todo: we use table as counterpart to mlflow metrics ... we have more options here for
+  fast analytics due to underlying pivot based columnar storage ... we will also
+  explore aggregating multiple tables from different HashableClass instances with same HashableClass
 """
 
 

@@ -257,7 +257,7 @@ class TestStorage(m.HashableClass):
     b: float
 
     @property
-    def results_folder(self) -> TestStorageResultsFolder:
+    def stores(self) -> TestStorageResultsFolder:
         return TestStorageResultsFolder(for_hashable=self)
 
     @staticmethod

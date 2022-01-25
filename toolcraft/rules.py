@@ -35,8 +35,7 @@ import typing as t
 from . import error as e
 from . import util
 from .marshalling import YamlRepr, HashableClass, FrozenEnum, Tracker
-from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup, \
-    ResultsFolder
+from .storage import Folder, StorageHashable, FileGroup, NpyFileGroup
 from .storage.state import Config, Info, StateFile
 from .gui.__base__ import Form, Dpg, Widget, MovableWidget, ContainerWidget
 from . import gui
@@ -72,14 +71,13 @@ def check_things_to_be_cached(
     _THINGS_TO_BE_CACHED = {
         Tracker: ['internal', ],
         HashableClass: [
-            'hex_hash', 'results_folder',
+            'hex_hash', 'stores',
         ],
         StorageHashable: [
             'config', 'info', 'path', 'root_dir',
         ],
         Folder: ['items'],
         FileGroup: ['file_keys'],
-        ResultsFolder: ['store'],
         Form: ['form_fields_container'],
         ContainerWidget: ['children'],
         Plot: ['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
@@ -149,7 +147,6 @@ def check_things_not_to_be_overridden(
         NpyFileGroup: ['get_files', ],
         Tracker: ['is_called', 'is_iterable', ],
         StorageHashable: ['path', ],
-        ResultsFolder: ['store', ],
         Form: ['build', ],
         Dashboard: ['run', ],
     }

@@ -23,7 +23,6 @@ todo: never use typer
 import logging
 from tqdm.auto import tqdm
 import typing as t
-import dataclasses
 import inspect
 import types
 import pathlib
@@ -240,7 +239,7 @@ def _wrap_message(
 ) -> t.List[str]:
 
     # adjust wrap_width for handling prefix
-    wrap_width = wrap_width - len(prefix)
+    wrap_width -= len(prefix)
 
     # if wrap or no wrap
     if no_wrap:

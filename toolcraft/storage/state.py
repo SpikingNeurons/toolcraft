@@ -1,5 +1,9 @@
 """
 Module that will hold code to do state management
+
+todo: check mlflow tags ... we will save state with dapr state and use it as tags
+  we want state to be visible across all machines and users so we will plan something
+  big here ... which is bigger in scope than mlflow tags
 """
 
 import dataclasses

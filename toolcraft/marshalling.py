@@ -710,6 +710,7 @@ class YamlRepr(Tracker):
 
             # register yaml tag for concrete classes
             yaml.add_representer(cls, cls._yaml_representer, Dumper=YamlDumper)
+            # noinspection PyTypeChecker
             yaml.add_constructor(cls.yaml_tag(), cls._yaml_constructor)
 
             # save the map for tags and see if there is repetition
@@ -1168,10 +1169,10 @@ class HashableClass(YamlRepr, abc.ABC):
     # noinspection PyPropertyDefinition,PyTypeChecker
     @property
     @util.CacheResult
-    def results_folder(self) -> "storage.ResultsFolder":
+    def stores(self) -> t.Dict[str, "storage.dec.StoreFolder"]:
         e.code.NotAllowed(msgs=[
-            f"Please override `results_folder` property if you want to "
-            f"save results or StoreFields for hashable class "
+            f"Please override `stores` property if you want to "
+            f"save results @storage.dec.XYZ decorators for hashable class "
             f"{self.__class__}"
         ])
 

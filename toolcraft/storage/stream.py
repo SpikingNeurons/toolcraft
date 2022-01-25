@@ -1,4 +1,11 @@
 """
+todo: mlflow metrics counterpart is storage.table ... but here we will see if we can
+  have streamed tables ... mlflow logging does not offer this but we can explore this
+  option
+
+todo: this might overlap with dapr telemetry ... or streamed logging handler ...
+  all those decisions can remain pending until dapr is understood
+
 Here we will implement things for streaming
 check try_pyarrow_stream.py
 

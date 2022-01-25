@@ -1,7 +1,15 @@
 """
 Module related to saving results of methods in HashableClass
-It uses storage.df_file to save all results in pyarrow based data frame
-storage.
+The classes here will be used to decorate methods of HashableClass
+The places that will be used to store things will defined by property `stores`
+which will return dict of special `StoreFolder`
+
+Here we offer storage decorators for
++ Table (pyarrow tables) >> should be used as alternative to mlflow metrics
++ FileGroup >> should be used as alternate to mlflow artifacts
++ State (not yet decided will be using dapr state instead) >> alternate to mlflow tags
++ Stream (not yet decided ... also see module `storage.stream`) >>
+    no equivalent in mlflow
 
 todo: explore https://github.com/tensorflow/io/tree/master/tensorflow_io/arrow
       + pandas dataframe ArrowDataset.from_pandas
@@ -30,9 +38,8 @@ import dataclasses
 from .. import marshalling as m
 from .. import error as e
 from .. import util
-from .table import \
-    Table, FILTERS_TYPE, FILTER_VALUE_TYPE, bake_expression
-from . import Folder, ResultsFolder
+from . import table
+from . import Folder, StorageHashable
 
 
 MODE_TYPE = t.Literal['r', 'rw', 'd', 'e', 'a', 'w']
@@ -42,22 +49,44 @@ _IS_STORE_FIELD = '_is_store_field'
 
 # noinspection PyDataclass
 @dataclasses.dataclass(frozen=True)
-class StoreFieldsFolder(Folder):
+class StoreFolder(Folder):
     """
-    A special Folder for StoreFields that will be saved as Table's
+    A special Folder for decorators `@s.dec.XYZ` that will use property stores to
+      figure out where to save results for decorated methods
+
     Note that here we use `for_hashable` to get `path`, so that user can use
-    `parent_folder=None`
+      `parent_folder=None`
     """
-    parent_folder: ResultsFolder
-    for_hashable: str
+    for_hashable: m.HashableClass
 
     @property
-    def contains(self) -> t.Type[Table]:
-        return Table
+    def contains(self) -> t.Type[StorageHashable]:
+        # As StorageHashable covers both
+        #  + storage.table.Table
+        #  + storage.file_group.FileGroup
+        # This is what we intend to store inside StoreFolder
+        return StorageHashable
 
-    @property
-    def uses_parent_folder(self) -> bool:
-        return True
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check if path has the unique name
+        # this is needed as the user need to take care of keeping
+        # path unique as then he can decide the possible
+        # sequence of folders under which he can store the storage results
+        if self.path.as_posix().find(
+            self.for_hashable.name
+        ) == -1:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"You need to have unique path for `{self.__class__}` "
+                    f"derived from hashable class"
+                    f" {self.for_hashable.__class__}",
+                    f"Please try to have `self.for_hashable.name` in the "
+                    f"`{self.__class__}` property `path` to avoid this error"
+                ]
+            )
 
 
 @enum.unique
@@ -135,7 +164,7 @@ class Mode(enum.Enum):
 
 class OnCallReturn(t.NamedTuple):
     mode: Mode
-    filters: t.Optional[FILTERS_TYPE]
+    filters: t.Optional[table.FILTERS_TYPE]
     filter_expression: t.Optional[pds.Expression]
     mode_options: t.Optional[t.Dict[str, t.Any]]
     columns: t.Optional[t.List[str]]
@@ -144,7 +173,7 @@ class OnCallReturn(t.NamedTuple):
         self,
         for_hashable: m.HashableClass,
         store_field: "StoreField",
-        df_file: Table,
+        df_file: table.Table,
         **kwargs
     ) -> t.Union[bool, pa.Table]:
         """
@@ -283,9 +312,40 @@ class OnCallReturn(t.NamedTuple):
             raise
 
 
-class StoreField:
+# todo: depends on dapr state tracking (alternate to mlflow tags)
+#   most likely we will dump this idea as having tag methods to HashableClass might
+#   not be convenient ... but might be interesting to use to check status of operations
+#   Most likely we will not use StorageHashable to save state but there will be some
+#   sort of dapr telemetry that needs to be explored
+class State:
     """
-    Will be used as a decorator.
+    Will be used as a storage decorator that can save `storage.state.XYZ`
+    when applied on HashableClass methods.
+    """
+    ...
+
+
+# todo: do after stream module is supported ... i.e. pyarrow streaming tables
+class Stream:
+    """
+    Will be used as a storage decorator that can save `storage.stream.XYZ`
+    when applied on HashableClass methods.
+    """
+    ...
+
+
+class FileGroup:
+    """
+    Will be used as a storage decorator that can save `storage.file_group.FileGroup`
+    when applied on HashableClass methods.
+    """
+    ...
+
+
+class Table:
+    """
+    Will be used as a storage decorator that can save `storage.table.Table`
+    when applied on HashableClass methods.
     """
 
     class LITERAL:
@@ -300,7 +360,7 @@ class StoreField:
         mandatory_kwarg_names = [mode]
         res_kwarg_ann_defs = {
             mode: MODE_TYPE,
-            filters: FILTERS_TYPE,
+            filters: table.FILTERS_TYPE,
             mode_options: t.Dict[str, t.Any],
             columns: t.List[str],
         }
@@ -390,7 +450,7 @@ class StoreField:
             if len(args) != 1:
                 e.code.CodingError(
                     msgs=[
-                        f"The class methods decorated with {StoreField} do "
+                        f"The class methods decorated with {Table} do "
                         f"not allow args ... only use kwargs ..."
                     ]
                 )
@@ -423,19 +483,19 @@ class StoreField:
         # ------------------------------------------------------- 02
         # get store_fields_folder the Folder that manages all Tables for
         # for_hashable
-        _folder = for_hashable.results_folder.store  # type: StoreFieldsFolder
+        _folder = for_hashable.stores.store  # type: StoreFolder
 
         # ------------------------------------------------------- 03
         # get Table
         _item = self.dec_fn_name
         if _item in _folder.items.keys():
-            _df_file = _folder.items[_item]  # type: Table
+            _df_file = _folder.items[_item]  # type: table.Table
         else:
             # The Table is special Folder it takes string that is name as
             # function to create a sub-folder under _folder. Note that
             # for_hashable is known to _folder so _df_file does not need to
             # know it as it is known via parent_folder
-            _df_file = Table(
+            _df_file = table.Table(
                 for_hashable=_item, parent_folder=_folder
             )
             # we need to update config for partition_cols and table_schema
@@ -483,7 +543,7 @@ class StoreField:
             e.code.NotAllowed(
                 msgs=[
                     f"We do not allow you to pass args to function "
-                    f"which is decorated by {StoreField}",
+                    f"which is decorated by {Table}",
                     f"\t > Found args: {args}",
                     f"Please check call to: ",
                     self.dec_fn_info,
@@ -554,17 +614,17 @@ class StoreField:
         # ------------------------------------------------------- 07.01
         # first get filters from partition cols related kwargs
         # noinspection PyTypeChecker
-        _f_for_pivots = []  # type: FILTERS_TYPE
+        _f_for_pivots = []  # type: table.FILTERS_TYPE
         if bool(self.partition_cols):
             for pk in self.partition_cols:
                 if pk in kwargs.keys():
-                    pkv = kwargs[pk]  # type: FILTER_VALUE_TYPE
+                    pkv = kwargs[pk]  # type: table.FILTER_VALUE_TYPE
                     # noinspection PyTypeChecker
                     _f_for_pivots.append((pk, "=", pkv))
         # then add some extra filters if user has provided
         _f_from_filters = kwargs.get(
             self.LITERAL.filters, []
-        )  # type: FILTERS_TYPE
+        )  # type: table.FILTERS_TYPE
         if _f_from_filters is None:
             _f_from_filters = []
         # ------------------------------------------------------- 07.02
@@ -613,7 +673,7 @@ class StoreField:
                 # Now cook expression from filters ... note that for delete
                 # mode we anyways fix columns to pivot only because of kwarg
                 # _columns_allowed
-                _filter_expression = bake_expression(
+                _filter_expression = table.bake_expression(
                     _elements=_f_all,
                     _err_msg=f"Filters used for mode {_mode} are not "
                              f"appropriate ....",
@@ -622,7 +682,7 @@ class StoreField:
             # --------------------------------------------------- 07.02.02
             # when read related modes i.e. read and exists allow anything
             else:
-                _filter_expression = bake_expression(
+                _filter_expression = table.bake_expression(
                     _elements=_f_all,
                     _err_msg=f"Filters used for mode {_mode} are not "
                              f"appropriate ....",

@@ -9,6 +9,9 @@ todo: add support for keepsake for saving blobs
 todo: Lets figure out cloud hash mechanisms to confirm uploads or check downloaded files
   based on hashes in metadata of cloud file
   https://cloud.google.com/storage/docs/hashes-etags
+
+todo: in context to mlflow this will also be used as log_artifact ... where
+  we store arbitrary files
 """
 
 import sys
@@ -130,24 +133,6 @@ class FileGroupConfig(s.Config):
             self.checked_on = self.checked_on[1:]
         # append time
         self.checked_on.append(datetime.datetime.now())
-
-
-@dataclasses.dataclass(frozen=True)
-class FileGroupResultsFolder(s.ResultsFolder):
-
-    class LITERAL(s.ResultsFolder.LITERAL):
-        results_folder_name = "_results"
-
-    for_hashable: "FileGroup"
-
-    @property
-    def name(self) -> str:
-        return self.LITERAL.results_folder_name
-
-    @property
-    @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
-        return self.for_hashable.path
 
 
 @dataclasses.dataclass(frozen=True)
@@ -292,9 +277,10 @@ class FileGroup(StorageHashable, abc.ABC):
             for f in self.path.iterdir():
                 if f.name in self.file_keys and f.is_file():
                     continue
-                if f.name.startswith(
-                    FileGroupResultsFolder.LITERAL.results_folder_name
-                ):
+                # anything starting with `_` will be ignored
+                # helpful in case you want to store results cached by `@s.StoreField`
+                # which uses results_folder property
+                if f.name.startswith("_"):
                     continue
                 _unknown_files.append(f)
 
@@ -327,13 +313,6 @@ class FileGroup(StorageHashable, abc.ABC):
     @property
     def is_outdated(self) -> bool:
         return False
-
-    @property
-    @util.CacheResult
-    def results_folder(self) -> FileGroupResultsFolder:
-        return FileGroupResultsFolder(
-            for_hashable=self,
-        )
 
     # def __getattribute__(self, item: str) -> t.Any:
     #     """

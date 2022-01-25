@@ -4,7 +4,7 @@ This file is just helpful until you do not install toolcraft with pip install ..
 import sys
 import pathlib
 
-sys.path.append("..")
+sys.path.append("..\\..")
 
 from toolcraft.tools import dapr
 

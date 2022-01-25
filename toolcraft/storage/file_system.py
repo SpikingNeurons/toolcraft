@@ -17,7 +17,6 @@ todo: add support https://arrow.apache.org/docs/python/filesystems.html#filesyst
     import gcsfs
     import adlfs
 
-
 todo: This is new (go on to fsspec) even pyarrow file-system allows fsspec and pafs
   offers limited subset of functions of what fsspec offers i.e. related to pa.dataset
   storage ... but other extensive stuff for flie system can come from fsspec
@@ -27,6 +26,12 @@ todo: This is new (go on to fsspec) even pyarrow file-system allows fsspec and p
 
 todo: remote caching
   https://www.anaconda.com/blog/fsspec-remote-caching
+
+todo: note that we can safely use this module for
+  both Table (mlflow metrics) and FileGroup (mlflow artifacts)
+  + file_group uses Folder that can use file system
+  + stream and table will use table.Table which is Folder so that can use file_system
+  + state will use dapr state and hence no need for file_system there
 """
 import pathlib
 import typing as t

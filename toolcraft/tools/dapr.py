@@ -4,6 +4,7 @@ import socket
 import shutil
 import typing as t
 from dapr.ext.grpc import App, InvokeMethodRequest, InvokeMethodResponse
+from dapr.conf import settings as dapr_settings
 import os
 import pickle
 import enum
@@ -20,6 +21,37 @@ from .. import marshalling as m
 
 _PORT = 50051
 _DAPR_APP = App()
+
+
+@_DAPR_APP.method('hashable_receiver_invoke')
+def hashable_receiver_invoke(request: InvokeMethodRequest) -> bytes:
+    # get from request
+    print("ggggggggggggggggggggggggggggggggggggggggggg")
+    print(request)
+    _metadata = request.metadata
+    _data = json.loads(request.data)
+
+    print(_data)
+
+    # confirm if server knows about requested hashable
+    _hex_hash = _data['hex_hash']
+    _hashable_yaml = settings.DAPR_SESSION_DIR / _hex_hash / ".yaml"
+    if not _hashable_yaml.exists():
+        if 'hashable_yaml' in _data.keys():
+            _hashable_yaml.parent.mkdir(parents=True, exist_ok=True)
+            _hashable_yaml.touch(exist_ok=False)
+            _hashable_yaml.write_text(_data['hashable_yaml'])
+        else:
+            return HashableReceiverResponse(
+                status=Status.NEEDS_HASHABLE_YAML,
+                message="Please send hashable yaml ..."
+            ).get_bytes()
+
+    # load hashable
+    print(_hashable_yaml)
+    return HashableReceiverResponse(
+        status=Status.STARTED, message="Just started"
+    ).get_bytes()
 
 
 class Status(enum.Enum):
@@ -74,32 +106,6 @@ class HashableReceiverResponse(t.NamedTuple):
         return pickle.loads(zlib.decompress(data))
 
 
-@_DAPR_APP.method('hashable_receiver_invoke')
-def hashable_receiver_invoke(request: InvokeMethodRequest) -> bytes:
-    # get from request
-    _metadata = request.metadata
-    _data = json.loads(request.data)
-
-    # confirm if server knows about requested hashable
-    _hex_hash = _data['hex_hash']
-    _hashable_yaml = settings.DAPR_SESSION_DIR / _hex_hash / ".yaml"
-    if not _hashable_yaml.exists():
-        if 'hashable_yaml' in _data.keys():
-            _hashable_yaml.parent.mkdir(parents=True, exist_ok=True)
-            _hashable_yaml.touch(exist_ok=False)
-            _hashable_yaml.write_text(_data['hashable_yaml'])
-        else:
-            return HashableReceiverResponse(
-                status=Status.NEEDS_HASHABLE_YAML, message="Please send hashable yaml ..."
-            ).get_bytes()
-
-    # load hashable
-    print(_hashable_yaml)
-    return HashableReceiverResponse(
-        status=Status.STARTED, message="Just started"
-    ).get_bytes()
-
-
 def launch_dapr_app():
     """
     Why pickle ??
@@ -119,6 +125,7 @@ def launch_dapr_app():
       we might not need to worry
 
     """
+
     # detect if called from main
     # noinspection PyUnresolvedReferences,PyProtectedMember
     _mod = sys._getframe(1).f_globals["__name__"]
@@ -186,7 +193,8 @@ def launch_dapr_app():
         msg=f"Listen to this IP {socket.gethostbyname(socket.gethostname())}:{_PORT}"
     )
 
-    print("gffffffffffffff")
+    # launch
+    _DAPR_APP.run(app_port=_PORT)
 
 
 class DaprTool(Tool):
