@@ -831,15 +831,18 @@ class Tracker:
         # that class is not fully loaded and any RuleChecker decorator will be
         # applied again
         if settings.STATIC_CODE_CHECK:
-            _src_code = inspect.getsource(cls)
-            _found_rule_checker_dec = False
-            for _token in [f"@m.", "@", "@marshalling."]:
-                _rule_checker_name = _token + RuleChecker.__name__
-                if _src_code.find(_rule_checker_name) > -1:
-                    _found_rule_checker_dec = True
-                    break
-            if not _found_rule_checker_dec:
-                RuleChecker()(tracker=cls)
+            _bypass = settings.STATIC_CODE_CHECK_BYPASS_GUI \
+                      and cls.__module__.startswith("toolcraft.gui")
+            if not _bypass:
+                _src_code = inspect.getsource(cls)
+                _found_rule_checker_dec = False
+                for _token in [f"@m.", "@", "@marshalling."]:
+                    _rule_checker_name = _token + RuleChecker.__name__
+                    if _src_code.find(_rule_checker_name) > -1:
+                        _found_rule_checker_dec = True
+                        break
+                if not _found_rule_checker_dec:
+                    RuleChecker()(tracker=cls)
 
     def __call__(
         self,

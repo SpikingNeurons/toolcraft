@@ -813,6 +813,7 @@ class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
         _widget = self.parent.children.pop(self.index_in_parent_children)
         # super of ContainerWidget is MovableWidget and
         # super of MovableWidget is Widget
+        # noinspection PySuperArguments
         return super(MovableWidget, self).delete()
 
 
