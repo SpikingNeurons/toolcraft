@@ -26,6 +26,10 @@ _DOT_DOT = _DOT_DOT_TYPE.__args__[0]
 
 
 @dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=['config', 'info', 'path', 'root_dir'],
+    things_not_to_be_overridden=['path']
+)
 class StorageHashable(m.HashableClass, abc.ABC):
 
     @property

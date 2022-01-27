@@ -10,6 +10,9 @@ from . import Suffix
 
 
 @dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=['items'],
+)
 class Folder(StorageHashable):
     """
     A folder for hashable instance like Dataset or Model.

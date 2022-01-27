@@ -23,6 +23,9 @@ class Suffix:
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_not_to_be_cached=['is_available']
+)
 class StateFile(m.YamlRepr, abc.ABC):
     """
 
@@ -130,6 +133,9 @@ class StateFile(m.YamlRepr, abc.ABC):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    class_can_be_overridden=False,
+)
 class Info(StateFile):
     """
     Info is a tricky class

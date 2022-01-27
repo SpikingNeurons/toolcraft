@@ -137,6 +137,9 @@ class DpgInternal(m.Internal):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_not_to_be_cached=['dpg_state', 'dpg_config', ]
+)
 class Dpg(m.YamlRepr, abc.ABC):
 
     @property
@@ -500,6 +503,9 @@ class WidgetInternal(DpgInternal):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_not_to_be_cached=['is_tagged']
+)
 class Widget(Dpg, abc.ABC):
 
     @property
@@ -573,6 +579,9 @@ USER_DATA = t.Dict[
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_not_to_be_cached=['index_in_parent_children']
+)
 class MovableWidget(Widget, abc.ABC):
 
     @property
@@ -671,6 +680,9 @@ class MovableWidget(Widget, abc.ABC):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_to_be_cached=['children'],
+)
 class ContainerWidget(Widget, abc.ABC):
     """
     Widget that can hold children
@@ -805,6 +817,10 @@ class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_to_be_cached=['form_fields_container'],
+    things_not_to_be_overridden=['build']
+)
 class Form(MovableWidget, abc.ABC):
     """
     Form is a special widget which creates a `form_fields_container` container and

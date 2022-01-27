@@ -43,4 +43,4 @@ from . import settings, logger, marshalling, util, error, helper, parallel, \
 
 if settings.DPG_WORKS:
     # as some rules use dpg
-    from . import gui, rules
+    from . import gui

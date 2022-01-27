@@ -32,7 +32,12 @@ import random
 from .. import util, logger, settings
 from .. import storage as s
 from .. import error as e
+from .. import marshalling as m
 from . import StorageHashable
+
+# noinspection PyUnresolvedReferences
+if False:
+    from . import folder
 
 _LOGGER = logger.get_logger()
 
@@ -136,6 +141,9 @@ class FileGroupConfig(s.Config):
 
 
 @dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=['file_keys'],
+)
 class FileGroup(StorageHashable, abc.ABC):
     """
     todo: While file_group.py is for blob storage. In future we can enable it to
@@ -1509,6 +1517,9 @@ class NpyMemMapCallHelper:
 
 
 @dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_not_to_be_overridden=['get_files']
+)
 class NpyFileGroup(FileGroup, abc.ABC):
     """
     Rationale: In all subclasses do not cache the properties that return
@@ -1957,3 +1968,78 @@ class GitDownload(DownloadFileGroup, abc.ABC):
     # tag: str  # or may be commit id
     # git_base_url: str
     ...
+
+
+@dataclasses.dataclass(frozen=True)
+class FileGroupFromPaths(FileGroup):
+    """
+    A concrete class that can convert any folder with files inside it to FileGroup
+    Note that the folder should be inside a `Folder` given by field `parent_folder`
+    """
+
+    parent_folder: "folder.Folder"
+    # the folder inside `parent_folder` which will have files given by `file_paths`
+    # and will be converted to `FileGroup` by generating *.info and *.config files
+    folder_name: str
+    keys: t.List[str]
+
+    @property
+    def name(self) -> str:
+        return self.folder_name
+
+    @property
+    def is_auto_hash(self) -> bool:
+        return True
+
+    @property
+    @util.CacheResult
+    def file_keys(self) -> t.List[str]:
+        return self.keys
+
+    @property
+    def uses_parent_folder(self) -> bool:
+        return True
+
+    @property
+    def unknown_files_on_disk(self) -> t.List[pathlib.Path]:
+        """
+        As the files will already created for this FileGroup we trick the system
+        to ignore those already created files so that pre_runner checks can succeed
+        """
+        return [
+            _f for _f in super().unknown_files_on_disk
+            if _f.name not in self.file_keys
+        ]
+
+    def get_files(
+        self, *, file_keys: t.List[str]
+    ) -> t.Dict[str, pathlib.Path]:
+        return {
+            file_key: self.path / file_key
+            for file_key in file_keys
+        }
+
+    def create(self) -> t.List[pathlib.Path]:
+
+        _ret = []
+
+        for fk in self.file_keys:
+            _f = self.path / fk
+            if not _f.exists():
+                e.code.CodingError(
+                    msgs=[
+                        f"We were expecting path {_f} to exist"
+                    ]
+                )
+            _ret.append(_f)
+
+        return _ret
+
+    # noinspection PyTypeChecker
+    def create_file(self, *, file_key: str) -> pathlib.Path:
+        e.code.CodingError(
+            msgs=[
+                f"This method need not be called as create method is "
+                f"overridden for class {self.__class__}"
+            ]
+        )

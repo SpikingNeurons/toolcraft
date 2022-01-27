@@ -8,6 +8,7 @@ from .__base__ import PlotSeries, PlotItem
 from . import _auto
 from .. import error as e
 from .. import util
+from .. import marshalling as m
 
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
@@ -112,6 +113,9 @@ class XAxis(_auto.XAxis):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_to_be_cached=['all_plot_series'],
+)
 class YAxis(_auto.YAxis):
 
     @property
@@ -208,6 +212,9 @@ class YAxis(_auto.YAxis):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_to_be_cached=['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
+)
 class Plot(_auto.Plot):
     """
     Refer this to improve more:

@@ -4,6 +4,9 @@ This module might eventually become `mlcraft`
 todo: Models can be stored as artifact i.e. `storage.dec.FileGroup` but then to make it
   live or track its lifecycle get inspiration
   from https://mlflow.org/docs/latest/model-registry.html#
+
+todo: look at heron philosophy ... although here we are basically inspired by popular
+  mlflow and want to use dapr https://github.com/georgedimitriadis/Heron
 """
 import dataclasses
 import pathlib

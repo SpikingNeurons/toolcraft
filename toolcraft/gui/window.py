@@ -22,7 +22,8 @@ class WindowInternal(__base__.DpgInternal):
             )
 
 
-class _DowngradeContainerWidget:
+@dataclasses.dataclass
+class Window(_auto.Window):
 
     @property
     @util.CacheResult
@@ -44,6 +45,10 @@ class _DowngradeContainerWidget:
     def dash_board(self) -> dashboard.Dashboard:
         return self.internal.dash_board
 
+    @property
+    def root(self) -> "Window":
+        return self
+
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.window.{cls.__name__}"
@@ -53,16 +58,35 @@ class _DowngradeContainerWidget:
 
 
 @dataclasses.dataclass
-class Window(_DowngradeContainerWidget, _auto.Window):
+class FileDialog(_auto.FileDialog):
 
     @property
-    def root(self) -> "Window":
-        return self
+    @util.CacheResult
+    def internal(self) -> WindowInternal:
+        # noinspection PyTypeChecker
+        return WindowInternal(owner=self)
 
+    @property
+    def parent(self) -> None:
+        e.code.CodingError(
+            msgs=[
+                "Use of `parent` for `Window` is not allowed.",
+                "Please use `dash_board` instead.",
+            ]
+        )
+        raise
 
-@dataclasses.dataclass
-class FileDialog(_DowngradeContainerWidget, _auto.FileDialog):
+    @property
+    def dash_board(self) -> dashboard.Dashboard:
+        return self.internal.dash_board
 
     @property
     def root(self) -> "FileDialog":
         return self
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.window.{cls.__name__}"
+
+    def setup(self, dash_board: dashboard.Dashboard):
+        self.internal.dash_board = dash_board

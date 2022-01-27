@@ -26,7 +26,7 @@ todo: https://xnd.io/
   Note xnd has support for plasma store
 
 """
-
+import pathlib
 import typing as t
 import inspect
 import pyarrow as pa
@@ -37,7 +37,9 @@ import dataclasses
 from .. import marshalling as m
 from .. import error as e
 from . import table
-from . import Folder, StorageHashable
+from . import Folder
+from . import file_group
+from . import state
 
 
 MODE_TYPE = t.Literal['r', 'rw', 'd', 'e', 'a', 'w']
@@ -422,14 +424,106 @@ class Stream(_Dec):
     ...
 
 
+class FileGroupMaker:
+    """
+    Special class whose instance we will pass to decorated method
+    (using decorator @s.dec.FileGroup) so that the user can
+    create `file_group.FileGroupFromPaths` instance
+    """
+
+    @property
+    def exists(self) -> bool:
+        _folder_exists = self.storage_path.exists() and self.storage_path.is_dir()
+        _info_exists = \
+            (self.parent_folder.path /
+             f"{self.folder_name}{state.Suffix.info}").exists()
+        _config_exists = \
+            (self.parent_folder.path /
+             f"{self.folder_name}{state.Suffix.config}").exists()
+
+        if _folder_exists and _info_exists and _config_exists:
+            return True
+        elif (not _folder_exists) and (not _info_exists) and (not _config_exists):
+            return False
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"Either all three must exists or nothing must exist",
+                    {
+                        "_folder_exists": _folder_exists,
+                        "_info_exists": _info_exists,
+                        "_config_exists": _config_exists,
+                    }
+                ]
+            )
+            raise
+
+    def __init__(
+        self, parent_folder: Folder, folder_name: str
+    ):
+        self.parent_folder = parent_folder
+        self.folder_name = folder_name
+        self.storage_path = parent_folder.path / folder_name
+
+    def make_file_group(self, file_keys: t.List[str]) -> file_group.FileGroupFromPaths:
+        return file_group.FileGroupFromPaths(
+            parent_folder=self.parent_folder,
+            folder_name=self.folder_name,
+            keys=file_keys,
+        )
+
+
 class FileGroup(_Dec):
     """
     Will be used as a storage decorator that can save `storage.file_group.FileGroup`
     when applied on HashableClass methods.
     """
 
-    def __init__(self):
-        super().__init__()
+    class LITERAL(_Dec.LITERAL):
+        file_group_maker = "file_group_maker"
+        reserved_kwarg_names = [file_group_maker]
+        reserved_kwarg_ann_defs = {file_group_maker: FileGroupMaker}
+        reserved_kwarg_default_values = {file_group_maker: None}
+        return_ann_def = file_group.FileGroupFromPaths
+
+    def __init__(self, *, store_name: str = 'base'):
+        super().__init__(store_name=store_name)
+
+    def validate_on_call(
+        self, for_hashable: m.HashableClass, **kwargs
+    ):
+        # call super
+        super().validate_on_call(for_hashable=for_hashable, **kwargs)
+
+        # test if file_group_maker if supplied remains None as we will generate it and
+        # user does not need to provide it
+        try:
+            _file_group_maker = kwargs["file_group_maker"]
+            if _file_group_maker is not None:
+                e.code.CodingError(msgs=[
+                    f"Please do not supply kwargs `file_group_maker` as we will take "
+                    f"care of supplying it ..."
+                ])
+        except KeyError:
+            ...
+
+    def on_call(
+        self, for_hashable: m.HashableClass, **kwargs
+    ) -> file_group.FileGroupFromPaths:
+        """
+        Note that we do not override validate_on_call as there is nothing much to do there
+        """
+        # first we need to make file_group_maker
+        _file_group_maker = FileGroupMaker(
+            parent_folder=for_hashable.stores[self.store_name],
+            folder_name=self.dec_fn_name
+        )
+
+        # update kwargs
+        kwargs["file_group_maker"] = _file_group_maker
+
+        # call the actual function
+        return self.dec_fn(for_hashable, **kwargs)
 
 
 @enum.unique
@@ -673,7 +767,7 @@ class Table(_Dec):
             mode_options: None,
             columns: None,
         }
-        return_ann_def = pa.Table
+        return_ann_def = t.Union[bool, pa.Table]
 
     # noinspection PyUnusedLocal
     def __init__(

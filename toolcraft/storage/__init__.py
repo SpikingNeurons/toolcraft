@@ -12,7 +12,7 @@ todo: storage in point of view of mlflow (also see top of individual module for
 from .__base__ import StorageHashable
 from .state import Info, Config, Suffix
 from .folder import Folder
-from .file_group import FileGroup, NpyMemMap, SHUFFLE_SEED_TYPE, \
+from .file_group import FileGroup, FileGroupFromPaths, NpyMemMap, SHUFFLE_SEED_TYPE, \
     DETERMINISTIC_SHUFFLE, NO_SHUFFLE, DO_NOT_USE, USE_ALL, \
     SELECT_TYPE, NON_DETERMINISTIC_SHUFFLE, FileGroupConfig
 from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup

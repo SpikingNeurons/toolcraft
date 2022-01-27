@@ -3,7 +3,9 @@ import dataclasses
 import datetime
 import hashlib
 import inspect
+import types
 import pathlib
+import enum
 import typing as t
 
 import numpy as np
@@ -20,6 +22,8 @@ if False:
     from . import gui, storage
 
 _LOGGER = logger.get_logger()
+_LITERAL_CLASS_NAME = 'LITERAL'
+_RULE_CHECKER_KEY = "__rule_checker__"
 
 # Class to keep track of all concrete HashableClass class's used in the
 # entire application
@@ -209,6 +213,505 @@ class Internal:
         self.__locked_fields__.remove(item)
 
 
+class RuleChecker:
+
+    """
+    Note that this decorator must be the first one to be applied on class then apply
+    @dataclasses.dataclass ...
+
+    todo: do not be tempted to do load time analysis of dataclass as it is tough from
+      our experience
+      + We do not want to dataclass related checks as it is out of scope for
+        __init_subclass__ method, and we cannot grab that class when completely loaded
+      + The only need for us related to dataclasses is to check if the child classes are
+        also decorated with dataclass or not ... for that we should only so static code
+        analysis to detect decorator ...
+
+    todo: code analysis takes lot of time
+      + provide a switch to disable code check
+        (it is now easy because of current decorator mechanism)
+      + skip some modules like gui while checking ... or bypass some checks for them
+        this can speed up checks
+    """
+
+    def __init__(
+        self,
+        class_can_be_overridden: bool = True,
+        things_to_be_cached: t.List[str] = None,
+        things_not_to_be_cached: t.List[str] = None,
+        things_not_to_be_overridden: t.List[str] = None,
+    ):
+        self.class_can_be_overridden = class_can_be_overridden
+        self.things_to_be_cached = \
+            [] if things_to_be_cached is None else things_to_be_cached
+        self.things_not_to_be_cached = \
+            [] if things_not_to_be_cached is None else things_not_to_be_cached
+        self.things_not_to_be_overridden = \
+            [] if things_not_to_be_overridden is None else things_not_to_be_overridden
+        # noinspection PyTypeChecker
+        self.parent = None  # type: RuleChecker
+        # noinspection PyTypeChecker
+        self.decorated_class = None  # type: t.Type[Tracker]
+
+    def __call__(self, tracker: t.Type["Tracker"]) -> t.Type["Tracker"]:
+        # ---------------------------------------------------------- 01
+        # store reference to decorated class
+        if self.decorated_class is None:
+            self.decorated_class = tracker
+        else:
+            e.code.CodingError(
+                msgs=[
+                    f"This should be only once and this __call__ is never expected "
+                    f"to happen again ..."
+                ]
+            )
+
+        # ---------------------------------------------------------- 02
+        # set parent ... expect for super parent Tracker
+        try:
+            if tracker != Tracker:
+                self.parent = getattr(tracker.__mro__[1], _RULE_CHECKER_KEY)
+        except NameError:
+            # this means tracker == Tracker
+            # it raises NameError as tracker is still not fully built to become Tracker
+            ...
+
+        # ---------------------------------------------------------- 03
+        # set __rule_checker__ so that child classes can refer to it
+        if _RULE_CHECKER_KEY in tracker.__dict__.keys():
+            e.code.CodingError(
+                msgs=[f"We never expect `{_RULE_CHECKER_KEY}` to be present "
+                      f"in class {tracker}.__dict__"]
+            )
+        setattr(tracker, _RULE_CHECKER_KEY, self)
+
+        # ---------------------------------------------------------- 03
+        # test if current decorator settings agree with parent
+        # and also merge some settings
+        self.agree_with_parent_and_merge_settings()
+
+        # ---------------------------------------------------------- 04
+        # check for dataclass decorator
+        self.check_if_decorated_with_dataclass()
+
+        # ---------------------------------------------------------- 05
+        # check_things_to_be_cached
+        self.check_things_to_be_cached()
+
+        # ---------------------------------------------------------- 06
+        # check_things_not_to_be_cached
+        self.check_things_not_to_be_cached()
+
+        # ---------------------------------------------------------- 07
+        # check_things_not_to_be_overridden
+        self.check_things_not_to_be_overridden()
+
+        # ---------------------------------------------------------- 08
+        # check_related_to_class_Tracker
+        self.check_related_to_class_Tracker()
+
+        # ---------------------------------------------------------- 09
+        # check_related_to_class_HashableClass
+        self.check_related_to_class_HashableClass()
+
+        # ---------------------------------------------------------- 10
+        # check_related_to_class_FrozenEnum
+        self.check_related_to_class_FrozenEnum()
+
+        # ---------------------------------------------------------- xx
+        # todo: find a way to check if super() calls are made in properties and methods
+        #   see inspect.getsource as used in `check_if_decorated_with_dataclass`
+
+        # ---------------------------------------------------------- xx
+        # todo: test that RuleChecker is the first decorator on the class
+
+        # ---------------------------------------------------------- xx
+        # todo: check that @property decorator is applied above @util.CacheResult
+
+        # ---------------------------------------------------------- xx
+        return tracker
+
+    # noinspection PyPep8Naming
+    def check_related_to_class_FrozenEnum(self):
+        # ---------------------------------------------------------- 01
+        # nothing to do if not a subclass of YamlRepr
+        try:
+            if not issubclass(self.decorated_class, FrozenEnum):
+                return
+        except NameError:
+            # FrozenEnum is still not created so nothing to do here so return
+            return
+
+        # ---------------------------------------------------------- 02
+        # check if the subclassing class also extends enum.Enum
+        if not issubclass(self.decorated_class, enum.Enum):
+            e.code.CodingError(
+                msgs=[
+                    f"While subclassing `FrozenEnum` make sure "
+                    f"that it also extends `enum.Enum`",
+                    f"Check class {self.decorated_class}"
+                ]
+            )
+
+    # noinspection PyPep8Naming
+    def check_related_to_class_HashableClass(self):
+        # ---------------------------------------------------------- 01
+        # nothing to do if not a subclass of YamlRepr
+        try:
+            if not issubclass(self.decorated_class, HashableClass):
+                return
+        except NameError:
+            # HashableClass is still not created so nothing to do hence return
+            return
+        # cls to consider
+        _hashable_cls = self.decorated_class
+
+        # ---------------------------------------------------------- 02
+        # class should not be local
+        if str(_hashable_cls).find("<locals>") > -1:
+            e.validation.NotAllowed(
+                msgs=[
+                    f"Hashable classes can only be first class classes.",
+                    f"Do not define classes locally, declare them at module "
+                    f"level.",
+                    f"Check class {_hashable_cls}"
+                ]
+            )
+
+        # ---------------------------------------------------------- 03
+        # check all non dunder attributes
+        for _attr_k, _attr_v in util.fetch_non_dunder_attributes(_hashable_cls):
+
+            # ------------------------------------------------------ 03.01
+            # if _attr_v is property, function or a method ... no need to check
+            # anything and we can continue
+            _allowed_types = (
+                property,
+                types.FunctionType,
+                types.MethodType,
+                util.HookUp,
+            )
+            # noinspection PyTypeChecker
+            if isinstance(_attr_v, _allowed_types):
+                continue
+
+            # ------------------------------------------------------ 03.02
+            # no attribute should start with _
+            if _attr_k.startswith('_'):
+                # if abstract class used this will be present
+                # the only field that starts with _ which we allow
+                if _attr_k == '_abc_impl':
+                    continue
+                # anything else raise error
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Attribute {_attr_k} is not one of {_allowed_types} "
+                        f"and it starts with `_`",
+                        f"Please check attribute {_attr_k} of class {_hashable_cls}"
+                    ]
+                )
+
+            # ------------------------------------------------------ 03.03
+            # if special helper classes that stores all LITERALS
+            if _attr_k == _LITERAL_CLASS_NAME:
+                # NOTE: we already check if class LITERAL is correctly
+                # subclassed in super method .... so no need to do here
+                continue
+
+            # ------------------------------------------------------ 03.04
+            # check if _attr_k is in __annotations__ then it is dataclass field
+            # Note: dataclasses.fields will not work here as the class still
+            #   does not know that it is dataclass
+            # todo: this is still not a complete solution as annotations will
+            #  also have fields that are t.ClassVar and t.InitVar
+            #  ... we will see this later how to deal with ... currently
+            #  there is no easy way
+            _attr_ks = []
+            for _c in _hashable_cls.__mro__:
+                if hasattr(_c, '__annotations__'):
+                    _attr_ks += list(_c.__annotations__.keys())
+            if _attr_k in _attr_ks:
+                # _ann_value is a typing.ClassVar raise error
+                # simple way to see if typing was used as annotation value
+                if hasattr(_attr_v, '__origin__'):
+                    if _attr_v.__origin__ == t.ClassVar:
+                        e.code.CodingError(
+                            msgs=[
+                                f"We do not allow class variable {_attr_k} "
+                                f"... check class {_hashable_cls}"
+                            ]
+                        )
+                # if `dataclasses.InitVar` raise error
+                if isinstance(_attr_v, dataclasses.InitVar):
+                    e.code.CodingError(
+                        msgs=[
+                            f"We co not allow using dataclass.InitVar.",
+                            f"Please check annotated field {_attr_k} in "
+                            f"class {_hashable_cls}"
+                        ]
+                    )
+                # if a valid dataclass field continue
+                continue
+
+            # ------------------------------------------------------ 03.05
+            # if we reached here we do not understand the class attribute so
+            # raise error
+            # print(cls.__annotations__.keys(), "::::::::::::::::::", cls)
+            e.code.NotAllowed(
+                msgs=[
+                    f"Found an attribute `{_attr_k}` with: ",
+                    dict(
+                        type=f"{type(_attr_v)}",
+                        value=f"{_attr_v}",
+                    ),
+                    f"Problem with attribute {_attr_k} of class {_hashable_cls}",
+                    f"It is neither one of {_allowed_types}, nor is it "
+                    f"defined as dataclass field.",
+                    f"Note that if you are directly assigning the annotated "
+                    f"field it will not return dataclass field so please "
+                    f"assign it with "
+                    f"`dataclass.field(default=...)` or "
+                    f"`dataclass.field(default_factory=...)`",
+                ]
+            )
+
+        # ---------------------------------------------------------- 04
+        # do not override dunder methods
+        _general_dunders_to_ignore = [
+            # python adds it
+            '__module__', '__dict__', '__weakref__', '__doc__',
+
+            # dataclass related
+            '__annotations__', '__abstractmethods__', '__dataclass_params__',
+            '__dataclass_fields__',
+
+            # dataclass adds this default dunders to all dataclasses ... we have
+            # no control over this ;(
+            '__init__', '__repr__', '__eq__', '__setattr__',
+            '__delattr__', '__hash__',
+
+            # we allow this
+            '__call__',
+
+            # this is used by RuleChecker
+            _RULE_CHECKER_KEY,
+        ]
+        if _hashable_cls != HashableClass:
+            for k in _hashable_cls.__dict__.keys():
+                if k.startswith("__") and k.endswith("__"):
+                    if k not in _general_dunders_to_ignore:
+                        e.code.CodingError(
+                            msgs=[
+                                f"You are not allowed to override dunder "
+                                f"methods in any subclass of {HashableClass}",
+                                f"Please check class {_hashable_cls} and avoid defining "
+                                f"dunder method `{k}` inside it"
+                            ]
+                        )
+
+    # noinspection PyPep8Naming
+    def check_related_to_class_Tracker(self):
+        # ---------------------------------------------------------- 01
+        # nothing to do if Tracker i.e. super parent
+        if self.parent is None:
+            return
+
+        # ---------------------------------------------------------- 02
+        # test if LITERAL is extended properly
+        _parent_literal_class = self.parent.decorated_class.LITERAL
+        e.validation.ShouldBeSubclassOf(
+            value=self.decorated_class.LITERAL, value_types=(_parent_literal_class, ),
+            msgs=[
+                f"We expect a nested class of class {self.decorated_class} with name "
+                f"`{_LITERAL_CLASS_NAME}` to "
+                f"extend the class {_parent_literal_class}"
+            ]
+        )
+
+    def check_things_not_to_be_overridden(self):
+        # ---------------------------------------------------------- 01
+        # nothing to do if Tracker i.e. super parent
+        if self.parent is None:
+            return
+
+        # ---------------------------------------------------------- 02
+        for _t in self.parent.things_not_to_be_overridden:
+            try:
+                if getattr(self.decorated_class, _t) != \
+                        getattr(self.parent.decorated_class, _t):
+                    e.code.CodingError(
+                        msgs=[
+                            f"Please do not override method/property "
+                            f"`{_t}` in class {self.decorated_class}"
+                        ]
+                    )
+            except AttributeError:
+                e.code.CodingError(
+                    msgs=[
+                        f"Property/method with name `{_t}` does not belong to class "
+                        f"{self.decorated_class} or any of its parent class",
+                        f"Please check if you provided wrong string ..."
+                    ]
+                )
+                raise
+
+    def check_things_not_to_be_cached(self):
+        for _t in self.things_not_to_be_cached:
+            # get
+            try:
+                _method_or_prop = getattr(self.decorated_class, _t)
+            except AttributeError:
+                e.code.CodingError(
+                    msgs=[
+                        f"Property/method with name `{_t}` does not belong to class "
+                        f"{self.decorated_class} or any of its parent class",
+                        f"Please check if you provided wrong string ..."
+                    ]
+                )
+                raise
+            # if abstract no sense in checking if cached
+            if getattr(_method_or_prop, '__isabstractmethod__', False):
+                continue
+            # check if cached
+            if util.is_cached(_method_or_prop):
+                e.code.CodingError(
+                    msgs=[
+                        f"We expect you not to cache property/method "
+                        f"`{_t}`. Do not use  decorator "
+                        f"`@util.CacheResult` in "
+                        f"class {self.decorated_class} for `{_t}`"
+                    ]
+                )
+
+    def check_things_to_be_cached(self):
+        for _t in self.things_to_be_cached:
+            # get
+            try:
+                _method_or_prop = getattr(self.decorated_class, _t)
+            except AttributeError:
+                e.code.CodingError(
+                    msgs=[
+                        f"Property/method with name `{_t}` does not belong to class "
+                        f"{self.decorated_class} or any of its parent class",
+                        f"Please check if you provided wrong string ..."
+                    ]
+                )
+                raise
+            # if abstract no sense in checking if cached
+            if getattr(_method_or_prop, '__isabstractmethod__', False):
+                continue
+            # check if cached
+            if not util.is_cached(_method_or_prop):
+                e.code.CodingError(
+                    msgs=[
+                        f"If defined we expect you to cache property/method `{_t}` "
+                        f"using decorator `@util.CacheResult` in "
+                        f"class {self.decorated_class}"
+                    ]
+                )
+
+    def check_if_decorated_with_dataclass(self):
+        """
+        do not be tempted to do load time analysis of dataclass as it is tough from
+        our experience
+          + We do not want to dataclass related checks as it is out of scope for
+            __init_subclass__ method, and we cannot grab that class when completely loaded
+          + The only need for us related to dataclasses is to check if the child classes are
+            also decorated with dataclass or not ... for that we should only so static code
+            analysis to detect decorator ...
+
+        Here we do very simple static code analysis ... if parent class
+        has @dataclass decorator we expect the same from this class
+        """
+        # ---------------------------------------------------------- 01
+        # nothing to do if Tracker i.e. super parent
+        if self.parent is None:
+            return
+
+        # ---------------------------------------------------------- 02
+        # first get current classes and detect if it has dataclass decorator
+        # if there is dataclass decorator no need to investigate more
+        _current_class = self.decorated_class
+        if inspect.getsource(_current_class).find("@dataclass") > -1:
+            return
+
+        # ---------------------------------------------------------- 03
+        # now that current class has no @dataclass decorator test for parent class
+        # note we do not use self.parent.decorated_class as it might skip
+        # immediate parent class
+        _parent_class = _current_class.__mro__[1]
+        if inspect.getsource(_parent_class).find("@dataclass") > -1:
+            e.code.CodingError(
+                msgs=[
+                    f"Parent class {_parent_class} of class {_current_class} is a "
+                    f"dataclass ... so please make sure to decorate accordingly ..."
+                ]
+            )
+
+    def agree_with_parent_and_merge_settings(self):
+        """
+        test if current decorator settings agree with parent
+        and also merge some settings
+        """
+        # ---------------------------------------------------------- 01
+        # nothing to do if Tracker i.e. super parent
+        if self.parent is None:
+            return
+
+        # ---------------------------------------------------------- 02
+        # class_can_be_overridden
+        if not self.parent.class_can_be_overridden:
+            e.code.CodingError(
+                msgs=[
+                    f"Parent class {self.parent.decorated_class} is configured to "
+                    f"not be overridden. So please refrain from doing it ..."
+                ]
+            )
+
+        # ---------------------------------------------------------- 03
+        # merge things_to_be_cached
+        for _t in self.things_to_be_cached:
+            if _t in self.parent.things_to_be_cached:
+                e.code.CodingError(
+                    msgs=[
+                        f"You have already configured `{_t}` in parent class "
+                        f"{self.parent.decorated_class} ..."
+                    ]
+                )
+        self.things_to_be_cached += self.parent.things_to_be_cached
+
+        # ---------------------------------------------------------- 04
+        # merge things_to_be_cached
+        for _t in self.things_not_to_be_cached:
+            if _t in self.parent.things_not_to_be_cached:
+                e.code.CodingError(
+                    msgs=[
+                        f"You have already configured `{_t}` in parent class "
+                        f"{self.parent.decorated_class} ..."
+                    ]
+                )
+        self.things_not_to_be_cached += self.parent.things_not_to_be_cached
+
+        # ---------------------------------------------------------- 05
+        # merge things_to_be_cached
+        for _t in self.things_not_to_be_overridden:
+            if _t in self.parent.things_not_to_be_overridden:
+                e.code.CodingError(
+                    msgs=[
+                        f"You have already configured `{_t}` in parent class "
+                        f"{self.parent.decorated_class} ..."
+                    ]
+                )
+        self.things_not_to_be_overridden += self.parent.things_not_to_be_overridden
+
+
+@RuleChecker(
+    things_to_be_cached=['internal'],
+    things_not_to_be_cached=[
+        'is_called', 'iterable_length', 'on_iter', 'on_call', 'on_enter', 'on_exit'
+    ],
+    things_not_to_be_overridden=['is_called', 'is_iterable', ]
+)
 class Tracker:
     """
     Tracker that can track all classes in this system
@@ -315,6 +818,21 @@ class Tracker:
 
         # call class_init
         cls.class_init()
+
+        # if not decorated by RuleChecker we will auto decorate it here
+        # this also does rule check on new subclass ;)
+        # Note that we need to static analyze the source code for this because note
+        # that class is not fully loaded and any RuleChecker decorator will be
+        # applied again
+        _src_code = inspect.getsource(cls)
+        _found_rule_checker_dec = False
+        for _token in [f"@m.", "@", "@marshalling."]:
+            _rule_checker_name = _token + RuleChecker.__name__
+            if _src_code.find(_rule_checker_name) > -1:
+                _found_rule_checker_dec = True
+                break
+        if not _found_rule_checker_dec:
+            RuleChecker()(tracker=cls)
 
     def __call__(
         self,
@@ -693,6 +1211,9 @@ class YamlLoader(yaml.UnsafeLoader):
         return _instance
 
 
+@RuleChecker(
+    things_not_to_be_overridden=['yaml']
+)
 class YamlRepr(Tracker):
     """
     This class makes it possible to have YamlRepr for dataclasses.
@@ -1083,6 +1604,10 @@ class FrozenEnum(YamlRepr):
 
 # @dataclasses.dataclass(eq=True, frozen=True)
 @dataclasses.dataclass(frozen=True)
+@RuleChecker(
+    things_to_be_cached=['hex_hash', 'stores', ],
+    things_not_to_be_overridden=['hex_hash']
+)
 class HashableClass(YamlRepr, abc.ABC):
     """
     todo: we will make this frozen ... after that we can use __hash__ i.e.
@@ -1278,13 +1803,6 @@ class HashableClass(YamlRepr, abc.ABC):
         #  serialization is supported
         # Note this helps to ignore `init=True` fields in equality check
         return self.hex_hash == other.hex_hash
-
-    @classmethod
-    def block_fields_in_subclasses(cls) -> bool:
-        """
-        Override this if you do not want subclasses to have new fields
-        """
-        return False
 
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}

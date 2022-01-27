@@ -23,6 +23,9 @@ class DashboardInternal(m.Internal):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_not_to_be_overridden=['run']
+)
 class Dashboard(m.YamlRepr, abc.ABC):
     """
     Dashboard is not a Widget.
@@ -368,6 +371,9 @@ class Dashboard(m.YamlRepr, abc.ABC):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_to_be_cached=['primary_window'],
+)
 class BasicDashboard(Dashboard):
     """
     A dashboard with one primary window ... and can layout all fields inside it
