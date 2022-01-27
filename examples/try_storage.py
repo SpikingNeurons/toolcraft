@@ -261,6 +261,7 @@ class TestStorage(m.HashableClass):
     @property
     @util.CacheResult
     def stores(self) -> t.Dict[str, "s.dec.StoreFolder"]:
+        # noinspection PyTypeChecker
         return {
             'base': TestStorageResultsFolder(for_hashable=self)
         }
