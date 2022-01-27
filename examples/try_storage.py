@@ -350,11 +350,6 @@ class TestStorage(m.HashableClass):
         return pa.table({"list": [_ for _ in result]})
 
 
-def try_file_storage():
-    ts = TestStorage(1, 2.0)
-    ts.fg()
-
-
 def try_arrow_storage():
     ts = TestStorage(1, 2.0)
 
@@ -756,18 +751,40 @@ def try_arrow_storage():
     print("ts.stores['base'].delete()")
 
 
+def try_file_storage():
+    ts = TestStorage(1, 2.0)
+
+    print("---------------------------------------------------------01")
+    # pandas_dataframe
+    r = ts.store(mode="rw")
+    print("ts.store(mode='rw')")
+    assert r == ts.data_vector("pandas_dataframe")
+
+    r = ts.store(mode="r")
+    print("ts.store(mode='r')")
+    assert r == ts.data_vector("pandas_dataframe")
+
+    print("---------------------------------------------------------02")
+    ts.fg()
+    print("ts.fg()")
+
+    print("---------------------------------------------------------03")
+    ts.stores['base'].delete(force=True)
+    print("ts.stores['base'].delete(force=True)")
+
+
 def try_main():
     global _TEMP_PATH
     if _TEMP_PATH.exists():
         util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
-    # try_hashable_ser()
-    # try_download_file()
-    # try_auto_hashed_download_file()
-    # try_metainfo_file()
-    # try_creating_folders()
-    # try_arrow_storage()
+    try_hashable_ser()
+    try_download_file()
+    try_auto_hashed_download_file()
+    try_metainfo_file()
+    try_creating_folders()
+    try_arrow_storage()
     try_file_storage()
     _TEMP_PATH.rmdir()
 

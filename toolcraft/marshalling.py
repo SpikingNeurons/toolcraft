@@ -228,7 +228,7 @@ class RuleChecker:
         analysis to detect decorator ...
 
     todo: code analysis takes lot of time
-      + provide a switch to disable code check
+      + provide a switch to disable code check (This is now DONE :))
         (it is now easy because of current decorator mechanism)
       + skip some modules like gui while checking ... or bypass some checks for them
         this can speed up checks
@@ -241,6 +241,9 @@ class RuleChecker:
         things_not_to_be_cached: t.List[str] = None,
         things_not_to_be_overridden: t.List[str] = None,
     ):
+        if not settings.STATIC_CODE_CHECK:
+            return
+
         self.class_can_be_overridden = class_can_be_overridden
         self.things_to_be_cached = \
             [] if things_to_be_cached is None else things_to_be_cached
@@ -254,6 +257,9 @@ class RuleChecker:
         self.decorated_class = None  # type: t.Type[Tracker]
 
     def __call__(self, tracker: t.Type["Tracker"]) -> t.Type["Tracker"]:
+        if not settings.STATIC_CODE_CHECK:
+            return tracker
+
         # ---------------------------------------------------------- 01
         # store reference to decorated class
         if self.decorated_class is None:
@@ -824,15 +830,16 @@ class Tracker:
         # Note that we need to static analyze the source code for this because note
         # that class is not fully loaded and any RuleChecker decorator will be
         # applied again
-        _src_code = inspect.getsource(cls)
-        _found_rule_checker_dec = False
-        for _token in [f"@m.", "@", "@marshalling."]:
-            _rule_checker_name = _token + RuleChecker.__name__
-            if _src_code.find(_rule_checker_name) > -1:
-                _found_rule_checker_dec = True
-                break
-        if not _found_rule_checker_dec:
-            RuleChecker()(tracker=cls)
+        if settings.STATIC_CODE_CHECK:
+            _src_code = inspect.getsource(cls)
+            _found_rule_checker_dec = False
+            for _token in [f"@m.", "@", "@marshalling."]:
+                _rule_checker_name = _token + RuleChecker.__name__
+                if _src_code.find(_rule_checker_name) > -1:
+                    _found_rule_checker_dec = True
+                    break
+            if not _found_rule_checker_dec:
+                RuleChecker()(tracker=cls)
 
     def __call__(
         self,

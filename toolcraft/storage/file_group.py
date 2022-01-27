@@ -998,8 +998,9 @@ class FileGroup(StorageHashable, abc.ABC):
             # so set the response automatically for FileGroup
             force = True
             # just let us warn user
-            _last_spinner = self.spinner
-            _last_spinner.stop()
+            _last_spinner = logger.Spinner.get_last_spinner()
+            if _last_spinner is not None:
+                _last_spinner.stop()
             _LOGGER.warning(
                 msg=f"Deleting files automatically for file group "
                     f"{self.__class__.__name__!r}",
@@ -1010,7 +1011,8 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"`config.DEBUG_HASHABLE_STATE = True`"
                 ]
             )
-            _last_spinner.start()
+            if _last_spinner is not None:
+                _last_spinner.start()
 
         # ---------------------------------------------------------------02
         # delete
@@ -1029,8 +1031,9 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 ]
             )
-            _last_spinner = self.spinner
-            _last_spinner.stop()
+            _last_spinner = logger.Spinner.get_last_spinner()
+            if _last_spinner is not None:
+                _last_spinner.stop()
             response = util.input_response(
                 question=f"Do you really want to delete the listed "
                          f"files/folders for file group {self.name!r} in "
@@ -1038,7 +1041,8 @@ class FileGroup(StorageHashable, abc.ABC):
                          f"{_formatted_names}\n",
                 options=["y", "n"]
             )
-            _last_spinner.start()
+            if _last_spinner is not None:
+                _last_spinner.start()
 
         # ---------------------------------------------------------------03
         # perform action
