@@ -23,6 +23,9 @@ def camel_case_split(identifier):
 
 
 class CustomException:
+    """
+    todo: use `rich` libs traceback interface etc
+    """
 
     def __init__(
         self, *,
