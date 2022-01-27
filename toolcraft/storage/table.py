@@ -2,6 +2,13 @@
 Module related to data frame storage mostly designed using pyarrow file
 systems and file formats
 
+todo: make table use file_system with this interface
+  https://arrow.apache.org/docs/python/filesystems.html#using-fsspec-compatible-filesystems-with-arrow
+  All this is made possible via FSSpecHandler
+  https://arrow.apache.org/docs/python/generated/pyarrow.fs.FSSpecHandler.html
+  Note that we can also stram data via pyarrow so that jobs on server can write
+  while client can read
+
 *** Writing and storing in streams ***
 todo: Stream writes and reads from pyarrow to pandas Dataframe
   https://wesmckinney.com/blog/arrow-streaming-columnar/

@@ -10,6 +10,9 @@ todo: do not use `toolcraft.logger` and `toolcraft.error` instead have your
     support etc
   + asks for prompt -> https://typer.tiangolo.com/tutorial/prompt/
   + nice terminating -> https://typer.tiangolo.com/tutorial/terminating/
+  [Counter argument]
+  + we can still use `toolcraft.logger` and `toolcraft.error` which will use `rich` lib
+  + while we still use typer for cli, validation, documentation and type completion
 
 """
 
@@ -30,17 +33,7 @@ class Tool(abc.ABC):
 
     Note: never override `tool_name`
 
-    Note that refrain from using `toolcraft.logger` and `toolcraft.error` as this
-    module is used for cli operations
-
-    todo: Also see if we can use alive_progress
-
-    We might need to support things like
-    + printing and colors -> https://typer.tiangolo.com/tutorial/printing/
-    + progress bar -> https://typer.tiangolo.com/tutorial/progressbar/
-    + fast-api -> typer is fast-api for cli also we will get same color support etc
-    + asks for prompt -> https://typer.tiangolo.com/tutorial/prompt/
-    + nice terminating -> https://typer.tiangolo.com/tutorial/terminating/
+    todo: do not allow anyone to make instances of this class ...
 
     """
 
@@ -115,6 +108,9 @@ class Tool(abc.ABC):
         color: str = typer.colors.BRIGHT_WHITE,
         err: bool = False,
     ):
+        """
+        todo: May be use `rich` lib here ...
+        """
         _tool_name = typer.style(f"{cls.tool_name()}:", fg=color, bold=True)
         typer.echo(f"{_tool_name} {msg}", err=err, color=True)
         if bool(msgs):

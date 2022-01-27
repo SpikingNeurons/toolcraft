@@ -1,5 +1,16 @@
 # coding=utf-8
 """
+
+[Guidelines]
++ we will always stick to python `logging` module for logging
+  (used indirectly by our `Logger` class)
++ the `rich` lib will be used for logging to console ...
+  and also for progress bars and spinners
++ dapr telemetry styled streamed logging needs to be explored
++ Note that typer based is only used in `toolcraft.tools` as we need some
+  cli, validation and documentation features ... but we can use `rich` only for
+  logging part while avoiding typer's echo interface
+
 NOTE: we do not use scandal.error as it is not possible here
 
 todo: removing exceptions is difficult ... as it is problematic to import
