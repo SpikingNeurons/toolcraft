@@ -70,6 +70,7 @@ def try_hashable_ser():
     assert _hashable.e == NewEnum.a1, "enums are not same"
 
 
+@dataclasses.dataclass(frozen=True)
 class DnTestFile(s.DownloadFileGroup):
     @property
     def meta_info(self) -> dict:
@@ -102,6 +103,7 @@ def try_download_file():
     df.delete(force=True)
 
 
+@dataclasses.dataclass(frozen=True)
 class DnTestFileAutoHashed(s.DownloadFileGroup):
     @property
     def meta_info(self) -> dict:
@@ -244,7 +246,7 @@ def try_creating_folders():
 
 
 @dataclasses.dataclass(frozen=True)
-class TestStorageResultsFolder(s.ResultsFolder):
+class TestStorageResultsFolder(s.dec.StoreFolder):
     @property
     @util.CacheResult
     def root_dir(self) -> pathlib.Path:
@@ -257,8 +259,11 @@ class TestStorage(m.HashableClass):
     b: float
 
     @property
-    def stores(self) -> TestStorageResultsFolder:
-        return TestStorageResultsFolder(for_hashable=self)
+    @util.CacheResult
+    def stores(self) -> t.Dict[str, "s.dec.StoreFolder"]:
+        return {
+            'base': TestStorageResultsFolder(for_hashable=self)
+        }
 
     @staticmethod
     def data_vector(
@@ -277,48 +282,61 @@ class TestStorage(m.HashableClass):
             ),
         }[key]
 
+    @s.dec.FileGroup()
+    def fg(self, file_group_maker: s.dec.FileGroupMaker = None) -> s.FileGroupFromPaths:
+        if not file_group_maker.exists:
+            fks = ["a", "b", "c"]
+            file_group_maker.storage_path.mkdir(parents=True, exist_ok=False)
+            for fk in fks:
+                (file_group_maker.storage_path / fk).touch()
+            return file_group_maker.make_file_group(fks)
+        else:
+            raise Exception(
+                f"Something already exists"
+            )
+
     # noinspection PyUnusedLocal
-    @s.StoreField()
+    @s.dec.Table()
     # noinspection PyMethodMayBeStatic
-    def store(self, mode: s.MODE_TYPE) -> pa.Table:
+    def store(self, mode: s.MODE_TYPE) -> t.Union[bool, pa.Table]:
         return self.data_vector("pandas_dataframe")
 
     # noinspection PyUnusedLocal
-    @s.StoreField(partition_cols=["a", "b"])
+    @s.dec.Table(partition_cols=["a", "b"])
     def store_with_partition_cols(
         self,
         mode: s.MODE_TYPE,
         a: int,
         b: int,
         filters: s.FILTERS_TYPE = None,
-    ) -> pa.Table:
+    ) -> t.Union[bool, pa.Table]:
         return self.data_vector("pandas_dataframe_with_partition_cols", a, b)
 
     # noinspection PyUnusedLocal
-    @s.StoreField(streamed_write=True)
+    @s.dec.Table(streamed_write=True)
     # noinspection PyMethodMayBeStatic
-    def store_streamed(self, mode: s.MODE_TYPE) -> pa.Table:
+    def store_streamed(self, mode: s.MODE_TYPE) -> t.Union[bool, pa.Table]:
         return self.data_vector("pandas_dataframe")
 
     # noinspection PyUnusedLocal
-    @s.StoreField(streamed_write=True, partition_cols=["a", "b"])
+    @s.dec.Table(streamed_write=True, partition_cols=["a", "b"])
     # noinspection PyMethodMayBeStatic
     def store_streamed_with_partition_cols(
         self,
         mode: s.MODE_TYPE,
         a: int,
         b: int,
-    ) -> pa.Table:
+    ) -> t.Union[bool, pa.Table]:
         return self.data_vector("pandas_dataframe_with_partition_cols", a, b)
 
     # noinspection PyUnusedLocal
-    @s.StoreField(partition_cols=["epoch"])
+    @s.dec.Table(partition_cols=["epoch"])
     def store_with_data_kwarg(
         self,
         mode: s.MODE_TYPE,
         epoch: int,
         data: t.Dict,
-    ) -> pa.Table:
+    ) -> t.Union[bool, pa.Table]:
         return pa.table(
             data={
                 "epoch": [epoch],
@@ -326,10 +344,15 @@ class TestStorage(m.HashableClass):
             },
         )
 
-    @s.StoreField()
-    def store_with_list(self, mode: s.MODE_TYPE) -> pa.Table:
+    @s.dec.Table()
+    def store_with_list(self, mode: s.MODE_TYPE) -> t.Union[bool, pa.Table]:
         result = np.ones((4, 5))
         return pa.table({"list": [_ for _ in result]})
+
+
+def try_file_storage():
+    ts = TestStorage(1, 2.0)
+    ts.fg()
 
 
 def try_arrow_storage():
@@ -729,9 +752,8 @@ def try_arrow_storage():
     # ---------------------------------------------------------07
     print("---------------------------------------------------------07")
     # finally delete folder for hashable that has StoreFields
-    ts.results_folder.store.delete()
-    ts.results_folder.delete()
-    print("ts.store_fields_folder.delete()")
+    ts.stores['base'].delete()
+    print("ts.stores['base'].delete()")
 
 
 def try_main():
@@ -740,12 +762,13 @@ def try_main():
         util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
-    try_hashable_ser()
-    try_download_file()
-    try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
-    try_arrow_storage()
+    # try_hashable_ser()
+    # try_download_file()
+    # try_auto_hashed_download_file()
+    # try_metainfo_file()
+    # try_creating_folders()
+    # try_arrow_storage()
+    try_file_storage()
     _TEMP_PATH.rmdir()
 
 
