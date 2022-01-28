@@ -14,6 +14,16 @@ todo: do not use `toolcraft.logger` and `toolcraft.error` instead have your
   + we can still use `toolcraft.logger` and `toolcraft.error` which will use `rich` lib
   + while we still use typer for cli, validation, documentation and type completion
 
+
+todo: may be no need for typer
+  + we can do many things rich.prompt
+  https://rich.readthedocs.io/en/stable/prompt.html
+  + Also we want interactive console things we will not be building cli tools
+    i.e. this library will not be used as cli based API
+
+todo: As of now typer is helpful to register tools
+  Need to investigate nice alternative for thins
+
 """
 
 import abc

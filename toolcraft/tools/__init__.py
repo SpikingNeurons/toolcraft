@@ -14,6 +14,9 @@ todo: do not use `toolcraft.logger` and `toolcraft.error` instead have your
     support etc
   + asks for prompt -> https://typer.tiangolo.com/tutorial/prompt/
   + nice terminating -> https://typer.tiangolo.com/tutorial/terminating/
+  [Counter argument] Use rich rich rich
+  + we can still use `toolcraft.logger` and `toolcraft.error` which will use `rich` lib
+  + while we still use typer for cli, validation, documentation and type completion
 
 """
 

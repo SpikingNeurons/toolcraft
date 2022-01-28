@@ -1,10 +1,23 @@
 """
+Understand storage module:
++ file_system >> will assist fifo to use fsspec smartly
++ folder.Folder >>
+  + Can manage its children ...
+  + uses file_system to detect where to keep files and folders
+  + children can Folder/FileGroup/FileFolder/Table
++ file_group.FileGroup >> Will have fixed number of files i.e. deterministic behaviour
++ file_folder.FileFolder >> can dynamically add remove files
++ table.Table >> full pyarrow tables
++ stream >> interface pending
++ state >> most likely will use dapr state
+  + might be eventually get rid of disk based StateFIle
+
 todo: storage in point of view of mlflow (also see top of individual module for
   more explanation)
   + table >> mlflow metrics
   + stream (streamed table) >> mlflow does not offer this
   + state >> mlflow tags
-  + file_group >> mlflow artifacts
+  + fifo.FileFolder >> mlflow artifacts
 
 """
 

@@ -13,6 +13,9 @@
 
 NOTE: we do not use scandal.error as it is not possible here
 
+todo: rich log handler
+  https://rich.readthedocs.io/en/stable/logging.html
+
 todo: removing exceptions is difficult ... as it is problematic to import
   .error module ... we can just pretty log the exceptions instead
 
@@ -812,6 +815,14 @@ class Spinner(Yaspin):
 
 
 class Logger:
+    """
+    Note we will always use pythons inbuilt logging
+    But for extra stuff we will use/extend `logging.Handler` interface and setup it in
+    `Logger.setup_handlers`
+
+    This class provided methods like info, warning etc. to finally log things.
+    Although handlers and filters might handle this well we might want dapr
+    """
 
     @property
     def level(self) -> int:
