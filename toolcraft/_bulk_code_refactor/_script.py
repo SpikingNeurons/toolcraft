@@ -78,7 +78,7 @@ def add_raise_before_exceptions_to_be_raised_explicitly():
             # raise where we have forgotten
             _src_txt = _src_txt.replace("raise raise", "raise")
             # finally, write back changes
-            # _fi.write_text(_src_txt, encoding="utf8")
+            _fi.write_text(_src_txt, encoding="utf8")
 
 
 def add_raise_if_expected_after_some_exceptions():
