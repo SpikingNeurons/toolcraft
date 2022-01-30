@@ -2,11 +2,11 @@
 import pathlib
 import typing as t
 
-from . import CustomException
+from .__base__ import _CustomException
 from ..logger import MESSAGES_TYPE
 
 
-class FileMustBeOnDiskOrNetwork(CustomException):
+class FileMustBeOnDiskOrNetwork(_CustomException):
     def __init__(
         self, *,
         path: pathlib.Path,
@@ -27,7 +27,7 @@ class FileMustBeOnDiskOrNetwork(CustomException):
         )
 
 
-class FolderMustBeOnDiskOrNetwork(CustomException):
+class FolderMustBeOnDiskOrNetwork(_CustomException):
     def __init__(
         self, *,
         path: pathlib.Path,
@@ -48,7 +48,10 @@ class FolderMustBeOnDiskOrNetwork(CustomException):
         )
 
 
-class NotAllowed(CustomException):
+class NotAllowed(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE
@@ -61,7 +64,7 @@ class NotAllowed(CustomException):
         )
 
 
-class FileMustNotBeOnDiskOrNetwork(CustomException):
+class FileMustNotBeOnDiskOrNetwork(_CustomException):
     def __init__(
         self, *,
         path: pathlib.Path,
@@ -81,7 +84,7 @@ class FileMustNotBeOnDiskOrNetwork(CustomException):
         )
 
 
-class FolderMustNotBeOnDiskOrNetwork(CustomException):
+class FolderMustNotBeOnDiskOrNetwork(_CustomException):
     def __init__(
         self, *,
         path: pathlib.Path,
@@ -101,7 +104,7 @@ class FolderMustNotBeOnDiskOrNetwork(CustomException):
         )
 
 
-class LongPath(CustomException):
+class LongPath(_CustomException):
 
     def __init__(
             self, *,

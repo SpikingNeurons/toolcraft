@@ -1,37 +1,35 @@
 """
-Get inspirations from
-https://github.com/python-poetry/poetry/tree/master/poetry/console/commands
-
-todo: do not use `toolcraft.logger` and `toolcraft.error` instead have your
-  own typer based interface as toolcraft.tools deals with only CLI things
-  + printing and colors -> https://typer.tiangolo.com/tutorial/printing/
-  + progress bar -> https://typer.tiangolo.com/tutorial/progressbar/
-  + fast-api -> typer is fast-api for cli also we will get same color
-    support etc
-  + asks for prompt -> https://typer.tiangolo.com/tutorial/prompt/
-  + nice terminating -> https://typer.tiangolo.com/tutorial/terminating/
-  [Counter argument]
-  + we can still use `toolcraft.logger` and `toolcraft.error` which will use `rich` lib
-  + while we still use typer for cli, validation, documentation and type completion
+[Guidelines]
++ We design this using rich lib
++ We have lot of things like progress_bar, prompt which we can use
++ todo: we can have parser based on command_fn signature to ask questions to
+    fill up arguments for tool ...
+    also we can create documentation in typer style but using rich
++ Get inspirations from
+  + https://github.com/python-poetry/poetry/tree/master/poetry/console/commands
+  + https://typer.tiangolo.com
+  + https://rich.readthedocs.io/en/stable/prompt.html
 
 
-todo: may be no need for typer
-  + we can do many things rich.prompt
-  https://rich.readthedocs.io/en/stable/prompt.html
+[Note] No need for typer
+  + we can do many things with rich.prompt
+    https://rich.readthedocs.io/en/stable/prompt.html
   + Also we want interactive console things we will not be building cli tools
     i.e. this library will not be used as cli based API
-
-todo: As of now typer is helpful to register tools
-  Need to investigate nice alternative for thins
 
 """
 
 import abc
 import inspect
-import typer
 import typing as t
+from rich import pretty
 
-APP = typer.Typer(name="toolcraft")
+from .. import error as e
+
+# Rich may be installed in the REPL so that Python data structures are automatically
+# pretty printed with syntax highlighting.
+# This makes the toolcraft tools console UI colorful
+pretty.install()
 
 
 class Tool(abc.ABC):
@@ -50,52 +48,51 @@ class Tool(abc.ABC):
     AVAILABLE_TOOL_CLASSES = {}  # type: t.Dict[str, t.Type[Tool]]
 
     def __init_subclass__(cls, **kwargs):
-        global APP
         # -------------------------------------------------------- 01
         # Validations
         # -------------------------------------------------------- 01.01
-        # method tool_name should never be overridden
-        # todo: dont know how to make this work ... python automatically bounded class
-        #   method in subclass ... even id() does not work
-        # if id(Tool.tool_name) != id(cls.tool_name:
-        # if Tool.tool_name != cls.tool_name:
-        # this seems to work the trick is to get the underlying func
-        # noinspection PyUnresolvedReferences
-        if id(Tool.tool_name.__func__) != id(cls.tool_name.__func__):
-            print(Tool.tool_name, cls.tool_name)
-            raise Exception(
-                f"Please never override method {Tool.tool_name}"
-            )
-        # -------------------------------------------------------- 01.02
         # all subclasses must be concrete
         if inspect.isabstract(cls):
             raise Exception(
                 f"Class {cls} is not concrete ..."
             )
+        # -------------------------------------------------------- 01.02
+        # nothing except command_fn should be overridden in subclass
+        _command_fn_name = Tool.command_fn.__name__
+        _child_class_keys = cls.__dict__.keys()
+        for _k in Tool.__dict__.keys():
+            if _k == _command_fn_name:
+                continue
+            if _k in _child_class_keys:
+                e.code.CodingError(
+                    msgs=[
+                        f"You are not allowed to override {_k} in child class "
+                        f"{cls} as it is already defined in parent class {Tool}"
+                    ]
+                )
         # -------------------------------------------------------- 01.03
         # there can be only one tool class per module
-        else:
-            if cls.tool_name() in cls.AVAILABLE_TOOL_CLASSES.keys():
-                raise Exception(
+        if cls.tool_name() in cls.AVAILABLE_TOOL_CLASSES.keys():
+            e.code.CodingError(
+                msgs=[
+                    f"There is already a tool named {cls.tool_name()} taken by class "
+                    f"{cls}",
                     f"you can have only one concrete subclass of {Tool} in "
                     f"module {cls.__module__}"
-                )
-        # -------------------------------------------------------- 01.04
-        # you need to define `command_fn` method in order to register it with
-        # `typer_app`
-        if Tool.command_fn.__name__ not in cls.__dict__.keys():
-            raise Exception(
-                f"Please override method `{Tool.command_fn.__name__}` in "
-                f"class {cls}."
+                ]
             )
 
         # -------------------------------------------------------- 02
         # store tool classes for future reference ...
         cls.AVAILABLE_TOOL_CLASSES[cls.tool_name()] = cls
 
-        # -------------------------------------------------------- 03
-        # register command_fn in typer_app
-        APP.command(name=cls.tool_name())(cls.command_fn)
+    def __init__(self):
+        e.code.CodingError(
+            msgs=[
+                "We do not allow to create instances for this class as it needs to "
+                "used at class level ..."
+            ]
+        )
 
     @classmethod
     def tool_name(cls) -> str:
@@ -105,35 +102,15 @@ class Tool(abc.ABC):
         return cls.__module__.split(".")[-1]
 
     @classmethod
+    def run(cls):
+        print("dfsdfsdfdsfdsfsdf")
+
+    @classmethod
+    @abc.abstractmethod
     def command_fn(cls, **kwargs):
-        raise NotImplementedError(
-            f"Please implement this method in the respective "
-            f"subclass ..."
-        )
-
-    @classmethod
-    def log(
-        cls,
-        msg: str, msgs: t.List[str] = None,
-        color: str = typer.colors.BRIGHT_WHITE,
-        err: bool = False,
-    ):
         """
-        todo: May be use `rich` lib here ...
+        + todo: we can have parser based on command_fn signature to ask questions to
+            fill up arguments for tool ...
+            also we can create documentation in typer style but using rich
         """
-        _tool_name = typer.style(f"{cls.tool_name()}:", fg=color, bold=True)
-        typer.echo(f"{_tool_name} {msg}", err=err, color=True)
-        if bool(msgs):
-            _indent = typer.style("   >>> ", fg=color, bold=True)
-            for _m in msgs:
-                typer.echo(f"{_indent}{_m}", err=err, color=True)
-
-    @classmethod
-    def info(cls, msg: str, msgs: t.List[str] = None):
-        cls.log(msg, msgs, typer.colors.GREEN)
-
-    @classmethod
-    def abort(cls, msg: str, msgs: t.List[str] = None) -> typer.Abort:
-        msg = typer.style(msg, fg=typer.colors.YELLOW)
-        cls.log(msg, msgs, typer.colors.BRIGHT_RED, err=True)
-        return typer.Abort()
+        ...

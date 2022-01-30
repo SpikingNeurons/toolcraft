@@ -10,10 +10,10 @@ from .. import logger
 #  Exception().__traceback__ can be used
 #  check PEP 3109 https://www.python.org/dev/peps/pep-3109/
 
+_LOGGER = logger.get_logger()
 
-# In some case we want to catch exception to handle while testing but
-# this is only for debugging
-_SHOW_TRACEBACK = True
+_SKULL_EMOJI = logger.AVAILABLE_EMOJI['skull_and_crossbones']
+_EXCEPTION_HEADER = f"{_SKULL_EMOJI} >>> {{header}} <<< {_SKULL_EMOJI}"
 
 
 def camel_case_split(identifier):
@@ -22,141 +22,66 @@ def camel_case_split(identifier):
     return [m.group(0) for m in matches]
 
 
-class CustomException:
+class _CustomException(Exception):
     """
     todo: use `rich` libs traceback interface etc
     """
+    # If not a validator then you need to explicitly raise instead of calling
+    _RAISE_EXPLICITLY = False
 
     def __init__(
         self, *,
         msgs: logger.MESSAGES_TYPE,
         unhandled_exception: Exception = None,
     ):
-        global _SHOW_TRACEBACK
+
         # -----------------------------------------------------------------01
-        # VALIDATIONS
-        # do not allow to use CustomException
-        if self.__class__ is CustomException:
-            raise Exception(
-                f"Do not use class {CustomException} instead subclass it ..."
-            )
-
-        # -----------------------------------------------------------------02
-        # Shutdown all the spinners
-        for s in logger.Spinner.NESTED_SPINNERS_STORE:
-            s.abort()
-
-        # -----------------------------------------------------------------02
         # GET LOGGER
         _caller_frame = inspect.currentframe().f_back.f_back
         _logger = logger.get_logger(
             module=inspect.getmodule(_caller_frame)
         )
 
+        # -----------------------------------------------------------------02
+        # MESSAGES RELATED
+        # make header and set is as message
+        _header = " ".join(camel_case_split(self.__class__.__name__)).upper()
+        _header = _EXCEPTION_HEADER.format(header=_header)
+        # call super to set the header as short message
+        super().__init__(_header)
+
         # -----------------------------------------------------------------03
-        # get all spinners and abort it
-        for s in logger.Spinner.NESTED_SPINNERS_STORE[::-1]:
-            s.hide()
-            s.abort()
+        # log
+        _logger.error(_header)
+        _logger.error(msgs)
+        _logger.exception(_header)
 
         # -----------------------------------------------------------------04
-        # MESSAGES RELATED
-        # get exception str
-        exception_str = " ".join(camel_case_split(
-            self.__class__.__name__)).upper()
+        # if the parent i.e. this __init__ was called from child that means the
+        # validation failed so set the flag
+        self._failed = True
 
         # -----------------------------------------------------------------05
-        # LOG
-        _logger.error(
-            msg=f"{logger.Emoji.EMOJI_SKULL} >>> {exception_str} <<< "
-                f"{logger.Emoji.EMOJI_SKULL}",
-            msgs=msgs,
-            prefix=""
-        )
+        # add redundant return for code checker to indicate that this need not
+        # be explicitly raised
+        return
 
-        # -----------------------------------------------------------------06
-        # traceback
-        if _SHOW_TRACEBACK:
-            cf = _caller_frame
-            _traceback_msgs = []
-            while cf is not None:
-                # bypass some traceback frames
-                # print(cf.f_code.co_filename, cf.f_code.co_name, cf.f_lineno)
-                if cf.f_code.co_name == "_cache_result_wrapper_func_in_util":
-                    cf = cf.f_back
-                    continue
-                if cf.f_code.co_filename == "<string>":
-                    cf = cf.f_back
-                    continue
-                if cf.f_code.co_filename == "<frozen importlib._bootstrap>":
-                    cf = cf.f_back
-                    continue
-                if cf.f_code.co_filename == \
-                        "<frozen importlib._bootstrap_external>":
-                    cf = cf.f_back
-                    continue
+    def raise_if_failed(self):
+        # test if it needs to be raised explicitly
+        if self._RAISE_EXPLICITLY:
+            from .code import RaiseExplicitly
+            raise RaiseExplicitly(
+                msgs=[
+                    f"Do not call {self.raise_if_failed} for class {self.__class__} "
+                    f"as it is configured to be raised explicitly.",
+                    f"Instead use keyword `raise`"
+                ]
+            )
 
-                # append traceback frame
-                _traceback_msgs.append(
-                    f"File \"{cf.f_code.co_filename}\", line {cf.f_lineno}"
-                )
-
-                # go back to previous traceback frame
-                cf = cf.f_back
-
-            _logger.error(
-                msg=f"Traceback (most recent call at last):",
-                msgs=_traceback_msgs[::-1],
-                prefix=logger.Emoji.TRACEBACK_PREFIX,
-                no_wrap=True)
-
-        # -----------------------------------------------------------------07
-        # if unhandled exception passed print them here
-        if unhandled_exception is not None:
-            from .. import util
-            _logger.error(
-                msg=f"Encountered unhandled exception (please see below)",
-                prefix=logger.Emoji.TRACEBACK_PREFIX,
-                no_wrap=True)
-            # todo: this currently is not logged in the file and is only
-            #  printed to console ... only exception name is logged to file
-            #  in above code
-            print(util.StringFmt.centered_text())
-            print(util.StringFmt.centered_text("Unhandled Exception"))
-            print(util.StringFmt.centered_text(
-                f"[ {unhandled_exception.__class__.__module__}."
-                f"{unhandled_exception.__class__.__name__} ]"
-            ))
-            print(util.StringFmt.centered_text())
-            print(str(unhandled_exception))
-            print(util.StringFmt.centered_text())
-            print(util.StringFmt.centered_text("End Of Unhandled Exception"))
-            print(util.StringFmt.centered_text())
-
-        # -----------------------------------------------------------------08
-        _logger.error(
-            msg=f"{logger.Emoji.EMOJI_SKULL} >>> EXITING THE PROGRAM <<< "
-                f"{logger.Emoji.EMOJI_SKULL}",
-            prefix="")
-
-        # -----------------------------------------------------------------09
-        # In some case we want to catch exception to handle while testing but
-        # this is only for debugging
-        e = Exception(exception_str)
-        e.custom_exception_class = self.__class__
-        raise e
-
-    @classmethod
-    def matches(cls, exception: Exception) -> bool:
+        # raise only if failed i.e. super constructor was called
         try:
-            # noinspection PyUnresolvedReferences
-            if exception.custom_exception_class is cls:
-                return True
-            else:
-                # it is custom exception but a different one so re raise it
-                raise exception
+            if self._failed:
+                raise self
         except AttributeError:
-            # if custom_exception_class attribute not present then
-            # unrecognized exception so re raise
-            raise exception
-
+            # no need to raise
+            return

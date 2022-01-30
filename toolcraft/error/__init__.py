@@ -6,6 +6,4 @@ todo: support rich things like
   syntax: for code with errors https://rich.readthedocs.io/en/stable/syntax.html
   layout: make columns for showing text diff https://rich.readthedocs.io/en/stable/layout.html
 """
-
-from .__base__ import CustomException
 from . import code, io, validation

@@ -3,11 +3,30 @@ import traceback
 import sys
 import numpy as np
 
-from . import CustomException
+from .__base__ import _CustomException
 from ..logger import MESSAGES_TYPE
 
 
-class ShouldNeverHappen(CustomException):
+class RaiseExplicitly(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
+    def __init__(
+        self, *,
+        msgs: MESSAGES_TYPE
+    ):
+        super().__init__(
+            msgs=[
+                "Error while coding !!!",
+                *msgs
+            ]
+        )
+
+
+class ShouldNeverHappen(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE
@@ -20,7 +39,10 @@ class ShouldNeverHappen(CustomException):
         )
 
 
-class NotAllowed(CustomException):
+class NotAllowed(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE
@@ -33,7 +55,10 @@ class NotAllowed(CustomException):
         )
 
 
-class CodingError(CustomException):
+class CodingError(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE
@@ -46,7 +71,10 @@ class CodingError(CustomException):
         )
 
 
-class RaiseUnhandledException(CustomException):
+class RaiseUnhandledException(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE,
@@ -61,7 +89,10 @@ class RaiseUnhandledException(CustomException):
         )
 
 
-class NotImplementedCorrectly(CustomException):
+class NotImplementedCorrectly(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE
@@ -74,7 +105,10 @@ class NotImplementedCorrectly(CustomException):
         )
 
 
-class NotSupported(CustomException):
+class NotSupported(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE
@@ -87,7 +121,7 @@ class NotSupported(CustomException):
         )
 
 
-class AssertError(CustomException):
+class AssertError(_CustomException):
     def __init__(
         self, *,
         value1, value2,
@@ -109,7 +143,10 @@ class AssertError(CustomException):
         )
 
 
-class ExitGracefully(CustomException):
+class ExitGracefully(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(
         self, *,
         msgs: MESSAGES_TYPE

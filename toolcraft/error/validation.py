@@ -9,10 +9,10 @@ import typing as t
 import numpy as np
 
 from ..logger import MESSAGES_TYPE
-from . import CustomException
+from .__base__ import _CustomException
 
 
-class ShouldBeOneOf(CustomException):
+class ShouldBeOneOf(_CustomException):
     def __init__(self, *, value: t.Any, values: t.Union[t.List, t.Tuple],
                  msgs: MESSAGES_TYPE):
         if value in values:
@@ -24,7 +24,7 @@ class ShouldBeOneOf(CustomException):
         ])
 
 
-class ShouldNotBeOneOf(CustomException):
+class ShouldNotBeOneOf(_CustomException):
     def __init__(self, *, value: t.Any, values: t.Union[t.List, t.Tuple],
                  msgs: MESSAGES_TYPE):
         if value not in values:
@@ -36,7 +36,7 @@ class ShouldNotBeOneOf(CustomException):
         ])
 
 
-class ShouldBeEqual(CustomException):
+class ShouldBeEqual(_CustomException):
     def __init__(self, *, value1, value2, msgs: MESSAGES_TYPE):
         _in_npy_test = isinstance(value1, np.ndarray) and isinstance(
             value2, np.ndarray)
@@ -63,7 +63,7 @@ class ShouldBeEqual(CustomException):
         super().__init__(msgs=[*msgs, *_msgs])
 
 
-class ShouldNotBeEqual(CustomException):
+class ShouldNotBeEqual(_CustomException):
     def __init__(self, *, value1, value2, msgs: MESSAGES_TYPE):
         if value1 != value2:
             return
@@ -74,7 +74,7 @@ class ShouldNotBeEqual(CustomException):
         ])
 
 
-class ValueNotAllowed(CustomException):
+class ValueNotAllowed(_CustomException):
     def __init__(self, *, value, not_be_value, msgs: MESSAGES_TYPE):
         if value != not_be_value:
             return
@@ -84,7 +84,7 @@ class ValueNotAllowed(CustomException):
         ])
 
 
-class SliceShouldNotOverlap(CustomException):
+class SliceShouldNotOverlap(_CustomException):
     def __init__(self, *, slice1: slice, slice2: slice, msgs: MESSAGES_TYPE):
         # step should be always None
         if slice1.step is not None or slice2.step is not None:
@@ -117,13 +117,20 @@ class SliceShouldNotOverlap(CustomException):
                 },
             ])
 
+        # add redundant return for code checker to indicate that this need not
+        # be explicitly raised
+        return
 
-class NotAllowed(CustomException):
+
+class NotAllowed(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
     def __init__(self, *, msgs: MESSAGES_TYPE):
         super().__init__(msgs=["This is Not Allowed !!!", *msgs])
 
 
-class OnlyValueAllowed(CustomException):
+class OnlyValueAllowed(_CustomException):
     def __init__(self, *, value, to_be_value, msgs: MESSAGES_TYPE):
         if value == to_be_value:
             return
@@ -134,7 +141,7 @@ class OnlyValueAllowed(CustomException):
         ])
 
 
-class IsSliceOrListWithin(CustomException):
+class IsSliceOrListWithin(_CustomException):
     def __init__(
         self,
         *,
@@ -200,7 +207,7 @@ class IsSliceOrListWithin(CustomException):
         super().__init__(msgs=[*msgs])
 
 
-class ShouldBeBetween(CustomException):
+class ShouldBeBetween(_CustomException):
     def __init__(
         self,
         *,
@@ -225,7 +232,7 @@ class ShouldBeBetween(CustomException):
         ])
 
 
-class ShouldBeGreaterThan(CustomException):
+class ShouldBeGreaterThan(_CustomException):
     def __init__(
         self,
         *,
@@ -240,7 +247,7 @@ class ShouldBeGreaterThan(CustomException):
         ])
 
 
-class ShouldBeLessThanEqTo(CustomException):
+class ShouldBeLessThanEqTo(_CustomException):
     def __init__(
         self,
         *,
@@ -255,7 +262,7 @@ class ShouldBeLessThanEqTo(CustomException):
         ])
 
 
-class ShouldBeInstanceOf(CustomException):
+class ShouldBeInstanceOf(_CustomException):
     def __init__(self, *, value: t.Any, value_types: t.Tuple,
                  msgs: MESSAGES_TYPE):
         if isinstance(value, value_types):
@@ -268,7 +275,7 @@ class ShouldBeInstanceOf(CustomException):
         ])
 
 
-class ShouldBeSubclassOf(CustomException):
+class ShouldBeSubclassOf(_CustomException):
     def __init__(self, *, value: t.Any, value_types: t.Tuple,
                  msgs: MESSAGES_TYPE):
         if issubclass(value, value_types):
@@ -281,7 +288,7 @@ class ShouldBeSubclassOf(CustomException):
         ])
 
 
-class ShouldBeClassMethod(CustomException):
+class ShouldBeClassMethod(_CustomException):
     def __init__(self, *, value: t.Callable, msgs: MESSAGES_TYPE):
         if inspect.ismethod(value):
             return
@@ -294,7 +301,7 @@ class ShouldBeClassMethod(CustomException):
         ])
 
 
-class ShouldBeFunction(CustomException):
+class ShouldBeFunction(_CustomException):
     def __init__(self, *, value: t.Callable, msgs: MESSAGES_TYPE):
         if inspect.isfunction(value):
             return
@@ -306,7 +313,7 @@ class ShouldBeFunction(CustomException):
         ])
 
 
-class ShouldBeDataClass(CustomException):
+class ShouldBeDataClass(_CustomException):
     def __init__(self, *, obj: t.Callable, msgs: MESSAGES_TYPE):
         if dataclasses.is_dataclass(obj):
             return
@@ -318,7 +325,7 @@ class ShouldBeDataClass(CustomException):
         ])
 
 
-class ShouldHaveAttribute(CustomException):
+class ShouldHaveAttribute(_CustomException):
     def __init__(self, *, attr_name: str, obj: t.Any, msgs: MESSAGES_TYPE):
         if hasattr(obj, attr_name):
             return
@@ -330,7 +337,7 @@ class ShouldHaveAttribute(CustomException):
         ])
 
 
-class ShouldHaveProperty(CustomException):
+class ShouldHaveProperty(_CustomException):
     def __init__(self, *, attr_name: str, obj: t.Any, msgs: MESSAGES_TYPE):
         if not hasattr(obj.__class__, attr_name):
             super().__init__(msgs=[
@@ -350,7 +357,7 @@ class ShouldHaveProperty(CustomException):
         return
 
 
-class ShouldNotHaveAttribute(CustomException):
+class ShouldNotHaveAttribute(_CustomException):
     def __init__(self, *, attr_name: str, obj: t.Any, msgs: MESSAGES_TYPE):
         if not hasattr(obj, attr_name):
             return

@@ -12,6 +12,8 @@ import sys
 import time
 import typing as t
 
+sys.path.append("..")
+
 import numpy as np
 import pandas as pd
 import pyarrow as pa
@@ -19,8 +21,6 @@ from toolcraft import marshalling as m
 from toolcraft import settings
 from toolcraft import storage as s
 from toolcraft import util
-
-sys.path.append("..\\..")
 
 settings.DEBUG_HASHABLE_STATE = False
 

@@ -65,7 +65,7 @@ class Internal:
     #  know that typing support is difficult to achieve. But we can override
     #  __getitem__ to throw custom error indicating on call kwargs have changed
     on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
-    progress_bar: logger.ProgressBar = None
+    progress_bar: "logger.ProgressBar" = None
     prefetched_on_first_call: bool
     in_with_context: bool = False
 
@@ -1735,7 +1735,7 @@ class HashableClass(YamlRepr, abc.ABC):
     # spinner will hang on and ... on consecutive calls cached spinners from
     # past runs will get used
     @property
-    def spinner(self) -> logger.Spinner:
+    def spinner(self) -> "logger.Spinner":
         _spinner = logger.Spinner.get_last_spinner()
         if _spinner is None:
             e.code.CodingError(msgs=[

@@ -24,7 +24,7 @@ import pathlib
 import importlib
 import sys
 
-from .__base__ import Tool, APP
+from .__base__ import Tool
 
 # todo: is this needed? Can this be removed?
 # this is so that all modules are loaded in tools directory ... so that the
@@ -39,4 +39,4 @@ for f in pathlib.Path(__file__).parent.glob("*.py"):
 
 
 if __name__ == '__main__':
-    sys.exit(APP())
+    sys.exit(Tool.run())

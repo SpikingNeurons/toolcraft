@@ -44,3 +44,10 @@ from . import settings, logger, marshalling, util, error, helper, parallel, \
 if settings.DPG_WORKS:
     # as some rules use dpg
     from . import gui
+
+# todo: when using toolcraft in interactive mode enable this
+# Rich may be installed in the REPL so that Python data structures are automatically
+# pretty printed with syntax highlighting.
+# This makes the toolcraft console UI colorful in interactive mode
+# from rich import pretty
+# pretty.install()

@@ -52,19 +52,6 @@ _FILE_EXE_MODE = 0o0777
 CACHE_KEY = "CACHE"
 
 
-class CachedPropertyNotSetError(e.CustomException):
-    def __init__(
-        self,
-        msgs: logger.MESSAGES_TYPE
-    ):
-        super().__init__(
-            msgs=[
-                "Cached Result Not found in object !!!",
-                *msgs
-            ]
-        )
-
-
 # noinspection PyUnresolvedReferences,PyMethodParameters,PyArgumentList
 class MultipleInheritanceNamedTupleMeta(t.NamedTupleMeta):
     # noinspection SpellCheckingInspection
