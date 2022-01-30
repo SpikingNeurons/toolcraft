@@ -280,7 +280,7 @@ class _SmartListDict:
                         f"Only allowed types are: ",
                         self.allowed_types,
                     ]
-                )
+                ).raise_if_failed()
             return item
 
 
@@ -319,7 +319,7 @@ class SmartDict(_SmartListDict):
                 f"We expect key to be always a str.",
                 f"Found unsupported type {type(key)}"
             ]
-        )
+        ).raise_if_failed()
 
         # ---------------------------------------------------------- 02
         # check if key present
@@ -331,7 +331,7 @@ class SmartDict(_SmartListDict):
                 f"cannot overwrite it...",
                 f"If you want to overwrite we recommend to delete then add it."
             ]
-        )
+        ).raise_if_failed()
 
         # ---------------------------------------------------------- 03
         # set item
@@ -346,7 +346,7 @@ class SmartDict(_SmartListDict):
                 f"We cannot find the requested item {item!r} in the "
                 f"SmartDict."
             ]
-        )
+        ).raise_if_failed()
 
         # return
         return self._items[item]
@@ -360,7 +360,7 @@ class SmartDict(_SmartListDict):
                 f"We cannot delete the item `{key}` as it is not present in "
                 f"the SmartDict."
             ]
-        )
+        ).raise_if_failed()
 
         # delete ... this will also propagate to __del__ of item so that you
         # can manage __del__ of what is contained
@@ -643,7 +643,7 @@ def CacheResult(*dec_args, **dec_kwargs):
                 f"We expect you to use CacheResult related decorators on "
                 f"function, instead you have decorated it over {dec_args[0]}"
             ]
-        )
+        ).raise_if_failed()
     else:
         raise e.code.ShouldNeverHappen(
             msgs=[
@@ -824,7 +824,7 @@ def get_object_memory_usage(obj) -> int:
         msgs=[
             f"Object of type {type(obj)} is not allowed ..."
         ]
-    )
+    ).raise_if_failed()
     seen_ids = set()
     size = 0
     objects = [obj]
@@ -1273,7 +1273,7 @@ def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
     e.io.FileMustNotBeOnDiskOrNetwork(
         path=file_path, msgs=[]
-    )
+    ).raise_if_failed()
     # save
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with file_path.open(mode='wb') as _f:
@@ -1284,7 +1284,7 @@ def read_pickle(file_path: pathlib.Path):
     # raise error if needed
     e.io.FileMustBeOnDiskOrNetwork(
         path=file_path, msgs=[]
-    )
+    ).raise_if_failed()
     # save
     with file_path.open(mode='rb') as _f:
         return pickle.load(_f)
@@ -1439,7 +1439,7 @@ def npy_array_save(file: pathlib.Path, npy_array: np.ndarray):
         msgs=[
             f"Only numpy arrays are allowed to be saved"
         ]
-    )
+    ).raise_if_failed()
 
     # if npy_array is structured raise error
     if npy_array.dtype.names is not None:
@@ -1477,7 +1477,7 @@ def npy_record_save(
         msgs=[
             f"Was expecting dictionary of numpy arrays"
         ]
-    )
+    ).raise_if_failed()
     _len = None
     for k, v in npy_record_dict.items():
         # key should be str
@@ -1927,7 +1927,7 @@ def one_hot_to_simple_labels(oh_label: pd.Series) -> pd.Series:
 #         msgs=[
 #             f"We expect you to pass a tensor instead found {type(t)}"
 #         ]
-#     )
+#     ).raise_if_failed()
 #
 #     npy_value = t.numpy()
 #

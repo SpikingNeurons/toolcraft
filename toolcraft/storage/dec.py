@@ -350,7 +350,7 @@ class _Dec:
                 f"methods of classes that are subclasses of "
                 f"{m.HashableClass}",
             ]
-        )
+        ).raise_if_failed()
 
         # ------------------------------------------------------- 02
         # check if mandatory kwargs are supplied

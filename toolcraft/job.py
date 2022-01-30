@@ -132,7 +132,7 @@ class JobRunnerHelper:
                             f"If using hashable kwarg then always annotate it with "
                             f"some subclass of {m.HashableClass} ..."
                         ]
-                    )
+                    ).raise_if_failed()
                     _hashable = _ann_type.from_yaml(
                         self.root_dir / f"{_arg_value}.info"
                     )
@@ -146,7 +146,7 @@ class JobRunnerHelper:
                             f"Annotation type for kwarg `{_arg_name}` of function "
                             f"{self.fn} is wrong"
                         ]
-                    )
+                    ).raise_if_failed()
                     self.fn_kwargs_casted[_arg_name] = _ann_type(_arg_value)
 
             # exception if improper command line token
@@ -287,7 +287,7 @@ class JobRunner:
                 msgs=[
                     f"We do not expect you to reserve methods in the flow ..."
                 ]
-            )
+            ).raise_if_failed()
             # check if all kwargs are supplied
             for _sk in inspect.signature(_fn).parameters.keys():
                 if _sk not in _fn_kwargs.keys():

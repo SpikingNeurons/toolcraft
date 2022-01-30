@@ -72,7 +72,7 @@ class StateFile(m.YamlRepr, abc.ABC):
                 f"This property can be used only when you have configured "
                 f"`config.DEBUG_HASHABLE_STATE=True`"
             ]
-        )
+        ).raise_if_failed()
         return self.path.parent / f"_backup_{self.path.name}_backup_"
 
     @abc.abstractmethod

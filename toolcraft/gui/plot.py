@@ -342,7 +342,7 @@ class Plot(_auto.Plot):
             msgs=[
                 "Please crosscheck the value for field num_of_y_axis"
             ]
-        )
+        ).raise_if_failed()
 
     def delete(self):
         self.clear()

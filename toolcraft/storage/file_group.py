@@ -538,7 +538,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     msgs=[
                         f"The key {k} in hashes dict is not known"
                     ]
-                )
+                ).raise_if_failed()
                 # This is in case we want to let code print hash that we want
                 # to supply
                 # value should be a valid hash
@@ -586,7 +586,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ---------------------------------------------------------- 05
         # check if files used in this file group can be handled for disk io
         for f in [self.path / fk for fk in self.file_keys]:
-            e.io.LongPath(path=f, msgs=[])
+            e.io.LongPath(path=f, msgs=[]).raise_if_failed()
 
     def init(self):
         # ----------------------------------------------------------- 01
@@ -905,7 +905,7 @@ class FileGroup(StorageHashable, abc.ABC):
                         f"self.create_file() is not present on the disk"
                     ]
                 )
-            e.io.LongPath(path=f, msgs=[])
+            e.io.LongPath(path=f, msgs=[]).raise_if_failed()
         # ----------------------------------------------------------------01.03
         # check if all key_paths i.e expected files are generated
         for f in expected_fs:
@@ -1127,7 +1127,7 @@ class NpyMemMap:
             e.io.FileMustBeOnDiskOrNetwork(
                 path=file_path,
                 msgs=[]
-            )
+            ).raise_if_failed()
 
         # ------------------------------------------------------------ 02
         # load memmap temporarily here to set some useful vars
@@ -1257,7 +1257,7 @@ class NpyMemMap:
                     f"Some coding error we are sure that the NpyMemMap is "
                     f"opened with `shuffle_seed=NO_SHUFFLE`"
                 ]
-            )
+            ).raise_if_failed()
             return _call_helper.memmap
         # ---------------------------------------------------------- 04.02
         # if anything else then we need to read memmap

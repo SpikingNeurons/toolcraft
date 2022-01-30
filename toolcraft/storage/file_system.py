@@ -63,7 +63,7 @@ class LocalFileSystem(pafs.LocalFileSystem):
                     f"other code that calls parents get_instance and inits "
                     f"self._instance variable to wrong value ..."
                 ]
-            )
+            ).raise_if_failed()
         return cls._instance
 
     # def rename(self, path, new_path):

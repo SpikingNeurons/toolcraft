@@ -13,12 +13,12 @@ def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
     e.io.FileMustNotBeOnDiskOrNetwork(
         path=file_path, msgs=[]
-    )
+    ).raise_if_failed()
 def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
     e.io.FileMustNotBeOnDiskOrNetwork(
         path=file_path, msgs=[]
-    )
+    ).raise_if_failed()
 """
 
 _iter = re.finditer(pattern=_SEARCH_REGEX, string=_STR_OR_FILE_OR_FOLDER)

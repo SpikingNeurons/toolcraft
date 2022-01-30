@@ -125,7 +125,7 @@ class Internal:
                 f"Member `{key}` is not annotated in class "
                 f"{self.__class__} so you cannot set it."
             ],
-        )
+        ).raise_if_failed()
 
         # if item is allowed to be set only once then do not allow it to be
         # set again
@@ -532,7 +532,7 @@ class RuleChecker:
                 f"`{_LITERAL_CLASS_NAME}` to "
                 f"extend the class {_parent_literal_class}"
             ]
-        )
+        ).raise_if_failed()
 
     def check_things_not_to_be_overridden(self):
         # ---------------------------------------------------------- 01
@@ -1419,7 +1419,7 @@ class YamlRepr(Tracker):
                         value_types=allowed_types,
                         msgs=[f"Value for key `{k}` in dict cannot be frozen"]
                         + _err_msg,
-                    )
+                    ).raise_if_failed()
 
         # ------------------------------------------------------------ 05
         # if list check values
@@ -1437,7 +1437,7 @@ class YamlRepr(Tracker):
                     value_types=allowed_types + (dict, list),
                     msgs=[f"Value for index `{i}` in list cannot be frozen"] +
                     _err_msg,
-                )
+                ).raise_if_failed()
                 # ---------------------------------------------------- 05.04
                 # if nested dict or list try to verify keys and values
                 if isinstance(v, (dict, list)):
@@ -1535,7 +1535,7 @@ class YamlRepr(Tracker):
 #             msgs=[
 #                 f"Unrecognized item type that cannot be freezed ..."
 #             ]
-#         )
+#         ).raise_if_failed()
 #         # -------------------------------------------------------- 01.02
 #         # check if keras config is serializable as per our code
 #         _k_config = item.get_config()
@@ -1876,7 +1876,7 @@ class HashableClass(YamlRepr, abc.ABC):
                         f"Check value of field `{f_name}` for class "
                         f"{self.__class__}"
                     ],
-                )
+                ).raise_if_failed()
 
     def init(self):
         ...

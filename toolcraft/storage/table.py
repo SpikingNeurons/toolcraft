@@ -197,7 +197,7 @@ def bake_expression(
                     _err_msg,
                     f"The first element of every filter tuple should be a str"
                 ]
-            )
+            ).raise_if_failed()
             # validate first element if it is one of _columns_allowed if
             # supplied
             if _columns_allowed is not None:
@@ -210,7 +210,7 @@ def bake_expression(
                         f"You can use filters only on below columns: ",
                         _columns_allowed,
                     ]
-                )
+                ).raise_if_failed()
             # validate second element
             # noinspection PyUnresolvedReferences
             e.validation.ShouldBeOneOf(
@@ -220,7 +220,7 @@ def bake_expression(
                     _err_msg,
                     "Invalid query string used for filter tuple ..."
                 ]
-            )
+            ).raise_if_failed()
             # validate third element
             # noinspection PyUnresolvedReferences
             e.validation.ShouldBeInstanceOf(
@@ -231,7 +231,7 @@ def bake_expression(
                     f"PyArrow filters kwarg tuple do not understand numpy "
                     f"or other types",
                 ]
-            )
+            ).raise_if_failed()
             # -------------------------------------------02.02.02
             # bake expression for tuple
             _exp = _OP_MAPPER_EXP[_element[1]](

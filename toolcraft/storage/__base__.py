@@ -302,7 +302,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
         # ----------------------------------------------------------- 02
         # check for path length
-        e.io.LongPath(path=self.path, msgs=[])
+        e.io.LongPath(path=self.path, msgs=[]).raise_if_failed()
         # if path exists check if it is a folder
         if self.path.exists():
             if not self.path.is_dir():
