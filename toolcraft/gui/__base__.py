@@ -35,13 +35,13 @@ class Tag:
     @classmethod
     def add(cls, tag: str, widget: 'Widget'):
         if tag in cls._container.keys():
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"A widget with tag `{tag}` already exists."
                 ]
             )
         if widget.is_tagged:
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"The widget is already tagged with tag {widget.internal.tag} "
                     f"so we cannot assign new tag {tag} ..."
@@ -67,7 +67,7 @@ class Tag:
         elif isinstance(tag_or_widget, Widget):
             return cls.get_tag(widget=tag_or_widget) is not None
         else:
-            e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(tag_or_widget)}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(tag_or_widget)}"])
             raise
 
     @classmethod
@@ -78,7 +78,7 @@ class Tag:
             else:
                 if not_exists_ok:
                     return
-                e.code.NotAllowed(
+                raise e.code.NotAllowed(
                     msgs=[
                         "There is no widget tagged with the tag name "
                         f"`{tag_or_widget}` hence there is nothing to remove"
@@ -92,7 +92,7 @@ class Tag:
             if _tag is None:
                 if not_exists_ok:
                     return
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"The widget you want to untag was never tagged"
                     ]
@@ -101,7 +101,7 @@ class Tag:
             # remove the tagged widget
             del cls._container[_tag]
         else:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Unknown type {type(tag_or_widget)} ..."
                 ]
@@ -291,7 +291,7 @@ class Dpg(m.YamlRepr, abc.ABC):
             if isinstance(v, Dpg):
                 if isinstance(self, Form):
                     if not isinstance(v, Widget):
-                        e.code.CodingError(
+                        raise e.code.CodingError(
                             msgs=[
                                 f"Check field {self.__class__}.{f_name}",
                                 f"For {Form} you can have fields that are {Widget}. ",
@@ -300,7 +300,7 @@ class Dpg(m.YamlRepr, abc.ABC):
                             ]
                         )
                 else:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Check field {self.__class__}.{f_name}",
                             f"You cannot have instance of class {v.__class__} as "
@@ -318,7 +318,7 @@ class Dpg(m.YamlRepr, abc.ABC):
         # ---------------------------------------------------- 01
         # check if already built
         if self.is_built:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Widget is already built and registered with:",
                     {
@@ -336,7 +336,7 @@ class Dpg(m.YamlRepr, abc.ABC):
     ):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We expect build to return int which happens to be dpg_id"
                 ]
@@ -494,7 +494,7 @@ class WidgetInternal(DpgInternal):
 
     def test_if_others_set(self):
         if not self.has("parent"):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Widget {self.__class__} is not a children to any parent",
                     f"Please use some container widget and add this Widget",
@@ -545,7 +545,7 @@ class Widget(Dpg, abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Was expecting class {self.__class__} to have field `user_data`",
                     "This is intended to be used by callback mechanism"
@@ -601,7 +601,7 @@ class MovableWidget(Widget, abc.ABC):
         # ---------------------------------------------- 01.01
         # either parent or before should be supplied
         if not((parent is None) ^ (before is None)):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     "Either supply parent or before",
                     "No need to provide both as parent can extracted from before",
@@ -619,7 +619,7 @@ class MovableWidget(Widget, abc.ABC):
             # if before is not None check if it is in parent and get its index
             _before_index = parent.index_in_children(before)
             if _before_index is None:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         f"We cannot find `before` widget in children of `parent` "
                         f"you want to move in",
@@ -710,7 +710,7 @@ class ContainerWidget(Widget, abc.ABC):
         # -------------------------------------------------- 01.01
         # check if supports before
         if not isinstance(widget, MovableWidget):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"{self.__class__} is not {MovableWidget} i.e. it does not "
                     f"supports before so you cannot "
@@ -725,7 +725,7 @@ class ContainerWidget(Widget, abc.ABC):
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
         if widget.is_built:
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     "The widget you are trying to add is already built",
                     "May be you want to `move()` widget instead.",
@@ -758,7 +758,7 @@ class ContainerWidget(Widget, abc.ABC):
 
     def clone(self) -> "ContainerWidget":
         if bool(self.children):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     "Cannot clone as you have added some widgets as children for "
                     f"the container widget {self.__class__}"
@@ -1046,7 +1046,7 @@ class Registry(m.YamlRepr, abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Was expecting class {self.__class__} to have field `user_data`",
                     "This is intended to be used by callback mechanism"
@@ -1068,7 +1068,7 @@ class PlotSeriesInternal(DpgInternal):
 
     def test_if_others_set(self):
         if not self.has("parent"):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Widget {self.__class__} is not a children to any parent",
                     f"Please use some `YAxis` and add this Widget",
@@ -1106,7 +1106,7 @@ class PlotItemInternal(DpgInternal):
 
     def test_if_others_set(self):
         if not self.has("parent"):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Widget {self.__class__} is not a children to any parent",
                     f"Please use some `Plot` and add this Widget",

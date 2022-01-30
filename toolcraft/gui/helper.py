@@ -16,7 +16,7 @@ def tab_bar_from_widget_dict(widget_dict: t.Dict) -> widget.TabBar:
             for _i, __v in enumerate(_v):
                 _tab(widget=__v)
         else:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Unrecognized type {type(_v)}"
                 ]

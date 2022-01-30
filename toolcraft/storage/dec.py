@@ -70,7 +70,7 @@ class StoreFolder(Folder):
         if self.path.as_posix().find(
             self.for_hashable.name
         ) == -1:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"You need to have unique path for `{self.__class__}` "
                     f"derived from hashable class"
@@ -141,7 +141,7 @@ class _Dec:
         # original dec_fn
         def _wrap_fn(*args, **kwargs):
             if len(args) != 1:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"Please refrain from passing args for this specially "
                         f"decorated methods meant to be used for storing Table "
@@ -157,7 +157,7 @@ class _Dec:
     def on_call(
         self, for_hashable: m.HashableClass, **kwargs
     ) -> t.Any:
-        e.code.CodingError(
+        raise e.code.CodingError(
             msgs=[
                 f"You expect you to always override this method in subclassed class "
                 f"{self.__class__}"
@@ -169,7 +169,7 @@ class _Dec:
         # ------------------------------------------------------- 01
         # todo: this class level check should move to rules.py eventually
         if self.LITERAL.return_ann_def is None:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Please define return annotation type in {self.LITERAL} for "
                     f"performing type checks ..."
@@ -182,7 +182,7 @@ class _Dec:
         # check function name and __qualname__
         _fn_qualname_split = self.dec_fn.__qualname__.split(".")
         if len(_fn_qualname_split) != 2:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Cannot understand fn qualifier name "
                     f"{self.dec_fn.__qualname__}",
@@ -196,7 +196,7 @@ class _Dec:
         _fn_class_name = _fn_qualname_split[0]
         _fn_name = _fn_qualname_split[1]
         if _fn_name != self.dec_fn.__name__:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Should be ideally same",
                     {
@@ -222,7 +222,7 @@ class _Dec:
         # make sure that first arg is self and update fn_args to ignore name
         # self
         if _dec_fn_arg_names[0] != "self":
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We expect first arg of decorated function to be self "
                     f"as it will be instance method and also we want to stick "
@@ -238,7 +238,7 @@ class _Dec:
         # make sure that mandatory kwargs are defined in function
         for k in _mandatory_kwargs:
             if k not in _dec_fn_arg_names:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"Make sure to define mandatory kwarg {k} in function "
                         f"below ... ",
@@ -255,14 +255,14 @@ class _Dec:
         # ------------------------------------------------------- 05.02
         # check if return annotation correct
         if 'return' not in _dec_fn_annotations.keys():
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Please annotate return type for method",
                     self.dec_fn_info,
                 ]
             )
         if _dec_fn_annotations['return'] != self.LITERAL.return_ann_def:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"The return annotation should be {self.LITERAL.return_ann_def}, "
                     f"instead found annotation to be "
@@ -276,7 +276,7 @@ class _Dec:
         for k in _dec_fn_arg_names:
             if k in _reserved_kwargs:
                 if _reserved_kwarg_ann_defs[k] != _dec_fn_annotations[k]:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"For reserved kwarg `{k}` the supplied "
                             f"annotation is not correct.",
@@ -312,7 +312,7 @@ class _Dec:
             if _rk in _dec_fn_arg_names:
                 # if default value is not supplied
                 if _rk not in _default_value_pairs.keys():
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"You did not supply default value for kwarg `{_rk}`",
                             f"We expect you to supply default value `{_default_value}`",
@@ -322,7 +322,7 @@ class _Dec:
                     )
                 # if default value is supplied iot should match
                 if _default_value != _default_value_pairs[_rk]:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Incorrect default value for kwarg `{_rk}`",
                             f"We expect you to supply default value `{_default_value}`",
@@ -356,7 +356,7 @@ class _Dec:
         # check if mandatory kwargs are supplied
         for mk in self.LITERAL.mandatory_kwarg_names():
             if mk not in kwargs.keys():
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We expect mandatory kwarg {mk} to be supplied "
                         f"while calling decorated function ",
@@ -371,7 +371,7 @@ class _Dec:
         for rk in self.LITERAL.reserved_kwarg_names:
             if rk in kwargs.keys():
                 if rk not in self.dec_fn_args:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Looks like you are supplying one of the reserved "
                             f"kwarg i.e. `{rk}` used by StoreField mechanism.",
@@ -392,7 +392,7 @@ class _Dec:
         #  for_hashable.init_validate ... we will keep this separate as that will
         #  complicate `separation of concerns`
         if self.store_name not in for_hashable.stores.keys():
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"The store_name {self.store_name} is not provided by property "
                     f"`stores` of class {for_hashable.__class__}",
@@ -446,7 +446,7 @@ class FileGroupMaker:
         elif (not _folder_exists) and (not _info_exists) and (not _config_exists):
             return False
         else:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Either all three must exists or nothing must exist",
                     {
@@ -500,7 +500,7 @@ class FileGroup(_Dec):
         try:
             _file_group_maker = kwargs["file_group_maker"]
             if _file_group_maker is not None:
-                e.code.CodingError(msgs=[
+                raise e.code.CodingError(msgs=[
                     f"Please do not supply kwargs `file_group_maker` as we will take "
                     f"care of supplying it ..."
                 ])
@@ -548,7 +548,7 @@ class _TableMode(enum.Enum):
         elif self in [self.read_write, self.write]:
             return False
         else:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Mode {self} is not yet supported"
                 ]
@@ -575,7 +575,7 @@ class _TableMode(enum.Enum):
         ]:
             return False
         else:
-            e.code.ShouldNeverHappen(
+            raise e.code.ShouldNeverHappen(
                 msgs=[
                     f"Mode {self} is not yet supported"
                 ]
@@ -586,7 +586,7 @@ class _TableMode(enum.Enum):
         for _m in cls:
             if _m.value == mode:
                 return _m
-        e.code.NotAllowed(
+        raise e.code.NotAllowed(
             msgs=[
                 f"The mode str cannot be parsed to valid mode",
                 {
@@ -632,7 +632,7 @@ class _TableOnCallReturn(t.NamedTuple):
                         filter_expression=self.filter_expression,
                     )
                 else:
-                    e.validation.NotAllowed(
+                    raise e.validation.NotAllowed(
                         msgs=[
                             f"There is nothing to read on the disk. Please "
                             f"check if exists before performing read."
@@ -640,7 +640,7 @@ class _TableOnCallReturn(t.NamedTuple):
                     )
                     raise
             else:
-                e.code.ShouldNeverHappen(
+                raise e.code.ShouldNeverHappen(
                     msgs=[
                         f"Cannot recognize type {type(_exists)}"
                     ]
@@ -654,7 +654,7 @@ class _TableOnCallReturn(t.NamedTuple):
                 return_table=False
             )
             if _exists:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         "Cannot write as data already exists on the disk.",
                         "Please check if exists before writing"
@@ -698,7 +698,7 @@ class _TableOnCallReturn(t.NamedTuple):
                 # if something existed then it should have been a table so
                 # raise error ...
                 if _exists:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Ideally this should be table as we used "
                             f"return_table=True",
@@ -727,7 +727,7 @@ class _TableOnCallReturn(t.NamedTuple):
                         # noinspection PyTypeChecker
                         return _value
             else:
-                e.code.ShouldNeverHappen(
+                raise e.code.ShouldNeverHappen(
                     msgs=[
                         f"Cannot recognize type {type(_exists)}"
                     ]
@@ -735,7 +735,7 @@ class _TableOnCallReturn(t.NamedTuple):
                 raise
         # ------------------------------------------------------- 07
         else:
-            e.code.ShouldNeverHappen(
+            raise e.code.ShouldNeverHappen(
                 msgs=[f"Unsupported mode {self.mode}"]
             )
             raise
@@ -894,7 +894,7 @@ class Table(_Dec):
         # mode allows it
         if self.streamed_write:
             if not _mode.is_streaming_possible:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"Mode `{_mode.value}` cannot be used when "
                         f"storage field is configured for streamed write "
@@ -950,14 +950,14 @@ class Table(_Dec):
                 # + all pivot columns must be specified
                 if _mode is not _TableMode.delete:
                     if bool(_f_from_filters):
-                        e.code.NotAllowed(
+                        raise e.code.NotAllowed(
                             msgs=[
                                 f"You cannot use `filters` kwarg for mode "
                                 f"{_mode}"
                             ]
                         )
                     if len(_f_for_pivots) != len(self.partition_cols):
-                        e.code.NotAllowed(
+                        raise e.code.NotAllowed(
                             msgs=[
                                 f"For mode {_mode} all partition related "
                                 f"kwargs must be supplied",
@@ -999,7 +999,7 @@ class Table(_Dec):
         if self.LITERAL.columns in kwargs.keys():
             # check if mode allows
             if _mode.is_write_or_delete_mode:
-                e.code.NotAllowed(
+                raise e.code.NotAllowed(
                     msgs=[
                         f"The `columns` kwarg cannot be used with mode "
                         f"{_mode}"
@@ -1051,7 +1051,7 @@ class Table(_Dec):
         if bool(self.partition_cols):
             # check if partition cols do not have repeat keys
             if len(set(self.partition_cols)) != len(self.partition_cols):
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         "Please check the partition_cols, looks like you "
                         "repeated string in the list provided ..."
@@ -1060,7 +1060,7 @@ class Table(_Dec):
             # check if partition column name is a reserved kwarg
             for col_name in self.partition_cols:
                 if col_name in self.LITERAL.reserved_kwarg_names:
-                    e.validation.NotAllowed(
+                    raise e.validation.NotAllowed(
                         msgs=[
                             f"You cannot use column name to be `{col_name}` as "
                             f"it is reserved for use by storage.StoreField..."
@@ -1086,7 +1086,7 @@ class Table(_Dec):
         if bool(_partition_cols):
             for k in _partition_cols:
                 if k not in _dec_fn_arg_names:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"You specified key `{k}` as a partition column "
                             f"while decorating method with StoreField. ",

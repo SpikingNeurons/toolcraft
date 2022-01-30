@@ -64,7 +64,7 @@ class Tool(abc.ABC):
             if _k == _command_fn_name:
                 continue
             if _k in _child_class_keys:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"You are not allowed to override {_k} in child class "
                         f"{cls} as it is already defined in parent class {Tool}"
@@ -73,7 +73,7 @@ class Tool(abc.ABC):
         # -------------------------------------------------------- 01.03
         # there can be only one tool class per module
         if cls.tool_name() in cls.AVAILABLE_TOOL_CLASSES.keys():
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"There is already a tool named {cls.tool_name()} taken by class "
                     f"{cls}",
@@ -87,7 +87,7 @@ class Tool(abc.ABC):
         cls.AVAILABLE_TOOL_CLASSES[cls.tool_name()] = cls
 
     def __init__(self):
-        e.code.CodingError(
+        raise e.code.CodingError(
             msgs=[
                 "We do not allow to create instances for this class as it needs to "
                 "used at class level ..."

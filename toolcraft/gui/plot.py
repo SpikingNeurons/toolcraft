@@ -127,7 +127,7 @@ class YAxis(_auto.YAxis):
     def __call__(self, plot_series: PlotSeries):
         if isinstance(plot_series, PlotSeries):
             if plot_series.label in self.all_plot_series.keys():
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         f"There already exists a plot_series with label "
                         f"`{plot_series.label}`",
@@ -141,7 +141,7 @@ class YAxis(_auto.YAxis):
             if self.is_built:
                 plot_series.build()
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_series)}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_series)}"])
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -283,7 +283,7 @@ class Plot(_auto.Plot):
     @util.CacheResult
     def y2_axis(self) -> YAxis:
         if self.num_of_y_axis not in [2, 3]:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"You cannot access this property. "
                     f"Please set the field `num_of_y_axis` to be one of [2, 3]"
@@ -297,7 +297,7 @@ class Plot(_auto.Plot):
     @util.CacheResult
     def y3_axis(self) -> YAxis:
         if self.num_of_y_axis != 3:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"You cannot access this property. "
                     f"Please set the field `num_of_y_axis` to be 3 to use this property"
@@ -316,7 +316,7 @@ class Plot(_auto.Plot):
     def __call__(self, plot_item: PlotItem):
         if isinstance(plot_item, PlotItem):
             if plot_item.label in self.all_plot_items.keys():
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         f"There already exists a plot_series with label "
                         f"`{plot_item.label}`"
@@ -327,7 +327,7 @@ class Plot(_auto.Plot):
             if self.is_built:
                 plot_item.build()
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_item)}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_item)}"])
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -420,7 +420,7 @@ class SubPlots(_auto.SubPlots):
         if isinstance(widget, Plot):
             super().__call__(widget, before)
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 
     @classmethod
     def yaml_tag(cls) -> str:

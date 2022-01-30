@@ -23,7 +23,7 @@ class SftpTool(Tool):
         # read details from input yaml file
         yaml_file = pathlib.Path(file_name)
         if not yaml_file.exists():
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"We cannot find file `{file_name}`"
                 ]

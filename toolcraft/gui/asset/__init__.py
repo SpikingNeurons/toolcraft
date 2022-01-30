@@ -38,7 +38,7 @@ class Theme(enum.Enum):
         elif self is self.LIGHT:
             _THEMES_CACHE[self] = themes.create_theme_imgui_light()
         else:
-            e.code.NotSupported(
+            raise e.code.NotSupported(
                 msgs=[
                     f"Theme {self} is not supported"
                 ]

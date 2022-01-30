@@ -329,7 +329,7 @@ class Dashboard(m.YamlRepr, abc.ABC):
         # -------------------------------------------------- 01
         # make sure if was already called
         if self.internal.has("is_run_called"):
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"You can run only once ..."
                 ]

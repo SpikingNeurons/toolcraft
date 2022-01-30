@@ -13,7 +13,7 @@ class WindowInternal(__base__.DpgInternal):
 
     def test_if_others_set(self):
         if not self.has("dash_board"):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Window {self.__class__} has no dash_board",
                     f"Make sure you have called `Window.setup(dash_board)` "
@@ -33,7 +33,7 @@ class Window(_auto.Window):
 
     @property
     def parent(self) -> None:
-        e.code.CodingError(
+        raise e.code.CodingError(
             msgs=[
                 "Use of `parent` for `Window` is not allowed.",
                 "Please use `dash_board` instead.",
@@ -68,7 +68,7 @@ class FileDialog(_auto.FileDialog):
 
     @property
     def parent(self) -> None:
-        e.code.CodingError(
+        raise e.code.CodingError(
             msgs=[
                 "Use of `parent` for `Window` is not allowed.",
                 "Please use `dash_board` instead.",

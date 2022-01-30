@@ -127,7 +127,7 @@ class FileGroupConfig(s.Config):
     def append_checked_on(self):
         # this can never happen
         if len(self.checked_on) > self.LITERAL.checked_on_list_limit:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"This should never happens ... did you try to append "
                     f"checked_on list multiple times"
@@ -250,7 +250,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 else:
                     _msg = "But all files in the file group are missing"
 
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"State manager files for file group `{self.name}` "
                         f"are present in dir {self.path}.",
@@ -276,7 +276,7 @@ class FileGroup(StorageHashable, abc.ABC):
         if self.path.exists():
             # expect path to be a dir
             if self.path.is_file():
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We expect path to be a dir for FileGroup"
                     ]
@@ -305,7 +305,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # if file creation needed do not call this method
         # todo: remove later
         if not self.is_created:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We need to create files before trying to do periodic "
                     f"check",
@@ -347,7 +347,7 @@ class FileGroup(StorageHashable, abc.ABC):
         https://stackoverflow.com/questions/37003862/how-to-upload-a-file-to-google-cloud-storage-on-python-3
         """
         if platform.system() != "Windows":
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     "Only supported for windows platform"
                 ]
@@ -358,7 +358,7 @@ class FileGroup(StorageHashable, abc.ABC):
             "application_default_credentials.json"
 
         if not _cred_file.exists():
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     "Please make sure that gcloud is installed ...",
                     "Then run command `gcloud auth application-default login`",
@@ -428,7 +428,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # we assume that the files will be created by now so we expect
             # the state_manager files to be present on the disk
             if not self.is_created:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"Never call this until files are created. Only after "
                         f"that the state files will be present on the disk"
@@ -437,7 +437,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # check if auto_hashes present
             if self.config.auto_hashes is None:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We expect that auto_hashes will be set by now"
                     ]
@@ -448,7 +448,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # if not auto hash then raise error to inform to override this method
         else:
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"Since you have not configured for auto hashing we "
                     f"expect you to override this method to provide hashes "
@@ -495,7 +495,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # when is_auto_hash do not override get_hashes else override get_hashes
         if self.is_auto_hash:
             if FileGroup.get_hashes != self.__class__.get_hashes:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"When in auto hashing mode do not override get_hashes",
                         f"Please check:",
@@ -507,7 +507,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 )
         else:
             if FileGroup.get_hashes == self.__class__.get_hashes:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"When not in auto hashing mode please override "
                         f"get_hashes to provide hashes",
@@ -543,7 +543,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 # to supply
                 # value should be a valid hash
                 # if not len(_hash) == 64:
-                #     e.code.NotAllowed(
+                #     raise e.code.NotAllowed(
                 #         msgs=[
                 #             f"Unsupported file hash for key {k!r}",
                 #             f"We only support sha-256",
@@ -553,7 +553,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 #     )
                 # check if value is lower case
                 if _hash.lower() != _hash:
-                    e.code.NotAllowed(
+                    raise e.code.NotAllowed(
                         msgs=[
                             f"For consistency make sure that hashes are "
                             f"lower case",
@@ -566,7 +566,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # not auto hash so check if all hashes provided
             for k in self.file_keys:
                 if k not in _hashes_keys:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Please provide hash for file_key `{k}` in "
                             f"`get_hashes` method of class {self.__class__}"
@@ -576,7 +576,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ---------------------------------------------------------- 04
         # check if duplicate file_keys
         if len(self.file_keys) != len(set(self.file_keys)):
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"We found some duplicates in self.file_keys",
                     self.file_keys
@@ -604,7 +604,7 @@ class FileGroup(StorageHashable, abc.ABC):
             _info_backup_exists = _info_backup_path.exists()
             _config_backup_exists = _config_backup_path.exists()
             if _info_backup_exists ^ _config_backup_exists:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We expect both info and config backup file to be "
                         f"present"
@@ -650,7 +650,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # The check() must be called only needed to catch some coding errors we
         # do this
         if not self.is_created:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Do not try to check until all files are created, "
                     f"make sure to call {self.__class__.__name__}.create()",
@@ -661,7 +661,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # do not check for period if force check
         if not force:
             if not self.periodic_check_needed:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"Find the bug in the code, you need to make sure if "
                         f"periodic check is needed using property "
@@ -685,7 +685,7 @@ class FileGroup(StorageHashable, abc.ABC):
             self.info.delete()
             self.config.delete()
             # raise error
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Hashes for some files did not match. ",
                     f"FileGroup: {self.name}",
@@ -726,7 +726,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # ----------------------------------------------------------01.01
             # check if in file keys
             if file_key not in self.file_keys:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"The supplied `file_key={file_key}` to "
                         f"`{self.__class__}.get_file` method is not one of:",
@@ -737,7 +737,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # --------------------------------------------------------------02
         # check if created
         if not self.is_created:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"Make sure to create files for instance of type "
                     f"{self.__class__} before calling `get_files()`"
@@ -747,7 +747,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # --------------------------------------------------------------03
         # if periodic check needed
         if self.periodic_check_needed:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"Make sure to perform check before using `get_file()` "
                     f"for class {self.__class__}"
@@ -757,7 +757,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # --------------------------------------------------------------04
         # delete if outdated
         if self.is_outdated:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"Files are out dated for class {self.__class__}. You "
                     f"need to delete it."
@@ -803,7 +803,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # if unknown files present throw error
         _unknown_files = self.unknown_files_on_disk
         if bool(_unknown_files):
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"We were trying to create files for class "
                     f"{self.__class__.__name__!r} with base name "
@@ -840,7 +840,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # if check if created and expected file is same
             if _expected_file != _created_file:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"The {self.__class__}.create() returns file path "
                         f"which is not expected for key {k!r}",
@@ -872,7 +872,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------01.01
         # created files should be `list` and should not be empty
         if not isinstance(created_fs, list):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Expected a list from {self.__class__.create_file} but "
                     f"instead found returned value of type "
@@ -883,14 +883,14 @@ class FileGroup(StorageHashable, abc.ABC):
         # check if created file is proper and if it is on disk
         for f in created_fs:
             if not isinstance(f, pathlib.Path):
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"Method {self.create_file} should return the list of "
                         f"files crested, instead found {created_fs}"
                     ]
                 )
             if f not in expected_fs:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"File {f.name!r} generated by create method of class "
                         f"{self.__class__} does not correspond to one of the "
@@ -899,7 +899,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             if not f.exists():
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"One of the file {f} you are returning from "
                         f"self.create_file() is not present on the disk"
@@ -910,7 +910,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # check if all key_paths i.e expected files are generated
         for f in expected_fs:
             if f not in created_fs:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We expect file {f.name} to be created",
                         f"But the file was not created"
@@ -921,7 +921,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # if unknown files present throw error
         _unknown_files = self.unknown_files_on_disk
         if bool(_unknown_files):
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"We have created files for class "
                     f"{self.__class__.__name__!r} with base name "
@@ -949,7 +949,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # will get set to None and then here we update it after computing hashes
         if self.is_auto_hash:
             if self.config.auto_hashes is not None:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We just generated files so we do not expect auto "
                         f"hashes to be present in the config"
@@ -1068,7 +1068,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 if _key_path.is_file() or _key_path.is_dir():
                     util.io_path_delete(_key_path, force=force)
                 else:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"If you deleted files manually this can happen",
                             f"But if you didnt then this might be a bug",
@@ -1077,7 +1077,7 @@ class FileGroup(StorageHashable, abc.ABC):
                         ]
                     )
         else:
-            e.code.ExitGracefully(
+            raise e.code.ExitGracefully(
                 msgs=[
                     "We will terminate the program as you requested "
                     "not to delete files..."
@@ -1182,7 +1182,7 @@ class NpyMemMap:
         try:
             _call_helper = self.call_helper
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"When using with statement make sure to call __call__ "
                     f"method so that call_helper attribute is available."
@@ -1193,7 +1193,7 @@ class NpyMemMap:
         # ---------------------------------------------------------- 02
         # if do_not_use raise error
         if _call_helper.do_not_use:
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"You opted do_not_use=True hence you cannot use "
                     f"__getitem__ method",
@@ -1205,7 +1205,7 @@ class NpyMemMap:
         # return ... no need to check for shuffle indices
         if len(_call_helper.memmap) == 1:
             if item != USE_ALL:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"For sanity we force you to use `:` while indexing "
                         f"NpyMemMap's with single value",
@@ -1226,14 +1226,14 @@ class NpyMemMap:
                 if isinstance(item[0], (int, slice, list, np.ndarray)):
                     item = (_call_helper.shuffle_indices[item[0]], *item[1:])
                 else:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"First element of tuple is not a int or slice "
                             f"instead found type {type(item[0])}"
                         ]
                     )
             else:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"The item can be int, slice or tuple instead found "
                         f"type {type(item)}"
@@ -1289,7 +1289,7 @@ class NpyMemMap:
             # noinspection PyUnresolvedReferences
             _ = self.call_helper
             # we do not expect attribute call_helper here
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Call was already called on the NpyMemmap instance.",
                     f"To avoid this you need to call __call__ with "
@@ -1316,7 +1316,7 @@ class NpyMemMap:
         try:
             _ = self.call_helper
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"When using with statement make sure to call __call__ "
                     f"method so that call_helper attribute is available."
@@ -1342,7 +1342,7 @@ class NpyMemMap:
         try:
             _ = self.call_helper
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"When using with statement make sure to call __call__ "
                     f"method so that call_helper attribute is available."
@@ -1357,7 +1357,7 @@ class NpyMemMap:
         try:
             _ = self.call_helper
             # we do not expect attribute call_helper here
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"May be you have not exited properly from within with "
                     f"statement.",
@@ -1383,7 +1383,7 @@ class NpyMemMap:
         try:
             call_helper = self.call_helper
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We expect you to use `with` statement and make sure to "
                     f"call __call__ method on it"
@@ -1393,7 +1393,7 @@ class NpyMemMap:
 
         # make sure that do_not_use is set
         if not call_helper.do_not_use:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"You are using method {self.get_raw_memmap} and we "
                     f"expect you to set `shuffle_seed=s.DO_NOT_USE` as you "
@@ -1420,7 +1420,7 @@ class NpyMemMap:
         try:
             call_helper = self.call_helper
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We expect you to use `with` statement and make sure to "
                     f"call __call__ method on it"
@@ -1430,7 +1430,7 @@ class NpyMemMap:
 
         # make sure that do_not_use is set
         if not call_helper.do_not_use:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"You are using method {self.random_examples} and we "
                     f"expect you to set `shuffle_seed=s.DO_NOT_USE` as we will "
@@ -1482,7 +1482,7 @@ class NpyMemMapCallHelper:
                 np.unique(shuffle_seed),
                 np.arange(_len, dtype=shuffle_seed.dtype)
             ):
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"While supplying shuffle seed as shuffle indices "
                         f"make sure that it has all values from 0 to {_len}",
@@ -1507,7 +1507,7 @@ class NpyMemMapCallHelper:
             return
 
         # should not happen as above cases should handle everything
-        e.code.CodingError(
+        raise e.code.CodingError(
             msgs=[
                 f"Not able to process shuffle_seed {shuffle_seed}"
             ]
@@ -1665,7 +1665,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # if spinner is None
         if _spinner is None:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We recently added spinner support so we expect that "
                     f"get_files method is called from with with context of "
@@ -1689,7 +1689,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # redundant check ... this was anyways checked while file creation
             # exists here for extra safety
             if len(_data) != self.shape[file_key][0]:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"This must be same and should be already checked in "
                         f"{self.__class__.create_post_runner}",
@@ -1723,7 +1723,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # if file exists raise error
         if _file.exists():
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"The file {_file} already exists so we cannot overwrite "
                     f"the file. Please delete it if possible."
@@ -1736,7 +1736,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         elif isinstance(npy_data, dict):
             util.npy_record_save(file=_file, npy_record_dict=npy_data)
         else:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Unrecognized type of npy_data {type(npy_data)!r} for "
                     f"file_key={file_key!r}",
@@ -1757,7 +1757,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _dtype_keys.sort()
         _keys.sort()
         if _keys != _shape_keys:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"The file_keys and the keys of shape dict do not match",
                     {
@@ -1769,7 +1769,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 ]
             )
         if _keys != _dtype_keys:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"The file_keys and the keys of dtype dict do not match",
                     {
@@ -1815,7 +1815,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # ------------------------------------------------------------02.03
             # check dtype
             if _npy_memmap.dtype != _dtypes[file_key]:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         f"Type mismatch for files created.",
                         f"The data type for loaded numpy file from disk for "
@@ -1828,7 +1828,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # ------------------------------------------------------------02.03
             # check shape
             if _npy_memmap.shape != _shapes[file_key]:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         f"Shape mismatch for files created.",
                         f"The shape for loaded numpy file from disk for "
@@ -1939,7 +1939,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     # noinspection PyTypeChecker
     def create_file(self, *, file_key: str) -> pathlib.Path:
-        e.code.CodingError(
+        raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "
                 f"overridden for class {self.__class__}"
@@ -2030,7 +2030,7 @@ class FileGroupFromPaths(FileGroup):
         for fk in self.file_keys:
             _f = self.path / fk
             if not _f.exists():
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We were expecting path {_f} to exist"
                     ]
@@ -2041,7 +2041,7 @@ class FileGroupFromPaths(FileGroup):
 
     # noinspection PyTypeChecker
     def create_file(self, *, file_key: str) -> pathlib.Path:
-        e.code.CodingError(
+        raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "
                 f"overridden for class {self.__class__}"

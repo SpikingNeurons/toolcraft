@@ -118,7 +118,7 @@ class Folder(StorageHashable):
         # deletion
         if _state_manager_files_available:
             if not _folder_present:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"The state is available but respective folder is "
                         f"absent."
@@ -159,7 +159,7 @@ class Folder(StorageHashable):
         # folder can have only two fields
         for f in self.dataclass_field_names:
             if f not in ['for_hashable', 'parent_folder']:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"The subclasses of class {Folder} can have only two "
                         f"fields {['for_hashable', 'parent_folder']}",
@@ -185,7 +185,7 @@ class Folder(StorageHashable):
         #     # safe update of dict
         #     if _hashable.hex_hash != \
         #             self.items[_hashable.name].hex_hash:
-        #         e.code.NotAllowed(
+        #         raise e.code.NotAllowed(
         #             msgs=[
         #                 f"While syncing from disk the hashable had different "
         #                 f"hex_hash than one assigned now",
@@ -259,7 +259,7 @@ class Folder(StorageHashable):
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it
         if not util.io_is_dir_empty(self.path):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"The folder should be empty by now ...",
                     f"Check path {self.path}"
@@ -296,7 +296,7 @@ class Folder(StorageHashable):
         # -----------------------------------------------------------------01
         # tracking dict should be empty
         if len(self.items) != 0:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We expect that the tracker dict be empty",
                     f"Make sure that you are calling sync only once i.e. from "
@@ -331,7 +331,7 @@ class Folder(StorageHashable):
             if self.contains == t.Any:
                 _cls = m.YamlRepr.get_class(f)
                 if _cls is None:
-                    e.validation.NotAllowed(
+                    raise e.validation.NotAllowed(
                         msgs=[
                             f"Cannot process tag at the start ",
                             f"Check: ",
@@ -373,7 +373,7 @@ class Folder(StorageHashable):
                            f"sub-class, there might be some coding error." \
                            f"Did you forget to call create file/folder " \
                            f"before adding the item."
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We cannot find the state for the following hashable "
                         f"item on disk",
@@ -382,7 +382,7 @@ class Folder(StorageHashable):
                 )
             else:
                 _err_msg = f"Don't know the type {type(hashable)}"
-                e.code.ShouldNeverHappen(msgs=[_err_msg])
+                raise e.code.ShouldNeverHappen(msgs=[_err_msg])
 
         # add item
         self.items[hashable.name] = hashable

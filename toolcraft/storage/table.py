@@ -161,7 +161,7 @@ def bake_expression(
         if isinstance(_element, list):
             # todo: remove this limitation when we understand DNF queries
             #   that is add support for filters that are nested lists
-            e.code.NotSupported(
+            raise e.code.NotSupported(
                 msgs=[
                     f"We will support nested filters list once we figure out "
                     f"how DNF queries work ..."
@@ -182,7 +182,7 @@ def bake_expression(
             # basic validations
             # check if three elements
             if len(_element) != 3:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         _err_msg,
                         f"We expect filters that are tuples and "
@@ -248,7 +248,7 @@ def bake_expression(
         # -----------------------------------------------02.03
         # else not supported
         else:
-            e.code.ShouldNeverHappen(
+            raise e.code.ShouldNeverHappen(
                 msgs=[
                     _err_msg,
                     f"We only support filters that are tuples "
@@ -378,7 +378,7 @@ class TableInternal(m.Internal):
                 _partition_cols = []
             for _col in _partition_cols:
                 if _col not in _tables_cols:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"While returning pa.Table from the decorated "
                             f"method you missed to add important partition "
@@ -393,7 +393,7 @@ class TableInternal(m.Internal):
             # if table_schema available then validate
             else:
                 if _schema_in_config != table.schema:
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"The yielded/returned table schema is "
                             f"not valid",
@@ -409,7 +409,7 @@ class TableInternal(m.Internal):
         else:
             # if table schema in config is none raise error
             if _schema_in_config is None:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We cannot update internals as you have not "
                         f"supplied table nor there is schema definition "
@@ -433,7 +433,7 @@ class TableConfig(s.Config):
 
     def get_partitioning(self) -> t.Optional[pds.Partitioning]:
         if self.schema is None:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Ideally by now this should be set by now if not "
                     f"available",
@@ -538,7 +538,7 @@ class Table(Folder):
         # make sure that for_hashable is str as in super class it
         # can be even HashableClass and that cannot be tolerated here
         if not isinstance(self.for_hashable, str):
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 msgs=[
                     f"We only allow for_hashable to be a str as this is "
                     f"Table.",
@@ -663,7 +663,7 @@ class Table(Folder):
         # todo: add support for filters that are nested lists
         for f in filters:
             if isinstance(f, list):
-                e.code.NotAllowed(
+                raise e.code.NotAllowed(
                     msgs=[
                         f"For delete mode we support simple filters that "
                         f"operate on partition columns ... nested "
@@ -695,7 +695,7 @@ class Table(Folder):
             # --------------------------------------------------04.02
             # the path must be a dir
             if not _path.is_dir():
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We were expecting path {_path} to be a dir ..."
                     ]
@@ -720,7 +720,7 @@ class Table(Folder):
                 # ----------------------------------------------04.06.01
                 # should be a dir
                 if not _nested_path.is_dir():
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"We were expecting folder ..."
                         ]
@@ -737,7 +737,7 @@ class Table(Folder):
                 # # the _pc from folder name should match expected partition
                 # # column
                 # if _pc != _pc_exp:
-                #     e.code.CodingError(
+                #     raise e.code.CodingError(
                 #         msgs=[
                 #             f"We were expecting all folder names to start "
                 #             f"with expected partition column name {_pc_exp}, "
@@ -768,7 +768,7 @@ class Table(Folder):
                         try:
                             _del &= _op(_val, _val1)
                         except TypeError:
-                            e.code.CodingError(
+                            raise e.code.CodingError(
                                 msgs=[
                                     f"Check supplied filters",
                                     f"Operation {_op} cannot be applied on "
@@ -837,7 +837,7 @@ class Table(Folder):
 
         # extra check
         if len(_table) == 0:
-            e.code.ShouldNeverHappen(
+            raise e.code.ShouldNeverHappen(
                 msgs=[
                     "The exists check before read call should handled it.",
                     "Found a empty table while reading",
@@ -862,7 +862,7 @@ class Table(Folder):
         # check if yields value should be generator
         if yields:
             if not _is_generator_type:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         f"Are you using return ?? ... ",
                         f"We expect you to yield"
@@ -870,7 +870,7 @@ class Table(Folder):
                 )
         else:
             if _is_generator_type:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         f"Are you using yield ?? ... ",
                         f"We expect you to return"
@@ -886,7 +886,7 @@ class Table(Folder):
         # if self.partition_cols is not None:
         #     for pc in self.partition_cols:
         #         if pc not in value.column_names:
-        #             e.code.CodingError(
+        #             raise e.code.CodingError(
         #                 msgs=[
         #                     f"We expect you to supply mandatory column "
         #                     f"`{pc}` in the returned/yielded pyarrow table."
@@ -906,7 +906,7 @@ class Table(Folder):
 
         # if not pa.Table then raise error
         if not isinstance(_table, pa.Table):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We expect the decorated method to return {pa.Table} "
                     f"but instead found return value of type {type(_table)}"

@@ -94,7 +94,7 @@ class JobRunnerHelper:
         try:
             self.fn = getattr(self.runner, self.fn_name)
             if not inspect.ismethod(self.fn):
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"We expect attribute {self.fn_name} to be method in class "
                         f"{self.runner,__class__}, but instead it is of type "
@@ -102,7 +102,7 @@ class JobRunnerHelper:
                     ]
                 )
         except AttributeError:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Command `{self.fn_name}` is not available for class "
                     f"{self.runner.__class__}. Please implement a method with that "
@@ -151,7 +151,7 @@ class JobRunnerHelper:
 
             # exception if improper command line token
             except ValueError:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     msgs=[
                         "Supply args as `<arg_name>=<arg_values>` with no spaces "
                         "around `=`",
@@ -161,7 +161,7 @@ class JobRunnerHelper:
 
     def __call__(self):
         if '__helper__' in self.runner.__dict__.keys():
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"We do not expect __helper__ to be set ..."
                 ]
@@ -187,7 +187,7 @@ class JobRunnerHelper:
                 _wait_over = f'-w "{_wait_on}" '
             os.system(_nxdi_prefix + _command)
         else:
-            e.code.ShouldNeverHappen(
+            raise e.code.ShouldNeverHappen(
                 msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"]
             )
 
@@ -251,7 +251,7 @@ class JobRunner:
         if '__helper__' in self.__dict__.keys():
             return self.__dict__['__helper__']
         else:
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"This is property is available only when job is running on "
                     f"cluster, as this hidden variable is updated only while jobs "
@@ -262,7 +262,7 @@ class JobRunner:
     def log_artifact(self, name: str, data: t.Any):
         _file = self.storage_dir / "artifacts" / name
         if _file.exists():
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     f"Artifact {name} already exists ... cannot write"
                 ]
@@ -291,7 +291,7 @@ class JobRunner:
             # check if all kwargs are supplied
             for _sk in inspect.signature(_fn).parameters.keys():
                 if _sk not in _fn_kwargs.keys():
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"You did not supply kwarg `{_sk}` while defining flow ..."
                         ]
@@ -299,7 +299,7 @@ class JobRunner:
             # check is some non-supported kwargs are supplied
             for _dk in _fn_kwargs.keys():
                 if _dk not in inspect.signature(_fn).parameters.keys():
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Supplied key `{_dk}` if not valid kwarg for method {_fn}"
                         ]
@@ -308,7 +308,7 @@ class JobRunner:
             # -------------------------------------- 01.02
             # check
             if not inspect.ismethod(_fn):
-                e.code.CodingError(
+                raise e.code.CodingError(
                     msgs=[
                         f"Please provide method of JobRunner instance ...",
                         f"Found unrecognized {_t}"
@@ -418,7 +418,7 @@ class JobRunner:
 
             for _rid, _row_job in enumerate(_col_jobs):
                 if not isinstance(_row_job, list):
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[f"expected row which is list, found {type(_row_job)}"]
                     )
                 _curr_row_prev_jobs = []
@@ -458,7 +458,7 @@ class JobRunner:
         First element of every list waits for last element of element in previous list
           >> Easy way to thing is UI layouts div mechanism
         """
-        e.validation.NotAllowed(
+        raise e.validation.NotAllowed(
             msgs=[
                 f"Please override this method to define the flow of jobs ..."
             ]

@@ -44,7 +44,7 @@ class Row(_auto.TableRow):
         # noinspection PyUnresolvedReferences
         _num_columns = len(self.parent.columns)
         if bool(self.children):
-            e.code.CodingError(
+            raise e.code.CodingError(
                 msgs=[
                     "must be empty when being called for first time",
                     "you cannot call this for multiple times as cells "
@@ -80,7 +80,7 @@ class Table(_auto.Table):
             # this will add cells based on number of columns
             widget()
         else:
-            e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 
         # call super to add in children
         _ret = super().__call__(widget, before)
@@ -108,7 +108,7 @@ class Table(_auto.Table):
             else:
                 return self.rows[item[0]][item[1]]
         else:
-            e.code.CodingError(msgs=[f"Unknown type {type(item)}"])
+            raise e.code.CodingError(msgs=[f"Unknown type {type(item)}"])
             raise
 
     @classmethod
@@ -121,13 +121,13 @@ class Table(_auto.Table):
 
         # check mandatory fields
         if self.rows is None:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"Please supply mandatory field `rows`"
                 ]
             )
         if self.columns is None:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     f"Please supply mandatory field `columns`"
                 ]
@@ -145,7 +145,7 @@ class Table(_auto.Table):
             # ---------------------------------------------- 03.01
             # should not be built
             if _c.is_built:
-                e.code.NotAllowed(
+                raise e.code.NotAllowed(
                     msgs=[
                         "The column should not be built ..."
                     ]
@@ -208,7 +208,7 @@ class Table(_auto.Table):
             for _ in cols:
                 _cols.append(Column(label=_))
         else:
-            e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
             raise
 
         # make rows
@@ -217,7 +217,7 @@ class Table(_auto.Table):
             for _ in range(rows):
                 _rows.append(Row())
         else:
-            e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
             raise
 
         return Table(rows=_rows, columns=_cols)
