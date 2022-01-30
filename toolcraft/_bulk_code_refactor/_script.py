@@ -1,5 +1,8 @@
 """
 This is just for quickly refactoring code and doing some static code tests
+
+Refer: https://regex101.com
+
 """
 import inspect
 import pathlib
@@ -58,7 +61,7 @@ def add_raise_before_exceptions_to_be_raised_explicitly():
             _src_txt = _fi.read_text(encoding="utf8")
             # make sure that raise_if_failed is not at end i.e. by detecting "."
             for _t in _tokens:
-                _r_t = _t.replace(".", "\.") + "[\s\S]*?\][\s\S]*?\)"
+                _r_t = _t.replace(".", "\.") + "\([\s\S]*?\)\n"
                 for _match in re.finditer(_r_t, string=_src_txt):
                     print(_match.group())
                     if _src_txt[_match.span()[1]: _match.span()[1]+1] == ".":
@@ -75,7 +78,7 @@ def add_raise_before_exceptions_to_be_raised_explicitly():
             # raise where we have forgotten
             _src_txt = _src_txt.replace("raise raise", "raise")
             # finally, write back changes
-            _fi.write_text(_src_txt, encoding="utf8")
+            # _fi.write_text(_src_txt, encoding="utf8")
 
 
 def add_raise_if_expected_after_some_exceptions():
@@ -118,7 +121,7 @@ def add_raise_if_expected_after_some_exceptions():
             # find the end location for matched tokens
             _locations_to_inject = []
             for _t in _tokens:
-                _r_t = _t.replace(".", "\.") + "[\s\S]*?\][\s\S]*?\)"
+                _r_t = _t.replace(".", "\.") + "\([\s\S]*?\)\n"
                 for _match in re.finditer(_r_t, string=_src_txt):
                     print(_match.group())
                     _locations_to_inject.append(_match.span()[1])
