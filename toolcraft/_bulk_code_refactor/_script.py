@@ -124,7 +124,7 @@ def add_raise_if_expected_after_some_exceptions():
                 _r_t = _t.replace(".", "\.") + "\([\s\S]*?\)\n"
                 for _match in re.finditer(_r_t, string=_src_txt):
                     print(_match.group())
-                    _locations_to_inject.append(_match.span()[1])
+                    _locations_to_inject.append(_match.span()[1]-1)
             # inject
             if bool(_locations_to_inject):
                 _start = 0
@@ -144,6 +144,6 @@ def add_raise_if_expected_after_some_exceptions():
 
 
 if __name__ == "__main__":
-    should_add_raise_explicitly_class_field()
-    add_raise_before_exceptions_to_be_raised_explicitly()
+    # should_add_raise_explicitly_class_field()
+    # add_raise_before_exceptions_to_be_raised_explicitly()
     add_raise_if_expected_after_some_exceptions()
