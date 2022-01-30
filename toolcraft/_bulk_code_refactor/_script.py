@@ -71,7 +71,7 @@ def add_raise_before_exceptions_to_be_raised_explicitly():
             for _t in _tokens:
                 _src_txt = _src_txt.replace(_t, "raise " + _t)
             # if already done then there will be two raises
-            # so simple do final replace ;) ... this preserves old changes and add
+            # so simply do final replace ;) ... this preserves old changes and add
             # raise where we have forgotten
             _src_txt = _src_txt.replace("raise raise", "raise")
             # finally, write back changes
@@ -132,16 +132,12 @@ def add_raise_if_expected_after_some_exceptions():
                 _new_src_txt += _src_txt[_locations_to_inject[-1]:]
             else:
                 _new_src_txt = _src_txt
-
-            # # replace tokens and prefix raise to them
-            # for _t in _tokens:
-            #     _src_txt = _src_txt.replace(_t, "raise " + _t)
-            # # if already done then there will be two raises
-            # # so simple do final replace ;) ... this preserves old changes and add
-            # # raise where we have forgotten
-            # _src_txt = _src_txt.replace("raise raise", "raise")
-            # # finally, write back changes
-            # _fi.write_text(_src_txt, encoding="utf8")
+            # if already done then there will be two raise_if_failed
+            # so simply do final replace ;) ... this preserves old changes and add
+            # raise where we have forgotten
+            _new_src_txt = _new_src_txt.replace(".raise_if_failed().raise_if_failed()", ".raise_if_failed()")
+            # finally, write back changes
+            _fi.write_text(_new_src_txt, encoding="utf8")
 
 
 if __name__ == "__main__":
