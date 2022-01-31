@@ -1,5 +1,8 @@
 import dataclasses
 import typing as t
+import sys
+
+sys.path.append("..")
 
 import dearpygui.dearpygui as dpg
 from toolcraft.gui import _demo, USER_DATA
@@ -163,6 +166,7 @@ class PlottingWithUpdates(gui.form.Form):
     @util.CacheResult
     def add_button(self) -> gui.widget.Button:
 
+        @dataclasses.dataclass(frozen=True)
         class __Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
@@ -190,6 +194,7 @@ class PlottingWithUpdates(gui.form.Form):
     @util.CacheResult
     def clear_button(self) -> gui.widget.Button:
 
+        @dataclasses.dataclass(frozen=True)
         class __Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
@@ -216,6 +221,7 @@ class PlottingWithUpdates(gui.form.Form):
     @util.CacheResult
     def update_button(self) -> gui.widget.Button:
 
+        @dataclasses.dataclass(frozen=True)
         class __Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
@@ -239,6 +245,7 @@ class PlottingWithUpdates(gui.form.Form):
     @util.CacheResult
     def delete_button(self) -> gui.widget.Button:
 
+        @dataclasses.dataclass(frozen=True)
         class __Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):

@@ -7,7 +7,10 @@ import types
 import pathlib
 import enum
 import typing as t
-
+import rich
+from rich import progress
+from rich import spinner
+from rich import columns
 import numpy as np
 import pyarrow as pa
 import yaml
@@ -559,7 +562,6 @@ class RuleChecker:
                         f"Please check if you provided wrong string ..."
                     ]
                 )
-                raise
 
     def check_things_not_to_be_cached(self):
         for _t in self.things_not_to_be_cached:
@@ -712,7 +714,7 @@ class RuleChecker:
 
 
 @RuleChecker(
-    things_to_be_cached=['internal'],
+    things_to_be_cached=['internal', 'rich_progress'],
     things_not_to_be_cached=[
         'is_called', 'iterable_length', 'on_iter', 'on_call', 'on_enter', 'on_exit'
     ],
@@ -799,13 +801,19 @@ class Tracker:
             f"{self.__class__} if you want to iterate "
             f"over tracker"
         ])
-        raise
 
     @property
     @util.CacheResult
     def dataclass_field_names(self) -> t.List[str]:
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
+
+    @property
+    @util.CacheResult
+    def rich_progress(self) -> progress.Progress:
+        return progress.Progress(
+
+        )
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -1222,7 +1230,7 @@ class YamlLoader(yaml.UnsafeLoader):
 
 
 @RuleChecker(
-    things_not_to_be_overridden=['yaml']
+    things_not_to_be_overridden=['yaml'],
 )
 class YamlRepr(Tracker):
     """
@@ -1231,6 +1239,7 @@ class YamlRepr(Tracker):
     NOTE: do nat make this class abstract as FrozenEnum like classes will not
     work
     """
+
     @classmethod
     def class_init(cls):
         """ """
@@ -1615,8 +1624,8 @@ class FrozenEnum(YamlRepr):
 # @dataclasses.dataclass(eq=True, frozen=True)
 @dataclasses.dataclass(frozen=True)
 @RuleChecker(
-    things_to_be_cached=['hex_hash', 'stores', ],
-    things_not_to_be_overridden=['hex_hash']
+    things_to_be_cached=['hex_hash', 'stores', 'rich_panel'],
+    things_not_to_be_overridden=['hex_hash'],
 )
 class HashableClass(YamlRepr, abc.ABC):
     """
@@ -1692,6 +1701,41 @@ class HashableClass(YamlRepr, abc.ABC):
 
     @property
     @util.CacheResult
+    def rich_panel(self) -> rich.console.Group:
+        """
+        Basically we want small flash cards which can have different multiple
+        `progress.Progress` with their own spinners. Plus we want link that can open up
+        new window on console and display dataclass info.
+
+        We can have basically a UI inside console per HashableClass with
+        interactions ...
+        todo: may be we can explore adding console rendered for toolcraft.gui
+          too complex for now and out of scope
+
+        todo: Build customized Progress with console.Group specific to HashableClass...
+          Note that rich is more powerful you can have mini panel cards and show
+            spinners and progress bars inside it ...
+          Note that if class can be iterated it will use `Tracker.rich_progress`
+            property ...
+          We can show things like
+          + status for multiple phases
+             + init, validate, create, some storage properties if any
+          + progress bar for some phases
+          + hashable_info (a link which will open a panel ans show hashable info)
+
+        todo: read
+          + customizing progress bar
+            https://rich.readthedocs.io/en/stable/progress.html?highlight=spinner#customizing
+          + multiple Progress
+            https://rich.readthedocs.io/en/stable/progress.html?highlight=spinner#multiple-progress
+          + Render groups
+            https://rich.readthedocs.io/en/stable/group.html
+          + Explore more
+        """
+        return rich.console.Group()
+
+    @property
+    @util.CacheResult
     def hex_hash(self) -> str:
         """
         We will use GUID popular in csharp instead of hex hash
@@ -1731,21 +1775,6 @@ class HashableClass(YamlRepr, abc.ABC):
             f"{self.__class__}"
         ])
 
-    # do not cache as dynamic list will be popped out and the reference to
-    # spinner will hang on and ... on consecutive calls cached spinners from
-    # past runs will get used
-    @property
-    def spinner(self) -> "logger.Spinner":
-        _spinner = logger.Spinner.get_last_spinner()
-        if _spinner is None:
-            raise e.code.CodingError(msgs=[
-                f"Please use this spinner property from within code that "
-                f"is called within spinner loops",
-                f"Looks like the code was never called within "
-                f"spinner loops",
-            ])
-        return _spinner
-
     # todo: this was for yaml repr .... but not needed ... so may be we
     #  still need to explore the default __repr__ for dataclass ...
     #  meanwhile __str__ suffice to generate unique text to save on disk ...
@@ -1753,40 +1782,30 @@ class HashableClass(YamlRepr, abc.ABC):
     #     return util.dataclass_to_yaml_repr(self)
 
     def __post_init__(self):
-
-        # --------------------------------------------------------------01
-        # do instance related things
-        with logger.Spinner(
-            title=f"Init {self.__class__.__module__}.{self.__class__.__name__}",
-            logger=_LOGGER,
-        ) as _s:
-            # ----------------------------------------------------------01.01
-            # dict field if any will be transformed
-            _s.text = "transforming ..."
-            for f in self.dataclass_field_names:
-                _dict = getattr(self, f)
-                if isinstance(_dict, dict):
-                    # make changes to hyper_fields ...
-                    # it is possible as dict is mutable
-                    _copy_dict = {}
-                    # makes sures that the items are sorted
-                    _sorted_keys = list(_dict.keys())
-                    _sorted_keys.sort()
-                    for k in _sorted_keys:
-                        v = _dict[k]
-                        _copy_dict[k] = v
-                    _dict.clear()
-                    _dict.update(_copy_dict)
-            # ----------------------------------------------------------01.02
-            # todo: add global flag to start and stop validation
-            # make sure that everything is light weight so that object creation
-            # is fast ...
-            _s.text = "validating ..."
-            self.init_validate()
-            # ----------------------------------------------------------01.03
-            # call init logic
-            _s.text = "initiating ..."
-            self.init()
+        # ---------------------------------------------------------- 01
+        # dict field if any will be transformed
+        for f in self.dataclass_field_names:
+            _dict = getattr(self, f)
+            if isinstance(_dict, dict):
+                # make changes to hyper_fields ...
+                # it is possible as dict is mutable
+                _copy_dict = {}
+                # makes sures that the items are sorted
+                _sorted_keys = list(_dict.keys())
+                _sorted_keys.sort()
+                for k in _sorted_keys:
+                    v = _dict[k]
+                    _copy_dict[k] = v
+                _dict.clear()
+                _dict.update(_copy_dict)
+        # ---------------------------------------------------------- 02
+        # todo: add global flag to start and stop validation
+        # make sure that everything is light weight so that object creation
+        # is fast ...
+        self.init_validate()
+        # ---------------------------------------------------------- 03
+        # call init logic
+        self.init()
 
     def __str__(self) -> str:
         """
