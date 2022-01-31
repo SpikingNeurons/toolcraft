@@ -29,6 +29,8 @@ Main aim of new logger lib
     + scavange code in
       >>> __emoji_mapping()
 """
+import pathlib
+
 import rich
 import dataclasses
 import typing as t
@@ -36,7 +38,7 @@ import types
 import inspect
 import sys
 import logging
-from logging import handlers
+import logging.handlers
 from rich.logging import RichHandler
 from rich import emoji
 
@@ -51,16 +53,16 @@ MESSAGES_TYPE = t.List[
     ]
 ]
 
-_FORMATTERS = {
-    'base': logging.Formatter(
+
+def get_base_formatter() -> logging.Formatter:
+    return logging.Formatter(
         # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
         # f'%(message)s'
         f'%(short_name)s: %(message)s'
     )
-}
 
 
-def setup_rich_handler() -> RichHandler:
+def get_rich_handler() -> RichHandler:
     """
     per handler do
     + set level
@@ -71,17 +73,20 @@ def setup_rich_handler() -> RichHandler:
     # -------------------------------------------------------- 01
     # get handler
     _h = RichHandler(
+        level=logging.NOTSET,
         markup=True,
         rich_tracebacks=True,
     )
 
     # -------------------------------------------------------- 02
     # set level
-    _h.setLevel(level=logging.NOTSET)
+    # this is done above so commenting out
+    # just keep these lines for reference on how initialize Handlers
+    # _h.setLevel(level=logging.NOTSET)
 
     # -------------------------------------------------------- 03
     # set formatter
-    _h.setFormatter(fmt=_FORMATTERS['base'])
+    _h.setFormatter(fmt=get_base_formatter())
 
     # -------------------------------------------------------- 04
     # add filters
@@ -92,7 +97,7 @@ def setup_rich_handler() -> RichHandler:
     return _h
 
 
-def setup_file_handler() -> logging.FileHandler:
+def get_file_handler(log_file: pathlib.Path) -> logging.FileHandler:
     """
     per handler do
     + set level
@@ -107,10 +112,10 @@ def setup_file_handler() -> logging.FileHandler:
     """
     # -------------------------------------------------------- 01
     # get handler
-    _h = handlers.RotatingFileHandler(
-        level=logging.NOTSET,
-        markup=True,
-        rich_tracebacks=True,
+    # this can make multiple log files for now stick up with simple things
+    # _h = logging.handlers.RotatingFileHandler()
+    _h = logging.FileHandler(
+        filename=log_file, mode='a', encoding='utf8',
     )
 
     # -------------------------------------------------------- 02
@@ -119,7 +124,7 @@ def setup_file_handler() -> logging.FileHandler:
 
     # -------------------------------------------------------- 03
     # set formatter
-    _h.setFormatter(fmt=_FORMATTERS['base'])
+    _h.setFormatter(fmt=get_base_formatter())
 
     # -------------------------------------------------------- 04
     # add filters
@@ -133,14 +138,19 @@ def setup_file_handler() -> logging.FileHandler:
 def setup_logging(
     level: int = logging.NOTSET,
     propagate: bool = False,
-    remove_handlers_forcefully: bool = True,
+    handlers: t.List[logging.Handler] = None,
+    filters: t.List[logging.Filter] = None,
 ):
     """
     Setup handlers, formatters and filters stc. here ...
 
-    Default behaviour is to log to console and file ...
-
     todo: read from .toolcraft config.toml file to read settings for how to handle logs
+      + which handlers to use
+      + which formatters to use
+      + which filters to use
+      + interactive edit of config file on server from client to disable/enable logs
+        ( dont know hoe this will behave on runtime and how to call
+         `setup_logging()` multiple times )
 
     todo: In server mode (i.e. settings.DAPR_SERVE_MODE is True)
       we will need to log only to file ...
@@ -154,52 +164,53 @@ def setup_logging(
     >>> logging.basicConfig
 
     """
-    # --------------------------------------------------------------- 01
-    # get root logger
-    _root_logger = logging.root
+    # thread safety
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    logging._acquireLock()
+    try:
 
-    # --------------------------------------------------------------- 02
-    # remove any handlers
-    if remove_handlers_forcefully:
-        for h in _root_logger.handlers[:]:
-            _root_logger.removeHandler(h)
-            h.close()
+        # --------------------------------------------------------------- 01
+        # get root logger
+        _root_logger = logging.root
 
-    # --------------------------------------------------------------- 03
-    # make filters (for root)
-    _filters = []  # type: t.List[logging.Filter]
+        # --------------------------------------------------------------- 02
+        # remove any handlers or filters
+        for _h in _root_logger.handlers[:]:
+            _root_logger.removeHandler(_h)
+            _h.close()
+        for _f in _root_logger.filters[:]:
+            _root_logger.removeFilter(_f)
 
-    # --------------------------------------------------------------- 04
-    # make handlers (for root)
-    # per handler do
-    # + set level
-    # + set formatter
-    # + add filters specific to handler
-    _handlers = [
+        # --------------------------------------------------------------- 03
+        # add filters and handlers to root logger
+        if bool(filters):
+            for _f in filters:
+                _root_logger.addFilter(_f)
+        if bool(handlers):
+            for _h in handlers:
+                _root_logger.addHandler(_h)
 
-    ]  # type: t.List[logging.Handler]
+        # --------------------------------------------------------------- 04
+        # set basic things
+        _root_logger.setLevel(level=level)
+        _root_logger.propagate = propagate
 
-    # --------------------------------------------------------------- 04
-    # add filters and handlers to root logger
-    for _f in _filters:
-        _root_logger.addFilter(_f)
-    for _h in _handlers:
-        _root_logger.addHandler(_h)
-
-    # --------------------------------------------------------------- 05
-    # set basic things
-    _root_logger.setLevel(level=level)
-    _root_logger.propagate = propagate
-
-
-
-    # _root_logger.addHandler()
-
-    # _root_logger.addFilter()
+    # ----
+    finally:
+        # noinspection PyUnresolvedReferences,PyProtectedMember
+        logging._releaseLock()
 
 
 # make sure that logging is set up before any other loggers are added
-setup_logging()
+# Default behaviour is to log to console using rich handler ...
+# If you want to log to file supply log_file kwarg
+# call setup_logging from your code again if you want to have other combinations
+# for logger
+setup_logging(
+    handlers=[
+        get_rich_handler(),
+    ]
+)
 
 
 @dataclasses.dataclass(frozen=True)
