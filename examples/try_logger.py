@@ -49,11 +49,28 @@ def _experiment_rich():
 
 
 def try_logging():
-    _LOGGER.info(msg="dddddddddddddddd")
+    _LOGGER.info(
+        msg="I am showing some message",
+        msgs=[
+            "JJKH wegbdkq2zuyhbviu ",
+            ["sadas", "sadas", "uiyu", "ewgy"],
+            (1,2,3,"dfsdf"),
+            {
+                "ee": 55, "gsedf": "dfsd"
+            }
+        ]
+    )
 
 
 def try_exceptions():
-    ...
+    try:
+        raise e.code.CodingError(
+            msgs=[
+                "I am wrong ...", "But why ???", {1: 1, 2: 3}, ["q", "tt", "yy"]
+            ]
+        )
+    except Exception as _e:
+        _LOGGER.exception(msg="Traceback")
 
 
 def main():

@@ -37,6 +37,7 @@ import typing as t
 import types
 import inspect
 import sys
+import yaml
 import logging
 import logging.handlers
 from rich.logging import RichHandler
@@ -54,11 +55,128 @@ MESSAGES_TYPE = t.List[
 ]
 
 
-def get_base_formatter() -> logging.Formatter:
+class CustomLogger(logging.Logger):
+
+    # noinspection PyMethodOverriding
+    def debug(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+        """
+        >>> logging.Logger.debug
+        """
+        if msgs is not None:
+            msg = msg + "\n" + yaml.dump(msgs)
+        if self.isEnabledFor(logging.DEBUG):
+            self._log(logging.DEBUG, msg, *(), **{})
+
+    # noinspection PyMethodOverriding
+    def info(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+        """
+        >>> logging.Logger.info
+        """
+        if msgs is not None:
+            msg = msg + "\n" + yaml.dump(msgs)
+        if self.isEnabledFor(logging.INFO):
+            self._log(logging.INFO, msg, (), **{})
+
+    # noinspection PyMethodOverriding
+    def warning(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+        """
+        >>> logging.Logger.warning
+        """
+        if msgs is not None:
+            msg = msg + "\n" + yaml.dump(msgs)
+        if self.isEnabledFor(logging.WARNING):
+            self._log(logging.WARNING, msg, *(), **{})
+
+    # noinspection PyMethodOverriding
+    def error(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+        """
+        >>> logging.Logger.error
+        """
+        if msgs is not None:
+            msg = msg + "\n" + yaml.dump(msgs)
+        if self.isEnabledFor(logging.ERROR):
+            self._log(logging.ERROR, msg, (), **{})
+
+    # noinspection PyMethodOverriding
+    def critical(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+        """
+        >>> logging.Logger.critical
+        """
+        if msgs is not None:
+            msg = msg + "\n" + yaml.dump(msgs)
+        if self.isEnabledFor(logging.CRITICAL):
+            self._log(logging.CRITICAL, msg, (), **{})
+
+    # noinspection PyMethodOverriding
+    def exception(self, *, msg: str, msgs: MESSAGES_TYPE = None, exc_info: bool = True):
+        """
+        >>> logging.Logger.exception
+        """
+        if msgs is not None:
+            msg = msg + "\n" + yaml.dump(msgs)
+        if self.isEnabledFor(logging.ERROR):
+            self._log(logging.ERROR, msg, (), exc_info=exc_info, **{})
+
+
+@dataclasses.dataclass(frozen=True)
+class LoggingMeta:
+    """
+
+    `short_name`
+        + Can be used by filter to add field to LogRecord to display in logs a
+          short name instead of module name that will be available via field name
+        + also, you can assign emoji as string
+    `suppress_logs`
+        + In case you want to suppress logs for that module ...
+    `bypass_traceback`
+        + when exceptions are raised then the tracks for this module are bypassed
+        + todo check main docstring above and discussion here
+            https://stackoverflow.com/questions/31949760/how-to-limit-python-traceback-to-specific-files
+    """
+    short_name: str
+    suppress_logs: bool = False
+    bypass_traceback: bool = False
+
+    def __post_init__(self):
+
+        # todo: implement this is needed
+        if self.suppress_logs:
+            raise Exception("Not yet supported ...")
+        if self.bypass_traceback:
+            raise Exception("Not yet supported ...")
+
+
+class AddLoggingMetaFilter(logging.Filter):
+    """
+    This adds logging meta info to record ... so that formatter can consume it
+    todo: this filter when added to root logger is not used by other loggers ..
+      see how the remaking loggers can access it
+    """
+
+    def filter(self, record):
+        try:
+            _meta = _ALL_LOGGERS_META[record.name]  # type: LoggingMeta
+            record.short_name = _meta.short_name
+        except KeyError:
+            raise Exception(
+                f"Unknown name {record.name} ... cannot find meta info for it"
+            )
+        return True
+
+
+def get_formatter_for_rich_handler() -> logging.Formatter:
     return logging.Formatter(
         # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
         # f'%(message)s'
-        f'%(short_name)s: %(message)s'
+        f'%(message)s'
+    )
+
+
+def get_formatter_for_file_handler() -> logging.Formatter:
+    return logging.Formatter(
+        # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
+        # f'%(message)s'
+        f'\n%(asctime)s %(short_name)s:\n>>>\n%(message)s'
     )
 
 
@@ -76,6 +194,7 @@ def get_rich_handler() -> RichHandler:
         level=logging.NOTSET,
         markup=True,
         rich_tracebacks=True,
+        show_path=False,
     )
 
     # -------------------------------------------------------- 02
@@ -86,11 +205,11 @@ def get_rich_handler() -> RichHandler:
 
     # -------------------------------------------------------- 03
     # set formatter
-    _h.setFormatter(fmt=get_base_formatter())
+    _h.setFormatter(fmt=get_formatter_for_rich_handler())
 
     # -------------------------------------------------------- 04
     # add filters
-    # _h.addFilter(...)
+    _h.addFilter(AddLoggingMetaFilter())
 
     # -------------------------------------------------------- 05
     # return
@@ -124,11 +243,11 @@ def get_file_handler(log_file: pathlib.Path) -> logging.FileHandler:
 
     # -------------------------------------------------------- 03
     # set formatter
-    _h.setFormatter(fmt=get_base_formatter())
+    _h.setFormatter(fmt=get_formatter_for_file_handler())
 
     # -------------------------------------------------------- 04
     # add filters
-    # _h.addFilter(...)
+    _h.addFilter(AddLoggingMetaFilter())
 
     # -------------------------------------------------------- 05
     # return
@@ -136,10 +255,9 @@ def get_file_handler(log_file: pathlib.Path) -> logging.FileHandler:
 
 
 def setup_logging(
-    level: int = logging.NOTSET,
     propagate: bool = False,
+    level: int = logging.NOTSET,
     handlers: t.List[logging.Handler] = None,
-    filters: t.List[logging.Filter] = None,
 ):
     """
     Setup handlers, formatters and filters stc. here ...
@@ -156,6 +274,11 @@ def setup_logging(
       we will need to log only to file ...
       so explore suppressing rich logging or maybe it already happens
 
+    NOTE: level and handlers propagate but filters dont
+      https://www.saltycrane.com/blog/2014/02/python-logging-filters-do-not-propagate-like-handlers-and-levels-do/
+      So make sure to add filters to handlers (similar to formatters) instead
+      of attaching it to logger
+
     NOTE: do not perform module level handlers/filters ....
       it is easy to implement but fruitless as we do not see any purpose
 
@@ -164,6 +287,7 @@ def setup_logging(
     >>> logging.basicConfig
 
     """
+
     # thread safety
     # noinspection PyUnresolvedReferences,PyProtectedMember
     logging._acquireLock()
@@ -182,10 +306,7 @@ def setup_logging(
             _root_logger.removeFilter(_f)
 
         # --------------------------------------------------------------- 03
-        # add filters and handlers to root logger
-        if bool(filters):
-            for _f in filters:
-                _root_logger.addFilter(_f)
+        # add handlers to root logger
         if bool(handlers):
             for _h in handlers:
                 _root_logger.addHandler(_h)
@@ -199,59 +320,6 @@ def setup_logging(
     finally:
         # noinspection PyUnresolvedReferences,PyProtectedMember
         logging._releaseLock()
-
-
-# make sure that logging is set up before any other loggers are added
-# Default behaviour is to log to console using rich handler ...
-# If you want to log to file supply log_file kwarg
-# call setup_logging from your code again if you want to have other combinations
-# for logger
-setup_logging(
-    handlers=[
-        get_rich_handler(),
-    ]
-)
-
-
-@dataclasses.dataclass(frozen=True)
-class LoggingMeta:
-    """
-
-    `short_name`
-        + Can be used by filter to add field to LogRecord to display in logs a
-          short name instead of module name that will be available via field name
-        + also, you can assign emoji as string
-    `suppress_logs`
-        + In case you want to suppress logs for that module ...
-    `bypass_traceback`
-        + when exceptions are raised then the tracks for this module are bypassed
-        + todo check main docstring above and discussion here
-            https://stackoverflow.com/questions/31949760/how-to-limit-python-traceback-to-specific-files
-    """
-    short_name: str
-    suppress_logs: bool = False
-    bypass_traceback: bool = False
-
-    def __post_init__(self):
-
-        # todo: implement this is needed
-        if self.suppress_logs:
-            raise Exception("Not yet supported ...")
-        if self.bypass_traceback:
-            raise Exception("Not yet supported ...")
-
-
-# All the logger meta info can be exploited in custom logging.Filters
-# todo: do when needed
-# Also note that this also helps in making sure that get_logger is called only
-# once in module using syntax `_LOGGER = logger.get_logger(...)
-_ALL_LOGGERS_META = {}  # type: t.Dict[str, LoggingMeta]
-
-# just for precaution call with no name so that we are sure that first
-# logging.Logger instance created is for root, and it is backed up
-# Also can be used for logging here, although it might not be needed
-_LOGGER = logging.getLogger()
-_ALL_LOGGERS_META[_LOGGER.name] = LoggingMeta(short_name="root")
 
 
 def __emoji_mapping():
@@ -338,7 +406,7 @@ def get_logger(
         t.Union[types.ModuleType, str]
     ] = None,
     meta: LoggingMeta = None,
-) -> logging.Logger:
+) -> CustomLogger:
     """
 
     Args:
@@ -368,13 +436,10 @@ def get_logger(
     # instead we will book keep meta info here ... so that if needed you can use some
     # custom logging.Filter to add it to LogRecord
     _logger_name = module.__name__
+    # if logger with same name already present then return it
     if _logger_name in _ALL_LOGGERS_META.keys():
-        _LOGGER.warning(msg=f"Make sure that this is called only once per module "
-                            f"i.e. `_LOGGER = logger.get_logger(...)`")
-        raise KeyError(
-            f"There is already a module with name {_logger_name} registered with meta "
-            f"info {_ALL_LOGGERS_META[_logger_name]}"
-        )
+        # noinspection PyTypeChecker
+        return logging.getLogger(_logger_name)
     # if meta not provided assign with empty meta
     if meta is None:
         # noinspection PyArgumentList
@@ -384,4 +449,47 @@ def get_logger(
 
     # ------------------------------------------------------------ 04
     # make and return logger
+    # noinspection PyTypeChecker
     return logging.getLogger(_logger_name)
+
+
+# -------------------------------------------------------------------------------- #
+# -------------------------------------------------------------------------------- #
+# -------------------------------------------------------------------------------- #
+# override with custom classes
+logging.setLoggerClass(CustomLogger)
+# NOTE: don't do this as the design will still make same amount of overhead ...
+#   instead, use filters to achieve any customization
+# logging.setLogRecordFactory(CustomLogRecord)
+
+# All the logger meta info can be exploited in custom logging.Filters
+# todo: do when needed
+# Also note that this also helps in making sure that get_logger is called only
+# once in module using syntax `_LOGGER = logger.get_logger(...)
+_ALL_LOGGERS_META = {}  # type: t.Dict[str, LoggingMeta]
+
+# just for precaution call with no name so that we are sure that first
+# logging.Logger instance created is for root, and it is backed up
+# Also can be used for logging here, although it might not be needed
+_LOGGER = logging.getLogger()
+
+# register in container
+_ALL_LOGGERS_META[_LOGGER.name] = LoggingMeta(short_name="root")
+
+# make sure that logging is set up before any other loggers are added
+# Default behaviour is to log to console using rich handler ...
+# If you want to log to file supply log_file kwarg
+# call setup_logging from your code again if you want to have other combinations
+# for logger
+setup_logging(
+    propagate=False,
+    level=logging.NOTSET,
+    handlers=[
+        get_rich_handler(),
+        get_file_handler("dd.log")
+    ],
+)
+
+# -------------------------------------------------------------------------------- #
+# -------------------------------------------------------------------------------- #
+# -------------------------------------------------------------------------------- #

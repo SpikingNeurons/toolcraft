@@ -433,21 +433,27 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 def basic_dashboard():
     _dash = MyDashboard(title="My Dashboard")
     _dash.topic2.plot_some_examples()
+    # noinspection PyTypeChecker
     _dash.topic4.add(
         hashable=SimpleHashableClass(some_value="first hashable ...")
     )
+    # noinspection PyTypeChecker
     _dash.topic4.add(
         hashable=SimpleHashableClass(some_value="second hashable ...")
     )
+    # noinspection PyTypeChecker
     _dash.topic4.add(
         hashable=SimpleHashableClass(some_value="third hashable ...")
     )
+    # noinspection PyTypeChecker
     _dash.topic4.add(
         hashable=SimpleHashableClass(some_value="fourth hashable ...")
     )
+    # noinspection PyTypeChecker
     _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="first hashable ...")
     )
+    # noinspection PyTypeChecker
     _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="second hashable ...")
     )

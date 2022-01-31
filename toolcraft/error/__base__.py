@@ -1,6 +1,9 @@
 import inspect
 import re
 import sys
+import yaml
+from rich import markdown
+from rich import print
 
 from .. import logger
 
@@ -12,8 +15,8 @@ from .. import logger
 
 _LOGGER = logger.get_logger()
 
-_SKULL_EMOJI = logger.AVAILABLE_EMOJI['skull_and_crossbones']
-_EXCEPTION_HEADER = f"{_SKULL_EMOJI} >>> {{header}} <<< {_SKULL_EMOJI}"
+_SKULL_EMOJI = logger.AVAILABLE_EMOJI['skull']
+_EXCEPTION_HEADER = f"{_SKULL_EMOJI} 👁️>>> {{header}} <<<👁️ {_SKULL_EMOJI}"
 
 
 def camel_case_split(identifier):
@@ -32,7 +35,6 @@ class _CustomException(Exception):
     def __init__(
         self, *,
         msgs: logger.MESSAGES_TYPE,
-        unhandled_exception: Exception = None,
     ):
 
         # -----------------------------------------------------------------01
@@ -52,9 +54,7 @@ class _CustomException(Exception):
 
         # -----------------------------------------------------------------03
         # log
-        _logger.error(_header)
-        _logger.error(msgs)
-        _logger.exception(_header)
+        _logger.error(msg=_header, msgs=msgs)
 
         # -----------------------------------------------------------------04
         # if the parent i.e. this __init__ was called from child that means the

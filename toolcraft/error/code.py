@@ -1,6 +1,3 @@
-import typing as t
-import traceback
-import sys
 import numpy as np
 
 from .__base__ import _CustomException
@@ -68,24 +65,6 @@ class CodingError(_CustomException):
                 "Possible error/bug while coding !!!",
                 *msgs
             ]
-        )
-
-
-class RaiseUnhandledException(_CustomException):
-
-    _RAISE_EXPLICITLY = True
-
-    def __init__(
-        self, *,
-        msgs: MESSAGES_TYPE,
-        exception: Exception,
-    ):
-        super().__init__(
-            msgs=[
-                "Encountered unhandled exception !!!",
-                *msgs
-            ],
-            unhandled_exception=exception,
         )
 
 
