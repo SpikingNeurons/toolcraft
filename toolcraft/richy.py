@@ -20,6 +20,7 @@ from rich import text as r_text
 from rich import progress as r_progress
 from rich import status as r_status
 from rich import panel as r_panel
+from rich import prompt as r_prompt
 
 
 class SpinnerColumn(r_progress.SpinnerColumn):
@@ -166,8 +167,8 @@ class Progress:
                 "status": SpinnerColumn(
                     states={
                         "start": "dots",
-                        "finished": EMOJI["heavy_check_mark"],
-                        "failed": EMOJI["heavy_multiplication_x"],
+                        "finished": EMOJI["white_heavy_check_mark"],
+                        "failed": EMOJI["cross_mark"],
                     }
                 ),
             },

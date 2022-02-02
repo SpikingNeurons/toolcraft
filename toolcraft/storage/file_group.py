@@ -27,6 +27,7 @@ import numpy as np
 import gc
 import datetime
 import io
+import hashlib
 import zipfile
 import gcsfs
 import platform
@@ -464,8 +465,6 @@ class FileGroup(StorageHashable, abc.ABC):
                     }
                 ]
             )
-            # useless return
-            return {}
 
     @classmethod
     def hook_up_methods(cls):
@@ -676,14 +675,71 @@ class FileGroup(StorageHashable, abc.ABC):
 
     # noinspection PyUnusedLocal
     def check(self, *, force: bool = False):
+        """
 
-        _failed_hashes = util.crosscheck_hashes_for_paths(
-            paths={fk: self.path / fk for fk in self.file_keys},
-            hash_type='sha256',
-            correct_hashes=self.get_hashes(),
-            msg=f"file group `{self.name}`"
-        )
+        todo: we can make this with asyncio with aiohttps and aiofiles
+          https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
 
+        """
+
+        # ------------------------------------------------------ 01
+        # some vars
+        _chunk_size = 1024 * 50
+        _correct_hashes = self.get_hashes()
+        _failed_hashes = {}
+        _file_paths = {
+            fk: self.path/fk for fk in self.file_keys
+        }  # type: t.Dict[str, pathlib.Path]
+        _lengths = {}
+        # get panels ... reusing richy.Progress.for_download as the stats
+        # needed are similar
+        _hash_check_panel = richy.Progress.for_download(
+            title=f"Hash check for file group: {self.name}")
+
+        # ------------------------------------------------------ 02
+        # now add tasks
+        for fk in self.file_keys:
+            _lengths[fk] = _file_paths[fk].stat().st_size
+            _hash_check_panel.add_task(
+                task_name=fk, total=_lengths[fk]
+            )
+
+        # ------------------------------------------------------ 03
+        # now download files
+        with richy.r_live.Live(_hash_check_panel.rich_panel, refresh_per_second=10):
+            _LOGGER.info(msg=f"Hash check for file group: {self.name}")
+            _start_time = datetime.datetime.now()
+            for fk in self.file_keys:
+                _hash_module = hashlib.sha256()
+                # get task id
+                _task_id = _hash_check_panel.tasks[fk].id
+                with _file_paths[fk].open(mode='rb', buffering=0) as fb:
+                    _new_chunk_size = min(_lengths[fk] // 10, _chunk_size)
+                    # compute
+                    for _chunk in iter(lambda: fb.read(_chunk_size), b''):
+                        _hash_module.update(_chunk)
+                        _hash_check_panel.rich_progress.update(
+                            task_id=_task_id,
+                            advance=len(_chunk)
+                        )
+                    fb.close()
+                    _computed_hash = _hash_module.hexdigest()
+                if _computed_hash == _correct_hashes[fk]:
+                    _LOGGER.info(msg=f" >> {fk}: success")
+                else:
+                    _LOGGER.error(msg=f" >> {fk}: failed")
+                    _hash_check_panel.rich_progress.update(
+                        task_id=_task_id,
+                        state="failed",
+                    )
+                    _failed_hashes[fk] = {
+                        'correct  ': _correct_hashes[fk],
+                        'computed ': _computed_hash,
+                    }
+            _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+            _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
+
+        # delete state files and print failed hashes
         if bool(_failed_hashes):
             # wipe state manager files
             self.info.delete()
@@ -1002,9 +1058,6 @@ class FileGroup(StorageHashable, abc.ABC):
             # so set the response automatically for FileGroup
             force = True
             # just let us warn user
-            _last_spinner = logger.Spinner.get_last_spinner()
-            if _last_spinner is not None:
-                _last_spinner.stop()
             _LOGGER.warning(
                 msg=f"Deleting files automatically for file group "
                     f"{self.__class__.__name__!r}",
@@ -1015,8 +1068,6 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"`config.DEBUG_HASHABLE_STATE = True`"
                 ]
             )
-            if _last_spinner is not None:
-                _last_spinner.start()
 
         # ---------------------------------------------------------------02
         # delete
@@ -1027,26 +1078,8 @@ class FileGroup(StorageHashable, abc.ABC):
         if force:
             response = "y"
         else:
-            _formatted_names = "".join(
-                [
-                    f"\t > file: {p.name}\n"
-                    for p in [
-                        self.path / fk for fk in self.file_keys
-                    ]
-                ]
-            )
-            _last_spinner = logger.Spinner.get_last_spinner()
-            if _last_spinner is not None:
-                _last_spinner.stop()
-            response = util.input_response(
-                question=f"Do you really want to delete the listed "
-                         f"files/folders for file group {self.name!r} in "
-                         f"path {self.path} ???\n"
-                         f"{_formatted_names}\n",
-                options=["y", "n"]
-            )
-            if _last_spinner is not None:
-                _last_spinner.start()
+            response = richy.r_prompt.Confirm.ask(
+                f"Do you want to delete files for `{self.name}`?", default=True)
 
         # ---------------------------------------------------------------03
         # perform action
@@ -1057,18 +1090,15 @@ class FileGroup(StorageHashable, abc.ABC):
             # todo: make it like progress bar
             _total_keys = len(self.file_keys)
             _s_fmt = len(str(_total_keys))
-            spinner = logger.Spinner.get_last_spinner()
 
             # -----------------------------------------------------------03.02
             # delete all files for the group
-            for i, fk in enumerate(self.file_keys):
-
+            _LOGGER.info(msg=f"Deleting files for `{self.name}` ...")
+            # todo: enhance `richy.r_progress.track`
+            for fk in richy.r_progress.track(
+                self.file_keys, description="Deleting ..."
+            ):
                 _key_path = self.path / fk
-
-                if spinner is not None:
-                    spinner.text = f"{_key_path.name!r}: " \
-                                   f"{i: {_s_fmt}d}/{_total_keys} deleted ..."
-
                 if _key_path.is_file() or _key_path.is_dir():
                     util.io_path_delete(_key_path, force=force)
                 else:
@@ -1087,13 +1117,6 @@ class FileGroup(StorageHashable, abc.ABC):
                     "not to delete files..."
                 ]
             )
-            # just in case when in debug or testing if error module
-            # is configured for raising instead of exiting
-            sys.exit()
-
-            # just in case exit does not exit
-            # noinspection PyUnreachableCode
-            raise
 
 
 # noinspection PyArgumentList
@@ -1930,12 +1953,12 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     def create(self) -> t.List[pathlib.Path]:
         """
-        todo: Exception handling ... allow few files that succeded
-        Returns:
-
+        todo: we can make this with asyncio with aiohttps and aiofiles
+          https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
         """
         # ------------------------------------------------------ 01
         # get details
+        _chunk_size = 1024 * 50
         _file_paths = {
             fk: self.path/fk for fk in self.file_keys
         }  # type: t.Dict[str, pathlib.Path]
@@ -1945,6 +1968,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         _lengths = {}
         for fk in self.file_keys:
             if _file_paths[fk].exists():
+                _lengths[fk] = _file_paths[fk].stat().st_size
                 continue
             _response = requests.get(_urls[fk], stream=True)
             _length = int(_response.headers['content-length'])
@@ -1974,7 +1998,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         for fk in self.file_keys:
             if _file_paths[fk].exists():
                 _download_panel.add_task(
-                    task_name=fk, total=-1
+                    task_name=fk, total=_lengths[fk]
                 )
             elif fk in _errors.keys():
                 _download_panel.add_task(
@@ -1997,7 +2021,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                 if _file_paths[fk].exists():
                     _download_panel.rich_progress.update(
                         task_id=_task_id,
-                        advance=1
+                        advance=_lengths[fk]
                     )
                     _LOGGER.info(msg=f" >> {fk}: already downloaded")
                     continue
@@ -2010,12 +2034,11 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                     _LOGGER.error(msg=f" >> {fk}: failed with error {_errors[fk]}")
                     continue
                 try:
-                    with open(_file_paths[fk], 'wb') as _f:
+                    with _file_paths[fk].open('wb') as _f:
                         for _chunk in _responses[fk].iter_content(
-                            chunk_size=min(_lengths[fk] // 10, 1024 * 50)
+                            chunk_size=min(_lengths[fk] // 10, _chunk_size)
                         ):
                             if _chunk:  # filter out keep-alive new chunks
-                                time.sleep(0.5)
                                 _f.write(_chunk)
                                 _download_panel.rich_progress.update(
                                     task_id=_task_id,

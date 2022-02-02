@@ -111,7 +111,7 @@ def try_download_file():
     if not df.is_created:
         df.create()
         df.check()
-    df.get_file(file_key="file")
+    df.get_file(file_key="file1")
     df.delete(force=True)
 
 
@@ -123,7 +123,9 @@ class DnTestFileAutoHashed(s.DownloadFileGroup):
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
-            "file": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file1": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "resources/pdf/dummy.pdf",
+            "file2": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
         }
 
@@ -137,7 +139,7 @@ def try_auto_hashed_download_file():
     df = DnTestFileAutoHashed()
     if not df.is_created:
         df.create()
-    df.get_file(file_key="file")
+    df.get_file(file_key="file1")
 
     df0 = DnTestFile()
 
