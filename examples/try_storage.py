@@ -127,6 +127,10 @@ class DnTestFileAutoHashed(s.DownloadFileGroup):
             "resources/pdf/dummy.pdf",
             "file2": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
+            "file3": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "resources/pdf/dummy.pdf",
+            "file4": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "resources/pdf/dummy.pdf",
         }
 
     @property
@@ -794,13 +798,13 @@ def try_main():
         util.io_path_delete(_TEMP_PATH, force=True)
     _TEMP_PATH.mkdir(parents=True, exist_ok=True)
     _TEMP_PATH = _TEMP_PATH.resolve()
-    try_hashable_ser()
-    try_download_file()
+    # try_hashable_ser()
+    # try_download_file()
     try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
-    try_arrow_storage()
-    try_file_storage()
+    # try_metainfo_file()
+    # try_creating_folders()
+    # try_arrow_storage()
+    # try_file_storage()
     _TEMP_PATH.rmdir()
 
 

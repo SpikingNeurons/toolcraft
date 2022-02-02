@@ -673,20 +673,20 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
 
-    # noinspection PyUnusedLocal
-    def check(self, *, force: bool = False):
+    def do_hash_check(self, compute: bool) -> t.Dict:
         """
+        When compute returns computed hashes else returns failed hashes if any ...
 
-        todo: we can make this with asyncio with aiohttps and aiofiles
-          https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
-
+        If compute is false that means that in case of auto hash the hashes will
+        already be computed and be present in config file
         """
 
         # ------------------------------------------------------ 01
         # some vars
         _chunk_size = 1024 * 50
-        _correct_hashes = self.get_hashes()
+        _correct_hashes = {} if compute else self.get_hashes()
         _failed_hashes = {}
+        _computed_hashes = {}
         _file_paths = {
             fk: self.path/fk for fk in self.file_keys
         }  # type: t.Dict[str, pathlib.Path]
@@ -724,20 +724,43 @@ class FileGroup(StorageHashable, abc.ABC):
                         )
                     fb.close()
                     _computed_hash = _hash_module.hexdigest()
-                if _computed_hash == _correct_hashes[fk]:
-                    _LOGGER.info(msg=f" >> {fk}: success")
+                # make dicts to return
+                _computed_hashes[fk] = _computed_hash
+                if compute:
+                    _LOGGER.info(msg=f" >> {fk}: hash computed")
                 else:
-                    _LOGGER.error(msg=f" >> {fk}: failed")
-                    _hash_check_panel.rich_progress.update(
-                        task_id=_task_id,
-                        state="failed",
-                    )
-                    _failed_hashes[fk] = {
-                        'correct  ': _correct_hashes[fk],
-                        'computed ': _computed_hash,
-                    }
+                    if _computed_hash == _correct_hashes[fk]:
+                        _LOGGER.info(msg=f" >> {fk}: success")
+                    else:
+                        _LOGGER.error(msg=f" >> {fk}: failed")
+                        _hash_check_panel.rich_progress.update(
+                            task_id=_task_id,
+                            state="failed",
+                        )
+                        _failed_hashes[fk] = {
+                            'correct  ': _correct_hashes[fk],
+                            'computed ': _computed_hash,
+                        }
             _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
             _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
+
+        # ------------------------------------------------------ 04
+        # return
+        if compute:
+            return _computed_hashes
+        else:
+            return _failed_hashes
+
+    # noinspection PyUnusedLocal
+    def check(self, *, force: bool = False):
+        """
+
+        todo: we can make this with asyncio with aiohttps and aiofiles
+          https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
+
+        """
+        # get failed hashes
+        _failed_hashes = self.do_hash_check(compute=False)
 
         # delete state files and print failed hashes
         if bool(_failed_hashes):
@@ -1015,12 +1038,7 @@ class FileGroup(StorageHashable, abc.ABC):
                         f"hashes to be present in the config"
                     ]
                 )
-            _auto_hashes = util.crosscheck_hashes_for_paths(
-                paths={k: self.path/k for k in self.file_keys},
-                hash_type='sha256',
-                msg=f"file group {self.name}",
-                correct_hashes=None,
-            )
+            _auto_hashes = self.do_hash_check(compute=True)
             self.config.auto_hashes = _auto_hashes
 
         # ----------------------------------------------------------------06
@@ -1094,7 +1112,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # -----------------------------------------------------------03.02
             # delete all files for the group
             _LOGGER.info(msg=f"Deleting files for `{self.name}` ...")
-            # todo: enhance `richy.r_progress.track`
+            # todo: enhance `richy.r_progress.track` ... put this inside panel ...
             for fk in richy.r_progress.track(
                 self.file_keys, description="Deleting ..."
             ):
