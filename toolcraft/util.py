@@ -31,10 +31,8 @@ from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlretrieve
 import socket
 import sys
-import enum
 import contextlib
-# import inspect
-# import addict
+from rich import progress
 
 from . import logger
 from . import error as e
@@ -1013,13 +1011,34 @@ def crosscheck_hash(
                 f"Found {path_or_npy_arr} of type {type(path_or_npy_arr)}"
             ]
         )
-        raise
 
     # final return
     return computed_hash, correct_hash
 
 
 def download_files(
+    paths: t.Dict[str, pathlib.Path],
+    urls: t.Dict[str, str],
+    msg: str,
+):
+    """
+    todo: we can make this with asyncio with aiohttps and aiofiles
+      https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
+    """
+    # make hooks
+
+    with progress.Progress(
+        "[progress.description]{task.description}",
+        progress.BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        progress.TimeRemainingColumn(),
+    ) as _p:
+        # create tasks
+        _tasks = {}
+
+
+
+def _download_files(
     paths: t.Dict[str, pathlib.Path],
     urls: t.Dict[str, str],
     msg: str,
@@ -1074,21 +1093,13 @@ def download_files(
 def download_file(
     file_path: pathlib.Path,
     file_url: str,
-    msg: str,
-    raise_error: bool = True
+    hook_for_urlretrive: t.Callable,
+    raise_error: bool = True,
 ) -> t.Optional[t.Dict[str, str]]:
     """
-    If raise_error is True and there is a error then it will return a dict
-    with error messages else it will return None
-
-    Args:
-        file_path:
-        file_url:
-        msg:
-        raise_error:
-
-    Returns:
-
+    If raise_error is False and there is an error then it will return a dict
+    with error messages else it will return None ... else if raise_error is True then
+    it will raise error
     """
     # ---------------------------------------------------------- 01
     # create parent if not present
@@ -1111,86 +1122,71 @@ def download_file(
             )
 
     # ---------------------------------------------------------- 02
+    # retrieve
     _error_msgs = None
-    with logger.ProgressBar(
-        unit='B', unit_scale=True, unit_divisor=1024, miniters=1,
-        # desc=file_path.name,
-    ) as pb:
-
-        # ------------------------------------------------------ 02.01
-        # set description
-        pb.set_description_str(msg)
-        pb.set_postfix_str("📥", refresh=True)
-
-        # ------------------------------------------------------ 02.02
-        # retrieve
-        try:
-            # retrieve data
-            # todo: can we have our own url_retrieve which can also
-            #  compute hash as it download file ... this way we need
-            #  not store data locally and can directly upload data to
-            #  network storage as we download data
-            if not file_path.exists():
-                urlretrieve(
-                    url=file_url,
-                    filename=file_path,
-                    reporthook=pb.hook_for_urlretrive,
-                    # todo: in case if some download server need extra
-                    #  information may be this is the argument we need
-                    #  to set
-                    data=None,
-                )
-            else:
-                # todo: currently the size foe already downloaded files is
-                #  shown zero see if we can set that progress bar for bytes
-                #  downloaded
-                # as file exists set the pb total
-                pb.total = pb.n
-
-        except HTTPError as exp:
-            # noinspection PyUnresolvedReferences
-            _error_msgs = dict(
+    try:
+        # retrieve data
+        # todo: can we have our own url_retrieve which can also
+        #  compute hash as it download file ... this way we need
+        #  not store data locally and can directly upload data to
+        #  network storage as we download data
+        if not file_path.exists():
+            urlretrieve(
                 url=file_url,
-                error_type='HTTPError',
-                error_code=exp.code,
-                error_msg=exp.msg
+                filename=file_path,
+                reporthook=hook_for_urlretrive,
+                # todo: in case if some download server need extra
+                #  information may be this is the argument we need
+                #  to set
+                data=None,
             )
-
-        except URLError as exp:
-            # noinspection PyUnresolvedReferences
-            _error_msgs = dict(
-                url=file_url,
-                error_type='URLError',
-                error_no=exp.errno,
-                error_reason=exp.reason,
-            )
-
-        except KeyboardInterrupt as exp:
-            # noinspection PyUnresolvedReferences
-            _error_msgs = dict(
-                url=file_url,
-                error_type='KeyboardInterrupt',
-            )
-
-        # ------------------------------------------------------ 02.03
-        # if there is error
-        if bool(_error_msgs):
-            # set pb
-            pb.set_postfix_str("❎", refresh=True)
-            # delete if any files created
-            if file_path.exists():
-                file_path.unlink()
-            # raise or return
-            if raise_error:
-                raise Exception(_error_msgs)
-            else:
-                return _error_msgs
-        # else
         else:
-            # set pb
-            pb.set_postfix_str("☑", refresh=True)
-            # return
-            return None
+            # todo: currently the size for already downloaded files is
+            #  shown zero see if we can set that progress bar for bytes
+            #  downloaded
+            # as file exists set the pb total
+            pb.total = pb.n
+
+    except HTTPError as exp:
+        # noinspection PyUnresolvedReferences
+        _error_msgs = dict(
+            url=file_url,
+            error_type='HTTPError',
+            error_code=exp.code,
+            error_msg=exp.msg
+        )
+
+    except URLError as exp:
+        # noinspection PyUnresolvedReferences
+        _error_msgs = dict(
+            url=file_url,
+            error_type='URLError',
+            error_no=exp.errno,
+            error_reason=exp.reason,
+        )
+
+    except KeyboardInterrupt as exp:
+        # noinspection PyUnresolvedReferences
+        _error_msgs = dict(
+            url=file_url,
+            error_type='KeyboardInterrupt',
+        )
+
+    # ------------------------------------------------------ 02.03
+    # if there is error
+    if bool(_error_msgs):
+        # delete if any files created
+        if file_path.exists():
+            file_path.unlink()
+        # raise or return
+        if raise_error:
+            raise Exception(_error_msgs)
+        else:
+            return _error_msgs
+    # else
+    else:
+        # return
+        return None
 
 
 def pathlib_rmtree(

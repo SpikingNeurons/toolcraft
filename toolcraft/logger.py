@@ -30,8 +30,6 @@ Main aim of new logger lib
       >>> __emoji_mapping()
 """
 import pathlib
-
-import rich
 import dataclasses
 import typing as t
 import types
@@ -41,9 +39,8 @@ import yaml
 import logging
 import logging.handlers
 from rich.logging import RichHandler
-from rich import emoji
 
-AVAILABLE_EMOJI = emoji.EMOJI
+from .richy import EMOJI
 
 MESSAGES_TYPE = t.List[
     t.Union[
@@ -57,65 +54,70 @@ MESSAGES_TYPE = t.List[
 
 class CustomLogger(logging.Logger):
 
+
     # noinspection PyMethodOverriding
-    def debug(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+    # def debug(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+    def debug(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.debug
         """
         if msgs is not None:
             msg = msg + "\n" + yaml.dump(msgs)
         if self.isEnabledFor(logging.DEBUG):
-            self._log(logging.DEBUG, msg, *(), **{})
+            self._log(logging.DEBUG, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def info(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+    def info(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.info
         """
         if msgs is not None:
             msg = msg + "\n" + yaml.dump(msgs)
         if self.isEnabledFor(logging.INFO):
-            self._log(logging.INFO, msg, (), **{})
+            self._log(logging.INFO, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def warning(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+    def warning(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.warning
         """
         if msgs is not None:
             msg = msg + "\n" + yaml.dump(msgs)
         if self.isEnabledFor(logging.WARNING):
-            self._log(logging.WARNING, msg, *(), **{})
+            self._log(logging.WARNING, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def error(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+    def error(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.error
         """
         if msgs is not None:
             msg = msg + "\n" + yaml.dump(msgs)
         if self.isEnabledFor(logging.ERROR):
-            self._log(logging.ERROR, msg, (), **{})
+            self._log(logging.ERROR, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def critical(self, *, msg: str, msgs: MESSAGES_TYPE = None):
+    def critical(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.critical
         """
         if msgs is not None:
             msg = msg + "\n" + yaml.dump(msgs)
         if self.isEnabledFor(logging.CRITICAL):
-            self._log(logging.CRITICAL, msg, (), **{})
+            self._log(logging.CRITICAL, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def exception(self, *, msg: str, msgs: MESSAGES_TYPE = None, exc_info: bool = True):
+    def exception(
+        self, msg: str, *args, msgs: MESSAGES_TYPE = None,
+        exc_info: bool = True, **kwargs
+    ):
         """
         >>> logging.Logger.exception
         """
         if msgs is not None:
             msg = msg + "\n" + yaml.dump(msgs)
         if self.isEnabledFor(logging.ERROR):
-            self._log(logging.ERROR, msg, (), exc_info=exc_info, **{})
+            self._log(logging.ERROR, msg, args, exc_info=exc_info, **kwargs)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -158,9 +160,11 @@ class AddLoggingMetaFilter(logging.Filter):
             _meta = _ALL_LOGGERS_META[record.name]  # type: LoggingMeta
             record.short_name = _meta.short_name
         except KeyError:
-            raise Exception(
-                f"Unknown name {record.name} ... cannot find meta info for it"
-            )
+            # third party loggers can also use our loggers by adding the meta on fly
+            _logger_name = record.name
+            _meta = LoggingMeta(short_name=_logger_name)
+            _ALL_LOGGERS_META[_logger_name] = _meta
+            record.short_name = _meta.short_name
         return True
 
 
@@ -287,6 +291,9 @@ def setup_logging(
     >>> logging.basicConfig
 
     """
+    # disable logging for some libraries
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
 
     # thread safety
     # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -486,7 +493,7 @@ setup_logging(
     level=logging.NOTSET,
     handlers=[
         get_rich_handler(),
-        get_file_handler("dd.log")
+        get_file_handler(pathlib.Path("tmp.log"))
     ],
 )
 

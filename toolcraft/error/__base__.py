@@ -15,7 +15,7 @@ from .. import logger
 
 _LOGGER = logger.get_logger()
 
-_SKULL_EMOJI = logger.AVAILABLE_EMOJI['skull']
+_SKULL_EMOJI = logger.EMOJI['skull']
 _EXCEPTION_HEADER = f"{_SKULL_EMOJI} 👁️>>> {{header}} <<<👁️ {_SKULL_EMOJI}"
 
 

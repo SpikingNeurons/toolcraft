@@ -1,40 +1,43 @@
-import dearpygui.dearpygui as dpg
-import numpy as np
-from dearpygui import demo
-from toolcraft.gui import _demo
+from time import sleep
 
-dpg.create_context()
-dpg.create_viewport()
-dpg.setup_dearpygui()
+from rich.live import Live
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
+from rich.table import Table
+from rich.console import Console
 
-# ----------------------------------------------------------------- DEMO
-# demo.show_demo()
-# _demo.show_demo()
 
-with dpg.window(label="Dear PyGui Demo", width=800, height=800,
-                pos=(100, 100), tag="__demo_id") as w1:
+job_progress = Progress(
+    "{task.description}",
+    SpinnerColumn(),
+    BarColumn(),
+    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+)
+job1 = job_progress.add_task("[green]Cooking")
+job2 = job_progress.add_task("[magenta]Baking", total=None)
+job3 = job_progress.add_task("[cyan]Mixing", total=400)
 
-    with dpg.plot(label="plot"):
-        dpg.add_plot_axis(dpg.mvXAxis)
-        with dpg.plot_axis(dpg.mvYAxis):
-            dpg.add_line_series(x=np.arange(10), y=np.random.normal(0.0, scale=2.0, size=10))
+total = sum(task.total for task in job_progress.tasks)
+overall_progress = Progress()
+overall_task = overall_progress.add_task("All Jobs", total=int(total))
 
-    with dpg.plot(label="plot"):
-        dpg.add_plot_axis(dpg.mvXAxis)
-        with dpg.plot_axis(dpg.mvYAxis):
-            _id = dpg.add_line_series(x=np.arange(10), y=np.random.normal(0.0, scale=2.0, size=10))
-            dpg.configure_item(_id, x=np.arange(10), y=np.random.normal(0.0, scale=2.0, size=10))
-    dpg.configure_item(_id, x=np.arange(10))
-#
-#     with dpg.collapsing_header(label="some label 111", default_open=True,) as p1:
-#         a1 = dpg.add_text(default_value="Some text 111")
-#     with dpg.collapsing_header(label="some label 222", default_open=True,) as p2:
-#         a2 = dpg.add_text(default_value="Some text 222", before=p1)
-#     with dpg.tooltip(parent=p2, label="sasdasd") as tt:
-#         dpg.add_text("dddddddddddd")
-#     with dpg.tooltip(parent=p2, label="rrrrr") as tt2:
-#         dpg.add_text("werwer333333333333")
+progress_table = Table.grid()
+progress_table.add_row(
+    Panel.fit(
+        overall_progress, title="Overall Progress", border_style="green", padding=(2, 2)
+    ),
+    Panel.fit(job_progress, title="[b]Jobs", border_style="red", padding=(1, 2)),
+)
 
-dpg.show_viewport()
-dpg.start_dearpygui()
-dpg.destroy_context()
+console = Console(record=True)
+console.print(progress_table)
+
+with Live(progress_table, refresh_per_second=10):
+    while not overall_progress.finished:
+        sleep(0.1)
+        for job in job_progress.tasks:
+            if not job.finished:
+                job_progress.advance(job.id)
+
+        completed = sum(task.completed for task in job_progress.tasks)
+        overall_progress.update(overall_task, completed=completed)

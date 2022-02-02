@@ -2,10 +2,12 @@ import abc
 import dataclasses
 import datetime
 import hashlib
+import sys
 import inspect
 import types
 import pathlib
 import enum
+import traceback
 import typing as t
 import rich
 from rich import progress
@@ -260,7 +262,25 @@ class RuleChecker:
         self.decorated_class = None  # type: t.Type[Tracker]
 
     def __call__(self, tracker: t.Type["Tracker"]) -> t.Type["Tracker"]:
+        """
+        todo: undecorated classes do not get rule checked so find a way to do it ...
+          note that we tried with source code read but it does not include source
+          code with decorator so we deleted that code [[HIGH PRIORITY]]
+          NOTE: only few i.e. decorated classes only are tested we need to find a
+            way to attach decorator to subclasses that are not decorated [[VVIP]]
+          NOTE:: also we need to find out how third party libs that use toolcraft can
+            get checked ... can the super class infect third party libs to do rule
+            checks
+          We can have some signal system that init_subclass triggers to so that rule
+            check get applied
+        """
+        # ---------------------------------------------------------- 00
+        # bypass
         if not settings.STATIC_CODE_CHECK:
+            return tracker
+        # todo enable this and test later
+        if settings.STATIC_CODE_CHECK_BYPASS_GUI \
+                and tracker.__module__.startswith("toolcraft.gui"):
             return tracker
 
         # ---------------------------------------------------------- 01
@@ -832,25 +852,6 @@ class Tracker:
 
         # call class_init
         cls.class_init()
-
-        # if not decorated by RuleChecker we will auto decorate it here
-        # this also does rule check on new subclass ;)
-        # Note that we need to static analyze the source code for this because note
-        # that class is not fully loaded and any RuleChecker decorator will be
-        # applied again
-        if settings.STATIC_CODE_CHECK:
-            _bypass = settings.STATIC_CODE_CHECK_BYPASS_GUI \
-                      and cls.__module__.startswith("toolcraft.gui")
-            if not _bypass:
-                _src_code = inspect.getsource(cls)
-                _found_rule_checker_dec = False
-                for _token in [f"@m.", "@", "@marshalling."]:
-                    _rule_checker_name = _token + RuleChecker.__name__
-                    if _src_code.find(_rule_checker_name) > -1:
-                        _found_rule_checker_dec = True
-                        break
-                if not _found_rule_checker_dec:
-                    RuleChecker()(tracker=cls)
 
     def __call__(
         self,
@@ -1718,7 +1719,7 @@ class HashableClass(YamlRepr, abc.ABC):
           Note that if class can be iterated it will use `Tracker.rich_progress`
             property ...
           We can show things like
-          + status for multiple phases
+          + status for multiple phases (rich.status.Status)
              + init, validate, create, some storage properties if any
           + progress bar for some phases
           + hashable_info (a link which will open a panel ans show hashable info)

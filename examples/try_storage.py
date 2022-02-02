@@ -78,13 +78,25 @@ class DnTestFile(s.DownloadFileGroup):
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
-            "file": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file1": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "resources/pdf/dummy.pdf",
+            "file2": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "resources/pdf/dummy.pdf",
+            "file3": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "resources/pdf/dummy.pdf",
+            "file4": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
         }
 
     def get_hashes(self) -> t.Dict[str, str]:
         return {
-            "file": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "file1": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "885e6adb4",
+            "file2": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "885e6adb4",
+            "file3": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "885e6adb4",
+            "file4": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
             "885e6adb4",
         }
 

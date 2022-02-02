@@ -15,6 +15,9 @@ todo: in context to mlflow this will also be used as log_artifact ... where
 """
 
 import sys
+import time
+
+import requests
 import typing as t
 import pathlib
 import subprocess
@@ -33,6 +36,7 @@ from .. import util, logger, settings
 from .. import storage as s
 from .. import error as e
 from .. import marshalling as m
+from .. import richy
 from . import StorageHashable
 
 # noinspection PyUnresolvedReferences
@@ -1925,16 +1929,106 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         ...
 
     def create(self) -> t.List[pathlib.Path]:
+        """
+        todo: Exception handling ... allow few files that succeded
+        Returns:
 
+        """
+        # ------------------------------------------------------ 01
+        # get details
         _file_paths = {
             fk: self.path/fk for fk in self.file_keys
-        }
+        }  # type: t.Dict[str, pathlib.Path]
         _urls = self.get_urls()
+        _errors = {}
+        _responses = {}
+        _lengths = {}
+        for fk in self.file_keys:
+            if _file_paths[fk].exists():
+                continue
+            _response = requests.get(_urls[fk], stream=True)
+            _length = int(_response.headers['content-length'])
+            try:
+                _response = requests.get(_urls[fk], stream=True)
+                try:
+                    _length = int(_response.headers['content-length'])
+                except Exception as _ee:
+                    raise Exception("error getting content length: " + str(_ee))
+            except Exception as _exp:
+                _errors[fk] = str(_exp)
+                _responses[fk] = None
+                _lengths[fk] = None
+                continue
+            _responses[fk] = _response
+            _lengths[fk] = _length
+        # ------------------------------------------------------ 02
+        # get panels
+        _download_panel = richy.Progress.for_download(
+            title=f"Download for file group: {self.name}")
+        # todo: make hash panel and add it to table and then render with live display
+        #   see https://github.com/Textualize/rich/blob/master/examples/live_progress.py
+        # _hash_check_panel = ...
 
-        util.download_files(
-            paths=_file_paths, urls=_urls, msg=f"file group `{self.name}`"
-        )
+        # ------------------------------------------------------ 03
+        # now add tasks
+        for fk in self.file_keys:
+            if _file_paths[fk].exists():
+                _download_panel.add_task(
+                    task_name=fk, total=-1
+                )
+            elif fk in _errors.keys():
+                _download_panel.add_task(
+                    task_name=fk, total=-1
+                )
+            else:
+                _download_panel.add_task(
+                    task_name=fk, total=_lengths[fk]
+                )
 
+        # ------------------------------------------------------ 04
+        # now download files
+        with richy.r_live.Live(_download_panel.rich_panel, refresh_per_second=10):
+            _LOGGER.info(msg=f"Downloading for file group: {self.name}")
+            _start_time = datetime.datetime.now()
+            for fk in self.file_keys:
+                # get task id
+                _task_id = _download_panel.tasks[fk].id
+                # if already present just move forward
+                if _file_paths[fk].exists():
+                    _download_panel.rich_progress.update(
+                        task_id=_task_id,
+                        advance=1
+                    )
+                    _LOGGER.info(msg=f" >> {fk}: already downloaded")
+                    continue
+                # if there was error earlier update task ...
+                if fk in _errors.keys():
+                    _download_panel.rich_progress.update(
+                        task_id=_task_id,
+                        state="failed",
+                    )
+                    _LOGGER.error(msg=f" >> {fk}: failed with error {_errors[fk]}")
+                    continue
+                try:
+                    with open(_file_paths[fk], 'wb') as _f:
+                        for _chunk in _responses[fk].iter_content(
+                            chunk_size=min(_lengths[fk] // 10, 1024 * 50)
+                        ):
+                            if _chunk:  # filter out keep-alive new chunks
+                                time.sleep(0.5)
+                                _f.write(_chunk)
+                                _download_panel.rich_progress.update(
+                                    task_id=_task_id,
+                                    advance=len(_chunk)
+                                )
+                    _LOGGER.info(msg=f" >> {fk}: success")
+                except Exception as _exp:
+                    _LOGGER.error(msg=f" >> {fk}: failed with error {str(_exp)}")
+            _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+            _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
+
+        # ------------------------------------------------------ 05
+        # return
         return list(_file_paths.values())
 
     # noinspection PyTypeChecker
