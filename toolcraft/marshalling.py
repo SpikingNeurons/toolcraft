@@ -19,6 +19,7 @@ import yaml
 
 from . import error as e
 from . import logger, settings, util
+from . import richy
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
@@ -29,6 +30,8 @@ if False:
 _LOGGER = logger.get_logger()
 _LITERAL_CLASS_NAME = 'LITERAL'
 _RULE_CHECKER = "__rule_checker__"
+
+_RULE_CHECKERS_TO_BE_CHECKED = {}  # type: t.Dict[int, RuleChecker]
 
 # Class to keep track of all concrete HashableClass class's used in the
 # entire application
@@ -266,15 +269,6 @@ class RuleChecker:
         This just keeps reference for class that is decorated
         """
         # ---------------------------------------------------------------- 01
-        # if super parent do nothing
-        try:
-            if tracker == Tracker:
-                return tracker
-        except NameError:
-            # this mean that Tracker is not fully loaded so the incoming
-            # tracker is anyway Tracker
-            return tracker
-        # ---------------------------------------------------------------- 02
         # there will never be a decorated class
         if self.decorated_class is not None:
             raise e.code.CodingError(
@@ -285,6 +279,19 @@ class RuleChecker:
             )
         # set it now here
         self.decorated_class = tracker
+        # ---------------------------------------------------------------- 02
+        # if super parent then there will be no call to __init_subclass__ so
+        # we have to handle things i.e. add fake RuleChecker so that anyway
+        # that will delete below and new rule checker will be added
+        try:
+            # A way to detect if Tracker is not fully loaded it will raise NameError
+            # By any chance if it matches then also we raise NameError so that
+            # exception handling takes over
+            if tracker == Tracker:
+                raise NameError
+        except NameError:
+            setattr(self.decorated_class, _RULE_CHECKER, self)
+            _RULE_CHECKERS_TO_BE_CHECKED[id(self)] = self
         # ---------------------------------------------------------------- 03
         # if you are initiating from __init_subclass__
         if rule_checker_set_from_init_subclass:
@@ -296,6 +303,7 @@ class RuleChecker:
                 # keep the reference of rule checker in decorated class
                 # note this is mapping proxy, so we use setattr
                 setattr(self.decorated_class, _RULE_CHECKER, self)
+                _RULE_CHECKERS_TO_BE_CHECKED[id(self)] = self
             else:
                 raise e.code.CodingError(
                     msgs=[
@@ -309,6 +317,10 @@ class RuleChecker:
         else:
             # remove the rule checker added by __init_subclass__ and instead have self
             if _RULE_CHECKER in self.decorated_class.__dict__.keys():
+                # do for rule checkers
+                del _RULE_CHECKERS_TO_BE_CHECKED[
+                    id(self.decorated_class.__dict__[_RULE_CHECKER])]
+                _RULE_CHECKERS_TO_BE_CHECKED[id(self)] = self
                 # note this is mapping proxy, so we use delattr and setattr
                 delattr(self.decorated_class, _RULE_CHECKER)
                 setattr(self.decorated_class, _RULE_CHECKER, self)
@@ -391,12 +403,11 @@ class RuleChecker:
     # noinspection PyPep8Naming
     def check_related_to_class_FrozenEnum(self):
         # ---------------------------------------------------------- 01
-        # nothing to do if not a subclass of YamlRepr
-        try:
-            if not issubclass(self.decorated_class, FrozenEnum):
-                return
-        except NameError:
-            # FrozenEnum is still not created so nothing to do here so return
+        # if FrozenEnum then it is parent class so ignore
+        if self.decorated_class == FrozenEnum:
+            return
+        # nothing to do if not a subclass of FrozenEnum
+        if not issubclass(self.decorated_class, FrozenEnum):
             return
 
         # ---------------------------------------------------------- 02
@@ -413,12 +424,11 @@ class RuleChecker:
     # noinspection PyPep8Naming
     def check_related_to_class_HashableClass(self):
         # ---------------------------------------------------------- 01
+        # if HashableClass ignore
+        if self.decorated_class == HashableClass:
+            return
         # nothing to do if not a subclass of YamlRepr
-        try:
-            if not issubclass(self.decorated_class, HashableClass):
-                return
-        except NameError:
-            # HashableClass is still not created so nothing to do hence return
+        if not issubclass(self.decorated_class, HashableClass):
             return
         # cls to consider
         _hashable_cls = self.decorated_class
@@ -1822,6 +1832,29 @@ class HashableClass(YamlRepr, abc.ABC):
 
     def __post_init__(self):
         # ---------------------------------------------------------- 01
+        # this is a very wierd way of doing rule check as we cannot detect when the
+        # class subclassing is over
+        # What we do here is when first time instance is created we check for classes
+        # that are already loaded and per form rule check and delete them ...
+        # as because in that case class is fully loaded and dataclass decorator
+        # is also applied
+        # [NOTE] MAKE SURE THAT THIS CODE IS NEVER CALLED FROM CLASS LEVEL METHODS
+        # Also we are aware that this can be done some parent class instance method
+        # but as of now we cannot have __init__ method there as many classes that are
+        # subclassed are dataclasses
+        # Note that this happens only once as we always keep on cleaning the dict
+        if settings.DO_RULE_CHECK:
+            _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
+            if bool(_rc_keys):
+                _LOGGER.info(msg=f"Detected new classes so performing rule checks ...")
+                # todo: enhance `richy.r_progress.track` ... put this inside panel ...
+                for _rc_k in richy.r_progress.track(
+                    _rc_keys, description="Rule Checking ..."
+                ):
+                    _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
+                    del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]
+
+        # ---------------------------------------------------------- 02
         # dict field if any will be transformed
         for f in self.dataclass_field_names:
             _dict = getattr(self, f)
@@ -1837,12 +1870,12 @@ class HashableClass(YamlRepr, abc.ABC):
                     _copy_dict[k] = v
                 _dict.clear()
                 _dict.update(_copy_dict)
-        # ---------------------------------------------------------- 02
+        # ---------------------------------------------------------- 03
         # todo: add global flag to start and stop validation
         # make sure that everything is light weight so that object creation
         # is fast ...
         self.init_validate()
-        # ---------------------------------------------------------- 03
+        # ---------------------------------------------------------- 04
         # call init logic
         self.init()
 

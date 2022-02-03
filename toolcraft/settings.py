@@ -16,6 +16,8 @@ DAPR_SERVE_MODE = False
 # noinspection PyTypeChecker
 DAPR_SESSION_DIR = None  # type: pathlib.Path
 
+DO_RULE_CHECK = True
+
 
 # check if debugger is used
 PYC_DEBUGGING = False

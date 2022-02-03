@@ -23,6 +23,7 @@ class A(m.HashableClass):
 @dataclasses.dataclass(frozen=True)
 class B(A):
     a: int
+    @util.CacheResult
     def f1(self):
         ...
 
@@ -41,14 +42,5 @@ class C(B):
 
 
 if __name__ == '__main__':
-    print(A.__dict__['__rule_checker__'])
-    # print(B.__dict__['__rule_checker__'])
-    print(C.__dict__['__rule_checker__'])
 
-    _ar = A.__dict__['__rule_checker__']
-    _cr = C.__dict__['__rule_checker__']
-
-    print("...")
-
-    for _ in m.Tracker.available_sub_classes():
-        print(_)
+    x=C(1,2)
