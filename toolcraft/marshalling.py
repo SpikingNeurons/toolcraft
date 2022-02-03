@@ -391,6 +391,10 @@ class RuleChecker:
         self.check_related_to_class_FrozenEnum()
 
         # ---------------------------------------------------------- xx
+        # todo: based on return type of properties and instance methods without
+        #  argument warn users to cache results
+
+        # ---------------------------------------------------------- xx
         # todo: find a way to check if super() calls are made in properties and methods
         #   see inspect.getsource to read code string
 
@@ -1861,10 +1865,12 @@ class HashableClass(YamlRepr, abc.ABC):
         if settings.DO_RULE_CHECK:
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
             if bool(_rc_keys):
-                _LOGGER.info(msg=f"Detected new classes so performing rule checks ...")
+                _LOGGER.info(
+                    msg=f"Detected {len(_rc_keys)} new classes so "
+                        f"performing rule checks ...")
                 # todo: enhance `richy.r_progress.track` ... put this inside panel ...
                 for _rc_k in richy.r_progress.track(
-                    _rc_keys, description="Rule Checking ..."
+                    _rc_keys, description=f"Rule Checking ..."
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
                     del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]
