@@ -11,6 +11,8 @@ import pathlib
 import sys
 import time
 import typing as t
+# todo ... get rich dunder methods for YamlRepr and then get rid of this print ;)
+from rich import print
 
 sys.path.append("..")
 
@@ -168,7 +170,7 @@ def try_metainfo_file():
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _)
         print(df.yaml())
         print(df.config)
-        df.get_file(file_key="file")
+        df.get_file(file_key="file1")
         print(df.yaml())
         print(df.config)
         time.sleep(1)
@@ -246,6 +248,12 @@ def try_creating_folders():
     # folder2.delete(force=True)
     # folder1.delete(force=True)
     # folder0.delete(force=True)
+    print(folder0.items.keys())
+    print(folder1.items.keys())
+    print(folder2.items.keys())
+    assert len(folder0.items) == 1
+    assert len(folder1.items) == 1
+    assert len(folder2.items) == 1
 
     # or else just delete the super parent and things will chain
     folder0.delete(force=True)
@@ -258,6 +266,9 @@ def try_creating_folders():
     print(folder0.items.keys())
     print(folder1.items.keys())
     print(folder2.items.keys())
+    assert len(folder0.items) == 0
+    assert len(folder1.items) == 0
+    assert len(folder2.items) == 0
     # not this one as it contains None so cannot access items but this too
     # needs to be blocked for any future access
     # print(folder3.items.keys())
@@ -800,9 +811,9 @@ def try_main():
     _TEMP_PATH = _TEMP_PATH.resolve()
     # try_hashable_ser()
     # try_download_file()
-    try_auto_hashed_download_file()
+    # try_auto_hashed_download_file()
     # try_metainfo_file()
-    # try_creating_folders()
+    try_creating_folders()
     # try_arrow_storage()
     # try_file_storage()
     _TEMP_PATH.rmdir()

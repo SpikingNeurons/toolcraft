@@ -45,6 +45,8 @@ if settings.DPG_WORKS:
     # as some rules use dpg
     from . import gui
 
+# decorate undecorated and hence rule check
+
 # todo: when using toolcraft in interactive mode enable this
 # Rich may be installed in the REPL so that Python data structures are automatically
 # pretty printed with syntax highlighting.

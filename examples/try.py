@@ -1,43 +1,54 @@
-from time import sleep
+import dataclasses
+import typing as t
+import sys
 
-from rich.live import Live
-from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn
-from rich.table import Table
-from rich.console import Console
+sys.path.append("..")
+
+from toolcraft import marshalling as m
+from toolcraft import util
 
 
-job_progress = Progress(
-    "{task.description}",
-    SpinnerColumn(),
-    BarColumn(),
-    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+@dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=['f1']
 )
-job1 = job_progress.add_task("[green]Cooking")
-job2 = job_progress.add_task("[magenta]Baking", total=None)
-job3 = job_progress.add_task("[cyan]Mixing", total=400)
+class A(m.HashableClass):
+    a: int
 
-total = sum(task.total for task in job_progress.tasks)
-overall_progress = Progress()
-overall_task = overall_progress.add_task("All Jobs", total=int(total))
+    @util.CacheResult
+    def f1(self):
+        ...
 
-progress_table = Table.grid()
-progress_table.add_row(
-    Panel.fit(
-        overall_progress, title="Overall Progress", border_style="green", padding=(2, 2)
-    ),
-    Panel.fit(job_progress, title="[b]Jobs", border_style="red", padding=(1, 2)),
+
+@dataclasses.dataclass(frozen=True)
+class B(A):
+    a: int
+    def f1(self):
+        ...
+
+
+@dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=['f2']
 )
+class C(B):
+    d: int
 
-console = Console(record=True)
-console.print(progress_table)
+    @util.CacheResult
+    def f2(self):
+        ...
 
-with Live(progress_table, refresh_per_second=10):
-    while not overall_progress.finished:
-        sleep(0.1)
-        for job in job_progress.tasks:
-            if not job.finished:
-                job_progress.advance(job.id)
 
-        completed = sum(task.completed for task in job_progress.tasks)
-        overall_progress.update(overall_task, completed=completed)
+
+if __name__ == '__main__':
+    print(A.__dict__['__rule_checker__'])
+    # print(B.__dict__['__rule_checker__'])
+    print(C.__dict__['__rule_checker__'])
+
+    _ar = A.__dict__['__rule_checker__']
+    _cr = C.__dict__['__rule_checker__']
+
+    print("...")
+
+    for _ in m.Tracker.available_sub_classes():
+        print(_)

@@ -52,9 +52,6 @@ else:
         f"missing toolcraft config file at {_config_file.as_posix()}"
     )
 
-STATIC_CODE_CHECK = TC_CONFIG['STATIC_CODE_CHECK']
-STATIC_CODE_CHECK_BYPASS_GUI = TC_CONFIG['STATIC_CODE_CHECK_BYPASS_GUI']
-
 
 _root_dnd = pathlib.Path(TC_CONFIG["dirs"]["DND"])
 _root_del = pathlib.Path(TC_CONFIG["dirs"]["DEL"])

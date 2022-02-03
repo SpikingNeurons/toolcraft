@@ -28,7 +28,7 @@ if False:
 
 _LOGGER = logger.get_logger()
 _LITERAL_CLASS_NAME = 'LITERAL'
-_RULE_CHECKER_KEY = "__rule_checker__"
+_RULE_CHECKER = "__rule_checker__"
 
 # Class to keep track of all concrete HashableClass class's used in the
 # entire application
@@ -240,15 +240,12 @@ class RuleChecker:
     """
 
     def __init__(
-        self,
+        self, *,
         class_can_be_overridden: bool = True,
         things_to_be_cached: t.List[str] = None,
         things_not_to_be_cached: t.List[str] = None,
         things_not_to_be_overridden: t.List[str] = None,
     ):
-        if not settings.STATIC_CODE_CHECK:
-            return
-
         self.class_can_be_overridden = class_can_be_overridden
         self.things_to_be_cached = \
             [] if things_to_be_cached is None else things_to_be_cached
@@ -261,104 +258,135 @@ class RuleChecker:
         # noinspection PyTypeChecker
         self.decorated_class = None  # type: t.Type[Tracker]
 
-    def __call__(self, tracker: t.Type["Tracker"]) -> t.Type["Tracker"]:
+    def __call__(
+        self, tracker: t.Type["Tracker"],
+        rule_checker_set_from_init_subclass: bool = False,
+    ) -> t.Type["Tracker"]:
         """
-        todo: undecorated classes do not get rule checked so find a way to do it ...
-          note that we tried with source code read but it does not include source
-          code with decorator so we deleted that code [[HIGH PRIORITY]]
-          NOTE: only few i.e. decorated classes only are tested we need to find a
-            way to attach decorator to subclasses that are not decorated [[VVIP]]
-          NOTE:: also we need to find out how third party libs that use toolcraft can
-            get checked ... can the super class infect third party libs to do rule
-            checks
-          We can have some signal system that init_subclass triggers to so that rule
-            check get applied
+        This just keeps reference for class that is decorated
         """
-        # ---------------------------------------------------------- 00
-        # bypass
-        if not settings.STATIC_CODE_CHECK:
+        # ---------------------------------------------------------------- 01
+        # if super parent do nothing
+        try:
+            if tracker == Tracker:
+                return tracker
+        except NameError:
+            # this mean that Tracker is not fully loaded so the incoming
+            # tracker is anyway Tracker
             return tracker
-        # todo enable this and test later
-        if settings.STATIC_CODE_CHECK_BYPASS_GUI \
-                and tracker.__module__.startswith("toolcraft.gui"):
-            return tracker
-
-        # ---------------------------------------------------------- 01
-        # store reference to decorated class
-        if self.decorated_class is None:
-            self.decorated_class = tracker
-        else:
+        # ---------------------------------------------------------------- 02
+        # there will never be a decorated class
+        if self.decorated_class is not None:
             raise e.code.CodingError(
                 msgs=[
-                    f"This should be only once and this __call__ is never expected "
-                    f"to happen again ..."
+                    f"This is suppose to be None as __call__ will be called only "
+                    f"once per instance of RuleChecker ..."
                 ]
             )
+        # set it now here
+        self.decorated_class = tracker
+        # ---------------------------------------------------------------- 03
+        # if you are initiating from __init_subclass__
+        if rule_checker_set_from_init_subclass:
+            # set the RuleChecker to decorated_class  ...
+            # in case the class has true decorator
+            # then that decorator code will delete this decorator in next code ...
+            # or else this decorator will be used to check code
+            if _RULE_CHECKER not in self.decorated_class.__dict__.keys():
+                # keep the reference of rule checker in decorated class
+                # note this is mapping proxy, so we use setattr
+                setattr(self.decorated_class, _RULE_CHECKER, self)
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"We assume you are calling from __init_subclass__ "
+                        f"so we expect that {_RULE_CHECKER} will not be setup yet as "
+                        f"you will be creating fresh RuleChecker instance"
+                    ]
+                )
+        # ---------------------------------------------------------------- 04
+        # if this is true decorator used on top of class
+        else:
+            # remove the rule checker added by __init_subclass__ and instead have self
+            if _RULE_CHECKER in self.decorated_class.__dict__.keys():
+                # note this is mapping proxy, so we use delattr and setattr
+                delattr(self.decorated_class, _RULE_CHECKER)
+                setattr(self.decorated_class, _RULE_CHECKER, self)
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"You are not calling this code from __init_subclass__ and we "
+                        f"assume this is actual decorator applied on class",
+                        f"So we expect that {_RULE_CHECKER} will be set by now as we "
+                        f"will delete it first and then add this RuleChecker on "
+                        f"top of it",
+                        f"Check class {tracker}"
+                    ]
+                )
+        # ---------------------------------------------------------------- 05
+        # return
+        return tracker
+
+    def check(self):
+        """
+        This will happen when all classes are loaded
+        """
+
+        # ---------------------------------------------------------- 01
+        # expect parent to be None as this is called only once per RuleCHecker
+        if self.parent is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We expect this parent to None as this is called only once "
+                    f"per RuleChecker"
+                ]
+            )
+        # set parent rule checker ... expect for super parent Tracker
+        if self.decorated_class != Tracker:
+            self.parent = getattr(self.decorated_class.__mro__[1], _RULE_CHECKER)
 
         # ---------------------------------------------------------- 02
-        # set parent ... expect for super parent Tracker
-        try:
-            if tracker != Tracker:
-                self.parent = getattr(tracker.__mro__[1], _RULE_CHECKER_KEY)
-        except NameError:
-            # this means tracker == Tracker
-            # it raises NameError as tracker is still not fully built to become Tracker
-            ...
-
-        # ---------------------------------------------------------- 03
-        # set __rule_checker__ so that child classes can refer to it
-        if _RULE_CHECKER_KEY in tracker.__dict__.keys():
-            raise e.code.CodingError(
-                msgs=[f"We never expect `{_RULE_CHECKER_KEY}` to be present "
-                      f"in class {tracker}.__dict__"]
-            )
-        setattr(tracker, _RULE_CHECKER_KEY, self)
-
-        # ---------------------------------------------------------- 03
         # test if current decorator settings agree with parent
         # and also merge some settings
         self.agree_with_parent_and_merge_settings()
 
-        # ---------------------------------------------------------- 04
+        # ---------------------------------------------------------- 03
         # check for dataclass decorator
         self.check_if_decorated_with_dataclass()
 
-        # ---------------------------------------------------------- 05
+        # ---------------------------------------------------------- 04
         # check_things_to_be_cached
         self.check_things_to_be_cached()
 
-        # ---------------------------------------------------------- 06
+        # ---------------------------------------------------------- 05
         # check_things_not_to_be_cached
         self.check_things_not_to_be_cached()
 
-        # ---------------------------------------------------------- 07
+        # ---------------------------------------------------------- 06
         # check_things_not_to_be_overridden
         self.check_things_not_to_be_overridden()
 
-        # ---------------------------------------------------------- 08
+        # ---------------------------------------------------------- 07
         # check_related_to_class_Tracker
         self.check_related_to_class_Tracker()
 
-        # ---------------------------------------------------------- 09
+        # ---------------------------------------------------------- 08
         # check_related_to_class_HashableClass
         self.check_related_to_class_HashableClass()
 
-        # ---------------------------------------------------------- 10
+        # ---------------------------------------------------------- 09
         # check_related_to_class_FrozenEnum
         self.check_related_to_class_FrozenEnum()
 
         # ---------------------------------------------------------- xx
         # todo: find a way to check if super() calls are made in properties and methods
-        #   see inspect.getsource as used in `check_if_decorated_with_dataclass`
+        #   see inspect.getsource to read code string
 
         # ---------------------------------------------------------- xx
         # todo: test that RuleChecker is the first decorator on the class
 
         # ---------------------------------------------------------- xx
         # todo: check that @property decorator is applied above @util.CacheResult
-
-        # ---------------------------------------------------------- xx
-        return tracker
 
     # noinspection PyPep8Naming
     def check_related_to_class_FrozenEnum(self):
@@ -523,7 +551,7 @@ class RuleChecker:
             '__call__',
 
             # this is used by RuleChecker
-            _RULE_CHECKER_KEY,
+            _RULE_CHECKER,
         ]
         if _hashable_cls != HashableClass:
             for k in _hashable_cls.__dict__.keys():
@@ -624,7 +652,6 @@ class RuleChecker:
                         f"Please check if you provided wrong string ..."
                     ]
                 )
-                raise
             # if abstract no sense in checking if cached
             if getattr(_method_or_prop, '__isabstractmethod__', False):
                 continue
@@ -660,7 +687,9 @@ class RuleChecker:
         # first get current classes and detect if it has dataclass decorator
         # if there is dataclass decorator no need to investigate more
         _current_class = self.decorated_class
-        if inspect.getsource(_current_class).find("@dataclass") > -1:
+        # noinspection PyProtectedMember,PyUnresolvedReferences
+        if dataclasses._FIELDS in _current_class.__dict__.keys() and \
+                dataclasses._PARAMS in _current_class.__dict__.keys():
             return
 
         # ---------------------------------------------------------- 03
@@ -668,7 +697,9 @@ class RuleChecker:
         # note we do not use self.parent.decorated_class as it might skip
         # immediate parent class
         _parent_class = _current_class.__mro__[1]
-        if inspect.getsource(_parent_class).find("@dataclass") > -1:
+        # noinspection PyProtectedMember,PyUnresolvedReferences
+        if dataclasses._FIELDS in _current_class.__dict__.keys() and \
+                dataclasses._PARAMS in _current_class.__dict__.keys():
             raise e.code.CodingError(
                 msgs=[
                     f"Parent class {_parent_class} of class {_current_class} is a "
@@ -852,6 +883,13 @@ class Tracker:
 
         # call class_init
         cls.class_init()
+
+        # add rule checker
+        # note that this makes sure that decorator is applied to all classes that
+        # do not have it ... while if you have used actual decorator then we will
+        # remove this decorator and add true decorator as it might have new rules
+        # to check
+        RuleChecker()(tracker=cls, rule_checker_set_from_init_subclass=True)
 
     def __call__(
         self,
