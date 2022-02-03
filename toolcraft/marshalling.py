@@ -4,6 +4,7 @@ import datetime
 import hashlib
 import sys
 import inspect
+import time
 import types
 import pathlib
 import enum
@@ -343,7 +344,6 @@ class RuleChecker:
         """
         This will happen when all classes are loaded
         """
-
         # ---------------------------------------------------------- 01
         # expect parent to be None as this is called only once per RuleCHecker
         if self.parent is not None:
@@ -396,9 +396,24 @@ class RuleChecker:
 
         # ---------------------------------------------------------- xx
         # todo: test that RuleChecker is the first decorator on the class
+        #  i.e. dataclass needs to be above RuleChecker
+        #   see inspect.getsource to read code string
 
         # ---------------------------------------------------------- xx
         # todo: check that @property decorator is applied above @util.CacheResult
+        #   see inspect.getsource to read code string
+
+        # ---------------------------------------------------------- xx
+        # todo: check should_add_raise_explicitly_class_field ...
+        #  check toolcraft._bulk_code_refactor._script.py
+
+        # ---------------------------------------------------------- xx
+        # todo: check add_raise_before_exceptions_to_be_raised_explicitly ...
+        #  check toolcraft._bulk_code_refactor._script.py
+
+        # ---------------------------------------------------------- xx
+        # todo: check add_raise_if_expected_after_some_exceptions ...
+        #  check toolcraft._bulk_code_refactor._script.py
 
     # noinspection PyPep8Naming
     def check_related_to_class_FrozenEnum(self):
