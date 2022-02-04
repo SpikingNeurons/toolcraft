@@ -26,8 +26,6 @@ from toolcraft import util
 
 settings.DEBUG_HASHABLE_STATE = False
 
-_TEMP_PATH = pathlib.Path("storage_temp")
-
 
 class NewEnum(m.FrozenEnum, enum.Enum):
     a1 = 11

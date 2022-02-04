@@ -36,6 +36,7 @@ todo: note that we can safely use this module for
 import typing as t
 import fsspec
 import toml
+import pyarrow as pa
 
 # todo: keep exploring these known_implementationsas they are updated
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -44,6 +45,14 @@ from fsspec.registry import known_implementations
 # todo: explore caching
 # from fsspec.implementations.cached import CachingFileSystem, \
 #     WholeFileCacheFileSystem, SimpleCacheFileSystem, LocalTempFile
+
+# todo: pyarrow ... may be not needed as pa.dataset accepts any file system and maybe
+#  we dont need anything more ... if we use native pyarrow file systems with a wrapper
+#  for fsspec then we are limited to local, S3 and Hadoop ... monitor evlution of
+#  this library they might eventually drop that lib and grow more dependant on fsspec
+#  https://arrow.apache.org/docs/python/filesystems.html
+# from pyarrow.fs import PyFileSystem, FSSpecHandler
+# pa_fs = PyFileSystem(FSSpecHandler(fs))
 
 # currently, we support (or want to support these file systems)
 from fsspec.implementations.local import LocalFileSystem
@@ -191,15 +200,9 @@ def get_file_system(fs: str) -> fsspec.AbstractFileSystem:
         _fs = _protocol_class(**_kwargs)
         # Add dir (using DirFileSystem) if specified ...
         if _root_dir is not None:
-            # todo: currently we block this for efficiency reasons ... as we might do
-            #  lot of small file writes to CWD ... remove this code only if necessary
-            if fs == "CWD":
-                raise e.validation.ConfigError(
-                    msgs=[
-                        f"Avoid using setting root_dir for CWD for efficiency",
-                        f"We will explore later if we want to enable it"
-                    ]
-                )
+            # todo: this might make it slow but nonetheless fsspec itself will add
+            #  some overhead for IO ... make sure you write in big chunks or do
+            #  analysis later ... or check if Async IO helps ...
             # wrap with DirFileSystem
             _fs = DirFileSystem(
                 path=_root_dir, fs=_fs, **_kwargs
