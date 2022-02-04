@@ -198,7 +198,7 @@ def get_rich_handler() -> RichHandler:
         level=logging.NOTSET,
         markup=True,
         rich_tracebacks=True,
-        show_path=False,
+        show_path=True,
     )
 
     # -------------------------------------------------------- 02

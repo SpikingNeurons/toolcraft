@@ -1933,6 +1933,14 @@ class TempFileGroup(FileGroup, abc.ABC):
 
 @dataclasses.dataclass(frozen=True)
 class DownloadFileGroup(FileGroup, abc.ABC):
+    """
+    todo: although we retrieve files from urls we might sometimes
+      need authentication ... and that is where the create must use
+      `storage.file_system` so that files can be downloaded from anywhere
+
+    todo: Explore `fsspec.implementations.cached` to cache files locally
+      on first access
+    """
 
     @property
     def name(self) -> str:

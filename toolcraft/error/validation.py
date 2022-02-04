@@ -130,6 +130,14 @@ class NotAllowed(_CustomException):
         super().__init__(msgs=["This is Not Allowed !!!", *msgs])
 
 
+class ConfigError(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
+    def __init__(self, *, msgs: MESSAGES_TYPE):
+        super().__init__(msgs=["Error with .toolcraft/config.toml", *msgs])
+
+
 class OnlyValueAllowed(_CustomException):
     def __init__(self, *, value, to_be_value, msgs: MESSAGES_TYPE):
         if value == to_be_value:

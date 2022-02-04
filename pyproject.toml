@@ -74,6 +74,7 @@ rich = "^11.0.0"
 # commit and check
 #twine = "^3.4.2"
 #panel = "^0.12.5"
+paramiko = "^2.9.2"
 #toml = "^0.10.2"
 
 

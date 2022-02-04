@@ -41,33 +41,10 @@ except ImportError:
 
 # make config
 TC_HOME = pathlib.Path.home() / ".toolcraft"
-_config_file = TC_HOME / "config.toml"
-if _config_file.exists():
-    TC_CONFIG = toml.load(_config_file.as_posix())
-    if "dirs" not in TC_CONFIG.keys():
-        raise Exception(
-            f"Missing mandatory `dirs` setting in toolcraft config file at "
-            f"`{_config_file.as_posix()}`"
-        )
-else:
-    raise Exception(
-        f"missing toolcraft config file at {_config_file.as_posix()}"
-    )
-
-
-_root_dnd = pathlib.Path(TC_CONFIG["dirs"]["DND"])
-_root_del = pathlib.Path(TC_CONFIG["dirs"]["DEL"])
-if not _root_dnd.exists():
-    _root_dnd.mkdir(parents=True, exist_ok=True)
-if not _root_del.exists():
-    _root_del.mkdir(parents=True, exist_ok=True)
-
-
-class Dir:
-    ROOT_DND = _root_dnd
-    ROOT_DEL = _root_del
-    DOWNLOAD = ROOT_DND / "Download"
-    TEMPORARY = ROOT_DEL / "_tmp"
+TC_CONFIG_FILE = TC_HOME / "config.toml"
+if not TC_CONFIG_FILE.exists():
+    TC_CONFIG_FILE.touch()
+TC_CONFIG = toml.load(TC_CONFIG_FILE.as_posix())
 
 
 class FileHash:
