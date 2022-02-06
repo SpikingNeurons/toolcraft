@@ -39,6 +39,7 @@ from .. import error as e
 from .. import marshalling as m
 from .. import richy
 from . import StorageHashable
+from .file_system import Path
 
 # noinspection PyUnresolvedReferences
 if False:
@@ -207,7 +208,6 @@ class FileGroup(StorageHashable, abc.ABC):
     def config(self) -> FileGroupConfig:
         return FileGroupConfig(
             hashable=self,
-            path_prefix=self.path.as_posix(),
         )
 
     @property
@@ -233,10 +233,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # Note that if some file_groups are missing we raise error ... either
         # all file_groups should be present or none of them should exist
         _present_files = [
-            f.is_file() or f.is_dir()
-            for f in [
-                self.path / fk for fk in self.file_keys
-            ]
+            (self.path / fk).exists() for fk in self.file_keys
         ]
         _all_files_in_fg_present = all(_present_files)
         _some_files_in_fg_present = any(_present_files)
@@ -272,7 +269,7 @@ class FileGroup(StorageHashable, abc.ABC):
             return False
 
     @property
-    def unknown_files_on_disk(self) -> t.List[pathlib.Path]:
+    def unknown_files_on_disk(self) -> t.List[Path]:
 
         # container for unknown files
         _unknown_files = []
@@ -280,22 +277,25 @@ class FileGroup(StorageHashable, abc.ABC):
         # look inside path dir if it exists
         if self.path.exists():
             # expect path to be a dir
-            if self.path.is_file():
+            if self.path.isfile():
                 raise e.code.CodingError(
                     msgs=[
                         f"We expect path to be a dir for FileGroup"
                     ]
                 )
             # look inside path dir
-            for f in self.path.iterdir():
-                if f.name in self.file_keys and f.is_file():
-                    continue
-                # anything starting with `_` will be ignored
-                # helpful in case you want to store results cached by `@s.dec.XYZ`
-                # which uses `stores` property
-                if f.name.startswith("_"):
-                    continue
-                _unknown_files.append(f)
+            print(self.path)
+            for _files in self.path.find(maxdepth=0, detail=False, withdirs=True):
+                print(_files)
+                # if f.name in self.file_keys and f.is_file():
+                #     continue
+                # # anything starting with `_` will be ignored
+                # # helpful in case you want to store results cached by `@s.dec.XYZ`
+                # # which uses `stores` property
+                # if f.name.startswith("_"):
+                #     continue
+                # _unknown_files.append(f)
+            raise
 
         # return
         return _unknown_files
@@ -589,7 +589,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ---------------------------------------------------------- 05
         # check if files used in this file group can be handled for disk io
         for f in [self.path / fk for fk in self.file_keys]:
-            e.io.LongPath(path=f, msgs=[]).raise_if_failed()
+            e.io.LongPath(path=f.path, msgs=[]).raise_if_failed()
 
     def init(self):
         # ----------------------------------------------------------- 01
@@ -1097,7 +1097,9 @@ class FileGroup(StorageHashable, abc.ABC):
             response = "y"
         else:
             response = richy.r_prompt.Confirm.ask(
-                f"Do you want to delete files for `{self.name}`?", default=True)
+                f"Do you want to delete files for FileGroup `{self.path}`?",
+                default=True,
+            )
 
         # ---------------------------------------------------------------03
         # perform action
@@ -1117,15 +1119,15 @@ class FileGroup(StorageHashable, abc.ABC):
                 self.file_keys, description="Deleting ..."
             ):
                 _key_path = self.path / fk
-                if _key_path.is_file() or _key_path.is_dir():
-                    util.io_path_delete(_key_path, force=force)
+                if _key_path.exists():
+                    _key_path.rm_file()
                 else:
                     raise e.code.CodingError(
                         msgs=[
                             f"If you deleted files manually this can happen",
                             f"But if you didnt then this might be a bug",
-                            f"We were not able to find file group with path "
-                            f"{_key_path}"
+                            f"We were not able to find file {fk} for file_group "
+                            f"with path {self.path}"
                         ]
                     )
         else:
@@ -2144,7 +2146,7 @@ class FileGroupFromPaths(FileGroup):
         return self.keys
 
     @property
-    def uses_parent_folder(self) -> bool:
+    def _uses_parent_folder(self) -> bool:
         return True
 
     @property

@@ -1273,11 +1273,12 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(cls, file_or_text: t.Union[pathlib.Path, str],
+    def load(cls, file_or_text: t.Union["storage.Path", str],
              **kwargs) -> t.Union[dict, "YamlRepr"]:
+        from . import storage
         # get text
         _text = file_or_text
-        if isinstance(file_or_text, pathlib.Path):
+        if isinstance(file_or_text, storage.Path):
             _text = file_or_text.read_text()
 
         # load with Loader
@@ -1405,17 +1406,18 @@ class YamlRepr(Tracker):
         return YamlDumper.dump(self)
 
     @classmethod
-    def from_yaml(cls, file_or_text: t.Union[pathlib.Path, str],
+    def from_yaml(cls, file_or_text: t.Union["storage.Path", str],
                   **kwargs) -> "YamlRepr":
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
     @staticmethod
     def get_class(
-        file_or_text: t.Union[pathlib.Path, str]
+        file_or_text: t.Union["storage.Path", str]
     ) -> t.Optional[t.Type["YamlRepr"]]:
+        from . import storage
         _text = file_or_text
-        if isinstance(file_or_text, pathlib.Path):
+        if isinstance(file_or_text, storage.Path):
             _text = file_or_text.read_text()
         _tag = _text.split("\n")[0]
         try:
@@ -1431,7 +1433,6 @@ class YamlRepr(Tracker):
             f"We expect you to override `as_dict()` method in class "
             f"{self.__class__}"
         ])
-        return {}
 
     @classmethod
     def from_dict(cls, yaml_state: t.Dict[str,
@@ -1763,16 +1764,8 @@ class HashableClass(YamlRepr, abc.ABC):
         If None is returned then grouping is not used
 
         """
-        raise e.code.CodingError(msgs=[
-            f"Do you need some grouping?",
-            f"Are you using this for plotting or organizing folders?",
-            f"Then please override this property or else refrain from "
-            f"using this property.",
-            f"If you do not want to use grouping please consider "
-            f"returning None ..."
-            f"Check class {self.__class__} and override its property "
-            f"`group_by` if needed",
-        ])
+        # default is not to use grouping
+        return None
 
     @property
     @util.CacheResult

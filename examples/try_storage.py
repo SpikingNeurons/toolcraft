@@ -76,6 +76,8 @@ def try_hashable_ser():
 
 @dataclasses.dataclass(frozen=True)
 class DnTestFile(s.DownloadFileGroup):
+    file_system: str = "DOWNLOAD"
+
     @property
     def meta_info(self) -> dict:
         return {}
@@ -182,10 +184,7 @@ def try_metainfo_file():
 
 @dataclasses.dataclass(frozen=True)
 class Folder0(s.Folder):
-
-    @property
-    def contains(self) -> t.Type["Folder1"]:
-        return Folder1
+    file_system: str = "CWD"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -194,12 +193,8 @@ class Folder1(s.Folder):
     parent_folder: s.Folder
 
     @property
-    def uses_parent_folder(self) -> bool:
+    def _uses_parent_folder(self) -> bool:
         return True
-
-    @property
-    def contains(self) -> t.Type["Folder2"]:
-        return Folder2
 
 
 @dataclasses.dataclass(frozen=True)
@@ -208,12 +203,8 @@ class Folder2(s.Folder):
     parent_folder: s.Folder
 
     @property
-    def uses_parent_folder(self) -> bool:
+    def _uses_parent_folder(self) -> bool:
         return True
-
-    @property
-    def contains(self) -> t.Type["Folder3"]:
-        return Folder3
 
 
 @dataclasses.dataclass(frozen=True)
@@ -222,7 +213,7 @@ class Folder3(s.Folder):
     parent_folder: s.Folder
 
     @property
-    def uses_parent_folder(self) -> bool:
+    def _uses_parent_folder(self) -> bool:
         return True
 
 
@@ -241,17 +232,7 @@ def try_creating_folders():
     )
     folder3 = Folder3(parent_folder=folder2, for_hashable="leaf_folder")
 
-    # either delete from bottom to top
-    # folder3.delete(force=True)
-    # folder2.delete(force=True)
-    # folder1.delete(force=True)
-    # folder0.delete(force=True)
-    print(folder0.items.keys())
-    print(folder1.items.keys())
-    print(folder2.items.keys())
-    assert len(folder0.items) == 1
-    assert len(folder1.items) == 1
-    assert len(folder2.items) == 1
+    print([_.path for _ in folder0.path.ls()])
 
     # or else just delete the super parent and things will chain
     folder0.delete(force=True)
@@ -261,12 +242,7 @@ def try_creating_folders():
     #  adding some flag will increase overhead in __getattribute__ method ...
     #  somehow need to invalidate use of the instance maybe by overriding
     #  dunder methods on fly
-    print(folder0.items.keys())
-    print(folder1.items.keys())
-    print(folder2.items.keys())
-    assert len(folder0.items) == 0
-    assert len(folder1.items) == 0
-    assert len(folder2.items) == 0
+    # print(folder0.path.ls())
     # not this one as it contains None so cannot access items but this too
     # needs to be blocked for any future access
     # print(folder3.items.keys())
@@ -808,10 +784,10 @@ def try_main():
         util.io_path_delete(_path, force=True)
     _path.mkdir(parents=True, exist_ok=True)
     _path = _path.resolve()
-    # try_hashable_ser()
-    # try_download_file()
-    # try_auto_hashed_download_file()
-    # try_metainfo_file()
+    try_hashable_ser()
+    try_download_file()
+    try_auto_hashed_download_file()
+    try_metainfo_file()
     try_creating_folders()
     # try_arrow_storage()
     # try_file_storage()

@@ -509,14 +509,7 @@ class Table(Folder):
         return TableInternal(self)
 
     @property
-    def contains(self) -> None:
-        # although default we make sure that this is overridden
-        # we know that the Table folder will have unmanageable content
-        # managed by pyarrow
-        return None
-
-    @property
-    def uses_parent_folder(self) -> bool:
+    def _uses_parent_folder(self) -> bool:
         return True
 
     @property

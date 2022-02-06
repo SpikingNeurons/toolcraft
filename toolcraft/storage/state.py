@@ -65,7 +65,7 @@ class StateFile(m.YamlRepr, abc.ABC):
 
     @property
     @util.CacheResult
-    def backup_path(self) -> pathlib.Path:
+    def backup_path(self) -> Path:
         e.code.AssertError(
             value1=settings.FileHash.DEBUG_HASHABLE_STATE, value2=True,
             msgs=[
@@ -73,7 +73,7 @@ class StateFile(m.YamlRepr, abc.ABC):
                 f"`config.DEBUG_HASHABLE_STATE=True`"
             ]
         ).raise_if_failed()
-        return self.path.parent / f"_backup_{self.path.name}_backup_"
+        return self.path / f"_backup_{self.path.name}_backup_"
 
     @abc.abstractmethod
     def sync(self):
@@ -94,8 +94,9 @@ class StateFile(m.YamlRepr, abc.ABC):
         #     f"{self.path} ... keep this until we catch the bug which is "
         #     f"deleting state files"
         # )
-        util.io_make_path_editable(self.path)
-        self.path.unlink()
+        # todo: figure this out with fsspec
+        # util.io_make_path_editable(self.path)
+        self.path.rm_file()
         self.reset()
 
     def backup(self):

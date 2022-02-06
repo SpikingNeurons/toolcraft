@@ -7,11 +7,12 @@ from .. import util
 from .. import marshalling as m
 from . import Suffix
 from . import Path
+from .. import richy
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['items'],
+    things_not_to_be_overridden=['name'],
 )
 class Folder(StorageHashable):
     """
@@ -130,29 +131,14 @@ class Folder(StorageHashable):
         return _state_manager_files_available
 
     @property
-    def contains(self) -> t.Union[
-        t.Any, t.Type[StorageHashable]
-    ]:
+    def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
         """
-        You can either opt for returning t.Any or any subclass of StorageHashable
-
-        If you return t.Any
-        + any arbitrary Folder or FileGroup can be added
-
-        If you return some subclass of StorageHashable
-        + You will not be allowed to add any other types
-
+        Default is use grouping from for_hashable as the storage will be controlled by
+        that hashable class
         """
-        return t.Any
-
-    @property
-    @util.CacheResult
-    def items(self) -> util.SmartDict:
-        return util.SmartDict(
-            allow_nested_dict_or_list=False,
-            supplied_items=None,
-            use_specific_class=None if self.contains == t.Any else self.contains,
-        )
+        if isinstance(self.for_hashable, str):
+            return None
+        return self.for_hashable.group_by
 
     def init_validate(self):
         # ----------------------------------------------------------- 01
@@ -170,44 +156,6 @@ class Folder(StorageHashable):
         # call super
         super().init_validate()
 
-    def init(self):
-        # call super
-        super().init()
-
-        # # Note due to sync that gets called when parent_folder instance
-        # # was created the items dict of parent_folder will get instance
-        # # of self if already present on disc ... in that case delete the
-        # # item in dict and replace with self ...
-        # if _hashable.name in self.items.keys():
-        #     # Also we do sanity check for integrity to check if hash of
-        #     # existing item matches hashable ... this ensure that this is
-        #     # safe update of dict
-        #     if _hashable.hex_hash != \
-        #             self.items[_hashable.name].hex_hash:
-        #         raise e.code.NotAllowed(
-        #             msgs=[
-        #                 f"While syncing from disk the hashable had different "
-        #                 f"hex_hash than one assigned now",
-        #                 f"We expect that while creating objects of "
-        #                 f"StorageHashable it should match with hex_hash of "
-        #                 f"equivalent object that was instantiated from disk",
-        #                 {
-        #                     "yaml_on_dsk":
-        #                         self.items[_hashable.name].yaml(),
-        #                     "yaml_in_memory":
-        #                         _hashable.yaml(),
-        #                 }
-        #             ]
-        #         )
-        #     # note we do not call delete() method of item as it will delete
-        #     # actual files/folder on disc
-        #     # here we just update dict
-        #     del self.items[_hashable.name]
-
-        # this is like `get()` for Folder .... note that all
-        # FileGroups/Folders will be added here via add_item
-        self.sync()
-
     def create(self) -> Path:
         """
         If there is no Folder we create an empty folder.
@@ -219,91 +167,69 @@ class Folder(StorageHashable):
         return self.path
 
     def delete(self, *, force: bool = False):
-        """
-        Deletes Folder.
-
-        Note: Do not do read_only check here as done in delete_item method as
-        it is not applicable here and completely depends on parent folder
-        permissions
-
-        Note we delete only empty folders, and the state ... we will not
-        support deleting non-empty folders
-
-        note: force kwarg does not matter for a folder but just kept alongside
-        FileGroup.delete for generic behaviour
-
-        todo: when `self.contains is None` handle delete differently as we
-          will not have items dict
-        """
-        # todo: do u want to add permission check for
-        #  Folder similar to FileGroup
-        # when contains is None we delete everything ... this is default
-        # behaviour if you want to do something special please override this
-        # method
-        # todo: fix later
-        if self.contains is None:
-            # note that this will also delete folder self.path
-            util.pathlib_rmtree(path=self.path, recursive=True, force=force)
-            # remember to make empty dir as per API ... this will be deleted
-            # by delete_post_runner while deleting state files
-            self.path.mkdir(exist_ok=True)
-        # else since the folder can track items delete them using items and
-        # calling the respective delete of items
+        # delete
+        # We ask for user response as most of the files/folders are important
+        # and programmatically deletes will cost download or generation of
+        # files ...
+        # This can be easily bypasses by setting force == True
+        if force:
+            response = "y"
         else:
-            _items = self.items.keys()
-            for item in _items:
-                # first delete the item physically
-                self.items[item].delete(force=force)
+            response = richy.r_prompt.Confirm.ask(
+                f"Do you want to delete files for Folder `{self.path}`?",
+                default=True,
+            )
+
+        # perform action
+        if response == "y":
+            for _sh in self.walk(only_names=False):
+                _sh.delete(force=force)
 
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it
-        if not util.io_is_dir_empty(self.path):
+        if not self.path.is_dir_empty():
             raise e.code.CodingError(
                 msgs=[
                     f"The folder should be empty by now ...",
-                    f"Check path {self.path}"
+                    f"Check path {self.path}",
+                    f"May be you have non StorageHashable files ... note that even "
+                    f"with force=True we cannot delete this"
                 ]
             )
 
     def warn_about_garbage(self):
         """
+        On disk a StorageHashable will have two files and one folder
+        + folder <hashable_name>
+        + file <hashable_name>.info
+        + file <hashable_name>.config
 
-        In sync() we skip anything that does not end with *.info this will also
-        skip files that are not StorageHashable .... but that is okay for
-        multiple reasons ...
-         + performance
-         + we might want something extra lying around in folders
-         + we might have deleted state info but the folders might be
-           lying around and might be wise to not delete it
-        The max we can do in that case is warn users that some
-        thing else is lying around in folder check method
-        warn_about_garbage.
+        A walk on folder will give us all the StorageHashable.
+        Anything else which do not have info and config will be treated as garbage
+        and can be warned about it.
 
         todo: implement this
 
         """
         ...
 
-    def sync(self):
+    def walk(
+        self, only_names: bool = True
+    ) -> t.Iterable[t.Union[str, StorageHashable]]:
         """
-        Sync is heavy weight call rarely we aim to do all validations here
-        and avoid any more validations later ON ...
+        When only_names = True things will be fast
 
-        todo: We can have special Config class for Folder which can do some
-          indexing operation
+        Note that walk will not test if other components are present or not
+        On disk a StorageHashable will have two files and one folder
+        + folder <hashable_name>
+        + file <hashable_name>.info
+        + file <hashable_name>.config
+        [NOTE]
+        This method will only look for *.info files so be aware that if other files
+        are not present this can falsely yield a StorageHashable
         """
+
         # -----------------------------------------------------------------01
-        # tracking dict should be empty
-        if len(self.items) != 0:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect that the tracker dict be empty",
-                    f"Make sure that you are calling sync only once i.e. from "
-                    f"__post_init__"
-                ]
-            )
-
-        # -----------------------------------------------------------------02
         # track for registered file groups
         # *** NOTE ***
         # We skip anything that does not end with *.info this will also
@@ -316,13 +242,13 @@ class Folder(StorageHashable):
         # The max we can do in that case is warn users that some
         # thing else is lying around in folder check method
         # warn_about_garbage.
-        for f in self.path.glob(pattern=f"*.{Suffix.info}"):
-
-            # construct hashable instance from meta file
-            # Note that when instance for hashable is created it will check
-            # things on its own periodically
-            # Note the __post_init__ call will also sync things if it is folder
-            if self.contains == t.Any:
+        _sep = self.path.sep
+        if only_names:
+            for f in self.path.glob(pattern=f"*{Suffix.info}"):
+                yield f.path.split(_sep)[-1].split(f"{Suffix.info}")[0]
+        else:
+            for f in self.path.glob(pattern=f"*{Suffix.info}"):
+                # build instance
                 _cls = m.YamlRepr.get_class(f)
                 if _cls is None:
                     raise e.validation.NotAllowed(
@@ -336,47 +262,11 @@ class Folder(StorageHashable):
                 _hashable = _cls.from_yaml(
                     f, parent_folder=self,
                 )  # type: StorageHashable
-            else:
-                # noinspection PyTypeChecker
-                _hashable = self.contains.from_yaml(
-                    f, parent_folder=self,
-                )  # type: StorageHashable
+                # yield
+                yield _hashable
 
-            # add tuple for tracking
-            # todo: no longer needed to add here as when we create instance
-            #  the instance adds itself to parent_folder instance ... delete
-            #  this code later ... kept for now just for reference
-            # noinspection PyTypeChecker
-            # self.items[_hashable.name] = _hashable
-
-        # -----------------------------------------------------------------03
+        # -----------------------------------------------------------------02
+        # todo: we might not need this as we are yielding above ... delete later
         # sync is equivalent to accessing folder
         # so update state manager files
-        self.config.append_last_accessed_on()
-
-    def add_item(self, hashable: StorageHashable):
-
-        # since we are adding hashable item that are persisted to disk their
-        # state should be present on disk
-        if not hashable.is_created:
-
-            # err msg
-            if isinstance(hashable, StorageHashable):
-                _err_msg = f"This should never happen for " \
-                           f"{hashable.__class__} " \
-                           f"sub-class, there might be some coding error." \
-                           f"Did you forget to call create file/folder " \
-                           f"before adding the item."
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We cannot find the state for the following hashable "
-                        f"item on disk",
-                        hashable.yaml(), _err_msg,
-                    ]
-                )
-            else:
-                _err_msg = f"Don't know the type {type(hashable)}"
-                raise e.code.ShouldNeverHappen(msgs=[_err_msg])
-
-        # add item
-        self.items[hashable.name] = hashable
+        # self.config.append_last_accessed_on()

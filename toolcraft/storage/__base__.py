@@ -17,7 +17,7 @@ from . import file_system as _fs
 
 # noinspection PyUnreachableCode
 if False:
-    from . import state
+    from . import state, folder
 
 _LOGGER = logger.get_logger()
 
@@ -28,12 +28,15 @@ _DOT_DOT = _DOT_DOT_TYPE.__args__[0]
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['config', 'info', 'path'],
-    things_not_to_be_overridden=['path']
+    things_to_be_cached=['config', 'info', 'path', 'uses_parent_folder'],
+    things_not_to_be_overridden=['path', 'uses_parent_folder']
 )
 class StorageHashable(m.HashableClass, abc.ABC):
 
-    file_system: str
+    # Either provide one of below in child classes ...
+    #   this is just provided here for reference
+    # file_system: str
+    # parent_folder: "folder.Folder"
 
     @property
     @util.CacheResult
@@ -54,6 +57,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
         Never override this.
         Always resolve folder structure from group_by and name.
         """
+        # ------------------------------------------------------------- 01
+        # get group for split strs that dictates grouping
         if isinstance(self.group_by, list):
             _split_strs = self.group_by
         elif isinstance(self.group_by, str):
@@ -66,10 +71,24 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"unsupported group_by value {self.group_by}"
                 ]
             )
-        _root_dir = _fs.get_file_system(fs=self.file_system)
+
+        # ------------------------------------------------------------- 02
+        # get path from parent_folder if uses_parent_folder
+        if self.uses_parent_folder:
+            _path = self.parent_folder.path
+        # else it will be file system so get from it
+        else:
+            _path = _fs.get_file_system_as_path(tc_name=self.file_system)
+
+        # ------------------------------------------------------------- 03
+        # note that we allow separators in name so split name with seperator
+        _split_strs += self.name.split(_path.sep)
+        # build path
         for _ in _split_strs:
-            _root_dir /= _
-        return _root_dir / self.name
+            _path /= _
+
+        # return
+        return _path
 
     @property
     @util.CacheResult
@@ -145,22 +164,29 @@ class StorageHashable(m.HashableClass, abc.ABC):
         )
 
     @property
-    def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
-        """
-        Default is use grouping from for_hashable as the storage will be controlled by
-        that hashable class
-        """
-        if isinstance(self.for_hashable, str):
-            return None
-        return self.for_hashable.group_by
-
-    @property
+    @util.CacheResult
     def uses_parent_folder(self) -> bool:
         """
         Adds a parent_folder behavior i.e. this subclass of StorageHashable
-        can be managed by parent_folder
+        can be managed by parent_folder or not
         """
-        return False
+        # Note we also do validation here ...
+        # that is either parent_folder or file_system should be provided
+        _found_file_system = "file_system" in self.dataclass_field_names
+        _found_parent_folder = "parent_folder" in self.dataclass_field_names
+        if not(_found_parent_folder ^ _found_file_system):
+            raise e.code.CodingError(
+                msgs=[
+                    f"Either supply dataclass field `file_system` or `parent_folder` "
+                    f"for class {self.__class__} ...",
+                    "We will raise error if both or none is specified ...",
+                    dict(_found_file_system=_found_file_system,
+                         _found_parent_folder=_found_parent_folder)
+                ]
+            )
+
+        # return
+        return _found_parent_folder
 
     @property
     def is_created(self) -> bool:
@@ -205,41 +231,15 @@ class StorageHashable(m.HashableClass, abc.ABC):
         from .folder import Folder
 
         # ----------------------------------------------------------- 01
-        # check if file_system is configured
-        e.validation.ShouldBeOneOf(
-            value=self.file_system, values=_fs.available_file_systems(),
-            msgs=[
-                "Expecting file_system to be valid ..."
-            ]
-        )
+        # test for field file_system or parent_folder
+        # calling property does the check
+        _uses_parent_folder = self.uses_parent_folder
 
         # ----------------------------------------------------------- 02
-        # if uses_parent_folder
-        if self.uses_parent_folder:
+        # if _uses_parent_folder test instance as we do not have control over
+        # type checking ... as every class has fresh definition for it
+        if _uses_parent_folder:
             # ------------------------------------------------------- 02.01
-            # check if necessary field added
-            if 'parent_folder' not in self.dataclass_field_names:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We expect you to define field `parent_folder` as you "
-                        f"have configured property `uses_parent_folder` to "
-                        f"True for class {self.__class__}"
-                    ]
-                )
-            # ------------------------------------------------------- 02.03
-            # test if parent_folder is Folder if not then it can only be _DOT_DOT
-            _parent_folder = getattr(self, 'parent_folder')  # type: Folder
-            if not isinstance(_parent_folder, Folder):
-                if _parent_folder != _DOT_DOT:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"We expect parent_folder to be set with instance "
-                            f"of type {Folder}",
-                            f"Instead found value of type "
-                            f"{type(_parent_folder)}"
-                        ]
-                    )
-            # ------------------------------------------------------- 02.04
             # If parent_folder is provided this property will not be overridden,
             # hence we will reach here.
             # In order to avoid creating Folder instance for parent_folder
@@ -253,7 +253,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             # Note in init_validate if self.parent_folder is `..` we raise error
             # stating that you are creating instance from yaml file directly and
             # it is not allowed as parent_folder should do it while syncing
-            if _parent_folder == _DOT_DOT:
+            if self.parent_folder == _DOT_DOT:
                 raise e.code.CodingError(
                     msgs=[
                         f"Problem with initializing {self.__class__}",
@@ -270,47 +270,25 @@ class StorageHashable(m.HashableClass, abc.ABC):
                         f"appropriately before `Hashable.init` runs"
                     ]
                 )
-            # ------------------------------------------------------- 02.05
-            # if parent_folder supplied check what it can contain
-            _contains = _parent_folder.contains
-            # if None
-            if _contains != t.Any:
-                # note we do not use isinstance() as all folder
-                # subclasses will be concrete and subclassing is not anything
-                # special as there is no hierarchy in folder types
-                if self.__class__ != _parent_folder.contains:
-                    raise e.code.NotAllowed(
-                        msgs=[
-                            f"The parent_folder is configured to contain only "
-                            f"instances of class "
-                            f"{_parent_folder.contains} but you "
-                            f"are trying to add instance of type "
-                            f"{self.__class__}"
-                        ]
-                    )
-            # ------------------------------------------------------- 02.06
-            # the file_system must match for this and parent folder
-            e.validation.ShouldBeEqual(
-                value1=self.file_system, value2=_parent_folder.file_system,
+
+            # ------------------------------------------------------- 02.02
+            # should be instance of Folder
+            e.validation.ShouldBeInstanceOf(
+                value=self.parent_folder, value_types=(Folder,),
                 msgs=[
-                    f"We expect that parent folder and this file/folder which is "
-                    f"supposed to be child must have same file system"
+                    "Please supply correct value for dataclass field `parent_folder`"
                 ]
             ).raise_if_failed()
 
         # ----------------------------------------------------------- 03
-        # if not uses_parent_folder
+        # if not _uses_parent_folder then test if valid file_system
         else:
-            # ------------------------------------------------------- 03.01
-            # do not supply parent_folder
-            if 'parent_folder' in self.dataclass_field_names:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Please do not define field `parent_folder` as you "
-                        f"have configured property `uses_parent_folder` to "
-                        f"False for class {self.__class__}"
-                    ]
-                )
+            e.validation.ShouldBeOneOf(
+                value=self.file_system, values=_fs.available_file_systems(),
+                msgs=[
+                    "Expecting file_system to be valid ..."
+                ]
+            ).raise_if_failed()
         
         # ----------------------------------------------------------- 04
         # check for path length
@@ -324,7 +302,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     ]
                 )
 
-        # ----------------------------------------------------------- 04
+        # ----------------------------------------------------------- 05
         # call super
         super().init_validate()
 
@@ -342,19 +320,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # if not created create
         if not self.is_created:
             self.create()
-
-        # ----------------------------------------------------------- 04
-        # if parent_folder can track then add self to items
-        # Note that when contains is None we might still have Folder and
-        # FileGroup inside it but we will not do tracking for it and it is
-        # job of user to handle in respective parent_folder class
-        if self.uses_parent_folder:
-            # noinspection PyUnresolvedReferences
-            _parent_folder = self.parent_folder  # type: Folder
-            if _parent_folder.contains is not None:
-                # add item ...
-                # Note that item can already exist due to sync in that case
-                _parent_folder.add_item(hashable=self)
 
     @classmethod
     def from_dict(
@@ -519,14 +484,15 @@ class StorageHashable(m.HashableClass, abc.ABC):
         self.config.delete()
 
         # also delete the empty path folder
-        if util.io_is_dir_empty(self.path):
+        try:
             self.path.rmdir()
-        else:
+        except OSError as _ose:
             raise e.code.CodingError(
                 msgs=[
                     f"All the files inside folder should be deleted by now ...",
                     f"Expected path dir to be empty",
-                    f"Check path {self.path}"
+                    f"Check path {self.path}",
+                    _ose
                 ]
             )
 
@@ -540,27 +506,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"things are now deleted."
                 ]
             )
-
-        # if parent_folder is there try to remove item from the tracking dict
-        # items
-        if self.uses_parent_folder:
-            # get parent folder
-            _parent_folder = getattr(self, 'parent_folder')
-            # if parent folder can track then delete items that it has tracked
-            if _parent_folder.contains is not None:
-                # just do sanity check if we are having same item
-                if id(self) != id(_parent_folder.items[self.name]):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"We expect these objects to be same ... "
-                            f"make sure to add item using "
-                            f"parent_folder.add_item() method for integrity"
-                        ]
-                    )
-                # in init() we added self by calling
-                # self.parent_folder.add_item(self) ... now we just remove the
-                # item from tracking dict items so that parent folder is in sync
-                del _parent_folder.items[self.name]
 
         # now we have removed strong reference to self in parent_folder.items
         # dict ... let us make this instance useless as files are deleted
