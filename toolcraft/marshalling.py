@@ -263,7 +263,11 @@ class RuleChecker:
         self.decorated_class = None  # type: t.Type[Tracker]
 
     def __call__(
-        self, tracker: t.Type["Tracker"],
+        self, tracker,
+        # todo: returning this causes issue with Typing as it starts thinking
+        #  everything is Tracker ... find a way to figure out typing protocol that
+        #  understand in context to class on which we decorated this
+        # self, tracker: t.Type["Tracker"],
         rule_checker_set_from_init_subclass: bool = False,
     ):
         # todo: returning this causes issue with Typing as it starts thinking
@@ -1769,7 +1773,6 @@ class HashableClass(YamlRepr, abc.ABC):
             f"Check class {self.__class__} and override its property "
             f"`group_by` if needed",
         ])
-        return ""
 
     @property
     @util.CacheResult
