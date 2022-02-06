@@ -34,7 +34,7 @@ class PythonDownloader(s.DownloadFileGroup):
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
+    def _root_dir(self) -> pathlib.Path:
         return pathlib.Path.home() / "Downloads" / ".python"
 
     def get_urls(self) -> t.Dict[str, str]:

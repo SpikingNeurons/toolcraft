@@ -1905,7 +1905,7 @@ class TempFileGroup(FileGroup, abc.ABC):
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
+    def _root_dir(self) -> pathlib.Path:
         return settings.Dir.TEMPORARY
 
     def get_files(
@@ -1956,7 +1956,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
+    def _root_dir(self) -> pathlib.Path:
         return settings.Dir.DOWNLOAD
 
     @property

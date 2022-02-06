@@ -108,20 +108,11 @@ class LongPath(_CustomException):
 
     def __init__(
             self, *,
-            path: pathlib.Path,
+            path: str,
             msgs: MESSAGES_TYPE
     ):
-        if not path.is_absolute():
-            super().__init__(
-                msgs=[
-                    *msgs,
-                    f"The path provided is relative please provide absolute "
-                    f"path.",
-                    f"Supplied path {path}"
-                ]
-            )
 
-        _path_len = len(path.as_posix())
+        _path_len = len(path)
 
         # 260 is for windows ... leave 60 for arrow storage
         # todo: adapt code based on OS platform
@@ -135,7 +126,5 @@ class LongPath(_CustomException):
                 f"Try to not use deep nesting structures and keep short "
                 f"folder names.",
                 f"Supplied path {path}",
-                f"If possible do not keep project working dir is nested "
-                f"directories.",
             ]
         )

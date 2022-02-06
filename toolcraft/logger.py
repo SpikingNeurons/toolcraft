@@ -199,6 +199,7 @@ def get_rich_handler() -> RichHandler:
         markup=True,
         rich_tracebacks=True,
         show_path=True,
+        locals_max_string=160,
     )
 
     # -------------------------------------------------------- 02

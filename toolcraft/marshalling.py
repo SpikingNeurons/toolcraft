@@ -819,7 +819,7 @@ class Tracker:
 
     @property
     @util.CacheResult
-    def internal(self) -> "Internal":
+    def internal(self) -> Internal:
         return Internal(self)
 
     @property

@@ -8,15 +8,16 @@ import pathlib
 import datetime
 import dataclasses
 import abc
+import fsspec
 
 from .. import util, logger, settings
 from .. import marshalling as m
 from .. import error as e
-from . import state
+from . import file_system as _fs
 
 # noinspection PyUnreachableCode
 if False:
-    from . import store
+    from . import state
 
 _LOGGER = logger.get_logger()
 
@@ -27,40 +28,31 @@ _DOT_DOT = _DOT_DOT_TYPE.__args__[0]
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['config', 'info', 'path', 'root_dir'],
+    things_to_be_cached=['config', 'info', 'path'],
     things_not_to_be_overridden=['path']
 )
 class StorageHashable(m.HashableClass, abc.ABC):
 
-    @property
-    @util.CacheResult
-    def config(self) -> state.Config:
-        return state.Config(
-            hashable=self,
-            path_prefix=self.path.as_posix(),
-        )
+    file_system: str
 
     @property
     @util.CacheResult
-    def info(self) -> state.Info:
-        return state.Info(
-            hashable=self,
-            path_prefix=self.path.as_posix(),
-        )
+    def config(self) -> "state.Config":
+        from . import state
+        return state.Config(hashable=self)
 
     @property
     @util.CacheResult
-    def internal(self) -> m.Internal:
-        return m.Internal(self)
+    def info(self) -> "state.Info":
+        from . import state
+        return state.Info(hashable=self)
 
     @property
     @util.CacheResult
-    def path(self) -> pathlib.Path:
+    def path(self) -> _fs.Path:
         """
         Never override this.
         Always resolve folder structure from group_by and name.
-        Note that root_dir can still be overridden if you want different
-        result locations
         """
         if isinstance(self.group_by, list):
             _split_strs = self.group_by
@@ -74,15 +66,14 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"unsupported group_by value {self.group_by}"
                 ]
             )
-            raise
-        _path = self.root_dir
+        _root_dir = _fs.get_file_system(fs=self.file_system)
         for _ in _split_strs:
-            _path /= _
-        return _path / self.name
+            _root_dir /= _
+        return _root_dir / self.name
 
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
+    def _x_root_dir(self) -> pathlib.Path:
         from .folder import Folder
 
         # if not using parent_folder then this property should never be
@@ -106,7 +97,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"parent_folder should be present in class {self.__class__}"
                 ]
             )
-            raise
 
         # If parent_folder is provided this property will not be overridden,
         # hence we will reach here.
@@ -138,7 +128,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"before `Hashable.init` runs"
                 ]
             )
-            raise
 
         # Now if parent_folder is Folder simply return the path of
         # parent_folder as it is the root plus the name for this StorageHashable
@@ -154,7 +143,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
                 f"The type is {type(_parent_folder)}"
             ]
         )
-        raise
 
     @property
     def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
@@ -214,9 +202,18 @@ class StorageHashable(m.HashableClass, abc.ABC):
         from .folder import Folder
 
         # ----------------------------------------------------------- 01
+        # check if file_system is configured
+        e.validation.ShouldBeOneOf(
+            value=self.file_system, values=_fs.available_file_systems(),
+            msgs=[
+                "Expecting file_system to be valid ..."
+            ]
+        )
+
+        # ----------------------------------------------------------- 02
         # if uses_parent_folder
         if self.uses_parent_folder:
-            # ------------------------------------------------------- 01.01
+            # ------------------------------------------------------- 02.01
             # check if necessary field added
             if 'parent_folder' not in self.dataclass_field_names:
                 raise e.code.CodingError(
@@ -226,19 +223,9 @@ class StorageHashable(m.HashableClass, abc.ABC):
                         f"True for class {self.__class__}"
                     ]
                 )
-            # ------------------------------------------------------- 01.02
-            # the root_dir property must not be overrided
-            if self.__class__.root_dir != StorageHashable.root_dir:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Please do not override property `root_dir` in class "
-                        f"{self.__class__} as it is configured to use "
-                        f"parent_folder"
-                    ]
-                )
-            # ------------------------------------------------------- 01.03
-            # test if parent_folder is Folder
-            _parent_folder = getattr(self, 'parent_folder')
+            # ------------------------------------------------------- 02.03
+            # test if parent_folder is Folder if not then it can only be _DOT_DOT
+            _parent_folder = getattr(self, 'parent_folder')  # type: Folder
             if not isinstance(_parent_folder, Folder):
                 if _parent_folder != _DOT_DOT:
                     raise e.code.CodingError(
@@ -249,7 +236,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                             f"{type(_parent_folder)}"
                         ]
                     )
-            # ------------------------------------------------------- 01.04
+            # ------------------------------------------------------- 02.04
             # If parent_folder is provided this property will not be overridden,
             # hence we will reach here.
             # In order to avoid creating Folder instance for parent_folder
@@ -280,8 +267,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                         f"appropriately before `Hashable.init` runs"
                     ]
                 )
-                raise
-            # ------------------------------------------------------- 01.05
+            # ------------------------------------------------------- 02.05
             # if parent_folder supplied check what it can contain
             _contains = _parent_folder.contains
             # if None
@@ -299,20 +285,43 @@ class StorageHashable(m.HashableClass, abc.ABC):
                             f"{self.__class__}"
                         ]
                     )
+            # ------------------------------------------------------- 02.06
+            # the file_system must match for this and parent folder
+            e.validation.ShouldBeEqual(
+                value1=self.file_system, value2=_parent_folder.file_system,
+                msgs=[
+                    f"We expect that parent folder and this file/folder which is "
+                    f"supposed to be child must have same file system"
+                ]
+            ).raise_if_failed()
 
-        # ----------------------------------------------------------- 02
+        # ----------------------------------------------------------- 03
+        # if not uses_parent_folder
+        else:
+            # ------------------------------------------------------- 03.01
+            # do not supply parent_folder
+            if 'parent_folder' in self.dataclass_field_names:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Please do not define field `parent_folder` as you "
+                        f"have configured property `uses_parent_folder` to "
+                        f"False for class {self.__class__}"
+                    ]
+                )
+        
+        # ----------------------------------------------------------- 04
         # check for path length
-        e.io.LongPath(path=self.path, msgs=[]).raise_if_failed()
+        e.io.LongPath(path=self.path.path, msgs=[]).raise_if_failed()
         # if path exists check if it is a folder
         if self.path.exists():
-            if not self.path.is_dir():
+            if not self.path.isdir():
                 raise e.validation.NotAllowed(
                     msgs=[
                         f"We expect {self.path} to be a dir"
                     ]
                 )
 
-        # ----------------------------------------------------------- 03
+        # ----------------------------------------------------------- 04
         # call super
         super().init_validate()
 
@@ -412,7 +421,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                 ]
             )
 
-    def create(self) -> t.Any:
+    def create(self) -> t.Union[_fs.Path, t.List[_fs.Path]]:
         raise e.code.CodingError(
             msgs=[
                 f"There is nothing to create for class {self.__class__}",
@@ -425,7 +434,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     # noinspection PyUnusedLocal
     def create_post_runner(
-        self, *, hooked_method_return_value: t.Any
+        self, *, hooked_method_return_value: t.Union[_fs.Path, t.List[_fs.Path]]
     ):
 
         # ----------------------------------------------------------- 01

@@ -14,6 +14,7 @@ import typing as t
 # todo ... get rich dunder methods for YamlRepr and then get rid of this print ;)
 from rich import print
 
+
 sys.path.append("..")
 
 import numpy as np
@@ -23,8 +24,11 @@ from toolcraft import marshalling as m
 from toolcraft import settings
 from toolcraft import storage as s
 from toolcraft import util
+from toolcraft.storage import file_system
 
 settings.DEBUG_HASHABLE_STATE = False
+
+_TEMP_PATH = "storage_temp"
 
 
 class NewEnum(m.FrozenEnum, enum.Enum):
@@ -178,10 +182,6 @@ def try_metainfo_file():
 
 @dataclasses.dataclass(frozen=True)
 class Folder0(s.Folder):
-    @property
-    @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
-        return _TEMP_PATH
 
     @property
     def contains(self) -> t.Type["Folder1"]:
@@ -233,7 +233,7 @@ class ParentTestStorage(m.HashableClass):
 
 
 def try_creating_folders():
-    folder0 = Folder0(for_hashable="arrow_storage")
+    folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/arrow_storage", file_system="CWD")
     folder1 = Folder1(parent_folder=folder0, for_hashable="parent_1")
     folder2 = Folder2(
         parent_folder=folder1,
@@ -276,7 +276,7 @@ def try_creating_folders():
 class TestStorageResultsFolder(s.dec.StoreFolder):
     @property
     @util.CacheResult
-    def root_dir(self) -> pathlib.Path:
+    def _root_dir(self) -> pathlib.Path:
         return _TEMP_PATH
 
 
@@ -803,10 +803,11 @@ def try_file_storage():
 
 def try_main():
     global _TEMP_PATH
-    if _TEMP_PATH.exists():
-        util.io_path_delete(_TEMP_PATH, force=True)
-    _TEMP_PATH.mkdir(parents=True, exist_ok=True)
-    _TEMP_PATH = _TEMP_PATH.resolve()
+    _path = pathlib.Path(_TEMP_PATH)
+    if _path.exists():
+        util.io_path_delete(_path, force=True)
+    _path.mkdir(parents=True, exist_ok=True)
+    _path = _path.resolve()
     # try_hashable_ser()
     # try_download_file()
     # try_auto_hashed_download_file()
@@ -814,7 +815,7 @@ def try_main():
     try_creating_folders()
     # try_arrow_storage()
     # try_file_storage()
-    _TEMP_PATH.rmdir()
+    _path.rmdir()
 
 
 if __name__ == "__main__":

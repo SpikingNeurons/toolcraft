@@ -1,5 +1,4 @@
 import dataclasses
-import pathlib
 import typing as t
 
 from .__base__ import StorageHashable
@@ -7,6 +6,7 @@ from .. import error as e
 from .. import util
 from .. import marshalling as m
 from . import Suffix
+from . import Path
 
 
 @dataclasses.dataclass(frozen=True)
@@ -103,7 +103,7 @@ class Folder(StorageHashable):
           this property is minimal
         """
         # ----------------------------------------------------------------01
-        _folder_present = self.path.is_dir()
+        _folder_present = self.path.isdir()
         # (The super method is responsible to do this as state manager is
         # available)
         _state_manager_files_available = super().is_created
@@ -158,14 +158,13 @@ class Folder(StorageHashable):
         # ----------------------------------------------------------- 01
         # folder can have only two fields
         for f in self.dataclass_field_names:
-            if f not in ['for_hashable', 'parent_folder']:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The subclasses of class {Folder} can have only two "
-                        f"fields {['for_hashable', 'parent_folder']}",
-                        f"Please remove field `{f}` from class {self.__class__}"
-                    ]
-                )
+            e.validation.ShouldBeOneOf(
+                value=f, values=['file_system', 'for_hashable', 'parent_folder'],
+                msgs=[
+                    f"Class {self.__class__} can only have limited fields defined "
+                    f"in it ... Please refrain from using any new fields ..."
+                ]
+            ).raise_if_failed()
 
         # ----------------------------------------------------------- 03
         # call super
@@ -209,11 +208,11 @@ class Folder(StorageHashable):
         # FileGroups/Folders will be added here via add_item
         self.sync()
 
-    def create(self) -> pathlib.Path:
+    def create(self) -> Path:
         """
         If there is no Folder we create an empty folder.
         """
-        if not self.path.is_dir():
+        if not self.path.isdir():
             self.path.mkdir()
 
         # return
@@ -306,23 +305,18 @@ class Folder(StorageHashable):
 
         # -----------------------------------------------------------------02
         # track for registered file groups
-        for f in self.path.iterdir():
-            # *** NOTE ***
-            # We skip anything that does not end with *.info this will also
-            # skip files that are not StorageHashable .... but that is okay
-            # for multiple reasons ...
-            #  + performance
-            #  + we might want something extra lying around in folders
-            #  + we might have deleted state info but the folders might be
-            #    lying around and might be wise to not delete it
-            # The max we can do in that case is warn users that some
-            # thing else is lying around in folder check method
-            # warn_about_garbage.
-
-            # registered items have metainfo file with them
-            # only consider if meta info file exists
-            if not f.name.endswith(Suffix.info):
-                continue
+        # *** NOTE ***
+        # We skip anything that does not end with *.info this will also
+        # skip files that are not StorageHashable .... but that is okay
+        # for multiple reasons ...
+        #  + performance
+        #  + we might want something extra lying around in folders
+        #  + we might have deleted state info but the folders might be
+        #    lying around and might be wise to not delete it
+        # The max we can do in that case is warn users that some
+        # thing else is lying around in folder check method
+        # warn_about_garbage.
+        for f in self.path.glob(pattern=f"*.{Suffix.info}"):
 
             # construct hashable instance from meta file
             # Note that when instance for hashable is created it will check

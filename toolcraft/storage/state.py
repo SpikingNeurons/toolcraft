@@ -15,6 +15,8 @@ import abc
 from .. import error as e
 from .. import util, settings
 from .. import marshalling as m
+from . import StorageHashable
+from . import Path
 
 
 class Suffix:
@@ -24,7 +26,8 @@ class Suffix:
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_not_to_be_cached=['is_available']
+    things_to_be_cached=['path'],
+    things_not_to_be_cached=['is_available'],
 )
 class StateFile(m.YamlRepr, abc.ABC):
     """
@@ -44,15 +47,12 @@ class StateFile(m.YamlRepr, abc.ABC):
       But we might have more usage for this so we will retain here
 
     """
-    hashable: m.HashableClass
-    # this is the path for which we store state
-    # this is the str to which we attach suffix and save it alongside path dir
-    path_prefix: str
+    hashable: StorageHashable
 
     @property
     @util.CacheResult
-    def path(self) -> pathlib.Path:
-        return pathlib.Path(f"{self.path_prefix}{self.suffix}")
+    def path(self) -> Path:
+        return self.hashable.path + self.suffix
 
     @property
     @abc.abstractmethod
@@ -173,7 +173,8 @@ class Info(StateFile):
             # ... write hashable info
             self.path.write_text(_yaml)
             # ... make read only as done only once
-            util.io_make_path_read_only(self.path)
+            # todo: see if fsspec can allow this explore later ...
+            # util.io_make_path_read_only(self.path)
 
     def check_if_backup_matches(self):
         if not self.backup_path.exists():

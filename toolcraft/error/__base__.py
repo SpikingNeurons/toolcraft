@@ -16,7 +16,7 @@ from .. import logger
 _LOGGER = logger.get_logger()
 
 _SKULL_EMOJI = logger.EMOJI['skull']
-_EXCEPTION_HEADER = f"{_SKULL_EMOJI} 👁️>>> {{header}} <<<👁️ {_SKULL_EMOJI}"
+_EXCEPTION_HEADER = f"{_SKULL_EMOJI} >>> {{header}} <<< {_SKULL_EMOJI}"
 
 
 def camel_case_split(identifier):
