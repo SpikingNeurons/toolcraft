@@ -147,9 +147,12 @@ class StorageHashable(m.HashableClass, abc.ABC):
     @property
     def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
         """
-        Default is use not grouping ... override this if you need grouping
+        Default is use grouping from for_hashable as the storage will be controlled by
+        that hashable class
         """
-        return None
+        if isinstance(self.for_hashable, str):
+            return None
+        return self.for_hashable.group_by
 
     @property
     def uses_parent_folder(self) -> bool:
