@@ -64,9 +64,6 @@ from fsspec.implementations.arrow import ArrowFSWrapper
 # from fsspec.implementations.tar import TarFileSystem
 from gcsfs import GCSFileSystem
 
-# todo: delete `file_system_dirfs.py` file once DirFileSystem is available in fsspec
-from .file_system_dirfs import DirFileSystem
-
 from .. import error as e
 from .. import logger
 from .. import settings
