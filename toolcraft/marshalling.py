@@ -265,7 +265,11 @@ class RuleChecker:
     def __call__(
         self, tracker: t.Type["Tracker"],
         rule_checker_set_from_init_subclass: bool = False,
-    ) -> t.Type["Tracker"]:
+    ):
+        # todo: returning this causes issue with Typing as it starts thinking
+        #  everything is Tracker ... find a way to figure out typing protocol that
+        #  understand in context to class on which we decorated this
+        # ) -> t.Type["Tracker"]:
         """
         This just keeps reference for class that is decorated
         """
