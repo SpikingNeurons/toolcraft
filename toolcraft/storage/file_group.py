@@ -269,10 +269,10 @@ class FileGroup(StorageHashable, abc.ABC):
             return False
 
     @property
-    def unknown_files_on_disk(self) -> t.List[Path]:
+    def unknown_paths_on_disk(self) -> t.List[Path]:
 
         # container for unknown files
-        _unknown_files = []
+        _unknown_paths = []
 
         # look inside path dir if it exists
         if self.path.exists():
@@ -284,21 +284,18 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             # look inside path dir
-            print(self.path)
-            for _files in self.path.find(maxdepth=0, detail=False, withdirs=True):
-                print(_files)
-                # if f.name in self.file_keys and f.is_file():
-                #     continue
-                # # anything starting with `_` will be ignored
-                # # helpful in case you want to store results cached by `@s.dec.XYZ`
-                # # which uses `stores` property
-                # if f.name.startswith("_"):
-                #     continue
-                # _unknown_files.append(f)
-            raise
+            for _path in self.path.find(maxdepth=0, detail=False, withdirs=True):
+                if _path.name in self.file_keys and _path.isfile():
+                    continue
+                # anything starting with `_` will be ignored
+                # helpful in case you want to store results cached by `@s.dec.XYZ`
+                # which uses `stores` property
+                if _path.name.startswith("_"):
+                    continue
+                _unknown_paths.append(_path)
 
         # return
-        return _unknown_files
+        return _unknown_paths
 
     @property
     def is_auto_hash(self) -> bool:
@@ -585,11 +582,6 @@ class FileGroup(StorageHashable, abc.ABC):
                     self.file_keys
                 ]
             )
-
-        # ---------------------------------------------------------- 05
-        # check if files used in this file group can be handled for disk io
-        for f in [self.path / fk for fk in self.file_keys]:
-            e.io.LongPath(path=f.path, msgs=[]).raise_if_failed()
 
     def init(self):
         # ----------------------------------------------------------- 01
@@ -884,7 +876,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # --------------------------------------------------------------03
         # if unknown files present throw error
-        _unknown_files = self.unknown_files_on_disk
+        _unknown_files = self.unknown_paths_on_disk
         if bool(_unknown_files):
             raise e.code.NotAllowed(
                 msgs=[
@@ -896,7 +888,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-    def create(self) -> t.List[pathlib.Path]:
+    def create(self) -> t.List[Path]:
         _ret = []
 
         # some variables to indicate progress
@@ -913,7 +905,7 @@ class FileGroup(StorageHashable, abc.ABC):
                            f"{i + 1: {_s_fmt}d}/{_total_files} created ..."
 
             # if found on disk bypass creation for efficiency
-            if _expected_file.is_file():
+            if _expected_file.isfile():
                 _ret.append(_expected_file)
                 continue
 
@@ -941,7 +933,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     def create_post_runner(
-            self, *, hooked_method_return_value: t.List[pathlib.Path]
+            self, *, hooked_method_return_value: t.List[Path]
     ):
         """
         The files are now created let us now do post handling
@@ -965,11 +957,11 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------01.02
         # check if created file is proper and if it is on disk
         for f in created_fs:
-            if not isinstance(f, pathlib.Path):
+            if not isinstance(f, Path):
                 raise e.code.CodingError(
                     msgs=[
                         f"Method {self.create_file} should return the list of "
-                        f"files crested, instead found {created_fs}"
+                        f"files created, instead found {created_fs}"
                     ]
                 )
             if f not in expected_fs:
@@ -988,7 +980,6 @@ class FileGroup(StorageHashable, abc.ABC):
                         f"self.create_file() is not present on the disk"
                     ]
                 )
-            e.io.LongPath(path=f, msgs=[]).raise_if_failed()
         # ----------------------------------------------------------------01.03
         # check if all key_paths i.e expected files are generated
         for f in expected_fs:
@@ -1002,7 +993,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ----------------------------------------------------------------02
         # if unknown files present throw error
-        _unknown_files = self.unknown_files_on_disk
+        _unknown_files = self.unknown_paths_on_disk
         if bool(_unknown_files):
             raise e.code.NotAllowed(
                 msgs=[
@@ -2150,13 +2141,13 @@ class FileGroupFromPaths(FileGroup):
         return True
 
     @property
-    def unknown_files_on_disk(self) -> t.List[pathlib.Path]:
+    def unknown_paths_on_disk(self) -> t.List[pathlib.Path]:
         """
         As the files will already created for this FileGroup we trick the system
         to ignore those already created files so that pre_runner checks can succeed
         """
         return [
-            _f for _f in super().unknown_files_on_disk
+            _f for _f in super().unknown_paths_on_disk
             if _f.name not in self.file_keys
         ]
 

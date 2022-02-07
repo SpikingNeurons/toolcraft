@@ -291,8 +291,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
             ).raise_if_failed()
         
         # ----------------------------------------------------------- 04
-        # check for path length
-        e.io.LongPath(path=self.path.path, msgs=[]).raise_if_failed()
         # if path exists check if it is a folder
         if self.path.exists():
             if not self.path.isdir():

@@ -159,7 +159,9 @@ class Path:
         self.fs, self.fs_config = get_file_system_details(self.fs_name)
         self.sep = self.fs.sep  # type: str
         self.root_path = self.fs_config['root_dir']
-        self.path = self.root_path + self.sep + self.suffix_path
+        self.full_path = self.root_path + self.sep + self.suffix_path
+        self.name = self.suffix_path.split(self.sep)[-1]
+        e.io.LongPath(path=self.full_path, msgs=[]).raise_if_failed()
 
         # do any validations if needed
         ...
@@ -201,32 +203,32 @@ class Path:
         )
 
     def exists(self) -> bool:
-        return self.fs.exists(path=self.path)
+        return self.fs.exists(path=self.full_path)
 
     def isdir(self) -> bool:
-        return self.fs.isdir(path=self.path)
+        return self.fs.isdir(path=self.full_path)
 
     def isfile(self) -> bool:
-        return self.fs.isfile(path=self.path)
+        return self.fs.isfile(path=self.full_path)
 
     def mkdir(self, create_parents: bool = True, **kwargs):
-        self.fs.mkdir(path=self.path, create_parents=create_parents, **kwargs)
+        self.fs.mkdir(path=self.full_path, create_parents=create_parents, **kwargs)
 
     def write_text(self, text: str):
-        with self.fs.open(path=self.path, mode='w') as _f:
+        with self.fs.open(path=self.full_path, mode='w') as _f:
             _f.write(text)
 
     def append_text(self, text: str):
-        with self.fs.open(path=self.path, mode='a') as _f:
+        with self.fs.open(path=self.full_path, mode='a') as _f:
             _f.write(text)
 
     def read_text(self) -> str:
-        with self.fs.open(path=self.path, mode='r') as _f:
+        with self.fs.open(path=self.full_path, mode='r') as _f:
             return _f.read()
 
     def _post_process_res(self, _res) -> t.List["Path"]:
         """
-        None _k[_k.find(self.path):] or _[_.find(self.path):] just strips extra
+        None _k[_k.find(self.full_path):] or _[_.find(self.full_path):] just strips extra
           things added by file system when crawling directory ... this is not needed
           as anyway we will know it ...
           If optimization needed do only is needed based on file_system
@@ -254,7 +256,7 @@ class Path:
         self, path: str = ".",
         maxdepth: int = None, withdirs: bool = False, detail: bool = False
     ) -> t.List["Path"]:
-        _path = self.path if path == "." else self.path + self.sep + path
+        _path = self.full_path if path == "." else self.full_path + self.sep + path
         _res = self.fs.find(
             path=_path, maxdepth=maxdepth, withdirs=withdirs, detail=detail
         )
@@ -263,25 +265,26 @@ class Path:
     def glob(
         self, pattern: str, detail: bool = False
     ) -> t.List["Path"]:
-        _pattern = self.path + "/" + pattern
+        _pattern = self.full_path + "/" + pattern
         _res = self.fs.glob(path=_pattern, detail=detail)
         return self._post_process_res(_res)
 
     def walk(
         self,  path: str = ".", maxdepth: int = None, detail: bool = False
     ) -> t.List["Path"]:
-        _path = self.path if path == "." else self.path + self.sep + path
+        _path = self.full_path if path == "." else self.full_path + self.sep + path
         for _ in self.fs.walk(
             path=_path, maxdepth=maxdepth, detail=detail
         ):
-            yield Path(path=_[0], fs_name=self.fs_name), \
-                  self._post_process_res(_[1]), self._post_process_res(_[2])
+            yield Path(
+                suffix_path=_[0].replace(self.root_path, ""), fs_name=self.fs_name
+            ), self._post_process_res(_[1]), self._post_process_res(_[2])
             # return self._post_process_res(_res)
 
     def ls(
         self, path: str = ".", detail: bool = False
     ) -> t.List["Path"]:
-        _path = self.path if path == "." else self.path + self.sep + path
+        _path = self.full_path if path == "." else self.full_path + self.sep + path
         _res = self.fs.ls(path=_path, detail=detail)
         return self._post_process_res(_res)
 
@@ -297,16 +300,16 @@ class Path:
         _new_path = []
         for _p in path:
             _new_path.append(
-                self.path if _p == "." else self.path + self.sep + _p
+                self.full_path if _p == "." else self.full_path + self.sep + _p
             )
         self.fs.rm(path=_new_path, recursive=recursive, maxdepth=maxdepth)
 
     def rm_file(self, path: str = "."):
-        _path = self.path if path == "." else self.path + self.sep + path
+        _path = self.full_path if path == "." else self.full_path + self.sep + path
         self.fs.rm_file(path=_path)
 
     def rmdir(self, path: str = "."):
-        _path = self.path if path == "." else self.path + self.sep + path
+        _path = self.full_path if path == "." else self.full_path + self.sep + path
         return self.fs.rmdir(path=_path)
 
 
