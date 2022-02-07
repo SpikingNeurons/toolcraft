@@ -78,7 +78,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             _path = self.parent_folder.path
         # else it will be file system so get from it
         else:
-            _path = _fs.get_file_system_as_path(tc_name=self.file_system)
+            _path = _fs.Path.get_root(fs_name=self.file_system)
 
         # ------------------------------------------------------------- 03
         # note that we allow separators in name so split name with seperator

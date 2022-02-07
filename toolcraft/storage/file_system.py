@@ -70,10 +70,11 @@ from .. import settings
 
 _LOGGER = logger.get_logger()
 
-_TC_FILE_SYSTEMS = {}  # type: t.Dict[str, Path]
+_FILE_SYSTEMS = {}  # type: t.Dict[str, fsspec.AbstractFileSystem]
+_FILE_SYSTEMS_CONFIG = {}  # type: t.Dict[str, t.Dict]
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class Path:
     """
     todo: chmod and dir permissions
@@ -149,20 +150,22 @@ class Path:
     >>> fsspec.AbstractFileSystem.upload
     >>> fsspec.AbstractFileSystem.walk
     """
-    fs: fsspec.AbstractFileSystem
-    path: str
-    tc_name: str
-
-    @property
-    def sep(self) -> str:
-        return self.fs.sep
+    suffix_path: str
+    fs_name: str
+    details: t.Dict = None
 
     def __post_init__(self):
+        # set some vars for faster access
+        self.fs, self.fs_config = get_file_system_details(self.fs_name)
+        self.sep = self.fs.sep  # type: str
+        self.root_path = self.fs_config['root_dir']
+        self.path = self.root_path + self.sep + self.suffix_path
+
         # do any validations if needed
         ...
 
     def __str__(self) -> str:
-        return f"{self.tc_name}::{self.path}"
+        return f"{self.fs_name}::{self.suffix_path}"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -174,12 +177,12 @@ class Path:
                     f"we do not allow seperator `{self.sep}` in the token `{other}`"
                 ]
             )
-        if self.path == ".":
-            return Path(
-                fs=self.fs, path=other, tc_name=self.tc_name)
+        _suffix = self.suffix_path
+        if _suffix != "":
+            _suffix += self.sep + other
         else:
-            return Path(
-                fs=self.fs, path=self.path + self.sep + other, tc_name=self.tc_name)
+            _suffix = other
+        return Path(suffix_path=_suffix, fs_name=self.fs_name)
 
     def __add__(self, other: str) -> "Path":
         if other.find(self.sep) != -1:
@@ -188,10 +191,14 @@ class Path:
                     f"we do not allow seperator {self.sep} in the token {other}"
                 ]
             )
-        if self.path == ".":
-            return Path(fs=self.fs, path=other, tc_name=self.tc_name)
-        else:
-            return Path(fs=self.fs, path=self.path + other, tc_name=self.tc_name)
+        return Path(suffix_path=self.suffix_path + other, fs_name=self.fs_name)
+
+    @classmethod
+    def get_root(cls, fs_name: str) -> "Path":
+        _fs, _fs_config = get_file_system_details(fs_name=fs_name)
+        return Path(
+            fs_name=fs_name, suffix_path=""
+        )
 
     def exists(self) -> bool:
         return self.fs.exists(path=self.path)
@@ -217,7 +224,7 @@ class Path:
         with self.fs.open(path=self.path, mode='r') as _f:
             return _f.read()
 
-    def _post_process_res(self, _res):
+    def _post_process_res(self, _res) -> t.List["Path"]:
         """
         None _k[_k.find(self.path):] or _[_.find(self.path):] just strips extra
           things added by file system when crawling directory ... this is not needed
@@ -227,13 +234,17 @@ class Path:
 
         """
         if isinstance(_res, dict):
-            return {
-                Path(fs=self.fs, path=_k, tc_name=self.tc_name): _v
+            return [
+                Path(
+                    suffix_path=_k.replace(self.root_path, ""),
+                    fs_name=self.fs_name, details=_v)
                 for _k, _v in _res.items()
-            }
+            ]
         elif isinstance(_res, list):
-            return [Path(fs=self.fs, path=_, tc_name=self.tc_name)
-                    for _ in _res]
+            return [
+                Path(suffix_path=_.replace(self.root_path, ""), fs_name=self.fs_name)
+                for _ in _res
+            ]
         else:
             raise e.code.NotSupported(
                 msgs=[f"Unknown type {type(_res)}"]
@@ -242,7 +253,7 @@ class Path:
     def find(
         self, path: str = ".",
         maxdepth: int = None, withdirs: bool = False, detail: bool = False
-    ) -> t.Union[t.List["Path"], t.Dict["Path", t.Dict]]:
+    ) -> t.List["Path"]:
         _path = self.path if path == "." else self.path + self.sep + path
         _res = self.fs.find(
             path=_path, maxdepth=maxdepth, withdirs=withdirs, detail=detail
@@ -251,25 +262,25 @@ class Path:
 
     def glob(
         self, pattern: str, detail: bool = False
-    ) -> t.Union[t.List["Path"], t.Dict["Path", t.Dict]]:
+    ) -> t.List["Path"]:
         _pattern = self.path + "/" + pattern
         _res = self.fs.glob(path=_pattern, detail=detail)
         return self._post_process_res(_res)
 
     def walk(
         self,  path: str = ".", maxdepth: int = None, detail: bool = False
-    ) -> t.Union[t.List["Path"], t.Dict["Path", t.Dict]]:
+    ) -> t.List["Path"]:
         _path = self.path if path == "." else self.path + self.sep + path
         for _ in self.fs.walk(
             path=_path, maxdepth=maxdepth, detail=detail
         ):
-            yield Path(fs=self.fs, path=_[0], tc_name=self.tc_name), \
+            yield Path(path=_[0], fs_name=self.fs_name), \
                   self._post_process_res(_[1]), self._post_process_res(_[2])
             # return self._post_process_res(_res)
 
     def ls(
         self, path: str = ".", detail: bool = False
-    ) -> t.Union[t.List["Path"], t.Dict["Path", t.Dict]]:
+    ) -> t.List["Path"]:
         _path = self.path if path == "." else self.path + self.sep + path
         _res = self.fs.ls(path=_path, detail=detail)
         return self._post_process_res(_res)
@@ -303,11 +314,11 @@ def available_file_systems() -> t.List[str]:
     return list(settings.TC_CONFIG["file_systems"].keys())
 
 
-def get_file_system_as_path(tc_name: str) -> Path:
+def get_file_system_details(fs_name: str) -> t.Tuple[fsspec.AbstractFileSystem, t.Dict]:
     # --------------------------------------------------------- 01
     # if fs exists in _FILE_SYSTEMS return it
-    if tc_name in _TC_FILE_SYSTEMS.keys():
-        return _TC_FILE_SYSTEMS[tc_name]
+    if fs_name in _FILE_SYSTEMS.keys():
+        return _FILE_SYSTEMS[fs_name], _FILE_SYSTEMS_CONFIG[fs_name]
 
     # --------------------------------------------------------- 02
     # check in settings if any file_system is provided
@@ -323,23 +334,23 @@ def get_file_system_as_path(tc_name: str) -> Path:
     # --------------------------------------------------------- 03
     # now check for specific fs
     try:
-        _fs_config = _all_fs_config[tc_name]
+        _fs_config = _all_fs_config[fs_name]
     except KeyError:
         # if CWD and it was not there we know the default ... so make one
-        if tc_name == "CWD":
-            _all_fs_config[tc_name] = {
+        if fs_name == "CWD":
+            _all_fs_config[fs_name] = {
                 "protocol": "file", "root_dir": ".", "kwargs": {"auto_mkdir": True}
             }
             # update settings and save
             assert id(settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)
             settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
             # store to current _fs_config
-            _fs_config = _all_fs_config[tc_name]
+            _fs_config = _all_fs_config[fs_name]
         # else it is not CWD nor supported so raise error
         else:
             raise e.validation.ConfigError(
                 msgs=[
-                    f"Please provide file system settings for `{tc_name}` in dict "
+                    f"Please provide file system settings for `{fs_name}` in dict "
                     f"`file_systems`",
                     f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
                 ]
@@ -347,7 +358,7 @@ def get_file_system_as_path(tc_name: str) -> Path:
     # make sure that _fs_config is dict
     e.validation.ShouldBeInstanceOf(
         value=_fs_config, value_types=(dict, ), msgs=[
-            f"Was expecting dict for file system {tc_name} configured in settings",
+            f"Was expecting dict for file system {fs_name} configured in settings",
             f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
         ]
     ).raise_if_failed()
@@ -359,7 +370,7 @@ def get_file_system_as_path(tc_name: str) -> Path:
         e.validation.ShouldBeOneOf(
             value=_k, values=["protocol", "kwargs", "root_dir"],
             msgs=[
-                f"Invalid config provided for file system `{tc_name}` in settings",
+                f"Invalid config provided for file system `{fs_name}` in settings",
                 f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
             ]
         ).raise_if_failed()
@@ -371,7 +382,7 @@ def get_file_system_as_path(tc_name: str) -> Path:
     except KeyError:
         raise e.validation.ConfigError(
             msgs=[
-                f"We expect mandatory setting `protocol` for file system {tc_name}",
+                f"We expect mandatory setting `protocol` for file system {fs_name}",
                 f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
             ]
         )
@@ -390,24 +401,33 @@ def get_file_system_as_path(tc_name: str) -> Path:
     except KeyError:
         raise e.validation.ConfigError(
             msgs=[
-                f"We expect mandatory setting `root_dir` for file system {tc_name}",
+                f"We expect mandatory setting `root_dir` for file system {fs_name}",
                 f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
             ]
         )
     # validate type
     e.validation.ShouldBeInstanceOf(
         value=_root_dir, value_types=(str, ), msgs=[
-            f"Was expecting str for file system `{tc_name}` setting `root_dir` ",
+            f"Was expecting str for file system `{fs_name}` setting `root_dir` ",
             f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
         ]
     ).raise_if_failed()
+    # if CWD make sure that root_dir always start with .
+    if fs_name == "CWD":
+        if not _root_dir.startswith("."):
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"For CWD file_system always make sure that root_dir starts with "
+                    f"'.', found {_root_dir}"
+                ]
+            )
 
     # --------------------------------------------------------- 06
     # get kwargs if provided and make sure it is dict
     _kwargs = _fs_config.get("kwargs", {})
     e.validation.ShouldBeInstanceOf(
         value=_kwargs, value_types=(dict, ), msgs=[
-            f"Was expecting dict for file system {tc_name}.kwargs configured in "
+            f"Was expecting dict for file system {fs_name}.kwargs configured in "
             f"settings",
             f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
         ]
@@ -444,7 +464,12 @@ def get_file_system_as_path(tc_name: str) -> Path:
         )
 
     # --------------------------------------------------------- 09
-    # backup and return
-    _TC_FILE_SYSTEMS[tc_name] = Path(fs=_fs, path=_root_dir, tc_name=tc_name)
-    return _TC_FILE_SYSTEMS[tc_name]
+    # if root_dir in fs_config does not end with sep then add it
+    if not _fs_config["root_dir"].endswith(_fs.sep):
+        _fs_config["root_dir"] += _fs.sep
 
+    # --------------------------------------------------------- 09
+    # backup and return
+    _FILE_SYSTEMS[fs_name] = _fs
+    _FILE_SYSTEMS_CONFIG[fs_name] = _fs_config
+    return _FILE_SYSTEMS[fs_name], _FILE_SYSTEMS_CONFIG[fs_name]

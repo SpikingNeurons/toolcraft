@@ -37,5 +37,5 @@ from .table import FILTERS_TYPE, FILTER_TYPE
 
 # a call so that the CWD FileSystem is loaded if defined in config.toml or else it
 # will add default CWD FileSystem ... also it will save it to config.toml
-file_system.get_file_system_as_path("CWD")
+file_system.get_file_system_details("CWD")
 assert "CWD" in file_system.available_file_systems(), "must be there by now ..."
