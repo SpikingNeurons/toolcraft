@@ -36,6 +36,18 @@ poetry install --with dev --with test --with docs --with pre-commit --with build
 pre-commit install --install-hooks
 ```
 
+## Poetry publish
+
+Note that you need to store pypi creds in poetry config and then you can publish
+
+```bat
+poetry config --list
+poetry config repositories.<repo_name> https://upload.pypi.org/legacy/
+poetry config --list
+poetry config http-basic.<repo_name> __token__ <pypi-token>
+poetry publish -r <repo_name>
+```
+
 ## Getting started with ppw
 
 + use ppw to start with
