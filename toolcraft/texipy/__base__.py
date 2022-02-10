@@ -48,8 +48,8 @@ class LaTeX(abc.ABC):
 
     def __str__(self) -> str:
         if self.use_new_lines:
-            return self.open_clause + "%\n" + \
-                   self.generate() + "\n" + \
+            return self.open_clause + "%\n\n" + \
+                   self.generate() + "\n\n" + \
                    self.close_clause + "%"
         else:
             return self.open_clause + self.generate() + self.close_clause + "%"
@@ -57,13 +57,19 @@ class LaTeX(abc.ABC):
     def init_validate(self):
         ...
 
-    @abc.abstractmethod
     def generate(self) -> str:
-        ...
+        _ret = []
+        for _ in self.items:
+            _ret.append(str(_))
+        return "\n".join(_ret)
 
 
 @dataclasses.dataclass
 class Document(LaTeX):
+
+    title: t.Union[str, None] = None
+    author: t.Union[str, None] = None
+    date: t.Union[str, None] = None
 
     main_tex_file: t.Union[None, str] = None
 
@@ -75,7 +81,9 @@ class Document(LaTeX):
         _ret = [_preamble_document_class]
         for _ in self.items:
             if not isinstance(_, str):
-                _ret.extend(_.preambles)
+                for _p in _.preambles:
+                    if _p not in _ret:
+                        _ret.append(_p)
         return _ret
 
     @property
@@ -83,16 +91,30 @@ class Document(LaTeX):
         _ret = []
         for _ in self.items:
             if not isinstance(_, str):
-                _ret.extend(_.commands)
+                for _c in _.commands:
+                    if _c not in _ret:
+                        _ret.append(_c)
         return _ret
 
     @property
     def open_clause(self) -> str:
-        return "\\begin{document}"
+        _tt = []
+        if self.title is not None:
+            _tt.append(f"\\title{{{self.title}}}%")
+        if self.author is not None:
+            _tt.append(f"\\author{{{self.author}}}%")
+        if self.date is not None:
+            _tt.append(f"\\date{{{self.date}}}%")
+        if bool(_tt):
+            _tt = ["% >> title related"] + _tt + [""]
+        _ret = _tt + ["% >> begin document", "\\begin{document}%", ]
+        if bool(_tt):
+            _ret += ["\\maketitle"]
+        return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
-        return "\\end{document}"
+        return "% >> end document\n\\end{document}"
 
     def init_validate(self):
         if self.main_tex_file is not None:
@@ -100,12 +122,6 @@ class Document(LaTeX):
                 _LOGGER.warning(msg=f"Main text file {self.main_tex_file} is "
                                  f"not on disk so using default setting")
                 self.main_tex_file = None
-
-    def generate(self) -> str:
-        _ret = []
-        for _ in self.items:
-            _ret.append(str(_))
-        return "\n".join(_ret)
 
     def write(
         self,
@@ -126,7 +142,7 @@ class Document(LaTeX):
             f"% >> generated on {datetime.datetime.now().ctime()}", "",
             "% >> preambles", *_preambles, "",
             "% >> commands", *_commands, "",
-            "% >> body", str(self), "",
+            str(self), "",
         ]
         _save_to_file = pathlib.Path(save_to_file)
         _save_to_file.write_text("\n".join(_all_lines))
@@ -140,5 +156,15 @@ class Document(LaTeX):
             )
 
 
+@dataclasses.dataclass
+class Section(LaTeX):
 
+    name: str
 
+    @property
+    def open_clause(self) -> str:
+        return f"\\section{self.name}"
+
+    @property
+    def close_clause(self) -> str:
+        pass
