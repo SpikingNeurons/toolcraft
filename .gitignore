@@ -109,3 +109,6 @@ ENV/
 
 # mkdocs build dir
 site/
+/toolcraft/texipy/examples/*.pdf
+/toolcraft/texipy/examples/*.tex
+/toolcraft/texipy/examples/*.log

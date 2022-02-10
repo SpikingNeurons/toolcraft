@@ -7,6 +7,6 @@ Aim:
   + Priority figures and tables
 """
 
-
-from . import table, tikz
-
+from . import util
+from .__base__ import Document
+from .tikz import TikZ
