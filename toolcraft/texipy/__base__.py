@@ -55,6 +55,8 @@ class Color(enum.Enum):
         we have 19 colors below available
 
     """
+    none = "none"
+
     red = "red"
     green = "green"
     blue = "blue"

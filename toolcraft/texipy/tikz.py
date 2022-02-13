@@ -174,8 +174,57 @@ class Anchor(enum.Enum):
         return f"anchor={self.value}"
     
 
+class Shape(enum.Enum):
+    rectangle = "rectangle"
+    circle = "circle"
+    ellipse = "ellipse"
+    circle_split = "circle split"
+    forbidden_sign = "forbidden sign"
+    diamond = "diamond"
+    cross_out = "cross out"
+    strike_out = "strike out"
+    regular_polygon = "regular polygon"
+    star = "star"
+
+    def __str__(self):
+        return self.__call__()
+
+    def __call__(
+        self,
+        regular_polygon_sides: int = None,
+        star_points: int = None, star_point_ratio: float = None,
+    ):
+        # deal with regular_polygon
+        if self is self.regular_polygon:
+            if regular_polygon_sides is not None:
+                return f"regular polygon,regular polygon sides={regular_polygon_sides}"
+
+        # deal with star
+        if self is self.star:
+            if star_points is not None or star_point_ratio is not None:
+                _ret = ["star"]
+                if star_points is not None:
+                    _ret.append(f"star points={star_points}")
+                if star_point_ratio is not None:
+                    _ret.append(f"star point ratio={star_point_ratio}")
+                return ",".join(_ret)
+
+        # return
+        return self.value
+
+
 class NodeStyle(t.NamedTuple):
-    shape: t.Literal['circle', 'ellipse', 'rectangle'] = None
+    shape: t.Union[str, Shape] = None
+    inner_sep: Scalar = None
+    inner_xsep: Scalar = None
+    inner_ysep: Scalar = None
+    outer_sep: Scalar = None
+    outer_xsep: Scalar = None
+    outer_ysep: Scalar = None
+    minimum_height: Scalar = None
+    minimum_width: Scalar = None
+    minimum_size: Scalar = None
+    aspect: t.Union[int, float] = None
     double: bool = False
     rounded_corners: bool = False
     
@@ -183,6 +232,31 @@ class NodeStyle(t.NamedTuple):
         _options = []
         if self.shape is not None:
             _options.append(f"shape={self.shape}")
+
+        if self.inner_sep is not None:
+            _options.append(f"inner sep={self.inner_sep}")
+        if self.inner_xsep is not None:
+            _options.append(f"inner xsep={self.inner_xsep}")
+        if self.inner_ysep is not None:
+            _options.append(f"inner ysep={self.inner_ysep}")
+
+        if self.outer_sep is not None:
+            _options.append(f"outer sep={self.outer_sep}")
+        if self.outer_xsep is not None:
+            _options.append(f"outer xsep={self.outer_xsep}")
+        if self.outer_ysep is not None:
+            _options.append(f"outer ysep={self.outer_ysep}")
+
+        if self.minimum_height is not None:
+            _options.append(f"minimum height={self.minimum_height}")
+        if self.minimum_width is not None:
+            _options.append(f"minimum width={self.minimum_width}")
+        if self.minimum_size is not None:
+            _options.append(f"minimum size={self.minimum_size}")
+
+        if self.aspect is not None:
+            _options.append(f"aspect={self.aspect}")
+
         if self.double:
             _options.append("double")
         if self.rounded_corners:
@@ -202,6 +276,7 @@ class Transform(t.NamedTuple):
         if self.rotate is not None:
             _options.append(f"rotate={self.rotate}")
         return ",".join(_options)
+
 
 class TextStyle(t.NamedTuple):
     color: Color = None
@@ -563,7 +638,11 @@ class Node(t.NamedTuple):
 class TikZ(LaTeX):
     @property
     def preambles(self) -> t.List[str]:
-        return ["\\usepackage{tikz}"] + super().preambles
+        return [
+            "\\usepackage{tikz}",
+            "\\usetikzlibrary{shapes}",
+            "\\usetikzlibrary{snakes}",
+        ] + super().preambles
 
     @property
     def open_clause(self) -> str:
