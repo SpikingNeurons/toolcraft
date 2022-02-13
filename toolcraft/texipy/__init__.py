@@ -8,5 +8,5 @@ Aim:
 """
 
 from . import helper
-from .__base__ import Document
+from .__base__ import Thickness, Color, Font, Document, Section, Scalar
 from .tikz import TikZ

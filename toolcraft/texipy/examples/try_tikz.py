@@ -3,17 +3,27 @@ We do this tutorial in texipy
 https://www.overleaf.com/learn/latex/TikZ_package
 """
 
-from toolcraft import texipy
-
+from toolcraft.texipy import Document, Section, TikZ, Color, Thickness
 
 
 if __name__ == '__main__':
-    _doc = texipy.Document(
+    _doc = Document(
         title="TikZ tutorial",
         author="Praveen Kulkarni",
         date="\\today",
         items=[
-            "dsfsdfsdfsd"
+            Section(
+                name="Introduction",
+                items=[
+                    TikZ(items=[]).draw_circle(
+                        x=0, y=3, radius=10, draw=Color.red, fill=Color.green,
+                        thickness=Thickness.very_thick
+                    ).draw_circle(
+                        x=3, y=3, radius=10, draw=Color.red, fill=Color.green,
+                        thickness=Thickness.very_thick
+                    )
+                ]
+            )
         ],
         main_tex_file="../main.tex",
     )
