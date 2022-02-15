@@ -12,19 +12,6 @@ from .. import error as e
 _LOGGER = logger.get_logger()
 
 
-class Thickness(enum.Enum):
-    """
-    Refer:
-    https://www.overleaf.com/learn/latex/TikZ_package
-    """
-    ultra_thin = "ultra thin"
-    very_thin = "very thin"
-    thin = "thin"
-    thick = "thick"
-    very_thick = "very thick"
-    ultra_thick = "ultra thick"
-
-
 class Font(enum.Enum):
     """
     todo: figure out other options later
@@ -55,6 +42,7 @@ class Color(enum.Enum):
         we have 19 colors below available
 
     """
+    # setting ⟨color⟩ to none disables filling/drawing locally
     none = "none"
 
     red = "red"
@@ -88,24 +76,6 @@ class Color(enum.Enum):
             return self.value
         else:
             return f"{self.value}!{intensity}"
-
-    def for_draw(
-        self, intensity: t.Union[int, float] = None,
-        opacity: t.Union[int, float] = None
-    ) -> str:
-        _ret = f"draw={self(intensity=intensity)}"
-        if opacity is not None:
-            _ret += f",draw opacity={opacity}"
-        return _ret
-
-    def for_fill(
-        self, intensity: t.Union[int, float] = None,
-        opacity: t.Union[int, float] = None
-    ) -> str:
-        _ret = f"fill={self(intensity=intensity)}"
-        if opacity is not None:
-            _ret += f",fill opacity={opacity}"
-        return _ret
 
 
 class Scalar(t.NamedTuple):

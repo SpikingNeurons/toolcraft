@@ -11,7 +11,247 @@ import abc
 import enum
 
 from .. import error as e
-from .__base__ import LaTeX, Color, Thickness, Font, Scalar
+from .__base__ import LaTeX, Color, Font, Scalar
+
+
+class Thickness(enum.Enum):
+    """
+    Refer:
+    https://www.overleaf.com/learn/latex/TikZ_package
+    """
+    ultra_thin = "ultra thin"
+    very_thin = "very thin"
+    thin = "thin"
+    semithick = "semithick"
+    thick = "thick"
+    very_thick = "very thick"
+    ultra_thick = "ultra thick"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class FillInteriorRule(enum.Enum):
+    """
+    Check section 12.3.2 Graphic Parameters: Interior Rules
+    """
+    nonzero_rule = "nonzero rule"
+    even_odd_rule = "even odd rule"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class Pattern(enum.Enum):
+    """
+    Check Section 26: Pattern Library
+    """
+    horizontal_lines = "horizontal lines"
+    vertical_lines = "vertical lines"
+    north_east_lines = "north east lines"
+    north_west_lines = "north west lines"
+    grid = "grid"
+    crosshatch = "crosshatch"
+    dots = "dots"
+    crosshatch_dots = "crosshatch dots"
+    fivepointed_stars = "fivepointed stars"
+    sixpointed_stars = "sixpointed stars"
+    bricks = "bricks"
+
+    def __str__(self) -> str:
+        return f"pattern={self.value}"
+
+
+class ArrowTip(enum.Enum):
+    """
+    Check section 18: Arrow Tip Library
+    """
+    # special i.e. no arrow tip
+    none = ""
+    bar = '|'
+    end_arrow = '>'  # defined/redefined through ArrowDef.end_arrow_kind
+    start_arrow = '<'  # used swapped version of ArrowDef.end_arrow_kind
+
+    # 18.1: Triangular Arrow Tips
+    latex = "latex'"
+    latex_reversed = "latex' reversed"
+    stealth = "stealth'"
+    stealth_reversed = "stealth' reversed"
+    triangle_90 = 'triangle 90'
+    triangle_90_reversed = 'triangle 90 reversed'
+    triangle_60 = 'triangle 60'
+    triangle_60_reversed = 'triangle 60 reversed'
+    triangle_45 = 'triangle 45'
+    triangle_45_reversed = 'triangle 45 reversed'
+    open_triangle_90 = 'open triangle 90'
+    open_triangle_90_reversed = 'open triangle 90 reversed'
+    open_triangle_60 = 'open triangle 60'
+    open_triangle_60_reversed = 'open triangle 60 reversed'
+    open_triangle_45 = 'open triangle 45'
+    open_triangle_45_reversed = 'open triangle 45 reversed'
+
+    # 18.2: Barbed Arrow Tips
+    angle_90 = 'angle 90'
+    angle_90_reversed = 'angle 90 reversed'
+    angle_60 = 'angle 60'
+    angle_60_reversed = 'angle 60 reversed'
+    angle_45 = 'angle 45'
+    angle_45_reversed = 'angle 45 reversed'
+    hooks = 'hooks'
+    hooks_reversed = 'hooks reversed'
+
+    # 18.3: Bracket-Like Arrow Tips
+    square_bracket_open = '['
+    square_bracket_close = ']'
+    round_bracket_open = '('
+    round_bracket_close = ')'
+
+    # 18.4: Circle and Diamond Arrow Tips
+    circle = "*"
+    open_circle = "o"
+    diamond = "diamond"
+    open_diamond = "open diamond"
+
+    # 18.5: Serif-Like Arrow Tips
+    serif_cm = "serif cm"
+    
+    # 18.6: Partial Arrow Tips
+    left_to = "left to"
+    left_to_reversed = "left to reversed"
+    right_to = "right to"
+    right_to_reversed = "right to reversed"
+    left_hook = "left hook"
+    left_hook_reversed = "left hook reversed"
+    right_hook = "right hook"
+    right_hook_reversed = "right hook reversed"
+
+    # 18.7: Line Caps
+    # only visible when line width is too big i.e. say <line width=1ex>
+    round_cap = "round cap"
+    butt_cap = "butt cap"
+    triangle_90_cap = "triangle 90 cap"
+    triangle_90_cap_reversed = "triangle 90 cap reversed"
+    fast_cap = "fast cap"
+    fast_cap_reversed = "fast cap reversed"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class ArrowDef(enum.Enum):
+    """
+    todo: currently multiple arrows at start and end tip is not supported
+          we need to implement redefining arrow syntax `>=⟨end arrow kind⟩` but that
+          will force to have same repetitive symbol ... also note that arrow enum
+          values that are of length more than 1 cannot be chained ... so only one tip
+          can be used and multiple is possible by syntax `>=⟨end arrow kind⟩` but then
+          we lose having various symbols
+    """
+    # tikz does not support start arrow kind, but you get swapped version of
+    # this when used `<` instead of `>`
+    end_arrow_kind: ArrowTip = None
+    shorten_start: Scalar = None
+    shorten_end: Scalar = None
+    start_tips: t.Union[ArrowTip, t.List[ArrowTip]] = None
+    end_tips: t.Union[ArrowTip, t.List[ArrowTip]] = None
+
+    def __str__(self) -> str:
+        _ret = []
+
+        # ------------------------------------------------ 01
+        # end_arrow_kind
+        # todo: currently we are adding this to path options but we might
+        #   also want only this part in scope options (\\begin{scope}[>=latex])
+        #   and not the entire arrow defination
+        if self.end_arrow_kind is not None:
+            _ret.append(f">={self.end_arrow_kind}")
+
+        # ------------------------------------------------ 02
+        # shorten the start and end of arrow ... with tips provided this will already
+        # shorten automatically bit you can control it further even when tips are
+        # not provided
+        if self.shorten_start is not None:
+            _ret.append(f"shorten <={self.shorten_start}")
+        if self.shorten_end is not None:
+            _ret.append(f"shorten >={self.shorten_end}")
+
+        # ------------------------------------------------ 03
+        # make tip formatter
+        _tip_format = ""
+        if self.start_tips is not None:
+            _tips = [self.start_tips] if isinstance(self.start_tips, ArrowTip) \
+                else self.start_tips
+            for _t in _tips:
+                _tip_format += str(_t)
+        _tip_format += '-'
+        if self.end_tips is not None:
+            _tips = [self.end_tips] if isinstance(self.end_tips, ArrowTip) \
+                else self.end_tips
+            for _t in _tips:
+                _tip_format += str(_t)
+        # i.e. when either start or end tips was provided
+        if _tip_format != '-':
+            _ret.append(_tip_format)
+
+        # ------------------------------------------------ 04
+        return ",".join(_ret)
+
+
+class Cap(enum.Enum):
+    round = "round"
+    rect = "rect"
+    butt = "butt"
+
+    def __str__(self) -> str:
+        return f"cap={self.value}"
+
+
+class Opacity(enum.Enum):
+
+    transparent = "transparent"
+    ultra_nearly_transparent = "ultra nearly transparent"
+    very_nearly_transparent = "very nearly transparent"
+    nearly_transparent = "nearly transparent"
+    semitransparent = "semitransparent"
+    nearly_opaque = "nearly opaque"
+    very_nearly_opaque = "very nearly opaque"
+    ultra_nearly_opaque = "ultra nearly opaque"
+    opaque = "opaque"
+
+    def __str__(self) -> str:
+        return f"{self.value}"
+
+
+class Join(enum.Enum):
+    round = "round"
+    bevel = "bevel"
+    miter = "miter"
+
+    def __str__(self) -> str:
+        return f"join={self.value}"
+
+    def __call__(self, miter_limit: t.Union[int, float] = None) -> str:
+        if miter_limit is not None:
+            if self is self.miter:
+                return f"join={self.value},miter limit={miter_limit}"
+            else:
+                raise e.code.CodingError(
+                    msgs=[f"kwarg miter_limit is only allowed for {self.miter}"]
+                )
+        return f"join={self.value}"
+
+
+class DashPattern(enum.Enum):
+    solid = "solid"
+    dotted = "dotted"
+    densely_dotted = "densely dotted"
+    loosely_dotted = "loosely dotted"
+    dashed = "dashed"
+    densely_dashed = "densely dashed"
+    loosely_dashed = "loosely dashed"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class Shape(enum.Enum):
@@ -53,7 +293,7 @@ class Shape(enum.Enum):
         return self.value
 
 
-class NodeStyle(t.NamedTuple):
+class NodeOptions(t.NamedTuple):
     shape: t.Union[str, Shape] = None
     inner_sep: Scalar = None
     inner_xsep: Scalar = None
@@ -126,7 +366,166 @@ class Transform(t.NamedTuple):
         return ",".join(_options)
 
 
-class TextStyle(t.NamedTuple):
+class FillOptions(t.NamedTuple):
+    color: t.Union[Color, str] = None
+    opacity: t.Union[int, float] = None
+    pattern: Pattern = None
+    pattern_color: t.Union[Color, str] = None
+    fill_interior_rule: FillInteriorRule = None
+
+    def __str__(self):
+        _options = []
+        if self.color is not None:
+            _options.append(f"fill={self.color}")
+        if self.opacity is not None:
+            _options.append(f"fill opacity={self.opacity}")
+        if self.pattern is not None:
+            _options.append(f"{self.pattern}")
+        if self.pattern_color is not None:
+            _options.append(f"pattern color={self.pattern_color}")
+        if self.fill_interior_rule is not None:
+            _options.append(str(self.fill_interior_rule))
+
+        return ",".join(_options)
+
+
+class ShadingType(enum.Enum):
+    """
+    Refer section 12.4.1 Choosing a Shading Type
+    """
+    axis = "axis"
+    radial = "radial"
+    ball = "ball"
+
+    def __str__(self) -> str:
+        return f"shading={self.value}"
+
+
+class ShadeOptions(t.NamedTuple):
+    """
+    Check section 12.4 Shading a Path
+
+    """
+    type: ShadingType = None
+    angle: t.Union[int, float] = None
+
+    # ----------------------------------------------------------
+    # following options' auto apply
+    # shade
+    # shading=axis
+    # middle color is average of top and bottom color
+    # shading angle=0
+    top_color: t.Union[str, Color] = None
+    bottom_color: t.Union[str, Color] = None
+    # note that this will not change angle ... must be applied at last after
+    # top and bottom as they affect it ... we have taken care of same
+    middle_color: t.Union[str, Color] = None
+
+    # ----------------------------------------------------------
+    # same as top_color except that
+    # shading angle=90
+    left_color: t.Union[str, Color] = None
+    right_color: t.Union[str, Color] = None
+
+    # ----------------------------------------------------------
+    # following options' auto apply
+    # shade
+    # shading=radial
+    inner_color: t.Union[str, Color] = None
+    outer_color: t.Union[str, Color] = None
+
+    # ----------------------------------------------------------
+    # following options' auto apply
+    # shade
+    # shading=ball
+    ball_color: t.Union[str, Color] = None
+
+    def __str__(self):
+        # if this object is used means add shade keyword
+        _options = ["shade"]
+
+        if self.type is not None:
+            _options.append(str(self.type))
+        if self.angle is not None:
+            _options.append(f"shading angle={self.angle}")
+        if self.top_color is not None:
+            _options.append(f"top color={self.top_color}")
+        if self.bottom_color is not None:
+            _options.append(f"bottom color={self.bottom_color}")
+        if self.middle_color is not None:
+            # note that middle must always be after top and bottom color
+            _options.append(f"middle color={self.middle_color}")
+        if self.left_color is not None:
+            _options.append(f"left color={self.left_color}")
+        if self.right_color is not None:
+            _options.append(f"right color={self.right_color}")
+        if self.inner_color is not None:
+            _options.append(f"inner color={self.inner_color}")
+        if self.outer_color is not None:
+            _options.append(f"outer color={self.outer_color}")
+        if self.ball_color is not None:
+            _options.append(f"ball color={self.ball_color}")
+
+        return ",".join(_options)
+
+
+class DrawOptions(t.NamedTuple):
+    color: t.Union[Color, str] = None
+    opacity: t.Union[int, float] = None
+    thickness: t.Union[Thickness, Scalar] = None
+    cap: Cap = None
+    join: Join = None
+    dash_pattern: t.Union[DashPattern, t.List[t.Tuple[bool, Scalar]]] = None
+    dash_phase: Scalar = None
+    arrow_def: ArrowDef = None
+
+    # section 12.2.5 Graphic Parameters: Double Lines and Bordered Lines
+    # although in tikz it is `double` and `double distance` we name
+    # differently for clarity ... as in reality to achieve double effect second line
+    # is drawn over first line ...
+    # Also note that second_thickness will affect first line thickness and is given as:
+    #   thickness = 2 * thickness + second_thickness
+    # If second_thickness not provided default of 0.6pt is used
+    second_color: t.Union[Color, str] = None
+    second_thickness: Scalar = None
+
+    def __str__(self):
+        _options = []
+        if self.color is not None:
+            _options.append(f"draw={self.color}")
+        if self.opacity is not None:
+            _options.append(f"draw opacity={self.opacity}")
+        if self.thickness is not None:
+            if isinstance(self.thickness, Thickness):
+                _options.append(str(self.thickness))
+            else:
+                _options.append(f"line width={self.thickness}")
+        if self.cap is not None:
+            _options.append(str(self.cap))
+        if self.join is not None:
+            _options.append(str(self.join))
+        if self.dash_pattern is not None:
+            if isinstance(self.dash_pattern, DashPattern):
+                _options.append(str(self.dash_pattern))
+            else:
+                _options.append(
+                    "dash pattern=" + " ".join(
+                        f"{'on' if _1 else 'off'} {_2}"
+                        for _1, _2 in self.dash_pattern
+                    )
+                )
+        if self.dash_phase is not None:
+            _options.append(f"dash phase={self.dash_phase}")
+        if self.arrow_def is not None:
+            _options.append(self.arrow_def)
+        if self.second_color is not None:
+            _options.append(f"double={self.second_color}")
+        if self.second_thickness is not None:
+            _options.append(f"double distance={self.second_thickness}")
+        return ",".join(_options)
+
+
+class TextOptions(t.NamedTuple):
     color: Color = None
     opacity: t.Union[int, float] = None
     font: Font = None
@@ -142,8 +541,6 @@ class TextStyle(t.NamedTuple):
     def __str__(self):
         _options = []
         if self.color is not None:
-            # A color= option will immediately override this option ...
-            # todo: figure out later what is color option
             _options.append(f"text={self.color}")
         if self.opacity is not None:
             _options.append(f"text opacity={self.opacity}")
@@ -519,14 +916,13 @@ class Node(t.NamedTuple):
     text_to_display: str = None
     
     # style
-    node_style: NodeStyle = None
-    text_style: TextStyle = None
+    node: NodeOptions = None
+    text: TextOptions = None
+    draw: DrawOptions = None
+    fill: FillOptions = None
 
     # transform
     transform: Transform = None
-
-    draw: t.Union[str, Color] = None
-    fill: t.Union[str, Color] = None
 
     # Refer: 13.5: Placing Nodes Using Anchors
     # with this field we address all below latex node options
@@ -555,32 +951,19 @@ class Node(t.NamedTuple):
         # add id if specified
         if self.id is not None:
             _ret += f"({self.id})"
-        _ret += " "
 
         # make options
         _options = []
+        if self.node is not None:
+            _options.append(str(self.node))
+        if self.text is not None:
+            _options.append(str(self.text))
         if self.draw is not None:
-            if str(self.draw).find("draw") == -1:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Use method {Color.for_draw} to assign draw color ..."
-                    ]
-                )
             _options.append(str(self.draw))
         if self.fill is not None:
-            if str(self.fill).find("fill") == -1:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Use method {Color.for_fill} to assign fill color ..."
-                    ]
-                )
             _options.append(str(self.fill))
         if self.transform is not None:
             _options.append(str(self.transform))
-        if self.node_style is not None:
-            _options.append(str(self.node_style))
-        if self.text_style is not None:
-            _options.append(str(self.text_style))
         if self.anchor is not None:
             _options.append(str(self.anchor))
         _ret += "[" + ",".join(_options) + "] "
@@ -588,6 +971,8 @@ class Node(t.NamedTuple):
         # finally, add text value if supplied
         if self.text_to_display is not None:
             _ret += "{" + self.text_to_display + "}"
+        else:
+            _ret += "{}"
 
         # return
         return _ret
@@ -688,14 +1073,34 @@ class Path:
         to support abbreviations like \\draw, \\fill, \\filldraw
     """
 
-    # actions
-    draw: t.Union[str, Color] = None
-    fill: t.Union[str, Color] = None
+    # actions check section 12 Action on Paths
+    # color -- we do not want to support this action due to confusion involved simple
+    #          use only fill to get same effect
+    # action [1]
+    draw: DrawOptions = None
+    # action [2]
+    fill: FillOptions = None
+    # action [3]
+    # supported in FillOptions ... todo: maybe we want it iin separate PatternOptions
+    # pattern
+    # action [4]
     # clip
-    # shade
+    # action [5]
+    # same as fill ... makes sense along with draw ...
+    # with fill works but makes no sense ...
+    # make sure you use either fill or shade ...
+    # also maybe pattern does not work with fill ...
+    # todo: add validation for this
+    #  ... either use pattern, shade or fill
+    #  ... based on more understanding
+    shade: ShadeOptions = None
+    # action [6]
+    # use_as_bounding_box
 
-    # some options for path
-    thickness: t.Union[Thickness, Scalar] = None
+    # this opacity applies to all fill draw pattern shade ...
+    # note that fill and draw options already have opacity field if you want to
+    # control those path actions separately
+    opacity: t.Union[int, float, Opacity] = None
 
     # cycle
     cycle: bool = False
@@ -712,31 +1117,17 @@ class Path:
         # ---------------------------------------------------------- 02
         # make options
         _options = []
-        # ---------------------------------------------------------- 02.01
         if self.draw is not None:
-            if str(self.draw).find("draw") == -1:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Use method {Color.for_draw} to assign draw color ..."
-                    ]
-                )
             _options.append(str(self.draw))
-        # ---------------------------------------------------------- 02.02
         if self.fill is not None:
-            if str(self.fill).find("fill") == -1:
-                e.validation.NotAllowed(
-                    msgs=[
-                        f"Use method {Color.for_fill} to assign fill color ..."
-                    ]
-                )
             _options.append(str(self.fill))
-        # ---------------------------------------------------------- 02.03
-        if self.thickness is not None:
-            if isinstance(self.thickness, Thickness):
-                _options.append(str(self.thickness))
+        if self.shade is not None:
+            _options.append(str(self.shade))
+        if self.opacity is not None:
+            if isinstance(self.opacity, Opacity):
+                _options.append(str(self.opacity))
             else:
-                _options.append(f"line width={self.thickness}")
-        # ---------------------------------------------------------- 02.04
+                _options.append(f"opacity={self.opacity}")
         _ret += "[" + ",".join(_options) + "] "
 
         # ---------------------------------------------------------- 03
@@ -755,27 +1146,48 @@ class Path:
     def connect(
         self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
-        self.connectome += ['--', item]
+        if bool(self.connectome):
+            self.connectome += ['--', item]
+        else:
+            self.connectome += [item]
         return self
 
     # noinspection PyPep8Naming
     def connect_HV(
         self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
-        self.connectome += ['-|', item]
+        if bool(self.connectome):
+            self.connectome += ['-|', item]
+        else:
+            raise e.code.CodingError(
+                msgs=[f"When starting from start use {Path.connect} as the "
+                      f"connectome is empty"]
+            )
         return self
 
     # noinspection PyPep8Naming
     def connect_VH(
         self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
-        self.connectome += ['|-', item]
+        if bool(self.connectome):
+            self.connectome += ['|-', item]
+        else:
+            raise e.code.CodingError(
+                msgs=[f"When starting from start use {Path.connect} as the "
+                      f"connectome is empty"]
+            )
         return self
 
     def connect_hidden(
         self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
-        self.connectome += [' ', item]
+        if bool(self.connectome):
+            self.connectome += [' ', item]
+        else:
+            raise e.code.CodingError(
+                msgs=[f"When starting from start use {Path.connect} as the "
+                      f"connectome is empty"]
+            )
         return self
 
 
@@ -787,6 +1199,8 @@ class TikZ(LaTeX):
             "\\usepackage{tikz}",
             "\\usetikzlibrary{shapes}",
             "\\usetikzlibrary{snakes}",
+            "\\usetikzlibrary{arrows}",
+            "\\usetikzlibrary{patterns}",
         ] + super().preambles
 
     @property
@@ -796,3 +1210,8 @@ class TikZ(LaTeX):
     @property
     def close_clause(self) -> str:
         return "% >> end tikz picture \n\\end{tikzpicture}"
+
+    def add_path(self, path: Path):
+        self.items.append(
+            f"\\{path};"
+        )
