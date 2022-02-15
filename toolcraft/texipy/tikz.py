@@ -14,6 +14,160 @@ from .. import error as e
 from .__base__ import LaTeX, Color, Thickness, Font, Scalar
 
 
+class Shape(enum.Enum):
+    rectangle = "rectangle"
+    circle = "circle"
+    ellipse = "ellipse"
+    circle_split = "circle split"
+    forbidden_sign = "forbidden sign"
+    diamond = "diamond"
+    cross_out = "cross out"
+    strike_out = "strike out"
+    regular_polygon = "regular polygon"
+    star = "star"
+
+    def __str__(self):
+        return self.__call__()
+
+    def __call__(
+        self,
+        regular_polygon_sides: int = None,
+        star_points: int = None, star_point_ratio: float = None,
+    ):
+        # deal with regular_polygon
+        if self is self.regular_polygon:
+            if regular_polygon_sides is not None:
+                return f"regular polygon,regular polygon sides={regular_polygon_sides}"
+
+        # deal with star
+        if self is self.star:
+            if star_points is not None or star_point_ratio is not None:
+                _ret = ["star"]
+                if star_points is not None:
+                    _ret.append(f"star points={star_points}")
+                if star_point_ratio is not None:
+                    _ret.append(f"star point ratio={star_point_ratio}")
+                return ",".join(_ret)
+
+        # return
+        return self.value
+
+
+class NodeStyle(t.NamedTuple):
+    shape: t.Union[str, Shape] = None
+    inner_sep: Scalar = None
+    inner_xsep: Scalar = None
+    inner_ysep: Scalar = None
+    outer_sep: Scalar = None
+    outer_xsep: Scalar = None
+    outer_ysep: Scalar = None
+    minimum_height: Scalar = None
+    minimum_width: Scalar = None
+    minimum_size: Scalar = None
+    aspect: t.Union[int, float] = None
+    double: bool = False
+    rounded_corners: bool = False
+    thickness: t.Union[Thickness, Scalar] = None
+
+    def __str__(self):
+        _options = []
+        if self.shape is not None:
+            _options.append(f"shape={self.shape}")
+
+        if self.inner_sep is not None:
+            _options.append(f"inner sep={self.inner_sep}")
+        if self.inner_xsep is not None:
+            _options.append(f"inner xsep={self.inner_xsep}")
+        if self.inner_ysep is not None:
+            _options.append(f"inner ysep={self.inner_ysep}")
+
+        if self.outer_sep is not None:
+            _options.append(f"outer sep={self.outer_sep}")
+        if self.outer_xsep is not None:
+            _options.append(f"outer xsep={self.outer_xsep}")
+        if self.outer_ysep is not None:
+            _options.append(f"outer ysep={self.outer_ysep}")
+
+        if self.minimum_height is not None:
+            _options.append(f"minimum height={self.minimum_height}")
+        if self.minimum_width is not None:
+            _options.append(f"minimum width={self.minimum_width}")
+        if self.minimum_size is not None:
+            _options.append(f"minimum size={self.minimum_size}")
+
+        if self.aspect is not None:
+            _options.append(f"aspect={self.aspect}")
+
+        if self.double:
+            _options.append("double")
+        if self.rounded_corners:
+            _options.append("rounded corners")
+
+        if self.thickness is not None:
+            if isinstance(self.thickness, Thickness):
+                _options.append(str(self.thickness))
+            else:
+                _options.append(f"line width={self.thickness}")
+
+        return ",".join(_options)
+
+
+class Transform(t.NamedTuple):
+
+    rotate: t.Union[int, float] = None
+    shift: 'Point' = None
+
+    def __str__(self):
+        _options = []
+        if self.shift is not None:
+            _options.append(f"shift={{{self.shift}}}")
+        if self.rotate is not None:
+            _options.append(f"rotate={self.rotate}")
+        return ",".join(_options)
+
+
+class TextStyle(t.NamedTuple):
+    color: Color = None
+    opacity: t.Union[int, float] = None
+    font: Font = None
+    width: Scalar = None
+    height: Scalar = None
+    depth: Scalar = None
+    justified: bool = False
+    ragged: bool = False
+    badly_ragged: bool = False
+    centered: bool = False
+    badly_centered: bool = False
+
+    def __str__(self):
+        _options = []
+        if self.color is not None:
+            # A color= option will immediately override this option ...
+            # todo: figure out later what is color option
+            _options.append(f"text={self.color}")
+        if self.opacity is not None:
+            _options.append(f"text opacity={self.opacity}")
+        if self.font is not None:
+            _options.append(f"font={self.font}")
+        if self.width is not None:
+            _options.append(f"text width={self.width}")
+        if self.height is not None:
+            _options.append(f"text height={self.height}")
+        if self.depth is not None:
+            _options.append(f"text depth={self.depth}")
+        if self.justified:
+            _options.append("text justified")
+        if self.ragged:
+            _options.append("text ragged")
+        if self.badly_ragged:
+            _options.append("text badly ragged")
+        if self.centered:
+            _options.append("text centered")
+        if self.badly_centered:
+            _options.append("text badly centered")
+        return ",".join(_options)
+
+
 class Anchor(enum.Enum):
     """
     Check section 13.5 Placing Nodes Using Anchors
@@ -174,152 +328,6 @@ class Anchor(enum.Enum):
         return f"anchor={self.value}"
     
 
-class Shape(enum.Enum):
-    rectangle = "rectangle"
-    circle = "circle"
-    ellipse = "ellipse"
-    circle_split = "circle split"
-    forbidden_sign = "forbidden sign"
-    diamond = "diamond"
-    cross_out = "cross out"
-    strike_out = "strike out"
-    regular_polygon = "regular polygon"
-    star = "star"
-
-    def __str__(self):
-        return self.__call__()
-
-    def __call__(
-        self,
-        regular_polygon_sides: int = None,
-        star_points: int = None, star_point_ratio: float = None,
-    ):
-        # deal with regular_polygon
-        if self is self.regular_polygon:
-            if regular_polygon_sides is not None:
-                return f"regular polygon,regular polygon sides={regular_polygon_sides}"
-
-        # deal with star
-        if self is self.star:
-            if star_points is not None or star_point_ratio is not None:
-                _ret = ["star"]
-                if star_points is not None:
-                    _ret.append(f"star points={star_points}")
-                if star_point_ratio is not None:
-                    _ret.append(f"star point ratio={star_point_ratio}")
-                return ",".join(_ret)
-
-        # return
-        return self.value
-
-
-class NodeStyle(t.NamedTuple):
-    shape: t.Union[str, Shape] = None
-    inner_sep: Scalar = None
-    inner_xsep: Scalar = None
-    inner_ysep: Scalar = None
-    outer_sep: Scalar = None
-    outer_xsep: Scalar = None
-    outer_ysep: Scalar = None
-    minimum_height: Scalar = None
-    minimum_width: Scalar = None
-    minimum_size: Scalar = None
-    aspect: t.Union[int, float] = None
-    double: bool = False
-    rounded_corners: bool = False
-    
-    def __str__(self):
-        _options = []
-        if self.shape is not None:
-            _options.append(f"shape={self.shape}")
-
-        if self.inner_sep is not None:
-            _options.append(f"inner sep={self.inner_sep}")
-        if self.inner_xsep is not None:
-            _options.append(f"inner xsep={self.inner_xsep}")
-        if self.inner_ysep is not None:
-            _options.append(f"inner ysep={self.inner_ysep}")
-
-        if self.outer_sep is not None:
-            _options.append(f"outer sep={self.outer_sep}")
-        if self.outer_xsep is not None:
-            _options.append(f"outer xsep={self.outer_xsep}")
-        if self.outer_ysep is not None:
-            _options.append(f"outer ysep={self.outer_ysep}")
-
-        if self.minimum_height is not None:
-            _options.append(f"minimum height={self.minimum_height}")
-        if self.minimum_width is not None:
-            _options.append(f"minimum width={self.minimum_width}")
-        if self.minimum_size is not None:
-            _options.append(f"minimum size={self.minimum_size}")
-
-        if self.aspect is not None:
-            _options.append(f"aspect={self.aspect}")
-
-        if self.double:
-            _options.append("double")
-        if self.rounded_corners:
-            _options.append("rounded corners")
-        return ",".join(_options)
-
-
-class Transform(t.NamedTuple):
-
-    rotate: t.Union[int, float] = None
-    shift: 'Point' = None
-
-    def __str__(self):
-        _options = []
-        if self.shift is not None:
-            _options.append(f"shift={{{self.shift}}}")
-        if self.rotate is not None:
-            _options.append(f"rotate={self.rotate}")
-        return ",".join(_options)
-
-
-class TextStyle(t.NamedTuple):
-    color: Color = None
-    opacity: t.Union[int, float] = None
-    font: Font = None
-    width: Scalar = None
-    height: Scalar = None
-    depth: Scalar = None
-    justified: bool = False
-    ragged: bool = False
-    badly_ragged: bool = False
-    centered: bool = False
-    badly_centered: bool = False
-    
-    def __str__(self):
-        _options = []
-        if self.color is not None:
-            # A color= option will immediately override this option ...
-            # todo: figure out later what is color option
-            _options.append(f"text={self.color}")
-        if self.opacity is not None:
-            _options.append(f"text opacity={self.opacity}")
-        if self.font is not None:
-            _options.append(f"font={self.font}")
-        if self.width is not None:
-            _options.append(f"text width={self.width}")
-        if self.height is not None:
-            _options.append(f"text height={self.height}")
-        if self.depth is not None:
-            _options.append(f"text depth={self.depth}")
-        if self.justified:
-            _options.append("text justified")
-        if self.ragged:
-            _options.append("text ragged")
-        if self.badly_ragged:
-            _options.append("text badly ragged")
-        if self.centered:
-            _options.append("text centered")
-        if self.badly_centered:
-            _options.append("text badly centered")
-        return ",".join(_options)
-    
-
 class Point(abc.ABC):
     """
     Point are like coordinate that are lightweight nodes without shape and `at` part
@@ -459,20 +467,38 @@ class PointOnNode(t.NamedTuple, Point):
     Implicit:
       \\draw (shape.north) |- (0,1);
       \\draw (shape.90) |- (0,1);
+
+    todo: When you do not supply node we assume it is previously defined shape on which
+      you are requesting anchor ... as in (first node.south).
     """
-    node: "Node"
+    node: "Node" = None
     anchor: t.Union[int, float, Anchor] = None
 
     def __str__(self):
-        if self.node.id is None:
-            e.validation.NotAllowed(
-                msgs=[
-                    "Cannot provide point on this node as it does not have "
-                    "`id` specified ..."
-                ]
+        _ret = "("
+
+        if self.node is None:
+            _ret += "first node"
+            raise e.code.CodingError(
+                msgs=[f"We have not yet figured this out ... "
+                      f"implement check and then use"]
             )
-        # Note that if Anchor then __str__ can handle if using non-intuitive anchors
-        return f"({self.node.id}.{self.anchor})"
+        else:
+            if self.node.id is None:
+                e.validation.NotAllowed(
+                    msgs=[
+                        "Cannot provide point on this node as it does not have "
+                        "`id` specified ..."
+                    ]
+                )
+            _ret += f"{self.node.id}"
+
+        if self.anchor is not None:
+            # Note that if Anchor then __str__ can handle
+            # only if using non-intuitive anchors
+            _ret += f".{self.anchor}"
+
+        return _ret + ")"
 
 
 class Node(t.NamedTuple):
@@ -542,7 +568,7 @@ class Node(t.NamedTuple):
                 )
             _options.append(str(self.draw))
         if self.fill is not None:
-            if str(self.draw).find("fill") == -1:
+            if str(self.fill).find("fill") == -1:
                 e.validation.NotAllowed(
                     msgs=[
                         f"Use method {Color.for_fill} to assign fill color ..."
@@ -635,6 +661,125 @@ class Node(t.NamedTuple):
 
 
 @dataclasses.dataclass
+class Path:
+    """
+    Most important component for TikZ class.
+    Class can have
+      Point (i.e. tikz coordinate)
+      Node (i.e. tikz node)
+
+    Path can have its components connected by
+      Path.connect  (i.e. tikz '--')
+      Path.connect_HV (i.e. tikz '-|')
+      Path.connect_VH (i.e. tikz '|-')
+      Path.connect_hidden
+        (i.e. in tikz we just place two coordinated side by side,
+        equivalent to add space ... ' ' this is cheat, but it is completely fine)
+
+    Actions on path:
+      draw (draws a line with specified thickness)
+      fill (interior of the specified gets colored ... assumes a closed path)
+      shade
+      clip
+      or any combo of above all
+
+    NOTE:
+        We simplify our code and use only path as generic method. We don't need
+        to support abbreviations like \\draw, \\fill, \\filldraw
+    """
+
+    # actions
+    draw: t.Union[str, Color] = None
+    fill: t.Union[str, Color] = None
+    # clip
+    # shade
+
+    # some options for path
+    thickness: t.Union[Thickness, Scalar] = None
+
+    # cycle
+    cycle: bool = False
+
+    def __post_init__(self):
+        # container to save all segments of path
+        self.connectome = []
+
+    def __str__(self):
+        # ---------------------------------------------------------- 01
+        # return str
+        _ret = "path"
+
+        # ---------------------------------------------------------- 02
+        # make options
+        _options = []
+        # ---------------------------------------------------------- 02.01
+        if self.draw is not None:
+            if str(self.draw).find("draw") == -1:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Use method {Color.for_draw} to assign draw color ..."
+                    ]
+                )
+            _options.append(str(self.draw))
+        # ---------------------------------------------------------- 02.02
+        if self.fill is not None:
+            if str(self.fill).find("fill") == -1:
+                e.validation.NotAllowed(
+                    msgs=[
+                        f"Use method {Color.for_fill} to assign fill color ..."
+                    ]
+                )
+            _options.append(str(self.fill))
+        # ---------------------------------------------------------- 02.03
+        if self.thickness is not None:
+            if isinstance(self.thickness, Thickness):
+                _options.append(str(self.thickness))
+            else:
+                _options.append(f"line width={self.thickness}")
+        # ---------------------------------------------------------- 02.04
+        _ret += "[" + ",".join(_options) + "] "
+
+        # ---------------------------------------------------------- 03
+        # process connectome
+        for _item in self.connectome:
+            _ret += str(_item) + " "
+
+        # ---------------------------------------------------------- 04
+        # add cycle
+        if self.cycle:
+            _ret += "-- cycle"
+
+        # ---------------------------------------------------------- 05
+        return _ret
+
+    def connect(
+        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+    ) -> 'Path':
+        self.connectome += ['--', item]
+        return self
+
+    # noinspection PyPep8Naming
+    def connect_HV(
+        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+    ) -> 'Path':
+        self.connectome += ['-|', item]
+        return self
+
+    # noinspection PyPep8Naming
+    def connect_VH(
+        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+    ) -> 'Path':
+        self.connectome += ['|-', item]
+        return self
+
+    def connect_hidden(
+        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+    ) -> 'Path':
+        self.connectome += [' ', item]
+        return self
+
+
+@dataclasses.dataclass
 class TikZ(LaTeX):
     @property
     def preambles(self) -> t.List[str]:
@@ -651,136 +796,3 @@ class TikZ(LaTeX):
     @property
     def close_clause(self) -> str:
         return "% >> end tikz picture \n\\end{tikzpicture}"
-
-    def path(
-        self,
-        path_items: t.List[t.Union[
-            Point2D, Point3D, PointPolar
-        ]],
-        draw: Color = None,
-        fill: Color = None,
-        # clip: ... = None,
-        # shade: ... = None,
-        draw_intensity: int = None,
-        fill_intensity: int = None,
-        thickness: Thickness = None,
-        opacity: int = None,
-        fill_opacity: int = None,
-        draw_opacity: int = None,
-    ) -> "TikZ":
-        """
-        Section 8.3: Actions on Paths
-        https://www.bu.edu/math/files/2013/08/tikzpgfmanual.pdf
-
-        A path is just a series of straight and curved lines, but it is not yet
-        specified what should happen with it.
-        One can
-          + draw a path,
-          + fill a path,
-          + shade it,
-          + clip it, or
-          + do any combination of these.
-
-        Drawing (also known as stroking) can be thought of as taking a pen of a
-        certain thickness and moving it along the path, thereby drawing on the canvas.
-
-        Filling means that the interior of the path is filled with a uniform color.
-        Obviously, filling makes sense only for closed paths and a path is
-        automatically closed prior to filling, if necessary.
-
-        NOTE:
-            We simplify our code and use only path as generic method. We don't need
-            to support abbreviations like \\draw, \\fill, \\filldraw
-            Also \\node is abbreviation for \\path node
-            Also \\coordinate is abbreviation for \\path coordinate
-
-        """
-        # -------------------------------------------------------- 01
-        # validation
-        if draw_intensity is not None and draw is None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "If you supplied draw_intensity then you must also supply draw"
-                ]
-            )
-        if fill_intensity is not None and fill is None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "If you supplied fill_intensity then you must also supply fill"
-                ]
-            )
-        if fill_opacity is not None or draw_opacity is not None:
-            if opacity is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "If you are supplying either of `fill_opacity` or(and) "
-                        "`draw_opacity` then you need not supply `opacity` ..."
-                    ]
-                )
-        # -------------------------------------------------------- 02
-        # determine command
-        if fill is not None:
-            if draw is None:
-                _cmd = "\\fill"
-            else:
-                _cmd = "\\filldraw"
-        else:
-            _cmd = "\\draw"
-        # -------------------------------------------------------- 03
-        # make options str
-        _options = []
-        if fill is not None:
-            _fill = f"fill={fill.value}"
-            if fill_intensity is not None:
-                _fill += f"!{fill_intensity}"
-            _options.append(_fill)
-        if draw is not None:
-            _draw = f"draw={draw.value}"
-            if draw_intensity is not None:
-                _draw += f"!{draw_intensity}"
-            _options.append(_draw)
-        if thickness is not None:
-            _options.append(thickness.value)
-        _options = "[" + ", ".join(_options) + "]"
-        # -------------------------------------------------------- 04
-        _draw_item_cmd = f"{_cmd}{_options} {draw_item};%"
-        self.items.append(_draw_item_cmd)
-        # -------------------------------------------------------- 05
-        # return self
-        return self
-
-    def draw_circle(
-        self, x: t.Union[int, float], y: t.Union[int, float],
-        radius: t.Union[int, float],
-        draw: Color = None, draw_intensity: t.Union[int, float] = None,
-        fill: Color = None, fill_intensity: t.Union[int, float] = None,
-        thickness: Thickness = None,
-        opacity: t.Union[int, float] = None,
-        fill_opacity: t.Union[int, float] = None,
-        draw_opacity: t.Union[int, float] = None,
-    ) -> "TikZ":
-        return self.draw(
-            draw_item=f"({x}, {y}) circle ({radius}pt)",
-            draw=draw, draw_intensity=draw_intensity,
-            fill=fill, fill_intensity=fill_intensity,
-            thickness=thickness,
-            opacity=opacity, fill_opacity=fill_opacity, draw_opacity=draw_opacity
-        )
-
-    def draw_line(
-        self,
-        cycle: bool = False,
-        draw: Color = None, draw_intensity: t.Union[int, float] = None,
-        fill: Color = None, fill_intensity: t.Union[int, float] = None,
-        thickness: Thickness = None,
-        opacity: t.Union[int, float] = None,
-        fill_opacity: t.Union[int, float] = None,
-        draw_opacity: t.Union[int, float] = None,
-    ) -> "TikZ":
-        return self.draw(
-            draw_item=f"({x}, {y}) circle ({radius}pt)",
-            draw=draw, draw_intensity=draw_intensity,
-            fill=fill, fill_intensity=fill_intensity,
-            thickness=thickness,
-            opacity=opacity, fill_opacity=fill_opacity, draw_opacity=draw_opacity
-        )
