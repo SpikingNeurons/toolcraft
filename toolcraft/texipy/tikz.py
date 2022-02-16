@@ -1217,7 +1217,7 @@ class Path:
     def __str__(self):
         # ---------------------------------------------------------- 01
         # return str
-        _ret = "path"
+        _ret = "\\path"
 
         # ---------------------------------------------------------- 02
         # make options
@@ -1254,7 +1254,7 @@ class Path:
             _ret += "-- cycle"
 
         # ---------------------------------------------------------- 05
-        return _ret
+        return _ret + ";"
 
     def connect(
             self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
@@ -1325,6 +1325,4 @@ class TikZ(LaTeX):
         return "% >> end tikz picture \n\\end{tikzpicture}"
 
     def add_path(self, path: Path):
-        self.items.append(
-            f"\\{path};"
-        )
+        self.items.append(str(path))
