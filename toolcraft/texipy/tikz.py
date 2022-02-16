@@ -3,6 +3,15 @@ Supporting tutorial: https://www.overleaf.com/learn/latex/TikZ_package
 
 More official tutorial: https://www.bu.edu/math/files/2013/08/tikzpgfmanual.pdf
 We can convert this entirely ...
+
+todo: Section 32 To Path Library ... support this ... looks useful
+todo: Section 33 Tree Library    ... support this ... looks useful
+
+todo: Section 22 Entity-Relationship Diagram Drawing Library
+todo: Section 24 Matrix Library
+todo: Section 25 Mindmap Drawing Library
+todo: Section 28 Plot Handler Library
+todo: Section 28 Plot Mark Library
 """
 
 import dataclasses
@@ -62,6 +71,67 @@ class Pattern(enum.Enum):
         return f"pattern={self.value}"
 
 
+class Snake(enum.Enum):
+    """
+    Check section 31: Snake Library
+    """
+    bent = "bent"
+    border = "border"
+    brace = "brace"
+    bumps = "bumps"
+    coil = "coil"
+    expanding_waves = "expanding waves"
+    saw = "saw"
+    snake = "snake"
+    ticks = "ticks"
+    triangles = "triangles"
+    crosses = "crosses"
+    waves = "waves"
+    zigzag = "zigzag"
+
+    def __str__(self) -> str:
+        return f"snake={self.value}"
+
+
+class SnakeOptions(t.NamedTuple):
+    """
+    Check section 31: Snake Library
+
+    todo: add validations to restrict some options bases on snake type ...
+      As of now we allow all options but this can be restricted based on
+      documentation ...
+    """
+    type: Snake = None
+    raise_snake: Scalar = None
+
+    segment_amplitude: Scalar = None
+    segment_length: Scalar = None
+    segment_aspect: t.Union[int, float] = None
+    segment_angle: t.Union[int, float] = None
+    segment_object_length: Scalar = None
+
+    def __str__(self) -> str:
+        _options = []
+
+        if self.type is not None:
+            _options.append(str(self.type))
+        if self.raise_snake is not None:
+            _options.append(str(self.raise_snake))
+
+        if self.segment_amplitude is not None:
+            _options.append(f"segment amplitude={self.segment_amplitude}")
+        if self.segment_length is not None:
+            _options.append(f"segment length={self.segment_length}")
+        if self.segment_aspect is not None:
+            _options.append(f"segment aspect={self.segment_aspect}")
+        if self.segment_angle is not None:
+            _options.append(f"segment angle={self.segment_angle}")
+        if self.segment_object_length is not None:
+            _options.append(f"segment object length={self.segment_object_length}")
+
+        return ",".join(_options)
+
+
 class ArrowTip(enum.Enum):
     """
     Check section 18: Arrow Tip Library
@@ -114,7 +184,7 @@ class ArrowTip(enum.Enum):
 
     # 18.5: Serif-Like Arrow Tips
     serif_cm = "serif cm"
-    
+
     # 18.6: Partial Arrow Tips
     left_to = "left to"
     left_to_reversed = "left to reversed"
@@ -207,7 +277,6 @@ class Cap(enum.Enum):
 
 
 class Opacity(enum.Enum):
-
     transparent = "transparent"
     ultra_nearly_transparent = "ultra nearly transparent"
     very_nearly_transparent = "very nearly transparent"
@@ -352,17 +421,22 @@ class NodeOptions(t.NamedTuple):
         return ",".join(_options)
 
 
-class Transform(t.NamedTuple):
-
+class TransformOptions(t.NamedTuple):
     rotate: t.Union[int, float] = None
+    scale: t.Union[int, float] = None
     shift: 'Point' = None
+    apply_current_external_transformation: bool = False
 
     def __str__(self):
         _options = []
-        if self.shift is not None:
-            _options.append(f"shift={{{self.shift}}}")
         if self.rotate is not None:
             _options.append(f"rotate={self.rotate}")
+        if self.scale is not None:
+            _options.append(f"scale={self.scale}")
+        if self.shift is not None:
+            _options.append(f"shift={{{self.shift}}}")
+        if self.apply_current_external_transformation:
+            _options.append("transform shape")
         return ",".join(_options)
 
 
@@ -626,9 +700,9 @@ class Anchor(enum.Enum):
         return self.__call__()
 
     def __call__(
-        self,
-        node: "Node" = None, offset: Scalar = None,
-        angle: t.Union[int, float] = None,
+            self,
+            node: "Node" = None, offset: Scalar = None,
+            angle: t.Union[int, float] = None,
     ) -> str:
         """
         NOTE: angle kwarg can be only used when angle anchor is used
@@ -723,7 +797,7 @@ class Anchor(enum.Enum):
             )
         # return str repr
         return f"anchor={self.value}"
-    
+
 
 class Point(abc.ABC):
     """
@@ -736,12 +810,11 @@ class Point(abc.ABC):
     """
 
     def shift(
-        self,
-        x: Scalar = Scalar(0),
-        y: Scalar = Scalar(0),
-        z: Scalar = Scalar(0),
+            self,
+            x: Scalar = Scalar(0),
+            y: Scalar = Scalar(0),
+            z: Scalar = Scalar(0),
     ) -> str:
-
         _str = str(self)
 
         _first_brace_index = _str.find("(")
@@ -908,21 +981,24 @@ class Node(t.NamedTuple):
       \\path ... node[⟨options⟩](⟨name⟩)at(⟨coordinate⟩){⟨text⟩} ...;
 
     todo: support multi-part nodes (see section 13.3)
+
+    todo: based on `o_node.shape` the anchor points differ ... so add
+      more properties or make a dict of new anchors
+      Check section 30: Shape Library ... to see complete list of new anchors
+      for given shape
     """
     # id
     id: str = None
 
     # refer section 13.4: Options for the Text in Nodes
     text_to_display: str = None
-    
-    # style
-    node: NodeOptions = None
-    text: TextOptions = None
-    draw: DrawOptions = None
-    fill: FillOptions = None
 
-    # transform
-    transform: Transform = None
+    # style
+    o_node: NodeOptions = None
+    o_text: TextOptions = None
+    o_draw: DrawOptions = None
+    o_fill: FillOptions = None
+    o_transform: TransformOptions = None
 
     # Refer: 13.5: Placing Nodes Using Anchors
     # with this field we address all below latex node options
@@ -938,7 +1014,7 @@ class Node(t.NamedTuple):
         """
         _node_str = str(self)
         _brace_index = _node_str.rfind("{")
-        return _node_str[:_brace_index] + f"at {other} " + _node_str[_brace_index:]
+        return _node_str[:_brace_index] + f"at{other}" + _node_str[_brace_index:]
 
     def __str__(self):
         """
@@ -954,16 +1030,16 @@ class Node(t.NamedTuple):
 
         # make options
         _options = []
-        if self.node is not None:
-            _options.append(str(self.node))
-        if self.text is not None:
-            _options.append(str(self.text))
-        if self.draw is not None:
-            _options.append(str(self.draw))
-        if self.fill is not None:
-            _options.append(str(self.fill))
-        if self.transform is not None:
-            _options.append(str(self.transform))
+        if self.o_node is not None:
+            _options.append(str(self.o_node))
+        if self.o_text is not None:
+            _options.append(str(self.o_text))
+        if self.o_draw is not None:
+            _options.append(str(self.o_draw))
+        if self.o_fill is not None:
+            _options.append(str(self.o_fill))
+        if self.o_transform is not None:
+            _options.append(str(self.o_transform))
         if self.anchor is not None:
             _options.append(str(self.anchor))
         _ret += "[" + ",".join(_options) + "] "
@@ -1044,6 +1120,27 @@ class Node(t.NamedTuple):
     def point_at_angle(self, angle: t.Union[int, float]) -> PointOnNode:
         return PointOnNode(node=self, anchor=angle)
 
+    def add_edge(self):
+        ...
+
+    def add_pin(self):
+        ...
+
+    def add_label(self):
+        ...
+
+
+class SpecialNodes:
+    """
+    You can use these special nodes while drawing path with `TikZ.path`
+    """
+    # you can access the current bounding box of tiz figure
+    # to draw border ... or to shrink image ...
+    current_bounding_box = Node(id="current bounding box")
+
+    # todo: not sure how to get lat node ... explore
+    # last_node = Node(id="first node")
+
 
 @dataclasses.dataclass
 class Path:
@@ -1076,16 +1173,17 @@ class Path:
     # actions check section 12 Action on Paths
     # color -- we do not want to support this action due to confusion involved simple
     #          use only fill to get same effect
-    # action [1]
-    draw: DrawOptions = None
-    # action [2]
-    fill: FillOptions = None
-    # action [3]
+    # action [1] -------------------------------------
+    o_draw: DrawOptions = None
+    # action [2] -------------------------------------
+    o_fill: FillOptions = None
+    # action [3] -------------------------------------
     # supported in FillOptions ... todo: maybe we want it iin separate PatternOptions
     # pattern
-    # action [4]
-    # clip
-    # action [5]
+    # action [4] -------------------------------------
+    # clip .. see section 12.6 Using a Path For Clipping
+    clip: bool = False
+    # action [5] -------------------------------------
     # same as fill ... makes sense along with draw ...
     # with fill works but makes no sense ...
     # make sure you use either fill or shade ...
@@ -1093,9 +1191,10 @@ class Path:
     # todo: add validation for this
     #  ... either use pattern, shade or fill
     #  ... based on more understanding
-    shade: ShadeOptions = None
-    # action [6]
-    # use_as_bounding_box
+    o_shade: ShadeOptions = None
+    # action [6] -------------------------------------
+    # use this path as bounding box
+    use_as_bounding_box: bool = False
 
     # this opacity applies to all fill draw pattern shade ...
     # note that fill and draw options already have opacity field if you want to
@@ -1104,6 +1203,12 @@ class Path:
 
     # cycle
     cycle: bool = False
+
+    # transform options at path level
+    o_transform: TransformOptions = None
+
+    # configure snake
+    o_snake: SnakeOptions = None
 
     def __post_init__(self):
         # container to save all segments of path
@@ -1117,17 +1222,25 @@ class Path:
         # ---------------------------------------------------------- 02
         # make options
         _options = []
-        if self.draw is not None:
-            _options.append(str(self.draw))
-        if self.fill is not None:
-            _options.append(str(self.fill))
-        if self.shade is not None:
-            _options.append(str(self.shade))
+        if self.o_draw is not None:
+            _options.append(str(self.o_draw))
+        if self.o_fill is not None:
+            _options.append(str(self.o_fill))
+        if self.o_shade is not None:
+            _options.append(str(self.o_shade))
+        if self.o_transform is not None:
+            _options.append(str(self.o_transform))
+        if self.o_snake is not None:
+            _options.append(str(self.o_snake))
         if self.opacity is not None:
             if isinstance(self.opacity, Opacity):
                 _options.append(str(self.opacity))
             else:
                 _options.append(f"opacity={self.opacity}")
+        if self.use_as_bounding_box:
+            _options.append("use as bounding box")
+        if self.clip:
+            _options.append("clip")
         _ret += "[" + ",".join(_options) + "] "
 
         # ---------------------------------------------------------- 03
@@ -1144,7 +1257,7 @@ class Path:
         return _ret
 
     def connect(
-        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+            self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
         if bool(self.connectome):
             self.connectome += ['--', item]
@@ -1154,7 +1267,7 @@ class Path:
 
     # noinspection PyPep8Naming
     def connect_HV(
-        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+            self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
         if bool(self.connectome):
             self.connectome += ['-|', item]
@@ -1167,7 +1280,7 @@ class Path:
 
     # noinspection PyPep8Naming
     def connect_VH(
-        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+            self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
         if bool(self.connectome):
             self.connectome += ['|-', item]
@@ -1179,7 +1292,7 @@ class Path:
         return self
 
     def connect_hidden(
-        self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
+            self, item: t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node]
     ) -> 'Path':
         if bool(self.connectome):
             self.connectome += [' ', item]
@@ -1196,12 +1309,12 @@ class TikZ(LaTeX):
     @property
     def preambles(self) -> t.List[str]:
         return [
-            "\\usepackage{tikz}",
-            "\\usetikzlibrary{shapes}",
-            "\\usetikzlibrary{snakes}",
-            "\\usetikzlibrary{arrows}",
-            "\\usetikzlibrary{patterns}",
-        ] + super().preambles
+                   "\\usepackage{tikz}",
+                   "\\usetikzlibrary{shapes}",
+                   "\\usetikzlibrary{snakes}",
+                   "\\usetikzlibrary{arrows}",
+                   "\\usetikzlibrary{patterns}",
+               ] + super().preambles
 
     @property
     def open_clause(self) -> str:
