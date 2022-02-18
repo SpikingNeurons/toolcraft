@@ -3,7 +3,8 @@ We do this tutorial in texipy
 https://www.overleaf.com/learn/latex/TikZ_package
 """
 
-from toolcraft.texipy import Document, Section, TikZ, Color, Thickness
+from toolcraft.texipy import Document, Section, Color
+from toolcraft.texipy import tikz
 
 
 if __name__ == '__main__':
@@ -15,12 +16,12 @@ if __name__ == '__main__':
             Section(
                 name="Introduction",
                 items=[
-                    TikZ(items=[]).draw_circle(
+                    tikz.TikZ(items=[]).draw_circle(
                         x=0, y=3, radius=10, draw=Color.red, fill=Color.green,
-                        thickness=Thickness.very_thick
+                        thickness=tikz.Thickness.very_thick
                     ).draw_circle(
                         x=3, y=3, radius=10, draw=Color.red, fill=Color.green,
-                        thickness=Thickness.very_thick
+                        thickness=tikz.Thickness.very_thick
                     )
                 ]
             )

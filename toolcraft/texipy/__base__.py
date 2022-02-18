@@ -7,6 +7,7 @@ import enum
 
 from . import helper
 from .. import logger
+from .. import util
 from .. import error as e
 
 _LOGGER = logger.get_logger()
@@ -83,7 +84,7 @@ class Scalar(t.NamedTuple):
     Also referred as <dimension> in latex docs
     """
     value: t.Union[int, float]
-    unit: t.Literal['', 'pt', 'mm', 'cm', 'ex', 'em', 'bp', 'dd', 'pc', 'in'] = '',
+    unit: t.Literal['', 'pt', 'mm', 'cm', 'ex', 'em', 'bp', 'dd', 'pc', 'in'] = ''
 
     def __str__(self):
         return f"{self.value}{self.unit}"
@@ -91,7 +92,12 @@ class Scalar(t.NamedTuple):
 
 @dataclasses.dataclass
 class LaTeX(abc.ABC):
-    items: t.List[t.Union[str, "LaTeX"]]
+    label: str = None
+
+    @property
+    @util.CacheResult
+    def items(self) -> t.List[t.Union["LaTeX", str]]:
+        return []
 
     @property
     def preambles(self) -> t.List[str]:
@@ -133,6 +139,7 @@ class LaTeX(abc.ABC):
         #     self.items = []
 
         self.init_validate()
+        self.init()
 
     def __str__(self) -> str:
         if self.use_new_lines:
@@ -142,15 +149,38 @@ class LaTeX(abc.ABC):
         else:
             return self.open_clause + self.generate() + self.close_clause + "%"
 
+    def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
+        self.items.append(item)
+        return self
+
     def init_validate(self):
         ...
+
+    def init(self):
+        # noinspection PyTypeChecker,PyAttributeOutsideInit
+        self._doc = None  # type: Document
 
     def generate(self) -> str:
         _ret = []
         for _ in self.items:
+            if not isinstance(_, str):
+                if _._doc is None:
+                    _._doc = self._doc
+                else:
+                    if id(_._doc) != id(self._doc):
+                        raise e.code.CodingError(
+                            msgs=["Different instances of _doc found ... "
+                                  "there must be only one"]
+                        )
+                if _.label is not None:
+                    e.validation.ShouldNotBeOneOf(
+                        value=_.label, values=self._doc.labels,
+                        msgs=[
+                            f"Please use a unique label ..."
+                        ]
+                    ).raise_if_failed()
+                    self._doc.labels.append(_.label)
             _ret.append(str(_))
-            if isinstance(_, str):
-                _ret.append("")
         return "\n".join(_ret)
 
 
@@ -162,6 +192,12 @@ class Document(LaTeX):
     date: t.Union[str, None] = None
 
     main_tex_file: t.Union[None, str] = None
+    label: None = None
+
+    @property
+    @util.CacheResult
+    def labels(self) -> t.List[str]:
+        return []
 
     @property
     def preambles(self) -> t.List[str]:
@@ -192,11 +228,26 @@ class Document(LaTeX):
         return "% >> end document\n\\end{document}"
 
     def init_validate(self):
+        super().init_validate()
         if self.main_tex_file is not None:
             if not pathlib.Path(self.main_tex_file).exists():
-                _LOGGER.warning(msg=f"Main text file {self.main_tex_file} is "
-                                 f"not on disk so using default setting")
+                _LOGGER.warning(
+                    msg=f"Main text file {self.main_tex_file} is "
+                        f"not on disk so using default setting")
                 self.main_tex_file = None
+        if self.label is not None:
+            raise e.code.CodingError(
+                msgs=[f"No need to set label for {self.__class__}"]
+            )
+
+    def init(self):
+        super().init()
+        if self._doc is not None:
+            raise e.code.CodingError(
+                msgs=[f"No need to set doc for {self.__class__}"]
+            )
+        # noinspection PyAttributeOutsideInit
+        self._doc = self  # as this is Document class
 
     def write(
         self,
@@ -232,19 +283,64 @@ class Document(LaTeX):
 
 
 @dataclasses.dataclass
-class Section(LaTeX):
-
-    name: str = "section name"
+class ChAndSec(LaTeX, abc.ABC):
+    name: str = None
 
     @property
-    def label(self) -> str:
-        return "sec:" + self.name.replace(" ", "_").lower()
+    def command(self) -> str:
+        return self.__class__.__name__.lower()
 
     @property
     def open_clause(self) -> str:
-        return f"% >> section `{self.name}` start " \
-               f"\n\\section{{{self.name}}}\\label{{{self.label}}}"
+        _ret = f"% >> {self.command}: `{self.name}` start " \
+               f"\n\\{self.command}{{{self.name}}}"
+        if self.label is not None:
+            _ret += f"\\label{{{self.label}}}"
+        return _ret
 
     @property
     def close_clause(self) -> str:
-        return f"% >> section `{self.name}` end ..."
+        return f"% >> {self.command}: `{self.name}` end ..."
+
+
+@dataclasses.dataclass
+class Section(ChAndSec):
+    ...
+
+
+@dataclasses.dataclass
+class SubSection(ChAndSec):
+    ...
+
+
+@dataclasses.dataclass
+class SubSubSection(ChAndSec):
+    ...
+
+
+@dataclasses.dataclass
+class Paragraph(ChAndSec):
+    ...
+
+
+@dataclasses.dataclass
+class SubParagraph(ChAndSec):
+    ...
+
+
+@dataclasses.dataclass
+class Part(ChAndSec):
+    """
+    Note that \\part and \\chapter are only available in report and
+    book document classes.
+    """
+    ...
+
+
+@dataclasses.dataclass
+class Chapter(ChAndSec):
+    """
+    Note that \\part and \\chapter are only available in report and
+    book document classes.
+    """
+    ...

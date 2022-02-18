@@ -4,6 +4,7 @@ Module to hold simple utilities that can be built with minimal dependencies.
 """
 import os
 import typing as t
+import re
 import pyarrow as pa
 import numpy as np
 import pickle
@@ -440,6 +441,14 @@ class StringFmt:
         _left_len = (total_len - _msg_len) // 2
         _right_len = total_len - _msg_len - _left_len
         return f"{fill_char * _left_len}{msg}{fill_char * _right_len}"
+
+
+def camel_case_split(in_str: str) -> t.List[str]:
+    """
+    Refer
+    https://stackoverflow.com/questions/2277352/split-a-string-at-uppercase-letters
+    """
+    return re.findall('[a-zA-Z][^A-Z]*', in_str)
 
 
 def rsetattr(obj, attr, val):

@@ -74,7 +74,6 @@ class Internal:
     #  know that typing support is difficult to achieve. But we can override
     #  __getitem__ to throw custom error indicating on call kwargs have changed
     on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
-    progress_bar: "logger.ProgressBar" = None
     prefetched_on_first_call: bool
     in_with_context: bool = False
 
