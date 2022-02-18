@@ -12,20 +12,6 @@ if __name__ == '__main__':
         title="TikZ tutorial",
         author="Praveen Kulkarni",
         date="\\today",
-        items=[
-            Section(
-                name="Introduction",
-                items=[
-                    tikz.TikZ(items=[]).draw_circle(
-                        x=0, y=3, radius=10, draw=Color.red, fill=Color.green,
-                        thickness=tikz.Thickness.very_thick
-                    ).draw_circle(
-                        x=3, y=3, radius=10, draw=Color.red, fill=Color.green,
-                        thickness=tikz.Thickness.very_thick
-                    )
-                ]
-            )
-        ],
         main_tex_file="../main.tex",
     )
 
