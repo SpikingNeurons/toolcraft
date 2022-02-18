@@ -14,7 +14,7 @@ def part_1_tut_0() -> tikz.TikZ:
         tikz.Path(
             style=tikz.Style(
                 draw=tikz.DrawOptions(
-                    color=Color.red, thickness=tikz.Thickness.thick,
+                    thickness=tikz.Thickness.thick,
                     rounded_corners=True,
                 ),
             )
@@ -41,7 +41,48 @@ def part_1_tut_0() -> tikz.TikZ:
 
 
 def part_1_tut_1():
-    ...
+    _tikz = tikz.TikZ(
+        caption="A Picture for Karl's Students", label="fig:sec1:karls_student"
+    )
+    _circle_style = tikz.Style(
+        shape=tikz.Circle(minimum_size=tikz.Scalar(2, 'pt'), inner_sep=tikz.Scalar(1, 'pt')),
+        draw=tikz.DrawOptions(
+            color=Color.gray,
+        ),
+        fill=tikz.FillOptions(
+            color=Color.gray,
+        ),
+    )
+    # todo: add support for normal shape syntax on path for
+    #  circle, rectangle and ellipsis
+    _circle_node = tikz.Node(style=_circle_style)
+    _tikz.add_path(
+        tikz.Path(
+        ).connect(
+             _circle_node @ tikz.Point2D(tikz.Scalar(0), tikz.Scalar(0)),
+        ).connect_hidden(
+             _circle_node @ tikz.Point2D(tikz.Scalar(1), tikz.Scalar(1)),
+        ).connect_hidden(
+             _circle_node @ tikz.Point2D(tikz.Scalar(2), tikz.Scalar(1)),
+        ).connect_hidden(
+             _circle_node @ tikz.Point2D(tikz.Scalar(2), tikz.Scalar(0)),
+        )
+    )
+    _tikz.add_path(
+        tikz.Path(
+            style=tikz.Style(draw=tikz.DrawOptions())
+        ).connect(
+            tikz.Point2D(tikz.Scalar(0), tikz.Scalar(0))
+        ).connect_hidden(
+            tikz.Controls(
+                first=tikz.Point2D(tikz.Scalar(1), tikz.Scalar(1)),
+                second=tikz.Point2D(tikz.Scalar(2), tikz.Scalar(1))
+            )
+        ).connect_hidden(
+            tikz.Point2D(tikz.Scalar(2), tikz.Scalar(0))
+        )
+    )
+    return _tikz
 
 
 def part_1_tut_2():
@@ -62,12 +103,16 @@ if __name__ == '__main__':
     )
     _section_1.add_item("Check https://www.bu.edu/math/files/2013/08/tikzpgfmanual.pdf")
 
-    _section_1_sub_1 = SubSection(
+    _section_1_tut_0 = SubSection(
         name="Simple Figure", label="sec1:simple"
     ).add_item(item=part_1_tut_0())
 
+    _section_1_tut_1 = SubSection(
+        name="A Picture for Karl's Students", label="sec1:karls_student"
+    ).add_item(item=part_1_tut_1())
 
-    _doc.add_item(_section_1.add_item(_section_1_sub_1))
+
+    _doc.add_item(_section_1.add_item(_section_1_tut_0).add_item(_section_1_tut_1))
 
 
 

@@ -354,6 +354,9 @@ class FillOptions(t.NamedTuple):
         _options = []
         if self.color is not None:
             _options.append(f"fill={self.color}")
+        else:
+            # needed if color not supplied
+            _options.append("fill")
         if self.opacity is not None:
             _options.append(f"fill opacity={self.opacity}")
         if self.pattern is not None:
@@ -471,6 +474,9 @@ class DrawOptions(t.NamedTuple):
         _options = []
         if self.color is not None:
             _options.append(f"draw={self.color}")
+        else:
+            # needed if color not supplied
+            _options.append("draw")
         if self.opacity is not None:
             _options.append(f"draw opacity={self.opacity}")
         if self.thickness is not None:
@@ -1194,15 +1200,13 @@ class Node:
         """
         We use new @ operator for `at` tikz keyword
         """
-        if self._at is not None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"You have already used up @ syntax and the current node is at "
-                    f"{self._at}"
-                ]
-            )
-        self._at = other
-        return self
+        _kwargs = {
+            _f.name: getattr(self, _f.name) for _f in dataclasses.fields(self)
+        }
+        # noinspection PyArgumentList
+        _ret = self.__class__(**_kwargs)
+        _ret._at = other
+        return _ret
 
     def __str__(self):
         """
@@ -1233,9 +1237,9 @@ class Node:
         # -------------------------------------------------------- 03
         # the token to return
         if self._at is None:
-            _ret = "node"
+            _ret = "node "
         else:
-            _ret = f"node at {self._at}"
+            _ret = f"node at {self._at} "
 
         # add id if specified
         if self.id is not None:
