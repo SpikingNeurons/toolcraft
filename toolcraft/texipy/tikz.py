@@ -458,7 +458,9 @@ class DrawOptions(t.NamedTuple):
     dash_pattern: t.Union[DashPattern, t.List[t.Tuple[bool, Scalar]]] = None
     dash_phase: Scalar = None
     arrow_def: ArrowDef = None
-    rounded_corners: bool = False
+    rounded_corners: Scalar = None
+    # switches off any rounding on subsequent corners of the path
+    sharp_corners: bool = False
 
     # section 12.2.5 Graphic Parameters: Double Lines and Bordered Lines
     # although in tikz it is `double` and `double distance` we name
@@ -502,8 +504,10 @@ class DrawOptions(t.NamedTuple):
             _options.append(f"dash phase={self.dash_phase}")
         if self.arrow_def is not None:
             _options.append(self.arrow_def)
-        if self.rounded_corners:
-            _options.append("rounded corners")
+        if self.rounded_corners is not None:
+            _options.append(f"rounded corners={self.rounded_corners}")
+        if self.sharp_corners:
+            _options.append("sharp corners")
         if self.second_color is not None:
             _options.append(f"double={self.second_color}")
         if self.second_thickness is not None:
@@ -1350,7 +1354,7 @@ class Node:
         ...
 
 
-PATH_ITEM_TYPE = t.Union[Point2D, Point3D, PointPolar, PointOnNode, Node, Controls]
+PATH_ITEM_TYPE = t.Union[str, Point2D, Point3D, PointPolar, PointOnNode, Node, Controls]
 
 
 @dataclasses.dataclass
@@ -1652,6 +1656,128 @@ class TikZ(LaTeX):
 
         # return self for chaining
         return self
+
+    def add_parabola(
+        self, point: Point2D, end_point: Point2D,
+        bend: Point2D = None,
+        bend_pos: float = None,
+        height: Scalar = None,
+        bend_at_end: bool = False,
+        bend_at_start: bool = False,
+        style: Style = None
+    ) -> "TikZ":
+        """
+        Adds using parabola command section 11.10
+        """
+        _options = []
+        if bend_at_end:
+            _options.append("bend at end")
+        if bend_at_start:
+            _options.append("bend at start")
+        if height is not None:
+            _options.append(f"parabola height={height}")
+        if bend_pos is not None:
+            _options.append(f"bend pos={bend_pos}")
+        if bool(_options):
+            _opt_str = "[" + ",".join(_options) + "]"
+        else:
+            _opt_str = ""
+        if bend is None:
+            _para_str = f"{point} parabola{_opt_str} {end_point}"
+        else:
+            _para_str = f"{point} parabola{_opt_str} bend {bend} {end_point}"
+        _path = Path(style=style)
+        _path.connect(_para_str)
+        return self.add_path(_path)
+
+    def add_circle(
+            self, point: Point2D, radius: Scalar, style: Style = None) -> "TikZ":
+        """
+        Adds using circle command section 11.7
+        """
+        _path = Path(style=style)
+        _path.connect(f"{point} circle ({radius})")
+        return self.add_path(_path)
+
+    def add_arc(
+        self, point: Point2D,
+        start_angle: t.Union[int, float],
+        end_angle: t.Union[int, float],
+        radius: Scalar,
+        half_height: Scalar = None,
+        style: Style = None
+    ) -> "TikZ":
+        """
+        Adds using arc command section 11.8
+        """
+        _path = Path(style=style)
+        _arc = f"{point} arc ({start_angle}:{end_angle}:{radius}"
+        if half_height is not None:
+            _arc += f" and {half_height}"
+        _arc += ")"
+        _path.connect(_arc)
+        return self.add_path(_path)
+
+    def add_ellipse(
+            self, point: Point2D,
+            half_width: Scalar, half_height: Scalar, style: Style = None) -> "TikZ":
+        """
+        Adds using ellipse command section 11.7
+        """
+        _path = Path(style=style)
+        _path.connect(f"{point} ellipse ({half_width} and {half_height})")
+        return self.add_path(_path)
+
+    def add_rectangle(
+            self, corner1: Point2D, corner2: Point2D, style: Style = None) -> "TikZ":
+        """
+        Adds using rectangle command
+        """
+        _path = Path(style=style)
+        _path.connect(f"{corner1} rectangle {corner2}")
+        return self.add_path(_path)
+
+    def add_grid(
+        self,
+        corner1: Point2D, corner2: Point2D,
+        step: t.Union[int, float, Scalar, Point2D, PointPolar] = None,
+        xstep: t.Union[int, float, Scalar] = None,
+        ystep: t.Union[int, float, Scalar] = None,
+        style: Style = DrawOptions(
+            thickness=Thickness.thin,
+            color=Color.green,
+        ),
+    ) -> "TikZ":
+        """
+        Adds using grid command section 11.9
+        """
+        _path = Path(style=style)
+        if step is None:
+            _step_str = ""
+            if xstep is not None:
+                _step_str += f"xstep={xstep}"
+            if ystep is not None:
+                if bool(_step_str):
+                    _step_str += f",ystep={ystep}"
+                else:
+                    _step_str += f"ystep={ystep}"
+            if not bool(_step_str):
+                raise e.code.NotAllowed(
+                    msgs=[
+                        f"Please supply either xstep or ystep if you are not "
+                        f"providing step"
+                    ]
+                )
+        else:
+            if xstep is not None or ystep is not None:
+                raise e.code.NotAllowed(
+                    msgs=[
+                        f"When step is supplied do not supply xstep or(and) ystep"
+                    ]
+                )
+            _step_str = f"step={step}"
+        _path.connect(f"{corner1} grid[{_step_str}]{corner2}")
+        return self.add_path(_path)
 
     def register_style(self, key: str, style: Style):
         if not key.startswith("s_"):

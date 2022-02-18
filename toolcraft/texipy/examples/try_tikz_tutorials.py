@@ -15,7 +15,7 @@ def part_1_tut_0() -> tikz.TikZ:
             style=tikz.Style(
                 draw=tikz.DrawOptions(
                     thickness=tikz.Thickness.thick,
-                    rounded_corners=True,
+                    rounded_corners=tikz.Scalar(5, 'pt'),
                 ),
             )
         ).connect(
@@ -53,21 +53,12 @@ def part_1_tut_1():
             color=Color.gray,
         ),
     )
-    # todo: add support for normal shape syntax on path for
-    #  circle, rectangle and ellipsis
-    _circle_node = tikz.Node(style=_circle_style)
-    _tikz.add_path(
-        tikz.Path(
-        ).connect(
-             _circle_node @ tikz.Point2D(tikz.Scalar(0), tikz.Scalar(0)),
-        ).connect_hidden(
-             _circle_node @ tikz.Point2D(tikz.Scalar(1), tikz.Scalar(1)),
-        ).connect_hidden(
-             _circle_node @ tikz.Point2D(tikz.Scalar(2), tikz.Scalar(1)),
-        ).connect_hidden(
-             _circle_node @ tikz.Point2D(tikz.Scalar(2), tikz.Scalar(0)),
-        )
-    )
+    for _x, _y in [(0, 0), (1, 1), (2, 1), (2, 0)]:
+        _tikz.add_circle(
+            style=_circle_style,
+            point=tikz.Point2D(tikz.Scalar(_x), tikz.Scalar(_y)),
+            radius=tikz.Scalar(2, 'pt'))
+        ...
     _tikz.add_path(
         tikz.Path(
             style=tikz.Style(draw=tikz.DrawOptions())
