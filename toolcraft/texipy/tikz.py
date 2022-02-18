@@ -1699,6 +1699,24 @@ class TikZ(LaTeX):
         _path.connect(f"{point} circle ({radius})")
         return self.add_path(_path)
 
+    def add_sin(
+            self, point: Point2D, end_point: Point2D, style: Style = None) -> "TikZ":
+        """
+        Adds using sin command section 11.11
+        """
+        _path = Path(style=style)
+        _path.connect(f"{point} sin {end_point}")
+        return self.add_path(_path)
+
+    def add_cos(
+            self, point: Point2D, end_point: Point2D, style: Style = None) -> "TikZ":
+        """
+        Adds using cos command section 11.11
+        """
+        _path = Path(style=style)
+        _path.connect(f"{point} cos {end_point}")
+        return self.add_path(_path)
+
     def add_arc(
         self, point: Point2D,
         start_angle: t.Union[int, float],
