@@ -677,16 +677,25 @@ class Anchor(enum.Enum):
         _is_special = self.is_special
         _is_non_intuitive = self.is_non_intuitive
         _is_intuitive = self.is_intuitive
-        # node and offset is only supported for intuitive anchors
+        # node and offset is only supported for intuitive anchors ...
+        # We need some validations for below statements
+        # + for non-intuitive anchors - node supported but not offset
+        # + for special anchors - node supported but not offset
+        # + for intuitive anchors - node supported and offset supported
         # todo: verify the above comment
         if _is_special or _is_non_intuitive:
-            if node is not None:
-                raise e.code.CodingError(
-                    msgs=[f"Please so not supply kwarg `node` for anchor {self}"]
-                )
             if offset is not None:
                 raise e.code.CodingError(
-                    msgs=[f"Please so not supply kwarg `offset` for anchor {self}"]
+                    msgs=[
+                        "Looks like a special or non-intuitive anchor",
+                        f"Please so not supply kwarg `offset` for anchor {self}"
+                    ]
+                )
+        # if node is provided make sure that id is available
+        if node is not None:
+            if node.id is None:
+                e.code.CodingError(
+                    msgs=["Please use node's that have id defined ..."]
                 )
 
         # ----------------------------------------------------- 02
@@ -700,7 +709,10 @@ class Anchor(enum.Enum):
                             f"special anchor {self}"
                         ]
                     )
-                return f"anchor={angle}"
+                if node is None:
+                    return f"anchor={angle}"
+                else:
+                    return f"{node.id}.{angle}"
             if self is self.side:
                 if side is None:
                     raise e.validation.NotAllowed(
@@ -709,7 +721,10 @@ class Anchor(enum.Enum):
                             f"special anchor {self}"
                         ]
                     )
-                return f"anchor=side {side}"
+                if node is None:
+                    return f"anchor=side {side}"
+                else:
+                    return f"{node.id}.side {side}"
             if self is self.corner:
                 if corner is None:
                     raise e.validation.NotAllowed(
@@ -718,7 +733,10 @@ class Anchor(enum.Enum):
                             f"special anchor {self}"
                         ]
                     )
-                return f"anchor=corner {corner}"
+                if node is None:
+                    return f"anchor=corner {corner}"
+                else:
+                    return f"{node.id}.corner {corner}"
             if self is self.inner_point:
                 if inner_point is None:
                     raise e.validation.NotAllowed(
@@ -727,7 +745,10 @@ class Anchor(enum.Enum):
                             f"special anchor {self}"
                         ]
                     )
-                return f"anchor=inner point {inner_point}"
+                if node is None:
+                    return f"anchor=inner point {inner_point}"
+                else:
+                    return f"{node.id}.inner point {inner_point}"
             if self is self.outer_point:
                 if outer_point is None:
                     raise e.validation.NotAllowed(
@@ -736,7 +757,10 @@ class Anchor(enum.Enum):
                             f"special anchor {self}"
                         ]
                     )
-                return f"anchor=outer point {outer_point}"
+                if node is None:
+                    return f"anchor=outer point {inner_point}"
+                else:
+                    return f"{node.id}.outer point {inner_point}"
 
         # ----------------------------------------------------- 03
         # _is_non_intuitive
@@ -766,7 +790,10 @@ class Anchor(enum.Enum):
                     msgs=[f"Please so not supply kwarg `outer_point` for non-intuitive "
                           f"anchor {self}"]
                 )
-            return f"anchor={self.value}"
+            if node is None:
+                return f"anchor={self.value}"
+            else:
+                return f"{node.id}.{self.value}"
 
         # ----------------------------------------------------- 04
         # if `node` is not provided then do not use `of` behaviour and use kwarg
@@ -957,10 +984,30 @@ class PointOnNode(Point):
       you are requesting anchor ... as in (first node.south).
     """
     node: "Node"
-    anchor: t.Union[int, float, Anchor] = None
+    anchor: Anchor = None
+    angle: t.Union[int, float] = None
+    side: int = None
+    corner: int = None
+    inner_point: int = None
+    outer_point: int = None
 
-    def __str__(self):
+    def __post_init__(self):
+        # call super
+        super().__post_init__()
 
+        # test if one of four file is supplied
+        if sum(
+            [self.anchor is None, self.angle is None,
+             self.side is None, self.corner is None,
+             self.inner_point is None, self.outer_point is None]
+        ) == 3:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"Only supply only one of the six fields ..."
+                ]
+            )
+
+        # expecting node id to be available
         if self.node.id is None:
             e.validation.NotAllowed(
                 msgs=[
@@ -969,21 +1016,36 @@ class PointOnNode(Point):
                 ]
             )
 
-        _ret = f"({self.node.id}"
-
-        # avoid using intuitive or special anchors
-        if isinstance(self.anchor, Anchor):
-            if self.anchor.is_special or self.anchor.is_intuitive:
-                raise e.code.CodingError(
-                    msgs=[]
+        # expecting anchor used to be non-intuitive
+        if self.anchor is not None:
+            if not self.anchor.is_non_intuitive:
+                raise e.validation.NotAllowed(
+                    msgs=["Only use non-intuitive anchor ... for special anchors use "
+                          "other fields of this dataclass"]
                 )
 
+    def __str__(self) -> str:
         if self.anchor is not None:
             # Note that if Anchor then __str__ can handle
             # only if using non-intuitive anchors
-            _ret += f".{self.anchor}"
-
-        return _ret + ")"
+            return f"({self.anchor(node=self.node)})"
+        elif self.angle is not None:
+            # noinspection PyCallingNonCallable
+            return f"({Anchor.angle(node=self.node)})"
+        elif self.side is not None:
+            # noinspection PyCallingNonCallable
+            return f"({Anchor.side(node=self.node)})"
+        elif self.corner is not None:
+            # noinspection PyCallingNonCallable
+            return f"({Anchor.corner(node=self.node)})"
+        elif self.inner_point is not None:
+            # noinspection PyCallingNonCallable
+            return f"({Anchor.inner_point(node=self.node)})"
+        elif self.outer_point is not None:
+            # noinspection PyCallingNonCallable
+            return f"({Anchor.outer_point(node=self.node)})"
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[f"Unknown {self}"])
 
 
 @dataclasses.dataclass
@@ -1342,10 +1404,19 @@ class Node:
         return PointOnNode(node=self, anchor=Anchor.text_lower)
 
     def point_at_angle(self, angle: t.Union[int, float]) -> PointOnNode:
-        return PointOnNode(node=self, anchor=angle)
+        return PointOnNode(node=self, angle=angle)
 
-    def add_edge(self):
-        ...
+    def point_on_side(self, side: int) -> PointOnNode:
+        return PointOnNode(node=self, side=side)
+
+    def point_on_corner(self, corner: int) -> PointOnNode:
+        return PointOnNode(node=self, corner=corner)
+
+    def point_on_inner_point(self, inner_point: int) -> PointOnNode:
+        return PointOnNode(node=self, inner_point=inner_point)
+
+    def point_on_outer_point(self, outer_point: int) -> PointOnNode:
+        return PointOnNode(node=self, outer_point=outer_point)
 
     def add_pin(self):
         ...
@@ -1480,6 +1551,20 @@ class Path:
 
         # ---------------------------------------------------------- 05
         return _ret + ";%"
+
+    def add_edge_simple(self):
+        self.connectome += ['--']
+
+    # noinspection PyPep8Naming
+    def add_edge_HV(self):
+        self.connectome += ['-|']
+
+    # noinspection PyPep8Naming
+    def add_edge_VH(self):
+        self.connectome += ['|-']
+
+    def add_edge(self, edge: Edge):
+        self.connectome += [edge]
 
     def connect(self, item: PATH_ITEM_TYPE) -> 'Path':
         if bool(self.connectome):
@@ -1658,8 +1743,8 @@ class TikZ(LaTeX):
         return self
 
     def add_parabola(
-        self, point: Point2D, end_point: Point2D,
-        bend: Point2D = None,
+        self, point: Point, end_point: Point,
+        bend: Point = None,
         bend_pos: float = None,
         height: Scalar = None,
         bend_at_end: bool = False,
@@ -1691,7 +1776,7 @@ class TikZ(LaTeX):
         return self.add_path(_path)
 
     def add_circle(
-            self, point: Point2D, radius: Scalar, style: Style = None) -> "TikZ":
+            self, point: Point, radius: Scalar, style: Style = None) -> "TikZ":
         """
         Adds using circle command section 11.7
         """
@@ -1700,7 +1785,7 @@ class TikZ(LaTeX):
         return self.add_path(_path)
 
     def add_sin(
-            self, point: Point2D, end_point: Point2D, style: Style = None) -> "TikZ":
+            self, point: Point, end_point: Point, style: Style = None) -> "TikZ":
         """
         Adds using sin command section 11.11
         """
@@ -1709,7 +1794,7 @@ class TikZ(LaTeX):
         return self.add_path(_path)
 
     def add_cos(
-            self, point: Point2D, end_point: Point2D, style: Style = None) -> "TikZ":
+            self, point: Point, end_point: Point, style: Style = None) -> "TikZ":
         """
         Adds using cos command section 11.11
         """
@@ -1717,8 +1802,20 @@ class TikZ(LaTeX):
         _path.connect(f"{point} cos {end_point}")
         return self.add_path(_path)
 
+    def connect(self, style: Style = None):
+        """
+        Section 11.13 The To Path operation
+        """
+        ...
+
+    def add_plot(self):
+        """
+        Section 11.12 ... it states to check section 16
+        """
+        ...
+
     def add_arc(
-        self, point: Point2D,
+        self, point: Point,
         start_angle: t.Union[int, float],
         end_angle: t.Union[int, float],
         radius: Scalar,
@@ -1737,7 +1834,7 @@ class TikZ(LaTeX):
         return self.add_path(_path)
 
     def add_ellipse(
-            self, point: Point2D,
+            self, point: Point,
             half_width: Scalar, half_height: Scalar, style: Style = None) -> "TikZ":
         """
         Adds using ellipse command section 11.7
@@ -1747,7 +1844,7 @@ class TikZ(LaTeX):
         return self.add_path(_path)
 
     def add_rectangle(
-            self, corner1: Point2D, corner2: Point2D, style: Style = None) -> "TikZ":
+            self, corner1: Point, corner2: Point, style: Style = None) -> "TikZ":
         """
         Adds using rectangle command
         """
@@ -1757,7 +1854,7 @@ class TikZ(LaTeX):
 
     def add_grid(
         self,
-        corner1: Point2D, corner2: Point2D,
+        corner1: Point, corner2: Point,
         step: t.Union[int, float, Scalar, Point2D, PointPolar] = None,
         xstep: t.Union[int, float, Scalar] = None,
         ystep: t.Union[int, float, Scalar] = None,
