@@ -18,6 +18,7 @@ import dataclasses
 import typing as t
 import abc
 import enum
+import numpy as np
 
 from .. import error as e
 from .. import util
@@ -2120,7 +2121,10 @@ class Path:
         return self
 
     def plot(
-        self, x: t.List[t.Union[int, float]], y: t.List[t.Union[int, float]]
+        self,
+        x: t.List[t.Union[int, float]], y: t.List[t.Union[int, float]],
+        bounding_rect: t.Tuple[Point2D, Point2D],
+        y_min: t.Union[int, float] = None, y_max: t.Union[int, float] = None,
     ) -> "Path":
         """
         Section 11.12 The Plot Operations ... tells checking section 16
@@ -2139,7 +2143,55 @@ class Path:
           Also note that `tikz.pgfplots` is always there so we do not expect more
           things from this method ...
         """
-        ...
+        # ----------------------------------------- 01
+        # validation
+        _unit = bounding_rect[0].x.unit
+        if not all(
+            [
+                bounding_rect[0].y.unit == _unit,
+                bounding_rect[1].x.unit == _unit,
+                bounding_rect[1].y.unit == _unit,
+            ]
+        ):
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "We expect that all units for bounding_rect must be same"
+                ]
+            )
+
+        # ----------------------------------------- 02
+        # compute vars
+        if y_min is None:
+            y_min = min(y)
+        if y_max is None:
+            y_max = max(y)
+        x_min = min(x)
+        x_max = max(y)
+        y_min = float(y_min)
+        y_max = float(y_max)
+        x_min = float(x_min)
+        x_max = float(x_max)
+
+        # ----------------------------------------- 03
+        # transform x and y
+        x = list((np.asarray(x)-x_min)/x_max)
+        y = list((np.asarray(y)-y_min)/y_max)
+
+        # ----------------------------------------- 04
+        # make coordinates list
+        _points = []
+        for _x, _y in zip(x, y):
+            _points.append(
+                str(Point2D(Scalar(_x, _unit), Scalar(_x, _unit)))
+            )
+
+        # ----------------------------------------- 05
+        # add to connectome
+        self.connectome += [f"plot coordinates {{{' '.join(_points)}}}"]
+
+        # ----------------------------------------- 06
+        # return
+        return self
 
     def to(
         self,
