@@ -2119,10 +2119,25 @@ class Path:
         self.connectome += [f"cos{to}"]
         return self
 
-    def plot(self) -> "Path":
+    def plot(
+        self, x: t.List[t.Union[int, float]], y: t.List[t.Union[int, float]]
+    ) -> "Path":
         """
         Section 11.12 The Plot Operations ... tells checking section 16
-        Section 16
+        Section 16 Plots of Functions
+
+        Note that we will have `tikz.pgfplots` for having more complex plots.
+        This plot is aimed at using plots inside tikz figure. So do expect this
+        function to do much as tikz is not plotting program and in complex cases
+        will call gnuplot ...
+
+        But in many cases using this is good as it will melt well with entire tex
+        documents like font, size, formula in labels ...
+
+        todo: expand later for now we will have very simple plot with coordinates
+          For this refer Section 16 and implement it ...
+          Also note that `tikz.pgfplots` is always there so we do not expect more
+          things from this method ...
         """
         ...
 
