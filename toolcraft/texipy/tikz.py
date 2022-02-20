@@ -1411,7 +1411,7 @@ class Node:
     # if previous path is line_hv_to or line_vh_to then 0.5 is exactly corner
     # for all remaining paths position placement does not work
     # for arc path this might work in future
-    pos: t.Union[float, NodePos] = None
+    pos_on_last_path: t.Union[float, NodePos] = None
     # -----
     # auto: <direction> = None
     # todo: auto ... must go in tikzpicture options
@@ -1535,11 +1535,11 @@ class Node:
         # -------------------------------------------------------- 04
         # make options
         _options = []
-        if self.pos is not None:
-            if isinstance(self.pos, NodePos):
-                _options.append(str(self.pos))
+        if self.pos_on_last_path is not None:
+            if isinstance(self.pos_on_last_path, NodePos):
+                _options.append(str(self.pos_on_last_path))
             else:
-                _options.append(f"pos={self.pos}")
+                _options.append(f"pos={self.pos_on_last_path}")
         if self.swap:
             _options.append("swap")
         if self.sloped:
@@ -1829,6 +1829,7 @@ class Path:
         """
         Section 11.2 The Line-To Operation
         \\path . . . --⟨coordinate⟩ . . . ;  # straight lines
+        \\tikz {\\draw (0,0) to[line to] (1,0);}
 
         Automatic anchors are computed for the same ...
         while center is used for other path commands like parabola, plot etc.
@@ -2127,16 +2128,57 @@ class Path:
 
     def to(
         self,
-        to: Point,
+        to: Point = None,
         out_: t.Union[int, float] = None,
         in_: t.Union[int, float] = None,
+        use_as_edge: bool = False,  # todo: experimental
+        edge_style: Style = None,
+        relative: bool = False,
+        bend_left: t.Union[int, float] = None,
+        bend_right: t.Union[int, float] = None,
+        bend_angle: t.Union[int, float] = None,
+        looseness: t.Union[int, float] = None,
+        out_looseness: t.Union[int, float] = None,
+        in_looseness: t.Union[int, float] = None,
+        min_distance: Scalar = None,
+        max_distance: Scalar = None,
+        out_min_distance: Scalar = None,
+        out_max_distance: Scalar = None,
+        in_min_distance: Scalar = None,
+        in_max_distance: Scalar = None,
+        distance: Scalar = None,
+        out_distance: Scalar = None,
+        in_distance: Scalar = None,
+        out_control: Point = None,
+        in_control: Point = None,
+        controls: t.Tuple[Point, Point] = None,
+        loop: bool = False,
+        loop_above: bool = False,
+        loop_below: bool = False,
+        loop_left: bool = False,
+        loop_right: bool = False,
         nodes: t.List[Node] = None,
     ) -> "Path":
         """
         Section 11.13 The To Path operation
         \\path . . . to[⟨options⟩] ⟨nodes⟩ (⟨coordinate⟩) . . . ;
+        
+        Read section 32 To Path Library
+        + This method can do all things for you
+          - line to (32.1 just use to with no remaining options)
+          - curve to (32.2 if you use any other kwargs)
+          - loops (32.3 when loop is used)
+
+        todo: Also check
+            Section 13.11 Connecting Nodes: Using the Edge Operation
+            We just change _op from to to edge without enough testing
+            Note that edge is drawm after main path is drawn so the coordinate system
+            will differ ... only advantage with `use_as_edge` is that the style option
+            can be applied unlike to so use at your own risk ...
 
         todo: implement these options
+            • to path=⟨path⟩
+              ...
             • execute at begin to=⟨code⟩
               The ⟨code⟩ is executed prior to the to. This can be used to draw
               one or more additional paths or to do additional computations.
@@ -2167,17 +2209,124 @@ class Path:
               they are more specifically to be used as labels on drawn path ...
 
         todo: See section 32 for number of predefined `to paths`
+
+
+        Loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+        Check section 32.3
+
+        Note that `edge` is used instead of `to`
+        When Node is used they have used `edge` while they have used `to` for
+        coordinates.
+        -----------------
+        \\begin{tikzpicture}
+        \\node [circle,draw] {a} edge [loop above] node {x} ();
+        \\end{tikzpicture}
+        ------------------
+        \\begin{tikzpicture}
+        \\tikzstyle{every loop}=[]
+        \\draw (0,0) to [loop above] () to [loop right] () to
+            [loop below] () to [loop left] ();
+        \\end{tikzpicture}
+        ------------------
+
+        We will use edge ... but note that unlike to edge is drawn after path is
+        rendered ... for loop it makes sense to not worry as we will return to
+        same coordinate/node
+
         """
         _t = []
         if out_ is not None:
             _t.append(f"out={out_}")
         if in_ is not None:
             _t.append(f"in={in_}")
-        _t = "[" + ",".join(_t) + "]"
+        if relative:
+            _t.append("relative")
+        if bend_left is not None:
+            _t.append(f"bend left={bend_left}")
+        if bend_right is not None:
+            _t.append(f"bend right={bend_right}")
+        if bend_angle is not None:
+            _t.append(f"bend angle={bend_angle}")
+        if looseness is not None:
+            _t.append(f"looseness={looseness}")
+        if out_looseness is not None:
+            _t.append(f"out looseness={out_looseness}")
+        if in_looseness is not None:
+            _t.append(f"in looseness={in_looseness}")
+        if min_distance is not None:
+            _t.append(f"min distance={min_distance}")
+        if max_distance is not None:
+            _t.append(f"max distance={max_distance}")
+        if out_min_distance is not None:
+            _t.append(f"out min distance={out_min_distance}")
+        if out_max_distance is not None:
+            _t.append(f"out max distance={out_max_distance}")
+        if in_min_distance is not None:
+            _t.append(f"in min distance={in_min_distance}")
+        if in_max_distance is not None:
+            _t.append(f"in max distance={in_max_distance}")
+        if distance is not None:
+            _t.append(f"distance={distance}")
+        if out_distance is not None:
+            _t.append(f"out distance={out_distance}")
+        if in_distance is not None:
+            _t.append(f"in distance={in_distance}")
+        if out_control is not None:
+            _t.append(f"out control={out_control}")
+        if in_control is not None:
+            _t.append(f"in control={in_control}")
+        if controls is not None:
+            _t.append(f"controls={controls[0]} and {controls[1]}")
+        if loop:
+            _t.append("loop")
+        if loop_above:
+            _t.append("loop above")
+        if loop_below:
+            _t.append("loop below")
+        if loop_left:
+            _t.append("loop left")
+        if loop_right:
+            _t.append("loop right")
+
+        # check if loop related and test/modify `to` if None
+        _is_loop_related = loop or loop_above or loop_below or loop_left or loop_right
+        if to is None:
+            if _is_loop_related:
+                # None is allowed for loops
+                to = "()"
+            else:
+                # `to` is mandatory when not loop
+                raise e.code.CodingError(
+                    msgs=[
+                        f"The `to` kwarg is mandatory when not using for loop"
+                    ]
+                )
+
+        # select op
+        _op = "to"
+        if _is_loop_related or use_as_edge:
+            _op = "edge"
+
+        # if _op is `to` then edge_style should be None
+        if _op == "to":
+            if edge_style is not None:
+                raise e.code.NotAllowed(
+                    msgs=["Do not supply `edge_style` as `to` op cannot process it..."]
+                )
+
+        # add edge style as the above check is just done above
+        if edge_style is not None:
+            _t.append(str(edge_style))
+
+        # expand connectome
+        _t_str = "[" + ",".join(_t) + "]"
         if bool(nodes):
-            self.connectome += ["to" + _t, nodes, to]
+            self.connectome += [_op + _t_str, nodes, to]
         else:
-            self.connectome += ["to" + _t, to]
+            self.connectome += [_op + _t_str, to]
+
+        # return
         return self
 
 
@@ -2204,6 +2353,7 @@ class TikZ(LaTeX):
         """
         return [
             "\\usepackage{tikz}",
+            "\\usetikzlibrary{topaths}",
             "\\usetikzlibrary{shapes}",
             "\\usetikzlibrary{shapes.geometric}",
             "\\usetikzlibrary{shapes.symbols}",
