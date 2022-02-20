@@ -1673,27 +1673,6 @@ class Node:
 
 
 @dataclasses.dataclass
-class To:
-    """
-    todo: do later ... similar to Edge
-    """
-
-
-@dataclasses.dataclass
-class Edge:
-    """
-    Section 13.11 Connecting Nodes: Using the Edge Operation
-    \\path . . . edge[⟨options⟩] ⟨nodes⟩ (⟨coordinate⟩) . . . ;
-
-    The edge operation works like to operation which is added after main path is drawn
-
-    Note that Edge is not like LineTo ... it is more like Node which is drawn after
-    path is drawn ... this allows more customization of the Edge ...
-    So treat it like Node or Node with Shape
-    """
-
-
-@dataclasses.dataclass
 class Path:
     """
     Most important component for TikZ class.
@@ -2507,158 +2486,6 @@ class TikZ(LaTeX):
         # return self for chaining
         return self
 
-    def add_parabola(
-        self, point: Point, end_point: Point,
-        bend: Point = None,
-        bend_pos: float = None,
-        height: Scalar = None,
-        bend_at_end: bool = False,
-        bend_at_start: bool = False,
-        style: Style = None
-    ) -> "TikZ":
-        """
-        Adds using parabola command section 11.10
-        """
-        _options = []
-        if bend_at_end:
-            _options.append("bend at end")
-        if bend_at_start:
-            _options.append("bend at start")
-        if height is not None:
-            _options.append(f"parabola height={height}")
-        if bend_pos is not None:
-            _options.append(f"bend pos={bend_pos}")
-        if bool(_options):
-            _opt_str = "[" + ",".join(_options) + "]"
-        else:
-            _opt_str = ""
-        if bend is None:
-            _para_str = f"{point} parabola{_opt_str} {end_point}"
-        else:
-            _para_str = f"{point} parabola{_opt_str} bend {bend} {end_point}"
-        _path = Path(style=style)
-        _path.connect(_para_str)
-        return self.add_path(_path)
-
-    def add_circle(
-            self, point: Point, radius: Scalar, style: Style = None) -> "TikZ":
-        """
-        Adds using circle command section 11.7
-        """
-        _path = Path(style=style)
-        _path.connect(f"{point} circle ({radius})")
-        return self.add_path(_path)
-
-    def add_sin(
-            self, point: Point, end_point: Point, style: Style = None) -> "TikZ":
-        """
-        Adds using sin command section 11.11
-        """
-        _path = Path(style=style)
-        _path.connect(f"{point} sin {end_point}")
-        return self.add_path(_path)
-
-    def add_cos(
-            self, point: Point, end_point: Point, style: Style = None) -> "TikZ":
-        """
-        Adds using cos command section 11.11
-        """
-        _path = Path(style=style)
-        _path.connect(f"{point} cos {end_point}")
-        return self.add_path(_path)
-
-    def connect(self, style: Style = None):
-        """
-        Section 11.13 The To Path operation
-        """
-        ...
-
-    def add_plot(self):
-        """
-        Section 11.12 ... it states to check section 16
-        """
-        ...
-
-    def add_arc(
-        self, point: Point,
-        start_angle: t.Union[int, float],
-        end_angle: t.Union[int, float],
-        radius: Scalar,
-        half_height: Scalar = None,
-        style: Style = None
-    ) -> "TikZ":
-        """
-        Adds using arc command section 11.8
-        """
-        _path = Path(style=style)
-        _arc = f"{point} arc ({start_angle}:{end_angle}:{radius}"
-        if half_height is not None:
-            _arc += f" and {half_height}"
-        _arc += ")"
-        _path.connect(_arc)
-        return self.add_path(_path)
-
-    def add_ellipse(
-            self, point: Point,
-            half_width: Scalar, half_height: Scalar, style: Style = None) -> "TikZ":
-        """
-        Adds using ellipse command section 11.7
-        """
-        _path = Path(style=style)
-        _path.connect(f"{point} ellipse ({half_width} and {half_height})")
-        return self.add_path(_path)
-
-    def add_rectangle(
-            self, corner1: Point, corner2: Point, style: Style = None) -> "TikZ":
-        """
-        Adds using rectangle command
-        """
-        _path = Path(style=style)
-        _path.connect(f"{corner1} rectangle {corner2}")
-        return self.add_path(_path)
-
-    def add_grid(
-        self,
-        corner1: Point, corner2: Point,
-        step: t.Union[int, float, Scalar, Point2D, PointPolar] = None,
-        xstep: t.Union[int, float, Scalar] = None,
-        ystep: t.Union[int, float, Scalar] = None,
-        style: Style = DrawOptions(
-            thickness=Thickness.thin,
-            color=Color.green,
-        ),
-    ) -> "TikZ":
-        """
-        Adds using grid command section 11.9
-        """
-        _path = Path(style=style)
-        if step is None:
-            _step_str = ""
-            if xstep is not None:
-                _step_str += f"xstep={xstep}"
-            if ystep is not None:
-                if bool(_step_str):
-                    _step_str += f",ystep={ystep}"
-                else:
-                    _step_str += f"ystep={ystep}"
-            if not bool(_step_str):
-                raise e.code.NotAllowed(
-                    msgs=[
-                        f"Please supply either xstep or ystep if you are not "
-                        f"providing step"
-                    ]
-                )
-        else:
-            if xstep is not None or ystep is not None:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        f"When step is supplied do not supply xstep or(and) ystep"
-                    ]
-                )
-            _step_str = f"step={step}"
-        _path.connect(f"{corner1} grid[{_step_str}]{corner2}")
-        return self.add_path(_path)
-
     def register_style(self, key: str, style: Style):
         if not key.startswith("s_"):
             raise e.validation.NotAllowed(
@@ -2677,7 +2504,10 @@ class TikZ(LaTeX):
         Check section 49.4 Predefined Nodes
         """
         # bounding box of the current picture
-        return Node(id="current bounding box", tikz_context=self)
+        _node = Node(id="current bounding box")
+        # noinspection PyProtectedMember
+        _node._tikz = self
+        return _node
 
     def get_current_path_bounding_box(self) -> Node:
         """
@@ -2685,7 +2515,10 @@ class TikZ(LaTeX):
         Check section 49.4 Predefined Nodes
         """
         # bounding box of the current path
-        return Node(id="current path bounding box", tikz_context=self)
+        _node = Node(id="current path bounding box")
+        # noinspection PyProtectedMember
+        _node._tikz = self
+        return _node
 
     def get_current_page(self) -> Node:
         """
@@ -2693,7 +2526,10 @@ class TikZ(LaTeX):
         Check section 49.4 Predefined Nodes
         """
         # ...
-        return Node(id="current page", tikz_context=self)
+        _node = Node(id="current page")
+        # noinspection PyProtectedMember
+        _node._tikz = self
+        return _node
 
     def get_last_node(self) -> Node:
         """
