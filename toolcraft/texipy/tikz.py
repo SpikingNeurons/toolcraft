@@ -97,38 +97,66 @@ class Snake(enum.Enum):
 class SnakeOptions(t.NamedTuple):
     """
     Check section 31: Snake Library
+    Section 11.2.3 Snaked Lines
 
     todo: add validations to restrict some options bases on snake type ...
       As of now we allow all options but this can be restricted based on
       documentation ...
     """
     type: Snake = None
+
+    gap_before_snake: Scalar = None
+    gap_after_snake: Scalar = None
+    gap_around_snake: Scalar = None
+
+    line_before_snake: Scalar = None
+    line_after_snake: Scalar = None
+    line_around_snake: Scalar = None
+
     raise_snake: Scalar = None
+    mirror_snake: bool = False
 
     segment_amplitude: Scalar = None
     segment_length: Scalar = None
-    segment_aspect: t.Union[int, float] = None
-    segment_angle: t.Union[int, float] = None
     segment_object_length: Scalar = None
+    segment_angle: t.Union[int, float] = None
+    segment_aspect: t.Union[int, float] = None
 
     def __str__(self) -> str:
         _options = []
 
         if self.type is not None:
             _options.append(str(self.type))
+
+        if self.gap_before_snake is not None:
+            _options.append(f"gap before snake={self.gap_before_snake}")
+        if self.gap_after_snake is not None:
+            _options.append(f"gap after snake={self.gap_after_snake}")
+        if self.gap_around_snake is not None:
+            _options.append(f"gap around snake={self.gap_around_snake}")
+
+        if self.line_before_snake is not None:
+            _options.append(f"line before snake={self.line_before_snake}")
+        if self.line_after_snake is not None:
+            _options.append(f"line after snake={self.line_after_snake}")
+        if self.line_around_snake is not None:
+            _options.append(f"line around snake={self.line_around_snake}")
+
         if self.raise_snake is not None:
             _options.append(str(self.raise_snake))
+        if self.mirror_snake:
+            _options.append("mirror snake")
 
         if self.segment_amplitude is not None:
             _options.append(f"segment amplitude={self.segment_amplitude}")
         if self.segment_length is not None:
             _options.append(f"segment length={self.segment_length}")
-        if self.segment_aspect is not None:
-            _options.append(f"segment aspect={self.segment_aspect}")
-        if self.segment_angle is not None:
-            _options.append(f"segment angle={self.segment_angle}")
         if self.segment_object_length is not None:
             _options.append(f"segment object length={self.segment_object_length}")
+        if self.segment_angle is not None:
+            _options.append(f"segment angle={self.segment_angle}")
+        if self.segment_aspect is not None:
+            _options.append(f"segment aspect={self.segment_aspect}")
 
         return ",".join(_options)
 
@@ -552,6 +580,189 @@ class TextOptions(t.NamedTuple):
             _options.append("text centered")
         if self.badly_centered:
             _options.append("text badly centered")
+        return ",".join(_options)
+
+
+@dataclasses.dataclass
+class Shape(abc.ABC):
+    """
+    We refer to multiple sections from pdf
+
+    Section 13.13 Predefined Shapes
+      + Most of the things here we will make part of base Shape class
+      + introduces basic shapes' rectangle, circle and coordinate
+
+    Section 30: Shape Library ...
+      + more shapes and respective anchors are specified
+
+    Section 49: Nodes and Shapes
+      + todo: not sure what this is about ... explore and add later
+
+    Section 49.6 Predefined Shapes
+      + covers anchors of base shapes
+      + todo: make tutorials showing similar pictures with python code ...
+
+    In this base class we will add fields that are common across many shapes
+
+    Also, we will add anchors that are common across many shapes ...
+
+    """
+    inner_sep: Scalar = None
+    inner_xsep: Scalar = None
+    inner_ysep: Scalar = None
+    outer_sep: Scalar = None
+    outer_xsep: Scalar = None
+    outer_ysep: Scalar = None
+    minimum_height: Scalar = None
+    minimum_width: Scalar = None
+    minimum_size: Scalar = None
+
+    def __str__(self):
+        _options = []
+
+        # here we add shape name inferred from class name
+        _shape_name = " ".join(util.camel_case_split(self.__class__.__name__)).lower()
+        _options.append(f"shape={_shape_name}")
+
+        if self.inner_sep is not None:
+            _options.append(f"inner sep={self.inner_sep}")
+        if self.inner_xsep is not None:
+            _options.append(f"inner xsep={self.inner_xsep}")
+        if self.inner_ysep is not None:
+            _options.append(f"inner ysep={self.inner_ysep}")
+
+        if self.outer_sep is not None:
+            _options.append(f"outer sep={self.outer_sep}")
+        if self.outer_xsep is not None:
+            _options.append(f"outer xsep={self.outer_xsep}")
+        if self.outer_ysep is not None:
+            _options.append(f"outer ysep={self.outer_ysep}")
+
+        if self.minimum_height is not None:
+            _options.append(f"minimum height={self.minimum_height}")
+        if self.minimum_width is not None:
+            _options.append(f"minimum width={self.minimum_width}")
+        if self.minimum_size is not None:
+            _options.append(f"minimum size={self.minimum_size}")
+
+        return ",".join(_options)
+
+
+class Rectangle(Shape):
+    ...
+
+
+class Circle(Shape):
+    ...
+
+
+class Diamond(Shape):
+    aspect: float = None
+
+    def __str__(self):
+        _options = [super().__str__()]
+        if self.aspect is not None:
+            _options.append(f"aspect={self.aspect}")
+        return ",".join(_options)
+
+
+class Ellipse(Shape):
+    ...
+
+
+class RegularPolygon(Shape):
+    sides: int = None
+    rotate: t.Union[int, float] = None
+
+    def __str__(self):
+        _options = [super().__str__()]
+        if self.sides is not None:
+            _options.append(f"regular polygon sides={self.sides}")
+        if self.rotate is not None:
+            _options.append(f"regular polygon rotate={self.rotate}")
+        return ",".join(_options)
+
+
+class Star(Shape):
+    points: int = None
+    ratio: float = None
+    height: Scalar = None
+    rotate: t.Union[int, float] = None
+
+    def __str__(self):
+        _options = [super().__str__()]
+        if self.points is not None:
+            _options.append(f"star points={self.points}")
+        if self.ratio is not None:
+            _options.append(f"star point ratio={self.ratio}")
+        if self.height is not None:
+            _options.append(f"star point height={self.height}")
+        if self.rotate is not None:
+            _options.append(f"star rotate={self.rotate}")
+        return ",".join(_options)
+
+
+class ForbiddenSign(Shape):
+    ...
+
+
+class CircleSplit(Shape):
+    ...
+
+
+class CrossOut(Shape):
+    ...
+
+
+class StrikeOut(Shape):
+    ...
+
+
+class NodePos(enum.Enum):
+    """
+    Section 13.7
+    """
+    midway = "midway"  # pos=0.5
+    near_start = "near start"  # pos=0.25
+    near_end = "near end"  # pos=0.75
+    very_near_start = "very near start"  # pos=0.125
+    very_near_end = "very near end"  # pos=0.875
+    at_start = "at start"  # pos=0
+    at_end = "at end"  # pos=1
+
+    def __str__(self):
+        return self.value
+
+
+class Style(t.NamedTuple):
+    shape: Shape = None
+    fill: FillOptions = None
+    draw: DrawOptions = None
+    snake: SnakeOptions = None
+    shade: ShadeOptions = None
+
+    # this opacity applies to all fill draw pattern shade ...
+    # note that fill and draw options already have opacity field if you want to
+    # control those separately
+    opacity: t.Union[int, float, Opacity] = None
+
+    def __str__(self) -> str:
+        _options = []
+        if self.shape is not None:
+            _options.append(str(self.shape))
+        if self.fill is not None:
+            _options.append(str(self.fill))
+        if self.draw is not None:
+            _options.append(str(self.draw))
+        if self.snake is not None:
+            _options.append(str(self.snake))
+        if self.shade is not None:
+            _options.append(str(self.shade))
+        if self.opacity is not None:
+            if isinstance(self.opacity, Opacity):
+                _options.append(str(self.opacity))
+            else:
+                _options.append(f"opacity={self.opacity}")
         return ",".join(_options)
 
 
@@ -1049,159 +1260,106 @@ class PointOnNode(Point):
 
 
 @dataclasses.dataclass
-class Controls:
+class Label:
     """
-    Set of two points specify the path
-    if one is given then it uses the same for second point ...
+    Although not a subclass of Node this is still a Node in latex
+
+    Section 13.9 The Label and Pin Options
+    label=[⟨options⟩]⟨angle⟩:⟨text⟩
+
+    Even you can name these nodes to be reused later
+    \\begin{tikzpicture}
+    \\node [circle,draw,label={[name=label node]above left:$a,b$}] {};
+    \\draw (label node) -- +(1,1);
+    \\end{tikzpicture}
     """
-    first: Point
-    second: Point = None
+    text: str
+    id: str = None
+    style: Style = None
+    angle: t.Union[int, float] = None
+    anchor: Anchor = None
+    # todo: this also needs to go in tikz options global to tikz picture
+    distance: Scalar = None
 
     def __post_init__(self):
-        # set var
-        # noinspection PyTypeChecker
-        self._tikz = None  # type: TikZ
+        # validation
+        if self.angle is not None and self.anchor is not None:
+            raise e.code.CodingError(
+                msgs=["only supply one of angle or anchor kwarg"]
+            )
+        if self.anchor is not None:
+            if not self.anchor.is_intuitive:
+                raise e.code.CodingError(
+                    msgs=["Only non-intuitive anchors are supported"]
+                )
 
-    def __str__(self) -> str:
-        if self.second is None:
-            return f".. controls {self.first} .."
-        else:
-            return f".. controls {self.first} and {self.second} .."
+    def __str__(self):
+        _l = "label={"
+        _options = []
+        if self.id is not None:
+            _options.append(f"name={self.id}")
+        if self.distance is not None:
+            _options.append(f"label distance={self.distance}")
+        if self.style is not None:
+            _options.append(str(self.style))
+        _l += "[" + ",".join(_options) + "]"
+        if self.anchor is not None:
+            # as the __str__ is formatted for normal options use self.anchor.value
+            _l += str(self.anchor.value)
+        if self.angle is not None:
+            _l += str(self.angle)
+        _l += f":{self.text}" + "}"
+        return _l
 
 
 @dataclasses.dataclass
-class Shape(abc.ABC):
+class Pin:
     """
-    We refer to multiple sections from pdf
+    Although not a subclass of Node this is still a Node in latex
 
-    Section 13.13 Predefined Shapes
-      + Most of the things here we will make part of base Shape class
-      + introduces basic shapes' rectangle, circle and coordinate
-
-    Section 30: Shape Library ...
-      + more shapes and respective anchors are specified
-
-    Section 49: Nodes and Shapes
-      + todo: not sure what this is about ... explore and add later
-
-    Section 49.6 Predefined Shapes
-      + covers anchors of base shapes
-      + todo: make tutorials showing similar pictures with python code ...
-
-    In this base class we will add fields that are common across many shapes
-
-    Also, we will add anchors that are common across many shapes ...
-
+    Section 13.9 The Label and Pin Options
+    pin=[⟨options⟩]⟨angle⟩:⟨text⟩
     """
-    inner_sep: Scalar = None
-    inner_xsep: Scalar = None
-    inner_ysep: Scalar = None
-    outer_sep: Scalar = None
-    outer_xsep: Scalar = None
-    outer_ysep: Scalar = None
-    minimum_height: Scalar = None
-    minimum_width: Scalar = None
-    minimum_size: Scalar = None
+    text: str
+    id: str = None
+    style: Style = None
+    angle: t.Union[int, float] = None
+    anchor: Anchor = None
+    # todo: this also needs to go in tikz options global to tikz picture
+    distance: Scalar = None
+    edge_style: Style = None
+
+    def __post_init__(self):
+        # validation
+        if self.angle is not None and self.anchor is not None:
+            raise e.code.CodingError(
+                msgs=["only supply one of angle or anchor kwarg"]
+            )
+        if self.anchor is not None:
+            if not self.anchor.is_intuitive:
+                raise e.code.CodingError(
+                    msgs=["Only non-intuitive anchors are supported"]
+                )
 
     def __str__(self):
+        _l = "pin={"
         _options = []
-
-        # here we add shape name inferred from class name
-        _shape_name = " ".join(util.camel_case_split(self.__class__.__name__)).lower()
-        _options.append(f"shape={_shape_name}")
-
-        if self.inner_sep is not None:
-            _options.append(f"inner sep={self.inner_sep}")
-        if self.inner_xsep is not None:
-            _options.append(f"inner xsep={self.inner_xsep}")
-        if self.inner_ysep is not None:
-            _options.append(f"inner ysep={self.inner_ysep}")
-
-        if self.outer_sep is not None:
-            _options.append(f"outer sep={self.outer_sep}")
-        if self.outer_xsep is not None:
-            _options.append(f"outer xsep={self.outer_xsep}")
-        if self.outer_ysep is not None:
-            _options.append(f"outer ysep={self.outer_ysep}")
-
-        if self.minimum_height is not None:
-            _options.append(f"minimum height={self.minimum_height}")
-        if self.minimum_width is not None:
-            _options.append(f"minimum width={self.minimum_width}")
-        if self.minimum_size is not None:
-            _options.append(f"minimum size={self.minimum_size}")
-
-        return ",".join(_options)
-
-
-class Rectangle(Shape):
-    ...
-
-
-class Circle(Shape):
-    ...
-
-
-class Diamond(Shape):
-    aspect: float = None
-
-    def __str__(self):
-        _options = [super().__str__()]
-        if self.aspect is not None:
-            _options.append(f"aspect={self.aspect}")
-        return ",".join(_options)
-
-
-class Ellipse(Shape):
-    ...
-
-
-class RegularPolygon(Shape):
-    sides: int = None
-    rotate: t.Union[int, float] = None
-
-    def __str__(self):
-        _options = [super().__str__()]
-        if self.sides is not None:
-            _options.append(f"regular polygon sides={self.sides}")
-        if self.rotate is not None:
-            _options.append(f"regular polygon rotate={self.rotate}")
-        return ",".join(_options)
-
-
-class Star(Shape):
-    points: int = None
-    ratio: float = None
-    height: Scalar = None
-    rotate: t.Union[int, float] = None
-
-    def __str__(self):
-        _options = [super().__str__()]
-        if self.points is not None:
-            _options.append(f"star points={self.points}")
-        if self.ratio is not None:
-            _options.append(f"star point ratio={self.ratio}")
-        if self.height is not None:
-            _options.append(f"star point height={self.height}")
-        if self.rotate is not None:
-            _options.append(f"star rotate={self.rotate}")
-        return ",".join(_options)
-
-
-class ForbiddenSign(Shape):
-    ...
-
-
-class CircleSplit(Shape):
-    ...
-
-
-class CrossOut(Shape):
-    ...
-
-
-class StrikeOut(Shape):
-    ...
+        if self.id is not None:
+            _options.append(f"name={self.id}")
+        if self.distance is not None:
+            _options.append(f"pin distance={self.distance}")
+        if self.style is not None:
+            _options.append(str(self.style))
+        if self.edge_style is not None:
+            _options.append(f"pin edge={{{self.edge_style}}}")
+        _l += "[" + ",".join(_options) + "]"
+        if self.anchor is not None:
+            # as the __str__ is formatted for normal options use self.anchor.value
+            _l += str(self.anchor.value)
+        if self.angle is not None:
+            _l += str(self.angle)
+        _l += f":{self.text}" + "}"
+        return _l
 
 
 @dataclasses.dataclass
@@ -1229,7 +1387,7 @@ class Node:
     text_to_display: str = None
 
     # style
-    style: t.Union[str, "Style"] = None
+    style: t.Union[str, Style] = None
     o_text: TextOptions = None
     o_transform: TransformOptions = None
 
@@ -1243,6 +1401,50 @@ class Node:
     # causes the node to be shifted such that it’s anchor ⟨anchor name⟩ lies on the
     # current coordinate.
     anchor: t.Union[str, Anchor] = None
+
+    # Section 13.7 Placing Nodes on a Line or Curve Explicitly
+    # -----
+    # when used the node is not anchored on last coordinate but somewhere on last
+    # path based on this fraction ...
+    # if previous path is line_to: then it is simple
+    # if previous path is curve_to: this is the time travelled over path
+    # if previous path is line_hv_to or line_vh_to then 0.5 is exactly corner
+    # for all remaining paths position placement does not work
+    # for arc path this might work in future
+    pos: t.Union[float, NodePos] = None
+    # -----
+    # auto: <direction> = None
+    # todo: auto ... must go in tikzpicture options
+    # -----
+    # this works when auto positioning is used and does the role of swapping the node
+    # anchoring behaviour
+    swap: bool = False
+    # -----
+    # used when adding label on path so that they are parallel to path
+    # The rotation is normally done in such a way that text is never "upside down".
+    # To get upside-down text, use can use [rotate=180] or [allow upside down]
+    sloped: bool = False
+    # -----
+    # If set to true, TikZ will not "righten" upside down text.
+    # todo: may be must go in tikzpicture options
+    allow_upside_down: bool = False
+
+    # labels and pins
+    # Section 13.9 The Label and Pin Options
+    # label=[⟨options⟩]⟨angle⟩:⟨text⟩
+    # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
+    labels: t.List = None
+    pins: t.List = None
+    
+    @property
+    @util.CacheResult
+    def labels(self) -> t.List[Label]:
+        return []
+    
+    @property
+    @util.CacheResult
+    def pins(self) -> t.List[Pin]:
+        return []
 
     def __post_init__(self):
 
@@ -1272,6 +1474,7 @@ class Node:
         # noinspection PyArgumentList
         _ret = self.__class__(**_kwargs)
         _ret._at = other
+        _ret.id = None  # as this is new Node
         return _ret
 
     def __str__(self):
@@ -1295,10 +1498,28 @@ class Node:
         if self.id is not None:
             e.validation.ShouldNotBeOneOf(
                 value=self.id, values=[_.id for _ in self._tikz.nodes],
-                msgs=[f"Node with if {self.id} is already registered in tikz_context"]
+                msgs=[f"Node with id {self.id} is already registered in tikz_context"]
             ).raise_if_failed()
             # Register this new node
             self._tikz.nodes.append(self)
+        # Also do the same for labels 
+        for _l in self.labels:
+            e.validation.ShouldNotBeOneOf(
+                value=_l.id, values=[_.id for _ in self._tikz.nodes],
+                msgs=[f"Label with id {_l.id} "
+                      f"is already registered in tikz_context"]
+            ).raise_if_failed()
+            # Register this new node
+            self._tikz.nodes.append(_l)
+        # Also do the same for pins
+        for _p in self.pins:
+            e.validation.ShouldNotBeOneOf(
+                value=_p.id, values=[_.id for _ in self._tikz.nodes],
+                msgs=[f"Pin with id {_p.id} "
+                      f"is already registered in tikz_context"]
+            ).raise_if_failed()
+            # Register this new node
+            self._tikz.nodes.append(_p)
 
         # -------------------------------------------------------- 03
         # the token to return
@@ -1314,6 +1535,17 @@ class Node:
         # -------------------------------------------------------- 04
         # make options
         _options = []
+        if self.pos is not None:
+            if isinstance(self.pos, NodePos):
+                _options.append(str(self.pos))
+            else:
+                _options.append(f"pos={self.pos}")
+        if self.swap:
+            _options.append("swap")
+        if self.sloped:
+            _options.append("sloped")
+        if self.allow_upside_down:
+            _options.append("allow upside down")
         if self.style is not None:
             _options.append(str(self.style))
         if self.o_text is not None:
@@ -1322,6 +1554,10 @@ class Node:
             _options.append(str(self.o_transform))
         if self.anchor is not None:
             _options.append(str(self.anchor))
+        for _l in self.labels:
+            _options.append(str(_l))
+        for _p in self.pins:
+            _options.append(str(_p))
         _ret += "[" + ",".join(_options) + "] "
 
         # -------------------------------------------------------- 05
@@ -1418,14 +1654,42 @@ class Node:
     def point_on_outer_point(self, outer_point: int) -> PointOnNode:
         return PointOnNode(node=self, outer_point=outer_point)
 
-    def add_pin(self):
-        ...
+    def add_label(self, label: Label) -> "Node":
+        """
+        Section 13.9 The Label and Pin Options
+        label=[⟨options⟩]⟨angle⟩:⟨text⟩
+        """
+        self.labels.append(label)
+        return self
 
-    def add_label(self):
-        ...
+    def add_pin(self, pin: Pin) -> "Node":
+        """
+        Section 13.9 The Label and Pin Options
+        pin=[⟨options⟩]⟨angle⟩:⟨text⟩
+        """
+        self.pins.append(pin)
+        return self
 
 
-PATH_ITEM_TYPE = t.Union[str, Point2D, Point3D, PointPolar, PointOnNode, Node, Controls]
+@dataclasses.dataclass
+class To:
+    """
+    todo: do later ... similar to Edge
+    """
+
+
+@dataclasses.dataclass
+class Edge:
+    """
+    Section 13.11 Connecting Nodes: Using the Edge Operation
+    \\path . . . edge[⟨options⟩] ⟨nodes⟩ (⟨coordinate⟩) . . . ;
+
+    The edge operation works like to operation which is added after main path is drawn
+
+    Note that Edge is not like LineTo ... it is more like Node which is drawn after
+    path is drawn ... this allows more customization of the Edge ...
+    So treat it like Node or Node with Shape
+    """
 
 
 @dataclasses.dataclass
@@ -1457,7 +1721,7 @@ class Path:
         We simplify our code and use only path as generic method. We don't need
         to support abbreviations like \\draw, \\fill, \\filldraw
     """
-    style: t.Union[str, "Style"] = None
+    style: t.Union[str, Style] = None
 
     # actions check section 12 Action on Paths
     # color -- we do not want to support this action due to confusion involved simple
@@ -1489,9 +1753,6 @@ class Path:
     # note that fill and draw options already have opacity field if you want to
     # control those path actions separately
     # opacity: t.Union[int, float, Opacity] = None ... Use via Style
-
-    # cycle
-    cycle: bool = False
 
     # transform options at path level
     o_transform: TransformOptions = None
@@ -1545,97 +1806,379 @@ class Path:
             _ret += str(_item) + " "
 
         # ---------------------------------------------------------- 04
-        # add cycle
-        if self.cycle:
-            _ret += "-- cycle"
-
-        # ---------------------------------------------------------- 05
         return _ret + ";%"
 
-    def add_edge_simple(self):
-        self.connectome += ['--']
-
-    # noinspection PyPep8Naming
-    def add_edge_HV(self):
-        self.connectome += ['-|']
-
-    # noinspection PyPep8Naming
-    def add_edge_VH(self):
-        self.connectome += ['|-']
-
-    def add_edge(self, edge: Edge):
-        self.connectome += [edge]
-
-    def connect(self, item: PATH_ITEM_TYPE) -> 'Path':
-        if bool(self.connectome):
-            self.connectome += ['--', item]
-        else:
-            self.connectome += [item]
+    def add_node(self, node: Node) -> "Path":
+        self.connectome += [node]
         return self
 
-    # noinspection PyPep8Naming
-    def connect_HV(self, item: PATH_ITEM_TYPE) -> 'Path':
-        if bool(self.connectome):
-            self.connectome += ['-|', item]
-        else:
-            raise e.code.CodingError(
-                msgs=[f"When starting from start use {Path.connect} as the "
-                      f"connectome is empty"]
-            )
+    def move_to(self, to: Point) -> "Path":
+        """
+
+        Section 11.1 The Move-To Operation
+        \\path . . . ⟨coordinate⟩ . . . ;
+        In the specification (0,0) --(2,0) (0,1) --(2,1) two move-to operations
+          are specified: (0,0) and (0,1). The other two operations,
+          namely --(2,0) and --(2,1) are line-to operations
+
+        """
+        self.connectome += [to]
         return self
 
-    # noinspection PyPep8Naming
-    def connect_VH(self, item: PATH_ITEM_TYPE) -> 'Path':
-        if bool(self.connectome):
-            self.connectome += ['|-', item]
+    def line_to(self, to: Point, nodes: t.List[Node] = None) -> "Path":
+        """
+        Section 11.2 The Line-To Operation
+        \\path . . . --⟨coordinate⟩ . . . ;  # straight lines
+
+        Automatic anchors are computed for the same ...
+        while center is used for other path commands like parabola, plot etc.
+
+        Note: the nodes options here ...
+              they are more specifically to be used as labels on drawn path ...
+              Read: 13.8 Placing Nodes on a Line or Curve Implicitly
+              todo: maybe we do not need nodes as we can add later and set pos=... on it
+                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
+                We might have limitations and also it places nodes not exactly at end
+                and sets the nodes pos automatically and they get locked
+
+        """
+        if bool(nodes):
+            self.connectome += ["--", nodes, to]
         else:
-            raise e.code.CodingError(
-                msgs=[f"When starting from start use {Path.connect} as the "
-                      f"connectome is empty"]
-            )
+            self.connectome += [f"--", to]
         return self
 
-    def connect_hidden(self, item: PATH_ITEM_TYPE) -> 'Path':
-        if bool(self.connectome):
-            self.connectome += [' ', item]
+    def line_hv_to(self, to: Point, nodes: t.List[Node] = None) -> "Path":
+        """
+        Section 11.2 The Line-To Operation
+        \\path . . . -|⟨coordinate⟩ . . . ;  # vertical horizontal lines
+
+        Automatic anchors are computed for the same ...
+        while center is used for other path commands like parabola, plot etc.
+
+        Note: the nodes options here ... todo: needs testing
+              they are more specifically to be used as labels on drawn path ...
+              todo: maybe we do not need nodes as we can add later and set pos=... on it
+                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
+                We might have limitations and also it places nodes not exactly at end
+                and sets the nodes pos automatically and they get locked
+
+        """
+        if bool(nodes):
+            self.connectome += ["-|", nodes, to]
         else:
-            raise e.code.CodingError(
-                msgs=[f"When starting from start use {Path.connect} as the "
-                      f"connectome is empty"]
-            )
+            self.connectome += [f"-|", to]
         return self
 
+    def line_vh_to(self, to: Point, nodes: t.List[Node] = None) -> "Path":
+        """
+        Section 11.2 The Line-To Operation
+        \\path . . . |-⟨coordinate⟩ . . . ;  # vertical horizontal lines
 
-class Style(t.NamedTuple):
-    shape: Shape = None
-    fill: FillOptions = None
-    draw: DrawOptions = None
-    snake: SnakeOptions = None
-    shade: ShadeOptions = None
+        Automatic anchors are computed for the same ...
+        while center is used for other path commands like parabola, plot etc.
 
-    # this opacity applies to all fill draw pattern shade ...
-    # note that fill and draw options already have opacity field if you want to
-    # control those separately
-    opacity: t.Union[int, float, Opacity] = None
+        Note: the nodes options here ... todo: needs testing
+              they are more specifically to be used as labels on drawn path ...
+              todo: maybe we do not need nodes as we can add later and set pos=... on it
+                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
+                We might have limitations and also it places nodes not exactly at end
+                and sets the nodes pos automatically and they get locked
 
-    def __str__(self) -> str:
+        """
+        if bool(nodes):
+            self.connectome += ["|-", nodes, to]
+        else:
+            self.connectome += [f"|-", to]
+        return self
+
+    def line_snake_to(
+        self, to: Point, snake: t.Union[Snake, SnakeOptions],
+        nodes: t.List[Node] = None,
+    ) -> "Path":
+        """
+        Section 11.2 The Line-To Operation
+        \\draw[snake=zigzag] (0,2.5) -- (3,2.5);  # snaked lines
+
+        Automatic anchors are computed for the same ...
+        while center is used for other path commands like parabola, plot etc.
+
+        \\begin{tikzpicture}
+        \\filldraw[fill=blue!20]
+        (0,3) [snake=saw]
+        -- (3,3) [snake=coil,segment aspect=0]
+        -- (2,1) [snake=bumps]
+        -| (0,3);
+        \\end{tikzpicture}
+
+        Note: the nodes options here ... todo: needs testing
+              they are more specifically to be used as labels on drawn path ...
+              todo: maybe we do not need nodes as we can add later and set pos=... on it
+                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
+                We might have limitations and also it places nodes not exactly at end
+                and sets the nodes pos automatically and they get locked
+
+        """
+        if bool(nodes):
+            self.connectome += [f"{snake}]--", nodes, to]
+        else:
+            self.connectome += [f"[{snake}]--", to]
+        return self
+
+    def curve_to(
+        self, to: Point,
+        control1: Point, control2: Point = None,
+        nodes: t.List[Node] = None,
+    ) -> "Path":
+        """
+        Section 11.3 The Curve-To Operation
+        \\path . . . ..controls⟨c⟩and⟨d⟩..⟨y⟩ . . . ;
+
+        The curve-to operation allows you to extend a path using a B´ezier curve.
+
+        Automatic anchors are computed for the same ...
+        while center is used for other path commands like parabola, plot etc.
+
+        If the "and⟨d⟩" part is not given, d is assumed to be equal to c.
+
+        Note: the nodes options here ... todo: needs testing
+              they are more specifically to be used as labels on drawn path ...
+              todo: maybe we do not need nodes as we can add later and set pos=... on it
+                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
+                We might have limitations and also it places nodes not exactly at end
+                and sets the nodes pos automatically and they get locked
+
+        """
+        if control2 is None:
+            _p = f"..controls{control1}.."
+        else:
+            _p = f"..controls{control1}and{control2}.."
+        if bool(nodes):
+            self.connectome += [_p, nodes, to]
+        else:
+            self.connectome += [_p, to]
+        return self
+
+    def cycle(self) -> "Path":
+        """
+        Section 11.4: The Cycle Operation
+        \\path . . . --cycle . . . ;
+        """
+        self.connectome += ["--cycle"]
+        return self
+
+    def rectangle(self, corner: Point) -> "Path":
+        """
+        Section 11.5 The Rectangle Operation
+        \\path . . . rectangle⟨corner⟩ . . . ;
+        """
+        self.connectome += [f"rectangle{corner}"]
+        return self
+
+    def set_rounded_corners(self, inset: Scalar = None) -> "Path":
+        """
+        Section 11.6 Rounding corners
+        """
+        if inset is None:
+            self.connectome += ["rounded corners"]
+        else:
+            self.connectome += [f"rounded corners={inset}"]
+        return self
+
+    def set_sharp_corners(self) -> "Path":
+        """
+        Section 11.6
+        \\begin{tikzpicture}
+        \\draw (0,0) [rounded corners=10pt]
+        -- (1,1) -- (2,1) [sharp corners]
+        -- (2,0) [rounded corners=5pt] -- cycle;
+        \\end{tikzpicture
+        """
+        self.connectome += ["sharp corners"]
+        return self
+
+    def circle(self, radius: Scalar) -> "Path":
+        """
+        Section 11.7 The Circle and Ellipse Operations
+        \\path . . . circle(⟨radius⟩) . . . ;
+
+        \\begin{tikzpicture}
+        \\draw (1,0) circle (.5cm);
+        \\draw (3,0) ellipse (1cm and .5cm) -- ++(3,0) circle (.5cm)
+        -- ++(2,-.5) circle (.25cm);
+        \\end{tikzpicture}
+        """
+        self.connectome += [f"circle({radius})"]
+        return self
+
+    def ellipse(self, half_width: Scalar, half_height: Scalar) -> "Path":
+        """
+        Section 11.7 The Circle and Ellipse Operations
+        \\path . . . ellipse(⟨half width⟩ and ⟨half height⟩) . . . ;
+        """
+        self.connectome += [f"ellipse({half_width} and {half_height})"]
+        return self
+
+    def arc(
+        self, start_angle: t.Union[int, float], end_angle: t.Union[int, float],
+        radius: Scalar, half_height: Scalar = None
+    ) -> "Path":
+        """
+        Section 11.8 The Arc Operation
+        \\path . . . arc(⟨start angle⟩:⟨end angle⟩:⟨radius⟩ and ⟨half height⟩) . . . ;
+
+        \\begin{tikzpicture}
+        \\draw (0,0) arc (180:90:1cm) -- (2,.5) arc (90:0:1cm);
+        \\draw (4,0) -- +(30:1cm) arc (30:60:1cm) -- cycle;
+        \\draw (8,0) arc (0:270:1cm and .5cm) -- cycle;
+        \\end{tikzpicture}
+        """
+        if half_height is None:
+            self.connectome += \
+                [f"arc({start_angle}:{end_angle}:{radius})"]
+        else:
+            self.connectome += \
+                [f"arc({start_angle}:{end_angle}:{radius} and {half_height})"]
+        return self
+
+    def grid(
+        self, corner: Point,
+        step: t.Union[int, float, Scalar, Point] = None,
+        xstep: t.Union[int, float, Scalar] = None,
+        ystep: t.Union[int, float, Scalar] = None,
+    ) -> "Path":
+        """
+        Section 11.9 The Grid Operation
+        \\path . . . grid[⟨options⟩]⟨corner⟩ . . . ;
+
+        \\begin{tikzpicture}[x=.5cm]
+        \\draw[thick] (0,0) grid [step=1](3,2);
+        \\draw[red](0,0) grid [step=.75cm] (3,2);
+        \\end{tikzpicture}
+        \\begin{tikzpicture}
+        \\draw(0,0) circle (1);
+        \\draw[blue](0,0) grid [step=(45:1)] (3,2);
+        \\end{tikzpicture}
+        """
         _options = []
-        if self.shape is not None:
-            _options.append(str(self.shape))
-        if self.fill is not None:
-            _options.append(str(self.fill))
-        if self.draw is not None:
-            _options.append(str(self.draw))
-        if self.snake is not None:
-            _options.append(str(self.snake))
-        if self.shade is not None:
-            _options.append(str(self.shade))
-        if self.opacity is not None:
-            if isinstance(self.opacity, Opacity):
-                _options.append(str(self.opacity))
-            else:
-                _options.append(f"opacity={self.opacity}")
-        return ",".join(_options)
+        if step is not None:
+            _options.append(f"{step}")
+        if xstep is not None:
+            _options.append(f"{xstep}")
+        if ystep is not None:
+            _options.append(f"{ystep}")
+        self.connectome += [f"grid[{','.join(_options)}]{corner}"]
+        return self
+
+    def parabola(
+        self, to: Point,
+        bend: Point = None, bend_pos: float = None,
+        height: Scalar = None, bend_at_start: bool = False, bend_at_end: bool = False
+    ) -> "Path":
+        """
+        Section 11.10 The Parabola operation
+        \\path . . . parabola[⟨options⟩]bend⟨bend coordinate⟩⟨coordinate⟩ . . . ;
+        """
+        _options = []
+        if bend_pos is not None:
+            _options.append(f"bend pos={bend_pos}")
+        if height is not None:
+            _options.append(f"parabola height={height}")
+        if bend_at_start:
+            _options.append("bend at start")
+        if bend_at_end:
+            _options.append("bend at end")
+
+        _p = "parabola"
+        if bool(_options):
+            _p += "[" + ",".join(_options) + "]"
+
+        if bend is not None:
+            _p += f"bend{bend}"
+
+        _p += f"{to}"
+
+        self.connectome += [_p]
+
+        return self
+
+    def sin(self, to: Point) -> "Path":
+        """
+        Section 11.11 The Sine and Cosine Operation
+        \\path . . . sin⟨coordinate⟩ . . . ;
+        """
+        self.connectome += [f"sin{to}"]
+        return self
+
+    def cos(self, to: Point) -> "Path":
+        """
+        Section 11.11 The Sine and Cosine Operation
+        \\path . . . cos⟨coordinate⟩ . . . ;
+        """
+        self.connectome += [f"cos{to}"]
+        return self
+
+    def plot(self) -> "Path":
+        """
+        Section 11.12 The Plot Operations ... tells checking section 16
+        Section 16
+        """
+        ...
+
+    def to(
+        self,
+        to: Point,
+        out_: t.Union[int, float] = None,
+        in_: t.Union[int, float] = None,
+        nodes: t.List[Node] = None,
+    ) -> "Path":
+        """
+        Section 11.13 The To Path operation
+        \\path . . . to[⟨options⟩] ⟨nodes⟩ (⟨coordinate⟩) . . . ;
+
+        todo: implement these options
+            • execute at begin to=⟨code⟩
+              The ⟨code⟩ is executed prior to the to. This can be used to draw
+              one or more additional paths or to do additional computations.
+            • executed at end to=⟨code⟩
+              Works like the previous option, only this code is executed after the
+              to path has been added.
+            • style=every to
+              This style is installed at the beginning of every to.
+              It is empty by default.
+
+        The to operation is used to add a user-defined path from the previous
+        coordinate to the following coordinate.
+
+        When you write (a) to (b), a straight line is added from a to b, exactly as
+        if you had written (a) -- (b).
+
+        However, if you write (a) to [out=135,in=45] (b) a curve is added to the path,
+        which leaves at an angle of 135◦ at a and arrives at an angle of 45◦ at b.
+        This is because the options in and out trigger a special path to be used
+        instead of the straight line.
+
+        When we write (a) to (b),
+          the ⟨path⟩ will expand to (a) -- (b),
+        When we write (a) to[red] node {x} (b)
+          the ⟨path⟩ will expand to (a) -- (b) node[pos] {x}
+
+        Note: the nodes options here ...
+              they are more specifically to be used as labels on drawn path ...
+
+        todo: See section 32 for number of predefined `to paths`
+        """
+        _t = []
+        if out_ is not None:
+            _t.append(f"out={out_}")
+        if in_ is not None:
+            _t.append(f"in={in_}")
+        _t = "[" + ",".join(_t) + "]"
+        if bool(nodes):
+            self.connectome += ["to" + _t, nodes, to]
+        else:
+            self.connectome += ["to" + _t, to]
+        return self
 
 
 @dataclasses.dataclass
@@ -1644,7 +2187,12 @@ class TikZ(LaTeX):
 
     @property
     @util.CacheResult
-    def nodes(self) -> t.List[Node]:
+    def paths(self) -> t.List[Path]:
+        return []
+
+    @property
+    @util.CacheResult
+    def nodes(self) -> t.List[t.Union[Node, Label, Pin]]:
         # A cached container for nodes with id ...
         return []
 
@@ -1683,11 +2231,6 @@ class TikZ(LaTeX):
         return "\n".join(_ret)
 
     @property
-    @util.CacheResult
-    def paths(self) -> t.List[Path]:
-        return []
-
-    @property
     def close_clause(self) -> str:
         _ret = ["% >> end tikz picture", "\\end{tikzpicture}%"]
         if self.caption is not None:
@@ -1707,6 +2250,11 @@ class TikZ(LaTeX):
         return {}
 
     def __str__(self):
+        if bool(self.items):
+            # todo: address this issue later
+            raise e.code.CodingError(
+                msgs=["Do not call this twice as self.items will be populated again"]
+            )
 
         # keep reference for _tikz ...
         # __str__ is like build, so we do these assignments here
