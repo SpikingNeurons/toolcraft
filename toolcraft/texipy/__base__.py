@@ -79,6 +79,30 @@ class Color(enum.Enum):
             return f"{self.value}!{intensity}"
 
 
+class FontSize(enum.Enum):
+    """
+    Refer https://texblog.org/2012/08/29/changing-the-font-size-in-latex/
+
+    todo: currently inline is implemented ... later implement as environment too
+    """
+    Huge = "\\Huge"
+    huge = "\\huge"
+    LARGE = "\\LARGE"
+    Large = "\\Large"
+    large = "\\large"
+    normalsize = "\\normalsize"  # (default)
+    small = "\\small"
+    footnotesize = "\\footnotesize"
+    scriptsize = "\\scriptsize"
+    tiny = "\\tiny"
+
+    def __str__(self):
+        return self.value
+
+    def __call__(self, text: str) -> str:
+        return f"{{{self} {text}}}"
+
+
 class Fa(enum.Enum):
     """
     Options supported by \\usepackage{fontawesome5}
@@ -88,6 +112,12 @@ class Fa(enum.Enum):
     times = "\\faTimes"
     check_circle = "\\faCheckCircle"
     times_circle = "\\faTimesCircle"
+
+    # not part of fontawesome but still makes sense here
+    ldots = "\\ldots"  # for horizontal dots on the line
+    cdots = "\\cdots"  # for horizontal dots above the line
+    vdots = "\\vdots"  # for vertical dots
+    ddots = "\\ddots"  # for diagonal dots
 
     def __str__(self):
         return self.value
@@ -105,6 +135,58 @@ class Scalar(t.NamedTuple):
 
     def __str__(self):
         return f"{self.value}{self.unit}"
+
+    def __mul__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
+        if isinstance(other, Scalar):
+            if other.unit != self.unit:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "Units should match ...", dict(self=self.unit, other=other.unit)
+                    ]
+                )
+            other = other.value
+        return Scalar(
+            value=self.value * other, unit=self.unit
+        )
+
+    def __add__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
+        if isinstance(other, Scalar):
+            if other.unit != self.unit:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "Units should match ...", dict(self=self.unit, other=other.unit)
+                    ]
+                )
+            other = other.value
+        return Scalar(
+            value=self.value + other, unit=self.unit
+        )
+
+    def __sub__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
+        if isinstance(other, Scalar):
+            if other.unit != self.unit:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "Units should match ...", dict(self=self.unit, other=other.unit)
+                    ]
+                )
+            other = other.value
+        return Scalar(
+            value=self.value - other, unit=self.unit
+        )
+
+    def __truediv__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
+        if isinstance(other, Scalar):
+            if other.unit != self.unit:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "Units should match ...", dict(self=self.unit, other=other.unit)
+                    ]
+                )
+            other = other.value
+        return Scalar(
+            value=self.value / other, unit=self.unit
+        )
 
 
 @dataclasses.dataclass
@@ -222,7 +304,9 @@ class Document(LaTeX):
         _preamble_document_class += "{article}" if self.main_tex_file is None else \
             f"[{self.main_tex_file}]{{subfiles}}"
         _ret = [
-                   _preamble_document_class, "\\usepackage{fontawesome5}"
+                   _preamble_document_class,
+                   "\\usepackage{fontawesome5}",
+                   "\\usepackage{xcolor}"
                ] + super().preambles
         return _ret
 

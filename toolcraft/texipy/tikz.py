@@ -76,6 +76,9 @@ class Pattern(enum.Enum):
 class Snake(enum.Enum):
     """
     Check section 31: Snake Library
+
+    todo: Replace with decorations.pathmorphing library:
+      https://tex.stackexchange.com/questions/42611/list-of-available-tikz-libraries-with-a-short-introduction/491626#491626
     """
     bent = "bent"
     border = "border"
@@ -1221,7 +1224,7 @@ class PointOnNode(Point):
 
         # expecting node id to be available
         if self.node.id is None:
-            e.validation.NotAllowed(
+            raise e.validation.NotAllowed(
                 msgs=[
                     "Cannot provide point on this node as it does not have "
                     "`id` specified ..."
@@ -2409,7 +2412,8 @@ class TikZ(LaTeX):
             "\\usetikzlibrary{shapes.symbols}",
             "\\usetikzlibrary{shapes.multipart}",
             "\\usetikzlibrary{shapes.misc}",
-            "\\usetikzlibrary{snakes}",
+            # todo: replace with decorations.pathmorphing library
+            # "\\usetikzlibrary{snakes}",
             "\\usetikzlibrary{arrows}",
             "\\usetikzlibrary{patterns}",
             "\\usetikzlibrary{positioning}",
