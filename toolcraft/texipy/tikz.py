@@ -1109,7 +1109,7 @@ class Point2D(Point):
     """
     x: Scalar
     y: Scalar
-    relative: t.Literal['+', '++'] = ''
+    relative: t.Literal['+', '++', ''] = ''
     id: str = None
 
     def __str__(self):
@@ -1278,7 +1278,7 @@ class Label:
     id: str = None
     style: Style = None
     angle: t.Union[int, float] = None
-    anchor: Anchor = None
+    anchor: Anchor = None  # must be only intuitive anchors
     # todo: this also needs to go in tikz options global to tikz picture
     distance: Scalar = None
 
@@ -1430,23 +1430,6 @@ class Node:
     # todo: may be must go in tikzpicture options
     allow_upside_down: bool = False
 
-    # labels and pins
-    # Section 13.9 The Label and Pin Options
-    # label=[⟨options⟩]⟨angle⟩:⟨text⟩
-    # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
-    labels: t.List = None
-    pins: t.List = None
-    
-    @property
-    @util.CacheResult
-    def labels(self) -> t.List[Label]:
-        return []
-    
-    @property
-    @util.CacheResult
-    def pins(self) -> t.List[Pin]:
-        return []
-
     def __post_init__(self):
 
         # please refer section 49.6 to see what anchors are available on node ...
@@ -1503,15 +1486,16 @@ class Node:
             ).raise_if_failed()
             # Register this new node
             self._tikz.nodes.append(self)
-        # Also do the same for labels 
+        # Also do the same for labels
         for _l in self.labels:
             e.validation.ShouldNotBeOneOf(
                 value=_l.id, values=[_.id for _ in self._tikz.nodes],
                 msgs=[f"Label with id {_l.id} "
                       f"is already registered in tikz_context"]
             ).raise_if_failed()
-            # Register this new node
-            self._tikz.nodes.append(_l)
+            # Register this new label as it is also a node ... but only if id is present
+            if _l.id is not None:
+                self._tikz.nodes.append(_l)
         # Also do the same for pins
         for _p in self.pins:
             e.validation.ShouldNotBeOneOf(
@@ -1519,8 +1503,9 @@ class Node:
                 msgs=[f"Pin with id {_p.id} "
                       f"is already registered in tikz_context"]
             ).raise_if_failed()
-            # Register this new node
-            self._tikz.nodes.append(_p)
+            # Register this new pin as it is also a node ... but only if id is present
+            if _p.id is not None:
+                self._tikz.nodes.append(_p)
 
         # -------------------------------------------------------- 03
         # the token to return
@@ -1571,6 +1556,24 @@ class Node:
         # -------------------------------------------------------- 06
         # return
         return _ret
+    
+    @property
+    @util.CacheResult
+    def labels(self) -> t.List[Label]:
+        # labels and pins
+        # Section 13.9 The Label and Pin Options
+        # label=[⟨options⟩]⟨angle⟩:⟨text⟩
+        # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
+        return []
+    
+    @property
+    @util.CacheResult
+    def pins(self) -> t.List[Pin]:
+        # labels and pins
+        # Section 13.9 The Label and Pin Options
+        # label=[⟨options⟩]⟨angle⟩:⟨text⟩
+        # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
+        return []
 
     @property
     def center(self) -> PointOnNode:
@@ -2043,11 +2046,11 @@ class Path:
         """
         _options = []
         if step is not None:
-            _options.append(f"{step}")
+            _options.append(f"step={step}")
         if xstep is not None:
-            _options.append(f"{xstep}")
+            _options.append(f"xstep={xstep}")
         if ystep is not None:
-            _options.append(f"{ystep}")
+            _options.append(f"ystep={ystep}")
         self.connectome += [f"grid[{','.join(_options)}]{corner}"]
         return self
 
@@ -2102,8 +2105,10 @@ class Path:
     def plot(
         self,
         x: t.List[t.Union[int, float]], y: t.List[t.Union[int, float]],
-        bounding_rect: t.Tuple[Point2D, Point2D],
+        width: Scalar, height: Scalar,
+        x_min: t.Union[int, float] = None, x_max: t.Union[int, float] = None,
         y_min: t.Union[int, float] = None, y_max: t.Union[int, float] = None,
+        relative: t.Literal['+', '++', ''] = '',
     ) -> "Path":
         """
         Section 11.12 The Plot Operations ... tells checking section 16
@@ -2122,53 +2127,52 @@ class Path:
           Also note that `tikz.pgfplots` is always there so we do not expect more
           things from this method ...
         """
-        # ----------------------------------------- 01
-        # validation
-        _unit = bounding_rect[0].x.unit
-        if not all(
-            [
-                bounding_rect[0].y.unit == _unit,
-                bounding_rect[1].x.unit == _unit,
-                bounding_rect[1].y.unit == _unit,
-            ]
-        ):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "We expect that all units for bounding_rect must be same"
-                ]
-            )
 
-        # ----------------------------------------- 02
+        # ----------------------------------------- 01
         # compute vars
         if y_min is None:
             y_min = min(y)
         if y_max is None:
             y_max = max(y)
-        x_min = min(x)
-        x_max = max(y)
+        if x_min is None:
+            x_min = min(x)
+        if x_max is None:
+            x_max = max(x)
         y_min = float(y_min)
         y_max = float(y_max)
         x_min = float(x_min)
         x_max = float(x_max)
 
+        # ----------------------------------------- 02
+        # transform x and y ... so that everything is between 0 and 1
+        x = (np.asarray(x)-x_min)/x_max
+        y = (np.asarray(y)-y_min)/y_max
+
         # ----------------------------------------- 03
-        # transform x and y
-        x = list((np.asarray(x)-x_min)/x_max)
-        y = list((np.asarray(y)-y_min)/y_max)
+        # scale it to given height and width
+        if width.unit != height.unit:
+            raise e.validation.NotAllowed(
+                msgs=["Was expecting the unit of height and width to be same"]
+            )
+        _unit = width.unit
+        x *= width.value
+        y *= height.value
+        x = x.astype(np.float32)
+        y = y.astype(np.float32)
 
         # ----------------------------------------- 04
         # make coordinates list
         _points = []
         for _x, _y in zip(x, y):
             _points.append(
-                str(Point2D(Scalar(_x, _unit), Scalar(_x, _unit)))
+                str(Point2D(Scalar(_x, _unit), Scalar(_y, _unit), relative=relative))
             )
 
-        # ----------------------------------------- 05
+        # ----------------------------------------- 06
         # add to connectome
         self.connectome += [f"plot coordinates {{{' '.join(_points)}}}"]
 
-        # ----------------------------------------- 06
+        # ----------------------------------------- 07
         # return
         return self
 
@@ -2497,6 +2501,21 @@ class TikZ(LaTeX):
             raise e.validation.NotAllowed(
                 msgs=[f"Style with key {key} is already registered ..."]
             )
+
+    def show_debug_grid(self, width: Scalar, height: Scalar, step: Scalar):
+        _path = Path(
+            style=Style(
+                draw=DrawOptions(
+                    color=Color.yellow,
+                )
+            )
+        ).move_to(
+            Point2D(Scalar(0, 'cm'), Scalar(0, 'cm'))
+        ).grid(
+            corner=Point2D(width, height),
+            step=step,
+        )
+        self.add_path(_path)
 
     def get_current_bounding_box(self) -> Node:
         """

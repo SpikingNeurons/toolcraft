@@ -79,6 +79,23 @@ class Color(enum.Enum):
             return f"{self.value}!{intensity}"
 
 
+class Fa(enum.Enum):
+    """
+    Options supported by \\usepackage{fontawesome5}
+    All fonts: http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
+    """
+    check = "\\faCheck"
+    times = "\\faTimes"
+    check_circle = "\\faCheckCircle"
+    times_circle = "\\faTimesCircle"
+
+    def __str__(self):
+        return self.value
+
+    def __call__(self, color: Color) -> str:
+        return f"{{\\color{{{color}}} {self}}}"
+
+
 class Scalar(t.NamedTuple):
     """
     Also referred as <dimension> in latex docs
@@ -204,7 +221,9 @@ class Document(LaTeX):
         _preamble_document_class = "\\documentclass"
         _preamble_document_class += "{article}" if self.main_tex_file is None else \
             f"[{self.main_tex_file}]{{subfiles}}"
-        _ret = [_preamble_document_class] + super().preambles
+        _ret = [
+                   _preamble_document_class, "\\usepackage{fontawesome5}"
+               ] + super().preambles
         return _ret
 
     @property
