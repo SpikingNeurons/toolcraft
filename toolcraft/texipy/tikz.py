@@ -241,7 +241,8 @@ class ArrowTip(enum.Enum):
         return self.value
 
 
-class ArrowDef(enum.Enum):
+@dataclasses.dataclass
+class ArrowDef:
     """
     todo: currently multiple arrows at start and end tip is not supported
           we need to implement redefining arrow syntax `>=⟨end arrow kind⟩` but that
@@ -535,7 +536,7 @@ class DrawOptions(t.NamedTuple):
         if self.dash_phase is not None:
             _options.append(f"dash phase={self.dash_phase}")
         if self.arrow_def is not None:
-            _options.append(self.arrow_def)
+            _options.append(str(self.arrow_def))
         if self.rounded_corners is not None:
             _options.append(f"rounded corners={self.rounded_corners}")
         if self.sharp_corners:
@@ -1070,7 +1071,7 @@ class Point(abc.ABC):
     ) -> str:
         _str = str(self)
 
-        _first_brace_index = _str.find("(")
+        _first_brace_index = _str.find("(") + 1
 
         _shift_token = f"[shift={{({x},{y},{z})}}]"
 
@@ -2181,7 +2182,7 @@ class Path:
 
     def to(
         self,
-        to: Point = None,
+        to: t.Union[Point, str] = None,
         out_: t.Union[int, float] = None,
         in_: t.Union[int, float] = None,
         use_as_edge: bool = False,  # todo: experimental
@@ -2404,7 +2405,8 @@ class TikZ(LaTeX):
         todo: move preambles to respective classes using field `tikz_context` in
           `Node` and `Path`
         """
-        return [
+        _doc = self._doc
+        _ret = [
             "\\usepackage{tikz}",
             "\\usetikzlibrary{topaths}",
             "\\usetikzlibrary{shapes}",
@@ -2418,7 +2420,21 @@ class TikZ(LaTeX):
             "\\usetikzlibrary{patterns}",
             "\\usetikzlibrary{positioning}",
             "\\usetikzlibrary{calc}",
-        ] + super().preambles
+        ]
+        if _doc.tikz_externalize_folder is not None:
+            _ret.append("\\usetikzlibrary{external}")
+        _ret += super().preambles
+        return _ret
+
+    @property
+    def preamble_configs(self) -> t.List[str]:
+        _doc = self._doc
+        _ret = []
+        if _doc.tikz_externalize_folder is not None:
+            _ret += [
+                f"\\tikzexternalize[prefix={_doc.tikz_externalize_folder}]"
+            ]
+        return _ret + super().preamble_configs
 
     @property
     def open_clause(self) -> str:
@@ -2463,16 +2479,6 @@ class TikZ(LaTeX):
         # keep reference for _tikz ...
         # __str__ is like build, so we do these assignments here
         for _p in self.paths:
-            # noinspection PyProtectedMember
-            if _p._tikz is None:
-                _p._tikz = self
-            else:
-                # noinspection PyProtectedMember
-                if id(_p._tikz) != id(self):
-                    raise e.code.CodingError(
-                        msgs=["_tikz was already set ... "
-                              "and path may be from different tikz picture"]
-                    )
             # LaTeX parent class does not understand Path it only understands str or
             # subclasses of LaTeX
             self.items.append(str(_p))
@@ -2487,6 +2493,18 @@ class TikZ(LaTeX):
                 value=path.style, values=list(self.styles.keys()),
                 msgs=[f"Style {path.style} is not registered with tikz"]
             ).raise_if_failed()
+
+        # if tikz not present provide it
+        # noinspection PyProtectedMember
+        if path._tikz is None:
+            path._tikz = self
+        else:
+            # noinspection PyProtectedMember
+            if id(path._tikz) != id(self):
+                raise e.code.CodingError(
+                    msgs=["_tikz was already set ... "
+                          "and path may be from different tikz picture"]
+                )
 
         # add to items
         self.paths.append(path)

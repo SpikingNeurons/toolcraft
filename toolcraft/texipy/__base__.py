@@ -249,6 +249,8 @@ class LaTeX(abc.ABC):
             return self.open_clause + self.generate() + self.close_clause + "%"
 
     def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
+        if self._doc is not None:
+            item._doc = self._doc
         self.items.append(item)
         return self
 
@@ -290,7 +292,9 @@ class Document(LaTeX):
     author: t.Union[str, None] = None
     date: t.Union[str, None] = None
 
-    main_tex_file: t.Union[None, str] = None
+    main_tex_file: t.Union[None, str] = "../main.tex"
+    # tikz_externalize_folder: t.Optional[str] = "texipy/_tikz_cache/"
+    tikz_externalize_folder: t.Optional[str] = None
     label: None = None
 
     @property
@@ -356,6 +360,7 @@ class Document(LaTeX):
         self,
         save_to_file: str,
         make_pdf: bool = False,
+        usepackage_file: str = None,
     ):
         # ----------------------------------------------- 01
         # make document class preamble
@@ -367,14 +372,30 @@ class Document(LaTeX):
         _preamble_configs = [f"{_pc}%" for _pc in self.preamble_configs]
         # ----------------------------------------------- 04
         # write
-        _all_lines = [
-            f"% >> generated on {datetime.datetime.now().ctime()}", "",
-            "% >> preambles", *_preambles, "",
-            "% >> preamble configs", *_preamble_configs, "",
-            str(self), "",
-        ]
-        _save_to_file = pathlib.Path(save_to_file)
-        _save_to_file.write_text("\n".join(_all_lines))
+        if usepackage_file is None:
+            _all_lines = [
+                f"% >> generated on {datetime.datetime.now().ctime()}", "",
+                "% >> preambles", *_preambles, "",
+                "% >> preamble configs", *_preamble_configs, "",
+                str(self), "",
+            ]
+            _save_to_file = pathlib.Path(save_to_file)
+            _save_to_file.write_text("\n".join(_all_lines))
+        else:
+            _common_lines = [
+                f"% >> generated on {datetime.datetime.now().ctime()}", "", ]
+            _save_to_file = pathlib.Path(save_to_file)
+            _usepackage_file = pathlib.Path(usepackage_file)
+            _save_to_file.write_text("\n".join(_common_lines + [
+                "% >> usepackage", _preambles[0],
+                f"\\usepackage{{{_usepackage_file.name.split('.')[0]}}}", "",
+                str(self), "",
+            ]))
+            _usepackage_file.write_text("\n".join(_common_lines + [
+                "% >> preambles", *_preambles[1:], "",
+                "% >> preamble configs", *_preamble_configs, "",
+            ]))
+
         # ----------------------------------------------- 05
         # make pdf if requested
         if make_pdf:

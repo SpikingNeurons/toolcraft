@@ -1,6 +1,8 @@
 """
 We do this tutorial in texipy
 for official tikz pdf https://www.bu.edu/math/files/2013/08/tikzpgfmanual.pdf
+
+Visual tikz tutorials: http://tug.ctan.org/info/visualtikz/VisualTikZ.pdf
 """
 
 from toolcraft.texipy import Document, Section, Color, SubSection
