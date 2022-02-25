@@ -199,26 +199,6 @@ class LaTeX(abc.ABC):
         return []
 
     @property
-    def preambles(self) -> t.List[str]:
-        _ret = []
-        for _ in self.items:
-            if not isinstance(_, str):
-                for _p in _.preambles:
-                    if _p not in _ret:
-                        _ret.append(_p)
-        return _ret
-
-    @property
-    def preamble_configs(self) -> t.List[str]:
-        _ret = []
-        for _ in self.items:
-            if not isinstance(_, str):
-                for _c in _.preamble_configs:
-                    if _c not in _ret:
-                        _ret.append(_c)
-        return _ret
-
-    @property
     def use_new_lines(self) -> bool:
         return True
 
@@ -293,6 +273,9 @@ class Document(LaTeX):
     date: t.Union[str, None] = None
 
     main_tex_file: t.Union[None, str] = "../main.tex"
+    symbols_file: str = "symbols.tex"
+    usepackage_file: str = "usepackage.sty"
+
     # tikz_externalize_folder: t.Optional[str] = "texipy/_tikz_cache/"
     tikz_externalize_folder: t.Optional[str] = None
     label: None = None
@@ -301,18 +284,6 @@ class Document(LaTeX):
     @util.CacheResult
     def labels(self) -> t.List[str]:
         return []
-
-    @property
-    def preambles(self) -> t.List[str]:
-        _preamble_document_class = "\\documentclass"
-        _preamble_document_class += "{article}" if self.main_tex_file is None else \
-            f"[{self.main_tex_file}]{{subfiles}}"
-        _ret = [
-                   _preamble_document_class,
-                   "\\usepackage{fontawesome5}",
-                   "\\usepackage{xcolor}"
-               ] + super().preambles
-        return _ret
 
     @property
     def open_clause(self) -> str:
@@ -336,12 +307,6 @@ class Document(LaTeX):
 
     def init_validate(self):
         super().init_validate()
-        if self.main_tex_file is not None:
-            if not pathlib.Path(self.main_tex_file).exists():
-                _LOGGER.warning(
-                    msg=f"Main text file {self.main_tex_file} is "
-                        f"not on disk so using default setting")
-                self.main_tex_file = None
         if self.label is not None:
             raise e.code.CodingError(
                 msgs=[f"No need to set label for {self.__class__}"]
@@ -356,47 +321,41 @@ class Document(LaTeX):
         # noinspection PyAttributeOutsideInit
         self._doc = self  # as this is Document class
 
+        # if main tex file not on disk automatically reset to None
+        if self.main_tex_file is not None:
+            if not pathlib.Path(self.main_tex_file).exists():
+                _LOGGER.warning(
+                    msg=f"Main text file {self.main_tex_file} is "
+                        f"not on disk so using default setting")
+                self.main_tex_file = None
+
     def write(
         self,
         save_to_file: str,
         make_pdf: bool = False,
-        usepackage_file: str = None,
     ):
         # ----------------------------------------------- 01
-        # make document class preamble
-        # ----------------------------------------------- 02
-        # make preamble
-        _preambles = [f"{_p}%" for _p in self.preambles]
-        # ----------------------------------------------- 03
-        # make commands
-        _preamble_configs = [f"{_pc}%" for _pc in self.preamble_configs]
-        # ----------------------------------------------- 04
-        # write
-        if usepackage_file is None:
-            _all_lines = [
-                f"% >> generated on {datetime.datetime.now().ctime()}", "",
-                "% >> preambles", *_preambles, "",
-                "% >> preamble configs", *_preamble_configs, "",
-                str(self), "",
-            ]
-            _save_to_file = pathlib.Path(save_to_file)
-            _save_to_file.write_text("\n".join(_all_lines))
-        else:
-            _common_lines = [
-                f"% >> generated on {datetime.datetime.now().ctime()}", "", ]
-            _save_to_file = pathlib.Path(save_to_file)
-            _usepackage_file = pathlib.Path(usepackage_file)
-            _save_to_file.write_text("\n".join(_common_lines + [
-                "% >> usepackage", _preambles[0],
-                f"\\usepackage{{{_usepackage_file.name.split('.')[0]}}}", "",
-                str(self), "",
-            ]))
-            _usepackage_file.write_text("\n".join(_common_lines + [
-                "% >> preambles", *_preambles[1:], "",
-                "% >> preamble configs", *_preamble_configs, "",
-            ]))
+        # make document
+        _all_lines = [
+            f"% >> generated on {datetime.datetime.now().ctime()}",
+            "",
+            "% >> init",
+            "\\documentclass{article}"
+            if self.main_tex_file is None else
+            f"\\documentclass[{self.main_tex_file}]{{subfiles}}",
+            f"\\usepackage{{{self.usepackage_file.split('.')[0]}}}",
+            ("" if self.main_tex_file is None else "% ") +
+            f"\\input{{{self.symbols_file.split('.')[0]}}}",
+            "",
+            str(self),
+            "",
+        ]
 
-        # ----------------------------------------------- 05
+        # ----------------------------------------------- 02
+        _save_to_file = pathlib.Path(save_to_file)
+        _save_to_file.write_text("\n".join(_all_lines))
+
+        # ----------------------------------------------- 03
         # make pdf if requested
         if make_pdf:
             helper.make_pdf(

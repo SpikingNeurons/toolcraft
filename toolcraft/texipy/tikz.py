@@ -2400,43 +2400,6 @@ class TikZ(LaTeX):
         return []
 
     @property
-    def preambles(self) -> t.List[str]:
-        """
-        todo: move preambles to respective classes using field `tikz_context` in
-          `Node` and `Path`
-        """
-        _doc = self._doc
-        _ret = [
-            "\\usepackage{tikz}",
-            "\\usetikzlibrary{topaths}",
-            "\\usetikzlibrary{shapes}",
-            "\\usetikzlibrary{shapes.geometric}",
-            "\\usetikzlibrary{shapes.symbols}",
-            "\\usetikzlibrary{shapes.multipart}",
-            "\\usetikzlibrary{shapes.misc}",
-            # todo: replace with decorations.pathmorphing library
-            # "\\usetikzlibrary{snakes}",
-            "\\usetikzlibrary{arrows}",
-            "\\usetikzlibrary{patterns}",
-            "\\usetikzlibrary{positioning}",
-            "\\usetikzlibrary{calc}",
-        ]
-        if _doc.tikz_externalize_folder is not None:
-            _ret.append("\\usetikzlibrary{external}")
-        _ret += super().preambles
-        return _ret
-
-    @property
-    def preamble_configs(self) -> t.List[str]:
-        _doc = self._doc
-        _ret = []
-        if _doc.tikz_externalize_folder is not None:
-            _ret += [
-                f"\\tikzexternalize[prefix={_doc.tikz_externalize_folder}]"
-            ]
-        return _ret + super().preamble_configs
-
-    @property
     def open_clause(self) -> str:
         _ret = []
         if self.caption is not None or self.label is not None:
