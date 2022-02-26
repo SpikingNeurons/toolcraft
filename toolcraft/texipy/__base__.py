@@ -343,6 +343,7 @@ class Document(LaTeX):
             "\\documentclass{article}"
             if self.main_tex_file is None else
             f"\\documentclass[{self.main_tex_file}]{{subfiles}}",
+            ("" if self.main_tex_file is None else "% ") +
             f"\\usepackage{{{self.usepackage_file.split('.')[0]}}}",
             ("" if self.main_tex_file is None else "% ") +
             f"\\input{{{self.symbols_file.split('.')[0]}}}",
