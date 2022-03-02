@@ -2388,6 +2388,9 @@ class Path:
 class TikZ(LaTeX):
     caption: str = None
 
+    # https://www.overleaf.com/learn/latex/Positioning_of_Figures
+    figure_pos: t.Literal['', 'h', 't', 'b', 'p', '!', 'H'] = ''
+
     @property
     @util.CacheResult
     def paths(self) -> t.List[Path]:
@@ -2403,8 +2406,15 @@ class TikZ(LaTeX):
     def open_clause(self) -> str:
         _ret = []
         if self.caption is not None or self.label is not None:
+            if self.figure_pos == '':
+                _figure_pos = ''
+            else:
+                _figure_pos = f"[{self.figure_pos}]"
             _ret += [
-                f"% >> start figure {self.label}", "\\begin{figure}%", "\\centering%"]
+                f"% >> start figure {self.label}",
+                f"\\begin{{figure}}{_figure_pos}%",
+                "\\centering%"
+            ]
         _ret.append("% >> start tikz picture")
         for _k, _s in self.styles.items():
             _ret.append(

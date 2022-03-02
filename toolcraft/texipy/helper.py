@@ -73,7 +73,10 @@ def make_pdf(
             if not silent:
                 _LOGGER.info(msg=output.decode())
 
-        for _ext in ['aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi', 'auxlock']:
+        for _ext in [
+            'aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
+            'auxlock', 'acn', 'glo', 'ist',
+        ]:
             (
                 pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
             ).unlink(missing_ok=True)
