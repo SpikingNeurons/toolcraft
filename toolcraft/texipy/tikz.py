@@ -22,7 +22,7 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Font, Scalar
+from .__base__ import LaTeX, Color, Font, Scalar, FigurePos
 
 
 class Thickness(enum.Enum):
@@ -2387,9 +2387,7 @@ class Path:
 @dataclasses.dataclass
 class TikZ(LaTeX):
     caption: str = None
-
-    # https://www.overleaf.com/learn/latex/Positioning_of_Figures
-    figure_pos: t.Literal['', 'h', 't', 'b', 'p', '!', 'H'] = ''
+    figure_pos: FigurePos = None
 
     @property
     @util.CacheResult
@@ -2406,13 +2404,9 @@ class TikZ(LaTeX):
     def open_clause(self) -> str:
         _ret = []
         if self.caption is not None or self.label is not None:
-            if self.figure_pos == '':
-                _figure_pos = ''
-            else:
-                _figure_pos = f"[{self.figure_pos}]"
             _ret += [
                 f"% >> start figure {self.label}",
-                f"\\begin{{figure}}{_figure_pos}%",
+                f"\\begin{{figure}}{self.figure_pos}%",
                 "\\centering%"
             ]
         _ret.append("% >> start tikz picture")

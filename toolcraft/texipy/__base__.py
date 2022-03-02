@@ -190,6 +190,42 @@ class Scalar(t.NamedTuple):
 
 
 @dataclasses.dataclass
+class FigurePos:
+    """
+    https://www.overleaf.com/learn/latex/Positioning_of_Figures
+    """
+    here: bool = False
+    top: bool = False
+    bottom: bool = False
+    special_float_page: bool = False
+    override: bool = False
+    strict_here: bool = False  # needs \\usepackage{float}
+
+    def __str__(self):
+        _ret = ""
+
+        if self.here:
+            _ret += "h"
+        if self.top:
+            _ret += "t"
+        if self.bottom:
+            _ret += "b"
+        if self.special_float_page:
+            _ret += "p"
+        if self.strict_here:
+            _ret += "H"
+        # this should be last
+        if self.override:
+            _ret += "!"
+
+        if _ret == "":
+            return _ret
+        else:
+            return "[" + _ret + "]"
+
+
+
+@dataclasses.dataclass
 class LaTeX(abc.ABC):
     label: str = None
 
