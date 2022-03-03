@@ -2,8 +2,8 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.3.1
->> Time: 2022-01-21 10:50
+>> DearPyGui: 1.4.0
+>> Time: 2022-03-03 21:52
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -4690,6 +4690,9 @@ class KnobFloat(MovableWidget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
 
@@ -4730,6 +4733,7 @@ class KnobFloat(MovableWidget):
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
             show=self.show,
+            enabled=self.enabled,
             pos=self.pos,
             filter_key=self.filter_key,
             tracked=self.tracked,

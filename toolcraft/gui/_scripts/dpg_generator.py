@@ -232,6 +232,9 @@ _SKIP_METHODS = [
     dpg.set_viewport_width,
     dpg.show_viewport, dpg.toggle_viewport_fullscreen,
 
+    # todo: when grabbing UI frames for examples
+    dpg.output_frame_buffer, dpg.save_image,
+
     # todo: dpg related
     dpg.create_context, dpg.destroy_context, dpg.empty_container_stack,
     dpg.last_container, dpg.last_item, dpg.setup_dearpygui,
