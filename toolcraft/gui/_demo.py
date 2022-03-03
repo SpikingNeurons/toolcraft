@@ -1193,7 +1193,7 @@ def show_demo():
 
                                 _text_id = dpg.add_text("0/0")
                                 with dpg.item_handler_registry(
-                                    tag="__demo_item_reg1_" + str(i)):
+                                        tag="__demo_item_reg1_" + str(i)):
                                     dpg.add_item_visible_handler(
                                         user_data=[_text_id, _child_id],
                                         callback=_update_yscroll_info)
@@ -1216,7 +1216,7 @@ def show_demo():
                                         dpg.add_text("Item " + str(j))
                         _text_id = dpg.add_text("0/0")
                         with dpg.item_handler_registry(
-                            tag="__demo_item_reg2_" + str(i)):
+                                tag="__demo_item_reg2_" + str(i)):
                             dpg.add_item_visible_handler(
                                 user_data=[_text_id, _child_id],
                                 callback=_update_xscroll_info)
@@ -1386,12 +1386,44 @@ def show_demo():
         with dpg.collapsing_header(label="Popups & Modal Windows"):
 
             with dpg.tree_node(label="Popups"):
+                dpg.add_text("This is a light wrapper over a window.", bullet=True)
                 dpg.add_text(
-                    "When a popup is active, it inhibits interacting with windows that are behind the popup. Clicking outside the popup closes it.")
+                    "For more control over a modal|popup window use a normal window with the modal|popup keyword and set the item handler and mouse events manually.",
+                    bullet=True)
+                dpg.add_text(
+                    "By default a popup will shrink fit the items it contains.This is useful for context windows, and simple modal window popups.",
+                    bullet=True)
+                dpg.add_text(
+                    "When a popup is active, it inhibits interacting with windows that are behind the popup. Clicking outside the popup closes it.",
+                    bullet=True)
                 with dpg.group(horizontal=True):
-                    b = dpg.add_button(label="Select..")
+                    b = dpg.add_button(label="Right Click...")
                     t = dpg.add_text("<None>")
                     with dpg.popup(b, tag="__demo_popup1"):
+                        dpg.add_text("Aquariam")
+                        dpg.add_separator()
+                        dpg.add_selectable(label="Bream", user_data=[t, "Bream"],
+                                           callback=lambda s, a, u: dpg.set_value(u[0],
+                                                                                  u[1]))
+                        dpg.add_selectable(label="Haddock", user_data=[t, "Haddock"],
+                                           callback=lambda s, a, u: dpg.set_value(u[0],
+                                                                                  u[1]))
+                        dpg.add_selectable(label="Mackerel", user_data=[t, "Mackerel"],
+                                           callback=lambda s, a, u: dpg.set_value(u[0],
+                                                                                  u[1]))
+                        dpg.add_selectable(label="Pollock", user_data=[t, "Pollock"],
+                                           callback=lambda s, a, u: dpg.set_value(u[0],
+                                                                                  u[1]))
+                        dpg.add_selectable(label="Tilefish", user_data=[t, "Tilefish"],
+                                           callback=lambda s, a, u: dpg.set_value(u[0],
+                                                                                  u[1]))
+                dpg.add_text("A Popup with minimum size that cannot be moved",
+                             bullet=True)
+                with dpg.group(horizontal=True):
+                    b = dpg.add_button(label="Right Click...")
+                    t = dpg.add_text("<None>")
+                    with dpg.popup(b, tag="__demo_popup2", no_move=True,
+                                   min_size=[300, 400]):
                         dpg.add_text("Aquariam")
                         dpg.add_separator()
                         dpg.add_selectable(label="Bream", user_data=[t, "Bream"],
@@ -1413,9 +1445,10 @@ def show_demo():
             with dpg.tree_node(label="Modals"):
                 dpg.add_text(
                     "Modal windows are like popups but the user cannot close them by clicking outside.")
-                dpg.add_button(label="Delete..")
+                dpg.add_text("This popup uses left click")
+                dpg.add_button(label="Left Click...")
                 with dpg.popup(dpg.last_item(), modal=True,
-                               mousebutton=dpg.mvMouseButton_Left, tag="__demo_popup2"):
+                               mousebutton=dpg.mvMouseButton_Left, tag="__demo_popup3"):
                     dpg.add_text(
                         "All those beautiful files will be deleted.\nThis operation cannot be undone!")
                     dpg.add_separator()
@@ -1423,10 +1456,10 @@ def show_demo():
                     with dpg.group(horizontal=True):
                         dpg.add_button(label="OK", width=75,
                                        callback=lambda: dpg.configure_item(
-                                           "__demo_popup2", show=False))
+                                           "__demo_popup3", show=False))
                         dpg.add_button(label="Cancel", width=75,
                                        callback=lambda: dpg.configure_item(
-                                           "__demo_popup2", show=False))
+                                           "__demo_popup3", show=False))
 
             with dpg.tree_node(label="File/Directory Selector"):
                 with dpg.file_dialog(label="Demo File Dialog", width=300, height=400,
@@ -1703,7 +1736,7 @@ def show_demo():
                         for i in range(3):
                             _text_id = dpg.add_text("(w: 0.0f)")
                             with dpg.item_handler_registry(
-                                tag="__demo_item_reg4_" + str(i)):
+                                    tag="__demo_item_reg4_" + str(i)):
                                 dpg.add_item_visible_handler(user_data=_text_id,
                                                              callback=lambda s, a,
                                                                              u: dpg.set_value(
@@ -1731,7 +1764,7 @@ def show_demo():
                         for i in range(4):
                             _text_id = dpg.add_text("(w: 0.0f)")
                             with dpg.item_handler_registry(
-                                tag="__demo_item_reg5_" + str(i)):
+                                    tag="__demo_item_reg5_" + str(i)):
                                 dpg.add_item_visible_handler(user_data=_text_id,
                                                              callback=lambda s, a,
                                                                              u: dpg.set_value(
@@ -2937,10 +2970,10 @@ def show_demo():
             dpg.add_text("Ctrl+Click to remove a link.", bullet=True)
 
             with dpg.node_editor(
-                callback=lambda sender, app_data: dpg.add_node_link(app_data[0],
-                                                                    app_data[1],
-                                                                    parent=sender),
-                delink_callback=lambda sender, app_data: dpg.delete_item(app_data)):
+                    callback=lambda sender, app_data: dpg.add_node_link(app_data[0],
+                                                                        app_data[1],
+                                                                        parent=sender),
+                    delink_callback=lambda sender, app_data: dpg.delete_item(app_data)):
                 with dpg.node(label="Node 1", pos=[10, 10]):
                     with dpg.node_attribute():
                         dpg.add_input_float(label="F1", width=150)
