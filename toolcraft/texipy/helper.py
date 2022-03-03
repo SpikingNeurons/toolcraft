@@ -93,3 +93,11 @@ def make_pdf(
                 'or make sure you have latexmk or pdfLaTex installed.'
             ]
         )
+
+
+def make_math(in_: str) -> str:
+    return f"\\({in_}\\)"
+
+
+def make_text(in_: str) -> str:
+    return f"\\text{{{in_}}}"

@@ -81,9 +81,9 @@ class Acronym(Symbol):
         _lines = [
             f"\\newacronym"
             f"{{{self._var_name}}}{{{self.short_name}}}{{{self.full_name}}}",
-            f"\\newcommand*{{\\{self._var_name}}}{{{self.short} }}",
-            f"\\newcommand*{{\\{self._var_name+'L'}}}{{{self.long} }}",
-            f"\\newcommand*{{\\{self._var_name+'F'}}}{{{self.full} }}",
+            f"\\newcommand*{{\\{self._var_name}}}{{{self.short}~}}",
+            f"\\newcommand*{{\\{self._var_name + 'F'}}}{{{self.full}~}}",
+            f"\\newcommand*{{\\{self._var_name + 'L'}}}{{{self.long}~}}",
         ]
         return "\n".join(_lines)
 
@@ -95,6 +95,9 @@ class Glossary(Symbol):
     """
     name: str
     description: str
+    make_cap: bool = False
+    make_pl: bool = False
+    make_cappl: bool = False
 
     @property
     def normal(self) -> str:
@@ -136,6 +139,16 @@ class Glossary(Symbol):
         # to be used by python code ...
         return f"\\Glspl{{{self._var_name}}}"
 
+    @property
+    def desc(self) -> str:
+        if self._var_name is None:
+            raise e.code.CodingError(
+                msgs=["Should be assigned by now ...",
+                      f"Did you forgot to call {make_symbols_tex_file}"]
+            )
+        # to be used by python code ...
+        return f"\\glsdesc{{{self._var_name}}}"
+
     def __str__(self):
         # to be used by python code ...
         return self.normal
@@ -152,11 +165,19 @@ class Glossary(Symbol):
             f"    name={self.name},",
             f"    description={{{self.description}}}",
             "}",
-            f"\\newcommand*{{\\{self._var_name}}}{{{self.normal} }}",
-            f"\\newcommand*{{\\{self._var_name.capitalize()}}}{{{self.cap} }}",
-            f"\\newcommand*{{\\{self._var_name+'Pl'}}}{{{self.pl} }}",
-            f"\\newcommand*{{\\{self._var_name.capitalize()+'Pl'}}}{{{self.cappl} }}",
+            f"\\newcommand*{{\\{self._var_name}}}{{{self.normal}~}}",
+            f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.desc}~}}",
         ]
+        if self.make_cap:
+            _lines += \
+                [f"\\newcommand*{{\\{self._var_name.capitalize()}}}{{{self.cap}~}}"]
+        if self.make_pl:
+            _lines += \
+                [f"\\newcommand*{{\\{self._var_name + 'Pl'}}}{{{self.pl}~}}"]
+        if self.make_cappl:
+            _lines += \
+                [f"\\newcommand*"
+                 f"{{\\{self._var_name.capitalize() + 'Pl'}}}{{{self.cappl}~}}"]
         return "\n".join(_lines)
 
 
@@ -243,7 +264,7 @@ class Command(Symbol):
             _cmd += f"[{self.num_args}]"
         if self.default_value is not None:
             _cmd += f"[{self.default_value}]"
-        _cmd += f"{{{self.latex} }}"
+        _cmd += f"{{{self.latex}~}}"
         return _cmd
 
 
