@@ -57,7 +57,6 @@ import typing as t
 import pathlib
 import dataclasses
 import pyarrow as pa
-import pyarrow.fs as pafs
 import pyarrow.dataset as pds
 import types
 import operator
@@ -67,7 +66,6 @@ from .. import util
 from .. import error as e
 from .. import marshalling as m
 from .. import storage as s
-from . import file_system as our_fs
 from . import Folder
 
 # noinspection PyUnresolvedReferences
@@ -279,7 +277,7 @@ def _read_table(
     # noinspection PyProtectedMember
     _table = pa.Table.from_batches(
         batches=pds.dataset(
-            source=df_file.path.as_posix(),
+            source=df_file.path.suffix_path,
             filesystem=df_file.file_system,
             format=_FILE_FORMAT,
             schema=table_schema,
@@ -454,6 +452,9 @@ class TableConfig(s.Config):
 @dataclasses.dataclass(frozen=True)
 class Table(Folder):
     """
+    We refer
+    https://arrow.apache.org/docs/python/filesystems.html#using-fsspec-compatible-filesystems-with-arrow
+
     This means files storage for Data frames i.e. for columnar data.
     Although it is named Table we extend Folder to implement this because of
     Hive formatting where we have folders for columns.
@@ -500,29 +501,13 @@ class Table(Folder):
     @util.CacheResult
     def config(self) -> TableConfig:
         return TableConfig(
-            hashable=self, path_prefix=self.path.as_posix()
+            hashable=self,
         )
 
     @property
     @util.CacheResult
     def internal(self) -> TableInternal:
         return TableInternal(self)
-
-    @property
-    def _uses_parent_folder(self) -> bool:
-        return True
-
-    @property
-    def file_system(self) -> t.Union[
-        pafs.FileSystem,
-        # todo: eventually this needs to be migrated tp `pafs.FileSystem` as
-        #   `pa.filesystem.FileSystem` will be deprecated by pyarrow
-        pa.filesystem.FileSystem,
-    ]:
-        # todo: currently only local file system .... we need to plan other
-        #  file systems later ...
-        # todo: for local we are going with singleton pattern
-        return our_fs.LocalFileSystem.get_instance()
 
     def init_validate(self):
         # call super
@@ -555,10 +540,9 @@ class Table(Folder):
 
     def exists(
         self,
-        columns: t.List[str],
-        filter_expression: pds.Expression,
-        return_table: bool,
-    ) -> t.Union[bool, pa.Table]:
+        columns: t.List[str] = None,
+        filter_expression: pds.Expression = None,
+    ) -> bool:
         """
         This is weird design choice here to return table when filters are
         used. This is just to avoid multiple data reads. Anyways you can
@@ -574,10 +558,9 @@ class Table(Folder):
         """
         # if nothing exists simply exit ... as there is no table to read on disk
         # noinspection PyTypeChecker
-        if not self.file_system.exists(self.path):
+        if not self.path.exists():
             return False
-        # if folder exists but empty then return False
-        if util.io_is_dir_empty(self.path):
+        if self.path.is_dir_empty():
             return False
         # read table with filters to see if something exists
         # Note that columns is None as it is irrelevant while checking for
@@ -589,11 +572,132 @@ class Table(Folder):
             table_schema=self.internal.schema,
             partitioning=self.internal.partitioning,
         )
-        # return Table if one or more rows exist else return False
-        if return_table:
-            return _table if len(_table) > 0 else False
+        # return
+        return bool(_table)
+
+    def read(
+        self,
+        columns: t.List[str] = None,
+        filter_expression: pds.Expression = None,
+    ) -> t.Optional[pa.Table]:
+        # if nothing exists simply exit ... as there is no table to read on disk
+        # noinspection PyTypeChecker
+        if not self.path.exists():
+            return None
+        if self.path.is_dir_empty():
+            return None
+        # this should always be there and would be known even if not provided
+        # on first write
+        _partitioning = self.internal.partitioning
+        _schema = self.internal.schema
+
+        # read table
+        _table = _read_table(
+            self, columns=columns, filter_expression=filter_expression,
+            partitioning=_partitioning,
+            table_schema=_schema
+        )
+
+        # extra check
+        if len(_table) == 0:
+            raise e.code.ShouldNeverHappen(
+                msgs=[
+                    "The exists check before read call should handled it.",
+                    "Found a empty table while reading",
+                    f"Please do not use `.` or `_` at start of any folder in "
+                    f"the path as the pyarrow does not raise error but reads "
+                    f"empty table.",
+                    f"Check path {self.path}"
+                ]
+            )
+
+        # return
+        return _table
+
+    def append(
+        self,
+        value: t.Union[pa.Table, types.GeneratorType],
+        yields: bool,
+    ) -> bool:
+        # is value a generator type
+        _is_generator_type = isinstance(value, types.GeneratorType)
+
+        # check if yields value should be generator
+        if yields:
+            if not _is_generator_type:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"Are you using return ?? ... ",
+                        f"We expect you to yield"
+                    ]
+                )
         else:
-            return bool(_table)
+            if _is_generator_type:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"Are you using yield ?? ... ",
+                        f"We expect you to return"
+                    ]
+                )
+
+        # check if partition columns exist in table that is to be
+        # written to disk
+        # todo: this check is inefficient especially for append writes
+        # todo: this check works when `yields=False` but when `yields=True`
+        #  this fails as value is generator. For now we comment this check
+        #  will take action later ... NOT A PRIORITY
+        # if self.partition_cols is not None:
+        #     for pc in self.partition_cols:
+        #         if pc not in value.column_names:
+        #             raise e.code.CodingError(
+        #                 msgs=[
+        #                     f"We expect you to supply mandatory column "
+        #                     f"`{pc}` in the returned/yielded pyarrow table."
+        #                 ]
+        #             )
+
+        # if not generator make it iterator so that looping happens once
+        if not _is_generator_type:
+            # todo: Is this efficient ???
+            value = [value]
+
+        # get iterator
+        _iterator = iter(value)
+
+        # get first element
+        _table = next(_iterator)  # type: pa.Table
+
+        # if not pa.Table then raise error
+        if not isinstance(_table, pa.Table):
+            raise e.code.CodingError(
+                msgs=[
+                    f"We expect the decorated method to return {pa.Table} "
+                    f"but instead found return value of type {type(_table)}"
+                ]
+            )
+
+        # get schema if in config else get schema from table and write
+        # back to config
+        if not self.internal.is_updated:
+            # now update as config is updated
+            self.internal.update_from_table_or_config(table=_table)
+
+        # get partitioning
+        _partitioning = self.internal.partitioning
+
+        # default behaviour is to append .... if you do not want that
+        # please call self.delete() before calling this
+        # write first element
+        _write_table(self, _table, _partitioning)
+        # now write remaining
+        for _table in _iterator:
+            _write_table(self, _table, _partitioning)
+
+        # we do not return what we just wrote
+        # for append and write we return True to avoid huge reads ....
+        # just use read Mode to get the values
+        # return bool
+        return True
 
     # Note that the parent delete is for Folder but for Table also we have
     # folder which represents folder and we will take care of the delete. But
@@ -810,121 +914,3 @@ class Table(Folder):
         # return True ... anyways when it reaches till here
         # _is_something_deleted will be True
         return _is_something_deleted
-
-    def read(
-        self,
-        columns: t.List[str],
-        filter_expression: pds.Expression,
-    ) -> pa.Table:
-        # this should always be there and would be known even if not provided
-        # on first write
-        _partitioning = self.internal.partitioning
-        _schema = self.internal.schema
-
-        # read table
-        _table = _read_table(
-            self, columns=columns, filter_expression=filter_expression,
-            partitioning=_partitioning,
-            table_schema=_schema
-        )
-
-        # extra check
-        if len(_table) == 0:
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    "The exists check before read call should handled it.",
-                    "Found a empty table while reading",
-                    f"Please do not use `.` or `_` at start of any folder in "
-                    f"the path as the pyarrow does not raise error but reads "
-                    f"empty table.",
-                    f"Check path {self.path}"
-                ]
-            )
-
-        # return
-        return _table
-
-    def append(
-        self,
-        value: t.Union[pa.Table, types.GeneratorType],
-        yields: bool,
-    ) -> bool:
-        # is value a generator type
-        _is_generator_type = isinstance(value, types.GeneratorType)
-
-        # check if yields value should be generator
-        if yields:
-            if not _is_generator_type:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Are you using return ?? ... ",
-                        f"We expect you to yield"
-                    ]
-                )
-        else:
-            if _is_generator_type:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Are you using yield ?? ... ",
-                        f"We expect you to return"
-                    ]
-                )
-
-        # check if partition columns exist in table that is to be
-        # written to disk
-        # todo: this check is inefficient especially for append writes
-        # todo: this check works when `yields=False` but when `yields=True`
-        #  this fails as value is generator. For now we comment this check
-        #  will take action later ... NOT A PRIORITY
-        # if self.partition_cols is not None:
-        #     for pc in self.partition_cols:
-        #         if pc not in value.column_names:
-        #             raise e.code.CodingError(
-        #                 msgs=[
-        #                     f"We expect you to supply mandatory column "
-        #                     f"`{pc}` in the returned/yielded pyarrow table."
-        #                 ]
-        #             )
-
-        # if not generator make it iterator so that looping happens once
-        if not _is_generator_type:
-            # todo: Is this efficient ???
-            value = [value]
-
-        # get iterator
-        _iterator = iter(value)
-
-        # get first element
-        _table = next(_iterator)  # type: pa.Table
-
-        # if not pa.Table then raise error
-        if not isinstance(_table, pa.Table):
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect the decorated method to return {pa.Table} "
-                    f"but instead found return value of type {type(_table)}"
-                ]
-            )
-
-        # get schema if in config else get schema from table and write
-        # back to config
-        if not self.internal.is_updated:
-            # now update as config is updated
-            self.internal.update_from_table_or_config(table=_table)
-
-        # get partitioning
-        _partitioning = self.internal.partitioning
-
-        # default behaviour is to append .... if you do not want that
-        # please call self.delete() before calling this
-        # write first element
-        _write_table(self, _table, _partitioning)
-        # now write remaining
-        for _table in _iterator:
-            _write_table(self, _table, _partitioning)
-
-        # we do not return what we just wrote
-        # for append and write we return True to avoid huge reads ....
-        # just use read Mode to get the values
-        # return bool
-        return True

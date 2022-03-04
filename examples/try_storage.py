@@ -283,10 +283,15 @@ class TestStorage(m.HashableClass):
                 f"Something already exists"
             )
 
+    @property
+    @util.CacheResult
+    def store(self) -> s.Table:
+        return s.Table(parent_folder=self.results_folder, for_hashable="store")
+
     # noinspection PyUnusedLocal
     @s.dec.Table()
     # noinspection PyMethodMayBeStatic
-    def store(self, mode: s.MODE_TYPE) -> t.Union[bool, pa.Table]:
+    def _store(self, mode: s.MODE_TYPE) -> t.Union[bool, pa.Table]:
         return self.data_vector("pandas_dataframe")
 
     # noinspection PyUnusedLocal
@@ -344,9 +349,11 @@ def try_arrow_storage():
     # ---------------------------------------------------------01
     print("---------------------------------------------------------01")
     # pandas_dataframe
-    r = ts.store(mode="rw")
+    r = ts.store.read()
     print("ts.store(mode='rw')")
     assert r == ts.data_vector("pandas_dataframe")
+
+    raise
 
     r = ts.store(mode="r")
     print("ts.store(mode='r')")
