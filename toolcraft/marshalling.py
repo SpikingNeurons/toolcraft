@@ -660,7 +660,6 @@ class RuleChecker:
                         f"Please check if you provided wrong string ..."
                     ]
                 )
-                raise
             # if abstract no sense in checking if cached
             if getattr(_method_or_prop, '__isabstractmethod__', False):
                 continue
@@ -1700,7 +1699,7 @@ class FrozenEnum(YamlRepr):
 # @dataclasses.dataclass(eq=True, frozen=True)
 @dataclasses.dataclass(frozen=True)
 @RuleChecker(
-    things_to_be_cached=['hex_hash', 'stores', 'rich_panel'],
+    things_to_be_cached=['hex_hash', 'rich_panel'],
     things_not_to_be_overridden=['hex_hash'],
 )
 class HashableClass(YamlRepr, abc.ABC):
@@ -1833,14 +1832,14 @@ class HashableClass(YamlRepr, abc.ABC):
         return hashlib.md5(f"{self.yaml()}".encode("utf-8")).hexdigest()
 
     # noinspection PyPropertyDefinition,PyTypeChecker
-    @property
-    @util.CacheResult
-    def stores(self) -> t.Dict[str, "storage.dec.StoreFolder"]:
-        raise e.code.NotAllowed(msgs=[
-            f"Please override `stores` property if you want to "
-            f"save results @storage.dec.XYZ decorators for hashable class "
-            f"{self.__class__}"
-        ])
+    # @property
+    # @util.CacheResult
+    # def stores(self) -> t.Dict[str, "storage.dec.StoreFolder"]:
+    #     raise e.code.NotAllowed(msgs=[
+    #         f"Please override `stores` property if you want to "
+    #         f"save results @storage.dec.XYZ decorators for hashable class "
+    #         f"{self.__class__}"
+    #     ])
 
     # todo: this was for yaml repr .... but not needed ... so may be we
     #  still need to explore the default __repr__ for dataclass ...

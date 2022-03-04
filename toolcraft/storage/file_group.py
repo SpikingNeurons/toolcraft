@@ -19,7 +19,6 @@ import time
 
 import requests
 import typing as t
-import pathlib
 import subprocess
 import dataclasses
 import abc
@@ -356,7 +355,7 @@ class FileGroup(StorageHashable, abc.ABC):
             )
 
         # todo: update path for linux/unix
-        _cred_file = pathlib.Path.home() / "AppData" / "Roaming" / "gcloud" / \
+        _cred_file = Path.HOME / "AppData" / "Roaming" / "gcloud" / \
             "application_default_credentials.json"
 
         if not _cred_file.exists():
@@ -681,7 +680,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _computed_hashes = {}
         _file_paths = {
             fk: self.path/fk for fk in self.file_keys
-        }  # type: t.Dict[str, pathlib.Path]
+        }  # type: t.Dict[str, Path]
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
         # needed are similar
@@ -691,7 +690,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ------------------------------------------------------ 02
         # now add tasks
         for fk in self.file_keys:
-            _lengths[fk] = _file_paths[fk].stat().st_size
+            _lengths[fk] = _file_paths[fk].stat()['size']
             _hash_check_panel.add_task(
                 task_name=fk, total=_lengths[fk]
             )
@@ -705,7 +704,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 _hash_module = hashlib.sha256()
                 # get task id
                 _task_id = _hash_check_panel.tasks[fk].id
-                with _file_paths[fk].open(mode='rb', buffering=0) as fb:
+                with _file_paths[fk].open(mode='rb') as fb:
                     _new_chunk_size = min(_lengths[fk] // 10, _chunk_size)
                     # compute
                     for _chunk in iter(lambda: fb.read(_chunk_size), b''):
@@ -1007,8 +1006,9 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ----------------------------------------------------------------03
         # make files read only
-        for f in created_fs:
-            util.io_make_path_read_only(f)
+        # todo: not sure how to make our `Path` based on fsspec as readonly
+        # for f in created_fs:
+        #     util.io_make_path_read_only(f)
 
         # ----------------------------------------------------------------04
         # call super and return .... so that state is created
@@ -1037,7 +1037,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     @abc.abstractmethod
-    def create_file(self, *, file_key: str) -> pathlib.Path:
+    def create_file(self, *, file_key: str) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
         create files on first call and subsequent file_keys will just fake
@@ -1148,10 +1148,7 @@ class NpyMemMap:
       the elements internal to them are again accessed randomly
     """
 
-    def __init__(
-        self,
-        file_path: pathlib.Path,
-    ):
+    def __init__(self, file_path: Path,):
         """
 
         Args:
@@ -1750,7 +1747,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         self,
         file_key: str,
         npy_data: t.Union[np.ndarray, t.Dict[str, np.ndarray]],
-    ) -> pathlib.Path:
+    ) -> Path:
         # get spinner and log
         _s = logger.Spinner.get_last_spinner()
         if _s is not None:
@@ -1823,7 +1820,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         return super().create_pre_runner()
 
     def create_post_runner(
-        self, *, hooked_method_return_value: t.List[pathlib.Path]
+        self, *, hooked_method_return_value: t.List[Path]
     ):
         # ----------------------------------------------------------------01
         # load as memmaps
@@ -1898,18 +1895,18 @@ class TempFileGroup(FileGroup, abc.ABC):
 
     @property
     @util.CacheResult
-    def _root_dir(self) -> pathlib.Path:
+    def _root_dir(self) -> Path:
         return settings.Dir.TEMPORARY
 
     def get_files(
             self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, pathlib.Path]:
+    ) -> t.Dict[str, Path]:
         return {
             file_key: self.path / file_key
             for file_key in file_keys
         }
 
-    def get_file(self, file_key: str) -> pathlib.Path:
+    def get_file(self, file_key: str) -> Path:
         return self.get_files(file_keys=[file_key])[file_key]
 
     # we should not override dunders
@@ -1948,11 +1945,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         return list(self.get_urls().keys())
 
     @property
-    @util.CacheResult
-    def _root_dir(self) -> pathlib.Path:
-        return settings.Dir.DOWNLOAD
-
-    @property
     @abc.abstractmethod
     def meta_info(self) -> dict:
         """
@@ -1970,7 +1962,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     def get_urls(self) -> t.Dict[str, str]:
         ...
 
-    def create(self) -> t.List[pathlib.Path]:
+    def create(self) -> t.List[Path]:
         """
         todo: we can make this with asyncio with aiohttps and aiofiles
           https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
@@ -1980,14 +1972,15 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         _chunk_size = 1024 * 50
         _file_paths = {
             fk: self.path/fk for fk in self.file_keys
-        }  # type: t.Dict[str, pathlib.Path]
+        }  # type: t.Dict[str, Path]
         _urls = self.get_urls()
+        _raise_error = False
         _errors = {}
         _responses = {}
         _lengths = {}
         for fk in self.file_keys:
             if _file_paths[fk].exists():
-                _lengths[fk] = _file_paths[fk].stat().st_size
+                _lengths[fk] = _file_paths[fk].stat()['size']
                 continue
             _response = requests.get(_urls[fk], stream=True)
             _length = int(_response.headers['content-length'])
@@ -2051,6 +2044,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         state="failed",
                     )
                     _LOGGER.error(msg=f" >> {fk}: failed with error {_errors[fk]}")
+                    _raise_error = True
                     continue
                 try:
                     with _file_paths[fk].open('wb') as _f:
@@ -2066,15 +2060,20 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                     _LOGGER.info(msg=f" >> {fk}: success")
                 except Exception as _exp:
                     _LOGGER.error(msg=f" >> {fk}: failed with error {str(_exp)}")
+                    _raise_error = True
             _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
             _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
+            if _raise_error:
+                raise e.validation.NotAllowed(
+                    msgs=["Check errors above ..."]
+                )
 
         # ------------------------------------------------------ 05
         # return
         return list(_file_paths.values())
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> pathlib.Path:
+    def create_file(self, *, file_key: str) -> Path:
         raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "
@@ -2084,13 +2083,13 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     def get_files(
         self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, pathlib.Path]:
+    ) -> t.Dict[str, Path]:
         return {
             file_key: self.path / file_key
             for file_key in file_keys
         }
 
-    def get_file(self, file_key: str) -> pathlib.Path:
+    def get_file(self, file_key: str) -> Path:
         return self.get_files(file_keys=[file_key])[file_key]
 
 
@@ -2141,7 +2140,7 @@ class FileGroupFromPaths(FileGroup):
         return True
 
     @property
-    def unknown_paths_on_disk(self) -> t.List[pathlib.Path]:
+    def unknown_paths_on_disk(self) -> t.List[Path]:
         """
         As the files will already created for this FileGroup we trick the system
         to ignore those already created files so that pre_runner checks can succeed
@@ -2153,13 +2152,13 @@ class FileGroupFromPaths(FileGroup):
 
     def get_files(
         self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, pathlib.Path]:
+    ) -> t.Dict[str, Path]:
         return {
             file_key: self.path / file_key
             for file_key in file_keys
         }
 
-    def create(self) -> t.List[pathlib.Path]:
+    def create(self) -> t.List[Path]:
 
         _ret = []
 
@@ -2176,7 +2175,7 @@ class FileGroupFromPaths(FileGroup):
         return _ret
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> pathlib.Path:
+    def create_file(self, *, file_key: str) -> Path:
         raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "

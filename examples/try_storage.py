@@ -123,6 +123,8 @@ def try_download_file():
 
 @dataclasses.dataclass(frozen=True)
 class DnTestFileAutoHashed(s.DownloadFileGroup):
+    file_system: str = "DOWNLOAD"
+
     @property
     def meta_info(self) -> dict:
         return {}
@@ -184,37 +186,24 @@ def try_metainfo_file():
 
 @dataclasses.dataclass(frozen=True)
 class Folder0(s.Folder):
-    file_system: str = "CWD"
+    file_system: str
 
 
 @dataclasses.dataclass(frozen=True)
 class Folder1(s.Folder):
-
-    parent_folder: s.Folder
-
-    @property
-    def _uses_parent_folder(self) -> bool:
-        return True
+    parent_folder: Folder0
 
 
 @dataclasses.dataclass(frozen=True)
 class Folder2(s.Folder):
 
-    parent_folder: s.Folder
-
-    @property
-    def _uses_parent_folder(self) -> bool:
-        return True
+    parent_folder: Folder1
 
 
 @dataclasses.dataclass(frozen=True)
 class Folder3(s.Folder):
 
-    parent_folder: s.Folder
-
-    @property
-    def _uses_parent_folder(self) -> bool:
-        return True
+    parent_folder: Folder2
 
 
 @dataclasses.dataclass(frozen=True)
@@ -224,7 +213,7 @@ class ParentTestStorage(m.HashableClass):
 
 
 def try_creating_folders():
-    folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/arrow_storage", file_system="CWD")
+    folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folders", file_system="CWD")
     folder1 = Folder1(parent_folder=folder0, for_hashable="parent_1")
     folder2 = Folder2(
         parent_folder=folder1,
@@ -232,7 +221,7 @@ def try_creating_folders():
     )
     folder3 = Folder3(parent_folder=folder2, for_hashable="leaf_folder")
 
-    print([_.path for _ in folder0.path.ls()])
+    print([_.full_path for _ in folder0.path.ls()])
 
     # or else just delete the super parent and things will chain
     folder0.delete(force=True)
@@ -249,11 +238,8 @@ def try_creating_folders():
 
 
 @dataclasses.dataclass(frozen=True)
-class TestStorageResultsFolder(s.dec.StoreFolder):
-    @property
-    @util.CacheResult
-    def _root_dir(self) -> pathlib.Path:
-        return _TEMP_PATH
+class TestStorageResultsFolder(s.Folder):
+    file_system: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -263,11 +249,9 @@ class TestStorage(m.HashableClass):
 
     @property
     @util.CacheResult
-    def stores(self) -> t.Dict[str, "s.dec.StoreFolder"]:
-        # noinspection PyTypeChecker
-        return {
-            'base': TestStorageResultsFolder(for_hashable=self)
-        }
+    def results_folder(self) -> TestStorageResultsFolder:
+        return TestStorageResultsFolder(
+            for_hashable=f"{_TEMP_PATH}/{self.hex_hash}", file_system="CWD")
 
     @staticmethod
     def data_vector(
@@ -784,12 +768,12 @@ def try_main():
         util.io_path_delete(_path, force=True)
     _path.mkdir(parents=True, exist_ok=True)
     _path = _path.resolve()
-    try_hashable_ser()
-    try_download_file()
-    try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
-    # try_arrow_storage()
+    # try_hashable_ser()
+    # try_download_file()
+    # try_auto_hashed_download_file()
+    # try_metainfo_file()
+    # try_creating_folders()
+    try_arrow_storage()
     # try_file_storage()
     _path.rmdir()
 

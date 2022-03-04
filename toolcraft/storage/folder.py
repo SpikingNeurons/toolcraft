@@ -245,7 +245,7 @@ class Folder(StorageHashable):
         _sep = self.path.sep
         if only_names:
             for f in self.path.glob(pattern=f"*{Suffix.info}"):
-                yield f.path.split(_sep)[-1].split(f"{Suffix.info}")[0]
+                yield f.full_path.split(_sep)[-1].split(f"{Suffix.info}")[0]
         else:
             for f in self.path.glob(pattern=f"*{Suffix.info}"):
                 # build instance

@@ -34,6 +34,7 @@ todo: note that we can safely use this module for
   + state will use dapr state and hence no need for file_system there
 """
 import dataclasses
+import pathlib
 import typing as t
 import fsspec
 import toml
@@ -154,6 +155,8 @@ class Path:
     fs_name: str
     details: t.Dict = None
 
+    HOME = pathlib.Path.home()
+
     def __post_init__(self):
         # set some vars for faster access
         self.fs, self.fs_config = get_file_system_details(self.fs_name)
@@ -214,16 +217,33 @@ class Path:
     def mkdir(self, create_parents: bool = True, **kwargs):
         self.fs.mkdir(path=self.full_path, create_parents=create_parents, **kwargs)
 
+    def stat(self) -> t.Dict:
+        return self.fs.stat(path=self.full_path)
+
+    def open(
+        self, mode: str,
+        block_size=None,
+        cache_options=None,
+        compression=None,
+    ):
+        return self.fs.open(
+            path=self.full_path,
+            mode=mode,
+            # todo: use below options
+            block_size=block_size,
+            cache_options=cache_options,
+            compression=compression)
+
     def write_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='w') as _f:
+        with self.fs.open(path=self.suffix_path, mode='w') as _f:
             _f.write(text)
 
     def append_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='a') as _f:
+        with self.fs.open(path=self.suffix_path, mode='a') as _f:
             _f.write(text)
 
     def read_text(self) -> str:
-        with self.fs.open(path=self.full_path, mode='r') as _f:
+        with self.fs.open(path=self.suffix_path, mode='r') as _f:
             return _f.read()
 
     def _post_process_res(self, _res) -> t.List["Path"]:
