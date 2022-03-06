@@ -1701,6 +1701,10 @@ class FrozenEnum(YamlRepr):
 @RuleChecker(
     things_to_be_cached=['hex_hash', 'rich_panel'],
     things_not_to_be_overridden=['hex_hash'],
+    # todo: any method or property that returns storage.FileSystem,
+    #  Table FileGroup, Folder must be cached
+    #  Will need to look at each property and methods return type and based on that
+    #  augment list things_to_be_cached
 )
 class HashableClass(YamlRepr, abc.ABC):
     """
