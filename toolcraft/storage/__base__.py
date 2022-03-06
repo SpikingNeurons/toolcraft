@@ -212,7 +212,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # hook up create
         util.HookUp(
             cls=cls,
-            silent=True,
             method=cls.create,
             pre_method=cls.create_pre_runner,
             post_method=cls.create_post_runner,
@@ -221,7 +220,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # hook up delete
         util.HookUp(
             cls=cls,
-            silent=True,
             method=cls.delete,
             pre_method=cls.delete_pre_runner,
             post_method=cls.delete_post_runner,

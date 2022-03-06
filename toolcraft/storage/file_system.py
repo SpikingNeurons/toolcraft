@@ -206,19 +206,23 @@ class Path:
         )
 
     def exists(self) -> bool:
-        return self.fs.exists(path=self.full_path)
+        return self.fs.exists(path=self.suffix_path)
 
     def isdir(self) -> bool:
-        return self.fs.isdir(path=self.full_path)
+        return self.fs.isdir(path=self.suffix_path)
 
     def isfile(self) -> bool:
-        return self.fs.isfile(path=self.full_path)
+        return self.fs.isfile(path=self.suffix_path)
 
     def mkdir(self, create_parents: bool = True, **kwargs):
-        self.fs.mkdir(path=self.full_path, create_parents=create_parents, **kwargs)
+        self.fs.mkdir(path=self.suffix_path, create_parents=create_parents, **kwargs)
+
+    def delete(self, recursive: bool = False, maxdepth: int = None):
+        return self.fs.delete(
+            path=self.suffix_path, recursive=recursive, maxdepth=maxdepth)
 
     def stat(self) -> t.Dict:
-        return self.fs.stat(path=self.full_path)
+        return self.fs.stat(path=self.suffix_path)
 
     def open(
         self, mode: str,
@@ -304,7 +308,7 @@ class Path:
     def ls(
         self, path: str = ".", detail: bool = False
     ) -> t.List["Path"]:
-        _path = self.full_path if path == "." else self.full_path + self.sep + path
+        _path = self.suffix_path if path == "." else self.suffix_path + self.sep + path
         _res = self.fs.ls(path=_path, detail=detail)
         return self._post_process_res(_res)
 

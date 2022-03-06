@@ -470,7 +470,6 @@ class FileGroup(StorageHashable, abc.ABC):
         # hook up get
         util.HookUp(
             cls=cls,
-            silent=True,
             method=cls.check,
             pre_method=cls.check_pre_runner,
             post_method=cls.check_post_runner,
@@ -479,7 +478,6 @@ class FileGroup(StorageHashable, abc.ABC):
         # hook up get
         util.HookUp(
             cls=cls,
-            silent=True,
             method=cls.get_files,
             pre_method=cls.get_files_pre_runner,
             post_method=cls.get_files_post_runner,

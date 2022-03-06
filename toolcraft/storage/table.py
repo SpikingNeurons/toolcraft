@@ -59,6 +59,7 @@ import dataclasses
 import pyarrow as pa
 import pyarrow.dataset as pds
 import types
+import itertools
 import operator
 import time
 
@@ -72,25 +73,10 @@ from . import Folder
 if False:
     from . import store
 
-_PARTITIONING = "hive"
+# _PARTITIONING = "hive"
 # _FILE_FORMAT = pds.ParquetFileFormat()
 # _FILE_FORMAT = pds.CsvFileFormat()
 _FILE_FORMAT = pds.IpcFileFormat()
-
-
-# see documentation for filters in pyarrow
-# https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetDataset.html
-FILTER_VALUE_TYPE = t.Union[int, float, str, set, list, tuple]
-FILTER_OPS_TYPE = t.Literal[
-    '=', '==', '<', '>', '<=', '>=', '!=', '&', '|', 'in', 'not in'
-]
-FILTER_TYPE = t.Tuple[
-    str, FILTER_OPS_TYPE,
-    FILTER_VALUE_TYPE
-]
-# Predicates are expressed in disjunctive normal form (DNF),
-# like [[('x', '=', 0), ...], ...]
-FILTERS_TYPE = t.List[t.Union[FILTER_TYPE, t.List[FILTER_TYPE]]]
 
 
 # todo: check pds.Expression for more operations that are supported
@@ -136,153 +122,104 @@ _OP_MAPPER_EXP = {
 }
 
 
-def bake_expression(
-    _elements: t.List, _err_msg, _columns_allowed=None,
-    # todo: support validation against schema later ...
-    #  + check `pds.Expression.is_valid` and `pds.Expression.validate`
-    _schema=None,
-) -> t.Optional[pds.Expression]:
-    # ---------------------------------------------------01
-    # if None return
-    if _elements is None:
-        return None
+class Filter(t.NamedTuple):
+    """
+    see documentation for filters in pyarrow
+    https://arrow.apache.org/docs/python/generated/pyarrow.parquet.ParquetDataset.html
 
-    # ---------------------------------------------------02
-    # some references
-    _expression = None
+    Predicates are expressed in disjunctive normal form (DNF),
+    like [[('x', '=', 0), ...], ...]
+    """
+    column: str
+    op_type: t.Literal[
+        '=', '==', '<', '>', '<=', '>=', '!=', '&', '|', 'in', 'not in',
+        # '~', 'not',
+    ]
+    value: t.Union[bool, int, float, str, set, list, tuple]
 
-    # ---------------------------------------------------02
-    # we always expect list and loop over it here
-    for _element in _elements:
-        # -----------------------------------------------02.01
-        # if list recursion
-        if isinstance(_element, list):
-            # todo: remove this limitation when we understand DNF queries
-            #   that is add support for filters that are nested lists
-            raise e.code.NotSupported(
-                msgs=[
-                    f"We will support nested filters list once we figure out "
-                    f"how DNF queries work ..."
-                ]
-            )
-            for _e in _element:
-                _r = bake_expression(_e, _err_msg, _columns_allowed, _schema)
-                if _expression is None:
-                    _expression = _r
-                else:
-                    # assuming that the the filters from nested list get
-                    # `and`ed with other elements in list
-                    _expression = operator.and_(_expression, _r)
-        # -----------------------------------------------02.02
-        # if tuple bake expression
-        elif isinstance(_element, tuple):
-            # -------------------------------------------02.02.01
-            # basic validations
-            # check if three elements
-            if len(_element) != 3:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        _err_msg,
-                        f"We expect filters that are tuples and "
-                        f"made of three elements",
-                        f"Check unsupported tuple {_element}",
-                    ]
-                )
-            # validate first element
-            e.validation.ShouldBeInstanceOf(
-                value=_element[0], value_types=(str, ),
-                msgs=[
-                    _err_msg,
-                    f"The first element of every filter tuple should be a str"
-                ]
-            ).raise_if_failed()
-            # validate first element if it is one of _columns_allowed if
-            # supplied
-            if _columns_allowed is not None:
-                e.validation.ShouldBeOneOf(
-                    value=_element[0],
-                    values=_columns_allowed,
-                    msgs=[
-                        _err_msg,
-                        f"Filter cannot be used on column {_element[0]}",
-                        f"You can use filters only on below columns: ",
-                        _columns_allowed,
-                    ]
-                ).raise_if_failed()
-            # validate second element
-            # noinspection PyUnresolvedReferences
-            e.validation.ShouldBeOneOf(
-                value=_element[1],
-                values=FILTER_OPS_TYPE.__args__,
-                msgs=[
-                    _err_msg,
-                    "Invalid query string used for filter tuple ..."
-                ]
-            ).raise_if_failed()
-            # validate third element
-            # noinspection PyUnresolvedReferences
-            e.validation.ShouldBeInstanceOf(
-                value=_element[2],
-                value_types=FILTER_VALUE_TYPE.__args__,
-                msgs=[
-                    _err_msg,
-                    f"PyArrow filters kwarg tuple do not understand numpy "
-                    f"or other types",
-                ]
-            ).raise_if_failed()
-            # -------------------------------------------02.02.02
-            # bake expression for tuple
-            _exp = _OP_MAPPER_EXP[_element[1]](
-                _element[0], _element[2]
-            )
-            # -------------------------------------------02.02.04
-            # make global expression
-            if _expression is None:
-                _expression = _exp
+    @property
+    def expression(self) -> pds.Expression:
+        return _OP_MAPPER_EXP[self.op_type](self.column, self.value)
+
+
+# Predicates are expressed in disjunctive normal form (DNF),
+# like [[('x', '=', 0), ...], ...]
+# list of tuples act like and expression
+# list of lists act like or expression
+# todo: dont know what happens with list of lista and tuples
+FILTERS_TYPE = t.List[t.Union[Filter, t.List[Filter]]]
+
+
+def make_expression(filters: FILTERS_TYPE) -> pds.Expression:
+    """
+    Predicates are expressed in disjunctive normal form (DNF),
+    like [[('x', '=', 0), ...], ...]
+    list of tuples act like and expression
+    list of lists act like or expression
+    todo: dont know what happens with list of lista and tuples
+
+    _expression = operator.and_(_expression, _exp)
+    """
+    # ---------------------------------------------------- 01
+    # validate
+    e.validation.ShouldBeInstanceOf(
+        value=filters, value_types=(list, ),
+        msgs=["Was expecting list type for filters"]
+    ).raise_if_failed()
+
+    # ---------------------------------------------------- 02
+    # loop
+    _ret_exp = None
+    for _filter in filters:
+        if isinstance(_filter, list):
+            _exp = make_expression(_filter)
+            if _ret_exp is None:
+                _ret_exp = _exp
             else:
-                # assuming that the the filters from nested list get
-                # `and`ed with other elements in list
-                _expression = operator.and_(_expression, _exp)
-        # -----------------------------------------------02.03
-        # else not supported
+                _ret_exp = operator.or_(_ret_exp, _exp)
+        elif isinstance(_filter, Filter):
+            _exp = _filter.expression
+            if _ret_exp is None:
+                _ret_exp = _exp
+            else:
+                _ret_exp = operator.and_(_ret_exp, _exp)
         else:
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    _err_msg,
-                    f"We only support filters that are tuples "
-                    f"with three elements or the list of those "
-                    f"three element tuples",
-                    f"Found type {type(_element)}",
-                ]
-            )
+            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(_filter)}"])
 
-    # ---------------------------------------------------03
+    # ---------------------------------------------------- 03
     # return
-    return _expression
+    return _ret_exp
 
 
 # noinspection PyArgumentList
 def _read_table(
-    df_file: "Table",
+    table_as_folder: "Table",
     columns: t.List[str],
     filter_expression: pds.Expression,
     partitioning: pds.Partitioning,
     table_schema: pa.Schema,
 ) -> pa.Table:
     """
+    Refer: https://arrow.apache.org/docs/python/dataset.html#dataset
+
     todo: need to find a way to preserve indexes while writing or
      else find a way to read with sort with pyarrow ... then there
      will be no need to use to_pandas() and also no need ofr casting
     """
     # noinspection PyProtectedMember
+    _path = table_as_folder.path
     _table = pa.Table.from_batches(
         batches=pds.dataset(
-            source=df_file.path.suffix_path,
-            filesystem=df_file.file_system,
+            source=_path.suffix_path,
+            filesystem=_path.fs,
             format=_FILE_FORMAT,
             schema=table_schema,
             partitioning=partitioning,
         ).to_batches(
+            # todo: verify below claim and test if this will remain generally correct
+            # using filters like columns and filter_expression here is more efficient
+            # as it applies for per batch loaded rather than loading entire table and
+            # then applying filters
             columns=columns,
             filter=filter_expression,
         ),
@@ -297,40 +234,49 @@ def _read_table(
 
 
 def _write_table(
-    df_file: "Table",
-    table: pa.Table,
-    partitioning: pds.Partitioning,
+    table_as_folder: "Table", table: pa.Table, append: bool,
+    delete_partition: bool = False,
 ):
     # file name formatter
-    _file_name = str(time.time_ns()) + ".{i}"
+    # note you might confuse with (i) ... looks like it is used by pyarrow internals
+    # when instead of pa.Table we will be saving batches ...
+    # todo: explore usage of `.{i}` ...
+    #  applicable for both e `Table.append` and `Table.write`
+    if append:
+        # this also helps time stamp based append
+        _file_name = str(time.time_ns()) + ".{i}"
+        # we introduce 1 micro second delay so that file names remain unique in
+        # nanoseconds
+        time.sleep(1.0 / 1000000.0)
+    else:
+        _file_name = "data.{i}"
 
-    # we introduce 1 micro second delay so that file names remain unique in
-    # nano seconds
-    time.sleep(1.0 / 1000000.0)
+    # if anything encountered then delete it ... useful with append write as can
+    # delete entire partition folder ... while in write mode this will have same
+    # behaviour
+    if delete_partition:
+        _existing_data_behavior = 'delete_matching'
+    else:
+        _existing_data_behavior = "overwrite_or_ignore"
+
+    # get partitioning
+    _partitioning = table_as_folder.partitioning
 
     # write to disk
+    _path = table_as_folder.path
     # noinspection PyProtectedMember
     pds.write_dataset(
         data=table,
-        base_dir=df_file.path.as_posix(),
-        filesystem=df_file.file_system,
-        partitioning=partitioning,
+        base_dir=_path.suffix_path,
+        filesystem=_path.fs,
+        partitioning=_partitioning,
         format=_FILE_FORMAT,
-        # todo: modify in future if append writes are supported by pyarrow
-        #  right now this is our solution
-        #  + we use timestamp that is unique for every write while `i` will
-        #    record the the ith file that was written for this disk
-        #
-        # todo: side effect we can use timestamp i.e. name as file to achieve
-        #  timestamp based streaming ;)
         basename_template=_file_name,
-        # todo: use overwrite_or_ignore='error' ... i.e. do not allow overwrite or
-        #  ignore ... need to support append write properly ... decide later
-        existing_data_behavior='overwrite_or_ignore',
+        existing_data_behavior=_existing_data_behavior,
     )
 
 
-class TableInternal(m.Internal):
+class _TableInternal(m.Internal):
 
     partitioning: t.Optional[pds.Partitioning]
     schema: t.Optional[pa.Schema]
@@ -343,109 +289,69 @@ class TableInternal(m.Internal):
         """
         return self.has("partitioning")
 
-    def update_from_table_or_config(
-        self, table: t.Optional[pa.Table]
-    ):
-        """
-        We want to save some things in internal for faster access as going
-        through config will need with context and unnecessary sync process.
-
-        If first write happens that means table is provided. In that case if
-        schema is provided by StoreField decorator we validate the schema on
-        first write. While if schema is not provided we infer it from table.
-
-        If table is None that means this is happening while object is created
-        and in that case if data exists on disk then we load schema from config
-        on disk. Else we set things to None
-        """
-        # schema from config
-        # noinspection PyUnresolvedReferences
-        _c = self.owner.config
-        _schema_in_config = _c.schema
-
-        # if table is provided that means either validate schema if schema
-        # in config or else infer schema from table and sync that to
-        # config to disk for future use
-        if table is not None:
-            # check if table has all the partition columns ... this needs
-            # to be checked when the returned table by decorated method
-            # misses out on certain columns that are needed for partitions
-            _tables_cols = [_.name for _ in table.schema]
-            _partition_cols = _c.partition_cols
-            if _partition_cols is None:
-                _partition_cols = []
-            for _col in _partition_cols:
-                if _col not in _tables_cols:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"While returning pa.Table from the decorated "
-                            f"method you missed to add important partition "
-                            f"column `{_col}`"
-                        ]
-                    )
-
-            # if table_schema none estimate from first table and write it
-            # back to config
-            if _schema_in_config is None:
-                _c.schema = table.schema
-            # if table_schema available then validate
-            else:
-                if _schema_in_config != table.schema:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"The yielded/returned table schema is "
-                            f"not valid",
-                            {
-                                "expected": _schema_in_config,
-                                "found": table.schema
-                            }
-                        ]
-                    )
-        # if table is None and this method is called we expect the schema to
-        # be available in config file ... check for config file and raise
-        # error if table schema not available
-        else:
-            # if table schema in config is none raise error
-            if _schema_in_config is None:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We cannot update internals as you have not "
-                        f"supplied table nor there is schema definition "
-                        f"available in config which should be either "
-                        f"supplied by user via StoreField decorator or "
-                        f"inferred from table written on the disk."
-                    ]
-                )
-
-        # update internal for faster access later
-        self.partitioning = _c.get_partitioning()
-        self.schema = _c.schema
-        self.partition_cols = _c.partition_cols
-
 
 @dataclasses.dataclass
 class TableConfig(s.Config):
+    schema: t.Optional[pa.Schema] = None
 
-    schema: t.Optional[t.Dict] = None
-    partition_cols: t.Optional[t.List[str]] = None
+    def update_schema(
+        self, table: pa.Table = None
+    ):
+        # ------------------------------------------------------------- 01
+        # if table is not provided we expect that schema is already available
+        if table is None:
+            if self.schema is None:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"We cannot guess schema as you have not "
+                        f"supplied table nor there is schema definition "
+                        f"available in config which should be either "
+                        f"supplied by user or guessed while first write."
+                    ]
+                )
+            return
 
-    def get_partitioning(self) -> t.Optional[pds.Partitioning]:
+        # ------------------------------------------------------------- 02
+        # else table is provided so get schema from it and update config
+        # if table is provided that means either validate schema if schema
+        # in config or else infer schema from table and sync that to
+        # config to disk for future use
+        # ------------------------------------------------------------- 02.01
+        # check if table has all the partition columns ... this needs
+        # to be checked when the returned table by decorated method
+        # misses out on certain columns that are needed for partitions
+        _tables_cols = [_.name for _ in table.schema]
+        _partition_cols = self.hashable.partition_cols
+        if _partition_cols is None:
+            _partition_cols = []
+        for _col in _partition_cols:
+            if _col not in _tables_cols:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"The pa.Table provided do not have important partition "
+                        f"column `{_col}`"
+                    ]
+                )
+        # ------------------------------------------------------------- 02.02
+        # if table_schema none estimate from first table and write it
+        # back to config
         if self.schema is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Ideally by now this should be set by now if not "
-                    f"available",
-                    f"That is possible on first write where table schema not "
-                    f"provided it is estimated while writing and stored in "
-                    f"config file"
-                ]
-            )
-        if self.partition_cols is None:
-            return None
-        # noinspection PyUnresolvedReferences
-        return pds.partitioning(
-            self.schema.empty_table().select(self.partition_cols).schema
-        )
+            self.schema = table.schema
+            return
+        # if table_schema available then validate
+        else:
+            if self.schema != table.schema:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"The table schema is "
+                        f"not valid",
+                        {
+                            "expected": self.schema,
+                            "found": table.schema
+                        }
+                    ]
+                )
+            return
 
 
 # noinspection PyDataclass
@@ -496,6 +402,7 @@ class Table(Folder):
     # StoreField
     for_hashable: str
     parent_folder: "store.StoreFieldsFolder"
+    partition_cols: t.List[str] = None
 
     @property
     @util.CacheResult
@@ -506,8 +413,24 @@ class Table(Folder):
 
     @property
     @util.CacheResult
-    def internal(self) -> TableInternal:
-        return TableInternal(self)
+    def partitioning(self) -> t.Optional[pds.Partitioning]:
+        if self.partition_cols is None:
+            return None
+        _schema = self.config.schema
+        if _schema is None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Ideally by now this should be set by now if not "
+                    f"available",
+                    f"That is possible on first write where table schema not "
+                    f"provided it is estimated while writing and stored in "
+                    f"config file"
+                ]
+            )
+        # noinspection PyUnresolvedReferences
+        return pds.partitioning(
+            _schema.empty_table().select(self.partition_cols).schema
+        )
 
     def init_validate(self):
         # call super
@@ -525,24 +448,11 @@ class Table(Folder):
                 ]
             )
 
-    def init(self):
-        # call super
-        super().init()
-
-        # if config has table_schema update internal from config on disk
-        # Note that in case the schema was not provided via StoreField
-        # decorator we still infer schema on first write and store it in
-        # *.config file ... Here if it is available from previous writes on
-        # disk we can fetch it
-        _s = self.config.schema
-        if _s is not None:
-            self.internal.update_from_table_or_config(table=None)
-
     def exists(
         self,
         columns: t.List[str] = None,
         filter_expression: pds.Expression = None,
-    ) -> bool:
+    ) -> t.Union[bool, pa.Table]:
         """
         This is weird design choice here to return table when filters are
         used. This is just to avoid multiple data reads. Anyways you can
@@ -562,18 +472,22 @@ class Table(Folder):
             return False
         if self.path.is_dir_empty():
             return False
-        # read table with filters to see if something exists
-        # Note that columns is None as it is irrelevant while checking for
-        # exists as we will use filters and check if minimum one row is
-        # returned or not ... and at that time it does not matter which
-        # column we select in that row
+
+        # this should always be there as above check suggests that something
+        # is already there
+        _partitioning = self.partitioning
+        _schema = self.config.schema
+        assert _schema is not None  # todo remove later
+
+        # read table
         _table = _read_table(
             self, columns=columns, filter_expression=filter_expression,
-            table_schema=self.internal.schema,
-            partitioning=self.internal.partitioning,
+            partitioning=_partitioning,
+            table_schema=_schema
         )
+
         # return
-        return bool(_table)
+        return _table
 
     def read(
         self,
@@ -586,10 +500,12 @@ class Table(Folder):
             return None
         if self.path.is_dir_empty():
             return None
-        # this should always be there and would be known even if not provided
-        # on first write
-        _partitioning = self.internal.partitioning
-        _schema = self.internal.schema
+
+        # this should always be there as above check suggests that something
+        # is already there
+        _partitioning = self.partitioning
+        _schema = self.config.schema
+        assert _schema is not None  # todo remove later
 
         # read table
         _table = _read_table(
@@ -614,89 +530,51 @@ class Table(Folder):
         # return
         return _table
 
-    def append(
-        self,
-        value: t.Union[pa.Table, types.GeneratorType],
-        yields: bool,
-    ) -> bool:
-        # is value a generator type
-        _is_generator_type = isinstance(value, types.GeneratorType)
-
-        # check if yields value should be generator
-        if yields:
-            if not _is_generator_type:
-                raise e.validation.NotAllowed(
+    def write(self, value: pa.Table) -> bool:
+        # make sure if some partition folders exists ...
+        # applicable when partition_cols present
+        if bool(self.partition_cols):
+            _unique_filters = [
+                [Filter(_pc, "=", _v) for _v in value[_pc].unique().tolist()]
+                for _pc in self.partition_cols
+            ]
+            _filters = [list(_) for _ in itertools.product(*_unique_filters)]
+            _table = self.exists(
+                columns=self.partition_cols,
+                filter_expression=make_expression(_filters))
+            if _table:
+                e.validation.NotAllowed(
                     msgs=[
-                        f"Are you using return ?? ... ",
-                        f"We expect you to yield"
-                    ]
-                )
-        else:
-            if _is_generator_type:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Are you using yield ?? ... ",
-                        f"We expect you to return"
+                        "Below partition col values already exist",
+                        _table.to_pydict()
                     ]
                 )
 
-        # check if partition columns exist in table that is to be
-        # written to disk
-        # todo: this check is inefficient especially for append writes
-        # todo: this check works when `yields=False` but when `yields=True`
-        #  this fails as value is generator. For now we comment this check
-        #  will take action later ... NOT A PRIORITY
-        # if self.partition_cols is not None:
-        #     for pc in self.partition_cols:
-        #         if pc not in value.column_names:
-        #             raise e.code.CodingError(
-        #                 msgs=[
-        #                     f"We expect you to supply mandatory column "
-        #                     f"`{pc}` in the returned/yielded pyarrow table."
-        #                 ]
-        #             )
+        # if schema is None update it
+        if self.config.schema is None:
+            self.config.update_schema(table=value)
 
-        # if not generator make it iterator so that looping happens once
-        if not _is_generator_type:
-            # todo: Is this efficient ???
-            value = [value]
+        # write
+        _write_table(self, table=value, append=False)
 
-        # get iterator
-        _iterator = iter(value)
+        # return success
+        return True
 
-        # get first element
-        _table = next(_iterator)  # type: pa.Table
+    def append(self, value: pa.Table, delete_partition: bool = False) -> bool:
+        """
+        delete_partition:
+          makes it possible to delete the folder for pivot and overwrite it completely
+          note that all appends will be wiped ...
+        """
 
-        # if not pa.Table then raise error
-        if not isinstance(_table, pa.Table):
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect the decorated method to return {pa.Table} "
-                    f"but instead found return value of type {type(_table)}"
-                ]
-            )
+        # if schema is None update it
+        if self.config.schema is None:
+            self.config.update_schema(table=value)
 
-        # get schema if in config else get schema from table and write
-        # back to config
-        if not self.internal.is_updated:
-            # now update as config is updated
-            self.internal.update_from_table_or_config(table=_table)
+        # write
+        _write_table(self, table=value, delete_partition=delete_partition, append=True)
 
-        # get partitioning
-        _partitioning = self.internal.partitioning
-
-        # default behaviour is to append .... if you do not want that
-        # please call self.delete() before calling this
-        # write first element
-        _write_table(self, _table, _partitioning)
-        # now write remaining
-        for _table in _iterator:
-            _write_table(self, _table, _partitioning)
-
-        # we do not return what we just wrote
-        # for append and write we return True to avoid huge reads ....
-        # just use read Mode to get the values
-        # return bool
+        # return success
         return True
 
     # Note that the parent delete is for Folder but for Table also we have
@@ -705,7 +583,7 @@ class Table(Folder):
     # argument will have no purpose.
     # noinspection PyMethodOverriding
     def delete_(
-        self, *, filters: FILTERS_TYPE,
+        self, *, filter_expression: pds.Expression = None,
     ) -> bool:
         """
         Note that this is not Folder.delete but delete related to mode=`d`
@@ -744,9 +622,9 @@ class Table(Folder):
         # use create method of Folder the state files will not be generated
         # ... also that is never the job of delete_ as it only is responsible
         # for pyarrow stuff and not the Folder stuff
-        if not bool(filters):
+        if not bool(filter_expression):
             # noinspection PyTypeChecker
-            self.file_system.delete(self.path, recursive=True)
+            self.path.delete(recursive=True)
             # just make a empty dir again fo that things are consistent for
             # Folder class i.e. is_created can detect things properly
             self.path.mkdir()
@@ -754,163 +632,16 @@ class Table(Folder):
             return True
 
         # ------------------------------------------------------02
-        # basic tests
-        # for now we expect simple filters i.e. list of tuples ... we do not
-        # support nested list of filters yet
-        # todo: add support for filters that are nested lists
-        for f in filters:
-            if isinstance(f, list):
-                raise e.code.NotAllowed(
-                    msgs=[
-                        f"For delete mode we support simple filters that "
-                        f"operate on partition columns ... nested "
-                        f"filters is not yet supported ..."
-                    ]
-                )
-        # some vars
-        _partition_cols = self.internal.partition_cols
+        # make sure that filter_expression is only made for partition_cols
+        ...
 
         # ------------------------------------------------------03
-        # loop over filters and make a dictionary with key as partition
-        # column and value as the list of tuple (operation, value)
-        # todo: I hope this handles the use case of multiple filters over same
-        #  column properly
-        _filters_dict_of_op_val_list = {
-            pc: [] for pc in _partition_cols
-        }
-        for f in filters:
-            _filters_dict_of_op_val_list[f[0]].append((_OP_MAPPER[f[1]], f[2]))
-
-        # ------------------------------------------------------04
-        # deletion helper method
-
-        def _delete(_depth: int, _path: pathlib.Path) -> bool:
-            # --------------------------------------------------04.01
-            # variable to track if something deleted
-            _something_deleted = False
-
-            # --------------------------------------------------04.02
-            # the path must be a dir
-            if not _path.is_dir():
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We were expecting path {_path} to be a dir ..."
-                    ]
-                )
-
-            # --------------------------------------------------04.03
-            # expect partition column
-            _pc_exp = _partition_cols[_depth]
-
-            # --------------------------------------------------04.04
-            # increment depth for further recursion if needed
-            _depth += 1
-
-            # --------------------------------------------------04.05
-            # get filters for this partition column
-            _filters_op_val_list = _filters_dict_of_op_val_list[_pc_exp]
-
-            # --------------------------------------------------04.06
-            # crawl over folder for partition cols
-            for _nested_path in _path.iterdir():
-
-                # ----------------------------------------------04.06.01
-                # should be a dir
-                if not _nested_path.is_dir():
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"We were expecting folder ..."
-                        ]
-                    )
-
-                # ----------------------------------------------04.06.02
-                # todo: sometimes the folder names are like
-                #  <column_name>=<_val> and sometimes the folder names are
-                #  just value of columns ... this may be because of new
-                #  pyarrow version or may be because we supply schema
-                #  everywhere appropriately
-                # # get tokens from folder name
-                # _pc, _val = _nested_path.name.split("=")
-                # # the _pc from folder name should match expected partition
-                # # column
-                # if _pc != _pc_exp:
-                #     raise e.code.CodingError(
-                #         msgs=[
-                #             f"We were expecting all folder names to start "
-                #             f"with expected partition column name {_pc_exp}, "
-                #             f"instead found it to be {_pc}"
-                #         ]
-                #     )
-                # todo: this is when folder name is just column value
-                _val = _nested_path.name
-                try:
-                    # note that if int then becomes float bit that is okay with
-                    # expression matching in python
-                    _val = float(_val)
-                except ValueError:
-                    # nothing to do if exception it remains string
-                    ...
-
-                # ----------------------------------------------04.06.03
-                # check if nested dir satisfies the criterion for deletion
-                # based on the filters
-                # If filters are provided check filters and then decide if
-                # nested path needs to be deleted or not
-                if bool(_filters_op_val_list):
-                    _del = True  # flag
-                    for _op, _val1 in _filters_op_val_list:
-                        # Note that _filters_op_val_list is for specific _pc
-                        # so when all filter conditions we can delete if any
-                        # one is False then do not delete
-                        try:
-                            _del &= _op(_val, _val1)
-                        except TypeError:
-                            raise e.code.CodingError(
-                                msgs=[
-                                    f"Check supplied filters",
-                                    f"Operation {_op} cannot be applied on "
-                                    f"values {(_val, _val1)} with type "
-                                    f"{(type(_val), type(_val1))}"
-                                ]
-                            )
-                        # quick break
-                        if not _del:
-                            break
-                # if no filters for the partition column then all child
-                # folders are eligible for delete as no filter is applied
-                else:
-                    _del = True
-
-                # ----------------------------------------------04.06.04
-                # if _del then delete
-                if _del:
-                    # if last partition delete the folder
-                    if _pc_exp == _partition_cols[-1]:
-                        # delete
-                        # noinspection PyTypeChecker
-                        self.file_system.delete(
-                            _nested_path, recursive=False)
-                        # if nested path is empty the delete empty dir
-                        # todo: can this be optimized ??
-                        if _nested_path.exists():
-                            if util.io_is_dir_empty(_nested_path):
-                                _nested_path.unlink()
-                        # update global flag
-                        _something_deleted |= True
-                    # else call the method in recursion
-                    else:
-                        _something_deleted |= \
-                            _delete(_depth=_depth, _path=_nested_path)
-
-            # --------------------------------------------------04.07
-            # return
-            return _something_deleted
-
-        # ------------------------------------------------------05
-        # call recursive function and track if deleted
-        _is_something_deleted = _delete(_depth=0, _path=self.path)
-
-        # ------------------------------------------------------06
-        # return True ... anyways when it reaches till here
-        # _is_something_deleted will be True
-        return _is_something_deleted
+        # delete partition paths where filter_expression is true
+        ...
+        # todo: support filter_expression based delete_
+        raise e.code.CodingError(
+            msgs=[
+                "filter_expression based delete_ is not yet supported as pyarrow does "
+                "not support we need to implement on our own ..."
+            ]
+        )

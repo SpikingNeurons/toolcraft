@@ -1260,7 +1260,6 @@ class HookUp:
         *,
         cls: t.Type,
         method: t.Callable,
-        silent: bool,
         pre_method: t.Optional[t.Callable] = None,
         post_method: t.Optional[t.Callable] = None,
     ):
@@ -1280,7 +1279,6 @@ class HookUp:
         # save variables in self
         self.cls = cls
         self.method = method
-        self.silent = silent
         self.pre_method = pre_method
         self.post_method = post_method
 
@@ -1361,14 +1359,6 @@ class HookUp:
         # -----------------------------------------------------------03
         # call business logic
         # -----------------------------------------------------------03.01
-        # enter spinner
-        if not self.silent:
-            spinner = logger.Spinner(
-                title=_title,
-                logger=logger.get_logger(self.cls.__module__),
-            )
-            spinner.__enter__()
-        # -----------------------------------------------------------03.02
         # call pre_method is provided
         if self.pre_method is not None:
             _pre_ret = self.pre_method(self.method_self, **kwargs)
@@ -1406,11 +1396,6 @@ class HookUp:
                         f"Found return value {_post_ret}"
                     ]
                 )
-        # -----------------------------------------------------------03.05
-        # enter spinner
-        if not self.silent:
-            # noinspection PyUnboundLocalVariable
-            spinner.__exit__(None, None, None)
 
         # -----------------------------------------------------------04
         # return the return value of method

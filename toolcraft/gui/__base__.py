@@ -274,7 +274,6 @@ class Dpg(m.YamlRepr, abc.ABC):
         # hookup build
         util.HookUp(
             cls=cls,
-            silent=True,
             method=cls.build,
             pre_method=cls.build_pre_runner,
             post_method=cls.build_post_runner,

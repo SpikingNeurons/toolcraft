@@ -140,22 +140,6 @@ class Folder(StorageHashable):
             return None
         return self.for_hashable.group_by
 
-    def init_validate(self):
-        # ----------------------------------------------------------- 01
-        # folder can have only two fields
-        for f in self.dataclass_field_names:
-            e.validation.ShouldBeOneOf(
-                value=f, values=['file_system', 'for_hashable', 'parent_folder'],
-                msgs=[
-                    f"Class {self.__class__} can only have limited fields defined "
-                    f"in it ... Please refrain from using any new fields ..."
-                ]
-            ).raise_if_failed()
-
-        # ----------------------------------------------------------- 03
-        # call super
-        super().init_validate()
-
     def create(self) -> Path:
         """
         If there is no Folder we create an empty folder.
