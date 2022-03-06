@@ -37,6 +37,7 @@ import dataclasses
 import pathlib
 import typing as t
 import fsspec
+import os
 import toml
 import pyarrow as pa
 
@@ -155,13 +156,13 @@ class Path:
     fs_name: str
     details: t.Dict = None
 
-    HOME = pathlib.Path.home()
+    # HOME = pathlib.Path.home()
 
     def __post_init__(self):
         # set some vars for faster access
         self.fs, self.fs_config = get_file_system_details(self.fs_name)
         self.sep = self.fs.sep  # type: str
-        self.root_path = self.fs_config['root_dir']
+        self.root_path = self.fs_config['root_dir']  # type: str
         self.full_path = self.root_path + self.sep + self.suffix_path
         self.name = self.suffix_path.split(self.sep)[-1]
         e.io.LongPath(path=self.full_path, msgs=[]).raise_if_failed()
@@ -206,23 +207,23 @@ class Path:
         )
 
     def exists(self) -> bool:
-        return self.fs.exists(path=self.suffix_path)
+        return self.fs.exists(path=self.full_path)
 
     def isdir(self) -> bool:
-        return self.fs.isdir(path=self.suffix_path)
+        return self.fs.isdir(path=self.full_path)
 
     def isfile(self) -> bool:
-        return self.fs.isfile(path=self.suffix_path)
+        return self.fs.isfile(path=self.full_path)
 
     def mkdir(self, create_parents: bool = True, **kwargs):
-        self.fs.mkdir(path=self.suffix_path, create_parents=create_parents, **kwargs)
+        self.fs.mkdir(path=self.full_path, create_parents=create_parents, **kwargs)
 
     def delete(self, recursive: bool = False, maxdepth: int = None):
         return self.fs.delete(
-            path=self.suffix_path, recursive=recursive, maxdepth=maxdepth)
+            path=self.full_path, recursive=recursive, maxdepth=maxdepth)
 
     def stat(self) -> t.Dict:
-        return self.fs.stat(path=self.suffix_path)
+        return self.fs.stat(path=self.full_path)
 
     def open(
         self, mode: str,
@@ -239,36 +240,42 @@ class Path:
             compression=compression)
 
     def write_text(self, text: str):
-        with self.fs.open(path=self.suffix_path, mode='w') as _f:
+        with self.fs.open(path=self.full_path, mode='w') as _f:
             _f.write(text)
 
     def append_text(self, text: str):
-        with self.fs.open(path=self.suffix_path, mode='a') as _f:
+        with self.fs.open(path=self.full_path, mode='a') as _f:
             _f.write(text)
 
     def read_text(self) -> str:
-        with self.fs.open(path=self.suffix_path, mode='r') as _f:
+        with self.fs.open(path=self.full_path, mode='r') as _f:
             return _f.read()
 
     def _post_process_res(self, _res) -> t.List["Path"]:
         """
-        None _k[_k.find(self.full_path):] or _[_.find(self.full_path):] just strips extra
-          things added by file system when crawling directory ... this is not needed
-          as anyway we will know it ...
+        None _k[_k.find(self.full_path):] or _[_.find(self.full_path):] just strips
+          extra things added by file system when crawling directory ... this is not
+          needed as anyway we will know it ...
           If optimization needed do only is needed based on file_system
            - (for example LocalFileSystem it is needed)
 
         """
+        _root_path = self.root_path
+        if self.fs_name == "CWD":
+            # we replace `.` with cwd
+            # todo: also test for linux
+            _root_path = _root_path.replace(".", os.getcwd().replace("\\", "/"))
+
         if isinstance(_res, dict):
             return [
                 Path(
-                    suffix_path=_k.replace(self.root_path, ""),
+                    suffix_path=_k.replace(_root_path, ""),
                     fs_name=self.fs_name, details=_v)
                 for _k, _v in _res.items()
             ]
         elif isinstance(_res, list):
             return [
-                Path(suffix_path=_.replace(self.root_path, ""), fs_name=self.fs_name)
+                Path(suffix_path=_.replace(_root_path, ""), fs_name=self.fs_name)
                 for _ in _res
             ]
         else:
@@ -308,7 +315,7 @@ class Path:
     def ls(
         self, path: str = ".", detail: bool = False
     ) -> t.List["Path"]:
-        _path = self.suffix_path if path == "." else self.suffix_path + self.sep + path
+        _path = self.full_path if path == "." else self.full_path + self.sep + path
         _res = self.fs.ls(path=_path, detail=detail)
         return self._post_process_res(_res)
 
@@ -491,9 +498,14 @@ def get_file_system_details(fs_name: str) -> t.Tuple[fsspec.AbstractFileSystem, 
         )
 
     # --------------------------------------------------------- 09
-    # if root_dir in fs_config does not end with sep then add it
-    if not _fs_config["root_dir"].endswith(_fs.sep):
-        _fs_config["root_dir"] += _fs.sep
+    # if root_dir in fs_config end with sep then raise error as we will be adding it
+    if _fs_config["root_dir"].endswith(_fs.sep):
+        raise e.code.NotAllowed(
+            msgs=[
+                f"Please do not supply seperator `{_fs.sep}` at end for root_dir "
+                f"in config files. As we will take care of that ..."
+            ]
+        )
 
     # --------------------------------------------------------- 09
     # backup and return
