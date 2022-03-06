@@ -14,9 +14,6 @@ todo: in context to mlflow this will also be used as log_artifact ... where
   we store arbitrary files
 """
 
-import sys
-import time
-
 import requests
 import typing as t
 import subprocess
@@ -1221,7 +1218,6 @@ class NpyMemMap:
                     f"method so that call_helper attribute is available."
                 ]
             )
-            raise AttributeError()
 
         # ---------------------------------------------------------- 02
         # if do_not_use raise error
@@ -1422,7 +1418,6 @@ class NpyMemMap:
                     f"call __call__ method on it"
                 ]
             )
-            raise AttributeError()
 
         # make sure that do_not_use is set
         if not call_helper.do_not_use:
@@ -2092,22 +2087,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
 
 @dataclasses.dataclass(frozen=True)
-class GitDownload(DownloadFileGroup, abc.ABC):
-    """
-    todo: Make this concrete ... see the SO question below
-     https://stackoverflow.com/questions/791959/download-a-specific-tag-with-git
-     What we aim is to get any archive based on tag and commit and save it as
-     downloaded zip file ... this will help people to get downloads from
-     public sources and migrate zips behind firewall...
-     Also check:
-      https://gitpython.readthedocs.io/
-    """
-    # tag: str  # or may be commit id
-    # git_base_url: str
-    ...
-
-
-@dataclasses.dataclass(frozen=True)
 class FileGroupFromPaths(FileGroup):
     """
     A concrete class that can convert any folder with files inside it to FileGroup
@@ -2140,7 +2119,7 @@ class FileGroupFromPaths(FileGroup):
     @property
     def unknown_paths_on_disk(self) -> t.List[Path]:
         """
-        As the files will already created for this FileGroup we trick the system
+        As the files will already be created for this FileGroup we trick the system
         to ignore those already created files so that pre_runner checks can succeed
         """
         return [

@@ -156,7 +156,7 @@ class Path:
     fs_name: str
     details: t.Dict = None
 
-    # HOME = pathlib.Path.home()
+    HOME = pathlib.Path.home()
 
     def __post_init__(self):
         # set some vars for faster access
