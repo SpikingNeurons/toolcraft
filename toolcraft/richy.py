@@ -22,8 +22,11 @@ from rich import status as r_status
 from rich import panel as r_panel
 from rich import prompt as r_prompt
 
+from . import logger
+from . import error as e
 
-class Spinner(enum.Enum):
+
+class SpinnerType(enum.Enum):
     """
     Refer
     >>> r_spinner.SPINNERS
@@ -264,3 +267,63 @@ class Progress:
         )
 
         return _progress
+
+
+@dataclasses.dataclass
+class Status:
+    """
+    A simple status indicator
+    todo: explore adding time elapsed
+    todo: explore clubbing multiple Status in one panel
+    todo: more complex Status panel
+
+    Refer __main__ of
+    >>> r_status.Status
+
+    + prints title with toolcraft.logger
+    + then show simple spinner
+    + can also log with time stamp (but not sent to logger module)
+    """
+    title: r_console.RenderableType
+    logger: logger.CustomLogger
+    spinner: SpinnerType = SpinnerType.dots
+
+    def __post_init__(self):
+        self.console = r_console.Console()
+        # noinspection PyTypeChecker
+        self.status = None  # type: r_status.Status
+
+    def __enter__(self):
+        self.logger.info(self.title)
+        self.status = self.console.status(
+            status=f"[magenta]{self.title}",
+            spinner=str(self.spinner),
+        )
+        self.status.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.status.__exit__(exc_type, exc_val, exc_tb)
+        self.status = None
+
+    def log(self, msg: str, log_to_logger: bool = False):
+        self.console.log(msg)
+        if log_to_logger:
+            self.logger.info(msg)
+
+    def update(
+        self,
+        status: r_console.RenderableType = None,
+        spinner: SpinnerType = None,
+        spinner_style: r_style.StyleType = None,
+        speed: float = None,
+    ):
+        if self.status is None:
+            e.code.CodingError(
+                msgs=["Allowed to be called from within with context"]
+            )
+        self.status.update(
+            status=status, spinner=str(spinner),
+            spinner_style=spinner_style, speed=speed
+        )
+

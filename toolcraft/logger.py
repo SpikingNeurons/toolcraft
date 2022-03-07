@@ -40,8 +40,6 @@ import logging
 import logging.handlers
 from rich.logging import RichHandler
 
-from .richy import EMOJI
-
 MESSAGES_TYPE = t.List[
     t.Union[
         str,

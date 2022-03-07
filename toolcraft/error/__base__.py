@@ -1,9 +1,6 @@
 import inspect
 import re
-import sys
-import yaml
-from rich import markdown
-from rich import print
+from ..richy import EMOJI
 
 from .. import logger
 
@@ -15,7 +12,7 @@ from .. import logger
 
 _LOGGER = logger.get_logger()
 
-_SKULL_EMOJI = logger.EMOJI['skull']
+_SKULL_EMOJI = EMOJI['skull']
 _EXCEPTION_HEADER = f"{_SKULL_EMOJI} >>> {{header}} <<< {_SKULL_EMOJI}"
 
 

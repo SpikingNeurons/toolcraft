@@ -898,13 +898,12 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: make it like progress bar
         _total_files = len(self.file_keys)
         _s_fmt = len(str(_total_files))
-        _console = richy.r_console.Console()
-        _title = f"Creating {_total_files} files for fg: {self.name}"
-        _LOGGER.info(_title)
-        with _console.status(
-            f"[magenta]{_title}",
-            spinner=str(richy.Spinner.dots),
+
+        with richy.Status(
+            title=f"Creating {_total_files} files for fg: {self.name}",
+            logger=_LOGGER,
         ) as _status:
+
             for i, k in enumerate(self.file_keys):
 
                 # get expected file from key
@@ -936,7 +935,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 _ret.append(_expected_file)
 
                 # log
-                _console.log(
+                _status.log(
                     f"{_expected_file.name!r}: "
                     f"{i + 1: {_s_fmt}d}/{_total_files} created ..."
                 )
