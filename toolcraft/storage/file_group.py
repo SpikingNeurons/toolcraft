@@ -680,7 +680,8 @@ class FileGroup(StorageHashable, abc.ABC):
         # get panels ... reusing richy.Progress.for_download as the stats
         # needed are similar
         _hash_check_panel = richy.Progress.for_download(
-            title=f"Hash check for file group: {self.name}")
+            title=f"Hash check for file group: {self.group_by}-{self.name}",
+            logger=_LOGGER)
 
         # ------------------------------------------------------ 02
         # now add tasks
@@ -692,8 +693,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ------------------------------------------------------ 03
         # now download files
-        with richy.r_live.Live(_hash_check_panel.rich_panel, refresh_per_second=10):
-            _LOGGER.info(msg=f"Hash check for file group: {self.name}")
+        with _hash_check_panel.go_live() as _live:
             _start_time = datetime.datetime.now()
             for fk in self.file_keys:
                 _hash_module = hashlib.sha256()
@@ -713,12 +713,12 @@ class FileGroup(StorageHashable, abc.ABC):
                 # make dicts to return
                 _computed_hashes[fk] = _computed_hash
                 if compute:
-                    _LOGGER.info(msg=f" >> {fk}: hash computed")
+                    _hash_check_panel.info(msg=f" >> {fk}: hash computed")
                 else:
                     if _computed_hash == _correct_hashes[fk]:
-                        _LOGGER.info(msg=f" >> {fk}: success")
+                        _hash_check_panel.info(msg=f" >> {fk}: success")
                     else:
-                        _LOGGER.error(msg=f" >> {fk}: failed")
+                        _hash_check_panel.error(msg=f" >> {fk}: failed")
                         _hash_check_panel.rich_progress.update(
                             task_id=_task_id,
                             state="failed",
@@ -728,7 +728,7 @@ class FileGroup(StorageHashable, abc.ABC):
                             'computed ': _computed_hash,
                         }
             _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
-            _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
+            _hash_check_panel.info(msg=f"Finished in {_total_seconds} seconds")
 
         # ------------------------------------------------------ 04
         # return
@@ -1160,7 +1160,7 @@ class NpyMemMap:
       the elements internal to them are again accessed randomly
     """
 
-    def __init__(self, file_path: Path,):
+    def __init__(self, file_path: Path):
         """
 
         Args:
@@ -1168,6 +1168,9 @@ class NpyMemMap:
         """
         # ------------------------------------------------------------ 01
         # save args passed
+        # todo: currently only allows local file system ... expand the usage for
+        #  NpyMemMap later if needed
+        file_path = file_path.local_path
         self.file_path = file_path
         # check if file_path exists
         if not file_path.is_file():
@@ -2014,7 +2017,8 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         # ------------------------------------------------------ 02
         # get panels
         _download_panel = richy.Progress.for_download(
-            title=f"Download for file group: {self.name}")
+            title=f"Download for file group: {self.group_by}-{self.name}",
+            logger=_LOGGER)
         # todo: make hash panel and add it to table and then render with live display
         #   see https://github.com/Textualize/rich/blob/master/examples/live_progress.py
         # _hash_check_panel = ...
@@ -2037,8 +2041,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
         # ------------------------------------------------------ 04
         # now download files
-        with richy.r_live.Live(_download_panel.rich_panel, refresh_per_second=10):
-            _LOGGER.info(msg=f"Downloading for file group: {self.name}")
+        with _download_panel.go_live() as _live:
             _start_time = datetime.datetime.now()
             for fk in self.file_keys:
                 # get task id
@@ -2049,7 +2052,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         task_id=_task_id,
                         advance=_lengths[fk]
                     )
-                    _LOGGER.info(msg=f" >> {fk}: already downloaded")
+                    _download_panel.info(msg=f" >> {fk}: already downloaded")
                     continue
                 # if there was error earlier update task ...
                 if fk in _errors.keys():
@@ -2057,7 +2060,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         task_id=_task_id,
                         state="failed",
                     )
-                    _LOGGER.error(msg=f" >> {fk}: failed with error {_errors[fk]}")
+                    _download_panel.error(msg=f" >> {fk}: failed with error {_errors[fk]}")
                     _raise_error = True
                     continue
                 try:
@@ -2071,12 +2074,13 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                                     task_id=_task_id,
                                     advance=len(_chunk)
                                 )
-                    _LOGGER.info(msg=f" >> {fk}: success")
+                    _download_panel.info(msg=f" >> {fk}: success")
                 except Exception as _exp:
-                    _LOGGER.error(msg=f" >> {fk}: failed with error {str(_exp)}")
+                    _download_panel.error(
+                        msg=f" >> {fk}: failed with error {str(_exp)}")
                     _raise_error = True
             _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
-            _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
+            _download_panel.info(msg=f"Finished in {_total_seconds} seconds")
             if _raise_error:
                 raise e.validation.NotAllowed(
                     msgs=["Check errors above ..."]

@@ -22,7 +22,7 @@ from rich import status as r_status
 from rich import panel as r_panel
 from rich import prompt as r_prompt
 
-from . import logger
+from .logger import CustomLogger
 from . import error as e
 
 
@@ -204,6 +204,7 @@ class Progress:
     """
     title: str
     columns: t.Dict[str, r_progress.ProgressColumn]
+    logger: CustomLogger
 
     def __post_init__(self):
         # ------------------------------------------------------------ 01
@@ -239,8 +240,18 @@ class Progress:
                 break
         return _tid
 
+    def go_live(self, refresh_per_second: int = 10) -> r_live.Live:
+        self.logger.info(self.title)
+        return r_live.Live(self.rich_panel, refresh_per_second=refresh_per_second)
+
+    def info(self, msg: str):
+        self.logger.info(msg)
+
+    def error(self, msg: str):
+        self.logger.error(msg)
+
     @classmethod
-    def for_download(cls, title: str) -> "Progress":
+    def for_download(cls, title: str, logger: CustomLogger) -> "Progress":
         _progress = Progress(
             title=title,
             columns={
@@ -264,6 +275,7 @@ class Progress:
                     }
                 ),
             },
+            logger=logger,
         )
 
         return _progress
@@ -285,7 +297,7 @@ class Status:
     + can also log with time stamp (but not sent to logger module)
     """
     title: r_console.RenderableType
-    logger: logger.CustomLogger
+    logger: CustomLogger
     spinner: SpinnerType = SpinnerType.dots
 
     def __post_init__(self):
