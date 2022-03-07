@@ -319,11 +319,6 @@ class FileGroup0(s.FileGroup):
         return _ret
 
 
-@dataclasses.dataclass(frozen=True)
-class TestFileGroup(m.HashableClass):
-    ...
-
-
 def try_arrow_storage():
     ts = TestStorage(1, 2.0)
 
