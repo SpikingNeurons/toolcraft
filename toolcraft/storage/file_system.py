@@ -218,6 +218,9 @@ class Path:
     def mkdir(self, create_parents: bool = True, **kwargs):
         self.fs.mkdir(path=self.full_path, create_parents=create_parents, **kwargs)
 
+    def touch(self, truncate: bool = True):
+        return self.fs.touch(path=self.full_path, truncate=truncate)
+
     def delete(self, recursive: bool = False, maxdepth: int = None):
         return self.fs.delete(
             path=self.full_path, recursive=recursive, maxdepth=maxdepth)

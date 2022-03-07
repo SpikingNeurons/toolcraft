@@ -24,7 +24,7 @@ from toolcraft import marshalling as m
 from toolcraft import settings
 from toolcraft import storage as s
 from toolcraft import util
-from toolcraft.storage import file_system
+from toolcraft.storage import file_system, Path
 from toolcraft.storage.table import Filter
 from toolcraft.storage.table import make_expression as me
 
@@ -296,6 +296,32 @@ class TestStorage(m.HashableClass):
             raise Exception(
                 f"Something already exists"
             )
+
+
+@dataclasses.dataclass(frozen=True)
+class FileGroup0(s.FileGroup):
+
+    start_str: str
+    parent_folder: Folder0
+
+    @property
+    def is_auto_hash(self) -> bool:
+        return True
+
+    @property
+    @util.CacheResult
+    def file_keys(self) -> t.List[str]:
+        return [self.start_str + _ for _ in ["a", "b", "c", "d"]]
+
+    def create_file(self, *, file_key: str) -> Path:
+        _ret = self.path / file_key
+        _ret.touch()
+        return _ret
+
+
+@dataclasses.dataclass(frozen=True)
+class TestFileGroup(m.HashableClass):
+    ...
 
 
 def try_arrow_storage():
@@ -622,25 +648,45 @@ def try_arrow_storage():
 
 
 def try_file_storage():
-    ts = TestStorage(1, 2.0)
-
+    # create simple file group inside folder
     print("---------------------------------------------------------01")
-    # pandas_dataframe
-    r = ts.store(mode="rw")
-    print("ts.store(mode='rw')")
-    assert r == ts.data_vector("pandas_dataframe")
+    print("Create folder0=Folder0(...)")
+    folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0", file_system="CWD")
+    print("Create fg0=FileGroup0(...)")
+    fg0 = FileGroup0(start_str="f1", parent_folder=folder0)
+    print("Create fg1=FileGroup0(...)")
+    fg1 = FileGroup0(start_str="f2", parent_folder=folder0)
+    print("Delete fg0")
+    fg0.delete(force=True)
+    print("Delete fg1")
+    fg1.delete(force=True)
+    print("Delete folder0")
+    folder0.delete(force=True)
 
-    r = ts.store(mode="r")
-    print("ts.store(mode='r')")
-    assert r == ts.data_vector("pandas_dataframe")
-
+    # create file group from path
     print("---------------------------------------------------------02")
-    ts.fg()
-    print("ts.fg()")
-
-    print("---------------------------------------------------------03")
-    ts.stores['base'].delete(force=True)
-    print("ts.stores['base'].delete(force=True)")
+    print("Create folder0=Folder0(...)")
+    folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0", file_system="CWD")
+    print("Create some folders and files inside it with folder0 as parent")
+    _fgs = []
+    for _dir, _files in {
+        "dir0": ["aa", "bb", "cc"],
+        "dir1": ["xxaa", "xxbb", "xxcc", "xxdd"]
+    }.items():
+        print(f"    create for {_dir}")
+        (folder0.path / _dir).mkdir()
+        for _file in _files:
+            (folder0.path / _dir / _file).touch()
+        _fgs.append(
+            s.FileGroupFromPaths(
+                parent_folder=folder0, folder_name=_dir, keys=_files,
+            )
+        )
+    print("Delete file groups")
+    for _fg in _fgs:
+        _fg.delete(force=True)
+    print("Delete folder0")
+    folder0.delete(force=True)
 
 
 def try_main():
@@ -656,7 +702,7 @@ def try_main():
     try_metainfo_file()
     try_creating_folders()
     try_arrow_storage()
-    # try_file_storage()
+    try_file_storage()
     _path.rmdir()
 
 

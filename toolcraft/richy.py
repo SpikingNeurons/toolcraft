@@ -6,8 +6,8 @@ https://github.com/Textualize/rich/blob/master/examples/live_progress.py
 
 import dataclasses
 import typing as t
+import enum
 from rich.emoji import EMOJI
-from rich.spinner import SPINNERS
 from rich import logging as r_logging
 from rich import console as r_console
 from rich import highlighter as r_highlighter
@@ -21,6 +21,95 @@ from rich import progress as r_progress
 from rich import status as r_status
 from rich import panel as r_panel
 from rich import prompt as r_prompt
+
+
+class Spinner(enum.Enum):
+    """
+    Refer
+    >>> r_spinner.SPINNERS
+
+    Code to generate this enum fields
+
+    from rich import spinner
+    for _ in spinner.SPINNERS.keys():
+        print(f"\t{_} = enum.auto()")
+    """
+    dots = enum.auto()
+    dots2 = enum.auto()
+    dots3 = enum.auto()
+    dots4 = enum.auto()
+    dots5 = enum.auto()
+    dots6 = enum.auto()
+    dots7 = enum.auto()
+    dots8 = enum.auto()
+    dots9 = enum.auto()
+    dots10 = enum.auto()
+    dots11 = enum.auto()
+    dots12 = enum.auto()
+    dots8Bit = enum.auto()
+    line = enum.auto()
+    line2 = enum.auto()
+    pipe = enum.auto()
+    simpleDots = enum.auto()
+    simpleDotsScrolling = enum.auto()
+    star = enum.auto()
+    star2 = enum.auto()
+    flip = enum.auto()
+    hamburger = enum.auto()
+    growVertical = enum.auto()
+    growHorizontal = enum.auto()
+    balloon = enum.auto()
+    balloon2 = enum.auto()
+    noise = enum.auto()
+    bounce = enum.auto()
+    boxBounce = enum.auto()
+    boxBounce2 = enum.auto()
+    triangle = enum.auto()
+    arc = enum.auto()
+    circle = enum.auto()
+    squareCorners = enum.auto()
+    circleQuarters = enum.auto()
+    circleHalves = enum.auto()
+    squish = enum.auto()
+    toggle = enum.auto()
+    toggle2 = enum.auto()
+    toggle3 = enum.auto()
+    toggle4 = enum.auto()
+    toggle5 = enum.auto()
+    toggle6 = enum.auto()
+    toggle7 = enum.auto()
+    toggle8 = enum.auto()
+    toggle9 = enum.auto()
+    toggle10 = enum.auto()
+    toggle11 = enum.auto()
+    toggle12 = enum.auto()
+    toggle13 = enum.auto()
+    arrow = enum.auto()
+    arrow2 = enum.auto()
+    arrow3 = enum.auto()
+    bouncingBar = enum.auto()
+    bouncingBall = enum.auto()
+    smiley = enum.auto()
+    monkey = enum.auto()
+    hearts = enum.auto()
+    clock = enum.auto()
+    earth = enum.auto()
+    material = enum.auto()
+    moon = enum.auto()
+    runner = enum.auto()
+    pong = enum.auto()
+    shark = enum.auto()
+    dqpb = enum.auto()
+    weather = enum.auto()
+    christmas = enum.auto()
+    grenade = enum.auto()
+    point = enum.auto()
+    layer = enum.auto()
+    betaWave = enum.auto()
+    aesthetic = enum.auto()
+
+    def __str__(self):
+        return self.name
 
 
 class SpinnerColumn(r_progress.SpinnerColumn):
@@ -41,7 +130,7 @@ class SpinnerColumn(r_progress.SpinnerColumn):
         for _k, _v in states.items():
             # if str check is spinner and make Spinner else make it Text
             if isinstance(_v, str):
-                if _v in SPINNERS.keys():
+                if _v in r_spinner.SPINNERS.keys():
                     _v = r_spinner.Spinner(name=_v)
                 else:
                     _v = r_text.Text.from_markup(_v)

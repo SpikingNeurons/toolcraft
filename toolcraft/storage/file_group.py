@@ -833,16 +833,16 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-    @abc.abstractmethod
     def get_files(
-        self, *,
-        file_keys: t.List[str]
-    ) -> t.Dict[str, t.Any]:
+        self, *, file_keys: t.List[str]
+    ) -> t.Dict[str, t.Union[Path, "NpyMemMap"]]:
         """
-        Note we return t.Any as you can return anything like file path
-        numpy array record etc.
+        Default is to return Path
         """
-        ...
+        return {
+            file_key: self.path / file_key
+            for file_key in file_keys
+        }
 
     # noinspection PyUnusedLocal
     def get_files_post_runner(
@@ -883,45 +883,63 @@ class FileGroup(StorageHashable, abc.ABC):
             )
 
     def create(self) -> t.List[Path]:
+        """
+        todo: Refer below and make simlar but in single row status panel for
+          file creations ... where for each file we will have spinner and a text widget
+          beside it showing time remianing ... right now we use simple progress
+            >>> richy.Progress.for_download
+
+        Also refer for main point at
+        >>> richy.r_console
+        """
         _ret = []
 
         # some variables to indicate progress
         # todo: make it like progress bar
         _total_files = len(self.file_keys)
         _s_fmt = len(str(_total_files))
-        spinner = self.spinner
-        for i, k in enumerate(self.file_keys):
-            # get expected file from key
-            _expected_file = self.path / k
+        _console = richy.r_console.Console()
+        _title = f"Creating {_total_files} files for fg: {self.name}"
+        _LOGGER.info(_title)
+        with _console.status(
+            f"[magenta]{_title}",
+            spinner=str(richy.Spinner.dots),
+        ) as _status:
+            for i, k in enumerate(self.file_keys):
 
-            # log
-            spinner.text = f"{_expected_file.name!r}: " \
-                           f"{i + 1: {_s_fmt}d}/{_total_files} created ..."
+                # get expected file from key
+                _expected_file = self.path / k
 
-            # if found on disk bypass creation for efficiency
-            if _expected_file.isfile():
+                # if found on disk bypass creation for efficiency
+                if _expected_file.isfile():
+                    _ret.append(_expected_file)
+                    continue
+
+                # if expected file not present then create
+                _created_file = _expected_file if _expected_file.exists() else \
+                    self.create_file(file_key=k)
+
+                # if check if created and expected file is same
+                if _expected_file != _created_file:
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"The {self.__class__}.create() returns file path "
+                            f"which is not expected for key {k!r}",
+                            {
+                                "Expected": _expected_file,
+                                "Found": _created_file,
+                            },
+                        ]
+                    )
+
+                # append
                 _ret.append(_expected_file)
-                continue
 
-            # if expected file not present then create
-            _created_file = _expected_file if _expected_file.exists() else \
-                self.create_file(file_key=k)
-
-            # if check if created and expected file is same
-            if _expected_file != _created_file:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The {self.__class__}.create() returns file path "
-                        f"which is not expected for key {k!r}",
-                        {
-                            "Expected": _expected_file,
-                            "Found": _created_file,
-                        },
-                    ]
+                # log
+                _console.log(
+                    f"{_expected_file.name!r}: "
+                    f"{i + 1: {_s_fmt}d}/{_total_files} created ..."
                 )
-
-            # append
-            _ret.append(_expected_file)
 
         # return list of created files
         return _ret
