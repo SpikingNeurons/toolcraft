@@ -78,7 +78,6 @@ def try_hashable_ser():
 
 @dataclasses.dataclass(frozen=True)
 class DnTestFile(s.DownloadFileGroup):
-    file_system: str = "DOWNLOAD"
 
     @property
     def meta_info(self) -> dict:
@@ -125,7 +124,6 @@ def try_download_file():
 
 @dataclasses.dataclass(frozen=True)
 class DnTestFileAutoHashed(s.DownloadFileGroup):
-    file_system: str = "DOWNLOAD"
 
     @property
     def meta_info(self) -> dict:

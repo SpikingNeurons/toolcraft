@@ -1943,6 +1943,10 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     """
 
     @property
+    def file_system(self) -> str:
+        return "DOWNLOAD"
+
+    @property
     def name(self) -> str:
         # we assume that this will remain unique as we group by module name.
         # Note that this does mean that you cannot add fields to

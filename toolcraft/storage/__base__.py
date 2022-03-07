@@ -8,8 +8,6 @@ import pathlib
 import datetime
 import dataclasses
 import abc
-import fsspec
-from tensorflow.python.ops.gen_math_ops import is_inf
 
 from .. import util, logger, settings
 from .. import marshalling as m
@@ -174,34 +172,22 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # Note we also do validation here ...
         # that is either parent_folder or file_system should be provided
         _found_file_system = "file_system" in self.dataclass_field_names
-        if _found_file_system:
-            if "file_system" in dir(self):
-                e.code.CodingError(
-                    msgs=["There is already a property/method defined with name "
-                          "`file_system`. Either use property or as dataclass field"]
-                )
-        else:
+        if not _found_file_system:
             _found_file_system = "file_system" in dir(self)
             if _found_file_system:
                 if not isinstance(getattr(self.__class__, "file_system"), property):
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Was expecting `file_system` to be property in class "
                             f"{self.__class__}"
                         ]
                     )
         _found_parent_folder = "parent_folder" in self.dataclass_field_names
-        if _found_parent_folder:
-            if "parent_folder" in dir(self):
-                e.code.CodingError(
-                    msgs=["There is already a property/method defined with name "
-                          "`parent_folder`. Either use property or as dataclass field"]
-                )
-        else:
+        if not _found_parent_folder:
             _found_parent_folder = "parent_folder" in dir(self)
             if _found_parent_folder:
                 if not isinstance(getattr(self.__class__, "parent_folder"), property):
-                    e.code.CodingError(
+                    raise e.code.CodingError(
                         msgs=[
                             f"Was expecting `parent_folder` to be property in class "
                             f"{self.__class__}"
