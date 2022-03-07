@@ -23,13 +23,14 @@ import pyarrow as pa
 from toolcraft import marshalling as m
 from toolcraft import settings
 from toolcraft import storage as s
-from toolcraft import util
+from toolcraft import util, richy, logger
 from toolcraft.storage import file_system, Path
 from toolcraft.storage.table import Filter
 from toolcraft.storage.table import make_expression as me
 
 settings.DEBUG_HASHABLE_STATE = False
 
+_LOGGER = logger.get_logger()
 _TEMP_PATH = "storage_temp"
 
 
@@ -114,10 +115,13 @@ def try_download_file():
     df = DnTestFile()
     if df.is_created:
         df.delete(force=True)
+
     df = DnTestFile()
+
     if not df.is_created:
         df.create()
         df.check()
+
     df.get_file(file_key="file1")
     df.delete(force=True)
 
@@ -691,13 +695,13 @@ def try_main():
         util.io_path_delete(_path, force=True)
     _path.mkdir(parents=True, exist_ok=True)
     _path = _path.resolve()
-    try_hashable_ser()
+    # try_hashable_ser()
     try_download_file()
-    try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
-    try_arrow_storage()
-    try_file_storage()
+    # try_auto_hashed_download_file()
+    # try_metainfo_file()
+    # try_creating_folders()
+    # try_arrow_storage()
+    # try_file_storage()
     _path.rmdir()
 
 
