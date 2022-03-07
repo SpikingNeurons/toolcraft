@@ -158,6 +158,16 @@ class Path:
 
     HOME = pathlib.Path.home()
 
+    @property
+    def local_path(self) -> pathlib.Path:
+        if not isinstance(self.fs, fsspec.implementations.local.LocalFileSystem):
+            raise e.code.CodingError(
+                msgs=[
+                    "Only allowed when local file system ..."
+                ]
+            )
+        return pathlib.Path(self.full_path)
+
     def __post_init__(self):
         # set some vars for faster access
         self.fs, self.fs_config = get_file_system_details(self.fs_name)
