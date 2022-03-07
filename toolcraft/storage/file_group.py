@@ -679,7 +679,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
         # needed are similar
-        _hash_check_panel = richy.Progress.for_download(
+        _hash_check_panel = richy.Progress.for_download_and_hashcheck(
             title=f"Hash check for file group: {self.group_by}-{self.name}",
             logger=_LOGGER)
 
@@ -887,7 +887,7 @@ class FileGroup(StorageHashable, abc.ABC):
         todo: Refer below and make simlar but in single row status panel for
           file creations ... where for each file we will have spinner and a text widget
           beside it showing time remianing ... right now we use simple progress
-            >>> richy.Progress.for_download
+            >>> richy.Progress.for_download_and_hashcheck
 
         Also refer for main point at
         >>> richy.r_console
@@ -2016,7 +2016,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             _lengths[fk] = _length
         # ------------------------------------------------------ 02
         # get panels
-        _download_panel = richy.Progress.for_download(
+        _download_panel = richy.Progress.for_download_and_hashcheck(
             title=f"Download for file group: {self.group_by}-{self.name}",
             logger=_LOGGER)
         # todo: make hash panel and add it to table and then render with live display

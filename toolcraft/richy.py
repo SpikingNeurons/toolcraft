@@ -214,6 +214,7 @@ class Progress:
             # todo: this can use console with record=True so that the progress
             #  can be saved to html or text ... need to explore ...
             console=None,
+            expand=True,
         )
         # ------------------------------------------------------------ 02
         # make rich table
@@ -251,7 +252,7 @@ class Progress:
         self.logger.error(msg)
 
     @classmethod
-    def for_download(cls, title: str, logger: CustomLogger) -> "Progress":
+    def for_download_and_hashcheck(cls, title: str, logger: CustomLogger) -> "Progress":
         _progress = Progress(
             title=title,
             columns={
