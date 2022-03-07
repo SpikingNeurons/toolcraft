@@ -25,7 +25,7 @@ from . import file_system
 from .file_system import Path
 from .__base__ import StorageHashable
 from .state import Info, Config, Suffix
-from .folder import Folder
+from .folder import Folder, TemporaryFolder
 from .file_group import FileGroup, FileGroupFromPaths, NpyMemMap, SHUFFLE_SEED_TYPE, \
     DETERMINISTIC_SHUFFLE, NO_SHUFFLE, DO_NOT_USE, USE_ALL, \
     SELECT_TYPE, NON_DETERMINISTIC_SHUFFLE, FileGroupConfig

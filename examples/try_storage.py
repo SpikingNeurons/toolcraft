@@ -239,7 +239,9 @@ def try_creating_folders():
 
 @dataclasses.dataclass(frozen=True)
 class TestStorageResultsFolder(s.Folder):
-    file_system: str
+    @property
+    def file_system(self) -> str:
+        return "CWD"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -251,7 +253,7 @@ class TestStorage(m.HashableClass):
     @util.CacheResult
     def results_folder(self) -> TestStorageResultsFolder:
         return TestStorageResultsFolder(
-            for_hashable=f"{_TEMP_PATH}/{self.hex_hash}", file_system="CWD")
+            for_hashable=f"{_TEMP_PATH}/{self.hex_hash}")
 
     @property
     @util.CacheResult

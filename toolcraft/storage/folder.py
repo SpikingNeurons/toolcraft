@@ -254,3 +254,14 @@ class Folder(StorageHashable):
         # sync is equivalent to accessing folder
         # so update state manager files
         # self.config.append_last_accessed_on()
+
+
+@dataclasses.dataclass(frozen=True)
+class TemporaryFolder(Folder):
+    """
+    Simple temp folder
+    """
+
+    @property
+    def file_system(self) -> str:
+        return "TEMP"
