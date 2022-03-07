@@ -899,7 +899,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _total_files = len(self.file_keys)
         _s_fmt = len(str(_total_files))
 
-        with richy.Status(
+        with richy.StatusPanel(
             title=f"Creating {_total_files} files for fg: {self.name}",
             logger=_LOGGER,
         ) as _status:

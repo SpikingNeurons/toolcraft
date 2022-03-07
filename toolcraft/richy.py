@@ -304,14 +304,25 @@ class Progress:
 
 
 @dataclasses.dataclass
-class Status:
+class StatusPanel:
     """
-    A simple status indicator
-    todo: explore adding time elapsed
-    todo: explore clubbing multiple Status in one panel
+    A simple status indicator ... which we want make like panel
+    todo: see
+      + toolcraft/examples/richy/dynamic_progress.py
+      + toolcraft/examples/richy/live_progress.py
+
+    todo: explore adding time elapsed or add progress bar
+      + see toolcraft/examples/richy/live_progress.py
+
+    todo: explore clubbing multiple Status in one panel ... so that status spinner and
+      it's log's stays in panel ...
+
+    todo: add more compability for `util.HookUp` when used
+      with `HashableCLass.hook_up_methods`
+
     todo: more complex Status panel
 
-    Refer __main__ of
+    For now refer __main__ of
     >>> r_status.Status
 
     + prints title with toolcraft.logger
