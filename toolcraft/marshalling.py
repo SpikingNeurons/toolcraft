@@ -1870,8 +1870,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 _LOGGER.info(
                     msg=f"Detected {len(_rc_keys)} new classes so "
                         f"performing rule checks ...")
-                # todo: enhance `richy.r_progress.track` ... put this inside panel ...
-                for _rc_k in richy.r_progress.track(
+                for _rc_k in richy.Progress.track(
                     _rc_keys, description=f"Rule Checking ..."
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()

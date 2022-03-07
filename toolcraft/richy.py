@@ -218,9 +218,9 @@ class Progress:
         )
         # ------------------------------------------------------------ 02
         # make rich table
-        self.rich_panel = r_panel.Panel.fit(
+        self.rich_panel = r_panel.Panel(
             self.rich_progress, title=self.title,
-            border_style="green", padding=(2, 2)
+            border_style="green", padding=(2, 2), expand=True
         )
         # ------------------------------------------------------------ 03
         # todo: find a way add to r_console.Console so that record=True can be used
@@ -250,6 +250,27 @@ class Progress:
 
     def error(self, msg: str):
         self.logger.error(msg)
+
+    @classmethod
+    def track(
+        cls,
+        sequence: t.Union[
+            t.Sequence[r_progress.ProgressType],
+            t.Iterable[r_progress.ProgressType]
+        ],
+        description: str = "Working...",
+        # total: t.Optional[float] = None,
+    ):
+        """
+        Simple progress bar for single task which iterates over sequence
+
+        Refer:
+        >>> r_progress.track
+
+        todo: enhance `richy.Progress.track` ... put this inside panel ...
+        todo: enhance later with our Progress instance
+        """
+        return r_progress.track(sequence, description)
 
     @classmethod
     def for_download_and_hashcheck(cls, title: str, logger: CustomLogger) -> "Progress":

@@ -1117,8 +1117,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # -----------------------------------------------------------03.02
             # delete all files for the group
             _LOGGER.info(msg=f"Deleting files for `{self.name}` ...")
-            # todo: enhance `richy.r_progress.track` ... put this inside panel ...
-            for fk in richy.r_progress.track(
+            for fk in richy.Progress.track(
                 self.file_keys, description="Deleting ..."
             ):
                 _key_path = self.path / fk
