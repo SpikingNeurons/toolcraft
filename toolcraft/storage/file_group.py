@@ -931,6 +931,13 @@ class FileGroup(StorageHashable, abc.ABC):
 
                 # if check if created and expected file is same
                 if _expected_file != _created_file:
+                    if not isinstance(_created_file, Path):
+                        raise e.code.CodingError(
+                            msgs=[
+                                f"You are supported to return instance of {Path} ... "
+                                f"instead found {type(_created_file)}"
+                            ]
+                        )
                     raise e.code.CodingError(
                         msgs=[
                             f"The {self.__class__}.create() returns file path "
