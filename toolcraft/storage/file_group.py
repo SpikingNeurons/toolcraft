@@ -2003,21 +2003,15 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             if _file_paths[fk].exists():
                 _lengths[fk] = _file_paths[fk].stat()['size']
                 continue
-            _response = requests.get(_urls[fk], stream=True)
-            _length = int(_response.headers['content-length'])
             try:
                 _response = requests.get(_urls[fk], stream=True)
                 try:
                     _length = int(_response.headers['content-length'])
+                    _lengths[fk] = _length
                 except Exception as _ee:
                     raise Exception("error getting content length: " + str(_ee))
             except Exception as _exp:
-                _errors[fk] = str(_exp)
-                _responses[fk] = None
-                _lengths[fk] = None
-                continue
-            _responses[fk] = _response
-            _lengths[fk] = _length
+                raise _exp
 
         # ------------------------------------------------------ 02
         # get panels
@@ -2072,7 +2066,8 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                     continue
                 try:
                     with _file_paths[fk].open('wb') as _f:
-                        for _chunk in _responses[fk].iter_content(
+                        _response = requests.get(_urls[fk], stream=True)
+                        for _chunk in _response.iter_content(
                             chunk_size=min(_lengths[fk] // 10, _chunk_size)
                         ):
                             if _chunk:  # filter out keep-alive new chunks
