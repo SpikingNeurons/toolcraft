@@ -800,11 +800,11 @@ class RuleChecker:
 
 
 @RuleChecker(
-    things_to_be_cached=['internal', 'rich_progress'],
+    things_to_be_cached=['internal'],
     things_not_to_be_cached=[
-        'is_called', 'iterable_length', 'on_iter', 'on_call', 'on_enter', 'on_exit'
+        'is_called', 'on_iter', 'on_call', 'on_enter', 'on_exit'
     ],
-    things_not_to_be_overridden=['is_called', 'is_iterable', ]
+    things_not_to_be_overridden=['is_called', ]
 )
 class Tracker:
     """
@@ -842,64 +842,9 @@ class Tracker:
 
     @property
     @util.CacheResult
-    def is_iterable(self) -> bool:
-        """
-        Indicates weather this class can be iterated or not
-        """
-        _iterable_length_overridden = (self.__class__.iterable_length !=
-                                       Tracker.iterable_length)
-        _on_iter_overridden = self.__class__.on_iter != Tracker.on_iter
-        if _iterable_length_overridden ^ _on_iter_overridden:
-            raise e.code.CodingError(msgs=[
-                f"Both property iterable_length and method on_iter must "
-                f"be overridden if you want to support iterating on "
-                f"instances of class {self.__class__}",
-                dict(
-                    _iterable_length_overridden=_iterable_length_overridden,
-                    _on_iter_overridden=_on_iter_overridden,
-                ),
-            ])
-        return _iterable_length_overridden
-
-    # noinspection PyPropertyDefinition,PyTypeChecker
-    @property
-    def iterable_length(self) -> int:
-        raise e.code.NotSupported(msgs=[
-            f"Override this property in class "
-            f"{self.__class__} if you want to iterate "
-            f"over tracker"
-        ])
-
-    # noinspection PyPropertyDefinition,PyTypeChecker
-    @property
-    def iterable_unit(self) -> str:
-        raise e.code.NotSupported(msgs=[
-            f"Override this property in class "
-            f"{self.__class__} if you want to iterate "
-            f"over tracker"
-        ])
-
-    # noinspection PyTypeChecker
-    @property
-    def iterates_infinitely(self) -> bool:
-        raise e.code.NotSupported(msgs=[
-            f"Override this property in class "
-            f"{self.__class__} if you want to iterate "
-            f"over tracker"
-        ])
-
-    @property
-    @util.CacheResult
     def dataclass_field_names(self) -> t.List[str]:
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
-
-    @property
-    @util.CacheResult
-    def rich_progress(self) -> progress.Progress:
-        return progress.Progress(
-
-        )
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -928,8 +873,7 @@ class Tracker:
 
     def __call__(
         self,
-        iter_show_progress_bar: bool = None,
-        iter_desc: str = None,
+        status_panel: richy.StatusPanel = None,
         **kwargs,
     ) -> "Tracker":
         """
@@ -955,27 +899,16 @@ class Tracker:
                 f"Or else try to call this with for statement ...",
             ])
         else:
-            # if iterating is not supported then make sure that iter_* kwargs
-            # are None
-            if self.is_iterable:
-                if iter_show_progress_bar is None:
-                    # the default when self is iterable is to show progress bar
-                    iter_show_progress_bar = True
-                self.internal.on_call_kwargs = {
-                    "iter_show_progress_bar": iter_show_progress_bar,
-                    "iter_desc": iter_desc,
-                    **kwargs,
-                }
-            else:
-                if iter_show_progress_bar is not None or iter_desc is not None:
-                    raise e.code.CodingError(msgs=[
-                        f"The class {self.__class__} does not override "
-                        f"on_iter that is it does not support iterating "
-                        f"so please make sure to set iter related "
-                        f"__call__ kwargs to None"
-                    ])
-                    # skip adding iter related kwargs
-                self.internal.on_call_kwargs = kwargs
+            # add status_panel if supplied
+            _on_call_kwargs = {}
+            if status_panel is not None:
+                _on_call_kwargs["status_panel"] = status_panel
+
+            # add remaining kwargs
+            _on_call_kwargs.update(kwargs)
+
+            # set internal on_call_kwargs
+            self.internal.on_call_kwargs = _on_call_kwargs
 
         # do something once kwargs are available
         self.on_call()

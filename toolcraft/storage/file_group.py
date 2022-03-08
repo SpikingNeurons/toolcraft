@@ -1634,30 +1634,21 @@ class NpyFileGroup(FileGroup, abc.ABC):
         again.
         """
         _ret = {}
-        with logger.ProgressBar(
-            iterable=self.file_keys, unit=" files", desc="Loading NpyMemMap's"
-        ) as _pg:
-            for fk in _pg:
-                _ret[fk] = NpyMemMap(file_path=self.path / fk,)
+        for fk in self.file_keys:
+            _ret[fk] = NpyMemMap(file_path=self.path / fk, )
         return _ret
 
     # noinspection PyMethodOverriding
     def __call__(
         self, *,
+        status_panel: t.Optional[richy.StatusPanel],
         shuffle_seed: SHUFFLE_SEED_TYPE,
-        suppress_npymemmap_log: bool = False,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
         return super().__call__(
-            # Note that we do not use iterating feature so set to None as we
-            # need to satisfy the API requirement
-            iter_show_progress_bar=None,
-            iter_desc=None,
-            iter_num_parts=None,
-            iter_for_part=None,
+            status_panel=status_panel,
             shuffle_seed=shuffle_seed,
-            suppress_npymemmap_log=suppress_npymemmap_log,
         )
 
     def on_enter(self):
@@ -1669,53 +1660,41 @@ class NpyFileGroup(FileGroup, abc.ABC):
             self.internal.on_call_kwargs[
                 'shuffle_seed'
             ]  # type: SHUFFLE_SEED_TYPE
-        suppress_npymemmap_log = \
+        status_panel = \
             self.internal.on_call_kwargs[
-                'suppress_npymemmap_log'
-            ]  # type: bool
+                'status_panel'
+            ]  # type: t.Optional[richy.StatusPanel]
+
+        # log
+        _total = len(self.file_keys)
 
         # get property
+        if status_panel is not None:
+            status_panel.update(f"Loading {_total} NpyMemMap's for Fg {self.name}")
         _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
 
         # make NpyMemmaps aware of seed
-        if suppress_npymemmap_log:
-            for k in self.file_keys:
-                v = _all_npy_mem_maps_cache[k]
-                v(shuffle_seed=shuffle_seed)
-                v.__enter__()
-        else:
-            with logger.ProgressBar(
-                iterable=self.file_keys, unit=" files", desc="Opening NpyMemMap's"
-            ) as _pg:
-                for k in _pg:
-                    v = _all_npy_mem_maps_cache[k]
-                    v(shuffle_seed=shuffle_seed)
-                    v.__enter__()
+        for i, k in enumerate(self.file_keys):
+            if status_panel is not None:
+                status_panel.update(
+                    f"Opening {i+1}/{_total} "
+                    f"NpyMemMap for `{k}` with seed `{shuffle_seed}`")
+            v = _all_npy_mem_maps_cache[k]
+            v(shuffle_seed=shuffle_seed)
+            v.__enter__()
 
     def on_exit(self):
-
-        # get kwargs passed in call
-        suppress_npymemmap_log = \
+        status_panel = \
             self.internal.on_call_kwargs[
-                'suppress_npymemmap_log'
-            ]  # type: bool
-
-        # exit numpy memmaps
-        # We have opened up all NpyMemMap's with shuffle_seed='DO_NOT_USE' ...
-        # for use within `with` context ... so now we close it
-        if suppress_npymemmap_log:
-            for k in self.file_keys:
-                v = self.all_npy_mem_maps_cache[k]
-                # noinspection PyUnresolvedReferences
-                v.__exit__(None, None, None)
-        else:
-            with logger.ProgressBar(
-                iterable=self.file_keys, unit=" files", desc="Closing NpyMemMap's"
-            ) as _pg:
-                for k in _pg:
-                    v = self.all_npy_mem_maps_cache[k]
-                    # noinspection PyUnresolvedReferences
-                    v.__exit__(None, None, None)
+                'status_panel'
+            ]  # type: t.Optional[richy.StatusPanel]
+        _total = len(self.file_keys)
+        for i, k in enumerate(self.file_keys):
+            if status_panel is not None:
+                status_panel.update(f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
+            v = self.all_npy_mem_maps_cache[k]
+            # noinspection PyUnresolvedReferences
+            v.__exit__(None, None, None)
 
         # call super
         super().on_exit()
