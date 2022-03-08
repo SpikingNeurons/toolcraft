@@ -22,7 +22,6 @@ from rich import status as r_status
 from rich import panel as r_panel
 from rich import prompt as r_prompt
 
-from .logger import CustomLogger
 from . import error as e
 
 
@@ -123,7 +122,7 @@ class SpinnerColumn(r_progress.SpinnerColumn):
     # noinspection PyMissingConstructor
     def __init__(
         self,
-        states: t.Dict[str, t.Union[str, r_text.Text, r_spinner.Spinner]],
+        states: t.Dict[str, t.Union[str, r_text.Text, r_spinner.Spinner, SpinnerType]],
         start_state_key: str = "start",
         finished_state_key: str = "finished",
         table_column: t.Optional[r_table.Column] = None,
@@ -131,13 +130,12 @@ class SpinnerColumn(r_progress.SpinnerColumn):
         # transform states to respective rich elements
         self.states = {}
         for _k, _v in states.items():
-            # if str check is spinner and make Spinner else make it Text
-            if isinstance(_v, str):
-                if _v in r_spinner.SPINNERS.keys():
-                    _v = r_spinner.Spinner(name=_v)
-                else:
-                    _v = r_text.Text.from_markup(_v)
-            # if not str then it is Text or Spinner
+            if isinstance(_v, SpinnerType):
+                _v = r_spinner.Spinner(name=str(_v))
+            elif isinstance(_v, str):
+                _v = r_text.Text.from_markup(_v)
+
+            # if not str then it is Text or Spinner so directly assign
             self.states[_k] = _v
 
         # set some keys
@@ -204,7 +202,6 @@ class Progress:
     """
     title: str
     columns: t.Dict[str, r_progress.ProgressColumn]
-    logger: CustomLogger
 
     def __post_init__(self):
         # ------------------------------------------------------------ 01
@@ -242,14 +239,7 @@ class Progress:
         return _tid
 
     def go_live(self, refresh_per_second: int = 10) -> r_live.Live:
-        self.logger.info(self.title)
         return r_live.Live(self.rich_panel, refresh_per_second=refresh_per_second)
-
-    def info(self, msg: str):
-        self.logger.info(msg)
-
-    def error(self, msg: str):
-        self.logger.error(msg)
 
     @classmethod
     def track(
@@ -273,7 +263,7 @@ class Progress:
         return r_progress.track(sequence, description)
 
     @classmethod
-    def for_download_and_hashcheck(cls, title: str, logger: CustomLogger) -> "Progress":
+    def for_download_and_hashcheck(cls, title: str) -> "Progress":
         _progress = Progress(
             title=title,
             columns={
@@ -291,13 +281,13 @@ class Progress:
                 "time_remaining": r_progress.TimeRemainingColumn(),
                 "status": SpinnerColumn(
                     states={
-                        "start": "dots",
+                        "start": SpinnerType.dots,
                         "finished": EMOJI["white_heavy_check_mark"],
+                        "already_finished": EMOJI["heavy_check_mark"],
                         "failed": EMOJI["cross_mark"],
                     }
                 ),
             },
-            logger=logger,
         )
 
         return _progress
@@ -330,7 +320,6 @@ class StatusPanel:
     + can also log with time stamp (but not sent to logger module)
     """
     title: r_console.RenderableType
-    logger: CustomLogger
     spinner: SpinnerType = SpinnerType.dots
 
     def __post_init__(self):
@@ -339,7 +328,6 @@ class StatusPanel:
         self.status = None  # type: r_status.Status
 
     def __enter__(self):
-        self.logger.info(self.title)
         self.status = self.console.status(
             status=f"[magenta]{self.title}",
             spinner=str(self.spinner),
@@ -351,10 +339,8 @@ class StatusPanel:
         self.status.__exit__(exc_type, exc_val, exc_tb)
         self.status = None
 
-    def log(self, msg: str, log_to_logger: bool = False):
+    def log(self, msg: str):
         self.console.log(msg)
-        if log_to_logger:
-            self.logger.info(msg)
 
     def update(
         self,
@@ -368,7 +354,7 @@ class StatusPanel:
                 msgs=["Allowed to be called from within with context"]
             )
         self.status.update(
-            status=status, spinner=str(spinner),
+            status=status, spinner=None if spinner is None else str(spinner),
             spinner_style=spinner_style, speed=speed
         )
 

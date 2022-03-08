@@ -317,7 +317,9 @@ class FileGroup0(s.FileGroup):
     def file_keys(self) -> t.List[str]:
         return [self.start_str + _ for _ in ["a", "b", "c", "d"]]
 
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(
+        self, *, file_key: str, status_panel: richy.StatusPanel = None
+    ) -> Path:
         _ret = self.path / file_key
         _ret.touch()
         return _ret
@@ -695,13 +697,13 @@ def try_main():
         util.io_path_delete(_path, force=True)
     _path.mkdir(parents=True, exist_ok=True)
     _path = _path.resolve()
-    try_hashable_ser()
+    # try_hashable_ser()
     try_download_file()
-    try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
-    try_arrow_storage()
-    try_file_storage()
+    # try_auto_hashed_download_file()
+    # try_metainfo_file()
+    # try_creating_folders()
+    # try_arrow_storage()
+    # try_file_storage()
     _path.rmdir()
 
 

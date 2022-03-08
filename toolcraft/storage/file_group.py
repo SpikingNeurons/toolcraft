@@ -679,9 +679,12 @@ class FileGroup(StorageHashable, abc.ABC):
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
         # needed are similar
-        _hash_check_panel = richy.Progress.for_download_and_hashcheck(
-            title=f"Hash check for file group: {self.group_by}-{self.name}",
-            logger=_LOGGER)
+        if compute:
+            _title = f"Compute hash for fg: {self.group_by}>>{self.name}"
+        else:
+            _title = f"Check hash for fg: {self.group_by}>>{self.name}"
+        _LOGGER.info(_title)
+        _hash_check_panel = richy.Progress.for_download_and_hashcheck(title=_title)
 
         # ------------------------------------------------------ 02
         # now add tasks
@@ -712,13 +715,8 @@ class FileGroup(StorageHashable, abc.ABC):
                     _computed_hash = _hash_module.hexdigest()
                 # make dicts to return
                 _computed_hashes[fk] = _computed_hash
-                if compute:
-                    _hash_check_panel.info(msg=f" >> {fk}: hash computed")
-                else:
-                    if _computed_hash == _correct_hashes[fk]:
-                        _hash_check_panel.info(msg=f" >> {fk}: success")
-                    else:
-                        _hash_check_panel.error(msg=f" >> {fk}: failed")
+                if not compute:
+                    if _computed_hash != _correct_hashes[fk]:
                         _hash_check_panel.rich_progress.update(
                             task_id=_task_id,
                             state="failed",
@@ -727,8 +725,10 @@ class FileGroup(StorageHashable, abc.ABC):
                             'correct  ': _correct_hashes[fk],
                             'computed ': _computed_hash,
                         }
-            _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
-            _hash_check_panel.info(msg=f"Finished in {_total_seconds} seconds")
+
+        # ------------------------------------------------------ 03
+        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+        _LOGGER.info(f"Finished in {_total_seconds} seconds")
 
         # ------------------------------------------------------ 04
         # return
@@ -898,13 +898,24 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: make it like progress bar
         _total_files = len(self.file_keys)
         _s_fmt = len(str(_total_files))
+        _max_key_str_len = max([len(_) for _ in self.file_keys]) + 1
+
+        _title = f"Creating {_total_files} files for fg: {self.name}"
+        _LOGGER.info(_title)
+
+        _start_time = datetime.datetime.now()
 
         with richy.StatusPanel(
-            title=f"Creating {_total_files} files for fg: {self.name}",
-            logger=_LOGGER,
+            title=_title,
         ) as _status:
 
             for i, k in enumerate(self.file_keys):
+
+                # log
+                _status.log(
+                    f"'{k:{_max_key_str_len}s}': "
+                    f"{i + 1: {_s_fmt}d}/{_total_files} creating ..."
+                )
 
                 # get expected file from key
                 _expected_file = self.path / k
@@ -916,7 +927,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
                 # if expected file not present then create
                 _created_file = _expected_file if _expected_file.exists() else \
-                    self.create_file(file_key=k)
+                    self.create_file(file_key=k, status_panel=_status)
 
                 # if check if created and expected file is same
                 if _expected_file != _created_file:
@@ -934,11 +945,8 @@ class FileGroup(StorageHashable, abc.ABC):
                 # append
                 _ret.append(_expected_file)
 
-                # log
-                _status.log(
-                    f"{_expected_file.name!r}: "
-                    f"{i + 1: {_s_fmt}d}/{_total_files} created ..."
-                )
+        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+        _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
 
         # return list of created files
         return _ret
@@ -1049,7 +1057,9 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     @abc.abstractmethod
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(
+        self, *, file_key: str, status_panel: richy.StatusPanel = None
+    ) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
         create files on first call and subsequent file_keys will just fake
@@ -1473,7 +1483,6 @@ class NpyMemMap:
                     f"call __call__ method on it"
                 ]
             )
-            raise AttributeError()
 
         # make sure that do_not_use is set
         if not call_helper.do_not_use:
@@ -1760,10 +1769,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
         file_key: str,
         npy_data: t.Union[np.ndarray, t.Dict[str, np.ndarray]],
     ) -> Path:
-        # get spinner and log
-        _s = logger.Spinner.get_last_spinner()
-        if _s is not None:
-            _s.text = f"Saving numpy data for `{file_key}`"
 
         # get file from a file_key
         _file = self.path / file_key
@@ -2013,11 +2018,12 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                 continue
             _responses[fk] = _response
             _lengths[fk] = _length
+
         # ------------------------------------------------------ 02
         # get panels
-        _download_panel = richy.Progress.for_download_and_hashcheck(
-            title=f"Download for file group: {self.group_by}-{self.name}",
-            logger=_LOGGER)
+        _title = f"Download for fg: {self.group_by}>>{self.name}"
+        _LOGGER.info(_title)
+        _download_panel = richy.Progress.for_download_and_hashcheck(title=_title)
         # todo: make hash panel and add it to table and then render with live display
         #   see https://github.com/Textualize/rich/blob/master/examples/live_progress.py
         # _hash_check_panel = ...
@@ -2051,7 +2057,10 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         task_id=_task_id,
                         advance=_lengths[fk]
                     )
-                    _download_panel.info(msg=f" >> {fk}: already downloaded")
+                    _download_panel.rich_progress.update(
+                        task_id=_task_id,
+                        state="already_finished",
+                    )
                     continue
                 # if there was error earlier update task ...
                 if fk in _errors.keys():
@@ -2059,7 +2068,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         task_id=_task_id,
                         state="failed",
                     )
-                    _download_panel.error(msg=f" >> {fk}: failed with error {_errors[fk]}")
                     _raise_error = True
                     continue
                 try:
@@ -2073,24 +2081,29 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                                     task_id=_task_id,
                                     advance=len(_chunk)
                                 )
-                    _download_panel.info(msg=f" >> {fk}: success")
                 except Exception as _exp:
-                    _download_panel.error(
-                        msg=f" >> {fk}: failed with error {str(_exp)}")
+                    _errors[fk] = str(_exp)
                     _raise_error = True
-            _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
-            _download_panel.info(msg=f"Finished in {_total_seconds} seconds")
-            if _raise_error:
-                raise e.validation.NotAllowed(
-                    msgs=["Check errors above ..."]
-                )
 
         # ------------------------------------------------------ 05
+        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+        _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
+
+        # ------------------------------------------------------ 06
+        # raise error if _raise_error
+        if _raise_error:
+            raise e.validation.NotAllowed(
+                msgs=["Check errors ...", _errors]
+            )
+
+        # ------------------------------------------------------ 07
         # return
         return list(_file_paths.values())
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(
+        self, *, file_key: str, status_panel: richy.StatusPanel = None
+    ) -> Path:
         raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "
@@ -2176,7 +2189,9 @@ class FileGroupFromPaths(FileGroup):
         return _ret
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(
+        self, *, file_key: str, status_panel: richy.StatusPanel = None
+    ) -> Path:
         raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "
