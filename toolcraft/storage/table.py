@@ -448,6 +448,17 @@ class Table(Folder):
                 ]
             )
 
+    def something_exists(self) -> bool:
+        """
+        A faster version of exists with no columns or filter_expression kwargs
+        Useful when only used for write ...
+        """
+        if not self.path.exists():
+            return False
+        if self.path.is_dir_empty():
+            return False
+        return True
+
     def exists(
         self,
         columns: t.List[str] = None,

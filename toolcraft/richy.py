@@ -2,11 +2,19 @@
 Refer:
 https://github.com/Textualize/rich/blob/master/examples/dynamic_progress.py
 https://github.com/Textualize/rich/blob/master/examples/live_progress.py
+
+todo: add terminal plotting support
+  + https://stackoverflow.com/questions/37288421/how-to-plot-a-chart-in-the-terminal
+  + either use plotext (adds extra dependency)
+  + or use dearpygui frame grabber ... to reuse `toolcraft.gui` module
+    this is possible as terminals can display raster images
+    Extend StatusPanel for this
 """
 
 import dataclasses
 import typing as t
 import enum
+import abc
 from rich.emoji import EMOJI
 from rich import logging as r_logging
 from rich import console as r_console
@@ -190,7 +198,19 @@ class SpinnerColumn(r_progress.SpinnerColumn):
 
 
 @dataclasses.dataclass
-class Progress:
+class Widget(abc.ABC):
+
+    @property
+    @abc.abstractmethod
+    def renderable(self) -> r_console.RenderableType:
+        ...
+
+    def go_live(self, refresh_per_second: int = 10) -> r_live.Live:
+        return r_live.Live(self.renderable, refresh_per_second=refresh_per_second)
+
+
+@dataclasses.dataclass
+class Progress(Widget):
     """
     Note that this is not ProgressBar nor Progress
     ... we use Progress as attribute
@@ -200,8 +220,20 @@ class Progress:
     todo: build a asyncio api (with io overhead) or multithreading
       api (with compute overhead) while exploiting `rich.progress.Task` api
     """
-    title: str
     columns: t.Dict[str, r_progress.ProgressColumn]
+    title: t.Optional[str] = None
+
+    @property
+    def renderable(self) -> r_console.RenderableType:
+        if self.title is None:
+            return self.rich_progress
+        else:
+            return r_panel.Panel(
+                self.rich_progress, title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True
+            )
 
     def __post_init__(self):
         # ------------------------------------------------------------ 01
@@ -214,21 +246,16 @@ class Progress:
             expand=True,
         )
         # ------------------------------------------------------------ 02
-        # make rich table
-        self.rich_panel = r_panel.Panel(
-            self.rich_progress, title=self.title,
-            border_style="green", padding=(2, 2), expand=True
-        )
-        # ------------------------------------------------------------ 03
         # todo: find a way add to r_console.Console so that record=True can be used
-        #   may be not possible
-        # ------------------------------------------------------------ 04
+        #   may be not possible ...
+        #   NOTE: record=True can save html .. or dump to text logs
+        # ------------------------------------------------------------ 03
         # empty container for added tasks
         self.tasks = {}  # type: t.Dict[str, r_progress.Task]
 
     def add_task(
         self, task_name: str, total: int, color: str = "cyan"
-    ) -> r_progress.TaskID:
+    ):
         _tid = self.rich_progress.add_task(
             description=f"[{color}]{task_name}", total=total,
         )
@@ -236,10 +263,23 @@ class Progress:
             if _rt.id == _tid:
                 self.tasks[task_name] = _rt
                 break
-        return _tid
 
-    def go_live(self, refresh_per_second: int = 10) -> r_live.Live:
-        return r_live.Live(self.rich_panel, refresh_per_second=refresh_per_second)
+    def update(
+        self, task_name: str = None,
+        advance: t.Union[int, float] = None, state: str = None
+    ):
+        if task_name is None:
+            if len(self.tasks) == 1:
+                task_name = list(self.tasks.keys())[0]
+            else:
+                raise e.code.NotAllowed(
+                    msgs=["You must supply task_name kwarg when number of "
+                          "tasks is not one"]
+                )
+        self.rich_progress.update(
+            task_id=self.tasks[task_name].id,
+            advance=advance, state=state,
+        )
 
     @classmethod
     def track(
@@ -280,6 +320,8 @@ class Progress:
                 "download": r_progress.DownloadColumn(),
                 "time_remaining": r_progress.TimeRemainingColumn(),
                 "status": SpinnerColumn(
+                    start_state_key="start",
+                    finished_state_key="finished",
                     states={
                         "start": SpinnerType.dots,
                         "finished": EMOJI["white_heavy_check_mark"],

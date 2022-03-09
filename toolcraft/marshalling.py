@@ -873,7 +873,7 @@ class Tracker:
 
     def __call__(
         self,
-        status_panel: richy.StatusPanel = None,
+        status_panel: t.Optional[richy.StatusPanel],
         **kwargs,
     ) -> "Tracker":
         """
@@ -900,9 +900,7 @@ class Tracker:
             ])
         else:
             # add status_panel if supplied
-            _on_call_kwargs = {}
-            if status_panel is not None:
-                _on_call_kwargs["status_panel"] = status_panel
+            _on_call_kwargs = {"status_panel": status_panel}
 
             # add remaining kwargs
             _on_call_kwargs.update(kwargs)

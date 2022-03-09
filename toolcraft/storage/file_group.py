@@ -701,14 +701,13 @@ class FileGroup(StorageHashable, abc.ABC):
             for fk in self.file_keys:
                 _hash_module = hashlib.sha256()
                 # get task id
-                _task_id = _hash_check_panel.tasks[fk].id
                 with _file_paths[fk].open(mode='rb') as fb:
                     _new_chunk_size = min(_lengths[fk] // 10, _chunk_size)
                     # compute
                     for _chunk in iter(lambda: fb.read(_chunk_size), b''):
                         _hash_module.update(_chunk)
-                        _hash_check_panel.rich_progress.update(
-                            task_id=_task_id,
+                        _hash_check_panel.update(
+                            task_name=fk,
                             advance=len(_chunk)
                         )
                     fb.close()
@@ -717,8 +716,8 @@ class FileGroup(StorageHashable, abc.ABC):
                 _computed_hashes[fk] = _computed_hash
                 if not compute:
                     if _computed_hash != _correct_hashes[fk]:
-                        _hash_check_panel.rich_progress.update(
-                            task_id=_task_id,
+                        _hash_check_panel.update(
+                            task_name=fk,
                             state="failed",
                         )
                         _failed_hashes[fk] = {
@@ -2029,23 +2028,22 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         with _download_panel.go_live() as _live:
             _start_time = datetime.datetime.now()
             for fk in self.file_keys:
-                # get task id
-                _task_id = _download_panel.tasks[fk].id
                 # if already present just move forward
                 if _file_paths[fk].exists():
-                    _download_panel.rich_progress.update(
-                        task_id=_task_id,
+                    print(_lengths[fk])
+                    _download_panel.update(
+                        task_name=fk,
                         advance=_lengths[fk]
                     )
-                    _download_panel.rich_progress.update(
-                        task_id=_task_id,
+                    _download_panel.update(
+                        task_name=fk,
                         state="already_finished",
                     )
                     continue
                 # if there was error earlier update task ...
                 if fk in _errors.keys():
-                    _download_panel.rich_progress.update(
-                        task_id=_task_id,
+                    _download_panel.update(
+                        task_name=fk,
                         state="failed",
                     )
                     _raise_error = True
@@ -2058,8 +2056,8 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         ):
                             if _chunk:  # filter out keep-alive new chunks
                                 _f.write(_chunk)
-                                _download_panel.rich_progress.update(
-                                    task_id=_task_id,
+                                _download_panel.update(
+                                    task_name=fk,
                                     advance=len(_chunk)
                                 )
                 except Exception as _exp:
