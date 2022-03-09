@@ -1801,7 +1801,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 _LOGGER.info(
                     msg=f"Detected {len(_rc_keys)} new classes so "
                         f"performing rule checks ...")
-                for _rc_k in richy.Progress.track(
+                for _rc_k in richy.Progress.simple_track(
                     _rc_keys, description=f"Rule Checking ..."
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()

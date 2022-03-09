@@ -11,6 +11,7 @@ todo: add terminal plotting support
     Extend StatusPanel for this
 """
 
+from collections.abc import Sized
 import dataclasses
 import typing as t
 import enum
@@ -254,19 +255,21 @@ class Progress(Widget):
         self.tasks = {}  # type: t.Dict[str, r_progress.Task]
 
     def add_task(
-        self, task_name: str, total: int, color: str = "cyan"
-    ):
+        self, task_name: str, total: float, description: str = None
+    ) -> r_progress.TaskID:
         _tid = self.rich_progress.add_task(
-            description=f"[{color}]{task_name}", total=total,
+            description=description or task_name, total=total,
         )
         for _rt in self.rich_progress.tasks:
             if _rt.id == _tid:
                 self.tasks[task_name] = _rt
                 break
+        return _tid
 
     def update(
         self, task_name: str = None,
-        advance: t.Union[int, float] = None, state: str = None
+        advance: float = None, state: str = None,
+        total: float = None, description: str = None
     ):
         if task_name is None:
             if len(self.tasks) == 1:
@@ -278,29 +281,102 @@ class Progress(Widget):
                 )
         self.rich_progress.update(
             task_id=self.tasks[task_name].id,
-            advance=advance, state=state,
+            advance=advance, state=state, total=total,
+            description=description,
         )
 
-    @classmethod
     def track(
+        self,
+        sequence: t.Union[
+            t.Sequence[r_progress.ProgressType],
+            t.Iterable[r_progress.ProgressType]
+        ],
+        task_name: str,
+        total: t.Optional[float] = None,
+        description: str = None
+    ) -> t.Iterable[r_progress.ProgressType]:
+        """
+        This can be better shortcut for add_task ...
+        Specifically to be used directly on iterables ...
+        Can add_task and also track it
+
+        total: supply it when length of sequence cannot be guessed
+               useful for infinite generators
+
+        Refer:
+        >>> r_progress.Progress.track
+        >>> r_progress.track
+        """
+        # ------------------------------------------------------------ 01
+        # estimate length
+        if total is None:
+            if isinstance(sequence, Sized):
+                task_total = float(len(sequence))
+            else:
+                raise ValueError(
+                    f"unable to get size of {sequence!r}, please specify 'total'"
+                )
+        else:
+            task_total = total
+
+        # ------------------------------------------------------------ 02
+        # if new task add it
+        if task_name in self.tasks.keys():
+            self.update(
+                task_name=task_name, total=task_total, description=description)
+        else:
+            self.add_task(
+                task_name=task_name, total=task_total, description=description)
+
+        # ------------------------------------------------------------ 03
+        # yield and hence auto track
+        # todo: explore --- self.rich_progress.live.auto_refresh
+        advance = self.rich_progress.advance
+        refresh = self.rich_progress.refresh
+        task_id = self.tasks[task_name].id
+        for value in sequence:
+            yield value
+            advance(task_id, 1)
+            refresh()
+
+    @classmethod
+    def simple_track(
         cls,
         sequence: t.Union[
             t.Sequence[r_progress.ProgressType],
             t.Iterable[r_progress.ProgressType]
         ],
         description: str = "Working...",
-        # total: t.Optional[float] = None,
-    ):
+        total: float = None,
+    ) -> t.Iterable[r_progress.ProgressType]:
         """
         Simple progress bar for single task which iterates over sequence
 
-        Refer:
-        >>> r_progress.track
-
-        todo: enhance `richy.Progress.track` ... put this inside panel ...
-        todo: enhance later with our Progress instance
         """
-        return r_progress.track(sequence, description)
+        _progress = Progress(
+            title="",  # setting this to str will add panel
+            columns={
+                "single_task": r_progress.TextColumn(
+                    "[progress.description]{task.description}"),
+                "progress": r_progress.BarColumn(),
+                "percentage": r_progress.TextColumn(
+                    "[progress.percentage]{task.percentage:>3.0f}%"),
+                "time_remaining": r_progress.TimeRemainingColumn(),
+                "status": SpinnerColumn(
+                    start_state_key="start",
+                    finished_state_key="finished",
+                    states={
+                        "start": SpinnerType.dots,
+                        "finished": EMOJI["white_heavy_check_mark"],
+                    }
+                ),
+            }
+        )
+        with _progress.go_live():
+            yield from _progress.track(
+                sequence=sequence, task_name="single_task",
+                description=description, total=total,
+            )
 
     @classmethod
     def for_download_and_hashcheck(cls, title: str) -> "Progress":

@@ -1133,7 +1133,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # -----------------------------------------------------------03.02
             # delete all files for the group
             _LOGGER.info(msg=f"Deleting files for `{self.name}` ...")
-            for fk in richy.Progress.track(
+            for fk in richy.Progress.simple_track(
                 self.file_keys, description="Deleting ..."
             ):
                 _key_path = self.path / fk
@@ -2030,7 +2030,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             for fk in self.file_keys:
                 # if already present just move forward
                 if _file_paths[fk].exists():
-                    print(_lengths[fk])
                     _download_panel.update(
                         task_name=fk,
                         advance=_lengths[fk]
