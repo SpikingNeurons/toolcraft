@@ -631,9 +631,13 @@ class SimpleStatusPanel(StatusPanel):
     @property
     def renderable(self) -> r_console.RenderableType:
         _table = r_table.Table.grid()
-        _table.add_row(self.progress.renderable)
         _table.add_row(
-            r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+            # r_panel.Panel(self.progress.renderable, box=r_box.HORIZONTALS)
+            self.progress.renderable
+        )
+        _table.add_row(
+            # r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+            self.status.renderable
         )
         if self.title is None:
             return _table

@@ -63,8 +63,8 @@ def try_status_panel():
 
 
 def main():
-    try_progress()
-    try_status()
+    # try_progress()
+    # try_status()
     try_status_panel()
 
 
