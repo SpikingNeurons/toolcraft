@@ -873,7 +873,7 @@ class Tracker:
 
     def __call__(
         self,
-        status_panel: t.Optional[richy.StatusPanel],
+        status_panel: t.Optional[richy.SimpleStatusPanel],
         **kwargs,
     ) -> "Tracker":
         """
