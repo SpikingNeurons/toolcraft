@@ -215,6 +215,14 @@ class Widget(abc.ABC):
     refresh_per_second: int = 10
     console: t.Optional[r_console.Console] = None
 
+    def __post_init__(self):
+        self._live = r_live.Live(
+            self.renderable,
+            console=self.console,
+            refresh_per_second=self.refresh_per_second,
+            transient=True,
+        )
+
     @property
     @abc.abstractmethod
     def renderable(self) -> r_console.RenderableType:
@@ -284,12 +292,7 @@ class Status(Widget):
         self._spinner = self.spinner.get_spinner(
             text=self.status, speed=self.spinner_speed
         )
-        self._live = r_live.Live(
-            self.renderable,
-            console=self.console,
-            refresh_per_second=self.refresh_per_second,
-            transient=True,
-        )
+        super().__post_init__()
 
     def __enter__(self) -> "Status":
         super().__enter__()
@@ -362,13 +365,18 @@ class Progress(Widget):
             console=self.console,
             expand=True,
         )
+
         # ------------------------------------------------------------ 02
         # todo: find a way add to r_console.Console so that record=True can be used
         #   may be not possible ...
         #   NOTE: record=True can save html .. or dump to text logs
+
         # ------------------------------------------------------------ 03
         # empty container for added tasks
         self.tasks = {}  # type: t.Dict[str, r_progress.Task]
+
+        # ------------------------------------------------------------ 04
+        super().__post_init__()
 
     def __enter__(self) -> "Progress":
         super().__enter__()
