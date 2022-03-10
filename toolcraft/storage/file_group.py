@@ -904,7 +904,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         _start_time = datetime.datetime.now()
 
-        with richy.StatusPanel(
+        with richy.SimpleStatusPanel(
             title=_title,
         ) as _status:
 
