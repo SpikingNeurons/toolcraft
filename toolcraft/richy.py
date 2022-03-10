@@ -271,7 +271,7 @@ class Status(Widget):
     """
     title: t.Optional[r_console.RenderableType] = None
     status: r_console.RenderableType = ""
-    spinner: SpinnerType = SpinnerType.dots
+    spinner: SpinnerType = SpinnerType.star
     # spinner_style: Optional[StyleType] = None
     spinner_speed: float = 1.0
 
@@ -321,9 +321,17 @@ class Status(Widget):
                 text=status, speed=spinner_speed
             )
         else:
+            # todo: figure this out currently only text update is happening
+            #   dont know how spinner can be changed with our API ....
+            #   Works with `python -m rich.status` example ...
+            #   note that console which is not widget might be key to solve this
+            raise e.code.NotSupported(
+                msgs=["Still not supported ..."]
+            )
             # noinspection PyAttributeOutsideInit
-            self._spinner = spinner.get_spinner(text=status, speed=spinner_speed)
-            self.refresh(update_renderable=True)
+            # self._spinner = spinner.get_spinner(text=status, speed=spinner_speed)
+            # print(">> new spinner", self._spinner)
+            # self.refresh(update_renderable=True)
 
 
 @dataclasses.dataclass
@@ -653,8 +661,6 @@ class SimpleStatusPanel(StatusPanel):
         # self.status.__exit__(exc_type, exc_val, exc_tb)
         # self.progress.__exit__(exc_type, exc_val, exc_tb)
         super().__exit__(exc_type, exc_val, exc_tb)
-
-
 
 
 @dataclasses.dataclass
