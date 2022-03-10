@@ -321,17 +321,14 @@ class Status(Widget):
                 text=status, speed=spinner_speed
             )
         else:
-            # todo: figure this out currently only text update is happening
+            # todo: When used with StatusPanel
+            #   figure this out currently only text update is happening
             #   dont know how spinner can be changed with our API ....
             #   Works with `python -m rich.status` example ...
-            #   note that console which is not widget might be key to solve this
-            raise e.code.NotSupported(
-                msgs=["Still not supported ..."]
-            )
+            #   Note that console which is not widget might be key to solve this
             # noinspection PyAttributeOutsideInit
-            # self._spinner = spinner.get_spinner(text=status, speed=spinner_speed)
-            # print(">> new spinner", self._spinner)
-            # self.refresh(update_renderable=True)
+            self._spinner = spinner.get_spinner(text=status, speed=spinner_speed)
+            self.refresh(update_renderable=True)
 
 
 @dataclasses.dataclass

@@ -10,7 +10,7 @@ _LOGGER = logger.get_logger()
 
 def try_progress():
     for _ in richy.Progress.simple_track(sequence=[1, 2, 3, 4]):
-        time.sleep(0.2)
+        time.sleep(1)
 
     with richy.Progress.for_download_and_hashcheck(title="Test Download") as _p:
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 1"):
@@ -63,8 +63,8 @@ def try_status_panel():
 
 
 def main():
-    # try_progress()
-    # try_status()
+    try_progress()
+    try_status()
     try_status_panel()
 
 
