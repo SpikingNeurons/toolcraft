@@ -15,6 +15,7 @@ from collections.abc import Sized
 import dataclasses
 import typing as t
 import enum
+import datetime
 import abc
 from rich.emoji import EMOJI
 from rich import logging as r_logging
@@ -29,9 +30,11 @@ from rich import text as r_text
 from rich import progress as r_progress
 from rich import status as r_status
 from rich import panel as r_panel
+from rich import box as r_box
 from rich import prompt as r_prompt
 
 from . import error as e
+from . import logger
 
 
 class SpinnerType(enum.Enum):
@@ -119,8 +122,16 @@ class SpinnerType(enum.Enum):
     betaWave = enum.auto()
     aesthetic = enum.auto()
 
-    def __str__(self):
-        return self.name
+    def get_spinner(
+        self,
+        text: r_console.RenderableType = "",
+        style: t.Optional[r_style.StyleType] = None,
+        speed: float = 1.0,
+    ) -> r_spinner.Spinner:
+        return r_spinner.Spinner(
+            name=self.name,
+            text=text, style=style, speed=speed,
+        )
 
 
 class SpinnerColumn(r_progress.SpinnerColumn):
@@ -140,7 +151,7 @@ class SpinnerColumn(r_progress.SpinnerColumn):
         self.states = {}
         for _k, _v in states.items():
             if isinstance(_v, SpinnerType):
-                _v = r_spinner.Spinner(name=str(_v))
+                _v = _v.get_spinner()
             elif isinstance(_v, str):
                 _v = r_text.Text.from_markup(_v)
 
@@ -200,14 +211,100 @@ class SpinnerColumn(r_progress.SpinnerColumn):
 
 @dataclasses.dataclass
 class Widget(abc.ABC):
+    refresh_per_second: int = 10
+    console: t.Optional[r_console.Console] = None
 
     @property
     @abc.abstractmethod
     def renderable(self) -> r_console.RenderableType:
         ...
 
-    def go_live(self, refresh_per_second: int = 10) -> r_live.Live:
-        return r_live.Live(self.renderable, refresh_per_second=refresh_per_second)
+    def refresh(self, update_renderable: bool = False):
+        """
+
+        Args:
+            update_renderable: In case you have updates any renderable
+              components on the fly
+
+        Returns:
+
+        """
+        if self._live is not None:
+            if update_renderable:
+                self._live.update(
+                    renderable=self.renderable, refresh=True
+                )
+            else:
+                self._live.refresh()
+
+    def __enter__(self) -> "Widget":
+        _console = self.console
+        if _console is None:
+            _console = r_console.Console(record=True)
+        self._live = r_live.Live(
+            self.renderable, refresh_per_second=self.refresh_per_second,
+            console=_console
+        )
+        self._live.start(refresh=False)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._live.stop()
+        self._live = None
+
+
+@dataclasses.dataclass
+class Status(Widget):
+    """
+    Refer:
+    >>> r_status.Status
+    >>> r_spinner.Spinner
+    """
+    title: t.Optional[r_console.RenderableType] = None
+    status: r_console.RenderableType = ""
+    spinner: SpinnerType = SpinnerType.dots
+    # spinner_style: Optional[StyleType] = None
+    spinner_speed: float = 1.0
+
+    @property
+    def renderable(self) -> r_console.RenderableType:
+        if self.title is None:
+            return self._spinner
+        else:
+            return r_panel.Panel(
+                self._spinner, title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=r_box.ASCII,
+            )
+
+    def __post_init__(self):
+        self._spinner = self.spinner.get_spinner(
+            text=self.status, speed=self.spinner_speed
+        )
+
+    def update(
+        self,
+        status: t.Optional[r_console.RenderableType] = None,
+        spinner: SpinnerType = None,
+        # spinner_style: Optional[StyleType] = None
+        spinner_speed: t.Optional[float] = None,
+    ):
+
+        if status is not None:
+            self.status = status
+        if spinner_speed is not None:
+            self.spinner_speed = spinner_speed
+
+        if spinner is None:
+            self._spinner.update(
+                text=status, speed=spinner_speed
+            )
+        else:
+            # noinspection PyAttributeOutsideInit
+            self._spinner = spinner.get_spinner(text=status, speed=spinner_speed)
+            self.refresh(update_renderable=True)
 
 
 @dataclasses.dataclass
@@ -221,29 +318,32 @@ class Progress(Widget):
     todo: build a asyncio api (with io overhead) or multithreading
       api (with compute overhead) while exploiting `rich.progress.Task` api
     """
-    columns: t.Dict[str, r_progress.ProgressColumn]
-    title: t.Optional[str] = None
+    columns: t.Dict[str, r_progress.ProgressColumn] = None
+    title: t.Optional[r_console.RenderableType] = None
 
     @property
     def renderable(self) -> r_console.RenderableType:
         if self.title is None:
-            return self.rich_progress
+            return self._progress
         else:
             return r_panel.Panel(
-                self.rich_progress, title=self.title,
+                self._progress, title=self.title,
                 border_style="green",
                 # padding=(2, 2),
-                expand=True
+                expand=True,
+                box=r_box.ASCII,
             )
 
     def __post_init__(self):
         # ------------------------------------------------------------ 01
         # make rich progress
-        self.rich_progress = r_progress.Progress(
+        if self.columns is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please supply mandatory columns field"]
+            )
+        self._progress = r_progress.Progress(
             *list(self.columns.values()),
-            # todo: this can use console with record=True so that the progress
-            #  can be saved to html or text ... need to explore ...
-            console=None,
+            console=self.console,
             expand=True,
         )
         # ------------------------------------------------------------ 02
@@ -257,10 +357,10 @@ class Progress(Widget):
     def add_task(
         self, task_name: str, total: float, description: str = None
     ) -> r_progress.TaskID:
-        _tid = self.rich_progress.add_task(
+        _tid = self._progress.add_task(
             description=description or task_name, total=total,
         )
-        for _rt in self.rich_progress.tasks:
+        for _rt in self._progress.tasks:
             if _rt.id == _tid:
                 self.tasks[task_name] = _rt
                 break
@@ -279,7 +379,7 @@ class Progress(Widget):
                     msgs=["You must supply task_name kwarg when number of "
                           "tasks is not one"]
                 )
-        self.rich_progress.update(
+        self._progress.update(
             task_id=self.tasks[task_name].id,
             advance=advance, state=state, total=total,
             description=description,
@@ -322,8 +422,11 @@ class Progress(Widget):
         # ------------------------------------------------------------ 02
         # if new task add it
         if task_name in self.tasks.keys():
-            self.update(
-                task_name=task_name, total=task_total, description=description)
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"There already exists a task named {task_name}"
+                ]
+            )
         else:
             self.add_task(
                 task_name=task_name, total=task_total, description=description)
@@ -331,32 +434,20 @@ class Progress(Widget):
         # ------------------------------------------------------------ 03
         # yield and hence auto track
         # todo: explore --- self.rich_progress.live.auto_refresh
-        advance = self.rich_progress.advance
-        refresh = self.rich_progress.refresh
+        advance = self._progress.advance
+        refresh = self._progress.refresh
         task_id = self.tasks[task_name].id
         for value in sequence:
             yield value
             advance(task_id, 1)
             refresh()
 
-    @classmethod
-    def simple_track(
-        cls,
-        sequence: t.Union[
-            t.Sequence[r_progress.ProgressType],
-            t.Iterable[r_progress.ProgressType]
-        ],
-        description: str = "Working...",
-        total: float = None,
-    ) -> t.Iterable[r_progress.ProgressType]:
-        """
-        Simple progress bar for single task which iterates over sequence
-
-        """
-        _progress = Progress(
-            title="",  # setting this to str will add panel
+    @staticmethod
+    def simple_progress(title: t.Optional[str] = None) -> "Progress":
+        return Progress(
+            title=title,  # setting this to str will add panel
             columns={
-                "single_task": r_progress.TextColumn(
+                "text": r_progress.TextColumn(
                     "[progress.description]{task.description}"),
                 "progress": r_progress.BarColumn(),
                 "percentage": r_progress.TextColumn(
@@ -372,7 +463,22 @@ class Progress(Widget):
                 ),
             }
         )
-        with _progress.go_live():
+
+    @classmethod
+    def simple_track(
+        cls,
+        sequence: t.Union[
+            t.Sequence[r_progress.ProgressType],
+            t.Iterable[r_progress.ProgressType]
+        ],
+        description: str = "Working...",
+        total: float = None,
+    ) -> t.Iterable[r_progress.ProgressType]:
+        """
+        Simple progress bar for single task which iterates over sequence
+
+        """
+        with cls.simple_progress(title="") as _progress:
             yield from _progress.track(
                 sequence=sequence, task_name="single_task",
                 description=description, total=total,
@@ -412,7 +518,7 @@ class Progress(Widget):
 
 
 @dataclasses.dataclass
-class StatusPanel:
+class StatusPanel(Widget, abc.ABC):
     """
     A simple status indicator ... which we want make like panel
     todo: see
@@ -430,18 +536,78 @@ class StatusPanel:
 
     todo: more complex Status panel
 
-    For now refer __main__ of
-    >>> r_status.Status
-
     + prints title with toolcraft.logger
     + then show simple spinner
     + can also log with time stamp (but not sent to logger module)
     """
+    title: t.Optional[r_console.RenderableType] = None
+    tc_log: logger.CustomLogger = None
+
+    def __enter__(self) -> "StatusPanel":
+        if self.tc_log is not None:
+            self.tc_log.info(msg=self.title + " started ...")
+            self._start_time = datetime.datetime.now()
+        # noinspection PyTypeChecker
+        return super().__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.tc_log is not None:
+            _secs = (datetime.datetime.now() - self._start_time).total_seconds()
+            self.tc_log.info(msg=self.title + f" finished in {_secs} seconds ...")
+        super().__exit__(exc_type, exc_val, exc_tb)
+
+
+@dataclasses.dataclass
+class SimpleStatusPanel(StatusPanel):
+
+    progress: Progress = Progress.simple_progress(title=None)
+    status: Status = Status(title=None)
+
+    @property
+    def renderable(self) -> r_console.RenderableType:
+        _table = r_table.Table.grid()
+        _table.add_row(self.progress.renderable)
+        _table.add_row(
+            r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+        )
+        if self.title is None:
+            return _table
+        else:
+            return r_panel.Panel(
+                _table,
+                title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=r_box.ASCII,
+            )
+
+    def __enter__(self) -> "SimpleStatusPanel":
+        # noinspection PyTypeChecker
+        super().__enter__()
+        # self.progress.__enter__()
+        self.status.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.status.__exit__(exc_type, exc_val, exc_tb)
+        # self.progress.__exit__(exc_type, exc_val, exc_tb)
+        super().__exit__(exc_type, exc_val, exc_tb)
+
+
+
+
+@dataclasses.dataclass
+class _StatusPanel:
     title: r_console.RenderableType
     spinner: SpinnerType = SpinnerType.dots
 
     def __post_init__(self):
-        self.console = r_console.Console()
+        self.console = r_console.Console(
+            # todo: this can use console with record=True so that the progress
+            #  can be saved to html or text ... need to explore ...
+            record=True
+        )
         # noinspection PyTypeChecker
         self.status = None  # type: r_status.Status
 
@@ -475,4 +641,3 @@ class StatusPanel:
             status=status, spinner=None if spinner is None else str(spinner),
             spinner_style=spinner_style, speed=speed
         )
-

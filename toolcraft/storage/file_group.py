@@ -696,7 +696,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ------------------------------------------------------ 03
         # now download files
-        with _hash_check_panel.go_live() as _live:
+        with _hash_check_panel:
             _start_time = datetime.datetime.now()
             for fk in self.file_keys:
                 _hash_module = hashlib.sha256()
@@ -2025,7 +2025,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
         # ------------------------------------------------------ 04
         # now download files
-        with _download_panel.go_live() as _live:
+        with _download_panel:
             _start_time = datetime.datetime.now()
             for fk in self.file_keys:
                 # if already present just move forward
