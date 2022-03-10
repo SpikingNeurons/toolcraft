@@ -33,8 +33,9 @@ from rich import panel as r_panel
 from rich import box as r_box
 from rich import prompt as r_prompt
 
-from . import error as e
 from . import logger
+from . import util
+from . import error as e
 
 
 class SpinnerType(enum.Enum):
@@ -283,6 +284,21 @@ class Status(Widget):
         self._spinner = self.spinner.get_spinner(
             text=self.status, speed=self.spinner_speed
         )
+        self._live = r_live.Live(
+            self.renderable,
+            console=self.console,
+            refresh_per_second=self.refresh_per_second,
+            transient=True,
+        )
+
+    def __enter__(self) -> "Status":
+        super().__enter__()
+        self._live.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._live.stop()
+        super().__exit__(exc_type, exc_val, exc_tb)
 
     def update(
         self,
@@ -354,6 +370,15 @@ class Progress(Widget):
         # empty container for added tasks
         self.tasks = {}  # type: t.Dict[str, r_progress.Task]
 
+    def __enter__(self) -> "Progress":
+        super().__enter__()
+        # self._progress.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # self._progress.stop()
+        super().__exit__(exc_type, exc_val, exc_tb)
+
     def add_task(
         self, task_name: str, total: float, description: str = None
     ) -> r_progress.TaskID:
@@ -393,7 +418,8 @@ class Progress(Widget):
         ],
         task_name: str,
         total: t.Optional[float] = None,
-        description: str = None
+        description: str = None,
+        update_period: float = 0.1,
     ) -> t.Iterable[r_progress.ProgressType]:
         """
         This can be better shortcut for add_task ...
@@ -434,16 +460,28 @@ class Progress(Widget):
         # ------------------------------------------------------------ 03
         # yield and hence auto track
         # todo: explore --- self.rich_progress.live.auto_refresh
-        advance = self._progress.advance
-        refresh = self._progress.refresh
         task_id = self.tasks[task_name].id
-        for value in sequence:
-            yield value
-            advance(task_id, 1)
-            refresh()
+        if self._progress.live.auto_refresh:
+            # noinspection PyProtectedMember
+            with r_progress._TrackThread(
+                    self._progress, task_id, update_period) as track_thread:
+                for value in sequence:
+                    yield value
+                    track_thread.completed += 1
+        else:
+            advance = self._progress.advance
+            refresh = self._progress.refresh
+            for value in sequence:
+                yield value
+                advance(task_id, 1)
+                refresh()
 
     @staticmethod
-    def simple_progress(title: t.Optional[str] = None) -> "Progress":
+    def simple_progress(
+        title: t.Optional[str] = None,
+        refresh_per_second: int = 10,
+        console: t.Optional[r_console.Console] = None,
+    ) -> "Progress":
         return Progress(
             title=title,  # setting this to str will add panel
             columns={
@@ -452,7 +490,7 @@ class Progress(Widget):
                 "progress": r_progress.BarColumn(),
                 "percentage": r_progress.TextColumn(
                     "[progress.percentage]{task.percentage:>3.0f}%"),
-                "time_remaining": r_progress.TimeRemainingColumn(),
+                "time_elapsed": r_progress.TimeElapsedColumn(),
                 "status": SpinnerColumn(
                     start_state_key="start",
                     finished_state_key="finished",
@@ -461,7 +499,9 @@ class Progress(Widget):
                         "finished": EMOJI["white_heavy_check_mark"],
                     }
                 ),
-            }
+            },
+            console=console,
+            refresh_per_second=refresh_per_second,
         )
 
     @classmethod
@@ -500,7 +540,7 @@ class Progress(Widget):
                 # "hash_percentage": progress.TextColumn(
                 #     "[progress.percentage]{task.percentage:>3.0f}%"),
                 "download": r_progress.DownloadColumn(),
-                "time_remaining": r_progress.TimeRemainingColumn(),
+                "time_elapsed": r_progress.TimeElapsedColumn(),
                 "status": SpinnerColumn(
                     start_state_key="start",
                     finished_state_key="finished",
@@ -551,17 +591,29 @@ class StatusPanel(Widget, abc.ABC):
         return super().__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        super().__exit__(exc_type, exc_val, exc_tb)
         if self.tc_log is not None:
             _secs = (datetime.datetime.now() - self._start_time).total_seconds()
             self.tc_log.info(msg=self.title + f" finished in {_secs} seconds ...")
-        super().__exit__(exc_type, exc_val, exc_tb)
 
 
 @dataclasses.dataclass
 class SimpleStatusPanel(StatusPanel):
 
-    progress: Progress = Progress.simple_progress(title=None)
-    status: Status = Status(title=None)
+    @property
+    @util.CacheResult
+    def progress(self) -> Progress:
+        return Progress.simple_progress(
+            title=None, console=self.console,
+            refresh_per_second=self.refresh_per_second)
+
+    @property
+    @util.CacheResult
+    def status(self) -> Status:
+        return Status(
+            title=None,
+            console=self.console, refresh_per_second=self.refresh_per_second
+        )
 
     @property
     def renderable(self) -> r_console.RenderableType:
@@ -586,11 +638,11 @@ class SimpleStatusPanel(StatusPanel):
         # noinspection PyTypeChecker
         super().__enter__()
         # self.progress.__enter__()
-        self.status.__enter__()
+        # self.status.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.status.__exit__(exc_type, exc_val, exc_tb)
+        # self.status.__exit__(exc_type, exc_val, exc_tb)
         # self.progress.__exit__(exc_type, exc_val, exc_tb)
         super().__exit__(exc_type, exc_val, exc_tb)
 

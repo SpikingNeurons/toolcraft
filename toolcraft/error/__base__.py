@@ -1,6 +1,5 @@
 import inspect
 import re
-from ..richy import EMOJI
 
 from .. import logger
 
@@ -12,7 +11,7 @@ from .. import logger
 
 _LOGGER = logger.get_logger()
 
-_SKULL_EMOJI = EMOJI['skull']
+_SKULL_EMOJI = "💀"
 _EXCEPTION_HEADER = f"{_SKULL_EMOJI} >>> {{header}} <<< {_SKULL_EMOJI}"
 
 

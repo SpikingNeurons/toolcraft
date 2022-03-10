@@ -29,8 +29,7 @@ def try_status():
         time.sleep(3)
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.balloon, status="done")
         time.sleep(3)
-        _s.update(
-            spinner_speed=1.0, spinner=richy.SpinnerType.bouncingBar, status="close")
+        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
         time.sleep(3)
 
 
@@ -45,23 +44,22 @@ def try_status_panel():
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 1"):
             time.sleep(0.2)
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.dots, status="start")
-        time.sleep(1)
+        time.sleep(0.2)
 
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 2"):
             time.sleep(0.2)
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.arrow, status="next")
-        time.sleep(1)
+        time.sleep(0.2)
 
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 3"):
             time.sleep(0.2)
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.balloon, status="done")
-        time.sleep(1)
+        time.sleep(0.2)
 
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 4"):
             time.sleep(0.2)
-        _s.update(
-            spinner_speed=1.0, spinner=richy.SpinnerType.bouncingBar, status="close")
-        time.sleep(1)
+        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
+        time.sleep(0.2)
 
 
 def main():
