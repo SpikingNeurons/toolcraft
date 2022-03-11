@@ -504,6 +504,7 @@ class Progress(Widget):
                 "percentage": r_progress.TextColumn(
                     "[progress.percentage]{task.percentage:>3.0f}%"),
                 "time_elapsed": r_progress.TimeElapsedColumn(),
+                "time_remaining": r_progress.TimeRemainingColumn(),
                 "status": SpinnerColumn(
                     start_state_key="start",
                     finished_state_key="finished",
@@ -612,6 +613,13 @@ class StatusPanel(Widget, abc.ABC):
 
 @dataclasses.dataclass
 class SimpleStatusPanel(StatusPanel):
+    """
+    We have table with one row for Progress and second for Status
+
+    todo: Add one more row that dumps logs using Text so that it stays inside Panel
+      This will help us have some information while Panel is still live
+      May de have method `self.log(...)` for this SimpleStatusPanel
+    """
 
     @property
     @util.CacheResult

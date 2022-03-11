@@ -908,13 +908,7 @@ class FileGroup(StorageHashable, abc.ABC):
             title=_title,
         ) as _status:
 
-            for i, k in enumerate(self.file_keys):
-
-                # log
-                _status.log(
-                    f"'{k:{_max_key_str_len}s}': "
-                    f"{i + 1: {_s_fmt}d}/{_total_files} creating ..."
-                )
+            for k in _status.progress.track(self.file_keys, task_name="create"):
 
                 # get expected file from key
                 _expected_file = self.path / k
@@ -1064,7 +1058,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
     @abc.abstractmethod
     def create_file(
-        self, *, file_key: str, status_panel: richy.StatusPanel = None
+        self, *, file_key: str, status_panel: richy.SimpleStatusPanel = None
     ) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
@@ -1640,7 +1634,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
     # noinspection PyMethodOverriding
     def __call__(
         self, *,
-        status_panel: t.Optional[richy.StatusPanel],
+        status_panel: t.Optional[richy.SimpleStatusPanel],
         shuffle_seed: SHUFFLE_SEED_TYPE,
     ) -> "NpyFileGroup":
         # call super
@@ -1669,13 +1663,13 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # get property
         if status_panel is not None:
-            status_panel.update(f"Loading {_total} NpyMemMap's for Fg {self.name}")
+            status_panel.status.update(f"Loading {_total} NpyMemMap's for Fg {self.name}")
         _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
 
         # make NpyMemmaps aware of seed
         for i, k in enumerate(self.file_keys):
             if status_panel is not None:
-                status_panel.update(
+                status_panel.status.update(
                     f"Opening {i+1}/{_total} "
                     f"NpyMemMap for `{k}` with seed `{shuffle_seed}`")
             v = _all_npy_mem_maps_cache[k]
@@ -1690,7 +1684,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _total = len(self.file_keys)
         for i, k in enumerate(self.file_keys):
             if status_panel is not None:
-                status_panel.update(f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
+                status_panel.status.update(f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
             v = self.all_npy_mem_maps_cache[k]
             # noinspection PyUnresolvedReferences
             v.__exit__(None, None, None)
@@ -2080,7 +2074,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.StatusPanel = None
+        self, *, file_key: str, status_panel: richy.SimpleStatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[
@@ -2168,7 +2162,7 @@ class FileGroupFromPaths(FileGroup):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.StatusPanel = None
+        self, *, file_key: str, status_panel: richy.SimpleStatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[
