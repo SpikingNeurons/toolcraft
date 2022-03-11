@@ -939,12 +939,14 @@ class Tracker:
         # expect you to call __call__ while looping over
         with self:
             # get some vars
-            _show_progress_bar = self.internal.on_call_kwargs[
-                "iter_show_progress_bar"]
-            _iter_desc = self.internal.on_call_kwargs["iter_desc"]
+            _status_panel = self.internal.on_call_kwargs[
+                "status_panel"]  # type: richy.SimpleStatusPanel
 
             # iterate
-            if _show_progress_bar:
+            if _status_panel is None:
+                for _ in self.on_iter():
+                    yield _
+            else:
                 if self.iterates_infinitely:
                     raise e.code.NotAllowed(
                         msgs=[
@@ -952,19 +954,9 @@ class Tracker:
                             "infinitely",
                         ]
                     )
-                with logger.ProgressBar(
-                        total=self.iterable_length,
-                        unit=self.iterable_unit,
-                        desc=_iter_desc,
-                ) as pg:
-                    self.internal.progress_bar = pg
-                    for _ in self.on_iter():
-                        pg.update(1)
-                        yield _
-                    self.internal.progress_bar = None
-            else:
-                self.internal.progress_bar = None
-                for _ in self.on_iter():
+                for _ in _status_panel.progress.track(
+                    self.on_iter(), total=self.iterable_length, task_name="iterating"
+                ):
                     yield _
 
     def __del__(self):

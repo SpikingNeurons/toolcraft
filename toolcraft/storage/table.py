@@ -210,7 +210,7 @@ def _read_table(
     _path = table_as_folder.path
     _table = pa.Table.from_batches(
         batches=pds.dataset(
-            source=_path.suffix_path,
+            source=_path.full_path,
             filesystem=_path.fs,
             format=_FILE_FORMAT,
             schema=table_schema,
@@ -267,7 +267,7 @@ def _write_table(
     # noinspection PyProtectedMember
     pds.write_dataset(
         data=table,
-        base_dir=_path.suffix_path,
+        base_dir=_path.full_path,
         filesystem=_path.fs,
         partitioning=_partitioning,
         format=_FILE_FORMAT,
