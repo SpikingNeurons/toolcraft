@@ -310,7 +310,6 @@ class Status(Widget):
         # spinner_style: Optional[StyleType] = None
         spinner_speed: t.Optional[float] = None,
     ):
-
         if status is not None:
             self.status = status
         if spinner_speed is not None:

@@ -1656,14 +1656,13 @@ class NpyFileGroup(FileGroup, abc.ABC):
         status_panel = \
             self.internal.on_call_kwargs[
                 'status_panel'
-            ]  # type: t.Optional[richy.StatusPanel]
+            ]  # type: richy.SimpleStatusPanel
 
         # log
         _total = len(self.file_keys)
 
         # get property
-        if status_panel is not None:
-            status_panel.status.update(f"Loading {_total} NpyMemMap's for Fg {self.name}")
+        status_panel.status.update(f"Loading {_total} NpyMemMap's for Fg {self.name}")
         _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
 
         # make NpyMemmaps aware of seed
@@ -1680,11 +1679,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
         status_panel = \
             self.internal.on_call_kwargs[
                 'status_panel'
-            ]  # type: t.Optional[richy.StatusPanel]
+            ]  # type: richy.SimpleStatusPanel
         _total = len(self.file_keys)
         for i, k in enumerate(self.file_keys):
-            if status_panel is not None:
-                status_panel.status.update(f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
+            status_panel.status.update(f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
             v = self.all_npy_mem_maps_cache[k]
             # noinspection PyUnresolvedReferences
             v.__exit__(None, None, None)
