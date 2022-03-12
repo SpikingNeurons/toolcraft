@@ -150,7 +150,9 @@ class Filter(t.NamedTuple):
 FILTERS_TYPE = t.List[t.Union[Filter, t.List[Filter]]]
 
 
-def make_expression(filters: FILTERS_TYPE) -> pds.Expression:
+def make_expression(
+    filters: FILTERS_TYPE, restrict_columns: t.List[str] = None
+) -> pds.Expression:
     """
     Predicates are expressed in disjunctive normal form (DNF),
     like [[('x', '=', 0), ...], ...]
@@ -178,6 +180,11 @@ def make_expression(filters: FILTERS_TYPE) -> pds.Expression:
             else:
                 _ret_exp = operator.or_(_ret_exp, _exp)
         elif isinstance(_filter, Filter):
+            if bool(restrict_columns):
+                e.validation.ShouldBeOneOf(
+                    value=_filter.column, values=restrict_columns,
+                    msgs=["You should use one of restricted columns ..."]
+                ).raise_if_failed()
             _exp = _filter.expression
             if _ret_exp is None:
                 _ret_exp = _exp
@@ -206,6 +213,11 @@ def _read_table(
      else find a way to read with sort with pyarrow ... then there
      will be no need to use to_pandas() and also no need ofr casting
     """
+    if bool(columns):
+        table_schema = pa.schema(
+            fields=[table_schema.field(_c) for _c in columns],
+            metadata=table_schema.metadata
+        )
     # noinspection PyProtectedMember
     _path = table_as_folder.path
     _table = pa.Table.from_batches(
@@ -223,6 +235,9 @@ def _read_table(
             columns=columns,
             filter=filter_expression,
         ),
+        # if column is specified table_schema will change as some columns will
+        # disappear ... so we set to None
+        # todo: check how to drop remaining columns from table_schema
         schema=table_schema,
     )
 
@@ -594,10 +609,16 @@ class Table(Folder):
     # argument will have no purpose.
     # noinspection PyMethodOverriding
     def delete_(
-        self, *, filter_expression: pds.Expression = None,
+        self, *, filters: FILTERS_TYPE = None,
     ) -> bool:
         """
-        Note that this is not Folder.delete but delete related to mode=`d`
+        Note that this is not Folder.delete but delete related to s.Table
+
+        Note that only pivot level delete is supported
+
+        filters:
+          We are not using pds.Expression as we want to make sure that only
+          filters related to partition_cols are used
 
         IMPORTANT:
         This delete_ with filters=None will delete all contents of
@@ -620,7 +641,7 @@ class Table(Folder):
 
         todo: for writes with one row per file we can delete based on columns
           that are not partition columns .... check if we can support it in
-          future
+          future ... most likely this si not possible so reject this proposal
         """
         # ------------------------------------------------------01
         # if filters=None then delete everything
@@ -632,8 +653,9 @@ class Table(Folder):
         # this is because consecutive writes will work but since they do not
         # use create method of Folder the state files will not be generated
         # ... also that is never the job of delete_ as it only is responsible
-        # for pyarrow stuff and not the Folder stuff
-        if not bool(filter_expression):
+        # for s.Table stuff and not the s.Folder stuff
+        _partition_cols = self.partition_cols
+        if filters is None:
             # noinspection PyTypeChecker
             self.path.delete(recursive=True)
             # just make a empty dir again fo that things are consistent for
@@ -643,16 +665,35 @@ class Table(Folder):
             return True
 
         # ------------------------------------------------------02
-        # make sure that filter_expression is only made for partition_cols
-        ...
+        if _partition_cols is None:
+            raise e.validation.NotAllowed(
+                msgs=["This Table does not use partition_cols and hence there "
+                      "is no point using filters while calling delete_"]
+            )
+
+        # ------------------------------------------------------02
+        # cook _filter_expression
+        # make sure that filters are only made for partition_cols as only folders
+        # i.e. pivots can be deleted
+        _filter_expression = make_expression(
+            filters=filters, restrict_columns=_partition_cols)
 
         # ------------------------------------------------------03
-        # delete partition paths where filter_expression is true
-        ...
-        # todo: support filter_expression based delete_
-        raise e.code.CodingError(
-            msgs=[
-                "filter_expression based delete_ is not yet supported as pyarrow does "
-                "not support we need to implement on our own ..."
-            ]
+        # lets figure out what matches and make dict that can help resolve
+        # paths to delete
+        _matches = self.read(
+            columns=_partition_cols, filter_expression=_filter_expression
         )
+        _uniques = [_matches[_c].unique().to_pylist() for _c in _partition_cols]
+
+        # ------------------------------------------------------04
+        # make all combos then resolve paths and delete them
+        _path = self.path
+        for _tuple in itertools.product(*_uniques):
+            _p = _path
+            for _ in _tuple:
+                _p /= str(_)
+            _p.delete(recursive=True)
+
+        # ------------------------------------------------------05
+        return True

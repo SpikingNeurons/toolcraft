@@ -899,7 +899,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _s_fmt = len(str(_total_files))
         _max_key_str_len = max([len(_) for _ in self.file_keys]) + 1
 
-        _title = f"Creating {_total_files} files for fg: {self.name}"
+        _title = f"Creating {_total_files} files for fg: {self.group_by}>>{self.name}"
         _LOGGER.info(_title)
 
         _start_time = datetime.datetime.now()
@@ -1662,7 +1662,9 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _total = len(self.file_keys)
 
         # get property
-        status_panel.status.update(f"Loading {_total} NpyMemMap's for Fg {self.name}")
+        if status_panel is not None:
+            status_panel.status.update(
+                f"Loading {_total} NpyMemMap's for Fg {self.name}")
         _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
 
         # make NpyMemmaps aware of seed
@@ -1682,7 +1684,9 @@ class NpyFileGroup(FileGroup, abc.ABC):
             ]  # type: richy.SimpleStatusPanel
         _total = len(self.file_keys)
         for i, k in enumerate(self.file_keys):
-            status_panel.status.update(f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
+            if status_panel is not None:
+                status_panel.status.update(
+                    f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
             v = self.all_npy_mem_maps_cache[k]
             # noinspection PyUnresolvedReferences
             v.__exit__(None, None, None)

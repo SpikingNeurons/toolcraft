@@ -430,24 +430,25 @@ def try_arrow_storage():
     print("not ts.store_with_partition_cols.exists(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 55)]))")
     assert not ts.store_with_partition_cols.exists(filter_expression=me([Filter('a', '=', 1), Filter('b', '=', 55)]))
 
-    # todo: filter based delete support is now not available ...
-    #  enable this test cases when it is implemented
-    # r = ts.store_with_partition_cols(mode="d", b=33)
-    # print("ts.store_with_partition_cols(mode='d', b=33)")
-    # assert r
-    #
-    # r = ts.store_with_partition_cols(mode="e", b=33)
-    # print("ts.store_with_partition_cols(mode='r', b=33)")
-    # assert not r
-    #
-    # r = ts.store_with_partition_cols(mode="r")
-    # print("ts.store_with_partition_cols(mode='r')")
-    # pd.testing.assert_frame_equal(
-    #     r.to_pandas().sort_index(axis=1),
-    #     ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
-    #     .to_pandas()
-    #     .sort_index(axis=1),
-    # )
+    print("ts.store_with_partition_cols.delete_(filters=[Filter('b', '=', 33)])")
+    assert ts.store_with_partition_cols.delete_(filters=[Filter('b', '=', 33)])
+
+    print("not ts.store_with_partition_cols.exists(filter_expression=me([Filter('b', '=', 33)]))")
+    assert not ts.store_with_partition_cols.exists(filter_expression=me([Filter('b', '=', 33)]))
+
+    r = ts.store_with_partition_cols.read()
+    print("ts.store_with_partition_cols.read()")
+    pd.testing.assert_frame_equal(
+        r.to_pandas().sort_index(axis=1),
+        pd.concat(
+            [
+                ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
+                .to_pandas()
+                .sort_index(axis=1),
+            ],
+            ignore_index=True,
+        ),
+    )
 
     print("ts.store_with_partition_cols.delete_()")
     assert ts.store_with_partition_cols.delete_()
@@ -698,11 +699,11 @@ def try_main():
     _path.mkdir(parents=True, exist_ok=True)
     _path = _path.resolve()
     # try_hashable_ser()
-    try_download_file()
+    # try_download_file()
     # try_auto_hashed_download_file()
     # try_metainfo_file()
     # try_creating_folders()
-    # try_arrow_storage()
+    try_arrow_storage()
     # try_file_storage()
     _path.rmdir()
 

@@ -950,8 +950,10 @@ class Tracker:
                 if self.iterates_infinitely:
                     raise e.code.NotAllowed(
                         msgs=[
-                            "We cannot show_progress_bar as this class iterates "
-                            "infinitely",
+                            "We cannot consume status_panel as this class iterates "
+                            "infinitely ... ",
+                            "you need to pass `status_panel=None` and handle it "
+                            "on your own",
                         ]
                     )
                 for _ in _status_panel.progress.track(
