@@ -30,7 +30,7 @@ from .file_group import FileGroup, FileGroupFromPaths, NpyMemMap, SHUFFLE_SEED_T
     DETERMINISTIC_SHUFFLE, NO_SHUFFLE, DO_NOT_USE, USE_ALL, \
     SELECT_TYPE, NON_DETERMINISTIC_SHUFFLE, FileGroupConfig
 from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup
-from .table import Table
+from .table import Table, Filter
 
 
 # a call so that the CWD FileSystem is loaded if defined in config.toml or else it
