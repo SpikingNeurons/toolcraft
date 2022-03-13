@@ -84,6 +84,22 @@ class NotImplementedCorrectly(_CustomException):
         )
 
 
+class ImplementInChildClass(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
+    def __init__(
+        self, *,
+        msgs: MESSAGES_TYPE
+    ):
+        super().__init__(
+            msgs=[
+                "Please implement this in child class !!!",
+                *msgs
+            ]
+        )
+
+
 class NotSupported(_CustomException):
 
     _RAISE_EXPLICITLY = True

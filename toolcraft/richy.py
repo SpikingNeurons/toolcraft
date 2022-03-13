@@ -441,6 +441,10 @@ class Progress(Widget):
         total: supply it when length of sequence cannot be guessed
                useful for infinite generators
 
+        task_name:
+          use # at end of task_task_name to support auto counter and hence
+          reuse of task_name
+
         Refer:
         >>> r_progress.Progress.track
         >>> r_progress.track
@@ -458,18 +462,24 @@ class Progress(Widget):
             task_total = total
 
         # ------------------------------------------------------------ 02
-        # if new task add it
+        # process task_name
         if task_name in self.tasks.keys():
             raise e.validation.NotAllowed(
                 msgs=[
                     f"There already exists a task named {task_name}"
                 ]
             )
-        else:
-            self.add_task(
-                task_name=task_name, total=task_total, description=description)
+        # if # in task name then add counter
+        # note adding # will make task name reusable by adding counter
+        _ = task_name.split("#")
+        if len(_) == 2:
+            task_name += str(len([k for k in self.tasks.keys() if k.startswith(_[0])]))
 
         # ------------------------------------------------------------ 03
+        # add task
+        self.add_task(task_name=task_name, total=task_total, description=description)
+
+        # ------------------------------------------------------------ 04
         # yield and hence auto track
         # todo: explore --- self.rich_progress.live.auto_refresh
         task_id = self.tasks[task_name].id
