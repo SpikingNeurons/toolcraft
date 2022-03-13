@@ -55,7 +55,7 @@ fsspec = "^2022.2.0"
 gcsfs = "^2022.2.0"
 dapr = "^1.5.0"
 dapr-ext-grpc = "^1.5.0"
-rich = "^11.2.0"
+rich = "^12.0.0"
 
 
 #[tool.poetry.group.dev]
