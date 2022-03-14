@@ -16,7 +16,6 @@ todo:
 
 """
 import pathlib
-import typer
 import toml
 
 from . import Tool

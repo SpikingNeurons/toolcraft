@@ -12,7 +12,6 @@ import zlib
 import pyarrow as pa
 import json
 import traceback
-import typer
 import sys
 
 from . import Tool

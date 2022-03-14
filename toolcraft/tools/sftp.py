@@ -1,5 +1,4 @@
 import pathlib
-import typer
 import yaml
 
 from . import Tool
@@ -13,11 +12,11 @@ class SftpTool(Tool):
     @classmethod
     def command_fn(
         cls,
-        file_name: str = typer.Option(
-            ...,
-            help="The yaml file that contains details of sftp server and "
-                 "download file details.",
-        )
+        # file_name: str = typer.Option(
+        #     ...,
+        #     help="The yaml file that contains details of sftp server and "
+        #          "download file details.",
+        # )
     ):
         # ------------------------------------------------------- 01
         # read details from input yaml file

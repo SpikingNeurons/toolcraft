@@ -463,7 +463,6 @@ class JobRunner:
                 f"Please override this method to define the flow of jobs ..."
             ]
         )
-        return []
 
     def run(self):
         _run_file = pathlib.Path(sys.argv[0])
