@@ -63,6 +63,8 @@ class Tool(abc.ABC):
         for _k in Tool.__dict__.keys():
             if _k == _command_fn_name:
                 continue
+            if _k.startswith('_'):
+                continue
             if _k in _child_class_keys:
                 raise e.code.CodingError(
                     msgs=[

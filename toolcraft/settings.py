@@ -11,11 +11,6 @@ import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
 
-# serving mode (dapr server)
-DAPR_SERVE_MODE = False
-# noinspection PyTypeChecker
-DAPR_SESSION_DIR = None  # type: pathlib.Path
-
 DO_RULE_CHECK = True
 
 
@@ -29,7 +24,6 @@ if gettrace is not None:
 # detect if in interactive mode
 INTERACTIVE = not hasattr(main, '__file__')
 
-DISABLE_PROGRESS_BAR = False
 LOGGER_USE_FILE_HANDLER = False
 
 try:
