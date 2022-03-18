@@ -11,19 +11,6 @@ from . import table
 from . import callback
 
 
-class UseInMethodRunnerForm:
-    """
-    A decorator for HashableCLass methods that can then be used in
-    HashableMethodsRunnerForm and DoubleSplitForm
-    """
-
-    def __init__(self):
-        ...
-
-    def __call__(self, *args, **kwargs):
-        ...
-
-
 @dataclasses.dataclass
 class HashableMethodsRunnerForm(Form):
     """
@@ -44,7 +31,7 @@ class HashableMethodsRunnerForm(Form):
     close_button: bool
     # todo: add icons for this
     info_button: bool
-    callable_names: t.Dict[str, str]
+    callable_names: t.List[str]
     use_collapsing_header: bool = True
 
     @property
@@ -80,6 +67,7 @@ class HashableMethodsRunnerForm(Form):
         _buttons_bar = self.button_bar
         _callable_names = self.callable_names
         _receiver = self.receiver
+        _hashable = self.hashable
 
         # add close button
         if self.close_button:
@@ -90,27 +78,23 @@ class HashableMethodsRunnerForm(Form):
 
         # add info button
         if self.info_button:
-            _callable_names["Info"] = "info_widget"
+            _callable_names.append("info_widget")
 
         # make buttons for callable names
-        for _button_label, _callable_name in _callable_names.items():
-            _b = self.hashable.get_gui_button(
-                group_tag=self.group_tag,
-                button_label=_button_label,
-                callable_name=_callable_name,
+        for _callable_name in _callable_names:
+            # get UseMethodInForm
+            _use_method_in_form_obj = m.UseMethodInForm.get_from_hashable_fn(
+                hashable=_hashable, fn_name=_callable_name
+            )
+            # create button widget
+            _button = _use_method_in_form_obj.get_gui_button(
+                hashable=_hashable,
                 receiver=_receiver,
                 allow_refresh=True,
+                group_tag=self.group_tag,
             )
-            _buttons_bar(widget=_b)
-
-    @classmethod
-    def make_from_hashable(
-        cls, hashable: m.HashableClass
-    ) -> "HashableMethodsRunnerForm":
-        """
-        Here we automatically make form from signature of methods that return widget
-        """
-        ...
+            # add button
+            _buttons_bar(widget=_button)
 
 
 @dataclasses.dataclass
@@ -175,16 +159,18 @@ class DoubleSplitForm(Form):
         self,
         hashable: m.HashableClass,
         group_key: str = None,
-        label: str = None,
     ):
 
         # ----------------------------------------------------- 01
+        # get UseMethodInForm
+        _use_method_in_form_obj = m.UseMethodInForm.get_from_hashable_fn(
+            hashable=hashable, fn_name=self.callable_name
+        )
+
+        # ----------------------------------------------------- 01
         # create button widget
-        if label is None:
-            label = f"{hashable.__class__.__name__}.{hashable.hex_hash[:-6]}"
-        _button = hashable.get_gui_button(
-            button_label=label,
-            callable_name=self.callable_name,
+        _button = _use_method_in_form_obj.get_gui_button(
+            hashable=hashable,
             receiver=self.receiver_panel,
             allow_refresh=self.allow_refresh,
             # we can maintain this as we will be using single `callable_name` and hence
@@ -201,7 +187,7 @@ class DoubleSplitForm(Form):
                 _container = self.button_panel_group[group_key]
             else:
                 self.button_panel_group[group_key] = gui.widget.CollapsingHeader(
-                    label=group_key
+                    label=group_key, default_open=False,
                 )
                 _container = self.button_panel_group[group_key]
                 self.button_panel(widget=_container)

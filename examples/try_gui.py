@@ -7,7 +7,8 @@ sys.path.append("..")
 import dearpygui.dearpygui as dpg
 from toolcraft.gui import _demo, USER_DATA
 import numpy as np
-from toolcraft import gui, util, marshalling, logger
+from toolcraft import gui, util, logger
+from toolcraft import marshalling as m
 
 _LOGGER = logger.get_logger()
 
@@ -319,24 +320,30 @@ class PlottingWithUpdates(gui.form.Form):
 
 
 @dataclasses.dataclass(frozen=True)
-class SimpleHashableClass(marshalling.HashableClass):
+class SimpleHashableClass(m.HashableClass):
 
     some_value: str
 
+    @property
+    def all_plots_gui_label(self) -> str:
+        return f"{self.__class__.__name__}.{self.hex_hash} (all_plots)\n" \
+               f" >> some_value - {self.some_value}"
+
+    @m.UseMethodInForm(
+        label_fmt="all_plots_gui_label"
+    )
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
-        print("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj")
         return gui.form.HashableMethodsRunnerForm(
             title=f"SimpleHashable method's runner form for {self.some_value}",
             group_tag="simple",
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names={
-                "line": "some_line_plot", "scatter": "some_scatter_plot"
-            },
+            callable_names=["some_line_plot",  "some_scatter_plot"],
             use_collapsing_header=True,
         )
 
+    @m.UseMethodInForm(label_fmt="line")
     def some_line_plot(self) -> gui.plot.Plot:
         _plot = gui.plot.Plot(
             label=f"This is line plot for {self.some_value}",
@@ -359,6 +366,7 @@ class SimpleHashableClass(marshalling.HashableClass):
         )
         return _plot
 
+    @m.UseMethodInForm(label_fmt="scatter")
     def some_scatter_plot(self) -> gui.plot.Plot:
         _plot = gui.plot.Plot(
             label=f"This is scatter plot for {self.some_value}",

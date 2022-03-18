@@ -61,6 +61,112 @@ class _ReadOnlyClass(type):
         ])
 
 
+class UseMethodInForm:
+    """
+    A decorator for HashableCLass methods that can then be used in forms like
+    HashableMethodsRunnerForm and DoubleSplitForm
+    """
+
+    def __init__(
+        self, label_fmt: str = None,
+    ):
+        """
+
+        Args:
+            label_fmt: label for button ... if str is property we will
+              call it to get label
+        """
+        self.label_fmt = label_fmt
+
+    def __call__(self, fn):
+        """
+        todo: add signature test to confirm that Widget or any of its subclass
+          is returned by fn
+        todo: currently fn cannot have any kwargs but eventually read the kwargs and
+          build a form do that parametrized widget running is possible ...
+          a bit complex but possible
+        """
+        # set vars
+        self.fn = fn
+
+        # store self inside fn
+        setattr(fn, f"_{self.__class__.__name__}", self)
+
+        # return fn as this is decorator
+        return self.fn
+
+    @classmethod
+    def get_from_hashable_fn(
+        cls, hashable: "HashableClass", fn_name: str
+    ) -> "UseMethodInForm":
+        try:
+            _fn = getattr(hashable.__class__, fn_name)
+        except AttributeError:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Function with name {fn_name} is not present in class "
+                    f"{hashable.__class__}"
+                ]
+            )
+        try:
+            return getattr(_fn, f"_{cls.__name__}")
+        except AttributeError:
+            raise e.code.CodingError(
+                msgs=[
+                    f"The function {_fn} was not decorated with {UseMethodInForm}"
+                ]
+            )
+
+    def get_gui_button(
+        self,
+        hashable: "HashableClass",
+        receiver: "gui.widget.ContainerWidget",
+        allow_refresh: bool,
+        group_tag: str = None,
+    ) -> "gui.widget.Button":
+        from . import gui
+
+        # ---------------------------------------------------- 01
+        # test callable name
+        _callable_name = self.fn.__name__
+        if not util.rhasattr(hashable, _callable_name):
+            raise e.code.CodingError(msgs=[
+                f"Callable `{_callable_name}` not available for "
+                f"HashableClass {hashable.__class__}"
+            ])
+
+        # ---------------------------------------------------- 02
+        # make label for button
+        if isinstance(getattr(hashable.__class__, self.label_fmt, None), property):
+            _button_label = getattr(hashable, self.label_fmt)
+        elif self.label_fmt is None:
+            _button_label = f"{hashable.__class__.__name__}.{hashable.hex_hash} " \
+                            f"({_callable_name})"
+        elif isinstance(self.label_fmt, str):
+            _button_label = self.label_fmt
+        else:
+            raise e.code.CodingError(
+                msgs=[f"unknown type {type(self.label_fmt)}"]
+            )
+
+        # ---------------------------------------------------- 03
+        # create callback
+        _callback = gui.callback.HashableMethodRunnerCallback(
+            hashable=hashable,
+            callable_name=_callable_name,
+            receiver=receiver,
+            allow_refresh=allow_refresh,
+            group_tag=group_tag,
+        )
+
+        # ---------------------------------------------------- 04
+        # create and return button
+        return gui.widget.Button(
+            label=_button_label,
+            callback=_callback,
+        )
+
+
 class Internal:
     """
     Need:
@@ -1919,6 +2025,7 @@ class HashableClass(YamlRepr, abc.ABC):
     def init(self):
         ...
 
+    @UseMethodInForm(label_fmt="Info")
     def info_widget(self) -> "gui.widget.Text":
         # import
         from . import gui
@@ -1929,46 +2036,6 @@ class HashableClass(YamlRepr, abc.ABC):
         )
         # return
         return _ret_widget
-
-    def get_gui_button(
-        self,
-        button_label: str,
-        callable_name: str,
-        receiver: "gui.widget.ContainerWidget",
-        allow_refresh: bool,
-        group_tag: str = None,
-    ) -> "gui.widget.Button":
-        """
-        todo: support refresh
-        """
-        # ---------------------------------------------------- 01
-        # import
-        from . import gui
-
-        # ---------------------------------------------------- 02
-        # test callable name
-        if not util.rhasattr(self, callable_name):
-            raise e.code.CodingError(msgs=[
-                f"Callable `{callable_name}` not available for "
-                f"HashableClass {self.__class__}"
-            ])
-
-        # ---------------------------------------------------- 03
-        # create callback
-        _callback = gui.callback.HashableMethodRunnerCallback(
-            hashable=self,
-            callable_name=callable_name,
-            receiver=receiver,
-            allow_refresh=allow_refresh,
-            group_tag=group_tag,
-        )
-
-        # ---------------------------------------------------- 04
-        # create and return button
-        return gui.widget.Button(
-            label=button_label,
-            callback=_callback,
-        )
 
 
 SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict,
