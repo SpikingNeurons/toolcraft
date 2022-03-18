@@ -324,6 +324,7 @@ class SimpleHashableClass(marshalling.HashableClass):
     some_value: str
 
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
+        print("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj")
         return gui.form.HashableMethodsRunnerForm(
             title=f"SimpleHashable method's runner form for {self.some_value}",
             group_tag="simple",
@@ -381,28 +382,32 @@ class SimpleHashableClass(marshalling.HashableClass):
         return _plot
 
 
+# @dataclasses.dataclass
+# class _SimpleHashablesMethodRunnerForm(gui.form.HashablesMethodRunnerForm):
+#
+#     title: str = "SimpleHashable's method runner form"
+#     callable_name: str = "some_line_plot"
+#     allow_refresh: bool = False
+#
+#     @property
+#     @util.CacheResult
+#     def form_fields_container(self) -> gui.widget.CollapsingHeader:
+#         _collapse_header = gui.widget.CollapsingHeader(label=self.title)
+#         _ret = super().form_fields_container
+#         _collapse_header(_ret)
+#         return _collapse_header
+#
+#
 @dataclasses.dataclass
-class SimpleHashablesMethodRunnerForm(gui.form.HashablesMethodRunnerForm):
+class DoubleSplitForm(gui.form.DoubleSplitForm):
 
-    title: str = "SimpleHashable's method runner form"
-    callable_name: str = "some_line_plot"
-    allow_refresh: bool = False
-
-    @property
-    @util.CacheResult
-    def form_fields_container(self) -> gui.widget.CollapsingHeader:
-        _collapse_header = gui.widget.CollapsingHeader(label=self.title)
-        _ret = super().form_fields_container
-        _collapse_header(_ret)
-        return _collapse_header
-
-
-@dataclasses.dataclass
-class SimpleHashablesMethodsRunnerForm(gui.form.HashablesMethodRunnerForm):
-
-    title: str = "SimpleHashable's method's runner form"
+    title: str = "Double split form ..."
     callable_name: str = "all_plots"
     allow_refresh: bool = False
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"try_gui.{cls.__name__}"
 
     @property
     @util.CacheResult
@@ -428,13 +433,11 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic3: PlottingWithUpdates = PlottingWithUpdates()
 
-    topic4: SimpleHashablesMethodRunnerForm = SimpleHashablesMethodRunnerForm(
-        allow_refresh=True
-    )
+    topic4: gui.form.DoubleSplitForm = DoubleSplitForm()
 
-    topic5: SimpleHashablesMethodsRunnerForm = SimpleHashablesMethodsRunnerForm(
-        allow_refresh=True
-    )
+    # topic5: SimpleHashablesMethodsRunnerForm = SimpleHashablesMethodsRunnerForm(
+    #     allow_refresh=True
+    # )
 
 
 def basic_dashboard():
@@ -442,28 +445,32 @@ def basic_dashboard():
     _dash.topic2.plot_some_examples()
     # noinspection PyTypeChecker
     _dash.topic4.add(
-        hashable=SimpleHashableClass(some_value="first hashable ...")
+        hashable=SimpleHashableClass(some_value="first hashable ..."),
+        group_key="Group 1 ..."
     )
     # noinspection PyTypeChecker
     _dash.topic4.add(
-        hashable=SimpleHashableClass(some_value="second hashable ...")
+        hashable=SimpleHashableClass(some_value="second hashable ..."),
+        group_key="Group 1 ..."
     )
     # noinspection PyTypeChecker
     _dash.topic4.add(
-        hashable=SimpleHashableClass(some_value="third hashable ...")
+        hashable=SimpleHashableClass(some_value="third hashable ..."),
+        group_key="Group 2 ..."
     )
     # noinspection PyTypeChecker
     _dash.topic4.add(
-        hashable=SimpleHashableClass(some_value="fourth hashable ...")
+        hashable=SimpleHashableClass(some_value="fourth hashable ..."),
+        group_key="Group 2 ..."
     )
-    # noinspection PyTypeChecker
-    _dash.topic5.add(
-        hashable=SimpleHashableClass(some_value="first hashable ...")
-    )
-    # noinspection PyTypeChecker
-    _dash.topic5.add(
-        hashable=SimpleHashableClass(some_value="second hashable ...")
-    )
+    # # noinspection PyTypeChecker
+    # _dash.topic5.add(
+    #     hashable=SimpleHashableClass(some_value="first hashable ...")
+    # )
+    # # noinspection PyTypeChecker
+    # _dash.topic5.add(
+    #     hashable=SimpleHashableClass(some_value="second hashable ...")
+    # )
     _dash.run()
 
 

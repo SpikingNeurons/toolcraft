@@ -10,8 +10,113 @@ Some things to do based on this
     Service invocation (advanced)	Invoke service by using custom protobuf message
 
 """
+import pathlib
+import socket
+import enum
+import pickle
+import zlib
+import shutil
+import typing as t
+from dapr.ext.grpc import InvokeMethodRequest, InvokeMethodResponse
+import json
 
+from . import Dapr
 from .. import marshalling as m
+from .. import error as e
+
+
+@Dapr.APP.method('hashable_receiver_invoke')
+def hashable_receiver_invoke(request: InvokeMethodRequest) -> bytes:
+
+    # get from request
+    print("ggggggggggggggggggggggggggggggggggggggggggg")
+    print(request)
+    _metadata = request.metadata
+    _data = json.loads(request.data)
+
+    print(_data)
+
+    # check if CWD set
+    if Dapr.CWD is None:
+        raise e.code.CodingError(
+            msgs=["Dapr.CWD should be set by now ..."]
+        )
+
+    # confirm if server knows about requested hashable
+    _hex_hash = _data['hex_hash']
+    _hashable_yaml = Dapr.CWD / _hex_hash / ".yaml"
+    if not _hashable_yaml.exists():
+        if 'hashable_yaml' in _data.keys():
+            _hashable_yaml.parent.mkdir(parents=True, exist_ok=True)
+            _hashable_yaml.touch(exist_ok=False)
+            _hashable_yaml.write_text(_data['hashable_yaml'])
+        else:
+            return HashableReceiverResponse(
+                status=Status.NEEDS_HASHABLE_YAML,
+                message="Please send hashable yaml ..."
+            ).get_bytes()
+
+    # load hashable
+    print(_hashable_yaml)
+    return HashableReceiverResponse(
+        status=Status.STARTED, message="Just started"
+    ).get_bytes()
+
+
+class Status(enum.Enum):
+    NEEDS_HASHABLE_YAML = enum.auto()
+    STARTED = enum.auto()
+    PROCESSING = enum.auto()
+    COMPLETED = enum.auto()
+
+
+class HashableReceiverResponse(t.NamedTuple):
+    """
+    Note that we cannot add more fields to this tuple and might not be needed as
+      simple design is best ...
+
+    todo: I assume pickles are easy and more powerful as of now ... KEEP THINGS SIMPLE
+      Ignore below comments if you agree ...
+      ** IGNORE BELOW **
+      In long run we will might think of removing pickle and see if json can be sent
+      back with data as protobuf which can be deserialized on client.
+      Where class_name can create instance with data for display.
+       {
+          'status': <>,
+          'message': <>,
+          'class_name': <>,
+          'module_name': <>,
+          'data': <protobuf>,
+       }
+    """
+    status: Status
+    message: str
+    # Any serializable python object
+    # Note that according to pyarrow `pa.Table` are also serializable
+    data: t.Any = None
+
+    @property
+    def is_completed(self):
+        return self.status is Status.COMPLETED
+
+    @property
+    def is_processing(self):
+        return self.status in [Status.PROCESSING, Status.STARTED]
+
+    @property
+    def just_started(self):
+        return self.status is Status.STARTED
+
+    @property
+    def results_available(self):
+        return self.data is not None
+
+    def get_bytes(self) -> bytes:
+        return zlib.compress(pickle.dumps(self))
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "HashableReceiverResponse":
+        return pickle.loads(zlib.decompress(data))
 
 
 class Invoke:

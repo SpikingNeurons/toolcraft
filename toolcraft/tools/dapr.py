@@ -23,43 +23,9 @@ from .. import marshalling as m
 from .. import richy
 from .. import error as e
 from .. import logger
+from ..dapr import Dapr
 
-# noinspection PyTypeChecker
-_DAPR_CWD = None  # type: pathlib.Path
-_DAPR_PORT = 50051
-_DAPR_APP = App()
 _LOGGER = logger.get_logger()
-
-
-@_DAPR_APP.method('hashable_receiver_invoke')
-def hashable_receiver_invoke(request: InvokeMethodRequest) -> bytes:
-    # get from request
-    print("ggggggggggggggggggggggggggggggggggggggggggg")
-    print(request)
-    _metadata = request.metadata
-    _data = json.loads(request.data)
-
-    print(_data)
-
-    # confirm if server knows about requested hashable
-    _hex_hash = _data['hex_hash']
-    _hashable_yaml = _DAPR_CWD / _hex_hash / ".yaml"
-    if not _hashable_yaml.exists():
-        if 'hashable_yaml' in _data.keys():
-            _hashable_yaml.parent.mkdir(parents=True, exist_ok=True)
-            _hashable_yaml.touch(exist_ok=False)
-            _hashable_yaml.write_text(_data['hashable_yaml'])
-        else:
-            return HashableReceiverResponse(
-                status=Status.NEEDS_HASHABLE_YAML,
-                message="Please send hashable yaml ..."
-            ).get_bytes()
-
-    # load hashable
-    print(_hashable_yaml)
-    return HashableReceiverResponse(
-        status=Status.STARTED, message="Just started"
-    ).get_bytes()
 
 
 def launch_dapr_app():
@@ -127,165 +93,6 @@ def launch_dapr_app():
     _DAPR_APP.run(app_port=_DAPR_PORT)
 
 
-class Status(enum.Enum):
-    NEEDS_HASHABLE_YAML = enum.auto()
-    STARTED = enum.auto()
-    PROCESSING = enum.auto()
-    COMPLETED = enum.auto()
-
-
-class HashableReceiverResponse(t.NamedTuple):
-    """
-    Extend this class to provide more methods that can be used to build gui etc.
-    But note that we cannot add more fields to this tuple and might not be needed as
-      simple design is best ...
-
-    todo: In long run we will remove pickle and see if the tuple can be sent as json
-       with the data as protobuf which can be deserialized on client
-       {
-          'class_name': <>,
-          'module_name': <>,
-          'data': <protobuf>,
-       }
-    """
-    status: Status
-    message: str
-    data: t.Union[pa.Table, t.Dict] = None
-
-    @property
-    def is_completed(self):
-        return self.status is Status.COMPLETED
-
-    @property
-    def is_processing(self):
-        return self.status in [Status.PROCESSING, Status.STARTED]
-
-    @property
-    def just_started(self):
-        return self.status is Status.STARTED
-
-    @property
-    def results_available(self):
-        return self.data is not None
-
-    def get_bytes(self) -> bytes:
-        return zlib.compress(pickle.dumps(self))
-
-    @classmethod
-    def from_bytes(cls, data: bytes) -> "HashableReceiverResponse":
-        return pickle.loads(zlib.decompress(data))
-
-
-class HashableRunner:
-    """
-
-    todo: This class might eventually become ... `mlcraft`
-      https://pypi.org/project/mlcraft/
-
-    todo: `mlflow` and `wandb` are closest things to mlcraft
-      + brainstorm USP of mlcraft
-        + python gui direct access to memory IPC/Grpc/RDMA will be available
-        + solid visual tools and in reach of python developers which shy away
-          from javascript
-        + capability to go grpc/http/ftp/ssh/gcs ... etc
-        + dapr based side car architecture ... mix and match compute resources
-        + powerful HashableClass that gives python user the control
-        + heavy pyarrow usage for storing tables that can be stored across machines
-          and queried with pyarrow ...
-          also other things like GPU analytics, plasma (in memory store), IPC, RBMA will
-          be there as pa.Table's
-
-    todo: Models can be stored as artifact i.e. `storage.dec.FileGroup` but then to
-      make it live or track its lifecycle get inspiration
-      from https://mlflow.org/docs/latest/model-registry.html#
-
-    todo: look at heron philosophy ... although here we are basically inspired by
-      popular mlflow and want to use dapr https://github.com/georgedimitriadis/Heron
-    """
-
-    @classmethod
-    def _start(cls):
-        """
-        Some things to do at the start ...
-        """
-
-        # show which hashables can be served by this server
-        _hcs = m.HashableClass.available_concrete_sub_classes()
-        _LOGGER.info(
-            msg=f"Below {len(_hcs)} hashable classes are available ",
-            msgs=[f"{_hc}" for _hc in _hcs]
-        )
-
-    @classmethod
-    def serve(cls):
-        """
-        Responsible to launch dapr server
-        """
-        cls._start()
-        _LOGGER.info("Dapr server started ...")
-        _DAPR_APP.run(_DAPR_PORT)
-
-    @classmethod
-    def view(cls):
-        """
-        To be used on clients
-        """
-        cls._start()
-        _LOGGER.info("Running client ...")
-
-    @classmethod
-    def launch(cls):
-        """
-        will launch jobs on server
-        """
-        cls._start()
-        _LOGGER.info("Launching jobs on server ...")
-
-    @classmethod
-    def run(cls):
-        """
-        This method should be called from __main__ of the script as it decides what
-        to call next
-        """
-        global _DAPR_CWD
-
-        # --------------------------------------------------- 01
-        # validation
-        if len(sys.argv) != 2:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "Only pass one arg", sys.argv[1:]
-                ]
-            )
-        _task_type = sys.argv[1]
-        e.validation.ShouldBeOneOf(
-            value=_task_type, values=['serve', 'launch', 'view'],
-            msgs=["Supply correct task type ..."]
-        ).raise_if_failed()
-
-        # --------------------------------------------------- 02
-        # find CWD
-        if _DAPR_CWD is not None:
-            raise e.code.CodingError(
-                msgs=["We do not expect _DAPR_CWD to be set ...",
-                      f"Found _DAPR_CWD = {_DAPR_CWD}"]
-            )
-        else:
-            _DAPR_CWD = pathlib.Path(sys.argv[0]).parent
-        _LOGGER.info(msg="Dapr current working dir set to: ", msgs=[str(_DAPR_CWD)])
-
-        # --------------------------------------------------- 03
-        # launch task
-        if _task_type == 'launch':
-            cls.launch()
-        elif _task_type == "serve":
-            cls.serve()
-        elif _task_type == "view":
-            cls.view()
-        else:
-            raise e.validation.NotAllowed(msgs=[f"Unsupported task_type {_task_type}"])
-
-
 class DaprTool(Tool):
     """
     This will launch toolcraft in server mode on remote machines
@@ -339,7 +146,7 @@ class DaprTool(Tool):
                 f"dapr run "
                 f"--app-id hashable-receiver "
                 f"--app-protocol grpc "
-                f"--app-port {_DAPR_PORT} "
+                f"--app-port {Dapr.PORT} "
                 f"python {py_script.absolute().as_posix()} serve"
             )
         elif task_type == 'view':

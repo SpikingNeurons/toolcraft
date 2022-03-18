@@ -68,7 +68,6 @@ class Tag:
             return cls.get_tag(widget=tag_or_widget) is not None
         else:
             raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(tag_or_widget)}"])
-            raise
 
     @classmethod
     def remove(cls, tag_or_widget: t.Union[str, 'Widget'], not_exists_ok: bool):
@@ -84,7 +83,6 @@ class Tag:
                         f"`{tag_or_widget}` hence there is nothing to remove"
                     ]
                 )
-                raise
         elif isinstance(tag_or_widget, Widget):
             # get tag
             _tag = cls.get_tag(widget=tag_or_widget)
@@ -97,7 +95,6 @@ class Tag:
                         f"The widget you want to untag was never tagged"
                     ]
                 )
-                raise
             # remove the tagged widget
             del cls._container[_tag]
         else:
@@ -106,7 +103,6 @@ class Tag:
                     f"Unknown type {type(tag_or_widget)} ..."
                 ]
             )
-            raise
 
 
 class Enum(m.FrozenEnum, enum.Enum):
@@ -593,7 +589,7 @@ class MovableWidget(Widget, abc.ABC):
 
     def move(self, parent: "ContainerWidget" = None, before: "MovableWidget" = None):
         """
-        Move the item in `parent` and put it before `before`
+        Move the item in `parent` or put it before `before`
         """
         # ---------------------------------------------- 01
         # check
@@ -612,6 +608,7 @@ class MovableWidget(Widget, abc.ABC):
         # ---------------------------------------------- 02
         # related to kwarg `before`
         if parent is None:
+            # noinspection PyUnresolvedReferences
             parent = before.parent
         _before_index = None
         if before is not None:
@@ -642,6 +639,7 @@ class MovableWidget(Widget, abc.ABC):
         # sync the move
         self.internal.parent = parent
         if self.is_built:
+            # noinspection PyUnresolvedReferences
             internal_dpg.move_item(
                 self.dpg_id, parent=parent.dpg_id,
                 before=0 if before is None else before.dpg_id)
@@ -692,8 +690,7 @@ class ContainerWidget(Widget, abc.ABC):
 
     @property
     @util.CacheResult
-    def children(self) -> t.List[t.Union[MovableWidget]]:
-        # this will be populated when __set_item__ is called
+    def children(self) -> t.List[MovableWidget]:
         return []
 
     # noinspection PyMethodOverriding

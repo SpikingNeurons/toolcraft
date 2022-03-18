@@ -11,13 +11,35 @@ from . import table
 from . import callback
 
 
+class UseInMethodRunnerForm:
+    """
+    A decorator for HashableCLass methods that can then be used in
+    HashableMethodsRunnerForm and DoubleSplitForm
+    """
+
+    def __init__(self):
+        ...
+
+    def __call__(self, *args, **kwargs):
+        ...
+
+
 @dataclasses.dataclass
 class HashableMethodsRunnerForm(Form):
+    """
+    This is the form which appears on right side of split window. And it needs
+    accompanying button wo work with
+
+    todo: if methods takes kwargs then make a form inside form fo that the method
+      call can be parametrized
+    """
 
     hashable: m.HashableClass
     title: str
-    # a single receiver will be used for all methods so we share it with `group_tag`
-    group_tag: str
+    # a single receiver will be used for all methods given by callable_names,
+    # so we share it with `group_tag`
+    # This allows to use keys in callable_names as tab bar
+    group_tag: t.Optional[str]
     # todo: add icons for this
     close_button: bool
     # todo: add icons for this
@@ -81,9 +103,23 @@ class HashableMethodsRunnerForm(Form):
             )
             _buttons_bar(widget=_b)
 
+    @classmethod
+    def make_from_hashable(
+        cls, hashable: m.HashableClass
+    ) -> "HashableMethodsRunnerForm":
+        """
+        Here we automatically make form from signature of methods that return widget
+        """
+        ...
+
 
 @dataclasses.dataclass
-class HashablesMethodRunnerForm(Form):
+class DoubleSplitForm(Form):
+    """
+    Takes
+    + Buttons in left panel (can be grouped with group_key)
+    + And responses are added to right receiver panel
+    """
 
     title: str
     callable_name: str
@@ -125,12 +161,22 @@ class HashablesMethodRunnerForm(Form):
 
     @property
     @util.CacheResult
+    def button_panel_group(self) -> t.Dict[str, gui.widget.CollapsingHeader]:
+        return {}
+
+    @property
+    @util.CacheResult
     def receiver_panel(self) -> widget.Group:
         _grp = widget.Group(horizontal=False)
         self._table[0, 1](_grp)
         return _grp
 
-    def add(self, hashable: m.HashableClass, label: str = None):
+    def add(
+        self,
+        hashable: m.HashableClass,
+        group_key: str = None,
+        label: str = None,
+    ):
 
         # ----------------------------------------------------- 01
         # create button widget
@@ -147,5 +193,19 @@ class HashablesMethodRunnerForm(Form):
         )
 
         # ----------------------------------------------------- 02
+        # get container
+        if group_key is None:
+            _container = self.button_panel
+        else:
+            if group_key in self.button_panel_group.keys():
+                _container = self.button_panel_group[group_key]
+            else:
+                self.button_panel_group[group_key] = gui.widget.CollapsingHeader(
+                    label=group_key
+                )
+                _container = self.button_panel_group[group_key]
+                self.button_panel(widget=_container)
+
+        # ----------------------------------------------------- 03
         # add button widget
-        self.button_panel(widget=_button)
+        _container(widget=_button)
