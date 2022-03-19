@@ -16,67 +16,18 @@ import pyarrow as pa
 import json
 import traceback
 import sys
-
+print("111111111111111111111111111")
 from . import Tool
 from .. import settings
 from .. import marshalling as m
+print("11111111111111111111111111122222222222")
 from .. import richy
 from .. import error as e
 from .. import logger
 from ..dapr import Dapr
+print("11111111111111111111111111133333333333333333")
 
 _LOGGER = logger.get_logger()
-
-
-def launch_dapr_app():
-    """
-
-
-    """
-
-    # detect if called from main
-    # noinspection PyUnresolvedReferences,PyProtectedMember
-    _mod = sys._getframe(1).f_globals["__name__"]
-    if _mod != '__main__':
-        raise e.validation.NotAllowed(
-            msgs=[
-                f"Function {launch_dapr_app} is intended to be called from __main__ "
-                f"of your main script"
-            ]
-        )
-
-    # get script path
-    _script_path = pathlib.Path(
-        traceback.extract_stack(limit=4)[-2].filename
-    )
-
-    # import script ... no need as the main script will handle it
-    # _module_name = _script_path.name.split(".")[0]
-    # importlib.import_module(_module_name)
-
-
-
-    # set the session dir
-    _session_name = _script_path.name.split(".")[0]
-    if settings.DAPR_SESSION_DIR is None:
-        settings.DAPR_SESSION_DIR = _script_path.parent / _session_name
-    else:
-        raise e.code.CodingError(
-            msgs=[
-                f"There is already a session running with name `{_session_name}`"
-            ]
-        )
-
-    # log before launch
-    _LOGGER.info(
-        msg=f"Running DAPR app `hashable-receiver` in dir {_script_path.parent}"
-    )
-    _LOGGER.info(
-        msg=f"Listen to this IP {socket.gethostbyname(socket.gethostname())}:{_DAPR_PORT}"
-    )
-
-    # launch
-    _DAPR_APP.run(app_port=_DAPR_PORT)
 
 
 class DaprTool(Tool):
