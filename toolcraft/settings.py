@@ -9,7 +9,6 @@ import typing as t
 import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
-import pyarrow
 
 DO_RULE_CHECK = True
 
@@ -55,3 +54,5 @@ class FileHash:
     # when you want to debug if auto_hashing feature creates same files in
     # consecutive runs
     DEBUG_HASHABLE_STATE = False
+
+import pyarrow
