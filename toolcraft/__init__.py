@@ -38,6 +38,7 @@ __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a4"
 _i = 0
+import pyarrow
 print("ppppppppppppppppppppppppppppppp", _i)
 _i += 1
 from . import settings
@@ -49,7 +50,6 @@ _i += 1
 from . import error
 print("ppppppppppppppppppppppppppppppp", _i)
 _i += 1
-import pyarrow
 from . import util
 print("ppppppppppppppppppppppppppppppp", _i)
 _i += 1
