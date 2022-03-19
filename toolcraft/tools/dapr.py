@@ -16,16 +16,14 @@ import pyarrow as pa
 import json
 import traceback
 import sys
-print("111111111111111111111111111")
+
 from . import Tool
 from .. import settings
 from .. import marshalling as m
-print("11111111111111111111111111122222222222")
 from .. import richy
 from .. import error as e
 from .. import logger
 from ..dapr import Dapr
-print("11111111111111111111111111133333333333333333")
 
 _LOGGER = logger.get_logger()
 
