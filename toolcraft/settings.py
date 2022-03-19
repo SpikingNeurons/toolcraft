@@ -3,7 +3,7 @@ todo: Formalize with a parent Settings class which will store settings in
   `.toolcraft` folder
 """
 import numpy as np
-import pyarrow as pa
+import pyarrow as pa  # do not comment this as on unix it causes seg fault
 import pathlib
 import toml
 import typing as t
@@ -56,4 +56,3 @@ class FileHash:
     # consecutive runs
     DEBUG_HASHABLE_STATE = False
 
-print(pa.table({"a": [2,3,4]}))
