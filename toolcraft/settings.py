@@ -9,6 +9,7 @@ import typing as t
 import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
+import pyarrow
 
 DO_RULE_CHECK = True
 
