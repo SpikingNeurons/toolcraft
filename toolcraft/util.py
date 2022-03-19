@@ -5,12 +5,15 @@ Module to hold simple utilities that can be built with minimal dependencies.
 print("xxxxxxxxxxxxxxxxxxxxxxx", 111)
 import typing as t
 import re
+print("eeeeeeeeeeeeeeee", 222)
 import pyarrow as pa
+print("eeeeeeeeeeeeeeee", 2342423)
 import numpy as np
 import pickle
 import inspect
 import abc
 import gc
+print("eeeeeeeeeeeeeeeeeee", 333)
 import types
 import datetime
 import pathlib
