@@ -6,9 +6,11 @@ import sys
 import pathlib
 
 sys.path.append("..\\..")
-
+print("pppppppppppppppppppppppppppp")
 from toolcraft.tools import dapr
+print("pppppppppppppppppppppppppppp")
 from toolcraft import settings
+print("pppppppppppppppppppppppppppp")
 
 
 if __name__ == '__main__':
