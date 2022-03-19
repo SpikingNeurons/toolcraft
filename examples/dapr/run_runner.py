@@ -12,6 +12,8 @@ from toolcraft import settings
 
 
 if __name__ == '__main__':
+    print(".................")
+    raise
     if len(sys.argv) != 2:
         raise Exception("Only pass one arg")
     if sys.argv[1] not in ['server', 'launch', 'client']:
