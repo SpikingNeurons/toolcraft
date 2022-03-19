@@ -21,8 +21,11 @@ def save_pickle(py_obj, file_path: pathlib.Path):
     ).raise_if_failed()
 """
 
-_iter = re.finditer(pattern=_SEARCH_REGEX, string=_STR_OR_FILE_OR_FOLDER)
 
-# this gives points to insert
-for _ in _iter:
-    print(_.span()[1])
+if __name__ == '__main__':
+    ...
+    # _iter = re.finditer(pattern=_SEARCH_REGEX, string=_STR_OR_FILE_OR_FOLDER)
+    #
+    # # this gives points to insert
+    # for _ in _iter:
+    #     print(_.span()[1])

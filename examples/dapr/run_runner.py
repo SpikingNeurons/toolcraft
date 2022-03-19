@@ -6,16 +6,13 @@ import sys
 import pathlib
 
 sys.path.append("..\\..")
-print("pppppppppppppppppppppppppppp")
 from toolcraft.tools import dapr
-print("pppppppppppppppppppppppppppp")
 from toolcraft import settings
-print("pppppppppppppppppppppppppppp")
 
 
 if __name__ == '__main__':
-    print(".................")
-    raise
+    if len(sys.argv) == 1:
+        sys.argv.append("client")
     if len(sys.argv) != 2:
         raise Exception("Only pass one arg")
     if sys.argv[1] not in ['server', 'launch', 'client']:
