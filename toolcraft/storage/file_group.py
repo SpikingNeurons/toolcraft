@@ -37,7 +37,7 @@ from .. import richy
 from . import StorageHashable
 from .file_system import Path
 
-# noinspection PyUnresolvedReferences
+# noinspection PyUnreachableCode
 if False:
     from . import folder
 
