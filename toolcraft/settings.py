@@ -3,7 +3,6 @@ todo: Formalize with a parent Settings class which will store settings in
   `.toolcraft` folder
 """
 import numpy as np
-import pyarrow
 import pathlib
 import toml
 import typing as t
