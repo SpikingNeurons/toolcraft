@@ -104,10 +104,6 @@ class Tool(abc.ABC):
         return cls.__module__.split(".")[-1]
 
     @classmethod
-    def run(cls):
-        print("dfsdfsdfdsfdsfsdf")
-
-    @classmethod
     @abc.abstractmethod
     def command_fn(cls, **kwargs):
         """
