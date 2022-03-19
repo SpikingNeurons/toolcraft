@@ -7,7 +7,12 @@ import sys
 import numpy as np
 sys.path.append("..\\..")
 from toolcraft import marshalling as m
-from toolcraft import dapr, gui, logger
+from toolcraft import dapr, logger
+
+try:
+    from toolcraft import gui
+except ImportError:
+    ...
 
 
 _LOGGER = logger.get_logger()
@@ -24,7 +29,7 @@ class Test(m.HashableClass):
                f" >> some_value - {self.some_value}"
 
     @m.UseMethodInForm(label_fmt="all_plots_gui_label")
-    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
+    def all_plots(self) -> "gui.form.HashableMethodsRunnerForm":
         return gui.form.HashableMethodsRunnerForm(
             title=f"SimpleHashable method's runner form for {self.some_value}",
             group_tag="simple",
@@ -36,7 +41,7 @@ class Test(m.HashableClass):
         )
 
     @m.UseMethodInForm(label_fmt="line")
-    def some_line_plot(self) -> gui.plot.Plot:
+    def some_line_plot(self) -> "gui.plot.Plot":
         _plot = gui.plot.Plot(
             label=f"This is line plot for {self.some_value}",
             height=200, width=-1,
@@ -59,7 +64,7 @@ class Test(m.HashableClass):
         return _plot
 
     @m.UseMethodInForm(label_fmt="scatter")
-    def some_scatter_plot(self) -> gui.plot.Plot:
+    def some_scatter_plot(self) -> "gui.plot.Plot":
         _plot = gui.plot.Plot(
             label=f"This is scatter plot for {self.some_value}",
             height=200, width=-1,
