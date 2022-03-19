@@ -141,20 +141,20 @@ class DaprTool(Tool):
         )
 
         # final call to dapr sidecar
-        if task_type == 'serve':
+        if task_type == 'server':
             os.system(
                 f"dapr run "
                 f"--app-id hashable-receiver "
                 f"--app-protocol grpc "
                 f"--app-port {Dapr.PORT} "
-                f"python {py_script.absolute().as_posix()} serve"
+                f"python {py_script.absolute().as_posix()} server"
             )
         elif task_type == 'view':
             os.system(
                 f"dapr run "
                 f"--app-id hashable-caller "
                 f"--app-protocol grpc "
-                f"python {py_script.absolute().as_posix()} view"
+                f"python {py_script.absolute().as_posix()} client"
             )
         elif task_type == 'launch':
             os.system(

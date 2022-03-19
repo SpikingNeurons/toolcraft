@@ -14,7 +14,7 @@ from toolcraft import settings
 if __name__ == '__main__':
     if len(sys.argv) != 2:
         raise Exception("Only pass one arg")
-    if sys.argv[1] not in ['serve', 'launch', 'view']:
+    if sys.argv[1] not in ['server', 'launch', 'view']:
         raise Exception(f"Unsupported value {sys.argv[1]}")
     _file = "run.py"
     # noinspection PyTypeChecker
