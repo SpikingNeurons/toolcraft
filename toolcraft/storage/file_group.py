@@ -20,7 +20,6 @@ import subprocess
 import dataclasses
 import abc
 import numpy as np
-import gc
 import datetime
 import io
 import hashlib
@@ -1206,9 +1205,6 @@ class NpyMemMap:
         # delete memmap so that there are no open references that cause
         # windows permission error
         del memmap
-        # also garbage collect as del alone does not work
-        # https://stackoverflow.com/questions/39953501/i-cant-remove-file\-created-by-memmap
-        gc.collect()
 
     def __len__(self) -> int:
         return self.shape[0]
@@ -1408,7 +1404,6 @@ class NpyMemMap:
             )
         # reset
         del self.call_helper
-        gc.collect()
 
     def __del__(self):
         # the call_helper attribute must not be present

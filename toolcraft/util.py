@@ -12,7 +12,6 @@ import numpy as np
 import pickle
 import inspect
 import abc
-import gc
 print("eeeeeeeeeeeeeeeeeee", 333)
 import types
 import datetime
@@ -823,6 +822,7 @@ def return_argument_as_it_is(t):
 
 def get_object_memory_usage(obj) -> int:
     """sum size of object & members."""
+    import gc
     # print(".......... DEBUG .........")
     # noinspection PyPep8Naming
     BLACKLIST = (type, types.ModuleType, types.FunctionType)
