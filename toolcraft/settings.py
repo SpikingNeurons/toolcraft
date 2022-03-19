@@ -2,14 +2,14 @@
 todo: Formalize with a parent Settings class which will store settings in
   `.toolcraft` folder
 """
-
+import pyarrow
 import numpy as np
 import pathlib
 import toml
 import typing as t
 import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
-# import __main__ as main
+import __main__ as main
 
 DO_RULE_CHECK = True
 
@@ -22,7 +22,7 @@ if gettrace is not None:
         PYC_DEBUGGING = True
 
 # detect if in interactive mode
-# INTERACTIVE = not hasattr(main, '__file__')
+INTERACTIVE = not hasattr(main, '__file__')
 
 LOGGER_USE_FILE_HANDLER = False
 
