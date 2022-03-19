@@ -97,9 +97,26 @@ class HashableRunner(dapr.HashableRunner):
         # call super
         super().launch()
 
+        # launch tasks
         for _t in _TASKS:
             _t.run()
 
+    @classmethod
+    def client(cls):
+        # call super
+        super().client()
+
+        # make dashboard
+        _dashboard = cls.make_dashboard(
+            callable_name="all_plots"
+        )
+
+        # add hashables
+        for _t in _TASKS:
+            _dashboard.split_form.add(hashable=_t, group_key=None)
+
+        # run dashboard
+        _dashboard.run()
 
 
 if __name__ == '__main__':

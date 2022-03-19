@@ -12,6 +12,8 @@ from .. import error as e
 from . import window
 from . import asset
 from . import widget
+from . import callback
+from . import form
 from .. import logger
 
 
@@ -124,6 +126,16 @@ class Dashboard(m.YamlRepr, abc.ABC):
             # get value
             v = getattr(self, f_name)
             # --------------------------------------------------- 02.02
+            # if None then make sure that it is supplied ..
+            # needed as we need to define values for each field
+            if v is None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"Please supply value for field {f_name} in class "
+                        f"{self.__class__}"
+                    ]
+                )
+            # --------------------------------------------------- 02.03
             # if not Widget class continue
             # that means Widgets and Containers will be clones if default supplied
             # While Hashable class and even Callbacks will not be cloned
@@ -131,12 +143,12 @@ class Dashboard(m.YamlRepr, abc.ABC):
             # build() method
             if not isinstance(v, widget.Widget):
                 continue
-            # --------------------------------------------------- 02.03
+            # --------------------------------------------------- 02.04
             # get field and its default value
             # noinspection PyUnresolvedReferences
             _field = self.__dataclass_fields__[f_name]
             _default_value = _field.default
-            # --------------------------------------------------- 02.04
+            # --------------------------------------------------- 02.05
             # if id(_default_value) == id(v) then that means the default value is
             # supplied ... so now we need to trick dataclass and assigned a clone of
             # default_value
@@ -407,3 +419,13 @@ class BasicDashboard(Dashboard):
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
         dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
+
+
+@dataclasses.dataclass
+class DaprClientDashboard(BasicDashboard):
+
+    theme_selector: widget.Combo = callback.SetThemeCallback.get_combo_widget()
+
+    welcome_msg: widget.Text = None
+
+    split_form: form.DoubleSplitForm = None

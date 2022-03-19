@@ -27,6 +27,20 @@ from .. import error as e
 
 @Dapr.APP.method('hashable_receiver_invoke')
 def hashable_receiver_invoke(request: InvokeMethodRequest) -> bytes:
+    """
+
+    Why pickle ??
+    + client is made up of python so there is no reason not to use pickle
+    + With respect to pyarrow Table
+      pa.serialize and pa.deserialize is deprecated as pickle protocol 5
+      supports everything ... so pickling is better way for us
+
+    todo: stream large data (we need to figure this out)
+      + look for https://arrow.apache.org/docs/python/ipc.html
+      + also lookout for pyarrow flight which uses grpc but also has more
+        capability of reading dataframe from multiple servers
+
+    """
 
     # get from request
     print("ggggggggggggggggggggggggggggggggggggggggggg")
@@ -74,6 +88,11 @@ class HashableReceiverResponse(t.NamedTuple):
     """
     Note that we cannot add more fields to this tuple and might not be needed as
       simple design is best ...
+
+    todo: DaprClient.invoke_method data kwarg is used to send kwargs for hashable method
+      Note that they are serialized with json.dumps instead of pickle.dumps as there
+      is encoding problem ... as of now request data sent to server will be small so
+      we might not need to worry
 
     todo: I assume pickles are easy and more powerful as of now ... KEEP THINGS SIMPLE
       Ignore below comments if you agree ...

@@ -30,21 +30,7 @@ _LOGGER = logger.get_logger()
 
 def launch_dapr_app():
     """
-    Why pickle ??
-      + client is made up of python so there is no reason not to use pickle
-      + With respect to pyarrow Table
-        pa.serialize and pa.deserialize is deprecated as pickle protocol 5
-        supports everything ... so pickling is better way for us
 
-    todo: stream large data (we need to figure this out)
-      + look for https://arrow.apache.org/docs/python/ipc.html
-      + also lookout for pyarrow flight which uses grpc but also has more
-        capability of reading dataframe from multiple servers
-
-    todo: DaprClient.invoke_method data kwarg is used to send kwargs for hashable method
-      Note that they are serialized with json.dumps instead of pickle.dumps as there
-      is encoding problem ... as of now request data sent to server will be small so
-      we might not need to worry
 
     """
 
@@ -149,7 +135,7 @@ class DaprTool(Tool):
                 f"--app-port {Dapr.PORT} "
                 f"python {py_script.absolute().as_posix()} server"
             )
-        elif task_type == 'view':
+        elif task_type == 'client':
             os.system(
                 f"dapr run "
                 f"--app-id hashable-caller "

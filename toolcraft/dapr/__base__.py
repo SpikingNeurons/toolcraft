@@ -1,11 +1,18 @@
+import os
 import pathlib
 import typing as t
 from dapr.ext.grpc import App
 import sys
+import socket
 
 from .. import logger
 from .. import error as e
 from .. import marshalling as m
+
+# noinspection PyUnreachableCode
+if False:
+    # noinspection PyUnresolvedReferences
+    from .. import gui
 
 _LOGGER = logger.get_logger()
 
@@ -13,6 +20,7 @@ _LOGGER = logger.get_logger()
 class Dapr:
 
     CWD: pathlib.Path = None
+    IP: str = None
     PORT: int = 50051
     APP = App()
     MODE: t.Literal['server', 'launch', 'client'] = None
@@ -77,7 +85,13 @@ class HashableRunner:
         Responsible to launch dapr server
         """
         cls._start()
-        _LOGGER.info("Dapr server started ...")
+        _LOGGER.info(
+            "Dapr server started ...",
+            msgs=[{
+                'CWD': Dapr.CWD.as_posix(),
+                'IP': Dapr.IP,
+                'PORT': Dapr.PORT
+            }])
         Dapr.APP.run(Dapr.PORT)
 
     @classmethod
@@ -86,7 +100,30 @@ class HashableRunner:
         To be used on clients
         """
         cls._start()
-        _LOGGER.info("Running client ...")
+        _LOGGER.info(
+            "Running client ...",
+            msgs=[{
+                'CWD': Dapr.CWD.as_posix(),
+                'IP': Dapr.IP,
+                'PORT': Dapr.PORT
+            }])
+
+    @classmethod
+    def make_dashboard(
+        cls, callable_name: str,
+    ) -> "gui.dashboard.DaprClientDashboard":
+        from .. import gui
+        return gui.dashboard.DaprClientDashboard(
+            title="Dapr Client Dashboard ...",
+            welcome_msg=gui.widget.Text(
+                f"Will connect to: {Dapr.IP}:{Dapr.PORT}"
+            ),
+            split_form=gui.form.DoubleSplitForm(
+                title=f"Double Split Form for `{callable_name}`...",
+                callable_name=callable_name,
+                allow_refresh=False,
+            ),
+        )
 
     @classmethod
     def launch(cls):
@@ -94,7 +131,13 @@ class HashableRunner:
         will launch jobs on server
         """
         cls._start()
-        _LOGGER.info("Launching jobs on server ...")
+        _LOGGER.info(
+            "Launching jobs on server ...",
+            msgs=[{
+                'CWD': Dapr.CWD.as_posix(),
+                'IP': Dapr.IP,
+                'PORT': Dapr.PORT
+            }])
 
     @classmethod
     def run(cls):
@@ -126,7 +169,7 @@ class HashableRunner:
         if Dapr.CWD is not None:
             raise e.code.CodingError(
                 msgs=["We do not expect `Dapr.CWD` to be set ...",
-                      f"Is set to: {Dapr.CWD}"]
+                      f"It is currently set to: {Dapr.CWD}"]
             )
         else:
             Dapr.CWD = pathlib.Path(sys.argv[0]).parent
@@ -140,6 +183,24 @@ class HashableRunner:
             )
         else:
             Dapr.MODE = _dapr_mode
+        # --------------------------------------------------- 02.03
+        # set IP
+        if Dapr.IP is not None:
+            raise e.code.CodingError(
+                msgs=["We do not expect `Dapr.IP` to be set ...",
+                      f"It is currently set to: {Dapr.IP}"]
+            )
+        if _dapr_mode in ['server', 'launch']:
+            Dapr.IP = str(socket.gethostbyname(socket.gethostname()))
+        elif _dapr_mode == 'client':
+            try:
+                Dapr.IP = os.environ['NXDI']
+            except KeyError:
+                raise e.code.NotAllowed(
+                    msgs=[f"Environment variable NXDI is not set ..."]
+                )
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
 
         # --------------------------------------------------- 03
         # launch task
