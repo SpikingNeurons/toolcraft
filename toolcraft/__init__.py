@@ -38,12 +38,12 @@ __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a4"
 _i = 0
-import pyarrow
 print("ppppppppppppppppppppppppppppppp", _i)
 _i += 1
 from . import settings
 print("ppppppppppppppppppppppppppppppp", _i)
 _i += 1
+import pyarrow
 from . import logger
 print("ppppppppppppppppppppppppppppppp", _i)
 _i += 1
