@@ -25,10 +25,9 @@ from .. import error as e
 from .. import logger
 from ..dapr import Dapr
 
-print("fff")
 _LOGGER = logger.get_logger()
-print("xxx")
 
+print("cccccccc")
 class DaprTool(Tool):
     """
     This will launch toolcraft in server mode on remote machines
@@ -100,3 +99,4 @@ class DaprTool(Tool):
             raise e.validation.NotAllowed(
                 msgs=[f"Unknown task_type: {task_type}"]
             )
+print("xxxxxxx")
