@@ -142,7 +142,7 @@ class Invoke:
     """
 
     Works for endpoint as given by
-    >>> hashable_receiver_invoke
+    >>> invoke_for_hashable
 
     This will be used as decorator for `m.HashableClass` methods which will be
     converted to dapr invoke commands on remote machines (needs configuration)
