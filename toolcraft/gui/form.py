@@ -22,7 +22,6 @@ class HashableMethodsRunnerForm(Form):
     """
 
     hashable: m.HashableClass
-    title: str
     # a single receiver will be used for all methods given by callable_names,
     # so we share it with `group_tag`
     # This allows to use keys in callable_names as tab bar
@@ -32,19 +31,12 @@ class HashableMethodsRunnerForm(Form):
     # todo: add icons for this
     info_button: bool
     callable_names: t.List[str]
-    use_collapsing_header: bool = True
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> t.Union[widget.Group, widget.CollapsingHeader]:
-        if self.use_collapsing_header:
-            _ret = widget.CollapsingHeader(label=self.title, default_open=True)
-            _gp = widget.Group()
-            _ret(_gp)
-        else:
-            _ret = widget.Group()
-            _gp = _ret
-            _gp(widget=widget.Text(default_value=self.title))
+    def form_fields_container(self) -> widget.Group:
+        _ret = widget.Group()
+        _gp = _ret
         _gp(widget=self.button_bar)
         _gp(widget=self.receiver)
         return _ret
@@ -104,8 +96,6 @@ class DoubleSplitForm(Form):
     + Buttons in left panel (can be grouped with group_key)
     + And responses are added to right receiver panel
     """
-
-    title: str
     callable_name: str
     allow_refresh: bool
 
@@ -132,7 +122,6 @@ class DoubleSplitForm(Form):
     @util.CacheResult
     def form_fields_container(self) -> widget.Group:
         _grp = widget.Group(horizontal=False)
-        _grp(widget=widget.Text(default_value=self.title))
         _grp(widget=self._table)
         return _grp
 

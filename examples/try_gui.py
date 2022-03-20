@@ -18,7 +18,9 @@ _LOGGER.info(msg="try gui ...")
 @dataclasses.dataclass
 class InfoForm(gui.form.Form):
 
-    label: str = "Text"
+    title: str = "Info"
+
+    collapsing_header_open: bool = False
 
     message: gui.widget.Text = gui.widget.Text(
         "This is topic 1. We will just add some bullet points below ...",
@@ -32,16 +34,13 @@ class InfoForm(gui.form.Form):
         "bullet 2 ...", bullet=True,
     )
 
-    @property
-    @util.CacheResult
-    def form_fields_container(self) -> gui.widget.CollapsingHeader:
-        return gui.widget.CollapsingHeader(label=self.label)
-
 
 @dataclasses.dataclass
 class Plotting(gui.form.Form):
 
-    label: str = "Plotting"
+    title: str = "Plotting"
+
+    collapsing_header_open: bool = False
 
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
@@ -59,11 +58,6 @@ class Plotting(gui.form.Form):
         label="This is sub plot ...",
         height=200, width=-1,
     )
-
-    @property
-    @util.CacheResult
-    def form_fields_container(self) -> gui.widget.CollapsingHeader:
-        return gui.widget.CollapsingHeader(label=self.label)
 
     def plot_some_examples(self):
         # ------------------------------------------------------- 01
@@ -147,7 +141,9 @@ class Plotting(gui.form.Form):
 @dataclasses.dataclass
 class PlottingWithUpdates(gui.form.Form):
 
-    label: str = "Plotting with updates"
+    title: str = "Plotting with updates"
+
+    collapsing_header_open: bool = False
 
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
@@ -158,10 +154,10 @@ class PlottingWithUpdates(gui.form.Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> gui.widget.CollapsingHeader:
-        _ch = gui.widget.CollapsingHeader(label=self.label)
-        _ch(self.create_button_bar())
-        return _ch
+    def form_fields_container(self) -> gui.widget.Group:
+        _grp = gui.widget.Group()
+        _grp(self.create_button_bar())
+        return _grp
 
     @property
     @util.CacheResult
@@ -334,13 +330,13 @@ class SimpleHashableClass(m.HashableClass):
     )
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
         return gui.form.HashableMethodsRunnerForm(
-            title=f"SimpleHashable method's runner form for {self.some_value}",
+            title=self.all_plots_gui_label,
             group_tag="simple",
             hashable=self,
             close_button=True,
             info_button=True,
             callable_names=["some_line_plot",  "some_scatter_plot"],
-            use_collapsing_header=True,
+            collapsing_header_open=True,
         )
 
     @m.UseMethodInForm(label_fmt="line")
@@ -390,40 +386,13 @@ class SimpleHashableClass(m.HashableClass):
         return _plot
 
 
-# @dataclasses.dataclass
-# class _SimpleHashablesMethodRunnerForm(gui.form.HashablesMethodRunnerForm):
-#
-#     title: str = "SimpleHashable's method runner form"
-#     callable_name: str = "some_line_plot"
-#     allow_refresh: bool = False
-#
-#     @property
-#     @util.CacheResult
-#     def form_fields_container(self) -> gui.widget.CollapsingHeader:
-#         _collapse_header = gui.widget.CollapsingHeader(label=self.title)
-#         _ret = super().form_fields_container
-#         _collapse_header(_ret)
-#         return _collapse_header
-#
-#
 @dataclasses.dataclass
-class DoubleSplitForm(gui.form.DoubleSplitForm):
+class MyDoubleSplitForm(gui.form.DoubleSplitForm):
 
     title: str = "Double split form ..."
     callable_name: str = "all_plots"
     allow_refresh: bool = False
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"try_gui.{cls.__name__}"
-
-    @property
-    @util.CacheResult
-    def form_fields_container(self) -> gui.widget.CollapsingHeader:
-        _collapse_header = gui.widget.CollapsingHeader(label=self.title)
-        _ret = super().form_fields_container
-        _collapse_header(_ret)
-        return _collapse_header
+    collapsing_header_open: bool = False
 
 
 @dataclasses.dataclass
@@ -441,7 +410,7 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic3: PlottingWithUpdates = PlottingWithUpdates()
 
-    topic4: gui.form.DoubleSplitForm = DoubleSplitForm()
+    topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
     # topic5: SimpleHashablesMethodsRunnerForm = SimpleHashablesMethodsRunnerForm(
     #     allow_refresh=True

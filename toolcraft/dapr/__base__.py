@@ -146,7 +146,7 @@ class HashableRunner:
             welcome_msg=gui.widget.Text(
                 f"Will connect to: {Dapr.IP}:{Dapr.PORT}"
             ),
-            add these log buttons in split_form
+            # add these log buttons in split_form or make a log form
             show_server_log=gui.widget.Button(
                 label="Server Log", callback=__Callback(),
                 user_data={"log_file": Dapr.CWD / "server.log"},
@@ -159,6 +159,7 @@ class HashableRunner:
                 title=f"...",
                 callable_name=callable_name,
                 allow_refresh=False,
+                collapsing_header_open=False,
             ),
         )
 

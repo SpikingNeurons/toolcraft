@@ -836,6 +836,8 @@ class Form(MovableWidget, abc.ABC):
       allow fields of form to be dynamically deleted ... but that is not the case now
       So do only if needed
     """
+    title: str
+    collapsing_header_open: bool
 
     @property
     @util.CacheResult
@@ -961,14 +963,18 @@ class Form(MovableWidget, abc.ABC):
 
     def build(self) -> t.Union[int, str]:
         # set internals
-        _form_fields_container = self.form_fields_container
-        _form_fields_container.internal.parent = self.parent
+        from .widget import CollapsingHeader
+
+        _ch = CollapsingHeader(
+            label=self.title, default_open=self.collapsing_header_open)
+        _ch(widget=self.form_fields_container)
+        _ch.internal.parent = self.parent
 
         # layout
         self.layout()
 
         # return
-        return _form_fields_container.build()
+        return _ch.build()
 
     def clear(self):
         _children_copy = self.form_fields_container.children.copy()

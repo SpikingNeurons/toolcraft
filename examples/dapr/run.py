@@ -31,13 +31,13 @@ class Test(m.HashableClass):
     @m.UseMethodInForm(label_fmt="all_plots_gui_label")
     def all_plots(self) -> "gui.form.HashableMethodsRunnerForm":
         return gui.form.HashableMethodsRunnerForm(
-            title=f"SimpleHashable method's runner form for {self.some_value}",
+            title=self.all_plots_gui_label,
             group_tag="simple",
             hashable=self,
             close_button=True,
             info_button=True,
             callable_names=["some_line_plot",  "some_scatter_plot"],
-            use_collapsing_header=True,
+            collapsing_header_open=True,
         )
 
     @m.UseMethodInForm(label_fmt="line")
