@@ -51,7 +51,6 @@ class SetThemeCallback(Callback):
                     f"unknown theme {_theme_str}"
                 ]
             )
-            raise
         # we change theme of parent to which this Combo widget is child
         sender.parent.bind_theme(theme=_theme)
 

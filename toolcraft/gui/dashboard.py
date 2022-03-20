@@ -422,14 +422,106 @@ class BasicDashboard(Dashboard):
 
 
 @dataclasses.dataclass
-class DaprClientDashboard(BasicDashboard):
+@m.RuleChecker(
+    things_to_be_cached=['split_form', 'console_form'],
+)
+class DaprClientDashboard(Dashboard):
 
-    theme_selector: widget.Combo = callback.SetThemeCallback.get_combo_widget()
+    subtitle: str = None
+    callable_name: str = None
 
-    welcome_msg: widget.Text = None
+    @property
+    @util.CacheResult
+    def primary_window(self) -> "window.Window":
+        from .window import Window
+        return Window(
+            label=self.title, width=self.width, height=self.height,
+        )
 
-    show_server_log: widget.Button = None
+    @property
+    @util.CacheResult
+    def split_form(self) -> form.DoubleSplitForm:
+        return form.DoubleSplitForm(
+            title=f"...",
+            callable_name=self.callable_name,
+            allow_refresh=False,
+            collapsing_header_open=False,
+        )
 
-    show_launch_log: widget.Button = None
+    @property
+    @util.CacheResult
+    def console_form(self) -> widget.CollapsingHeader:
 
-    split_form: form.DoubleSplitForm = None
+        _console_ch = widget.CollapsingHeader(default_open=False, label="Console")
+        _receiver = widget.Group()
+
+        @dataclasses.dataclass(frozen=True)
+        class __Callback(callback.Callback):
+            # noinspection PyMethodParameters
+            def fn(_self, sender: widget.Widget):
+                # noinspection PyTypeChecker
+                _file_name: str = sender.get_user_data()['file']
+                _receiver.clear()
+                _receiver(widget=widget.Text(default_value=_file_name))
+
+        _button_bar = widget.Group(horizontal=True)
+        _button_bar(
+            widget=widget.Button(
+                label="Launch Log",
+                callback=__Callback(),
+                user_data={"file": "launch.log"},
+            )
+        )
+        _button_bar(
+            widget=widget.Button(
+                label="Server Log",
+                callback=__Callback(),
+                user_data={"file": "server.log"},
+            )
+        )
+
+        _console_ch(widget=_button_bar)
+        _console_ch(widget=_receiver)
+
+        return _console_ch
+
+    def setup(self):
+        self.primary_window.setup(dash_board=self)
+
+    def layout(self):
+        # get _primary_window
+        _primary_window = self.primary_window
+
+        # add theme selector
+        _primary_window(
+            widget=callback.SetThemeCallback.get_combo_widget()
+        )
+
+        # add subtitle
+        _primary_window(
+            widget=widget.Text(default_value=self.subtitle,)
+        )
+
+        # add split form
+        _primary_window(widget=self.split_form)
+
+        # make console
+        _primary_window(widget=self.console_form)
+
+    def build(self):
+        self.primary_window.build()
+        # primary window dpg_id
+        _primary_window_dpg_id = self.primary_window.dpg_id
+        # set the things for primary window
+        dpg.set_primary_window(window=_primary_window_dpg_id, value=True)
+        # todo: have to figure out theme, font etc.
+        # themes.set_theme(theme="Dark Grey")
+        # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
+        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
+
+    def add_hashable(self, hashable: m.HashableClass, group_key: str = None,):
+        self.split_form.add(
+            hashable=hashable, group_key=group_key,
+        )
+
+

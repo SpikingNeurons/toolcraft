@@ -118,7 +118,7 @@ class HashableRunner(dapr.HashableRunner):
 
         # add hashables
         for _t in _TASKS:
-            _dashboard.split_form.add(hashable=_t, group_key=None)
+            _dashboard.add_hashable(hashable=_t, group_key=None)
 
         # run dashboard
         _dashboard.run()

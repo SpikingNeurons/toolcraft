@@ -143,24 +143,8 @@ class HashableRunner:
 
         return gui.dashboard.DaprClientDashboard(
             title="Dapr Client Dashboard ...",
-            welcome_msg=gui.widget.Text(
-                f"Will connect to: {Dapr.IP}:{Dapr.PORT}"
-            ),
-            # add these log buttons in split_form or make a log form
-            show_server_log=gui.widget.Button(
-                label="Server Log", callback=__Callback(),
-                user_data={"log_file": Dapr.CWD / "server.log"},
-            ),
-            show_launch_log=gui.widget.Button(
-                label="Launch Log", callback=__Callback(),
-                user_data={"log_file": Dapr.CWD / "launch.log"},
-            ),
-            split_form=gui.form.DoubleSplitForm(
-                title=f"...",
-                callable_name=callable_name,
-                allow_refresh=False,
-                collapsing_header_open=False,
-            ),
+            subtitle=f"Will connect to: {Dapr.IP}:{Dapr.PORT}",
+            callable_name=callable_name,
         )
 
     @classmethod
