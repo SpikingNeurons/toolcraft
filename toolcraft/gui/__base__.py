@@ -5,6 +5,7 @@ The rule for now is to
 """
 import abc
 import dataclasses
+import pathlib
 import typing as t
 import enum
 import dearpygui.dearpygui as dpg
@@ -568,7 +569,7 @@ class Widget(Dpg, abc.ABC):
 USER_DATA = t.Dict[
     str, t.Union[
         int, float, str, slice, tuple, list, dict, None,
-        m.FrozenEnum, m.HashableClass, Widget,
+        m.FrozenEnum, m.HashableClass, Widget, pathlib.Path,
     ]
 ]
 

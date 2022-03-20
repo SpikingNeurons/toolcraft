@@ -3,7 +3,9 @@ import pathlib
 import typing as t
 from dapr.ext.grpc import App
 import sys
+import dataclasses
 import socket
+import logging
 
 from .. import logger
 from .. import error as e
@@ -24,6 +26,21 @@ class Dapr:
     PORT: int = 50051
     APP = App()
     MODE: t.Literal['server', 'launch', 'client'] = None
+
+    @classmethod
+    def log_file(cls) -> pathlib.Path:
+        return cls.CWD / f"{cls.MODE}.log"
+
+    @classmethod
+    def setup_logging(cls):
+        logger.setup_logging(
+            propagate=False,
+            level=logging.NOTSET,
+            handlers=[
+                logger.get_rich_handler(),
+                logger.get_file_handler(cls.log_file())
+            ],
+        )
 
     def __new__(cls, *args, **kwargs):
         raise e.code.NotAllowed(msgs=[
@@ -113,13 +130,33 @@ class HashableRunner:
         cls, callable_name: str,
     ) -> "gui.dashboard.DaprClientDashboard":
         from .. import gui
+
+        @dataclasses.dataclass(frozen=True)
+        class __Callback(gui.callback.Callback):
+            # noinspection PyMethodParameters
+            def fn(_self, sender: gui.widget.Widget):
+                # noinspection PyTypeChecker
+                _log_file: pathlib.Path = sender.get_user_data()['log_file']
+                sender(
+                    gui.widget.P
+                )
+
         return gui.dashboard.DaprClientDashboard(
             title="Dapr Client Dashboard ...",
             welcome_msg=gui.widget.Text(
                 f"Will connect to: {Dapr.IP}:{Dapr.PORT}"
             ),
+            add these log buttons in split_form
+            show_server_log=gui.widget.Button(
+                label="Server Log", callback=__Callback(),
+                user_data={"log_file": Dapr.CWD / "server.log"},
+            ),
+            show_launch_log=gui.widget.Button(
+                label="Launch Log", callback=__Callback(),
+                user_data={"log_file": Dapr.CWD / "launch.log"},
+            ),
             split_form=gui.form.DoubleSplitForm(
-                title=f"Double Split Form for `{callable_name}`...",
+                title=f"...",
                 callable_name=callable_name,
                 allow_refresh=False,
             ),
@@ -165,7 +202,7 @@ class HashableRunner:
 
         # --------------------------------------------------- 02
         # --------------------------------------------------- 02.01
-        # find CWD
+        # set CWD
         if Dapr.CWD is not None:
             raise e.code.CodingError(
                 msgs=["We do not expect `Dapr.CWD` to be set ...",
@@ -201,6 +238,9 @@ class HashableRunner:
                 )
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
+        # --------------------------------------------------- 02.04
+        # set logging
+        Dapr.setup_logging()
 
         # --------------------------------------------------- 03
         # launch task

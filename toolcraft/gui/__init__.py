@@ -6,8 +6,8 @@ todo: Separate gui module in new package so that
 
 from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE, USER_DATA, Tag
 from ._enum import *
-from . import window
 from . import widget
+from . import window
 from . import table
 from . import plot
 from . import form

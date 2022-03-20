@@ -17,4 +17,6 @@ from ._auto import EnThemeCat
 from ._auto import EnCullMode
 # noinspection PyUnresolvedReferences
 from ._auto import EnNodeAttr
+# noinspection PyUnresolvedReferences
+from ._auto import EnMouseButton
 # auto pk; end <<<

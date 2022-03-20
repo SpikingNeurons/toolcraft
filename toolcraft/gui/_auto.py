@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.4.0
->> Time: 2022-03-03 21:52
+>> Time: 2022-03-20 04:07
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -106,6 +106,15 @@ class EnNodeAttr(Enum, enum.Enum):
     Input = dpg.mvNode_Attr_Input  # 0
     Output = dpg.mvNode_Attr_Output  # 1
     Static = dpg.mvNode_Attr_Static  # 2
+
+
+class EnMouseButton(Enum, enum.Enum):
+
+    Left = dpg.mvMouseButton_Left  # 0
+    Middle = dpg.mvMouseButton_Middle  # 2
+    Right = dpg.mvMouseButton_Right  # 1
+    X1 = dpg.mvMouseButton_X1  # 3
+    X2 = dpg.mvMouseButton_X2  # 4
 
 
 @dataclasses.dataclass

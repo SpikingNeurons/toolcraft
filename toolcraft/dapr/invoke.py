@@ -23,6 +23,35 @@ import json
 from . import Dapr
 from .. import marshalling as m
 from .. import error as e
+from .. import logger
+
+
+@Dapr.APP.method('server_invoke')
+def server_invoke(request: InvokeMethodRequest) -> bytes:
+    """
+    Method to track server related stuff
+
+    todo: for log make a stream or poll this method from client to pull backend logs ...
+      as of mow things are manual and happens when we click
+    """
+
+    # get from request
+    print("ssssssssssssssss")
+    print(request)
+    _metadata = request.metadata
+    _data = json.loads(request.data)
+
+    print(_data)
+    print(logger.TMP_LOG_FILE.read_text())
+
+    # check if CWD set
+    if Dapr.CWD is None:
+        raise e.code.CodingError(
+            msgs=["Dapr.CWD should be set by now ..."]
+        )
+
+    return b'server...invoke'
+
 
 
 @Dapr.APP.method('hashable_receiver_invoke')

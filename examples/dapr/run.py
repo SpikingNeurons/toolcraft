@@ -12,7 +12,7 @@ from toolcraft import dapr, logger
 try:
     from toolcraft import gui
 except ImportError:
-    ...
+    gui = None
 
 
 _LOGGER = logger.get_logger()

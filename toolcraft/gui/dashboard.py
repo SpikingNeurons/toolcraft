@@ -131,7 +131,7 @@ class Dashboard(m.YamlRepr, abc.ABC):
             if v is None:
                 raise e.validation.NotAllowed(
                     msgs=[
-                        f"Please supply value for field {f_name} in class "
+                        f"Please supply value for field `{f_name}` in class "
                         f"{self.__class__}"
                     ]
                 )
@@ -427,5 +427,9 @@ class DaprClientDashboard(BasicDashboard):
     theme_selector: widget.Combo = callback.SetThemeCallback.get_combo_widget()
 
     welcome_msg: widget.Text = None
+
+    show_server_log: widget.Button = None
+
+    show_launch_log: widget.Button = None
 
     split_form: form.DoubleSplitForm = None

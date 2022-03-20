@@ -65,6 +65,9 @@ _SKIP_METHODS = [
     dpg.set_axis_limits_auto,  # XAxis.set_limits_auto, YAxis.set_limits_auto
     dpg.set_axis_ticks,  # XAxis.set_ticks, YAxis.set_ticks
 
+    # handled by window.PopUp
+    dpg.popup,
+
     # handled methods by Widget.__setattr__
     dpg.set_item_callback,
     dpg.set_item_drag_callback,
@@ -255,7 +258,7 @@ _SKIP_METHODS = [
     dpg.get_file_dialog_info,  # maybe class method for FileDialog widget
     dpg.load_image, dpg.lock_mutex, dpg.mutex, dpg.unlock_mutex,
     dpg.pop_container_stack, dpg.push_container_stack,
-    dpg.popup, dpg.add_char_remap,
+    dpg.add_char_remap,
     dpg.render_dearpygui_frame, dpg.reorder_items,
     dpg.sample_colormap, dpg.save_init_file,
     dpg.set_global_font_scale, dpg.set_frame_callback, dpg.set_exit_callback,
@@ -881,6 +884,15 @@ from .__base__ import USER_DATA
         if bool(_NEEDED_ENUMS):
             raise Exception("Should be empty ... only call once")
         self.all_dpg_defs = self.fetch_all_dpg_defs()
+
+        # some enums are not detected via doc string sso we add it here
+        # noinspection PyTypeChecker
+        _enum_defs = [
+            self.fetch_enum_def_from_fn_param_doc(
+                method=None, param_name=None,
+                param_doc="  Union[int, str]  mvMouseButton_*  "
+            ),
+        ]
 
     @staticmethod
     def fetch_enum_def_from_fn_param_doc(
