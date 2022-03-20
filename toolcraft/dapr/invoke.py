@@ -10,52 +10,23 @@ Some things to do based on this
     Service invocation (advanced)	Invoke service by using custom protobuf message
 
 """
-import pathlib
-import socket
 import enum
 import pickle
 import zlib
-import shutil
 import typing as t
 from dapr.ext.grpc import InvokeMethodRequest, InvokeMethodResponse
 import json
 
 from . import Dapr
-from .. import marshalling as m
 from .. import error as e
+from .. import marshalling as m
 from .. import logger
 
-
-@Dapr.APP.method('server_invoke')
-def server_invoke(request: InvokeMethodRequest) -> bytes:
-    """
-    Method to track server related stuff
-
-    todo: for log make a stream or poll this method from client to pull backend logs ...
-      as of mow things are manual and happens when we click
-    """
-
-    # get from request
-    print("ssssssssssssssss")
-    print(request)
-    _metadata = request.metadata
-    _data = json.loads(request.data)
-
-    print(_data)
-    print(logger.TMP_LOG_FILE.read_text())
-
-    # check if CWD set
-    if Dapr.CWD is None:
-        raise e.code.CodingError(
-            msgs=["Dapr.CWD should be set by now ..."]
-        )
-
-    return b'server...invoke'
+_LOGGER = logger.get_logger()
 
 
-
-@Dapr.APP.method('hashable_receiver_invoke')
-def hashable_receiver_invoke(request: InvokeMethodRequest) -> bytes:
+@Dapr.APP.method('invoke_for_hashable')
+def invoke_for_hashable(request: InvokeMethodRequest) -> bytes:
     """
 
     Why pickle ??
@@ -94,14 +65,14 @@ def hashable_receiver_invoke(request: InvokeMethodRequest) -> bytes:
             _hashable_yaml.touch(exist_ok=False)
             _hashable_yaml.write_text(_data['hashable_yaml'])
         else:
-            return HashableReceiverResponse(
+            return Response(
                 status=Status.NEEDS_HASHABLE_YAML,
                 message="Please send hashable yaml ..."
             ).get_bytes()
 
     # load hashable
     print(_hashable_yaml)
-    return HashableReceiverResponse(
+    return Response(
         status=Status.STARTED, message="Just started"
     ).get_bytes()
 
@@ -113,7 +84,7 @@ class Status(enum.Enum):
     COMPLETED = enum.auto()
 
 
-class HashableReceiverResponse(t.NamedTuple):
+class Response(t.NamedTuple):
     """
     Note that we cannot add more fields to this tuple and might not be needed as
       simple design is best ...
@@ -163,12 +134,16 @@ class HashableReceiverResponse(t.NamedTuple):
         return zlib.compress(pickle.dumps(self))
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "HashableReceiverResponse":
+    def from_bytes(cls, data: bytes) -> "Response":
         return pickle.loads(zlib.decompress(data))
 
 
 class Invoke:
     """
+
+    Works for endpoint as given by
+    >>> hashable_receiver_invoke
+
     This will be used as decorator for `m.HashableClass` methods which will be
     converted to dapr invoke commands on remote machines (needs configuration)
 
@@ -181,4 +156,15 @@ class Invoke:
       note that hash should be for the user code who uses this library and not for
       toolcraft ...
     """
-    ...
+
+    def __init__(self):
+        ...
+
+    def __call__(self, fn: t.Callable):
+        # wrap fn
+        def _fn(_self: m.HashableClass, **kwargs):
+            print("ppppppppppppppppppppppppppp")
+            print(_self.yaml(), kwargs)
+            return fn(_self, **kwargs)
+
+        return _fn

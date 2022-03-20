@@ -14,6 +14,7 @@ from . import asset
 from . import widget
 from . import callback
 from . import form
+from .. import dapr
 from .. import logger
 
 
@@ -453,30 +454,31 @@ class DaprClientDashboard(Dashboard):
     def console_form(self) -> widget.CollapsingHeader:
 
         _console_ch = widget.CollapsingHeader(default_open=False, label="Console")
-        _receiver = widget.Group()
+        _receiver = widget.Text(default_value="...")
+        _server = dapr.Dapr.SERVER
 
         @dataclasses.dataclass(frozen=True)
         class __Callback(callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: widget.Widget):
                 # noinspection PyTypeChecker
-                _file_name: str = sender.get_user_data()['file']
-                _receiver.clear()
-                _receiver(widget=widget.Text(default_value=_file_name))
+                _dapr_mode: str = sender.get_user_data()['dapr_mode']
+                _receiver.default_value = _server.read_logs(
+                    num_bytes=2048, dapr_mode=_dapr_mode)
 
         _button_bar = widget.Group(horizontal=True)
         _button_bar(
             widget=widget.Button(
                 label="Launch Log",
                 callback=__Callback(),
-                user_data={"file": "launch.log"},
+                user_data={"dapr_mode": "launch"},
             )
         )
         _button_bar(
             widget=widget.Button(
                 label="Server Log",
                 callback=__Callback(),
-                user_data={"file": "server.log"},
+                user_data={"dapr_mode": "server"},
             )
         )
 

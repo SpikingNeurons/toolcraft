@@ -81,7 +81,7 @@ class DaprTool(Tool):
                 f"dapr run "
                 f"--app-id hashable-receiver "
                 f"--app-protocol grpc "
-                f"--app-port {Dapr.PORT} "
+                f"--app-port {Dapr.GRPC_PORT} "
                 f"python {py_script.absolute().as_posix()} server"
             )
         elif task_type == 'client':

@@ -78,7 +78,7 @@ class UseMethodInForm:
         """
         self.label_fmt = label_fmt
 
-    def __call__(self, fn):
+    def __call__(self, fn: t.Callable):
         """
         todo: add signature test to confirm that Widget or any of its subclass
           is returned by fn
@@ -1957,7 +1957,6 @@ class HashableClass(YamlRepr, abc.ABC):
             f"marshalling class.",
             f"Instead use `.yaml()` method.",
         ])
-        return ""
 
     def __eq__(self, other):
         # todo: find better ways with marshalling class and when full

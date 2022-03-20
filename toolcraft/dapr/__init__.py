@@ -4,4 +4,4 @@ todo explore asyncio: courotines, futures, streams
 
 """
 from .__base__ import Dapr, HashableRunner
-from .invoke import Invoke, HashableReceiverResponse
+from .invoke import Invoke, Response

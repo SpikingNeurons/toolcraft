@@ -1,11 +1,12 @@
 import os
+import enum
 import pathlib
 import typing as t
 from dapr.ext.grpc import App
 import sys
-import dataclasses
 import socket
 import logging
+from dapr.clients import DaprClient
 
 from .. import logger
 from .. import error as e
@@ -15,21 +16,56 @@ from .. import marshalling as m
 if False:
     # noinspection PyUnresolvedReferences
     from .. import gui
+    from . import helper
 
 _LOGGER = logger.get_logger()
+
+
+class DaprMode(enum.Enum):
+    server = enum.auto()
+    launch = enum.auto()
+    client = enum.auto()
+
+    @property
+    def log_file(self) -> pathlib.Path:
+        return Dapr.CWD / f"{self.name}.log"
+
+    @classmethod
+    def from_str(cls, dapr_mode: str) -> "DaprMode":
+        try:
+            return cls[dapr_mode]
+        except KeyError:
+            raise e.code.CodingError(
+                msgs=[f"unknown dapr mode {dapr_mode}",
+                      {"allowed strs": [_.name for _ in cls]}]
+            )
 
 
 class Dapr:
 
     CWD: pathlib.Path = None
     IP: str = None
-    PORT: int = 50051
+    GRPC_PORT: int = 50051
+    HTTP_PORT: int = 3500
     APP = App()
-    MODE: t.Literal['server', 'launch', 'client'] = None
+    MODE: DaprMode = None
+    SERVER: "helper.Server" = None
 
     @classmethod
-    def log_file(cls) -> pathlib.Path:
-        return cls.CWD / f"{cls.MODE}.log"
+    def as_dict(cls) -> t.Dict:
+        return {
+            'CWD': Dapr.CWD.as_posix(),
+            'IP': Dapr.IP,
+            'GRPC_PORT': Dapr.GRPC_PORT,
+            'HTTP_PORT': Dapr.HTTP_PORT,
+            'MODE': Dapr.MODE.name,
+        }
+
+    @classmethod
+    def get_client(cls) -> DaprClient:
+        return DaprClient(
+            address=f"{cls.IP}:{cls.GRPC_PORT}"
+        )
 
     @classmethod
     def setup_logging(cls):
@@ -38,7 +74,7 @@ class Dapr:
             level=logging.NOTSET,
             handlers=[
                 logger.get_rich_handler(),
-                logger.get_file_handler(cls.log_file())
+                logger.get_file_handler(cls.MODE.log_file)
             ],
         )
 
@@ -104,12 +140,8 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Dapr server started ...",
-            msgs=[{
-                'CWD': Dapr.CWD.as_posix(),
-                'IP': Dapr.IP,
-                'PORT': Dapr.PORT
-            }])
-        Dapr.APP.run(Dapr.PORT)
+            msgs=[Dapr.as_dict()])
+        Dapr.APP.run(Dapr.GRPC_PORT)
 
     @classmethod
     def client(cls):
@@ -119,33 +151,7 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Running client ...",
-            msgs=[{
-                'CWD': Dapr.CWD.as_posix(),
-                'IP': Dapr.IP,
-                'PORT': Dapr.PORT
-            }])
-
-    @classmethod
-    def make_dashboard(
-        cls, callable_name: str,
-    ) -> "gui.dashboard.DaprClientDashboard":
-        from .. import gui
-
-        @dataclasses.dataclass(frozen=True)
-        class __Callback(gui.callback.Callback):
-            # noinspection PyMethodParameters
-            def fn(_self, sender: gui.widget.Widget):
-                # noinspection PyTypeChecker
-                _log_file: pathlib.Path = sender.get_user_data()['log_file']
-                sender(
-                    gui.widget.P
-                )
-
-        return gui.dashboard.DaprClientDashboard(
-            title="Dapr Client Dashboard ...",
-            subtitle=f"Will connect to: {Dapr.IP}:{Dapr.PORT}",
-            callable_name=callable_name,
-        )
+            msgs=[Dapr.as_dict()])
 
     @classmethod
     def launch(cls):
@@ -155,11 +161,18 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Launching jobs on server ...",
-            msgs=[{
-                'CWD': Dapr.CWD.as_posix(),
-                'IP': Dapr.IP,
-                'PORT': Dapr.PORT
-            }])
+            msgs=[Dapr.as_dict()])
+
+    @classmethod
+    def make_dashboard(
+        cls, callable_name: str,
+    ) -> "gui.dashboard.DaprClientDashboard":
+        from .. import gui
+        return gui.dashboard.DaprClientDashboard(
+            title="Dapr Client Dashboard ...",
+            subtitle=f"Will connect to: {Dapr.IP}:{Dapr.GRPC_PORT}",
+            callable_name=callable_name,
+        )
 
     @classmethod
     def run(cls):
@@ -179,11 +192,7 @@ class HashableRunner:
                     "Only pass one arg", sys.argv[1:]
                 ]
             )
-        _dapr_mode = sys.argv[1]
-        e.validation.ShouldBeOneOf(
-            value=_dapr_mode, values=['server', 'launch', 'client'],
-            msgs=["Supply correct task type ..."]
-        ).raise_if_failed()
+        _dapr_mode = DaprMode.from_str(dapr_mode=sys.argv[1])
 
         # --------------------------------------------------- 02
         # --------------------------------------------------- 02.01
@@ -201,7 +210,7 @@ class HashableRunner:
         if Dapr.MODE is not None:
             raise e.code.CodingError(
                 msgs=["We do not expect `Dapr.MODE` to be set ...",
-                      f"Is set to: {Dapr.MODE}"]
+                      f"Is currently set to: {Dapr.MODE}"]
             )
         else:
             Dapr.MODE = _dapr_mode
@@ -212,9 +221,9 @@ class HashableRunner:
                 msgs=["We do not expect `Dapr.IP` to be set ...",
                       f"It is currently set to: {Dapr.IP}"]
             )
-        if _dapr_mode in ['server', 'launch']:
+        if _dapr_mode in [DaprMode.server, DaprMode.launch]:
             Dapr.IP = str(socket.gethostbyname(socket.gethostname()))
-        elif _dapr_mode == 'client':
+        elif _dapr_mode is DaprMode.client:
             try:
                 Dapr.IP = os.environ['NXDI']
             except KeyError:
@@ -224,16 +233,26 @@ class HashableRunner:
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
         # --------------------------------------------------- 02.04
+        # set reference to server ... only for client mode
+        if Dapr.SERVER is not None:
+            raise e.code.CodingError(
+                msgs=["We do not expect `Dapr.SERVER` to be set ...",
+                      f"It is currently set to: {Dapr.SERVER}"]
+            )
+        if _dapr_mode is DaprMode.client:
+            from . import helper
+            Dapr.SERVER = helper.Server()
+        # --------------------------------------------------- 02.05
         # set logging
         Dapr.setup_logging()
 
         # --------------------------------------------------- 03
         # launch task
-        if _dapr_mode == 'launch':
+        if _dapr_mode is DaprMode.launch:
             cls.launch()
-        elif _dapr_mode == "server":
+        elif _dapr_mode is DaprMode.server:
             cls.server()
-        elif _dapr_mode == "client":
+        elif _dapr_mode is DaprMode.client:
             cls.client()
         else:
-            raise e.validation.NotAllowed(msgs=[f"Unsupported task_type {_dapr_mode}"])
+            raise e.code.ShouldNeverHappen(msgs=[f"Unknown {_dapr_mode}"])

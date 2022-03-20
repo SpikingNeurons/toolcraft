@@ -2,7 +2,6 @@ import dataclasses
 import typing as t
 
 from .. import util
-from .. import error as e
 from .. import marshalling as m
 from .__base__ import Form
 from .. import gui
