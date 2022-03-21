@@ -23,7 +23,7 @@ from .. import marshalling as m
 from .. import richy
 from .. import error as e
 from .. import logger
-from ..dapr import Dapr
+from ..dapr import DAPR
 
 _LOGGER = logger.get_logger()
 
@@ -76,4 +76,4 @@ class DaprTool(Tool):
         )
 
         # final call to dapr sidecar
-        Dapr.dapr_launch(dapr_mode=dapr_mode, py_script=py_script)
+        DAPR.dapr_launch(py_script=py_script)

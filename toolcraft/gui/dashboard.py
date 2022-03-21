@@ -456,7 +456,7 @@ class DaprClientDashboard(Dashboard):
         _console_ch = widget.CollapsingHeader(default_open=False, label="Console")
         _receiver = widget.Text(default_value="...")
         # note only available for `dapr.DaprMode.client`
-        _server = dapr.Dapr.SERVER
+        _server = dapr.DAPR.server
 
         @dataclasses.dataclass(frozen=True)
         class __Callback(callback.Callback):

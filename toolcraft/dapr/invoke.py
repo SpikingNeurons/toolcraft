@@ -17,7 +17,7 @@ import typing as t
 from dapr.ext.grpc import InvokeMethodRequest, InvokeMethodResponse
 import json
 
-from . import Dapr, DaprMode
+from . import DaprMode, DAPR
 from .. import error as e
 from .. import marshalling as m
 from .. import logger
@@ -25,19 +25,7 @@ from .. import logger
 _LOGGER = logger.get_logger()
 
 
-def invoke_for_hashable_on_client(request: "Request") -> t.Any:
-    with Dapr.get_client() as _client:
-
-        _response = _client.invoke_method(
-            app_id=Dapr.APP_ID_SERVER,
-            method_name="invoke_for_hashable_on_server",
-            data=request.get_bytes(),
-        )
-
-        print(_response)
-
-
-@Dapr.APP.method('invoke_for_hashable_on_server')
+@DAPR.app.method('invoke_for_hashable_on_server')
 def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     """
 
@@ -63,14 +51,14 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     print(_data)
 
     # check if CWD set
-    if Dapr.CWD is None:
+    if DAPR.cwd is None:
         raise e.code.CodingError(
             msgs=["Dapr.CWD should be set by now ..."]
         )
 
     # confirm if server knows about requested hashable
     _hex_hash = _data['hex_hash']
-    _hashable_yaml = Dapr.CWD / _hex_hash / ".yaml"
+    _hashable_yaml = DAPR.cwd / _hex_hash / ".yaml"
     if not _hashable_yaml.exists():
         if 'hashable_yaml' in _data.keys():
             _hashable_yaml.parent.mkdir(parents=True, exist_ok=True)
@@ -87,6 +75,20 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     return Response(
         status=Status.STARTED, message="Just started"
     ).get_bytes()
+
+
+def invoke_for_hashable_on_client(request: "Request") -> t.Any:
+    with DAPR.client as _client:
+
+        _response = _client.invoke_method(
+            # app_id=DAPR.APP_ID_SERVER,
+            # method_name="invoke_for_hashable_on_server",
+            app_id='hashable-server',
+            method_name='invoke_for_hashable_on_server',
+            data=request.get_bytes(),
+        )
+
+        print(_response)
 
 
 class Status(enum.Enum):
@@ -195,7 +197,7 @@ class Invoke:
         def _fn(_self: m.HashableClass, **kwargs):
             print("ppppppppppppppppppppppppppp")
             print(_self.yaml(), kwargs)
-            if Dapr.MODE is DaprMode.client:
+            if DAPR.MODE is DaprMode.client:
                 return invoke_for_hashable_on_client(
                     request=Request(
                         yaml=_self.yaml(),
@@ -203,12 +205,12 @@ class Invoke:
                         kwargs=kwargs,
                     )
                 )
-            elif Dapr.MODE is DaprMode.server:
+            elif DAPR.MODE is DaprMode.server:
                 return fn(_self, **kwargs)
             else:
                 e.code.NotAllowed(
                     msgs=[
-                        f"DaprMode {Dapr.MODE} is not supported by decorator "
+                        f"DaprMode {DAPR.MODE} is not supported by decorator "
                         f"{self.__class__}"
                     ]
                 )

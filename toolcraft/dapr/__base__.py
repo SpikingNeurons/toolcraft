@@ -1,15 +1,18 @@
+import dataclasses
 import os
 import enum
 import pathlib
 import typing as t
-from dapr.ext.grpc import App
 import sys
 import socket
 import logging
-from dapr.clients import DaprClient
+import dapr
+from dapr import clients
+from dapr.ext.grpc import App
 
 from .. import logger
 from .. import error as e
+from .. import util
 from .. import marshalling as m
 
 # noinspection PyUnreachableCode
@@ -21,14 +24,14 @@ if False:
 _LOGGER = logger.get_logger()
 
 
-class DaprMode(enum.Enum):
+class DaprMode(m.FrozenEnum, enum.Enum):
     server = enum.auto()
     launch = enum.auto()
     client = enum.auto()
 
     @property
-    def log_file(self) -> pathlib.Path:
-        return Dapr.CWD / f"{self.name}.log"
+    def log_file_name(self) -> str:
+        return f"{self.name}.log"
 
     @classmethod
     def from_str(cls, dapr_mode: str) -> "DaprMode":
@@ -41,46 +44,104 @@ class DaprMode(enum.Enum):
             )
 
 
-class Dapr:
+@dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=['app', 'server', 'log_file'],
+    things_not_to_be_cached=['client'],
+)
+class _Dapr(m.HashableClass):
+    """
+    Refer for dapr settings
+    >>> dapr.conf.global_settings
+    >>> dapr.conf.settings
+    """
 
-    CWD: pathlib.Path = None
-    IP: str = None
-    GRPC_PORT: int = 50051
-    HTTP_PORT: int = 3500
-    APP = App()
-    MODE: DaprMode = None
-    SERVER: "helper.Server" = None
-    APP_ID_SERVER = "hashable-server"
-    APP_ID_CLIENT = "hashable-client"
+    # our settings
+    PY_SCRIPT: str
+    MODE: DaprMode
+    APP_ID_SERVER: str = "hashable-server"
+    APP_ID_CLIENT: str = "hashable-client"
 
-    @classmethod
-    def as_dict(cls) -> t.Dict:
-        return {
-            'CWD': Dapr.CWD.as_posix(),
-            'IP': Dapr.IP,
-            'GRPC_PORT': Dapr.GRPC_PORT,
-            'HTTP_PORT': Dapr.HTTP_PORT,
-            'MODE': Dapr.MODE.name,
-        }
+    # dapr related settings
+    DAPR_RUNTIME_HOST: str = '127.0.0.1'
+    HTTP_APP_PORT: int = 3000
+    GRPC_APP_PORT: int = 3010
+    DAPR_API_TOKEN: str = None
+    DAPR_HTTP_PORT: int = 3500
+    DAPR_GRPC_PORT: int = 50001
+    DAPR_API_VERSION: str = 'v1.0'
+    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'http'
+    DAPR_HTTP_TIMEOUT_SECONDS: int = 60
 
-    @classmethod
-    def dapr_launch(cls, dapr_mode: str, py_script: pathlib.Path):
+    @property
+    def cwd(self) -> pathlib.Path:
+        return pathlib.Path(self.PY_SCRIPT).parent
 
-        _dapr_mode = DaprMode.from_str(dapr_mode=dapr_mode)
+    @property
+    @util.CacheResult
+    def app(self) -> "App":
+        return App()
+
+    @property
+    def client(self) -> "clients.DaprClient":
+        if self.MODE is not DaprMode.client:
+            raise e.code.NotAllowed(
+                msgs=[f"Use client property only for {DaprMode.client}"]
+            )
+        return clients.DaprClient(
+            # f"{self.DAPR_RUNTIME_HOST}:{self.DAPR_GRPC_PORT}"
+        )
+
+    @property
+    @util.CacheResult
+    def log_file(self) -> pathlib.Path:
+        return self.cwd / self.MODE.log_file_name
+
+    @property
+    @util.CacheResult
+    def server(self) -> "helper.Server":
+        from . import helper
+        if self.MODE is not DaprMode.client:
+            raise e.code.NotAllowed(
+                msgs=[f"Use server property only for {DaprMode.client}"]
+            )
+        return helper.Server()
+
+    def init(self):
+
+        # sync settings
+        self.sync_with_dapr_settings()
+
+        # setup logging
+        logger.setup_logging(
+            propagate=False,
+            level=logging.INFO,
+            handlers=[
+                logger.get_rich_handler(),
+                logger.get_stream_handler(),
+                logger.get_file_handler(self.log_file),
+            ],
+        )
+
+    def dapr_launch(self, py_script: pathlib.Path):
+
+        _dapr_mode = self.MODE
 
         if _dapr_mode is DaprMode.server:
             os.system(
                 f"dapr run "
-                f"--app-id {Dapr.APP_ID_SERVER} "
+                f"--app-id {DAPR.APP_ID_SERVER} "
                 f"--app-protocol grpc "
-                f"--app-port {Dapr.GRPC_PORT} "
+                f"--app-port {DAPR.DAPR_GRPC_PORT} "
+                f"-- "
                 f"python {py_script.absolute().as_posix()} server"
             )
         elif _dapr_mode is DaprMode.client:
             os.system(
                 f"dapr run "
-                f"--app-id {Dapr.APP_ID_CLIENT} "
+                f"--app-id {DAPR.APP_ID_CLIENT} "
                 f"--app-protocol grpc "
+                f"-- "
                 f"python {py_script.absolute().as_posix()} client"
             )
         elif _dapr_mode is DaprMode.launch:
@@ -92,30 +153,69 @@ class Dapr:
                 msgs=[f"Unsupported dapr mode: {_dapr_mode}"]
             )
 
-    @classmethod
-    def get_client(cls) -> DaprClient:
-        print(f"{cls.IP}:{cls.GRPC_PORT}", ".....................")
-        return DaprClient(
-            address=f"{cls.IP}:{cls.GRPC_PORT}"
-        )
+    def sync_with_dapr_settings(self):
+        # todo: this is not elegant but dapr python-sdk is still not mature ...
+        #  track things when version > 1.5.0 and update
+        _settings = dapr.conf.settings
+        _settings.DAPR_RUNTIME_HOST = self.DAPR_RUNTIME_HOST
+        _settings.HTTP_APP_PORT = self.HTTP_APP_PORT
+        _settings.GRPC_APP_PORT = self.GRPC_APP_PORT
+        _settings.DAPR_API_TOKEN = self.DAPR_API_TOKEN
+        _settings.DAPR_HTTP_PORT = self.DAPR_HTTP_PORT
+        _settings.DAPR_GRPC_PORT = self.DAPR_GRPC_PORT
+        _settings.DAPR_API_VERSION = self.DAPR_API_VERSION
+        _settings.DAPR_API_METHOD_INVOCATION_PROTOCOL = \
+            self.DAPR_API_METHOD_INVOCATION_PROTOCOL
+        _settings.DAPR_HTTP_TIMEOUT_SECONDS = self.DAPR_HTTP_TIMEOUT_SECONDS
 
     @classmethod
-    def setup_logging(cls):
-        logger.setup_logging(
-            propagate=False,
-            level=logging.NOTSET,
-            handlers=[
-                logger.get_rich_handler(),
-                logger.get_file_handler(cls.MODE.log_file),
-            ],
-        )
+    def make(cls) -> "_Dapr":
+        # --------------------------------------------------- 01
+        # if no arg passed assume client mode i.e. client
+        if len(sys.argv) == 1:
+            sys.argv.append('client')
+        # validation
+        if len(sys.argv) != 2:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "Only pass one arg", sys.argv[1:]
+                ]
+            )
 
-    def __new__(cls, *args, **kwargs):
-        raise e.code.NotAllowed(msgs=[
-            f"This class is meant to be used to hold class "
-            f"variables only",
-            f"Do not try to create instance of {cls} ...",
-        ])
+        # --------------------------------------------------- 02
+        # get some vars
+        # --------------------------------------------------- 02.01
+        # get cwd
+        _py_script = sys.argv[0]
+        # --------------------------------------------------- 02.02
+        # get mode
+        _dapr_mode = DaprMode.from_str(dapr_mode=sys.argv[1])
+        # --------------------------------------------------- 02.03
+        # get dapr_runtime_host
+        if _dapr_mode in [DaprMode.server, DaprMode.launch]:
+            _dapr_runtime_host = str(socket.gethostbyname(socket.gethostname()))
+        elif _dapr_mode is DaprMode.client:
+            try:
+                _dapr_runtime_host = os.environ['NXDI']
+                if _dapr_runtime_host == "localhost":
+                    # todo: find why this happens and if it can be done more elegantly
+                    #   Check why this does not resolve to 127.0.0.1
+                    # as localhost resolves to 127.0.0.1 and when SERVER is running
+                    # on localhost the IP is actually different
+                    _dapr_runtime_host = str(socket.gethostbyname(socket.gethostname()))
+            except KeyError:
+                raise e.code.NotAllowed(
+                    msgs=[f"Environment variable NXDI is not set ..."]
+                )
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+        # --------------------------------------------------- 02.05
+        # create _Dapr instance and return
+        return _Dapr(PY_SCRIPT=_py_script, MODE=_dapr_mode,
+                     DAPR_RUNTIME_HOST=_dapr_runtime_host)
+
+
+DAPR = _Dapr.make()  # type: _Dapr
 
 
 class HashableRunner:
@@ -172,8 +272,8 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Dapr server started ...",
-            msgs=[Dapr.as_dict()])
-        Dapr.APP.run(Dapr.GRPC_PORT)
+            msgs=[DAPR.as_dict()])
+        DAPR.app.run(DAPR.DAPR_GRPC_PORT)
 
     @classmethod
     def client(cls):
@@ -183,7 +283,7 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Running client ...",
-            msgs=[Dapr.as_dict()])
+            msgs=[DAPR.as_dict()])
 
     @classmethod
     def launch(cls):
@@ -193,7 +293,7 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Launching jobs on server ...",
-            msgs=[Dapr.as_dict()])
+            msgs=[DAPR.as_dict()])
 
     @classmethod
     def make_dashboard(
@@ -202,7 +302,7 @@ class HashableRunner:
         from .. import gui
         return gui.dashboard.DaprClientDashboard(
             title="Dapr Client Dashboard ...",
-            subtitle=f"Will connect to: {Dapr.IP}:{Dapr.GRPC_PORT}",
+            subtitle=f"Will connect to: {DAPR.DAPR_RUNTIME_HOST}:{DAPR.DAPR_GRPC_PORT}",
             callable_name=callable_name,
         )
 
@@ -212,80 +312,9 @@ class HashableRunner:
         This method should be called from __main__ of the script as it decides what
         to call next
         """
-
-        # --------------------------------------------------- 01
-        # if no arg passed assume client mode i.e. client
-        if len(sys.argv) == 1:
-            sys.argv.append('client')
-        # validation
-        if len(sys.argv) != 2:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "Only pass one arg", sys.argv[1:]
-                ]
-            )
-        _dapr_mode = DaprMode.from_str(dapr_mode=sys.argv[1])
-
-        # --------------------------------------------------- 02
-        # --------------------------------------------------- 02.01
-        # set CWD
-        if Dapr.CWD is not None:
-            raise e.code.CodingError(
-                msgs=["We do not expect `Dapr.CWD` to be set ...",
-                      f"It is currently set to: {Dapr.CWD}"]
-            )
-        else:
-            Dapr.CWD = pathlib.Path(sys.argv[0]).parent
-        _LOGGER.info(msg="Dapr current working dir set to: ", msgs=[str(Dapr.CWD)])
-        # --------------------------------------------------- 02.02
-        # set dapr mode
-        if Dapr.MODE is not None:
-            raise e.code.CodingError(
-                msgs=["We do not expect `Dapr.MODE` to be set ...",
-                      f"Is currently set to: {Dapr.MODE}"]
-            )
-        else:
-            Dapr.MODE = _dapr_mode
-        # --------------------------------------------------- 02.03
-        # set IP
-        if Dapr.IP is not None:
-            raise e.code.CodingError(
-                msgs=["We do not expect `Dapr.IP` to be set ...",
-                      f"It is currently set to: {Dapr.IP}"]
-            )
-        if _dapr_mode in [DaprMode.server, DaprMode.launch]:
-            Dapr.IP = str(socket.gethostbyname(socket.gethostname()))
-        elif _dapr_mode is DaprMode.client:
-            try:
-                Dapr.IP = os.environ['NXDI']
-                if Dapr.IP == "localhost":
-                    # todo: find why this happens and if it can be done more elegantly
-                    #   Check why this does not resolve to 127.0.0.1
-                    # as localhost resolves to 127.0.0.1 and when SERVER is running
-                    # on localhost the IP is actually different
-                    Dapr.IP = str(socket.gethostbyname(socket.gethostname()))
-            except KeyError:
-                raise e.code.NotAllowed(
-                    msgs=[f"Environment variable NXDI is not set ..."]
-                )
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[])
-        # --------------------------------------------------- 02.04
-        # set reference to server ... only for client mode
-        if Dapr.SERVER is not None:
-            raise e.code.CodingError(
-                msgs=["We do not expect `Dapr.SERVER` to be set ...",
-                      f"It is currently set to: {Dapr.SERVER}"]
-            )
-        if _dapr_mode is DaprMode.client:
-            from . import helper
-            Dapr.SERVER = helper.Server()
-        # --------------------------------------------------- 02.05
-        # set logging
-        Dapr.setup_logging()
-
-        # --------------------------------------------------- 03
+        global DAPR
         # launch task
+        _dapr_mode = DAPR.MODE
         if _dapr_mode is DaprMode.launch:
             cls.launch()
         elif _dapr_mode is DaprMode.server:

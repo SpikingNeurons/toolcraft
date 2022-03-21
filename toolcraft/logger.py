@@ -219,6 +219,31 @@ def get_rich_handler() -> RichHandler:
     return _h
 
 
+def get_stream_handler() -> logging.StreamHandler:
+
+    # -------------------------------------------------------- 01
+    # get handler
+    # this can make multiple log files for now stick up with simple things
+    # _h = logging.handlers.RotatingFileHandler()
+    _h = logging.StreamHandler(stream=sys.stdout)
+
+    # -------------------------------------------------------- 02
+    # set level
+    _h.setLevel(level=logging.NOTSET)
+
+    # -------------------------------------------------------- 03
+    # set formatter
+    # _h.setFormatter(fmt=get_formatter_for_file_handler())
+
+    # -------------------------------------------------------- 04
+    # add filters
+    # _h.addFilter(AddLoggingMetaFilter())
+
+    # -------------------------------------------------------- 05
+    # return
+    return _h
+
+
 def get_file_handler(log_file: pathlib.Path) -> logging.FileHandler:
     """
     per handler do
@@ -492,7 +517,8 @@ setup_logging(
     level=logging.NOTSET,
     handlers=[
         get_rich_handler(),
-        get_file_handler(pathlib.Path("tmp.log"))
+        get_stream_handler(),
+        get_file_handler(pathlib.Path("tmp.log")),
     ],
 )
 
