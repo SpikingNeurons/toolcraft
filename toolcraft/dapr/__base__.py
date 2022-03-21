@@ -70,7 +70,7 @@ class _Dapr(m.HashableClass):
     DAPR_HTTP_PORT: int = 3500
     DAPR_GRPC_PORT: int = 50001
     DAPR_API_VERSION: str = 'v1.0'
-    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'grpc'
+    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'http'
     DAPR_HTTP_TIMEOUT_SECONDS: int = 60
 
     @property
