@@ -70,7 +70,7 @@ class _Dapr(m.HashableClass):
     DAPR_HTTP_PORT: int = 3500
     DAPR_GRPC_PORT: int = 50001
     DAPR_API_VERSION: str = 'v1.0'
-    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'http'
+    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'grpc'
     DAPR_HTTP_TIMEOUT_SECONDS: int = 60
 
     @property
@@ -157,7 +157,7 @@ class _Dapr(m.HashableClass):
         # todo: this is not elegant but dapr python-sdk is still not mature ...
         #  track things when version > 1.5.0 and update
         _settings = dapr.conf.settings
-        _settings.DAPR_RUNTIME_HOST = self.DAPR_RUNTIME_HOST
+        # _settings.DAPR_RUNTIME_HOST = self.DAPR_RUNTIME_HOST
         _settings.HTTP_APP_PORT = self.HTTP_APP_PORT
         _settings.GRPC_APP_PORT = self.GRPC_APP_PORT
         _settings.DAPR_API_TOKEN = self.DAPR_API_TOKEN
@@ -202,7 +202,9 @@ class _Dapr(m.HashableClass):
                     #   Check why this does not resolve to 127.0.0.1
                     # as localhost resolves to 127.0.0.1 and when SERVER is running
                     # on localhost the IP is actually different
-                    _dapr_runtime_host = str(socket.gethostbyname(socket.gethostname()))
+                    # _dapr_runtime_host = \
+                    #     str(socket.gethostbyname(socket.gethostname()))
+                    _dapr_runtime_host = "127.0.0.1"
             except KeyError:
                 raise e.code.NotAllowed(
                     msgs=[f"Environment variable NXDI is not set ..."]
@@ -273,7 +275,7 @@ class HashableRunner:
         _LOGGER.info(
             "Dapr server started ...",
             msgs=[DAPR.as_dict()])
-        DAPR.app.run(DAPR.DAPR_GRPC_PORT)
+        DAPR.app.run(app_port=DAPR.DAPR_GRPC_PORT)
 
     @classmethod
     def client(cls):

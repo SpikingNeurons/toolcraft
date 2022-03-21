@@ -45,10 +45,15 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     # get from request
     print("ggggggggggggggggggggggggggggggggggggggggggg")
     print(request)
+    print("ggggggggggggggggggggggggggggggggggggggggggg11")
     _metadata = request.metadata
+    print("ggggggggggggggggggggggggggggggggggggggggg222gg")
+    return b"receiver response ..."
     _data = json.loads(request.data)
+    print("gggggggggggggggggggggggggggggggggggggggg333ggg")
 
     print(_data)
+    print("ggggggggggggggggggggggggggggggggggggggg444gggg")
 
     # check if CWD set
     if DAPR.cwd is None:
@@ -81,10 +86,8 @@ def invoke_for_hashable_on_client(request: "Request") -> t.Any:
     with DAPR.client as _client:
 
         _response = _client.invoke_method(
-            # app_id=DAPR.APP_ID_SERVER,
-            # method_name="invoke_for_hashable_on_server",
-            app_id='hashable-server',
-            method_name='invoke_for_hashable_on_server',
+            app_id=DAPR.APP_ID_SERVER,
+            method_name="invoke_for_hashable_on_server",
             data=request.get_bytes(),
         )
 
