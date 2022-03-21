@@ -455,6 +455,7 @@ class DaprClientDashboard(Dashboard):
 
         _console_ch = widget.CollapsingHeader(default_open=False, label="Console")
         _receiver = widget.Text(default_value="...")
+        # note only available for `dapr.DaprMode.client`
         _server = dapr.Dapr.SERVER
 
         @dataclasses.dataclass(frozen=True)
@@ -471,14 +472,14 @@ class DaprClientDashboard(Dashboard):
             widget=widget.Button(
                 label="Launch Log",
                 callback=__Callback(),
-                user_data={"dapr_mode": "launch"},
+                user_data={"dapr_mode": dapr.DaprMode.launch.name},
             )
         )
         _button_bar(
             widget=widget.Button(
                 label="Server Log",
                 callback=__Callback(),
-                user_data={"dapr_mode": "server"},
+                user_data={"dapr_mode": dapr.DaprMode.server.name},
             )
         )
 

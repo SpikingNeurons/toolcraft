@@ -1771,14 +1771,11 @@ class HashableClass(YamlRepr, abc.ABC):
         from field values if possible so that there is unique for all
         possible instances (Example check PreparedData names. Note that
         `hex_hash` will anyways be unique for a instance.
-
-        todo: If you want to use some grouping we need to figure out group_by
-          property .... check FileGroup
         """
         return self.hex_hash
 
     @property
-    def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
+    def group_by(self) -> t.List[str]:
         """
         As self.name is hex_hash or else a name which is unique to all
         instances of that class we need some convenient name that can be used
@@ -1798,7 +1795,7 @@ class HashableClass(YamlRepr, abc.ABC):
 
         """
         # default is not to use grouping
-        return None
+        return []
 
     @property
     @util.CacheResult

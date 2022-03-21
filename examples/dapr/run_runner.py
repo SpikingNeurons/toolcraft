@@ -20,5 +20,5 @@ if __name__ == '__main__':
     _file = "run.py"
     # noinspection PyTypeChecker
     dapr.DaprTool.command_fn(
-        pathlib.Path(_file), task_type=sys.argv[1]
+        pathlib.Path(_file), dapr_mode=sys.argv[1]
     )

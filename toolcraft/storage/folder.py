@@ -137,7 +137,7 @@ class Folder(StorageHashable):
         that hashable class
         """
         if isinstance(self.for_hashable, str):
-            return None
+            return []
         return self.for_hashable.group_by
 
     def create(self) -> Path:

@@ -17,7 +17,7 @@ import typing as t
 from dapr.ext.grpc import InvokeMethodRequest, InvokeMethodResponse
 import json
 
-from . import Dapr
+from . import Dapr, DaprMode
 from .. import error as e
 from .. import marshalling as m
 from .. import logger
@@ -25,8 +25,20 @@ from .. import logger
 _LOGGER = logger.get_logger()
 
 
-@Dapr.APP.method('invoke_for_hashable')
-def invoke_for_hashable(request: InvokeMethodRequest) -> bytes:
+def invoke_for_hashable_on_client(request: "Request") -> t.Any:
+    with Dapr.get_client() as _client:
+
+        _response = _client.invoke_method(
+            app_id=Dapr.APP_ID_SERVER,
+            method_name="invoke_for_hashable_on_server",
+            data=request.get_bytes(),
+        )
+
+        print(_response)
+
+
+@Dapr.APP.method('invoke_for_hashable_on_server')
+def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     """
 
     Why pickle ??
@@ -86,7 +98,7 @@ class Status(enum.Enum):
 
 class Response(t.NamedTuple):
     """
-    Note that we cannot add more fields to this tuple and might not be needed as
+    Note that we don't want to add more fields to this tuple and might not be needed as
       simple design is best ...
 
     todo: DaprClient.invoke_method data kwarg is used to send kwargs for hashable method
@@ -138,11 +150,29 @@ class Response(t.NamedTuple):
         return pickle.loads(zlib.decompress(data))
 
 
+class Request(t.NamedTuple):
+    """
+    Note that we don't want to add more fields to this tuple and might not be needed as
+      simple design is best ...
+    """
+    yaml: str
+    fn_name: str
+    kwargs: t.Dict
+
+    def get_bytes(self) -> bytes:
+        return zlib.compress(pickle.dumps(self))
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "Request":
+        return pickle.loads(zlib.decompress(data))
+
+
 class Invoke:
     """
 
     Works for endpoint as given by
-    >>> invoke_for_hashable
+    >>> invoke_for_hashable_on_client
+    >>> invoke_for_hashable_on_server
 
     This will be used as decorator for `m.HashableClass` methods which will be
     converted to dapr invoke commands on remote machines (needs configuration)
@@ -165,6 +195,22 @@ class Invoke:
         def _fn(_self: m.HashableClass, **kwargs):
             print("ppppppppppppppppppppppppppp")
             print(_self.yaml(), kwargs)
-            return fn(_self, **kwargs)
+            if Dapr.MODE is DaprMode.client:
+                return invoke_for_hashable_on_client(
+                    request=Request(
+                        yaml=_self.yaml(),
+                        fn_name=fn.__name__,
+                        kwargs=kwargs,
+                    )
+                )
+            elif Dapr.MODE is DaprMode.server:
+                return fn(_self, **kwargs)
+            else:
+                e.code.NotAllowed(
+                    msgs=[
+                        f"DaprMode {Dapr.MODE} is not supported by decorator "
+                        f"{self.__class__}"
+                    ]
+                )
 
         return _fn

@@ -37,7 +37,7 @@ class DaprTool(Tool):
 
     @classmethod
     def command_fn(
-        cls, py_script: pathlib.Path, task_type: t.Literal['serve', 'view', 'launch'],
+        cls, py_script: pathlib.Path, dapr_mode: t.Literal['serve', 'view', 'launch'],
     ):
 
         # todo: add git version check for toolcraft and any library that uses toolcraft
@@ -72,30 +72,8 @@ class DaprTool(Tool):
         # log details
         _LOGGER.info(
             msg=f"Calling tool {cls.tool_name()} for",
-            msgs=[{'py_script': py_script.as_posix(), 'task_type': task_type}]
+            msgs=[{'py_script': py_script.as_posix(), 'dapr_mode': dapr_mode}]
         )
 
         # final call to dapr sidecar
-        if task_type == 'server':
-            os.system(
-                f"dapr run "
-                f"--app-id hashable-receiver "
-                f"--app-protocol grpc "
-                f"--app-port {Dapr.GRPC_PORT} "
-                f"python {py_script.absolute().as_posix()} server"
-            )
-        elif task_type == 'client':
-            os.system(
-                f"dapr run "
-                f"--app-id hashable-caller "
-                f"--app-protocol grpc "
-                f"python {py_script.absolute().as_posix()} client"
-            )
-        elif task_type == 'launch':
-            os.system(
-                f"python {py_script.absolute().as_posix()} launch"
-            )
-        else:
-            raise e.validation.NotAllowed(
-                msgs=[f"Unknown task_type: {task_type}"]
-            )
+        Dapr.dapr_launch(dapr_mode=dapr_mode, py_script=py_script)

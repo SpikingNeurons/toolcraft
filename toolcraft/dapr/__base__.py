@@ -50,6 +50,8 @@ class Dapr:
     APP = App()
     MODE: DaprMode = None
     SERVER: "helper.Server" = None
+    APP_ID_SERVER = "hashable-server"
+    APP_ID_CLIENT = "hashable-client"
 
     @classmethod
     def as_dict(cls) -> t.Dict:
@@ -62,7 +64,37 @@ class Dapr:
         }
 
     @classmethod
+    def dapr_launch(cls, dapr_mode: str, py_script: pathlib.Path):
+
+        _dapr_mode = DaprMode.from_str(dapr_mode=dapr_mode)
+
+        if _dapr_mode is DaprMode.server:
+            os.system(
+                f"dapr run "
+                f"--app-id {Dapr.APP_ID_SERVER} "
+                f"--app-protocol grpc "
+                f"--app-port {Dapr.GRPC_PORT} "
+                f"python {py_script.absolute().as_posix()} server"
+            )
+        elif _dapr_mode is DaprMode.client:
+            os.system(
+                f"dapr run "
+                f"--app-id {Dapr.APP_ID_CLIENT} "
+                f"--app-protocol grpc "
+                f"python {py_script.absolute().as_posix()} client"
+            )
+        elif _dapr_mode is DaprMode.launch:
+            os.system(
+                f"python {py_script.absolute().as_posix()} launch"
+            )
+        else:
+            raise e.code.NotSupported(
+                msgs=[f"Unsupported dapr mode: {_dapr_mode}"]
+            )
+
+    @classmethod
     def get_client(cls) -> DaprClient:
+        print(f"{cls.IP}:{cls.GRPC_PORT}", ".....................")
         return DaprClient(
             address=f"{cls.IP}:{cls.GRPC_PORT}"
         )
@@ -74,7 +106,7 @@ class Dapr:
             level=logging.NOTSET,
             handlers=[
                 logger.get_rich_handler(),
-                logger.get_file_handler(cls.MODE.log_file)
+                logger.get_file_handler(cls.MODE.log_file),
             ],
         )
 
@@ -226,6 +258,12 @@ class HashableRunner:
         elif _dapr_mode is DaprMode.client:
             try:
                 Dapr.IP = os.environ['NXDI']
+                if Dapr.IP == "localhost":
+                    # todo: find why this happens and if it can be done more elegantly
+                    #   Check why this does not resolve to 127.0.0.1
+                    # as localhost resolves to 127.0.0.1 and when SERVER is running
+                    # on localhost the IP is actually different
+                    Dapr.IP = str(socket.gethostbyname(socket.gethostname()))
             except KeyError:
                 raise e.code.NotAllowed(
                     msgs=[f"Environment variable NXDI is not set ..."]

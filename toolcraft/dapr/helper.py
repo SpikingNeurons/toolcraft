@@ -19,6 +19,9 @@ class Server(m.HashableClass):
     """
     Use this class to query or retrieve any stats from server ...
     """
+    @property
+    def group_by(self) -> t.List[str]:
+        return ["server"]
 
     @invoke.Invoke()
     def read_logs(self, num_bytes: int, dapr_mode: str) -> str:

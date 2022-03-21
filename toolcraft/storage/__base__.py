@@ -58,18 +58,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         """
         # ------------------------------------------------------------- 01
         # get group for split strs that dictates grouping
-        if isinstance(self.group_by, list):
-            _split_strs = self.group_by
-        elif isinstance(self.group_by, str):
-            _split_strs = [self.group_by]
-        elif self.group_by is None:
-            _split_strs = []
-        else:
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    f"unsupported group_by value {self.group_by}"
-                ]
-            )
+        _split_strs = self.group_by
 
         # ------------------------------------------------------------- 02
         # get path from parent_folder if uses_parent_folder
@@ -307,7 +296,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     "Expecting file_system to be valid ..."
                 ]
             ).raise_if_failed()
-        
+
         # ----------------------------------------------------------- 04
         # if path exists check if it is a folder
         if self.path.exists():
