@@ -64,13 +64,14 @@ class _Dapr(m.HashableClass):
 
     # dapr related settings
     DAPR_RUNTIME_HOST: str = '127.0.0.1'
-    HTTP_APP_PORT: int = 3000
-    GRPC_APP_PORT: int = 3010
+    APP_PORT: int = 2008
+    # HTTP_APP_PORT: int = 3000
+    # GRPC_APP_PORT: int = 3010
+    # DAPR_HTTP_PORT: int = 3500
+    # DAPR_GRPC_PORT: int = 50001
     DAPR_API_TOKEN: str = None
-    DAPR_HTTP_PORT: int = 3500
-    DAPR_GRPC_PORT: int = 50001
     DAPR_API_VERSION: str = 'v1.0'
-    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'http'
+    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'grpc'
     DAPR_HTTP_TIMEOUT_SECONDS: int = 60
 
     @property
@@ -157,12 +158,12 @@ class _Dapr(m.HashableClass):
         # todo: this is not elegant but dapr python-sdk is still not mature ...
         #  track things when version > 1.5.0 and update
         _settings = dapr.conf.settings
-        # _settings.DAPR_RUNTIME_HOST = self.DAPR_RUNTIME_HOST
-        _settings.HTTP_APP_PORT = self.HTTP_APP_PORT
-        _settings.GRPC_APP_PORT = self.GRPC_APP_PORT
+        _settings.DAPR_RUNTIME_HOST = self.DAPR_RUNTIME_HOST
+        # _settings.HTTP_APP_PORT = self.HTTP_APP_PORT
+        # _settings.GRPC_APP_PORT = self.GRPC_APP_PORT
+        # _settings.DAPR_HTTP_PORT = self.DAPR_HTTP_PORT
+        # _settings.DAPR_GRPC_PORT = self.DAPR_GRPC_PORT
         _settings.DAPR_API_TOKEN = self.DAPR_API_TOKEN
-        _settings.DAPR_HTTP_PORT = self.DAPR_HTTP_PORT
-        _settings.DAPR_GRPC_PORT = self.DAPR_GRPC_PORT
         _settings.DAPR_API_VERSION = self.DAPR_API_VERSION
         _settings.DAPR_API_METHOD_INVOCATION_PROTOCOL = \
             self.DAPR_API_METHOD_INVOCATION_PROTOCOL
@@ -275,7 +276,7 @@ class HashableRunner:
         _LOGGER.info(
             "Dapr server started ...",
             msgs=[DAPR.as_dict()])
-        DAPR.app.run(app_port=DAPR.DAPR_GRPC_PORT)
+        DAPR.app.run(app_port=DAPR.APP_PORT)
 
     @classmethod
     def client(cls):
