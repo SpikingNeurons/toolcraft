@@ -48,6 +48,7 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     print("ggggggggggggggggggggggggggggggggggggggggggg11")
     _metadata = request.metadata
     print("ggggggggggggggggggggggggggggggggggggggggg222gg")
+    raise Exception("success ... so that we can log")
     return b"receiver response ..."
     _data = json.loads(request.data)
     print("gggggggggggggggggggggggggggggggggggggggg333ggg")
