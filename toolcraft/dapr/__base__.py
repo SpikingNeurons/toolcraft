@@ -133,7 +133,7 @@ class _Dapr(m.HashableClass):
                 f"dapr run "
                 f"--app-id {DAPR.APP_ID_SERVER} "
                 f"--app-protocol grpc "
-                f"--app-port {DAPR.DAPR_GRPC_PORT} "
+                f"--app-port {DAPR.APP_PORT} "
                 f"-- "
                 f"python {py_script.absolute().as_posix()} server"
             )
@@ -142,6 +142,7 @@ class _Dapr(m.HashableClass):
                 f"dapr run "
                 f"--app-id {DAPR.APP_ID_CLIENT} "
                 f"--app-protocol grpc "
+                f"--app-port {DAPR.APP_PORT} "
                 f"-- "
                 f"python {py_script.absolute().as_posix()} client"
             )
