@@ -100,12 +100,12 @@ class _Dapr(m.HashableClass):
         return App()
 
     @property
-    def client(self) -> "clients.DaprClient":
+    def client(self) -> "clients.DaprGrpcClient":
         if self.MODE is not DaprMode.client:
             raise e.code.NotAllowed(
                 msgs=[f"Use client property only for {DaprMode.client}"]
             )
-        return clients.DaprClient(
+        return clients.DaprGrpcClient(
             # f"{self.DAPR_RUNTIME_HOST}:{self.DAPR_GRPC_PORT}"
         )
 

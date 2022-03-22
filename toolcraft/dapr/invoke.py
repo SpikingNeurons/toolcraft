@@ -10,6 +10,7 @@ Some things to do based on this
     Service invocation (advanced)	Invoke service by using custom protobuf message
 
 """
+import datetime
 import enum
 import pickle
 import zlib
@@ -84,8 +85,10 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
 
 
 def invoke_for_hashable_on_client(request: "Request") -> t.Any:
+    _start = datetime.datetime.now()
+    print("...................................11111111111111111111111111111")
     with DAPR.client as _client:
-
+        print("...................................222222222222222222222", (datetime.datetime.now() - _start).total_seconds())
         # noinspection PyTypeChecker
         _response = _client.invoke_method(
             app_id=DAPR.APP_ID,
@@ -97,6 +100,7 @@ def invoke_for_hashable_on_client(request: "Request") -> t.Any:
             #     ('key1', 'value1')
             # ),
         )
+        print("...................................33333333333333333", (datetime.datetime.now() - _start).total_seconds())
 
         print(_response)
 
