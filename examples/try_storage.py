@@ -656,7 +656,7 @@ def try_arrow_storage(gcs: bool):
     ts.results_folder.delete(force=True)
 
 
-def try_file_storage():
+def try_file_storage(gcs: bool):
     # create simple file group inside folder
     print("---------------------------------------------------------01")
     print("Create folder0=Folder0(...)")
@@ -711,8 +711,12 @@ def try_main():
     # try_metainfo_file()
     # try_creating_folders()
     # try_arrow_storage(gcs=False)
-    try_arrow_storage(gcs=True)
-    # try_file_storage()
+    # try_file_storage(gcs=False)
+
+    # todo: support gcs ... tests can work only without firewall
+    # try_arrow_storage(gcs=True)
+    # try_file_storage(gcs=True)
+
     _path.rmdir()
 
 
