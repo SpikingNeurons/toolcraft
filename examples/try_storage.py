@@ -705,13 +705,13 @@ def try_main():
         util.io_path_delete(_path, force=True)
     _path.mkdir(parents=True, exist_ok=True)
     _path = _path.resolve()
-    try_hashable_ser()
-    try_download_file()
-    try_auto_hashed_download_file()
-    try_metainfo_file()
-    try_creating_folders()
-    try_arrow_storage(gcs=False)
-    try_file_storage(gcs=False)
+    # try_hashable_ser()
+    # try_download_file()
+    # try_auto_hashed_download_file()
+    # try_metainfo_file()
+    # try_creating_folders()
+    # try_arrow_storage(gcs=False)
+    # try_file_storage(gcs=False)
 
     # todo: support gcs ... tests can work only without firewall
     #   loading fs and credentials for gcs is done ... only other things like adding
