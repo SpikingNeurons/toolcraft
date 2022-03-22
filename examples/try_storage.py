@@ -714,7 +714,7 @@ def try_main():
     try_file_storage(gcs=False)
 
     # todo: support gcs ... tests can work only without firewall
-    #   loading fs and credentials for gcs is done ... only other things adding
+    #   loading fs and credentials for gcs is done ... only other things like adding
     #   bucket information to Path is pending ... can be done easily
     # try_arrow_storage(gcs=True)
     # try_file_storage(gcs=True)
