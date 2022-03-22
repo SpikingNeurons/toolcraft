@@ -59,20 +59,36 @@ class _Dapr(m.HashableClass):
     # our settings
     PY_SCRIPT: str
     MODE: DaprMode
-    APP_ID_SERVER: str = "hashable-server"
-    APP_ID_CLIENT: str = "hashable-client"
+    SERVER_IP: str
 
-    # dapr related settings
-    DAPR_RUNTIME_HOST: str = '127.0.0.1'
+    # dapr related settings ... dapr run --help
+    APP_ID: str
+    APP_MAX_CONCURRENCY: int = -1
     APP_PORT: int = 2008
+    APP_PROTOCOL: t.Literal['gRPC', 'HTTP'] = 'HTTP'
+    APP_SSL: bool = False
+    # COMPONENTS_PATH: str = ...
+    # CONFIG: str = ...
+    DAPR_GRPC_PORT: int = 2019
+    DAPR_HTTP_MAX_REQUEST_SIZE: int = -1
+    DAPR_HTTP_PORT: int = 2014
+    ENABLE_PROFILING: bool = False
+    LOG_LEVEL: t.Literal['debug', 'info', 'warn', 'error', 'fatal', 'panic'] = 'info'
+    METRICS_PORT: int = -1
+    PLACEMENT_HOST_ADDRESS: str = "localhost"
+    PROFILE_PORT: int = -1
+    # UNIX_DOMAIN_SOCKET: str = ...
+    # LOG_AS_JSON: bool = ...
+
+    # DAPR_RUNTIME_HOST: str = '127.0.0.1'
     # HTTP_APP_PORT: int = 3000
     # GRPC_APP_PORT: int = 3010
     # DAPR_HTTP_PORT: int = 3500
     # DAPR_GRPC_PORT: int = 50001
-    DAPR_API_TOKEN: str = None
-    DAPR_API_VERSION: str = 'v1.0'
-    DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'grpc'
-    DAPR_HTTP_TIMEOUT_SECONDS: int = 60
+    # DAPR_API_TOKEN: str = None
+    # DAPR_API_VERSION: str = 'v1.0'
+    # DAPR_API_METHOD_INVOCATION_PROTOCOL: t.Literal['grpc', 'http'] = 'grpc'
+    # DAPR_HTTP_TIMEOUT_SECONDS: int = 60
 
     @property
     def cwd(self) -> pathlib.Path:
@@ -125,24 +141,36 @@ class _Dapr(m.HashableClass):
         )
 
     def dapr_launch(self, py_script: pathlib.Path):
-
+        # get mode
         _dapr_mode = self.MODE
 
+        # make cmd args
+        _dapr_args = []
+        for f_name in self.dataclass_field_names:
+            if f_name in ['PY_SCRIPT', 'MODE', 'SERVER_IP']:
+                continue
+            _new_f_name = f"--{f_name.replace('_', '-').lower()}"
+            f_value = getattr(self, f_name)
+            if isinstance(f_value, bool):
+                if not f_value:
+                    continue
+                else:
+                    _dapr_args.append(_new_f_name)
+            else:
+                _dapr_args.append(f"{_new_f_name} {f_value}")
+
+        # launch on cmd
         if _dapr_mode is DaprMode.server:
             os.system(
                 f"dapr run "
-                f"--app-id {DAPR.APP_ID_SERVER} "
-                f"--app-protocol grpc "
-                f"--app-port {DAPR.APP_PORT} "
+                f"{' '.join(_dapr_args)} "
                 f"-- "
                 f"python {py_script.absolute().as_posix()} server"
             )
         elif _dapr_mode is DaprMode.client:
             os.system(
                 f"dapr run "
-                f"--app-id {DAPR.APP_ID_CLIENT} "
-                f"--app-protocol grpc "
-                f"--app-port {DAPR.APP_PORT} "
+                f"{' '.join(_dapr_args)} "
                 f"-- "
                 f"python {py_script.absolute().as_posix()} client"
             )
@@ -159,16 +187,16 @@ class _Dapr(m.HashableClass):
         # todo: this is not elegant but dapr python-sdk is still not mature ...
         #  track things when version > 1.5.0 and update
         _settings = dapr.conf.settings
-        _settings.DAPR_RUNTIME_HOST = self.DAPR_RUNTIME_HOST
+        # _settings.DAPR_RUNTIME_HOST = self.DAPR_RUNTIME_HOST
         # _settings.HTTP_APP_PORT = self.HTTP_APP_PORT
         # _settings.GRPC_APP_PORT = self.GRPC_APP_PORT
         # _settings.DAPR_HTTP_PORT = self.DAPR_HTTP_PORT
         # _settings.DAPR_GRPC_PORT = self.DAPR_GRPC_PORT
-        _settings.DAPR_API_TOKEN = self.DAPR_API_TOKEN
-        _settings.DAPR_API_VERSION = self.DAPR_API_VERSION
-        _settings.DAPR_API_METHOD_INVOCATION_PROTOCOL = \
-            self.DAPR_API_METHOD_INVOCATION_PROTOCOL
-        _settings.DAPR_HTTP_TIMEOUT_SECONDS = self.DAPR_HTTP_TIMEOUT_SECONDS
+        # _settings.DAPR_API_TOKEN = self.DAPR_API_TOKEN
+        # _settings.DAPR_API_VERSION = self.DAPR_API_VERSION
+        # _settings.DAPR_API_METHOD_INVOCATION_PROTOCOL = \
+        #     self.DAPR_API_METHOD_INVOCATION_PROTOCOL
+        # _settings.DAPR_HTTP_TIMEOUT_SECONDS = self.DAPR_HTTP_TIMEOUT_SECONDS
 
     @classmethod
     def make(cls) -> "_Dapr":
@@ -193,20 +221,20 @@ class _Dapr(m.HashableClass):
         # get mode
         _dapr_mode = DaprMode.from_str(dapr_mode=sys.argv[1])
         # --------------------------------------------------- 02.03
-        # get dapr_runtime_host
+        # get server_ip
         if _dapr_mode in [DaprMode.server, DaprMode.launch]:
-            _dapr_runtime_host = str(socket.gethostbyname(socket.gethostname()))
+            _server_ip = str(socket.gethostbyname(socket.gethostname()))
         elif _dapr_mode is DaprMode.client:
             try:
-                _dapr_runtime_host = os.environ['NXDI']
-                if _dapr_runtime_host == "localhost":
+                _server_ip = os.environ['NXDI']
+                if _server_ip == "localhost":
                     # todo: find why this happens and if it can be done more elegantly
                     #   Check why this does not resolve to 127.0.0.1
                     # as localhost resolves to 127.0.0.1 and when SERVER is running
                     # on localhost the IP is actually different
                     # _dapr_runtime_host = \
                     #     str(socket.gethostbyname(socket.gethostname()))
-                    _dapr_runtime_host = "127.0.0.1"
+                    _server_ip = "127.0.0.1"
             except KeyError:
                 raise e.code.NotAllowed(
                     msgs=[f"Environment variable NXDI is not set ..."]
@@ -214,9 +242,16 @@ class _Dapr(m.HashableClass):
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
         # --------------------------------------------------- 02.05
+        # get _app_id
+        _app_id = f"hashable"
+        # --------------------------------------------------- 03
         # create _Dapr instance and return
-        return _Dapr(PY_SCRIPT=_py_script, MODE=_dapr_mode,
-                     DAPR_RUNTIME_HOST=_dapr_runtime_host)
+        return _Dapr(
+            PY_SCRIPT=_py_script,
+            MODE=_dapr_mode,
+            SERVER_IP=_server_ip,
+            APP_ID=_app_id,
+        )
 
 
 DAPR = _Dapr.make()  # type: _Dapr
@@ -306,7 +341,7 @@ class HashableRunner:
         from .. import gui
         return gui.dashboard.DaprClientDashboard(
             title="Dapr Client Dashboard ...",
-            subtitle=f"Will connect to: {DAPR.DAPR_RUNTIME_HOST}:{DAPR.DAPR_GRPC_PORT}",
+            subtitle=f"Will connect to: {DAPR.SERVER_IP}:{DAPR.APP_PORT}",
             callable_name=callable_name,
         )
 

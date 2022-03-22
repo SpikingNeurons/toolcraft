@@ -87,7 +87,7 @@ def invoke_for_hashable_on_client(request: "Request") -> t.Any:
     with DAPR.client as _client:
 
         _response = _client.invoke_method(
-            app_id=DAPR.APP_ID_SERVER,
+            app_id=DAPR.APP_ID,
             method_name="invoke_for_hashable_on_server",
             data=request.get_bytes(),
         )
