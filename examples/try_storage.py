@@ -249,6 +249,13 @@ class TestStorageResultsFolder(s.Folder):
 
 
 @dataclasses.dataclass(frozen=True)
+class TestStorageResultsFolderGcs(s.Folder):
+    @property
+    def file_system(self) -> str:
+        return "GCS"
+
+
+@dataclasses.dataclass(frozen=True)
 class TestStorage(m.HashableClass):
     a: int
     b: float
@@ -288,18 +295,15 @@ class TestStorage(m.HashableClass):
             ),
         }[key]
 
-    # @s.dec.FileGroup()
-    def fg(self, file_group_maker: "s.dec.FileGroupMaker" = None) -> s.FileGroupFromPaths:
-        if not file_group_maker.exists:
-            fks = ["a", "b", "c"]
-            file_group_maker.storage_path.mkdir(parents=True, exist_ok=False)
-            for fk in fks:
-                (file_group_maker.storage_path / fk).touch()
-            return file_group_maker.make_file_group(fks)
-        else:
-            raise Exception(
-                f"Something already exists"
-            )
+
+@dataclasses.dataclass(frozen=True)
+class TestStorageGcs(TestStorage):
+
+    @property
+    @util.CacheResult
+    def results_folder(self) -> TestStorageResultsFolderGcs:
+        return TestStorageResultsFolderGcs(
+            for_hashable=f"{_TEMP_PATH}/{self.hex_hash}")
 
 
 @dataclasses.dataclass(frozen=True)
@@ -325,8 +329,11 @@ class FileGroup0(s.FileGroup):
         return _ret
 
 
-def try_arrow_storage():
-    ts = TestStorage(1, 2.0)
+def try_arrow_storage(gcs: bool):
+    if gcs:
+        ts = TestStorageGcs(1, 2.0)
+    else:
+        ts = TestStorage(1, 2.0)
 
     # ---------------------------------------------------------01
     print("---------------------------------------------------------01")
@@ -703,7 +710,8 @@ def try_main():
     # try_auto_hashed_download_file()
     # try_metainfo_file()
     # try_creating_folders()
-    try_arrow_storage()
+    # try_arrow_storage(gcs=False)
+    try_arrow_storage(gcs=True)
     # try_file_storage()
     _path.rmdir()
 

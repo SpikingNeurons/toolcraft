@@ -39,6 +39,7 @@ import typing as t
 import fsspec
 import os
 import toml
+import json
 import pyarrow as pa
 
 # todo: keep exploring these known_implementationsas they are updated
@@ -497,7 +498,65 @@ def get_file_system_details(fs_name: str) -> t.Tuple[fsspec.AbstractFileSystem, 
     # --------------------------------------------------------- 08
     # make instance
     try:
-        _fs = _protocol_class(**_kwargs)
+        print(1111111111111111111111, _protocol_class, _kwargs)
+        import gcsfs
+        gcsfs.GCSFileSystem
+        if _protocol in ['gs', 'gcs']:
+            # get credentials
+            if 'credentials' not in _kwargs.keys():
+                raise e.validation.NotAllowed(
+                    msgs=[f"Please supply mandatory kwarg `credentials` in config "
+                          f"file {settings.TC_CONFIG_FILE} for file_system {fs_name}"]
+                )
+            _credentials_file = settings.TC_HOME / _kwargs['credentials']
+            if not _credentials_file.exists():
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"Cannot find credential file {_credentials_file}",
+                        f"Please create it using information from here:",
+                        "https://cloud.google.com/docs/authentication/"
+                        "getting-started#create-service-account-console",
+                    ]
+                )
+            # get project and bucket
+            if 'project' not in _kwargs.keys():
+                raise e.validation.NotAllowed(
+                    msgs=[f"Please supply mandatory kwarg `project` in config "
+                          f"file {settings.TC_CONFIG_FILE} for file_system {fs_name}"]
+                )
+            if 'bucket' not in _kwargs.keys():
+                raise e.validation.NotAllowed(
+                    msgs=[f"Please supply mandatory kwarg `bucket` in config "
+                          f"file {settings.TC_CONFIG_FILE} for file_system {fs_name}"]
+                )
+            _project = _kwargs['project']
+            _bucket = _kwargs['bucket']
+            # make _fs
+            try:
+                _fs = _protocol_class(
+                    project=_project,
+                    check_connection=True,
+                    token=_credentials_file.as_posix()
+                )  # type: gcsfs.GCSFileSystem
+            except Exception as _ex:
+                # todo: add more advanced exceptions like
+                #  bad credentials, wrong project ... etc
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "Wrong project name or bad credentials ...",
+                        str(_ex)
+                    ]
+                )
+            # test if bucket exists
+            e.validation.ShouldBeOneOf(
+                value=_bucket + '/',  # as buckets from _fs ahs suffix `/`
+                values=_fs.buckets,
+                msgs=[
+                    "Provided bucket is not available ..."
+                ]
+            ).raise_if_failed()
+        else:
+            _fs = _protocol_class(**_kwargs)
     except TypeError as _te:
         raise e.code.CodingError(
             msgs=[
