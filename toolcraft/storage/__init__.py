@@ -22,7 +22,7 @@ todo: storage in point of view of mlflow (also see top of individual module for
 """
 
 from . import file_system
-from .file_system import Path
+from .file_system import Path, FileSystemConfig
 from .__base__ import StorageHashable
 from .state import Info, Config, Suffix
 from .folder import Folder
@@ -35,5 +35,5 @@ from .table import Table, Filter, make_expression
 
 # a call so that the CWD FileSystem is loaded if defined in config.toml or else it
 # will add default CWD FileSystem ... also it will save it to config.toml
-file_system.get_file_system_details("CWD")
+FileSystemConfig.get("CWD")
 assert "CWD" in file_system.available_file_systems(), "must be there by now ..."

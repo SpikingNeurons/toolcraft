@@ -41,6 +41,7 @@ import os
 import toml
 import json
 import pyarrow as pa
+import gcsfs
 
 # todo: keep exploring these known_implementationsas they are updated
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -70,11 +71,236 @@ from gcsfs import GCSFileSystem
 from .. import error as e
 from .. import logger
 from .. import settings
+from .. import marshalling as m
+from .. import util
 
 _LOGGER = logger.get_logger()
 
-_FILE_SYSTEMS = {}  # type: t.Dict[str, fsspec.AbstractFileSystem]
-_FILE_SYSTEMS_CONFIG = {}  # type: t.Dict[str, t.Dict]
+_FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, FileSystemConfig]
+
+
+@dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=['fs']
+)
+class FileSystemConfig(m.HashableClass):
+    fs_name: str
+    protocol: t.Literal['gs', 'gcs', 'file']
+    root_dir: str
+    kwargs: t.Dict[str, t.Any] = None
+
+    @property
+    @util.CacheResult
+    def fs(self) -> fsspec.AbstractFileSystem:
+        # ------------------------------------------------------------- 01
+        # load class for protocol
+        try:
+            _protocol_class = fsspec.get_filesystem_class(self.protocol)
+        except ImportError as _ie:
+            raise e.code.CodingError(
+                msgs=[
+                    f"You need to install some packages",
+                    {
+                        "raised_error": str(_ie)
+                    }
+                ]
+            )
+        # some vars
+        _kwargs = self.kwargs
+        if _kwargs is None:
+            _kwargs = {}
+
+        # ------------------------------------------------------------- 02
+        # make instance
+        try:
+            # --------------------------------------------------------- 02.01
+            if self.protocol in ['gs', 'gcs']:
+                # some vars
+                _credentials_file = settings.TC_HOME / self.kwargs['credentials']
+                _project = _kwargs['project']
+                _bucket = _kwargs['bucket']
+                # make _fs
+                _fs = _protocol_class(
+                    project=_project,
+                    check_connection=True,
+                    token=_credentials_file.as_posix()
+                )  # type: gcsfs.GCSFileSystem
+                # test if bucket exists
+                e.validation.ShouldBeOneOf(
+                    value=_bucket + '/',  # as buckets from _fs ahs suffix `/`
+                    values=_fs.buckets,
+                    msgs=[
+                        "Provided bucket is not available ..."
+                    ]
+                ).raise_if_failed()
+            # --------------------------------------------------------- 02.02
+            else:
+                _fs = _protocol_class(**_kwargs)
+
+        except Exception as _ex:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Invalid kwargs supplied ... Class {_protocol_class} "
+                    f"cannot recognize them ...",
+                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
+                    {
+                        "raised_error": str(_ex)
+                    }
+                ]
+            )
+
+        # ------------------------------------------------------------- 03
+        return _fs
+
+    def init_validate(self):
+        # ------------------------------------------------------------- 01
+        # call super
+        super().init_validate()
+
+        # ------------------------------------------------------------- 02
+        # validate protocol
+        if self.protocol in known_implementations.keys():
+            _err_msg = "This protocol is known by gcsfs but not yet " \
+                       "implemented in `toolcraft`. Please raise PR for support ..."
+        else:
+            _err_msg = "this protocol is not known by gcsfs and cannot be " \
+                       "supported by `toolcraft`"
+        e.validation.ShouldBeOneOf(
+            value=self.protocol, values=['gs', 'gcs', 'file'],
+            msgs=[_err_msg]
+        ).raise_if_failed()
+
+        # ------------------------------------------------------------- 03
+        # protocol specific validations
+        # ------------------------------------------------------------- 03.01
+        # if gcs related protocol validate kwargs
+        if self.protocol in ['gs', 'gcs']:
+            # kwargs must be supplied
+            if self.kwargs is None:
+                raise e.validation.NotAllowed(
+                    msgs=[f"Please supply mandatory `kwargs` dict in config "
+                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                )
+            # get credentials
+            if 'credentials' not in self.kwargs.keys():
+                raise e.validation.NotAllowed(
+                    msgs=[f"Please supply mandatory kwarg `credentials` in config "
+                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                )
+            _credentials_file = settings.TC_HOME / self.kwargs['credentials']
+            if not _credentials_file.exists():
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"Cannot find credential file {_credentials_file}",
+                        f"Please create it using information from here:",
+                        "https://cloud.google.com/docs/authentication/"
+                        "getting-started#create-service-account-console",
+                    ]
+                )
+            # get project and bucket
+            if 'project' not in self.kwargs.keys():
+                raise e.validation.NotAllowed(
+                    msgs=[f"Please supply mandatory kwarg `project` in config "
+                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                )
+            if 'bucket' not in self.kwargs.keys():
+                raise e.validation.NotAllowed(
+                    msgs=[f"Please supply mandatory kwarg `bucket` in config "
+                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                )
+
+        # ------------------------------------------------------------- 04
+        # call property fs as it also validates creation
+        _ = self.fs
+
+        # ------------------------------------------------------------- 05
+        # if root_dir in fs_config end with sep then raise error as we will be adding it
+        if self.root_dir.endswith(self.fs.sep):
+            raise e.code.NotAllowed(
+                msgs=[
+                    f"Please do not supply seperator `{self.fs.sep}` at end for "
+                    f"root_dir in config files. As we will take care of that ..."
+                ]
+            )
+        # if CWD make sure that root_dir always start with .
+        if self.fs_name == "CWD":
+            if not self.root_dir.startswith("."):
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"For CWD file_system always make sure that root_dir "
+                        f"starts with '.', found {self.root_dir}"
+                    ]
+                )
+
+    @classmethod
+    def get(cls, fs_name: str) -> "FileSystemConfig":
+        # --------------------------------------------------------- 01
+        # if available return
+        if fs_name in _FILE_SYSTEM_CONFIGS.keys():
+            return _FILE_SYSTEM_CONFIGS[fs_name]
+
+        # --------------------------------------------------------- 02
+        # not available so create
+        # --------------------------------------------------------- 02.01
+        # check in settings if any file_system is provided
+        try:
+            _all_fs_config = settings.TC_CONFIG["file_systems"]
+        except KeyError:
+            # if not add an empty dict and save it to config
+            _all_fs_config = {}
+            # update settings and save
+            settings.TC_CONFIG["file_systems"] = _all_fs_config
+            settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
+        # --------------------------------------------------------- 02.02
+        # now check for specific fs
+        try:
+            _fs_config = _all_fs_config[fs_name]
+        except KeyError:
+            # if CWD and it was not there we know the default ... so make one
+            if fs_name == "CWD":
+                _all_fs_config[fs_name] = {
+                    "protocol": "file", "root_dir": ".", "kwargs": {"auto_mkdir": True}
+                }
+                # update settings and save
+                assert id(settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)
+                settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
+                # store to current _fs_config
+                _fs_config = _all_fs_config[fs_name]
+            # else it is not CWD nor supported so raise error
+            else:
+                raise e.validation.ConfigError(
+                    msgs=[
+                        f"Please provide file system settings for `{fs_name}` in dict "
+                        f"`file_systems`",
+                        f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
+                    ]
+                )
+        # --------------------------------------------------------- 02.03
+        # make sure that _fs_config is dict
+        e.validation.ShouldBeInstanceOf(
+            value=_fs_config, value_types=(dict, ), msgs=[
+                f"Was expecting dict for file system {fs_name} configured in settings",
+                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
+            ]
+        ).raise_if_failed()
+        # --------------------------------------------------------- 02.04
+        # make sure that there we know thw settings i.e. they should be one or more
+        # of these three
+        for _k in _fs_config.keys():
+            e.validation.ShouldBeOneOf(
+                value=_k, values=["protocol", "kwargs", "root_dir"],
+                msgs=[
+                    f"Invalid config provided for file system `{fs_name}` in settings",
+                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
+                ]
+            ).raise_if_failed()
+        # --------------------------------------------------------- 02.05
+        # make instance and save
+        _FILE_SYSTEM_CONFIGS[fs_name] = FileSystemConfig(fs_name=fs_name, **_fs_config)
+
+        # --------------------------------------------------------- 03
+        # return
+        return _FILE_SYSTEM_CONFIGS[fs_name]
 
 
 @dataclasses.dataclass
@@ -171,9 +397,10 @@ class Path:
 
     def __post_init__(self):
         # set some vars for faster access
-        self.fs, self.fs_config = get_file_system_details(self.fs_name)
+        self.fs_config = FileSystemConfig.get(self.fs_name)  # type: FileSystemConfig
+        self.fs = self.fs_config.fs  # type: fsspec.AbstractFileSystem
         self.sep = self.fs.sep  # type: str
-        self.root_path = self.fs_config['root_dir']  # type: str
+        self.root_path = self.fs_config.root_dir  # type: str
         self.full_path = self.root_path + self.sep + self.suffix_path
         self.name = self.suffix_path.split(self.sep)[-1]
         e.io.LongPath(path=self.full_path, msgs=[]).raise_if_failed()
@@ -212,7 +439,6 @@ class Path:
 
     @classmethod
     def get_root(cls, fs_name: str) -> "Path":
-        _fs, _fs_config = get_file_system_details(fs_name=fs_name)
         return Path(
             fs_name=fs_name, suffix_path=""
         )
@@ -360,227 +586,3 @@ class Path:
 
 def available_file_systems() -> t.List[str]:
     return list(settings.TC_CONFIG["file_systems"].keys())
-
-
-def get_file_system_details(fs_name: str) -> t.Tuple[fsspec.AbstractFileSystem, t.Dict]:
-    # --------------------------------------------------------- 01
-    # if fs exists in _FILE_SYSTEMS return it
-    if fs_name in _FILE_SYSTEMS.keys():
-        return _FILE_SYSTEMS[fs_name], _FILE_SYSTEMS_CONFIG[fs_name]
-
-    # --------------------------------------------------------- 02
-    # check in settings if any file_system is provided
-    try:
-        _all_fs_config = settings.TC_CONFIG["file_systems"]
-    except KeyError:
-        # if not add an empty dict and save it to config
-        _all_fs_config = {}
-        # update settings and save
-        settings.TC_CONFIG["file_systems"] = _all_fs_config
-        settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
-
-    # --------------------------------------------------------- 03
-    # now check for specific fs
-    try:
-        _fs_config = _all_fs_config[fs_name]
-    except KeyError:
-        # if CWD and it was not there we know the default ... so make one
-        if fs_name == "CWD":
-            _all_fs_config[fs_name] = {
-                "protocol": "file", "root_dir": ".", "kwargs": {"auto_mkdir": True}
-            }
-            # update settings and save
-            assert id(settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)
-            settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
-            # store to current _fs_config
-            _fs_config = _all_fs_config[fs_name]
-        # else it is not CWD nor supported so raise error
-        else:
-            raise e.validation.ConfigError(
-                msgs=[
-                    f"Please provide file system settings for `{fs_name}` in dict "
-                    f"`file_systems`",
-                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-                ]
-            )
-    # make sure that _fs_config is dict
-    e.validation.ShouldBeInstanceOf(
-        value=_fs_config, value_types=(dict, ), msgs=[
-            f"Was expecting dict for file system {fs_name} configured in settings",
-            f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-        ]
-    ).raise_if_failed()
-
-    # --------------------------------------------------------- 04
-    # make sure that there we know thw settings i.e. they should be one or more
-    # of these three
-    for _k in _fs_config.keys():
-        e.validation.ShouldBeOneOf(
-            value=_k, values=["protocol", "kwargs", "root_dir"],
-            msgs=[
-                f"Invalid config provided for file system `{fs_name}` in settings",
-                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-            ]
-        ).raise_if_failed()
-
-    # --------------------------------------------------------- 04
-    # make sure that we have mandatory setting protocol
-    try:
-        _protocol = _fs_config["protocol"]
-    except KeyError:
-        raise e.validation.ConfigError(
-            msgs=[
-                f"We expect mandatory setting `protocol` for file system {fs_name}",
-                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-            ]
-        )
-    # test if it is known
-    e.validation.ShouldBeOneOf(
-        value=_protocol, values=known_implementations.keys(),
-        msgs=[
-            "Unsupported file system protocol ..."
-        ]
-    ).raise_if_failed()
-
-    # --------------------------------------------------------- 05
-    # check for mandatory root_dir
-    try:
-        _root_dir = _fs_config["root_dir"]
-    except KeyError:
-        raise e.validation.ConfigError(
-            msgs=[
-                f"We expect mandatory setting `root_dir` for file system {fs_name}",
-                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-            ]
-        )
-    # validate type
-    e.validation.ShouldBeInstanceOf(
-        value=_root_dir, value_types=(str, ), msgs=[
-            f"Was expecting str for file system `{fs_name}` setting `root_dir` ",
-            f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-        ]
-    ).raise_if_failed()
-    # if CWD make sure that root_dir always start with .
-    if fs_name == "CWD":
-        if not _root_dir.startswith("."):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"For CWD file_system always make sure that root_dir starts with "
-                    f"'.', found {_root_dir}"
-                ]
-            )
-
-    # --------------------------------------------------------- 06
-    # get kwargs if provided and make sure it is dict
-    _kwargs = _fs_config.get("kwargs", {})
-    e.validation.ShouldBeInstanceOf(
-        value=_kwargs, value_types=(dict, ), msgs=[
-            f"Was expecting dict for file system {fs_name}.kwargs configured in "
-            f"settings",
-            f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-        ]
-    ).raise_if_failed()
-
-    # --------------------------------------------------------- 07
-    # load class for protocol
-    try:
-        _protocol_class = fsspec.get_filesystem_class(_protocol)
-    except ImportError as _ie:
-        raise e.code.CodingError(
-            msgs=[
-                f"You need to install some packages",
-                {
-                    "raised_error": str(_ie)
-                }
-            ]
-        )
-
-    # --------------------------------------------------------- 08
-    # make instance
-    try:
-        print(1111111111111111111111, _protocol_class, _kwargs)
-        import gcsfs
-        gcsfs.GCSFileSystem
-        if _protocol in ['gs', 'gcs']:
-            # get credentials
-            if 'credentials' not in _kwargs.keys():
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `credentials` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {fs_name}"]
-                )
-            _credentials_file = settings.TC_HOME / _kwargs['credentials']
-            if not _credentials_file.exists():
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Cannot find credential file {_credentials_file}",
-                        f"Please create it using information from here:",
-                        "https://cloud.google.com/docs/authentication/"
-                        "getting-started#create-service-account-console",
-                    ]
-                )
-            # get project and bucket
-            if 'project' not in _kwargs.keys():
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `project` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {fs_name}"]
-                )
-            if 'bucket' not in _kwargs.keys():
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `bucket` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {fs_name}"]
-                )
-            _project = _kwargs['project']
-            _bucket = _kwargs['bucket']
-            # make _fs
-            try:
-                _fs = _protocol_class(
-                    project=_project,
-                    check_connection=True,
-                    token=_credentials_file.as_posix()
-                )  # type: gcsfs.GCSFileSystem
-            except Exception as _ex:
-                # todo: add more advanced exceptions like
-                #  bad credentials, wrong project ... etc
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "Wrong project name or bad credentials ...",
-                        str(_ex)
-                    ]
-                )
-            # test if bucket exists
-            e.validation.ShouldBeOneOf(
-                value=_bucket + '/',  # as buckets from _fs ahs suffix `/`
-                values=_fs.buckets,
-                msgs=[
-                    "Provided bucket is not available ..."
-                ]
-            ).raise_if_failed()
-        else:
-            _fs = _protocol_class(**_kwargs)
-    except TypeError as _te:
-        raise e.code.CodingError(
-            msgs=[
-                f"Invalid kwargs supplied ... Class {_protocol_class} "
-                f"cannot recognize them ...",
-                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
-                {
-                    "raised_error": str(_te)
-                }
-            ]
-        )
-
-    # --------------------------------------------------------- 09
-    # if root_dir in fs_config end with sep then raise error as we will be adding it
-    if _fs_config["root_dir"].endswith(_fs.sep):
-        raise e.code.NotAllowed(
-            msgs=[
-                f"Please do not supply seperator `{_fs.sep}` at end for root_dir "
-                f"in config files. As we will take care of that ..."
-            ]
-        )
-
-    # --------------------------------------------------------- 09
-    # backup and return
-    _FILE_SYSTEMS[fs_name] = _fs
-    _FILE_SYSTEMS_CONFIG[fs_name] = _fs_config
-    return _FILE_SYSTEMS[fs_name], _FILE_SYSTEMS_CONFIG[fs_name]

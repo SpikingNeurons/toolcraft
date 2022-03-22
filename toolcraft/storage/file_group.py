@@ -758,7 +758,8 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"Hashes for some files did not match. ",
                     f"FileGroup: {self.name}",
                     f"Check below",
-                    _failed_hashes
+                    _failed_hashes,
+                    f"Check file system {self.path}"
                 ]
             )
 
