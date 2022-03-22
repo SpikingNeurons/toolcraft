@@ -65,8 +65,8 @@ class _Dapr(m.HashableClass):
     APP_ID: str
     APP_MAX_CONCURRENCY: int = -1
     APP_PORT: int = 2008
-    APP_PROTOCOL: t.Literal['gRPC', 'HTTP'] = 'gRPC'
-    APP_SSL: bool = True
+    APP_PROTOCOL: t.Literal['gRPC', 'HTTP'] = 'HTTP'
+    APP_SSL: bool = False
     # COMPONENTS_PATH: str = ...
     # CONFIG: str = ...
     DAPR_GRPC_PORT: int = 2019
@@ -189,9 +189,9 @@ class _Dapr(m.HashableClass):
         _settings = dapr.conf.settings
         _settings.DAPR_RUNTIME_HOST = self.SERVER_IP
         # _settings.HTTP_APP_PORT = self.HTTP_APP_PORT
-        # _settings.GRPC_APP_PORT = self.GRPC_APP_PORT
+        _settings.GRPC_APP_PORT = self.DAPR_GRPC_PORT
         # _settings.DAPR_HTTP_PORT = self.DAPR_HTTP_PORT
-        # _settings.DAPR_GRPC_PORT = self.DAPR_GRPC_PORT
+        _settings.DAPR_GRPC_PORT = self.DAPR_GRPC_PORT
         # _settings.DAPR_API_TOKEN = self.DAPR_API_TOKEN
         # _settings.DAPR_API_VERSION = self.DAPR_API_VERSION
         _settings.DAPR_API_METHOD_INVOCATION_PROTOCOL = self.APP_PROTOCOL

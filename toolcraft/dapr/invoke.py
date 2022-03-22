@@ -86,10 +86,16 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
 def invoke_for_hashable_on_client(request: "Request") -> t.Any:
     with DAPR.client as _client:
 
+        # noinspection PyTypeChecker
         _response = _client.invoke_method(
             app_id=DAPR.APP_ID,
             method_name="invoke_for_hashable_on_server",
             data=request.get_bytes(),
+            content_type='text/plain',
+            http_verb='GET',
+            # http_querystring=(
+            #     ('key1', 'value1')
+            # ),
         )
 
         print(_response)
