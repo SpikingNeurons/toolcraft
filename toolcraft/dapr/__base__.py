@@ -66,7 +66,7 @@ class _Dapr(m.HashableClass):
     APP_MAX_CONCURRENCY: int = -1
     APP_PORT: int = 2008
     APP_PROTOCOL: t.Literal['gRPC', 'HTTP'] = 'HTTP'
-    APP_SSL: bool = False
+    APP_SSL: bool = True
     # COMPONENTS_PATH: str = ...
     # CONFIG: str = ...
     DAPR_GRPC_PORT: int = 2019
