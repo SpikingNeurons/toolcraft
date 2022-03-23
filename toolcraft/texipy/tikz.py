@@ -22,7 +22,7 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Font, Scalar, FigurePos
+from .__base__ import LaTeX, Color, Font, Scalar, Positioning, TextAlignment
 
 
 class Thickness(enum.Enum):
@@ -832,13 +832,13 @@ class Anchor(enum.Enum):
     below_right = "below right"
     left = "left"
     right = "right"
-    
+
     @property
     def is_special(self) -> bool:
         return self in [
             self.angle, self.corner, self.side, self.inner_point, self.outer_point,
         ]
-    
+
     @property
     def is_intuitive(self) -> bool:
         return self in [
@@ -846,7 +846,7 @@ class Anchor(enum.Enum):
             self.below, self.below_right, self.below_left,
             self.left, self.right,
         ]
-    
+
     @property
     def is_non_intuitive(self) -> bool:
         return self in [
@@ -873,7 +873,7 @@ class Anchor(enum.Enum):
         return self.__call__()
 
     def __call__(
-        self, 
+        self,
         node: "Node" = None, offset: Scalar = None,
         angle: t.Union[int, float] = None,
         side: int = None, corner: int = None,
@@ -1560,7 +1560,7 @@ class Node:
         # -------------------------------------------------------- 06
         # return
         return _ret
-    
+
     @property
     @util.CacheResult
     def labels(self) -> t.List[Label]:
@@ -1569,7 +1569,7 @@ class Node:
         # label=[⟨options⟩]⟨angle⟩:⟨text⟩
         # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
         return []
-    
+
     @property
     @util.CacheResult
     def pins(self) -> t.List[Pin]:
@@ -2216,7 +2216,7 @@ class Path:
         """
         Section 11.13 The To Path operation
         \\path . . . to[⟨options⟩] ⟨nodes⟩ (⟨coordinate⟩) . . . ;
-        
+
         Read section 32 To Path Library
         + This method can do all things for you
           - line to (32.1 just use to with no remaining options)
@@ -2386,8 +2386,9 @@ class Path:
 
 @dataclasses.dataclass
 class TikZ(LaTeX):
+    positioning: Positioning = None
+    alignment: TextAlignment = None
     caption: str = None
-    figure_pos: FigurePos = None
 
     @property
     @util.CacheResult
@@ -2402,13 +2403,12 @@ class TikZ(LaTeX):
 
     @property
     def open_clause(self) -> str:
-        _ret = []
-        if self.caption is not None or self.label is not None:
-            _ret += [
-                f"% >> start figure {self.label}",
-                f"\\begin{{figure}}{self.figure_pos}%",
-                "\\centering%"
-            ]
+        _ret = [
+            f"% >> start figure {'...' if self.label is None else self.label}",
+            f"\\begin{{figure}}{'' if self.positioning is None else self.positioning}%",
+        ]
+        if self.alignment is not None:
+            _ret.append(f"{self.alignment}%")
         _ret.append("% >> start tikz picture")
         for _k, _s in self.styles.items():
             _ret.append(
@@ -2424,8 +2424,10 @@ class TikZ(LaTeX):
             _ret.append(f"\\caption{{{self.caption}}}%")
         if self.label is not None:
             _ret.append(f"\\label{{{self.label}}}%")
-        if self.caption is not None or self.label is not None:
-            _ret += [f"% >> end figure: {self.label}", "\\end{figure}%"]
+        _ret += [
+            f"% >> end figure {'...' if self.label is None else self.label}",
+            "\\end{figure}%"
+        ]
         return "\n".join(_ret)
 
     @property

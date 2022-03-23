@@ -189,16 +189,37 @@ class Scalar(t.NamedTuple):
         )
 
 
+class TextAlignment(enum.Enum):
+    """
+    https://www.overleaf.com/learn/latex/Text_alignment
+    """
+    centering = "\\centering"
+    raggedright = "\\raggedright"
+    raggedleft = "\\raggedleft"
+
+    def __str__(self) -> str:
+        return self.value
+
+
 @dataclasses.dataclass
-class FigurePos:
+class Positioning:
     """
+    Positioning for figures and tables
+
     https://www.overleaf.com/learn/latex/Positioning_of_Figures
+    https://www.overleaf.com/learn/latex/Positioning_images_and_tables
     """
+    # Will place the here approximately.
     here: bool = False
+    # Position at the top of the page.
     top: bool = False
+    # Position at the bottom of the page.
     bottom: bool = False
+    # Put in a special page, for tables only.
     special_float_page: bool = False
+    # Override internal LATEX parameters.
     override: bool = False
+    # Place at this precise location, pretty much like h!.
     strict_here: bool = False  # needs \\usepackage{float}
 
     def __str__(self):
@@ -222,7 +243,6 @@ class FigurePos:
             return _ret
         else:
             return "[" + _ret + "]"
-
 
 
 @dataclasses.dataclass
