@@ -22,7 +22,7 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Font, Scalar, Positioning, TextAlignment
+from .__base__ import LaTeX, Color, Font, Scalar, Positioning, FloatObjAlignment
 
 
 class Thickness(enum.Enum):
@@ -2387,7 +2387,7 @@ class Path:
 @dataclasses.dataclass
 class TikZ(LaTeX):
     positioning: Positioning = None
-    alignment: TextAlignment = None
+    alignment: FloatObjAlignment = None
     caption: str = None
 
     @property
@@ -2439,7 +2439,7 @@ class TikZ(LaTeX):
         return {}
 
     def __str__(self):
-        if bool(self.items):
+        if bool(self._items):
             # todo: address this issue later
             raise e.code.CodingError(
                 msgs=["Do not call this twice as self.items will be populated again"]
@@ -2450,7 +2450,7 @@ class TikZ(LaTeX):
         for _p in self.paths:
             # LaTeX parent class does not understand Path it only understands str or
             # subclasses of LaTeX
-            self.items.append(str(_p))
+            self._items.append(str(_p))
 
         # return
         return super().__str__()

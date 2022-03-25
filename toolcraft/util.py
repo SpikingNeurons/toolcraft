@@ -1616,7 +1616,7 @@ def notifying_list_dict_class_factory(cls, callback):
     https://stackoverflow.com/questions/9871169
     """
     new_dct = cls.__dict__.copy()
-    for key, value in new_dct.items():
+    for key, value in new_dct._items():
         if key in _changer_methods:
             new_dct[key] = _proxy_decorator(
                 value, callback

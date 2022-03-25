@@ -129,12 +129,59 @@ class Fa(enum.Enum):
 class Scalar(t.NamedTuple):
     """
     Also referred as <dimension> in latex docs
+
+    Units:
+    pt: a point is approximately 1/72.27 inch, that means about 0.0138 inch or
+        0.3515 mm (exactly point is defined as 1/864 of American printer’s foot that
+        is 249/250 of English foot)
+    mm: a millimeter
+    cm:	a centimeter
+    in:	inch
+    ex:	roughly the height of an 'x' (lowercase) in the current font
+        (it depends on the font used)
+    em:	roughly the width of an 'M' (uppercase) in the current font
+        (it depends on the font used)
+    mu:	math unit equal to 1/18 em, where em is taken from the math symbols family
+    sp:	so-called "special points", a low-level unit of measure where 65536sp=1pt
+    bp: ...
+    dd: ...
+    pc: ...
+
+    We also support special lengths as units
+    baselineskip:   Vertical distance between lines in a paragraph
+    columnsep:	    Distance between columns
+    columnwidth:	The width of a column
+    evensidemargin:	Margin of even pages, commonly used in two-sided documents such as books
+    linewidth:	    Width of the line in the current environment.
+    oddsidemargin:	Margin of odd pages, commonly used in two-sided documents such as books
+    paperwidth:	    Width of the page
+    paperheight:	Height of the page
+    parindent:	    Paragraph indentation
+    parskip:	    Vertical space between paragraphs
+    tabcolsep:	    Separation between columns in a table (tabular environment)
+    textheight:	    Height of the text area in the page
+    textwidth:	    Width of the text area in the page
+    topmargin:	    Length of the top margin
     """
     value: t.Union[int, float]
-    unit: t.Literal['', 'pt', 'mm', 'cm', 'ex', 'em', 'bp', 'dd', 'pc', 'in'] = ''
+    unit: t.Literal[
+        '',
+        'pt', 'mm', 'cm', 'in', 'ex', 'em', 'mu', 'sp',
+        'bp', 'dd', 'pc',
+        # special lengths
+        'baselineskip', 'columnsep', 'columnwidth', 'evensidemargin', 'linewidth',
+        'oddsidemargin', 'paperwidth', 'paperheight', 'parindent', 'parskip',
+        'tabcolsep', 'textheight', 'textwidth', 'topmargin',
+    ] = ''
 
     def __str__(self):
-        return f"{self.value}{self.unit}"
+        if self.unit == 'textwidth':
+            if self.value in [1, 1.0]:
+                return f"\\{self.unit}"
+            else:
+                return f"{self.value}\\{self.unit}"
+        else:
+            return f"{self.value}{self.unit}"
 
     def __mul__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
         if isinstance(other, Scalar):
@@ -189,8 +236,15 @@ class Scalar(t.NamedTuple):
         )
 
 
-class TextAlignment(enum.Enum):
+class FloatObjAlignment(enum.Enum):
     """
+
+    todo: support things like \\small
+
+    useful for aligning floating objects like
+      - tabular inside table environment
+      - tikzpicture inside figure environment ...
+
     https://www.overleaf.com/learn/latex/Text_alignment
     """
     centering = "\\centering"
@@ -251,11 +305,15 @@ class LaTeX(abc.ABC):
 
     @property
     @util.CacheResult
-    def items(self) -> t.List[t.Union["LaTeX", str]]:
+    def _items(self) -> t.List[t.Union["LaTeX", str]]:
         return []
 
     @property
     def use_new_lines(self) -> bool:
+        return True
+
+    @property
+    def allow_add_items(self) -> bool:
         return True
 
     @property
@@ -277,29 +335,8 @@ class LaTeX(abc.ABC):
         self.init()
 
     def __str__(self) -> str:
-        if self.use_new_lines:
-            return self.open_clause + "%\n\n" + \
-                   self.generate() + "\n\n" + \
-                   self.close_clause + "%"
-        else:
-            return self.open_clause + self.generate() + self.close_clause + "%"
-
-    def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
-        if self._doc is not None:
-            item._doc = self._doc
-        self.items.append(item)
-        return self
-
-    def init_validate(self):
-        ...
-
-    def init(self):
-        # noinspection PyTypeChecker,PyAttributeOutsideInit
-        self._doc = None  # type: Document
-
-    def generate(self) -> str:
-        _ret = []
-        for _ in self.items:
+        # assign _doc to any items first ...
+        for _ in self._items:
             if not isinstance(_, str):
                 if _._doc is None:
                     _._doc = self._doc
@@ -317,8 +354,42 @@ class LaTeX(abc.ABC):
                         ]
                     ).raise_if_failed()
                     self._doc.labels.append(_.label)
-            _ret.append(str(_))
-        return "\n".join(_ret)
+
+        # create str
+        if self.use_new_lines:
+            return self.open_clause + "%\n\n" + \
+                   self.generate() + "\n\n" + \
+                   self.close_clause + "%"
+        else:
+            return self.open_clause + self.generate() + self.close_clause
+
+    def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
+        if not self.allow_add_items:
+            raise e.code.NotAllowed(
+                msgs=[f"You are not allowed to use `add_items` method for class "
+                      f"{self.__class__}"]
+            )
+        if self._doc is not None:
+            item._doc = self._doc
+        self._items.append(item)
+        return self
+
+    def init_validate(self):
+        ...
+
+    def init(self):
+        # noinspection PyTypeChecker,PyAttributeOutsideInit
+        self._doc = None  # type: Document
+
+        # if any dataclass field is instance of subclass of LaTeX then assign self._doc
+        for f in dataclasses.fields(self):
+            _v = getattr(self, f.name)
+            if isinstance(_v, LaTeX):
+                if _v._doc is None:
+                    _v._doc = self._doc
+
+    def generate(self) -> str:
+        return "\n".join([str(_) for _ in self._items])
 
 
 @dataclasses.dataclass
