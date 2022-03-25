@@ -13,3 +13,4 @@ from .__base__ import Font, Color, Scalar, Document, Section, SubSection, \
     Positioning, FloatObjAlignment
 from .symbol import Command, Glossary, Acronym, make_symbols_tex_file
 from . import tikz
+from . import table

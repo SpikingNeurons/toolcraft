@@ -35,6 +35,12 @@ class TabularColsFmt(enum.Enum):
     # paragraph column with text vertically aligned at the bottom
     # (requires array package)
     para_bottom = "b"
+    # The tabularx package requires the same arguments of tabular* but, in order to
+    # let the table have the width specified by the user, it modifies the width of
+    # certain columns instead of the space between columns. The columns that can be
+    # stretched are identified by the alignment command X. This package requires the
+    # array package.
+    stretched = "X"
     # @{text}
     #   - Insert the text `text` in every line of the table between the columns
     #     where it appears.
@@ -79,11 +85,12 @@ class TabularColsFmt(enum.Enum):
         return self in [
             self.left_justified, self.centered, self.right_justified,
             self.para_top, self.para_middle, self.para_bottom,
+            self.stretched,
         ]
 
     def __call__(self, width: Scalar = None, insert: str = None):
         # if vertical line's no kwargs will be used
-        if self in [self.vertical_line, self.double_vertical_line]:
+        if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
             raise e.validation.NotAllowed(
                 msgs=[
                     f"no use for __call__ while using {self} as we need not "
@@ -292,7 +299,7 @@ class Row(LaTeX):
         return _ret
 
     @classmethod
-    def from_list(cls, items: t.List[str, LaTeX]) -> "Row":
+    def from_list(cls, items: t.List[t.Union[str, LaTeX]]) -> "Row":
         _ret = Row()
         for _ in items:
             _ret.add_item(_)
@@ -397,7 +404,10 @@ class Table(LaTeX):
 
         # add main table str
         _ret.append(
-            f"\\begin{{{self.latex_type}}}{_width}[{self.t_pos}]{{{self.t_cols_fmt}}}%")
+            f"\\begin{{{self.latex_type}}}"
+            f"{_width}"
+            f"[{self.t_pos}]"
+            f"{{{''.join(self.t_cols_fmt)}}}%")
 
         return "\n".join(_ret)
 
@@ -417,23 +427,6 @@ class Table(LaTeX):
             ]
         return "\n".join(_ret)
 
-    def __str__(self):
-        if bool(self._items):
-            # todo: address this issue later
-            raise e.code.CodingError(
-                msgs=["Do not call this twice as self.items will be populated again"]
-            )
-
-        # keep reference for _tikz ...
-        # __str__ is like build, so we do these assignments here
-        for _p in self.paths:
-            # LaTeX parent class does not understand Path it only understands str or
-            # subclasses of LaTeX
-            self._items.append(str(_p))
-
-        # return
-        return super().__str__()
-
     def init(self):
         # call super
         super().init()
@@ -449,7 +442,7 @@ class Table(LaTeX):
         # should not be None
         if self.t_cols_fmt is None:
             raise e.validation.NotAllowed(
-                msgs=[f"Please supply value for field `tabular_cols_fmt`"]
+                msgs=[f"Please supply value for field `t_cols_fmt`"]
             )
 
         # will support later
@@ -465,6 +458,17 @@ class Table(LaTeX):
                 value=self.type, values=['*', 'X'],
                 msgs=["width is not supported for this type ... keep it None"]
             ).raise_if_failed()
+
+        # allow column format stretched i.e. X for type=='X'
+        for _ in self.t_cols_fmt:
+            if _ == TabularColsFmt.stretched:
+                if self.type != 'X':
+                    raise e.validation.NotAllowed(
+                        msgs=[
+                            f"You can use column fmt {_} only while using "
+                            f"table type 'X' i.e. tabularx"
+                        ]
+                    )
 
     def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
         if isinstance(item, Row):
