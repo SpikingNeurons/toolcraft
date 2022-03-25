@@ -27,10 +27,6 @@ class TabularColsFmt(enum.Enum):
     centered = "c"
     # right-justified column
     right_justified = "r"
-    # vertical line
-    vertical_line = "|"
-    # double vertical line
-    double_vertical_line = "||"
     # paragraph column with text vertically aligned at the top
     para_top = "p"
     # paragraph column with text vertically aligned in the middle
@@ -58,7 +54,25 @@ class TabularColsFmt(enum.Enum):
     #     \\begin{tabular}{@{}lp{6cm}@{}}
     #        ...
     #     \\end{tabular}
-    text = "@"
+    insert = "@"
+    # insert before
+    # - can be placed before a command l, r, c, p, m or b and inserts ins before
+    #   the content of the cell;
+    # - can also be used to format certain columns:
+    #   it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+    #   \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+    insert_before = ">"
+    # insert after
+    # - can be placed before a command l, r, c, p, m or b and inserts ins before
+    #   the content of the cell;
+    # - can also be used to format certain columns:
+    #   it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+    #   \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+    insert_after = "<"
+    # vertical line
+    vertical_line = "|"
+    # double vertical line
+    double_vertical_line = "||"
 
     @property
     def is_legit_column(self) -> bool:
@@ -67,23 +81,33 @@ class TabularColsFmt(enum.Enum):
             self.para_top, self.para_middle, self.para_bottom,
         ]
 
-    def __call__(self, width: Scalar = None, text: str = None):
-        # for text ...
-        if self is self.text:
-            if text is None:
+    def __call__(self, width: Scalar = None, insert: str = None):
+        # if vertical line's no kwargs will be used
+        if self in [self.vertical_line, self.double_vertical_line]:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"no use for __call__ while using {self} as we need not "
+                    f"parametrize it"
+                ]
+            )
+
+        # for inserts ...
+        if self in [self.insert, self.insert_before, self.insert_after]:
+            if insert is None:
                 raise e.validation.NotAllowed(
-                    msgs=[f"Please supply value for kwarg `text`"]
+                    msgs=[f"Please supply value for kwarg `text` while using {self}"]
                 )
             if width is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[f"Please do not supply kwarg `width`"]
+                    msgs=[f"Please do not supply kwarg `width` while using {self}"]
                 )
-            return f"@{{{text}}}"
-        else:
-            if text is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"text kwarg is usable only for {self.text}"]
-                )
+            return f"{self.value}{{{insert}}}"
+
+        # since self is not for `self.insert` we expect `insert` kwarg to be None
+        if insert is not None:
+            raise e.validation.NotAllowed(
+                msgs=[f"insert kwarg is usable only for insert related stuff"]
+            )
 
         # for width ...
         if width is None:
@@ -99,9 +123,9 @@ class TabularColsFmt(enum.Enum):
                 )
 
     def __str__(self) -> str:
-        if self is self.text:
+        if self in [self.insert, self.insert_after, self.insert_before]:
             raise e.validation.NotAllowed(
-                msgs=[f"When using tabular column {self} please specify `text` kwarg "
+                msgs=[f"When using tabular column {self} please specify `insert` kwarg "
                       f"by using __call__"]
             )
         return self.__call__()
@@ -473,5 +497,54 @@ class Table(LaTeX):
                 ]
             )
         self.add_item(item=f"\\cline{{{n}-{m}}}%")
+
+    def add_toprule(self, thickness: Scalar = None):
+        """
+        Offered by packages `booktabs` and `ctable`
+        To be used instead of `add_hline`
+        Must be used for first line and is thicker than others
+        """
+        _thickness = ""
+        if thickness is not None:
+            _thickness = f"[{thickness}]"
+        self.add_item(item=f"\\toprule{_thickness}%")
+
+    def add_midrule(self, thickness: Scalar = None):
+        """
+        Offered by packages `booktabs` and `ctable`
+        To be used instead of `add_hline`
+        """
+        _thickness = ""
+        if thickness is not None:
+            _thickness = f"[{thickness}]"
+        self.add_item(item=f"\\midrule{_thickness}%")
+
+    def add_cmidrule(self, n: int, m: int, thickness: Scalar = None):
+        """
+        Offered by packages `booktabs` and `ctable`
+        To be used instead of `add_cline`
+        """
+        if m < n or n <= 0:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "Select n and m to be positive non-zero numbers and n<=m",
+                    "Found", dict(n=n, m=m),
+                ]
+            )
+        _thickness = ""
+        if thickness is not None:
+            _thickness = f"[{thickness}]"
+        self.add_item(item=f"\\cmidrule{{{n}-{m}}}{_thickness}%")
+
+    def add_bottomrule(self, thickness: Scalar = None):
+        """
+        Offered by packages `booktabs` and `ctable`
+        To be used instead of `add_hline`
+        Must be used for last line and is thicker than others
+        """
+        _thickness = ""
+        if thickness is not None:
+            _thickness = f"[{thickness}]"
+        self.add_item(item=f"\\bottomrule{_thickness}%")
 
 
