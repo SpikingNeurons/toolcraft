@@ -10,11 +10,13 @@ import dataclasses
 import os
 import sys
 import pickle
+import types
 
 from . import logger
 from . import error as e
 from . import marshalling as m
 from . import util
+from . import storage as s
 
 
 _LOGGER = logger.get_logger()
@@ -27,7 +29,7 @@ class Viewer:
     fn_kwargs: t.Dict
 
 
-class JobRunnerClusterType(enum.Enum):
+class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     """
     todo: support ibm_lsf over ssh using https://www.fabfile.org
     """
@@ -35,15 +37,13 @@ class JobRunnerClusterType(enum.Enum):
     local = enum.auto()
 
 
-@dataclasses.dataclass
-class JobRunnerHelper:
-
-    runner: "JobRunner"
-    root_dir: pathlib.Path
-    run_file: pathlib.Path
-    fn_name: str
-    fn_kwargs: t.List[str]
-    jobs_from_last_stage: t.List['JobRunnerHelper']
+@dataclasses.dataclass(frozen=True)
+class Job:
+    method: types.MethodType
+    method_kwargs: t.Dict[str, t.Union[m.HashableClass, int, float, str]] = \
+        dataclasses.field(default_factory=dict)
+    jobs_from_last_stage: t.List["Job"] = \
+        dataclasses.field(default_factory=list)
 
     @property
     @util.CacheResult
@@ -54,133 +54,97 @@ class JobRunnerHelper:
         + fn_kwargs if present
         + hashable hex_hash if present
         """
-        _n = "x".join(
-            self.storage_dir.absolute(
-            ).relative_to(self.root_dir.absolute()).as_posix().split("/")
-        )
+        _n = self.path.suffix_path.replace("/", "x")
         return f"jx{_n}"
 
     @property
     @util.CacheResult
-    def storage_dir(self) -> pathlib.Path:
+    def path(self) -> s.Path:
         """
-        If job is for hashable then it is not a uni job and hence will be nested
-
         Note that folder nesting is dependent on `self.fn` signature ...
-
-        Note that if
-        where hashable is automatically made first element even if it is not defined
-        first ...
 
         todo: integrate this with storage with partition_columns ...
           note that first pivot will then be hashable name ...
         """
-        _fn_signature_params = inspect.signature(self.fn).parameters
-        _ret_dir = self.root_dir
-        if "hashable" in _fn_signature_params:
-            _ret_dir /= self.fn_kwargs_casted["hashable"].hex_hash
-        _ret_dir /= self.fn_name
-        for _arg_name in _fn_signature_params:
-            if _arg_name != "hashable":
-                _ret_dir /= f"{_arg_name}_{self.fn_kwargs_casted[_arg_name]}"
-        if not _ret_dir.exists():
-            _ret_dir.mkdir(parents=True, exist_ok=True)
-        return _ret_dir
+        _ret = self.runner.cwd
+        _ret /= self.method.__func__.__name__
+        for _key in inspect.signature(self.method).parameters.keys():
+            _value = self.method_kwargs[_key]
+            if _key == "hashable":
+                _ret /= _value.hex_hash
+            else:
+                _ret /= str(_value)
+        if not _ret.exists():
+            _ret.mkdir(parents=True, exist_ok=True)
+        return _ret
+
+    @property
+    @util.CacheResult
+    def runner(self) -> "JobRunner":
+        try:
+            # noinspection PyTypeChecker
+            _ret = self.method.__self__  # type: JobRunner
+        except Exception as _ex:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Doesn't seem like a method of an instance ...", _ex
+                ]
+            )
+        e.validation.ShouldBeInstanceOf(
+            value=_ret, value_types=(JobRunner, ),
+            msgs=[f"expected method to be from a instance of any subclass "
+                  f"of {JobRunner}"]
+        ).raise_if_failed()
+        return _ret
 
     def __post_init__(self):
+        # some special methods cannot be used for job
+        _runner = self.runner
+        e.validation.ShouldNotBeOneOf(
+            value=self.method, values=[
+                _runner.class_init, _runner.log_artifact,
+                _runner.run_flow, _runner.run, _runner.viewer,
+            ],
+            msgs=["Some special methods cannot be used as job ..."]
+        ).raise_if_failed()
 
-        # ----------------------------------------------- 01
-        # get fn
-        try:
-            self.fn = getattr(self.runner, self.fn_name)
-            if not inspect.ismethod(self.fn):
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We expect attribute {self.fn_name} to be method in class "
-                        f"{self.runner,__class__}, but instead it is of type "
-                        f"{type(self.fn)}"
-                    ]
-                )
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Command `{self.fn_name}` is not available for class "
-                    f"{self.runner.__class__}. Please implement a method with that "
-                    f"name in class {self.runner.__class__}"
-                ]
-            )
+        # make <hex_hash>.info if not present
+        _infos_folder = _runner.cwd / "infos"
+        if not _infos_folder.exists():
+            _infos_folder.mkdir()
+        if "hashable" in self.method_kwargs.keys():
+            _hashable = self.method_kwargs["hashable"]
+            _info_file = _infos_folder / f"{_hashable.hex_hash}.info"
+            if not _info_file.exists():
+                _info_file.write_text(_hashable.yaml())
 
-        # ----------------------------------------------- 02
-        # make fn kwargs and add hashable instance if needed
-        _fn_signature_params = inspect.signature(self.fn).parameters
-        self.fn_kwargs_casted = {}
-        # loop over all command line tokens
-        for _a in self.fn_kwargs:
-            try:
-                # get as str
-                [_arg_name, _arg_value] = _a.split("=")
-
-                # get annotation type
-                _ann_type = _fn_signature_params[_arg_name].annotation
-
-                # if _arg_name is hashable then create hashable instance
-                if _arg_name == "hashable":
-                    _ann_type: m.HashableClass
-                    e.validation.ShouldBeSubclassOf(
-                        value=_ann_type, value_types=(m.HashableClass, ),
-                        msgs=[
-                            f"If using hashable kwarg then always annotate it with "
-                            f"some subclass of {m.HashableClass} ..."
-                        ]
-                    ).raise_if_failed()
-                    _hashable = _ann_type.from_yaml(
-                        self.root_dir / f"{_arg_value}.info"
-                    )
-                    self.fn_kwargs_casted[_arg_name] = _hashable
-
-                # else should be a simple type int, str, or float
-                else:
-                    e.validation.ShouldBeOneOf(
-                        value=_ann_type, values=[int, float, str],
-                        msgs=[
-                            f"Annotation type for kwarg `{_arg_name}` of function "
-                            f"{self.fn} is wrong"
-                        ]
-                    ).raise_if_failed()
-                    self.fn_kwargs_casted[_arg_name] = _ann_type(_arg_value)
-
-            # exception if improper command line token
-            except ValueError:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "Supply args as `<arg_name>=<arg_values>` with no spaces "
-                        "around `=`",
-                        f"Found incompatible token `{_a}`"
-                    ]
-                )
-
-    def __call__(self):
-        if '__helper__' in self.runner.__dict__.keys():
-            raise e.code.CodingError(
-                msgs=[
-                    f"We do not expect __helper__ to be set ..."
-                ]
-            )
-        self.runner.__dict__['__helper__'] = self
-        return self.fn(**self.fn_kwargs_casted)
+    def __call__(self) -> t.Any:
+        _ret = self.method(**self.method_kwargs)
+        return _ret
 
     def launch_on_cluster(self):
         # ------------------------------------------------------------- 01
         # make command to run on cli
-        _command = f"python {self.run_file.name} " \
-                   f"{self.fn_name} {' '.join(self.fn_kwargs)}"
+        _kwargs_as_cli_strs = []
+        for _k, _v in self.method_kwargs.items():
+            if _k == "hashable":
+                _v = _v.hex_hash
+            _kwargs_as_cli_strs.append(
+                f"{_k}={_v}"
+            )
+        _command = f"python {self.runner.py_script} " \
+                   f"{self.method.__func__.__name__} " \
+                   f"{' '.join(_kwargs_as_cli_strs)}"
 
         # ------------------------------------------------------------- 02
         if self.runner.cluster_type is JobRunnerClusterType.local:
             os.system(_command)
         elif self.runner.cluster_type is JobRunnerClusterType.ibm_lsf:
-            _log = self.storage_dir / ".log"
-            _nxdi_prefix = f'bsub -oo {_log.as_posix()} -J {self.id} '
+            # todo: when self.path is not local we need to see how to log files ...
+            #   should we stream or dump locally ?? ... or maybe figure out
+            #   dapr telemetry
+            _log = self.path / ".log"
+            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
             if bool(self.jobs_from_last_stage):
                 _wait_on = \
                     " && ".join([f"done({_.id})" for _ in self.jobs_from_last_stage])
@@ -193,7 +157,11 @@ class JobRunnerHelper:
 
 
 @dataclasses.dataclass(frozen=True)
-class JobRunner:
+@m.RuleChecker(
+    things_to_be_cached=['cwd', 'job'],
+    things_not_to_be_overridden=['cwd', 'job']
+)
+class JobRunner(m.HashableClass):
     """
     Can use click or pyinvoke also but not bothered about it as we don't intend to
     call ourselves from cli ... todo: check and do if it is interesting
@@ -237,30 +205,138 @@ class JobRunner:
     cluster_type: JobRunnerClusterType
 
     @property
-    @util.CacheResult
-    def id(self) -> str:
-        return self.helper.id
+    def py_script(self) -> str:
+        return sys.argv[0]
 
     @property
     @util.CacheResult
-    def storage_dir(self) -> pathlib.Path:
-        return self.helper.storage_dir
+    def cwd(self) -> s.Path:
+        """
+        todo: adapt code so that the cwd can be on any other file system instead of CWD
+        """
+        _py_script = self.py_script
+        _folder_name = _py_script.replace(".py", "")
+        _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
+        e.code.AssertError(
+            value1=_ret.local_path.as_posix(),
+            value2=(pathlib.Path(_py_script).parent / _folder_name).as_posix(),
+            msgs=[
+                f"Something unexpected ... the cwd for job runner is "
+                f"{pathlib.Path.cwd() / _folder_name}",
+                f"While the accompanying script is at "
+                f"{pathlib.Path(_py_script).as_posix()}",
+                f"Please debug ..."
+            ]
+        ).raise_if_failed()
+        return _ret
 
     @property
-    def helper(self) -> JobRunnerHelper:
-        if '__helper__' in self.__dict__.keys():
-            return self.__dict__['__helper__']
-        else:
+    @util.CacheResult
+    def job(self) -> Job:
+        """
+        Note that this job is available only on server i.e. to the submitted job on
+        cluster ... on job launching machine access to this property will raise error
+
+        Note this can read cli args and construct `method` and `method_kwargs` fields
+        """
+
+        if len(sys.argv) == 1:
             raise e.code.CodingError(
                 msgs=[
-                    f"This is property is available only when job is running on "
-                    f"cluster, as this hidden variable is updated only while jobs "
-                    f"run on cluster ... check {JobRunnerHelper.__call__}"
+                    "This job is available only for jobs submitted to server ... "
+                    "it cannot be accessed by instance which launches jobs ..."
                 ]
             )
+        else:
+            _method_name = sys.argv[1]
+            _method = getattr(self, _method_name)
+            _method_signature = inspect.signature(_method)
+            _method_kwargs = {}
+            for _arg in sys.argv[2:]:
+                _key, _str_val = _arg.split("=")
+                if _key == "hashable":
+                    _info_file = self.cwd / "infos" / f"{_str_val}.info"
+                    if _info_file.exists():
+                        _val = _method_signature.parameters[_key].annotation.from_yaml(
+                            _info_file
+                        )
+                    else:
+                        raise e.code.CodingError(
+                            msgs=[f"We expect to have info file {_info_file} "
+                                  f"in storage"]
+                        )
+                else:
+                    _val = _method_signature.parameters[_key].annotation(_str_val)
+                _method_kwargs[_key] = _val
+            return Job(method=_method, method_kwargs=_method_kwargs)
+
+    @classmethod
+    def class_init(cls):
+        # ------------------------------------------------------- 01
+        # call super
+        super().class_init()
+
+        # ------------------------------------------------------- 02
+        # test fn signature
+        # loop over attributes
+        for _attr in [_ for _ in dir(cls) if not _.startswith("_")]:
+            # --------------------------------------------------- 02.01
+            # get cls attr value
+            _val = getattr(cls, _attr)
+
+            # --------------------------------------------------- 02.02
+            # skip if not function
+            if not inspect.isfunction(_val):
+                continue
+
+            # --------------------------------------------------- 02.03
+            # get signature
+            _signature = inspect.signature(_val)
+            _parameter_keys = list(_signature.parameters.keys())
+
+            # --------------------------------------------------- 02.04
+            # loop over parameters
+            for _parameter_key in _parameter_keys:
+                # ----------------------------------------------- 02.04.01
+                # if hashable parameter
+                if _parameter_key == "hashable":
+                    # hashable must be first
+                    if "hashable" != _parameter_keys[1]:
+                        raise e.validation.NotAllowed(
+                            msgs=[
+                                f"If using `hashable` kwarg in function {_val} make "
+                                f"sure that it is first kwarg i.e. it immediately "
+                                f"follows after self"
+                            ]
+                        )
+                    # hashable annotation must be subclass of m.HashableClass
+                    e.validation.ShouldBeSubclassOf(
+                        value=_signature.parameters["hashable"].annotation,
+                        value_types=(m.HashableClass, ),
+                        msgs=["Was expecting annotation for kwarg `hashable` to be "
+                              "proper subclass"]
+                    ).raise_if_failed()
+                # ----------------------------------------------- 02.04.02
+                # infos is reserved
+                elif _parameter_key == "infos":
+                    raise e.code.CodingError(
+                        msgs=["Refrain from defining attribute `infos` as it is "
+                              "reserved for creating folder where we store hashables "
+                              "info so that server can build instance from it ..."]
+                    )
+                # ----------------------------------------------- 02.04.03
+                # else make sure that annotation is int, float or str ...
+                else:
+                    e.validation.ShouldBeSubclassOf(
+                        value=_signature.parameters[_parameter_key].annotation,
+                        value_types=(int, float, str),
+                        msgs=["Was restrict annotation types for proper "
+                              "kwarg serialization so that they can be passed over "
+                              "cli ... and can also determine path for storage"]
+                    ).raise_if_failed()
 
     def log_artifact(self, name: str, data: t.Any):
-        _file = self.storage_dir / "artifacts" / name
+        _file = self.path / "artifacts" / name
         if _file.exists():
             raise e.code.CodingError(
                 msgs=[
@@ -465,7 +541,7 @@ class JobRunner:
         )
 
     def run(self):
-        _run_file = pathlib.Path(sys.argv[0])
+        _run_file = pathlib.Path(self.py_script)
         _root_dir = _run_file.parent / _run_file.name.replace(".py", "")
         if not _root_dir.exists():
             _root_dir.mkdir()

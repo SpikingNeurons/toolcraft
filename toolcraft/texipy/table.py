@@ -11,7 +11,7 @@ from .. import util
 from .__base__ import LaTeX, Color, Font, Scalar, Positioning, FloatObjAlignment
 
 
-class TabularColsFmt(enum.Enum):
+class ColumnFmt(enum.Enum):
     """
     https://www.overleaf.com/learn/latex/Tables
 
@@ -91,12 +91,13 @@ class TabularColsFmt(enum.Enum):
     def __call__(self, width: Scalar = None, insert: str = None):
         # if vertical line's no kwargs will be used
         if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"no use for __call__ while using {self} as we need not "
-                    f"parametrize it"
-                ]
-            )
+            if width is not None or insert is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"no use for pass kwargs while using `ColumnFmt.{self.name}` "
+                        f"as we need not parametrize it"
+                    ]
+                )
 
         # for inserts ...
         if self in [self.insert, self.insert_before, self.insert_after]:
@@ -137,8 +138,21 @@ class TabularColsFmt(enum.Enum):
             )
         return self.__call__()
 
+    @classmethod
+    def enum_from_value(cls, _str: str) -> "ColumnFmt":
+        for _ in cls:
+            if _.value == _str[0:1]:
+                return _
+        raise e.validation.NotAllowed(
+            msgs=[
+                f"Cannot recognize string `{_str}`",
+                "Should be one of:",
+                [_.value for _ in cls]
+            ]
+        )
 
-class TabularPos(enum.Enum):
+
+class TablePos(enum.Enum):
     """
     https://www.overleaf.com/learn/latex/Tables
 
@@ -224,7 +238,7 @@ class MultiRowCell(LaTeX):
 class MultiColumnCell(LaTeX):
 
     num_cols: int = None
-    t_col_fmt: t.Union[TabularColsFmt, str] = None
+    t_col_fmt: t.Union[ColumnFmt, str] = None
     value: t.Union[LaTeX, str] = None
 
     @property
@@ -254,7 +268,7 @@ class MultiColumnCell(LaTeX):
             )
 
         # validate t_col_fmt
-        if isinstance(self.t_col_fmt, TabularColsFmt):
+        if isinstance(self.t_col_fmt, ColumnFmt):
             if not self.t_col_fmt.is_legit_column:
                 raise e.validation.NotAllowed(
                     msgs=[f"Only legit column format can be specified ... "
@@ -280,15 +294,19 @@ class Row(LaTeX):
     height: Scalar = None
 
     @property
+    def use_new_lines(self) -> bool:
+        return False
+
+    @property
     def open_clause(self) -> str:
         return ""
 
     @property
     def close_clause(self) -> str:
         if self.height is None:
-            _ret = " \\\\ "
+            _ret = " \\\\ %"
         else:
-            _ret = f" \\\\ [{self.height}]"
+            _ret = f" \\\\ [{self.height}] %"
         return _ret
 
     def __len__(self):
@@ -299,8 +317,90 @@ class Row(LaTeX):
         return _ret
 
     @classmethod
-    def from_list(cls, items: t.List[t.Union[str, LaTeX]]) -> "Row":
-        _ret = Row()
+    def from_list(
+        cls, items: t.List[t.Union[str, LaTeX]], height: Scalar = None
+    ) -> "Row":
+        _ret = Row(height=height)
+        for _ in items:
+            _ret.add_item(_)
+        return _ret
+
+    def generate(self) -> str:
+        return " & ".join([str(_) for _ in self._items])
+
+
+@dataclasses.dataclass
+class TableColsDef(LaTeX):
+
+    @property
+    def use_new_lines(self) -> bool:
+        return False
+
+    @property
+    def open_clause(self) -> str:
+        return "{"
+
+    @property
+    def close_clause(self) -> str:
+        return "}"
+
+    def init(self):
+        # call super
+        super().init()
+
+        # some vars to track previous items
+        # noinspection PyAttributeOutsideInit,PyTypeChecker
+        self._previous_fmt = None  # type: ColumnFmt
+        # noinspection PyAttributeOutsideInit
+        self.uses_stretched_fmt = False
+        # noinspection PyAttributeOutsideInit
+        self.num_cols = 0
+
+    def generate(self) -> str:
+        return "".join([str(_) for _ in self._items])
+
+    def add_item(self, item: t.Union[str, ColumnFmt]) -> "TableColsDef":
+        # get vars for current
+        _current_fmt = ColumnFmt.enum_from_value(str(item))
+
+        # if there were some items already added then do some validations
+        if bool(self._items):
+            if self._previous_fmt is ColumnFmt.insert_before:
+                if not _current_fmt.is_legit_column:
+                    raise e.validation.NotAllowed(
+                        msgs=[
+                            f"Previous item added was for {ColumnFmt.insert_before}",
+                            f"So we expect it to follow with legit column"
+                        ]
+                    )
+            if _current_fmt is ColumnFmt.insert_after:
+                if not self._previous_fmt.is_legit_column:
+                    raise e.validation.NotAllowed(
+                        msgs=[
+                            f"Current item is for {ColumnFmt.insert_after} so we "
+                            f"expect the previous item to be legit column",
+                        ]
+                    )
+
+        # assign internal vars
+        # noinspection PyAttributeOutsideInit
+        self._previous_fmt = _current_fmt
+
+        # set uses_stretched_fmt
+        # noinspection PyAttributeOutsideInit
+        self.uses_stretched_fmt = _current_fmt is ColumnFmt.stretched
+
+        # increment col count
+        if _current_fmt.is_legit_column:
+            self.num_cols += 1
+
+        # return ... note that we convert to str as Enums are not acceptable
+        # noinspection PyTypeChecker
+        return super().add_item(str(item))
+
+    @classmethod
+    def from_list(cls, items: t.List[t.Union[str, ColumnFmt]]) -> "TableColsDef":
+        _ret = TableColsDef()
         for _ in items:
             _ret.add_item(_)
         return _ret
@@ -321,6 +421,13 @@ class Table(LaTeX):
       \\RequirePackage{array}%  useful for paragraph columns ... see TabularColsFmt
       \\RequirePackage{booktabs}%  useful for professional line bars and looks
       \\RequirePackage{tabularx}%  useful for auto sizing columns
+      \\RequirePackage{ctable}%  useful for ...
+      \\RequirePackage{makecell}%  useful for formatting table cell e.g. \\thead
+
+    Also make sure you set this globally .. for vertical centering text in X column
+    This is because the default is bottom ..
+    # todo: find better ways later ... this doesn't seem to work though
+    \\renewcommand\\tabularxcolumn[1]{m{#1}}%
 
     type:
       'normal'
@@ -355,9 +462,13 @@ class Table(LaTeX):
     alignment: FloatObjAlignment = None
     caption: str = None
     type: t.Literal['normal', 'array', '*', 'X'] = 'X'
-    t_pos: TabularPos = TabularPos.centered
+    t_pos: TablePos = TablePos.centered
     t_width: Scalar = None
-    t_cols_fmt: t.List[t.Union[TabularColsFmt, str]] = None
+    t_cols_def: TableColsDef = None
+
+    @property
+    def is_auto_stretchable(self) -> bool:
+        return self.type in ['*', 'X']
 
     @property
     def latex_type(self) -> str:
@@ -385,7 +496,7 @@ class Table(LaTeX):
             _ret = []
         else:
             _ret = [
-                f"% >> start table {'...' if self.label is None else self.label}",
+                f"% >> start table `{'...' if self.label is None else self.label}`",
                 f"\\begin{{table}}"
                 f"{'' if self.positioning is None else self.positioning}%",
             ]
@@ -407,7 +518,7 @@ class Table(LaTeX):
             f"\\begin{{{self.latex_type}}}"
             f"{_width}"
             f"[{self.t_pos}]"
-            f"{{{''.join(self.t_cols_fmt)}}}%")
+            f"{self.t_cols_def}%")
 
         return "\n".join(_ret)
 
@@ -422,7 +533,7 @@ class Table(LaTeX):
             _ret.append(f"\\label{{{self.label}}}%")
         if self.type != 'array':
             _ret += [
-                f"% >> end table {'...' if self.label is None else self.label}",
+                f"% >> end table `{'...' if self.label is None else self.label}`",
                 "\\end{table}%"
             ]
         return "\n".join(_ret)
@@ -431,16 +542,21 @@ class Table(LaTeX):
         # call super
         super().init()
 
-        # auto figure out num columns
-        # noinspection PyAttributeOutsideInit
-        self._num_cols = len([_ for _ in self.t_cols_fmt if _.is_legit_column])
+        # there should be minimum one col present
+        if self.t_cols_def.num_cols < 1:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "Please specify at-least one legit column in `self.t_cols_def` ...",
+                    "Did you miss to add items to it ???"
+                ]
+            )
 
     def init_validate(self):
         # call super
         super().init_validate()
 
         # should not be None
-        if self.t_cols_fmt is None:
+        if self.t_cols_def is None:
             raise e.validation.NotAllowed(
                 msgs=[f"Please supply value for field `t_cols_fmt`"]
             )
@@ -460,28 +576,29 @@ class Table(LaTeX):
             ).raise_if_failed()
 
         # allow column format stretched i.e. X for type=='X'
-        for _ in self.t_cols_fmt:
-            if _ == TabularColsFmt.stretched:
-                if self.type != 'X':
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"You can use column fmt {_} only while using "
-                            f"table type 'X' i.e. tabularx"
-                        ]
-                    )
+        if self.t_cols_def.uses_stretched_fmt:
+            if self.type != 'X':
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"YThe t_cols_def uses one or more {ColumnFmt.stretched}",
+                        f"This is only allowed when table type is 'X' i.e. tabularx",
+                    ]
+                )
 
-    def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
-        if isinstance(item, Row):
-            raise e.code.NotAllowed(
-                msgs=["Please use add_row method instead of add_item for adding Row"]
-            )
-        return super().add_item(item)
+        # specify t_width when table is stretchable
+        if self.is_auto_stretchable:
+            if self.t_width is None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"Please specify `t_width` as table is auto stretchable ..."
+                    ]
+                )
 
     def add_row(self, row: Row):
-        if len(row) != self._num_cols:
+        if len(row) != self.t_cols_def.num_cols:
             raise e.validation.NotAllowed(
-                msgs=[f"We only expect to have {self._num_cols} items in row but "
-                      f"instead we found {len(row)}"]
+                msgs=[f"We only expect to have {self.t_cols_def.num_cols} items in "
+                      f"row but instead we found {len(row)}"]
             )
         self.add_item(item=row)
 
