@@ -62,6 +62,23 @@ class JobGroupFlowId(t.NamedTuple):
         return f"[ stage: {self.stage}, job_group: {self.job_group} ]"
 
 
+@dataclasses.dataclass
+class Tag:
+    name: str
+
+
+@dataclasses.dataclass
+class TagManager:
+    """
+    todo: support this for every job ....
+    """
+    job: "Job"
+    started: Tag = Tag(name="started")
+    failed: Tag = Tag(name="failed")
+    finished: Tag = Tag(name="finished")
+    description: Tag = Tag(name="description")
+
+
 class Job:
     """
     Note that this job is available only on server i.e. to the submitted job on
@@ -69,6 +86,11 @@ class Job:
 
     Note this can read cli args and construct `method` and `method_kwargs` fields
     """
+
+    @property
+    @util.CacheResult
+    def tag_manager(self) -> TagManager:
+        return TagManager(job=self)
 
     @property
     def flow_id(self) -> JobFlowId:
