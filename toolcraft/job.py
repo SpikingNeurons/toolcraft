@@ -205,6 +205,19 @@ class Job:
         if self.is_on_main_machine:
             self._launch_on_cluster()
         else:
+            # reconfig logger to change log file for job
+            import logging
+            _log = self.path / "toolcraft.log"
+            logger.setup_logging(
+                propagate=False,
+                level=logging.NOTSET,
+                # todo: here we can config that on server where things will be logged
+                handlers=[
+                    logger.get_rich_handler(),
+                    logger.get_stream_handler(),
+                    logger.get_file_handler(_log.local_path),
+                ],
+            )
             _start = datetime.datetime.now()
             _LOGGER.info(msg=f"Starting job {self.id} at {_start.ctime()}")
             self.method(**self.method_kwargs)
@@ -241,7 +254,7 @@ class Job:
             # todo: when self.path is not local we need to see how to log files ...
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
-            _log = self.path / ".log"
+            _log = self.path / "bsub.log"
             _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
             if bool(self.wait_on):
                 _wait_on = \
@@ -275,17 +288,7 @@ class Job:
         for _arg in sys.argv[2:]:
             _key, _str_val = _arg.split("=")
             if _key == _HASHABLE_KWARG:
-                _hashable_info_file = \
-                    runner.cwd / _MONITOR_FOLDER / f"{_str_val}.info"
-                if _hashable_info_file.exists():
-                    _val = m.HashableClass.get_class(_hashable_info_file).from_yaml(
-                        _hashable_info_file
-                    )
-                else:
-                    raise e.code.CodingError(
-                        msgs=[f"We expect to have info file {_hashable_info_file} "
-                              f"in storage"]
-                    )
+                _val = runner.monitor.get_hashable_from_hex_hash(hex_hash=_str_val)
             else:
                 _val = _method_signature.parameters[_key].annotation(_str_val)
             _method_kwargs[_key] = _val
@@ -501,11 +504,24 @@ class Monitor:
                 f"Creating hashable file {_file.local_path.as_posix()}")
             _file.write_text(hashable.yaml())
 
+    def get_hashable_from_hex_hash(self, hex_hash: str) -> m.HashableClass:
+        _hashable_info_file = self.hashables_path / f"{hex_hash}.info"
+        if _hashable_info_file.exists():
+            # noinspection PyTypeChecker
+            return m.HashableClass.get_class(_hashable_info_file).from_yaml(
+                _hashable_info_file
+            )
+        else:
+            raise e.code.CodingError(
+                msgs=[f"We expect that you should have already created file "
+                      f"{_hashable_info_file}"]
+            )
+
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'runner_monitor'],
-    things_not_to_be_overridden=['cwd', 'job', 'runner_monitor']
+    things_to_be_cached=['cwd', 'job', 'flow', 'monitor'],
+    things_not_to_be_overridden=['cwd', 'job', 'monitor']
 )
 class Runner(m.HashableClass, abc.ABC):
     """
