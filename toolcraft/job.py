@@ -368,7 +368,7 @@ class JobGroup:
         # ------------------------------------------------------------- 01
         # make command to run on cli
         # there is nothing to do here as this is just a blank job that waits ...
-        _command = ""
+        _command = "python -c 'import time; time.sleep(1)'"
 
         # ------------------------------------------------------------- 02
         if self.runner.cluster_type is JobRunnerClusterType.local:
