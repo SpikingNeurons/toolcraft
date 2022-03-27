@@ -1,15 +1,16 @@
 """
 todo: deprecate in favour of dapr module
 """
-
+import abc
+import datetime
 import enum
-import pathlib
 import inspect
 import typing as t
 import dataclasses
 import os
 import sys
 import pickle
+import hashlib
 import types
 
 from . import logger
@@ -17,6 +18,7 @@ from . import error as e
 from . import marshalling as m
 from . import util
 from . import storage as s
+from . import richy
 
 
 _LOGGER = logger.get_logger()
@@ -24,7 +26,7 @@ _LOGGER = logger.get_logger()
 
 @dataclasses.dataclass
 class Viewer:
-    runner: "JobRunner"
+    runner: "Runner"
     fn: t.Callable
     fn_kwargs: t.Dict
 
@@ -37,13 +39,55 @@ class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     local = enum.auto()
 
 
-@dataclasses.dataclass(frozen=True)
+class JobFlowId(t.NamedTuple):
+    """
+    A tuple that helps you find job in the Flow
+    """
+    stage: int
+    job_group: int
+    job: int
+
+    def __str__(self):
+        return f"[ stage: {self.stage}, job_group: {self.job_group}, job: {self.job} ]"
+
+
+class JobGroupFlowId(t.NamedTuple):
+    """
+    A tuple that helps you find job group in the Flow
+    """
+    stage: int
+    job_group: int
+
+    def __str__(self):
+        return f"[ stage: {self.stage}, job_group: {self.job_group} ]"
+
+
 class Job:
-    method: types.MethodType
-    method_kwargs: t.Dict[str, t.Union[m.HashableClass, int, float, str]] = \
-        dataclasses.field(default_factory=dict)
-    jobs_from_last_stage: t.List["Job"] = \
-        dataclasses.field(default_factory=list)
+    """
+    Note that this job is available only on server i.e. to the submitted job on
+    cluster ... on job launching machine access to this property will raise error
+
+    Note this can read cli args and construct `method` and `method_kwargs` fields
+    """
+
+    @property
+    def flow_id(self) -> JobFlowId:
+        if self._flow_id is None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"This must be set by {Flow} using its items field ..."
+                ]
+            )
+        return self._flow_id
+
+    @flow_id.setter
+    def flow_id(self, value: JobFlowId):
+        if self._flow_id is None:
+            self._flow_id = value
+        else:
+            raise e.code.CodingError(
+                msgs=[f"This property is already set you cannot set it again ..."]
+            )
 
     @property
     @util.CacheResult
@@ -54,8 +98,11 @@ class Job:
         + fn_kwargs if present
         + hashable hex_hash if present
         """
-        _n = self.path.suffix_path.replace("/", "x")
-        return f"jx{_n}"
+        return self.path.suffix_path.replace("/", "x")
+
+    @property
+    def is_on_main_machine(self) -> bool:
+        return self.runner.is_on_main_machine
 
     @property
     @util.CacheResult
@@ -78,38 +125,47 @@ class Job:
             _ret.mkdir(parents=True, exist_ok=True)
         return _ret
 
-    @property
-    @util.CacheResult
-    def runner(self) -> "JobRunner":
+    def __init__(
+        self,
+        runner: "Runner",
+        method: t.Callable,
+        method_kwargs: t.Dict[str, t.Union[m.HashableClass, int, float, str]] = None,
+        wait_on: t.List["JobGroup"] = None,
+    ):
+
+        # assign some vars
+        self.runner = runner
+        # noinspection PyTypeChecker
+        self.method = method  # type: types.MethodType
+        self.method_kwargs = method_kwargs or {}
+        self.wait_on = wait_on or []
+        # noinspection PyTypeChecker
+        self._flow_id = None  # type: JobFlowId
+
+        # make sure that method is from same runner instance
         try:
             # noinspection PyTypeChecker
-            _ret = self.method.__self__  # type: JobRunner
+            if id(self.method.__self__) != id(runner):
+                raise e.code.CodingError(
+                    msgs=["Was expecting them to be same instance"]
+                )
         except Exception as _ex:
             raise e.code.CodingError(
                 msgs=[
                     f"Doesn't seem like a method of an instance ...", _ex
                 ]
             )
-        e.validation.ShouldBeInstanceOf(
-            value=_ret, value_types=(JobRunner, ),
-            msgs=[f"expected method to be from a instance of any subclass "
-                  f"of {JobRunner}"]
-        ).raise_if_failed()
-        return _ret
 
-    def __post_init__(self):
         # some special methods cannot be used for job
-        _runner = self.runner
         e.validation.ShouldNotBeOneOf(
-            value=self.method, values=[
-                _runner.class_init, _runner.log_artifact,
-                _runner.run_flow, _runner.run, _runner.viewer,
+            value=method, values=[
+                runner.class_init, runner.run,
             ],
             msgs=["Some special methods cannot be used as job ..."]
         ).raise_if_failed()
 
         # make <hex_hash>.info if not present
-        _infos_folder = _runner.cwd / "infos"
+        _infos_folder = runner.cwd / "infos"
         if not _infos_folder.exists():
             _infos_folder.mkdir()
         if "hashable" in self.method_kwargs.keys():
@@ -118,11 +174,26 @@ class Job:
             if not _info_file.exists():
                 _info_file.write_text(_hashable.yaml())
 
-    def __call__(self) -> t.Any:
-        _ret = self.method(**self.method_kwargs)
-        return _ret
+    def __call__(self):
+        if self.is_on_main_machine:
+            self._launch_on_cluster()
+        else:
+            _start = datetime.datetime.now()
+            _LOGGER.info(msg=f"Starting job {self.id} at {_start.ctime()}")
+            self.method(**self.method_kwargs)
+            _end = datetime.datetime.now()
+            _LOGGER.info(
+                msg=f"Finished job {self.id} at {_start.ctime()}",
+                msgs=[
+                    {
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds())
+                    }
+                ]
+            )
 
-    def launch_on_cluster(self):
+    def _launch_on_cluster(self):
         # ------------------------------------------------------------- 01
         # make command to run on cli
         _kwargs_as_cli_strs = []
@@ -145,10 +216,147 @@ class Job:
             #   dapr telemetry
             _log = self.path / ".log"
             _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
-            if bool(self.jobs_from_last_stage):
+            if bool(self.wait_on):
                 _wait_on = \
-                    " && ".join([f"done({_.id})" for _ in self.jobs_from_last_stage])
-                _wait_over = f'-w "{_wait_on}" '
+                    " && ".join([f"done({_.id})" for _ in self.wait_on])
+                _nxdi_prefix += f'-w "{_wait_on}" '
+            os.system(_nxdi_prefix + _command)
+        else:
+            raise e.code.ShouldNeverHappen(
+                msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"]
+            )
+
+    @classmethod
+    def from_cli(
+        cls,
+        runner: "Runner",
+    ) -> "Job":
+        # test if running on machines that execute jobs ...
+        if runner.is_on_main_machine:
+            raise e.code.CodingError(
+                msgs=[
+                    "This call is available only for jobs submitted to server ... "
+                    "it cannot be accessed by instance which launches jobs ..."
+                ]
+            )
+
+        # fetch from args
+        _method_name = sys.argv[2]
+        _method = getattr(runner, _method_name)
+        _method_signature = inspect.signature(_method)
+        _method_kwargs = {}
+        for _arg in sys.argv[3:]:
+            _key, _str_val = _arg.split("=")
+            if _key == "hashable":
+                _info_file = runner.cwd / "infos" / f"{_str_val}.info"
+                if _info_file.exists():
+                    _val = _method_signature.parameters[_key].annotation.from_yaml(
+                        _info_file
+                    )
+                else:
+                    raise e.code.CodingError(
+                        msgs=[f"We expect to have info file {_info_file} "
+                              f"in storage"]
+                    )
+            else:
+                _val = _method_signature.parameters[_key].annotation(_str_val)
+            _method_kwargs[_key] = _val
+
+        # return
+        return Job(
+            runner=runner,
+            method=_method, method_kwargs=_method_kwargs,
+        )
+
+    def log_artifact(self, name: str, data: t.Any):
+        _file = self.path / "artifacts" / name
+        if _file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Artifact {name} already exists ... cannot write"
+                ]
+            )
+        # todo: make this compatible for all type of path
+        with open(_file.local_path.as_posix(), 'wb') as _file:
+            pickle.dump(data, _file)
+
+
+class JobGroup:
+    """
+    Job's in this JobGroup will run in parallel and other JobGroup's can
+      wait on previous JobGroup's
+    We can have multiple JobGroup within
+      stages so that we can move ahead with next stages if we only depend on one of
+      JobGroup from previous stage
+    """
+
+    @property
+    def flow_id(self) -> JobGroupFlowId:
+        if self._flow_id is None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"This must be set by {Flow} using its items field ..."
+                ]
+            )
+        return self._flow_id
+
+    @flow_id.setter
+    def flow_id(self, value: JobGroupFlowId):
+        if self._flow_id is None:
+            self._flow_id = value
+        else:
+            raise e.code.CodingError(
+                msgs=[f"This property is already set you cannot set it again ..."]
+            )
+
+    @property
+    @util.CacheResult
+    def id(self) -> str:
+        """
+        A unique id for job group ...
+        """
+        _job_ids = "-".join([_.id for _ in self.jobs])
+        return f"jgx{hashlib.sha256(_job_ids.encode('utf-8')).hexdigest()}"
+
+    @property
+    def is_on_main_machine(self) -> bool:
+        return self.runner.is_on_main_machine
+
+    def __init__(
+        self,
+        runner: "Runner",
+        jobs: t.List[Job],
+    ):
+        # save vars
+        self.runner = runner
+        self.jobs = jobs
+        # noinspection PyTypeChecker
+        self._flow_id = None  # type: JobGroupFlowId
+
+    def __call__(self):
+        if self.is_on_main_machine:
+            self._launch_on_cluster()
+        else:
+            raise e.code.CodingError(
+                msgs=["We assume that this will never get called on cluster ",
+                      "JobGroup should only get called on main machine ..."]
+            )
+
+    def _launch_on_cluster(self):
+        # ------------------------------------------------------------- 01
+        # make command to run on cli
+        # there is nothing to do here as this is just a blank job that waits ...
+        _command = ""
+
+        # ------------------------------------------------------------- 02
+        if self.runner.cluster_type is JobRunnerClusterType.local:
+            ...
+        elif self.runner.cluster_type is JobRunnerClusterType.ibm_lsf:
+            _nxdi_prefix = f'bsub -J {self.id} '
+            if bool(self.jobs):
+                _wait_on = \
+                    " && ".join([f"done({_.id})" for _ in self.jobs])
+                _nxdi_prefix += f'-w "{_wait_on}" '
             os.system(_nxdi_prefix + _command)
         else:
             raise e.code.ShouldNeverHappen(
@@ -156,12 +364,92 @@ class Job:
             )
 
 
+class Flow:
+    """
+    This will decide how jobs will be executed on cluster
+    Gets called when script is called without arguments
+
+    Elements within list are run in parallel
+    A sequence of lists is run sequentially
+    First element of every list waits for last element of element in previous list
+      >> Easy way to thing is UI layouts div mechanism
+    """
+
+    def __init__(
+        self,
+        stages: t.List[t.List[JobGroup]],
+        runner: "Runner",
+    ):
+        # test if running on main machine which launches jobs
+        # there will be only one arg
+        if not runner.is_on_main_machine:
+            raise e.code.CodingError(
+                msgs=[
+                    "This property `JobRunner.flow` should make instance of Flow.",
+                    "This instance can be create only on main machine from where the "
+                    "script is launched",
+                    "While when jobs are running on cluster they need not use this "
+                    "instance .. instead they will be using Job instance",
+                ]
+            )
+
+        # save reference
+        self.stages = stages
+        self.runner = runner
+
+        # set flow ids
+        for _stage_id, _stage in enumerate(self.stages):
+            for _job_group_id, _job_group in enumerate(_stage):
+                _job_group.flow_id = JobGroupFlowId(
+                    stage=_stage_id, job_group=_job_group_id,
+                )
+                for _job_id, _job in enumerate(_job_group.jobs):
+                    _job.flow_id = JobFlowId(
+                        stage=_stage_id, job_group=_job_group_id, job=_job_id
+                    )
+
+    def __call__(self):
+        _cluster_type = self.runner.cluster_type
+        if _cluster_type is JobRunnerClusterType.local:
+            for _stage in self.stages:
+                for _job_group in _stage:
+                    for _job in _job_group.jobs:
+                        _job()
+                    _job_group()
+        elif _cluster_type is JobRunnerClusterType.ibm_lsf:
+            _sp = richy.SimpleStatusPanel(
+                title=f"Launch stages on `{_cluster_type.name}`", tc_log=_LOGGER
+            )
+            with _sp:
+                _p = _sp.progress
+                _s = _sp.status
+                _s.update(spinner_speed=1.0, spinner=None, status="started ...")
+                for _stage_id, _stage in enumerate(self.stages):
+                    _jobs = []
+                    for _job_group in _stage:
+                        _jobs += _job_group.jobs
+                        _jobs += [_job_group]
+                    for _job in _p.track(
+                        sequence=_jobs, task_name=f"stage {_stage_id:03d}"
+                    ):
+                        _s.update(
+                            spinner_speed=1.0,
+                            spinner=None, status=f"launching {_job.flow_id} ..."
+                        )
+                        _job()
+                _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
+        else:
+            raise e.code.NotSupported(
+                msgs=[f"Not supported {_cluster_type}"]
+            )
+
+
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job'],
+    things_to_be_cached=['cwd', 'job', 'flow'],
     things_not_to_be_overridden=['cwd', 'job']
 )
-class JobRunner(m.HashableClass):
+class Runner(m.HashableClass, abc.ABC):
     """
     Can use click or pyinvoke also but not bothered about it as we don't intend to
     call ourselves from cli ... todo: check and do if it is interesting
@@ -206,7 +494,8 @@ class JobRunner(m.HashableClass):
 
     @property
     def py_script(self) -> str:
-        return sys.argv[0]
+        import pathlib
+        return pathlib.Path(sys.argv[0]).name
 
     @property
     @util.CacheResult
@@ -214,6 +503,7 @@ class JobRunner(m.HashableClass):
         """
         todo: adapt code so that the cwd can be on any other file system instead of CWD
         """
+        import pathlib
         _py_script = self.py_script
         _folder_name = _py_script.replace(".py", "")
         _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
@@ -228,17 +518,22 @@ class JobRunner(m.HashableClass):
                 f"Please debug ..."
             ]
         ).raise_if_failed()
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
         return _ret
+
+    @property
+    @abc.abstractmethod
+    def flow(self) -> Flow:
+        ...
+
+    @property
+    def is_on_main_machine(self) -> bool:
+        return len(sys.argv) == 1
 
     @property
     @util.CacheResult
     def job(self) -> Job:
-        """
-        Note that this job is available only on server i.e. to the submitted job on
-        cluster ... on job launching machine access to this property will raise error
-
-        Note this can read cli args and construct `method` and `method_kwargs` fields
-        """
 
         if len(sys.argv) == 1:
             raise e.code.CodingError(
@@ -268,7 +563,25 @@ class JobRunner(m.HashableClass):
                 else:
                     _val = _method_signature.parameters[_key].annotation(_str_val)
                 _method_kwargs[_key] = _val
-            return Job(method=_method, method_kwargs=_method_kwargs)
+            return Job(method=_method, method_kwargs=_method_kwargs, runner=self)
+
+    def init(self):
+        # call super
+        super().init()
+
+        # setup logger
+        import logging, pathlib
+        logger.setup_logging(
+            propagate=False,
+            level=logging.NOTSET,
+            handlers=[
+                logger.get_rich_handler(),
+                logger.get_stream_handler(),
+                logger.get_file_handler(
+                    pathlib.Path(self.py_script.replace(".py", ".log"))
+                ),
+            ],
+        )
 
     @classmethod
     def class_init(cls):
@@ -279,7 +592,7 @@ class JobRunner(m.HashableClass):
         # ------------------------------------------------------- 02
         # test fn signature
         # loop over attributes
-        for _attr in [_ for _ in dir(cls) if not _.startswith("_")]:
+        for _attr in [_ for _ in cls.__dict__.keys() if not _.startswith("_")]:
             # --------------------------------------------------- 02.01
             # get cls attr value
             _val = getattr(cls, _attr)
@@ -324,243 +637,25 @@ class JobRunner(m.HashableClass):
                               "reserved for creating folder where we store hashables "
                               "info so that server can build instance from it ..."]
                     )
-                # ----------------------------------------------- 02.04.03
+                # ----------------------------------------------- 02.04.02
+                # if self continue
+                elif _parameter_key == "self":
+                    continue
+                # ----------------------------------------------- 02.04.04
                 # else make sure that annotation is int, float or str ...
                 else:
                     e.validation.ShouldBeSubclassOf(
                         value=_signature.parameters[_parameter_key].annotation,
                         value_types=(int, float, str),
-                        msgs=["Was restrict annotation types for proper "
+                        msgs=["We restrict annotation types for proper "
                               "kwarg serialization so that they can be passed over "
-                              "cli ... and can also determine path for storage"]
+                              "cli ... and can also determine path for storage",
+                              f"Check kwarg `{_parameter_key}` defined in function "
+                              f"`{cls.__name__}.{_val.__name__}`"]
                     ).raise_if_failed()
 
-    def log_artifact(self, name: str, data: t.Any):
-        _file = self.path / "artifacts" / name
-        if _file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} already exists ... cannot write"
-                ]
-            )
-        with open(_file.as_posix(), 'wb') as _file:
-            pickle.dump(data, _file)
-
-    def run_flow(self, run_file: pathlib.Path, root_dir: pathlib.Path):
-
-        # ------------------------------------------ 01
-        # tuple to job make
-        def _tuple_2_job(
-            _t: t.Tuple[t.Callable, t.Dict], _prev_js,
-        ) -> JobRunnerHelper:
-
-            # -------------------------------------- 01.01
-            # resolve tuple
-            (_fn, _fn_kwargs) = _t
-            # make sure that _fn is not one of reserved methods
-            e.validation.ShouldNotBeOneOf(
-                value=_fn, values=[self.flow, ],
-                msgs=[
-                    f"We do not expect you to reserve methods in the flow ..."
-                ]
-            ).raise_if_failed()
-            # check if all kwargs are supplied
-            for _sk in inspect.signature(_fn).parameters.keys():
-                if _sk not in _fn_kwargs.keys():
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"You did not supply kwarg `{_sk}` while defining flow ..."
-                        ]
-                    )
-            # check is some non-supported kwargs are supplied
-            for _dk in _fn_kwargs.keys():
-                if _dk not in inspect.signature(_fn).parameters.keys():
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Supplied key `{_dk}` if not valid kwarg for method {_fn}"
-                        ]
-                    )
-
-            # -------------------------------------- 01.02
-            # check
-            if not inspect.ismethod(_fn):
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Please provide method of JobRunner instance ...",
-                        f"Found unrecognized {_t}"
-                    ]
-                )
-
-            # -------------------------------------- 01.03
-            # make command
-            # noinspection PyUnresolvedReferences
-            _fn_name = _fn.__func__.__name__
-            _fn_kwargs_str_list = []
-            for _k, _v in _fn_kwargs.items():
-                if isinstance(_v, m.HashableClass):
-                    # this is our opportunity to create folder and info file
-                    _hash_info = root_dir / f"{_v.hex_hash}.info"
-                    _hash_dir = root_dir / _v.hex_hash
-                    if not _hash_info.exists():
-                        _hash_info.write_text(_v.yaml())
-                    (root_dir / _v.hex_hash).mkdir(exist_ok=True)
-                    # make token
-                    _fn_kwargs_str_list.append(
-                        f"{_k}={_v.hex_hash}"
-                    )
-                else:
-                    _fn_kwargs_str_list.append(
-                        f"{_k}={_v}"
-                    )
-
-            # -------------------------------------- 01.04
-            # make and return job runner
-            return JobRunnerHelper(
-                runner=self,
-                run_file=run_file,
-                root_dir=root_dir,
-                fn_name=_fn_name,
-                fn_kwargs=_fn_kwargs_str_list,
-                jobs_from_last_stage=_prev_js,
-            )
-
-        # ------------------------------------------ 02
-        # get flow
-        _flow = self.flow()
-
-        # ------------------------------------------ 03
-        # helper recursive function
-        def _run_flow(
-            _col_jobs: t.Union[
-                t.List[t.List[t.Union[t.Tuple[t.Callable, t.Dict], t.List]]],
-                t.Tuple[t.Callable, t.Dict]
-            ],
-            _msg: str,
-            _prev_jobs: t.List[JobRunnerHelper],
-        ):
-            """
-            import typing as t
-
-            ll = [
-                [1, [[234, 222, [[123]]]]],
-                [2, 3,],
-                [4, 5, [[5], [99]]],
-                [5, [[6,7,]], [[8], [9, 10], [11]]],
-            ]
-
-
-
-            def _fn(
-                _col_jobs: t.Union[t.List[t.List], int],
-                _msg: str,
-                _prev_jobs: t.List
-            ):
-
-                print(_col_jobs, _msg, _prev_jobs)
-
-                if isinstance(_col_jobs, int):
-                    return _col_jobs
-
-                _last_row_prev_jobs = _prev_jobs
-                _curr_row_prev_jobs = []
-
-                for _rid, _row_job in enumerate(_col_jobs):
-                    if not isinstance(_row_job, list):
-                        raise Exception("expected row which is list")
-                    _curr_row_prev_jobs = []
-                    for _eid, _elem in enumerate(_row_job):
-                        _last_job = _fn(_elem, _msg + f'.r{_rid}[{_eid}]', _last_row_prev_jobs)
-                        if isinstance(_last_job, list):
-                            _curr_row_prev_jobs.extend(_last_job)
-                        else:
-                            _curr_row_prev_jobs.append(_last_job)
-                    _last_row_prev_jobs = _curr_row_prev_jobs
-
-                return _curr_row_prev_jobs
-
-
-
-            _fn(ll, "", [])
-
-            """
-
-            # if tuple creat job runner and return
-            if isinstance(_col_jobs, tuple):
-                return _tuple_2_job(_col_jobs, _prev_jobs)
-
-            # some book-up vars
-            _last_row_prev_jobs = _prev_jobs  # type: t.List[JobRunnerHelper]
-            _curr_row_prev_jobs = []  # type: t.List[JobRunnerHelper]
-
-            for _rid, _row_job in enumerate(_col_jobs):
-                if not isinstance(_row_job, list):
-                    raise e.code.CodingError(
-                        msgs=[f"expected row which is list, found {type(_row_job)}"]
-                    )
-                _curr_row_prev_jobs = []
-                for _eid, _elem in enumerate(_row_job):
-                    _c_msg = _msg + f'.r{_rid}[{_eid}]'
-                    _last_job = _run_flow(_elem, _c_msg, _last_row_prev_jobs)
-                    if isinstance(_last_job, list):
-                        _curr_row_prev_jobs.extend(_last_job)
-                    else:
-                        _curr_row_prev_jobs.append(_last_job)
-                        _LOGGER.info(
-                            msg=f"Running job ",
-                            msgs=[[f"{_c_msg}", f"{_last_job.id}"]]
-                        )
-                        _LOGGER.info(
-                            msg=f"Will wait over previous jobs ",
-                            msgs=[[_.id for _ in _last_row_prev_jobs]]
-                        )
-                        _last_job.launch_on_cluster()
-                _last_row_prev_jobs = _curr_row_prev_jobs
-
-            return _curr_row_prev_jobs
-
-        # ------------------------------------------ 04
-        _run_flow(_flow, "", [])
-
-    # noinspection PyMethodMayBeStatic
-    def flow(self) -> t.List[
-        t.Union[t.Tuple[t.Callable, t.Dict[str, t.Union[str, int, float]]], t.List]
-    ]:
-        """
-        This method will call more jobs and decide the job flow.
-        Gets called when script is called without arguments
-
-        Elements within list are run in parallel
-        A sequence of lists is run sequentially
-        First element of every list waits for last element of element in previous list
-          >> Easy way to thing is UI layouts div mechanism
-        """
-        raise e.validation.NotAllowed(
-            msgs=[
-                f"Please override this method to define the flow of jobs ..."
-            ]
-        )
-
     def run(self):
-        _run_file = pathlib.Path(self.py_script)
-        _root_dir = _run_file.parent / _run_file.name.replace(".py", "")
-        if not _root_dir.exists():
-            _root_dir.mkdir()
-        if len(sys.argv) == 1:
-            return self.run_flow(run_file=_run_file, root_dir=_root_dir)
+        if self.is_on_main_machine:
+            self.flow()
         else:
-            _fn_name = sys.argv[1]
-            _helper = JobRunnerHelper(
-                runner=self,
-                run_file=_run_file,
-                root_dir=_root_dir,
-                fn_name=_fn_name,
-                fn_kwargs=[] if len(sys.argv) <= 2 else sys.argv[2:],
-                jobs_from_last_stage=[],
-            )
-            _helper()
-
-    def viewer(self) -> Viewer:
-        """
-        Allows you to view what job is doing or already done
-        """
-        ...
+            self.job()

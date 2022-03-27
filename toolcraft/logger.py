@@ -318,6 +318,8 @@ def setup_logging(
     # disable logging for some libraries
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("h5py").setLevel(logging.WARNING)
+    logging.getLogger("numexpr").setLevel(logging.WARNING)
 
     # thread safety
     # noinspection PyUnresolvedReferences,PyProtectedMember

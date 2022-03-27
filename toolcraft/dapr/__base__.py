@@ -201,13 +201,11 @@ class _Dapr(m.HashableClass):
     def make(cls) -> "_Dapr":
         # --------------------------------------------------- 01
         # if no arg passed assume client mode i.e. client
-        if len(sys.argv) == 1:
-            sys.argv.append('client')
         # validation
         if len(sys.argv) != 2:
             raise e.validation.NotAllowed(
                 msgs=[
-                    "Only pass one arg", sys.argv[1:]
+                    "Pass one arg to handle dapr ...", sys.argv[1:]
                 ]
             )
 
@@ -253,7 +251,10 @@ class _Dapr(m.HashableClass):
         )
 
 
-DAPR = _Dapr.make()  # type: _Dapr
+# todo: should be initialized when launched via
+#  `toolcraft.tools.dapr.DaprTool.command_fn` i.e.
+#   when on command line `toolcraft dapr client`
+# DAPR = _Dapr.make()  # type: _Dapr
 
 
 class HashableRunner:

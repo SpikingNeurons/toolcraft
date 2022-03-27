@@ -10,5 +10,5 @@ todo: explore reverse proxy
   Something to do with SSO as well
 
 """
-from .__base__ import DaprMode, HashableRunner, DAPR
+from .__base__ import DaprMode, HashableRunner
 from .invoke import Invoke, Response

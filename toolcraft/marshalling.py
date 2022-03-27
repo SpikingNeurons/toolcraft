@@ -1443,7 +1443,7 @@ class YamlRepr(Tracker):
     @staticmethod
     def get_class(
         file_or_text: t.Union["storage.Path", str]
-    ) -> t.Optional[t.Type["YamlRepr"]]:
+    ) -> t.Type["YamlRepr"]:
         from . import storage
         _text = file_or_text
         if isinstance(file_or_text, storage.Path):
@@ -1452,7 +1452,12 @@ class YamlRepr(Tracker):
         try:
             return YAML_TAG_MAPPING[_tag]
         except KeyError:
-            return None
+            raise e.code.CodingError(
+                msgs=[
+                    "Cannot detect hashable class from provided `file_or_text` ...",
+                    "Cannot process tag at the start ... check:", _text,
+                ]
+            )
 
     def clone(self) -> "YamlRepr":
         return self.from_yaml(self.yaml())

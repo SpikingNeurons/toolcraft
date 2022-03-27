@@ -18,7 +18,7 @@ import typing as t
 from dapr.ext.grpc import InvokeMethodRequest, InvokeMethodResponse
 import json
 
-from . import DaprMode, DAPR
+from . import DaprMode
 from .. import error as e
 from .. import marshalling as m
 from .. import logger
@@ -26,7 +26,10 @@ from .. import logger
 _LOGGER = logger.get_logger()
 
 
-@DAPR.app.method('invoke_for_hashable_on_server')
+# todo: should be registered when launched via
+#  `toolcraft.tools.dapr.DaprTool.command_fn` i.e.
+#   when on command line `toolcraft dapr client`
+# @DAPR.app.method('invoke_for_hashable_on_server')
 def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     """
 

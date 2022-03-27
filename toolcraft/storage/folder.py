@@ -234,14 +234,6 @@ class Folder(StorageHashable):
             for f in self.path.glob(pattern=f"*{Suffix.info}"):
                 # build instance
                 _cls = m.YamlRepr.get_class(f)
-                if _cls is None:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Cannot process tag at the start ",
-                            f"Check: ",
-                            f.read_text()
-                        ]
-                    )
                 # noinspection PyTypeChecker
                 _hashable = _cls.from_yaml(
                     f, parent_folder=self,
