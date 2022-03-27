@@ -194,6 +194,8 @@ class Job:
             _hashable = self.method_kwargs["hashable"]
             _info_file = _infos_folder / f"{_hashable.hex_hash}.info"
             if not _info_file.exists():
+                _LOGGER.info(
+                    f"Creating hashable file {_info_file.local_path.as_posix()}")
                 _info_file.write_text(_hashable.yaml())
 
     def __call__(self):
