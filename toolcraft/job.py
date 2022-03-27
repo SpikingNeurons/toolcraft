@@ -120,7 +120,7 @@ class Job:
         + fn_kwargs if present
         + hashable hex_hash if present
         """
-        return self.path.suffix_path.replace("/", "x")
+        return f"x{self.path.suffix_path.replace('/', 'x')}xJ"
 
     @property
     def is_on_main_machine(self) -> bool:
@@ -338,7 +338,7 @@ class JobGroup:
         A unique id for job group ...
         """
         _job_ids = "-".join([_.id for _ in self.jobs])
-        return f"jgx{hashlib.sha256(_job_ids.encode('utf-8')).hexdigest()}"
+        return f"x{hashlib.sha256(_job_ids.encode('utf-8')).hexdigest()}xJG"
 
     @property
     def is_on_main_machine(self) -> bool:
