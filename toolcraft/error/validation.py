@@ -283,6 +283,19 @@ class ShouldBeInstanceOf(_CustomException):
         ])
 
 
+class ShouldNotBeInstanceOf(_CustomException):
+    def __init__(self, *, value: t.Any, value_types: t.Tuple,
+                 msgs: MESSAGES_TYPE):
+        if not isinstance(value, value_types):
+            return
+
+        super().__init__(msgs=[
+            *msgs,
+            f"Supplied value type {type(value)!r} is one of: ",
+            value_types,
+        ])
+
+
 class ShouldBeSubclassOf(_CustomException):
     def __init__(self, *, value: t.Any, value_types: t.Tuple,
                  msgs: MESSAGES_TYPE):

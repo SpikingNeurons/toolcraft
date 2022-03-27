@@ -2038,6 +2038,23 @@ class HashableClass(YamlRepr, abc.ABC):
         # return
         return _ret_widget
 
+    def check_for_storage_hashable(self, field_key: str = ""):
+        """
+        raises error if instance of StorageHashable or any of its fields is
+        instance of StorageHashable
+        """
+        from . import storage
+        e.validation.ShouldNotBeInstanceOf(
+            value=self, value_types=(storage.StorageHashable, ),
+            msgs=[
+                f"Do not use {storage.StorageHashable} for field_key `{field_key}`"
+            ]
+        ).raise_if_failed()
+        for _f in self.dataclass_field_names:
+            _v = getattr(self, _f)
+            if isinstance(_v, HashableClass):
+                _v.check_for_storage_hashable(field_key=f"{field_key}.{_f}")
+
 
 SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict,
                                           np.float32, np.int64, np.int32,

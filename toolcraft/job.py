@@ -22,6 +22,8 @@ from . import richy
 
 
 _LOGGER = logger.get_logger()
+_MONITOR_FOLDER = "monitor"
+_HASHABLE_KWARG = "hashable"
 
 
 @dataclasses.dataclass
@@ -71,6 +73,8 @@ class Tag:
 class TagManager:
     """
     todo: support this for every job ....
+    todo: we might want these tags to be save state on some state server ...
+      so that we can check states there ...
     """
     job: "Job"
     started: Tag = Tag(name="started")
@@ -139,7 +143,7 @@ class Job:
         _ret /= self.method.__func__.__name__
         for _key in inspect.signature(self.method).parameters.keys():
             _value = self.method_kwargs[_key]
-            if _key == "hashable":
+            if _key == _HASHABLE_KWARG:
                 _ret /= _value.hex_hash
             else:
                 _ret /= str(_value)
@@ -179,24 +183,23 @@ class Job:
             )
 
         # some special methods cannot be used for job
+        # noinspection PyUnresolvedReferences
         e.validation.ShouldNotBeOneOf(
-            value=method, values=[
-                runner.class_init, runner.run,
-            ],
+            value=method.__func__, values=runner.methods_that_cannot_be_a_job(),
             msgs=["Some special methods cannot be used as job ..."]
         ).raise_if_failed()
 
-        # make <hex_hash>.info if not present
-        _infos_folder = runner.cwd / "infos"
-        if not _infos_folder.exists():
-            _infos_folder.mkdir()
-        if "hashable" in self.method_kwargs.keys():
-            _hashable = self.method_kwargs["hashable"]
-            _info_file = _infos_folder / f"{_hashable.hex_hash}.info"
-            if not _info_file.exists():
-                _LOGGER.info(
-                    f"Creating hashable file {_info_file.local_path.as_posix()}")
-                _info_file.write_text(_hashable.yaml())
+        # if _HASHABLE_KWARG present
+        if _HASHABLE_KWARG in self.method_kwargs.keys():
+            # get
+            _hashable = self.method_kwargs[_HASHABLE_KWARG]
+            # make sure that it is not s.StorageHashable or any of its fields are
+            # not s.StorageHashable
+            _hashable.check_for_storage_hashable(
+                field_key=f"{_hashable.__class__.__name__}"
+            )
+            # make <hex_hash>.info if not present
+            self.runner.monitor.make_hashable_info_file(hashable=_hashable)
 
     def __call__(self):
         if self.is_on_main_machine:
@@ -222,7 +225,7 @@ class Job:
         # make command to run on cli
         _kwargs_as_cli_strs = []
         for _k, _v in self.method_kwargs.items():
-            if _k == "hashable":
+            if _k == _HASHABLE_KWARG:
                 _v = _v.hex_hash
             _kwargs_as_cli_strs.append(
                 f"{_k}={_v}"
@@ -265,21 +268,22 @@ class Job:
             )
 
         # fetch from args
-        _method_name = sys.argv[2]
+        _method_name = sys.argv[1]
         _method = getattr(runner, _method_name)
         _method_signature = inspect.signature(_method)
         _method_kwargs = {}
-        for _arg in sys.argv[3:]:
+        for _arg in sys.argv[2:]:
             _key, _str_val = _arg.split("=")
-            if _key == "hashable":
-                _info_file = runner.cwd / "infos" / f"{_str_val}.info"
-                if _info_file.exists():
-                    _val = _method_signature.parameters[_key].annotation.from_yaml(
-                        _info_file
+            if _key == _HASHABLE_KWARG:
+                _hashable_info_file = \
+                    runner.cwd / _MONITOR_FOLDER / f"{_str_val}.info"
+                if _hashable_info_file.exists():
+                    _val = m.HashableClass.get_class(_hashable_info_file).from_yaml(
+                        _hashable_info_file
                     )
                 else:
                     raise e.code.CodingError(
-                        msgs=[f"We expect to have info file {_info_file} "
+                        msgs=[f"We expect to have info file {_hashable_info_file} "
                               f"in storage"]
                     )
             else:
@@ -376,7 +380,9 @@ class JobGroup:
         if self.runner.cluster_type is JobRunnerClusterType.local:
             ...
         elif self.runner.cluster_type is JobRunnerClusterType.ibm_lsf:
-            _nxdi_prefix = f'bsub -J {self.id} '
+            # needed to add -oo so that we do not get any emails ;)
+            _log = self.runner.cwd / ".log"
+            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
             if bool(self.jobs):
                 _wait_on = \
                     " && ".join([f"done({_.id})" for _ in self.jobs])
@@ -469,9 +475,37 @@ class Flow:
 
 
 @dataclasses.dataclass(frozen=True)
+class Monitor:
+    runner: "Runner"
+
+    @property
+    @util.CacheResult
+    def path(self) -> s.Path:
+        _ret = self.runner.cwd / _MONITOR_FOLDER
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    @property
+    @util.CacheResult
+    def hashables_path(self) -> s.Path:
+        _ret = self.path / "hashables"
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    def make_hashable_info_file(self, hashable: m.HashableClass):
+        _file = self.hashables_path / f"{hashable.hex_hash}.info"
+        if not _file.exists():
+            _LOGGER.info(
+                f"Creating hashable file {_file.local_path.as_posix()}")
+            _file.write_text(hashable.yaml())
+
+
+@dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow'],
-    things_not_to_be_overridden=['cwd', 'job']
+    things_to_be_cached=['cwd', 'job', 'flow', 'runner_monitor'],
+    things_not_to_be_overridden=['cwd', 'job', 'runner_monitor']
 )
 class Runner(m.HashableClass, abc.ABC):
     """
@@ -523,6 +557,11 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
+    def monitor(self) -> Monitor:
+        return Monitor(runner=self)
+
+    @property
+    @util.CacheResult
     def cwd(self) -> s.Path:
         """
         todo: adapt code so that the cwd can be on any other file system instead of CWD
@@ -567,27 +606,11 @@ class Runner(m.HashableClass, abc.ABC):
                 ]
             )
         else:
-            _method_name = sys.argv[1]
-            _method = getattr(self, _method_name)
-            _method_signature = inspect.signature(_method)
-            _method_kwargs = {}
-            for _arg in sys.argv[2:]:
-                _key, _str_val = _arg.split("=")
-                if _key == "hashable":
-                    _info_file = self.cwd / "infos" / f"{_str_val}.info"
-                    if _info_file.exists():
-                        _val = _method_signature.parameters[_key].annotation.from_yaml(
-                            _info_file
-                        )
-                    else:
-                        raise e.code.CodingError(
-                            msgs=[f"We expect to have info file {_info_file} "
-                                  f"in storage"]
-                        )
-                else:
-                    _val = _method_signature.parameters[_key].annotation(_str_val)
-                _method_kwargs[_key] = _val
-            return Job(method=_method, method_kwargs=_method_kwargs, runner=self)
+            return Job.from_cli(runner=self)
+
+    @classmethod
+    def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
+        return [cls.run, cls.init]
 
     def init(self):
         # call super
@@ -636,36 +659,28 @@ class Runner(m.HashableClass, abc.ABC):
             for _parameter_key in _parameter_keys:
                 # ----------------------------------------------- 02.04.01
                 # if hashable parameter
-                if _parameter_key == "hashable":
+                if _parameter_key == _HASHABLE_KWARG:
                     # hashable must be first
-                    if "hashable" != _parameter_keys[1]:
+                    if _HASHABLE_KWARG != _parameter_keys[1]:
                         raise e.validation.NotAllowed(
                             msgs=[
-                                f"If using `hashable` kwarg in function {_val} make "
-                                f"sure that it is first kwarg i.e. it immediately "
-                                f"follows after self"
+                                f"If using `{_HASHABLE_KWARG}` kwarg in function "
+                                f"{_val} make sure that it is first kwarg i.e. it "
+                                f"immediately follows after self"
                             ]
                         )
                     # hashable annotation must be subclass of m.HashableClass
                     e.validation.ShouldBeSubclassOf(
-                        value=_signature.parameters["hashable"].annotation,
+                        value=_signature.parameters[_HASHABLE_KWARG].annotation,
                         value_types=(m.HashableClass, ),
-                        msgs=["Was expecting annotation for kwarg `hashable` to be "
-                              "proper subclass"]
+                        msgs=[f"Was expecting annotation for kwarg "
+                              f"`{_HASHABLE_KWARG}` to be proper subclass"]
                     ).raise_if_failed()
-                # ----------------------------------------------- 02.04.02
-                # infos is reserved
-                elif _parameter_key == "infos":
-                    raise e.code.CodingError(
-                        msgs=["Refrain from defining attribute `infos` as it is "
-                              "reserved for creating folder where we store hashables "
-                              "info so that server can build instance from it ..."]
-                    )
                 # ----------------------------------------------- 02.04.02
                 # if self continue
                 elif _parameter_key == "self":
                     continue
-                # ----------------------------------------------- 02.04.04
+                # ----------------------------------------------- 02.04.03
                 # else make sure that annotation is int, float or str ...
                 else:
                     e.validation.ShouldBeSubclassOf(
