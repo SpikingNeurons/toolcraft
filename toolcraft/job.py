@@ -651,6 +651,30 @@ class Flow:
           ssh ... rather than using instance on cluster to launch jobs
           This will also help to have gui in dearpygui
         """
+        # just check health of all jobs
+        _sp = richy.SimpleStatusPanel(
+            title=f"Checking health of all jobs first ...", tc_log=_LOGGER
+        )
+        with _sp:
+            _p = _sp.progress
+            _s = _sp.status
+            _s.update(spinner_speed=1.0, spinner=None, status="started ...")
+            _jobs = []
+            for _stage_id, _stage in enumerate(self.stages):
+                for _job_group in _stage:
+                    _jobs += _job_group.jobs
+            _job: Job
+            for _job in _p.track(
+                sequence=_jobs, task_name=f"check health"
+            ):
+                _s.update(
+                    spinner_speed=1.0,
+                    spinner=None, status=f"check health for {_job.flow_id} ..."
+                )
+                _job.check_health()
+            _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
+
+        # call jobs ...
         _cluster_type = self.runner.cluster_type
         if _cluster_type is JobRunnerClusterType.local:
             for _stage in self.stages:
@@ -671,6 +695,7 @@ class Flow:
                     for _job_group in _stage:
                         _jobs += _job_group.jobs
                         _jobs += [_job_group]
+                    _job: t.Union[Job, JobGroup]
                     for _job in _p.track(
                         sequence=_jobs, task_name=f"stage {_stage_id:03d}"
                     ):
