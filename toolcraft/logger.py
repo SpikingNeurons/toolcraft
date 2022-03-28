@@ -315,6 +315,9 @@ def setup_logging(
     >>> logging.basicConfig
 
     """
+    # log when changing handlers ...
+    _LOGGER.info("We are setting up loggers based on new handlers ...")
+
     # disable logging for some libraries
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
