@@ -231,6 +231,14 @@ class Job:
 
     @property
     @util.CacheResult
+    def artifacts_path(self) -> s.Path:
+        _ret = self.path / "artifacts"
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    @property
+    @util.CacheResult
     def path(self) -> s.Path:
         """
         Note that folder nesting is dependent on `self.fn` signature ...
@@ -257,7 +265,6 @@ class Job:
         method_kwargs: t.Dict[str, t.Union[m.HashableClass, int, float, str]] = None,
         wait_on: t.List["JobGroup"] = None,
     ):
-
         # assign some vars
         self.runner = runner
         # noinspection PyTypeChecker
@@ -357,7 +364,7 @@ class Job:
                     ]
                 )
 
-    def __call__(self):
+    def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
         self.check_health()
 
@@ -369,7 +376,7 @@ class Job:
 
         # launch
         if self.is_on_main_machine:
-            self._launch_on_main_machine()
+            self._launch_on_main_machine(cluster_type)
         else:
             self._launch_on_worker_machine()
 
@@ -433,7 +440,7 @@ class Job:
                 ]
             )
 
-    def _launch_on_main_machine(self):
+    def _launch_on_main_machine(self, cluster_type: JobRunnerClusterType):
         """
         This runs on your main machine so that jobs are launched on cluster
         todo: make this run on client and run jobs over ssh connection ...
@@ -452,9 +459,9 @@ class Job:
                    f"{' '.join(_kwargs_as_cli_strs)}"
 
         # ------------------------------------------------------------- 02
-        if self.runner.cluster_type is JobRunnerClusterType.local:
+        if cluster_type is JobRunnerClusterType.local:
             os.system(_command)
-        elif self.runner.cluster_type is JobRunnerClusterType.ibm_lsf:
+        elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # todo: when self.path is not local we need to see how to log files ...
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
@@ -467,7 +474,7 @@ class Job:
             os.system(_nxdi_prefix + _command)
         else:
             raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"]
+                msgs=[f"Unsupported cluster_type {cluster_type}"]
             )
 
     @classmethod
@@ -503,8 +510,8 @@ class Job:
             method=_method, method_kwargs=_method_kwargs,
         )
 
-    def log_artifact(self, name: str, data: t.Any):
-        _file = self.path / "artifacts" / name
+    def save_artifact(self, name: str, data: t.Any):
+        _file = self.artifacts_path / name
         if _file.exists():
             raise e.code.CodingError(
                 msgs=[
@@ -514,6 +521,18 @@ class Job:
         # todo: make this compatible for all type of path
         with open(_file.local_path.as_posix(), 'wb') as _file:
             pickle.dump(data, _file)
+
+    def load_artifact(self, name: str) -> t.Any:
+        _file = self.artifacts_path / name
+        if not _file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Artifact {name} does not exists ... cannot load"
+                ]
+            )
+        # todo: make this compatible for all type of path
+        with open(_file.local_path.as_posix(), 'rb') as _file:
+            return pickle.load(_file)
 
 
 class JobGroup:
@@ -568,25 +587,25 @@ class JobGroup:
         # noinspection PyTypeChecker
         self._flow_id = None  # type: JobGroupFlowId
 
-    def __call__(self):
+    def __call__(self, cluster_type: JobRunnerClusterType):
         if self.is_on_main_machine:
-            self._launch_on_cluster()
+            self._launch_on_cluster(cluster_type)
         else:
             raise e.code.CodingError(
                 msgs=["We assume that this will never get called on cluster ",
                       "JobGroup should only get called on main machine ..."]
             )
 
-    def _launch_on_cluster(self):
+    def _launch_on_cluster(self, cluster_type: JobRunnerClusterType):
         # ------------------------------------------------------------- 01
         # make command to run on cli
         # there is nothing to do here as this is just a blank job that waits ...
         _command = "python -c 'import time; time.sleep(1)'"
 
         # ------------------------------------------------------------- 02
-        if self.runner.cluster_type is JobRunnerClusterType.local:
+        if cluster_type is JobRunnerClusterType.local:
             ...
-        elif self.runner.cluster_type is JobRunnerClusterType.ibm_lsf:
+        elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # needed to add -oo so that we do not get any emails ;)
             _log = self.runner.cwd / ".log"
             _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
@@ -645,7 +664,7 @@ class Flow:
                         stage=_stage_id, job_group=_job_group_id, job=_job_id
                     )
 
-    def __call__(self):
+    def __call__(self, cluster_type: JobRunnerClusterType):
         """
         todo: we might want this to be called from client machine and submit jobs via
           ssh ... rather than using instance on cluster to launch jobs
@@ -675,16 +694,15 @@ class Flow:
             _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
 
         # call jobs ...
-        _cluster_type = self.runner.cluster_type
-        if _cluster_type is JobRunnerClusterType.local:
+        if cluster_type is JobRunnerClusterType.local:
             for _stage in self.stages:
                 for _job_group in _stage:
                     for _job in _job_group.jobs:
-                        _job()
-                    _job_group()
-        elif _cluster_type is JobRunnerClusterType.ibm_lsf:
+                        _job(cluster_type)
+                    _job_group(cluster_type)
+        elif cluster_type is JobRunnerClusterType.ibm_lsf:
             _sp = richy.SimpleStatusPanel(
-                title=f"Launch stages on `{_cluster_type.name}`", tc_log=_LOGGER
+                title=f"Launch stages on `{cluster_type.name}`", tc_log=_LOGGER
             )
             with _sp:
                 _p = _sp.progress
@@ -703,11 +721,11 @@ class Flow:
                             spinner_speed=1.0,
                             spinner=None, status=f"launching {_job.flow_id} ..."
                         )
-                        _job()
+                        _job(cluster_type)
                 _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
         else:
             raise e.code.NotSupported(
-                msgs=[f"Not supported {_cluster_type}"]
+                msgs=[f"Not supported {cluster_type}"]
             )
 
         # todo: add richy tracking panel ...that makes a layout for all stages and
@@ -811,7 +829,6 @@ class Runner(m.HashableClass, abc.ABC):
 
     todo: add models support (in folder `self.storage_dir/models`)
     """
-    cluster_type: JobRunnerClusterType
 
     @property
     def py_script(self) -> str:
@@ -908,19 +925,24 @@ class Runner(m.HashableClass, abc.ABC):
             _val = getattr(cls, _attr)
 
             # --------------------------------------------------- 02.02
+            # ignore some special methods
+            for _val in cls.methods_that_cannot_be_a_job():
+                continue
+
+            # --------------------------------------------------- 02.03
             # skip if not function
             if not inspect.isfunction(_val):
                 continue
 
-            # --------------------------------------------------- 02.03
+            # --------------------------------------------------- 02.04
             # get signature
             _signature = inspect.signature(_val)
             _parameter_keys = list(_signature.parameters.keys())
 
-            # --------------------------------------------------- 02.04
+            # --------------------------------------------------- 02.05
             # loop over parameters
             for _parameter_key in _parameter_keys:
-                # ----------------------------------------------- 02.04.01
+                # ----------------------------------------------- 02.05.01
                 # if hashable parameter
                 if _parameter_key == _HASHABLE_KWARG:
                     # hashable must be first
@@ -939,11 +961,11 @@ class Runner(m.HashableClass, abc.ABC):
                         msgs=[f"Was expecting annotation for kwarg "
                               f"`{_HASHABLE_KWARG}` to be proper subclass"]
                     ).raise_if_failed()
-                # ----------------------------------------------- 02.04.02
+                # ----------------------------------------------- 02.05.02
                 # if self continue
                 elif _parameter_key == "self":
                     continue
-                # ----------------------------------------------- 02.04.03
+                # ----------------------------------------------- 02.05.03
                 # else make sure that annotation is int, float or str ...
                 else:
                     e.validation.ShouldBeSubclassOf(
@@ -956,8 +978,8 @@ class Runner(m.HashableClass, abc.ABC):
                               f"`{cls.__name__}.{_val.__name__}`"]
                     ).raise_if_failed()
 
-    def run(self):
+    def run(self, cluster_type: JobRunnerClusterType):
         if self.is_on_main_machine:
-            self.flow()
+            self.flow(cluster_type)
         else:
-            self.job()
+            self.job(cluster_type)
