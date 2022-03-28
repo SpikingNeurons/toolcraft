@@ -360,64 +360,75 @@ class Job:
 
         # launch
         if self.is_on_main_machine:
-            self._launch_on_cluster()
+            self._launch_on_main_machine()
         else:
-            # reconfig logger to change log file for job
-            import logging
-            _log = self.path / "toolcraft.log"
-            logger.setup_logging(
-                propagate=False,
-                level=logging.NOTSET,
-                # todo: here we can config that on server where things will be logged
-                handlers=[
-                    logger.get_rich_handler(),
-                    logger.get_stream_handler(),
-                    logger.get_file_handler(_log.local_path),
-                ],
+            self._launch_on_worker_machine()
+
+    def _launch_on_worker_machine(self):
+        """
+        The jobs are run on cluster ... this piece of code will execute on the
+        worker machines that will execute those scheduled jobs
+        """
+
+        # reconfig logger to change log file for job
+        import logging
+        _log = self.path / "toolcraft.log"
+        logger.setup_logging(
+            propagate=False,
+            level=logging.NOTSET,
+            # todo: here we can config that on server where things will be logged
+            handlers=[
+                logger.get_rich_handler(),
+                logger.get_stream_handler(),
+                logger.get_file_handler(_log.local_path),
+            ],
+        )
+        _start = datetime.datetime.now()
+        _LOGGER.info(msg=f"Starting job {self.id} at {_start.ctime()}")
+        self.tag_manager.started.create()
+        self.tag_manager.running.create()
+        _failed = False
+        try:
+            self.method(**self.method_kwargs)
+        except Exception as _ex:
+            _failed = True
+            self.tag_manager.failed.create(
+                data={
+                    "exception": str(_ex)
+                }
             )
-            _start = datetime.datetime.now()
-            _LOGGER.info(msg=f"Starting job {self.id} at {_start.ctime()}")
-            self.tag_manager.started.create()
-            self.tag_manager.running.create()
-            _failed = False
-            try:
-                self.method(**self.method_kwargs)
-            except Exception as _ex:
-                _failed = True
-                self.tag_manager.failed.create(
-                    data={
-                        "exception": str(_ex)
+            _end = datetime.datetime.now()
+            _LOGGER.info(
+                msg=f"Failed job {self.id} at {_start.ctime()}",
+                msgs=[
+                    {
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds()),
+                        "exception": str(_ex),
                     }
-                )
-                _end = datetime.datetime.now()
-                _LOGGER.info(
-                    msg=f"Failed job {self.id} at {_start.ctime()}",
-                    msgs=[
-                        {
-                            "started": _start.ctime(),
-                            "ended": _end.ctime(),
-                            "seconds": str((_end - _start).total_seconds()),
-                            "exception": str(_ex),
-                        }
-                    ]
-                )
+                ]
+            )
+        self.tag_manager.running.delete()
+        if not _failed:
+            self.tag_manager.finished.create()
+            _end = datetime.datetime.now()
+            _LOGGER.info(
+                msg=f"Successfully finished job {self.id} at {_start.ctime()}",
+                msgs=[
+                    {
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds()),
+                    }
+                ]
+            )
 
-            self.tag_manager.running.delete()
-            if not _failed:
-                self.tag_manager.finished.create()
-                _end = datetime.datetime.now()
-                _LOGGER.info(
-                    msg=f"Successfully finished job {self.id} at {_start.ctime()}",
-                    msgs=[
-                        {
-                            "started": _start.ctime(),
-                            "ended": _end.ctime(),
-                            "seconds": str((_end - _start).total_seconds()),
-                        }
-                    ]
-                )
-
-    def _launch_on_cluster(self):
+    def _launch_on_main_machine(self):
+        """
+        This runs on your main machine so that jobs are launched on cluster
+        todo: make this run on client and run jobs over ssh connection ...
+        """
         # ------------------------------------------------------------- 01
         # make command to run on cli
         _kwargs_as_cli_strs = []
