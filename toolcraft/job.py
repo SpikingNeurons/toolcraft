@@ -300,10 +300,9 @@ class Job:
             # make <hex_hash>.info if not present
             self.runner.monitor.make_hashable_info_file(hashable=_hashable)
 
-    def __call__(self):
-        # validate job status
+    def check_health(self):
         # if job has already started
-        _job_info = {"job_id": self.id, "path": self.path}
+        _job_info = {"job_id": self.id, "path": self.path.full_path}
         if self.is_started:
             # if job was finished then skip
             if self.is_finished:
@@ -313,7 +312,7 @@ class Job:
                 )
                 return
             if self.is_failed:
-                _LOGGER.info(
+                _LOGGER.error(
                     msg=f"Previous job has failed so skipping call ...",
                     msgs=["Delete previous calls files to make this call work ...",
                           _job_info]
@@ -357,6 +356,16 @@ class Job:
                         _job_info
                     ]
                 )
+
+    def __call__(self):
+        # check health
+        self.check_health()
+
+        # if finished or failed earlier return
+        # Note that we already log error or info if lob is finished or failed in
+        # above call to check_health
+        if self.is_finished or self.is_failed:
+            return
 
         # launch
         if self.is_on_main_machine:
