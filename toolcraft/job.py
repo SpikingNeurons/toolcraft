@@ -597,6 +597,9 @@ class JobGroup:
             )
 
     def _launch_on_cluster(self, cluster_type: JobRunnerClusterType):
+        # todo: also print jobs that were grouped for this job group ...
+        #   both for JobRunnerClusterType.local and JobRunnerClusterType.ibm_lsf
+
         # ------------------------------------------------------------- 01
         # make command to run on cli
         # there is nothing to do here as this is just a blank job that waits ...
@@ -607,7 +610,7 @@ class JobGroup:
             ...
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # needed to add -oo so that we do not get any emails ;)
-            _log = self.runner.cwd / ".log"
+            _log = self.runner.cwd / "job_group.log"
             _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
             if bool(self.jobs):
                 _wait_on = \
