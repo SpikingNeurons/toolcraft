@@ -259,7 +259,7 @@ class FileSystemConfig(m.HashableClass):
             # if CWD and it was not there we know the default ... so make one
             if fs_name == "CWD":
                 _all_fs_config[fs_name] = {
-                    "protocol": "file", "root_dir": ".", "kwargs": {"auto_mkdir": True}
+                    "protocol": "file", "root_dir": ".",
                 }
                 # update settings and save
                 assert id(settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)

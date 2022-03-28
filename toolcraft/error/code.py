@@ -84,6 +84,23 @@ class NotImplementedCorrectly(_CustomException):
         )
 
 
+class NotYetImplemented(_CustomException):
+
+    _RAISE_EXPLICITLY = True
+
+    def __init__(
+        self, *,
+        msgs: MESSAGES_TYPE
+    ):
+        super().__init__(
+            msgs=[
+                "The functionality is not yet implemented ... "
+                "we might support it later !!!",
+                *msgs
+            ]
+        )
+
+
 class ImplementInChildClass(_CustomException):
 
     _RAISE_EXPLICITLY = True

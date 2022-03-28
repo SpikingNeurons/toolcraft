@@ -8,6 +8,7 @@ import inspect
 import typing as t
 import dataclasses
 import os
+import yaml
 import sys
 import pickle
 import hashlib
@@ -66,21 +67,103 @@ class JobGroupFlowId(t.NamedTuple):
 
 @dataclasses.dataclass
 class Tag:
+
     name: str
+    manager: "TagManager"
+
+    @property
+    @util.CacheResult
+    def path(self) -> s.Path:
+        _ret = self.manager.path / self.name
+        return _ret
+
+    def create(self, data: t.Dict[str, t.Any] = None):
+        if self.path.exists():
+            raise e.code.CodingError(
+                msgs=[f"Tag at {self.path} already exists ..."]
+            )
+        if data is None:
+            data = {}
+        if "time" in data.keys():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Do not supply key time in data dict we will add it ..."
+                ]
+            )
+        data["time"] = datetime.datetime.now()
+        _LOGGER.info(msg=f"Creating tag {self.path}")
+        self.path.write_text(text=yaml.safe_dump(data))
+
+    def read(self) -> t.Dict[str, t.Any]:
+        if not self.path.exists():
+            raise e.code.CodingError(
+                msgs=[f"Tag at {self.path} does not exist ..."]
+            )
+        _LOGGER.info(msg=f"Reading tag {self.path}")
+        return yaml.safe_load(self.path.read_text())
+
+    def exists(self) -> bool:
+        return self.path.exists()
+
+    def delete(self):
+        if self.path.exists():
+            _LOGGER.info(msg=f"Deleting tag {self.path}")
+            self.path.delete()
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    f"The tag {self.path} does not exist so cannot delete ..."
+                ]
+            )
+
+    def update(self, data: t.Dict[str, t.Any]):
+        # _LOGGER.info(msg=f"Updating tag {self.path}")
+        raise e.code.NotYetImplemented(msgs=[f"yet to implement {Tag.update}"])
 
 
 @dataclasses.dataclass
 class TagManager:
     """
-    todo: support this for every job ....
     todo: we might want these tags to be save state on some state server ...
       so that we can check states there ...
+    todo: can we route all tags to simple database file ...
+      To support dynamic tags we might need some document storage database instead of
+      fixed schema database ...
     """
     job: "Job"
-    started: Tag = Tag(name="started")
-    failed: Tag = Tag(name="failed")
-    finished: Tag = Tag(name="finished")
-    description: Tag = Tag(name="description")
+
+    @property
+    @util.CacheResult
+    def path(self) -> s.Path:
+        _ret = self.job.path / "tags"
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    @property
+    @util.CacheResult
+    def started(self) -> Tag:
+        return Tag(name="started", manager=self)
+
+    @property
+    @util.CacheResult
+    def running(self) -> Tag:
+        return Tag(name="running", manager=self)
+
+    @property
+    @util.CacheResult
+    def failed(self) -> Tag:
+        return Tag(name="failed", manager=self)
+
+    @property
+    @util.CacheResult
+    def finished(self) -> Tag:
+        return Tag(name="finished", manager=self)
+
+    @property
+    @util.CacheResult
+    def description(self) -> Tag:
+        return Tag(name="description", manager=self)
 
 
 class Job:
@@ -95,6 +178,22 @@ class Job:
     @util.CacheResult
     def tag_manager(self) -> TagManager:
         return TagManager(job=self)
+
+    @property
+    def is_started(self) -> bool:
+        return self.tag_manager.started.exists()
+
+    @property
+    def is_running(self) -> bool:
+        return self.tag_manager.running.exists()
+
+    @property
+    def is_finished(self) -> bool:
+        return self.tag_manager.finished.exists()
+
+    @property
+    def is_failed(self) -> bool:
+        return self.tag_manager.failed.exists()
 
     @property
     def flow_id(self) -> JobFlowId:
@@ -148,7 +247,7 @@ class Job:
             else:
                 _ret /= str(_value)
         if not _ret.exists():
-            _ret.mkdir(parents=True, exist_ok=True)
+            _ret.mkdir(create_parents=True)
         return _ret
 
     def __init__(
@@ -202,6 +301,64 @@ class Job:
             self.runner.monitor.make_hashable_info_file(hashable=_hashable)
 
     def __call__(self):
+        # validate job status
+        # if job has already started
+        _job_info = {"job_id": self.id, "path": self.path}
+        if self.is_started:
+            # if job was finished then skip
+            if self.is_finished:
+                _LOGGER.info(
+                    msg=f"Job is already completed so skipping call ...",
+                    msgs=[_job_info]
+                )
+                return
+            if self.is_failed:
+                _LOGGER.info(
+                    msg=f"Previous job has failed so skipping call ...",
+                    msgs=["Delete previous calls files to make this call work ...",
+                          _job_info]
+                )
+                return
+            if self.is_running:
+                raise e.code.CodingError(
+                    msgs=[
+                        "This is bug ... there is ongoing job running ...",
+                        "Either you have abruptly killed previous jobs or you "
+                        "have run same job multiple times ...",
+                        "Also teh job might have failed and you missed to catch "
+                        "exception and set failed tag appropriately ... in that case "
+                        "check logs",
+                        _job_info,
+                    ]
+                )
+        else:
+            # if started tag does not exist then other tags should not exist
+            if self.is_running:
+                e.code.CodingError(
+                    msgs=[
+                        "Found tag for `running` ... we expect it to not be present "
+                        "as the job was never started",
+                        _job_info
+                    ]
+                )
+            if self.is_finished:
+                e.code.CodingError(
+                    msgs=[
+                        "Found tag for `finished` ... we expect it to not be present "
+                        "as the job was never started",
+                        _job_info
+                    ]
+                )
+            if self.is_failed:
+                e.code.CodingError(
+                    msgs=[
+                        "Found tag for `failed` ... we expect it to not be present "
+                        "as the job was never started",
+                        _job_info
+                    ]
+                )
+
+        # launch
         if self.is_on_main_machine:
             self._launch_on_cluster()
         else:
@@ -220,18 +377,45 @@ class Job:
             )
             _start = datetime.datetime.now()
             _LOGGER.info(msg=f"Starting job {self.id} at {_start.ctime()}")
-            self.method(**self.method_kwargs)
-            _end = datetime.datetime.now()
-            _LOGGER.info(
-                msg=f"Finished job {self.id} at {_start.ctime()}",
-                msgs=[
-                    {
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds())
+            self.tag_manager.started.create()
+            self.tag_manager.running.create()
+            _failed = False
+            try:
+                self.method(**self.method_kwargs)
+            except Exception as _ex:
+                _failed = True
+                self.tag_manager.failed.create(
+                    data={
+                        "exception": str(_ex)
                     }
-                ]
-            )
+                )
+                _end = datetime.datetime.now()
+                _LOGGER.info(
+                    msg=f"Failed job {self.id} at {_start.ctime()}",
+                    msgs=[
+                        {
+                            "started": _start.ctime(),
+                            "ended": _end.ctime(),
+                            "seconds": str((_end - _start).total_seconds()),
+                            "exception": str(_ex),
+                        }
+                    ]
+                )
+
+            self.tag_manager.running.delete()
+            if not _failed:
+                self.tag_manager.finished.create()
+                _end = datetime.datetime.now()
+                _LOGGER.info(
+                    msg=f"Successfully finished job {self.id} at {_start.ctime()}",
+                    msgs=[
+                        {
+                            "started": _start.ctime(),
+                            "ended": _end.ctime(),
+                            "seconds": str((_end - _start).total_seconds()),
+                        }
+                    ]
+                )
 
     def _launch_on_cluster(self):
         # ------------------------------------------------------------- 01
@@ -442,6 +626,11 @@ class Flow:
                     )
 
     def __call__(self):
+        """
+        todo: we might want this to be called from client machine and submit jobs via
+          ssh ... rather than using instance on cluster to launch jobs
+          This will also help to have gui in dearpygui
+        """
         _cluster_type = self.runner.cluster_type
         if _cluster_type is JobRunnerClusterType.local:
             for _stage in self.stages:
@@ -475,6 +664,19 @@ class Flow:
             raise e.code.NotSupported(
                 msgs=[f"Not supported {_cluster_type}"]
             )
+
+        # todo: add richy tracking panel ...that makes a layout for all stages and
+        #  shows status of all jobs submitted above
+        #  The status info will be based on tracking provided by
+        #  + if toolcraft maybe use predefined tags to show status ... but his might
+        #    cause some io overhead ... instead have toolcraft.Job to update
+        #    richy client
+        #  + Also see if you can use
+        #    - bsub
+        #    - qsub
+        #    - dapr telemetry
+        #  IMP: see docstring we can even have dearpygui client if we can submit jobs
+        #    and track jobs via ssh
 
 
 @dataclasses.dataclass(frozen=True)
