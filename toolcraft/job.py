@@ -788,7 +788,7 @@ class Monitor:
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'monitor'],
+    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'hashables_to_setup'],
     things_not_to_be_overridden=['cwd', 'job', 'monitor']
 )
 class Runner(m.HashableClass, abc.ABC):
@@ -832,6 +832,11 @@ class Runner(m.HashableClass, abc.ABC):
 
     todo: add models support (in folder `self.storage_dir/models`)
     """
+
+    @property
+    @util.CacheResult
+    def hashables_to_setup(self) -> t.List[m.HashableClass]:
+        return []
 
     @property
     def py_script(self) -> str:
