@@ -961,8 +961,9 @@ class Runner(m.HashableClass, abc.ABC):
         # call super
         super().init_validate()
 
-        # todo: fields defined check move to m.RuleChecker
-        # todo: check if this si reasonable ... sometimes we want different flows and
+        # todo: fields defined check move to `m.RuleChecker` ...
+        #  have something like `restricted_field_names`
+        # todo: check if this is reasonable ... sometimes we want different flows and
         #  in that case this will be needed  or else we need to define different
         #  subclasses
         # add restriction that there should be no dataclass fields for runner
