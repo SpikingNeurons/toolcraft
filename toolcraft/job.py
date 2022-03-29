@@ -24,7 +24,7 @@ from . import richy
 
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
-_HASHABLE_KWARG = "hashable"
+_EXPERIMENT_KWARG = "experiment"
 
 
 @dataclasses.dataclass
@@ -222,7 +222,7 @@ class Job:
         This takes in account
         + fn_name
         + fn_kwargs if present
-        + hashable hex_hash if present
+        + experiment hex_hash if present
         """
         return f"x{self.path.suffix_path.replace('/', 'x')}xJ"
 
@@ -245,13 +245,13 @@ class Job:
         Note that folder nesting is dependent on `self.fn` signature ...
 
         todo: integrate this with storage with partition_columns ...
-          note that first pivot will then be hashable name ...
+          note that first pivot will then be experiment name ...
         """
         _ret = self.runner.cwd
         _ret /= self.method.__func__.__name__
         for _key in inspect.signature(self.method).parameters.keys():
             _value = self.method_kwargs[_key]
-            if _key == _HASHABLE_KWARG:
+            if _key == _EXPERIMENT_KWARG:
                 _ret /= _value.hex_hash
             else:
                 _ret /= str(_value)
@@ -263,7 +263,7 @@ class Job:
         self,
         runner: "Runner",
         method: t.Callable,
-        method_kwargs: t.Dict[str, t.Union[m.HashableClass, int, float, str]] = None,
+        method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None,
         wait_on: t.List["JobGroup"] = None,
     ):
         # assign some vars
@@ -289,6 +289,23 @@ class Job:
                 ]
             )
 
+        # make sure that all kwargs are supplied
+        _required_keys = list(inspect.signature(self.method).parameters.keys())
+        _required_keys.sort()
+        _provided_keys = list(self.method_kwargs.keys())
+        _provided_keys.sort()
+        if _required_keys != _provided_keys:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We expect method_kwargs has all keys required by method "
+                    f"{self.method} ",
+                    f"Also so not supply any extra kwargs ...",
+                    dict(
+                        _required_keys=_required_keys, _provided_keys=_provided_keys
+                    ),
+                ]
+            )
+
         # some special methods cannot be used for job
         # noinspection PyUnresolvedReferences
         e.validation.ShouldNotBeOneOf(
@@ -296,17 +313,17 @@ class Job:
             msgs=["Some special methods cannot be used as job ..."]
         ).raise_if_failed()
 
-        # if _HASHABLE_KWARG present
-        if _HASHABLE_KWARG in self.method_kwargs.keys():
+        # if _EXPERIMENT_KWARG present
+        if _EXPERIMENT_KWARG in self.method_kwargs.keys():
             # get
-            _hashable = self.method_kwargs[_HASHABLE_KWARG]
+            _experiment = self.method_kwargs[_EXPERIMENT_KWARG]
             # make sure that it is not s.StorageHashable or any of its fields are
             # not s.StorageHashable
-            _hashable.check_for_storage_hashable(
-                field_key=f"{_hashable.__class__.__name__}"
+            _experiment.check_for_storage_hashable(
+                field_key=f"{_experiment.__class__.__name__}"
             )
             # make <hex_hash>.info if not present
-            self.runner.monitor.make_hashable_info_file(hashable=_hashable)
+            self.runner.monitor.make_experiment_info_file(experiment=_experiment)
 
     def check_health(self):
         # if job has already started
@@ -453,7 +470,7 @@ class Job:
         # make command to run on cli
         _kwargs_as_cli_strs = []
         for _k, _v in self.method_kwargs.items():
-            if _k == _HASHABLE_KWARG:
+            if _k == _EXPERIMENT_KWARG:
                 _v = _v.hex_hash
             _kwargs_as_cli_strs.append(
                 f"{_k}={_v}"
@@ -509,8 +526,8 @@ class Job:
         _method_kwargs = {}
         for _arg in sys.argv[2:]:
             _key, _str_val = _arg.split("=")
-            if _key == _HASHABLE_KWARG:
-                _val = runner.monitor.get_hashable_from_hex_hash(hex_hash=_str_val)
+            if _key == _EXPERIMENT_KWARG:
+                _val = runner.monitor.get_experiment_from_hex_hash(hex_hash=_str_val)
             else:
                 _val = _method_signature.parameters[_key].annotation(_str_val)
             _method_kwargs[_key] = _val
@@ -617,8 +634,9 @@ class JobGroup:
         _command = "python -c 'import time; time.sleep(1)'"
 
         # ------------------------------------------------------------- 02
-        if cluster_type in \
-            [JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread]:
+        if cluster_type in [
+            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
+        ]:
             ...
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # needed to add -oo so that we do not get any emails ;)
@@ -709,8 +727,9 @@ class Flow:
             _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
 
         # call jobs ...
-        if cluster_type in \
-            [JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread]:
+        if cluster_type in [
+            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
+        ]:
             for _stage in self.stages:
                 for _job_group in _stage:
                     for _job in _job_group.jobs:
@@ -772,36 +791,36 @@ class Monitor:
 
     @property
     @util.CacheResult
-    def hashables_path(self) -> s.Path:
-        _ret = self.path / "hashables"
+    def experiments_folder_path(self) -> s.Path:
+        _ret = self.path / "experiments"
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
 
-    def make_hashable_info_file(self, hashable: m.HashableClass):
-        _file = self.hashables_path / f"{hashable.hex_hash}.info"
+    def make_experiment_info_file(self, experiment: "Experiment"):
+        _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
         if not _file.exists():
             _LOGGER.info(
-                f"Creating hashable file {_file.local_path.as_posix()}")
-            _file.write_text(hashable.yaml())
+                f"Creating experiment info file {_file.local_path.as_posix()}")
+            _file.write_text(experiment.yaml())
 
-    def get_hashable_from_hex_hash(self, hex_hash: str) -> m.HashableClass:
-        _hashable_info_file = self.hashables_path / f"{hex_hash}.info"
-        if _hashable_info_file.exists():
+    def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
+        _experiment_info_file = self.experiments_folder_path / f"{hex_hash}.info"
+        if _experiment_info_file.exists():
             # noinspection PyTypeChecker
-            return m.HashableClass.get_class(_hashable_info_file).from_yaml(
-                _hashable_info_file
+            return m.HashableClass.get_class(_experiment_info_file).from_yaml(
+                _experiment_info_file
             )
         else:
             raise e.code.CodingError(
                 msgs=[f"We expect that you should have already created file "
-                      f"{_hashable_info_file}"]
+                      f"{_experiment_info_file}"]
             )
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'hashables_to_setup'],
+    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'experiments_to_setup'],
     things_not_to_be_overridden=['cwd', 'job', 'monitor']
 )
 class Runner(m.HashableClass, abc.ABC):
@@ -845,11 +864,6 @@ class Runner(m.HashableClass, abc.ABC):
 
     todo: add models support (in folder `self.storage_dir/models`)
     """
-
-    @property
-    @util.CacheResult
-    def hashables_to_setup(self) -> t.List[m.HashableClass]:
-        return []
 
     @property
     def py_script(self) -> str:
@@ -909,6 +923,18 @@ class Runner(m.HashableClass, abc.ABC):
         else:
             return Job.from_cli(runner=self)
 
+    @property
+    @util.CacheResult
+    def experiments_to_setup(self) -> t.List["Experiment"]:
+        return []
+
+    def setup(self):
+        _exps = self.experiments_to_setup
+        _LOGGER.info(
+            f"Setting up {len(_exps)} experiments registered for this runner ...")
+        for _exp in _exps:
+            _exp.setup()
+
     @classmethod
     def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
         return [cls.run, cls.init]
@@ -923,7 +949,7 @@ class Runner(m.HashableClass, abc.ABC):
         #   single thread and multiple threads
         # we need to update property ...
         # useful for JobRunnerClusterType.local_on_same_thread
-        _clone.hashables_to_setup.extend(self.hashables_to_setup)
+        _clone.experiments_to_setup.extend(self.experiments_to_setup)
 
         # return
         return _clone
@@ -933,7 +959,8 @@ class Runner(m.HashableClass, abc.ABC):
         super().init()
 
         # setup logger
-        import logging, pathlib
+        import logging
+        import pathlib
         # note that this should always be local ... dont use `self.cwd`
         _log_file = pathlib.Path(self.py_script.replace(".py", "")) / "runner.log"
         _log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -980,23 +1007,23 @@ class Runner(m.HashableClass, abc.ABC):
             # loop over parameters
             for _parameter_key in _parameter_keys:
                 # ----------------------------------------------- 02.05.01
-                # if hashable parameter
-                if _parameter_key == _HASHABLE_KWARG:
-                    # hashable must be first
-                    if _HASHABLE_KWARG != _parameter_keys[1]:
+                # if _EXPERIMENT_KWARG parameter
+                if _parameter_key == _EXPERIMENT_KWARG:
+                    # _EXPERIMENT_KWARG must be first
+                    if _EXPERIMENT_KWARG != _parameter_keys[1]:
                         raise e.validation.NotAllowed(
                             msgs=[
-                                f"If using `{_HASHABLE_KWARG}` kwarg in function "
+                                f"If using `{_EXPERIMENT_KWARG}` kwarg in function "
                                 f"{_val} make sure that it is first kwarg i.e. it "
                                 f"immediately follows after self"
                             ]
                         )
-                    # hashable annotation must be subclass of m.HashableClass
+                    # _EXPERIMENT_KWARG annotation must be subclass of Experiment
                     e.validation.ShouldBeSubclassOf(
-                        value=_signature.parameters[_HASHABLE_KWARG].annotation,
-                        value_types=(m.HashableClass, ),
+                        value=_signature.parameters[_EXPERIMENT_KWARG].annotation,
+                        value_types=(Experiment, ),
                         msgs=[f"Was expecting annotation for kwarg "
-                              f"`{_HASHABLE_KWARG}` to be proper subclass"]
+                              f"`{_EXPERIMENT_KWARG}` to be proper subclass"]
                     ).raise_if_failed()
                 # ----------------------------------------------- 02.05.02
                 # if self continue
@@ -1020,3 +1047,17 @@ class Runner(m.HashableClass, abc.ABC):
             self.flow(cluster_type)
         else:
             self.job(cluster_type)
+
+
+@dataclasses.dataclass(frozen=True)
+class Experiment(m.HashableClass):
+
+    # runner
+    runner: Runner
+
+    def init(self):
+        # call super
+        super().init()
+
+        # register self to runner
+        self.runner.experiments_to_setup.append(self)
