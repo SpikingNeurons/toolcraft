@@ -824,7 +824,9 @@ class Monitor:
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'experiments_to_setup'],
-    things_not_to_be_overridden=['cwd', 'job', 'monitor']
+    things_not_to_be_overridden=['cwd', 'job', 'monitor'],
+    # we do not want any fields for Runner class
+    restrict_dataclass_fields_to=[],
 )
 class Runner(m.HashableClass, abc.ABC):
     """
@@ -956,26 +958,6 @@ class Runner(m.HashableClass, abc.ABC):
 
         # return
         return _clone
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # todo: fields defined check move to `m.RuleChecker` ...
-        #  have something like `restricted_field_names`
-        # todo: check if this is reasonable ... sometimes we want different flows and
-        #  in that case this will be needed  or else we need to define different
-        #  subclasses
-        # add restriction that there should be no dataclass fields for runner
-        if bool(self.dataclass_field_names):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Please do not define any dataclass fields for class "
-                    f"{self.__class__}",
-                    "Found fields", self.dataclass_field_names,
-                    f"You should rely on fields of {Experiment} instead"
-                ]
-            )
 
     def init(self):
         # call super

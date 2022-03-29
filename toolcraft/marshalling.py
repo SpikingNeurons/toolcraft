@@ -354,6 +354,7 @@ class RuleChecker:
         things_to_be_cached: t.List[str] = None,
         things_not_to_be_cached: t.List[str] = None,
         things_not_to_be_overridden: t.List[str] = None,
+        restrict_dataclass_fields_to: t.List[str] = None,
     ):
         self.class_can_be_overridden = class_can_be_overridden
         self.things_to_be_cached = \
@@ -362,6 +363,10 @@ class RuleChecker:
             [] if things_not_to_be_cached is None else things_not_to_be_cached
         self.things_not_to_be_overridden = \
             [] if things_not_to_be_overridden is None else things_not_to_be_overridden
+        # todo: the child classes do not get this setting from parent class
+        #   test with job.Runner ... child classes of Runner do not obey this
+        #   restriction
+        self.restrict_dataclass_fields_to = restrict_dataclass_fields_to
         # noinspection PyTypeChecker
         self.parent = None  # type: RuleChecker
         # noinspection PyTypeChecker
@@ -574,6 +579,13 @@ class RuleChecker:
             return
         # cls to consider
         _hashable_cls = self.decorated_class
+        # fetch attributes that are annotated
+        # Note: dataclasses.fields will not work here as the class still
+        #   does not know that it is dataclass
+        _annotated_attr_keys = []
+        for _c in _hashable_cls.__mro__:
+            if hasattr(_c, '__annotations__'):
+                _annotated_attr_keys += list(_c.__annotations__.keys())
 
         # ---------------------------------------------------------- 02
         # class should not be local
@@ -628,19 +640,9 @@ class RuleChecker:
                 continue
 
             # ------------------------------------------------------ 03.04
-            # check if _attr_k is in __annotations__ then it is dataclass field
-            # Note: dataclasses.fields will not work here as the class still
-            #   does not know that it is dataclass
-            # todo: this is still not a complete solution as annotations will
-            #  also have fields that are t.ClassVar and t.InitVar
-            #  ... we will see this later how to deal with ... currently
-            #  there is no easy way
-            _attr_ks = []
-            for _c in _hashable_cls.__mro__:
-                if hasattr(_c, '__annotations__'):
-                    _attr_ks += list(_c.__annotations__.keys())
-            if _attr_k in _attr_ks:
-                # _ann_value is a typing.ClassVar raise error
+            # avoid using ClassVar and InitVar
+            if _attr_k in _annotated_attr_keys:
+                # _attr_v is a typing.ClassVar raise error
                 # simple way to see if typing was used as annotation value
                 if hasattr(_attr_v, '__origin__'):
                     if _attr_v.__origin__ == t.ClassVar:
@@ -684,7 +686,32 @@ class RuleChecker:
                 ]
             )
 
-        # ---------------------------------------------------------- 04
+        # ---------------------------------------------------------- 05
+        # if not None then that means we want to restrict dataclass fields
+        _restrict_dataclass_fields_to = self.restrict_dataclass_fields_to
+        if _restrict_dataclass_fields_to is not None:
+            if bool(_restrict_dataclass_fields_to):
+                for _attr_k in _annotated_attr_keys:
+                    e.validation.ShouldBeOneOf(
+                        value=_attr_k, values=_restrict_dataclass_fields_to,
+                        msgs=[
+                            f"Please use only allowed dataclass fields for class "
+                            f"{_hashable_cls}..."
+                        ]
+                    ).raise_if_failed()
+            else:
+                # empty list was supplied that means you dont want to use any fields
+                if bool(_annotated_attr_keys):
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"Please do not specify ant dataclass fields for class "
+                            f"{_hashable_cls}",
+                            f"We found below fields defined",
+                            _annotated_attr_keys,
+                        ]
+                    )
+
+        # ---------------------------------------------------------- 05
         # do not override dunder methods
         _general_dunders_to_ignore = [
             # python adds it
