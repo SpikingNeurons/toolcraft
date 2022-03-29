@@ -68,6 +68,21 @@ Then ...
   + MDX components
   + multi-platform doc i.e. for mobile, desktop etc ...
 
+## Documentations
+
+### Docusauraus
+Docusauraus will be great
+Discussion to get sphinx inside it are going on
+https://github.com/facebook/docusaurus/issues/1059
+
+### mkdocs
+https://www.mkdocs.org
+Not sure but thsi soes not have stuff for Docausaurus
+### pydoc=markdown
+[pydoc-markdown](https://niklasrosenstein.github.io/pydoc-markdown/api/pydoc_markdown/renderers/docusaurus/) has docausaurus renderer
+
+but I assume this one is completely different as it does not use sphinx instead has its own markdowm
+
 ## Badges
 
 + You can generate badges and display status

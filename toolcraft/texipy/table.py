@@ -505,6 +505,12 @@ class Table(LaTeX):
         if self.alignment is not None:
             _ret.append(f"{self.alignment}%")
 
+        # add caption and label ... on top for table
+        if self.caption is not None:
+            _ret.append(f"\\caption{{{self.caption}}}%")
+        if self.label is not None:
+            _ret.append(f"\\label{{{self.label}}}%")
+
         # add comment
         _ret.append(f"% >> start {self.latex_type}")
 
@@ -527,10 +533,6 @@ class Table(LaTeX):
         _ret = [
             f"% >> end {self.latex_type}", f"\\end{{{self.latex_type}}}%",
         ]
-        if self.caption is not None:
-            _ret.append(f"\\caption{{{self.caption}}}%")
-        if self.label is not None:
-            _ret.append(f"\\label{{{self.label}}}%")
         if self.type != 'array':
             _ret += [
                 f"% >> end table `{'...' if self.label is None else self.label}`",

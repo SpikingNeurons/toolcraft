@@ -823,7 +823,7 @@ class Monitor:
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'experiments_to_setup'],
+    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments'],
     things_not_to_be_overridden=['cwd', 'job', 'monitor'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
@@ -930,11 +930,11 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def experiments_to_setup(self) -> t.List["Experiment"]:
+    def registered_experiments(self) -> t.List["Experiment"]:
         return []
 
     def setup(self):
-        _exps = self.experiments_to_setup
+        _exps = self.registered_experiments
         _LOGGER.info(
             f"Setting up {len(_exps)} experiments registered for this runner ...")
         for _exp in _exps:
@@ -954,7 +954,7 @@ class Runner(m.HashableClass, abc.ABC):
         #   single thread and multiple threads
         # we need to update property ...
         # useful for JobRunnerClusterType.local_on_same_thread
-        _clone.experiments_to_setup.extend(self.experiments_to_setup)
+        _clone.registered_experiments.extend(self.registered_experiments)
 
         # return
         return _clone
@@ -1065,4 +1065,4 @@ class Experiment(m.HashableClass):
         super().init()
 
         # register self to runner
-        self.runner.experiments_to_setup.append(self)
+        self.runner.registered_experiments.append(self)
