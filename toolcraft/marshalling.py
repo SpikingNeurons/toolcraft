@@ -535,11 +535,21 @@ class RuleChecker:
     # noinspection PyPep8Naming
     def check_related_to_class_FrozenEnum(self):
         # ---------------------------------------------------------- 01
+        # things to skip
+        # ---------------------------------------------------------- 01.01
         # if FrozenEnum then it is parent class so ignore
         if self.decorated_class == FrozenEnum:
             return
+        # ---------------------------------------------------------- 01.02
         # nothing to do if not a subclass of FrozenEnum
         if not issubclass(self.decorated_class, FrozenEnum):
+            return
+        # ---------------------------------------------------------- 01.03
+        # If subclass but have no annotated fields then that means we want to subclass
+        # it later while this class should be treated as subclass ...
+        # We do this as we cannot declare it as abstract class as the behaviour does
+        # not work when we want enums ...
+        if not hasattr(self.decorated_class, "__annotations__"):
             return
 
         # ---------------------------------------------------------- 02

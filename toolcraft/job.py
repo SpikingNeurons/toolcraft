@@ -40,6 +40,7 @@ class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     """
     ibm_lsf = enum.auto()
     local = enum.auto()
+    local_on_same_thread = enum.auto()
 
 
 class JobFlowId(t.NamedTuple):
@@ -406,6 +407,19 @@ class Job:
         _failed = False
         try:
             self.method(**self.method_kwargs)
+            self.tag_manager.running.delete()
+            self.tag_manager.finished.create()
+            _end = datetime.datetime.now()
+            _LOGGER.info(
+                msg=f"Successfully finished job {self.id} at {_start.ctime()}",
+                msgs=[
+                    {
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds()),
+                    }
+                ]
+            )
         except Exception as _ex:
             _failed = True
             self.tag_manager.failed.create(
@@ -425,20 +439,10 @@ class Job:
                     }
                 ]
             )
-        self.tag_manager.running.delete()
-        if not _failed:
-            self.tag_manager.finished.create()
-            _end = datetime.datetime.now()
-            _LOGGER.info(
-                msg=f"Successfully finished job {self.id} at {_start.ctime()}",
-                msgs=[
-                    {
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                    }
-                ]
-            )
+            self.tag_manager.running.delete()
+            # above thing will tell toolcraft that things failed gracefully
+            # while below raise will tell cluster systems like bsub that job has failed
+            raise _ex
 
     def _launch_on_main_machine(self, cluster_type: JobRunnerClusterType):
         """
@@ -461,6 +465,13 @@ class Job:
         # ------------------------------------------------------------- 02
         if cluster_type is JobRunnerClusterType.local:
             os.system(_command)
+        elif cluster_type is JobRunnerClusterType.local_on_same_thread:
+            _backup_argv = sys.argv
+            sys.argv = \
+                _backup_argv + [str(self.method.__func__.__name__)] + \
+                _kwargs_as_cli_strs
+            self.runner.clone().run(cluster_type=cluster_type)
+            sys.argv = _backup_argv
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # todo: when self.path is not local we need to see how to log files ...
             #   should we stream or dump locally ?? ... or maybe figure out
@@ -606,7 +617,8 @@ class JobGroup:
         _command = "python -c 'import time; time.sleep(1)'"
 
         # ------------------------------------------------------------- 02
-        if cluster_type is JobRunnerClusterType.local:
+        if cluster_type in \
+            [JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread]:
             ...
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # needed to add -oo so that we do not get any emails ;)
@@ -697,7 +709,8 @@ class Flow:
             _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
 
         # call jobs ...
-        if cluster_type is JobRunnerClusterType.local:
+        if cluster_type in \
+            [JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread]:
             for _stage in self.stages:
                 for _job_group in _stage:
                     for _job in _job_group.jobs:
@@ -900,21 +913,37 @@ class Runner(m.HashableClass, abc.ABC):
     def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
         return [cls.run, cls.init]
 
+    def clone(self) -> "Runner":
+        # get clone
+        # noinspection PyTypeChecker
+        _clone = super().clone()  # type: Runner
+
+        # todo: not elegant but improve if needed later ...
+        #   this leads to tedious cloning ... as we need to always examine runner for
+        #   single thread and multiple threads
+        # we need to update property ...
+        # useful for JobRunnerClusterType.local_on_same_thread
+        _clone.hashables_to_setup.extend(self.hashables_to_setup)
+
+        # return
+        return _clone
+
     def init(self):
         # call super
         super().init()
 
         # setup logger
         import logging, pathlib
+        # note that this should always be local ... dont use `self.cwd`
+        _log_file = pathlib.Path(self.py_script.replace(".py", "")) / "runner.log"
+        _log_file.parent.mkdir(parents=True, exist_ok=True)
         logger.setup_logging(
             propagate=False,
             level=logging.NOTSET,
             handlers=[
                 logger.get_rich_handler(),
                 logger.get_stream_handler(),
-                logger.get_file_handler(
-                    pathlib.Path(self.py_script.replace(".py", ".log"))
-                ),
+                logger.get_file_handler(_log_file),
             ],
         )
 

@@ -131,7 +131,7 @@ class Folder(StorageHashable):
         return _state_manager_files_available
 
     @property
-    def group_by(self) -> t.Optional[t.Union[str, t.List[str]]]:
+    def group_by(self) -> t.List[str]:
         """
         Default is use grouping from for_hashable as the storage will be controlled by
         that hashable class
