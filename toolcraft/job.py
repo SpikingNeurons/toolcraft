@@ -459,6 +459,9 @@ class Job:
             self.tag_manager.running.delete()
             # above thing will tell toolcraft that things failed gracefully
             # while below raise will tell cluster systems like bsub that job has failed
+            # todo for `JobRunnerClusterType.local_on_same_thread` this will not allow
+            #  future jobs to run ... but this is expected as we want to debug in
+            #  this mode mostly
             raise _ex
 
     def _launch_on_main_machine(self, cluster_type: JobRunnerClusterType):
@@ -953,6 +956,25 @@ class Runner(m.HashableClass, abc.ABC):
 
         # return
         return _clone
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # todo: fields defined check move to m.RuleChecker
+        # todo: check if this si reasonable ... sometimes we want different flows and
+        #  in that case this will be needed  or else we need to define different
+        #  subclasses
+        # add restriction that there should be no dataclass fields for runner
+        if bool(self.dataclass_field_names):
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"Please do not define any dataclass fields for class "
+                    f"{self.__class__}",
+                    "Found fields", self.dataclass_field_names,
+                    f"You should rely on fields of {Experiment} instead"
+                ]
+            )
 
     def init(self):
         # call super
