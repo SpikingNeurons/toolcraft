@@ -365,7 +365,8 @@ class RuleChecker:
             [] if things_not_to_be_overridden is None else things_not_to_be_overridden
         # todo: the child classes do not get this setting from parent class
         #   test with job.Runner ... child classes of Runner do not obey this
-        #   restriction
+        #   restriction ... also test other init kwargs above even they might not
+        #   be propagating information downstream
         self.restrict_dataclass_fields_to = restrict_dataclass_fields_to
         # noinspection PyTypeChecker
         self.parent = None  # type: RuleChecker
