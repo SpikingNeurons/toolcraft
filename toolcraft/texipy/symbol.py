@@ -19,6 +19,14 @@ class Symbol(abc.ABC):
 
     def __post_init__(self):
         self._var_name = None
+        self.init_validate()
+        self.init()
+
+    def init_validate(self):
+        ...
+
+    def init(self):
+        ...
 
     def __str__(self):
         raise e.code.CodingError(
