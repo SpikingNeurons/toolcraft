@@ -555,7 +555,7 @@ class RuleChecker:
         # it later while this class should be treated as subclass ...
         # We do this as we cannot declare it as abstract class as the behaviour does
         # not work when we want enums ...
-        if not hasattr(self.decorated_class, "__annotations__"):
+        if not bool(getattr(self.decorated_class, '__annotations__', {})):
             return
 
         # ---------------------------------------------------------- 02
@@ -716,7 +716,7 @@ class RuleChecker:
         # do not override dunder methods
         _general_dunders_to_ignore = [
             # python adds it
-            '__module__', '__dict__', '__weakref__', '__doc__',
+            '__module__', '__dict__', '__weakref__', '__doc__', '__match_args__',
 
             # dataclass related
             '__annotations__', '__abstractmethods__', '__dataclass_params__',
