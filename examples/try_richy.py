@@ -40,31 +40,32 @@ def try_status_panel():
     with _sp:
         _p = _sp.progress
         _s = _sp.status
+        _time = 0.2
 
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 1"):
-            time.sleep(0.2)
+            time.sleep(_time)
         _s.update(spinner_speed=1.0, spinner=None, status="start")
-        time.sleep(0.2)
+        time.sleep(_time)
 
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 2"):
-            time.sleep(0.2)
+            time.sleep(_time)
         _s.update(spinner_speed=1.0, spinner=None, status="next")
-        time.sleep(0.2)
+        time.sleep(_time)
 
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 3"):
-            time.sleep(0.2)
+            time.sleep(_time)
         _s.update(spinner_speed=1.0, spinner=None, status="done")
-        time.sleep(0.2)
+        time.sleep(_time)
 
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 4"):
-            time.sleep(0.2)
+            time.sleep(_time)
         _s.update(spinner_speed=1.0, spinner=None, status="close")
-        time.sleep(0.2)
+        time.sleep(_time)
 
 
 def main():
-    # try_progress()
-    # try_status()
+    try_progress()
+    try_status()
     try_status_panel()
 
 

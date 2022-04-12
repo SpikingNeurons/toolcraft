@@ -1066,3 +1066,6 @@ class Experiment(m.HashableClass):
 
         # register self to runner
         self.runner.registered_experiments.append(self)
+
+    def setup(self):
+        _LOGGER.info(f" >> Setup experiment: {self.hex_hash}")
