@@ -1076,7 +1076,7 @@ class Tracker:
 
         """
         # call on exit
-        self.on_exit()
+        self.on_exit(exc_type, exc_val, exc_tb)
 
     def __iter__(self) -> t.Iterable:
         # the with statement here helps users to directly iterate over
@@ -1209,7 +1209,7 @@ class Tracker:
             ])
         self.internal.in_with_context = True
 
-    def on_exit(self):
+    def on_exit(self, exc_type, exc_val, exc_tb):
         """
         Override this in case you want to do something when __exit__ is called
         """

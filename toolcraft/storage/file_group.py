@@ -1638,6 +1638,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
             if status_panel is not None:
                 status_panel.status.update(
                     f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
+        else:
+            # this might be okay when called directly ...
+            # but note that if we do via our __call__ API then the above clause will
+            # appropriately get triggered
+            _LOGGER.info(
+                f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
 
         # load memmaps
         _ret = {}
@@ -1676,9 +1682,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _total = len(self.file_keys)
 
         # get property
-        if status_panel is not None:
-            status_panel.status.update(
-                f"Loading {_total} NpyMemMap's for Fg {self.name}")
         _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
 
         # make NpyMemmaps aware of seed
@@ -1691,7 +1694,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             v(shuffle_seed=shuffle_seed)
             v.__enter__()
 
-    def on_exit(self):
+    def on_exit(self, exc_type, exc_val, exc_tb):
         status_panel = \
             self.internal.on_call_kwargs[
                 'status_panel'
@@ -1703,7 +1706,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
                     f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
             v = self.all_npy_mem_maps_cache[k]
             # noinspection PyUnresolvedReferences
-            v.__exit__(None, None, None)
+            v.__exit__(exc_type, exc_val, exc_tb)
 
         # call super
         super().on_exit()
