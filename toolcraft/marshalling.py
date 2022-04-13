@@ -1028,11 +1028,6 @@ class Tracker:
           https://docs.python.domainunion.de/3/library/contextlib.html
 
         """
-        # prefetch if not done
-        # handle expensive things that can reduce load on consecutive calls
-        # on same instance
-        if not self.internal.has("prefetched_on_first_call"):
-            self.prefetch_stuff_before_first_call()
 
         # set call
         if self.is_called:
@@ -1051,6 +1046,12 @@ class Tracker:
 
             # set internal on_call_kwargs
             self.internal.on_call_kwargs = _on_call_kwargs
+
+        # prefetch if not done
+        # handle expensive things that can reduce load on consecutive calls
+        # on same instance
+        if not self.internal.has("prefetched_on_first_call"):
+            self.prefetch_stuff_before_first_call()
 
         # do something once kwargs are available
         self.on_call()

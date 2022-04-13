@@ -1627,6 +1627,19 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Used to cache NpyMemMap instances to avoid creating them again and
         again.
         """
+        # Sometimes this can be called without using with context and no status
+        # panel might be available ...
+        # But note that this is just loading files which will not need on_call_kwargs,
+        # so we allow users to access without with context ...
+        if self.internal.on_call_kwargs is not None:
+            status_panel = self.internal.on_call_kwargs.get(
+                'status_panel', None
+            )  # type: richy.SimpleStatusPanel
+            if status_panel is not None:
+                status_panel.status.update(
+                    f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
+
+        # load memmaps
         _ret = {}
         for fk in self.file_keys:
             _ret[fk] = NpyMemMap(file_path=self.path / fk, )

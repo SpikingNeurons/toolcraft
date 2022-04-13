@@ -10,6 +10,7 @@ each of which consisting of multiple steps.
 
 import time
 
+from rich import box
 from rich.console import Group
 from rich.panel import Panel
 from rich.live import Live
@@ -52,7 +53,7 @@ current_app_progress = Progress(
 
 # progress bars for single app steps (will be hidden when step is done)
 step_progress = Progress(
-    TextColumn("  "),
+    TextColumn(">>> "),
     TimeElapsedColumn(),
     TextColumn("[bold purple]{task.fields[action]}"),
     SpinnerColumn("simpleDots"),
@@ -71,10 +72,10 @@ overall_progress = Progress(
 )
 # group of progress bars;
 # some are always visible, others will disappear when progress is complete
-progress_group = Group(
-    Panel(Group(current_app_progress, step_progress, app_steps_progress)),
-    overall_progress,
-)
+progress_group = Panel(Group(
+    Group(current_app_progress, step_progress, app_steps_progress),
+    Panel(overall_progress, box=box.HORIZONTALS),
+), box=box.ASCII)
 
 # tuple specifies how long each step takes for that app
 step_actions = ("downloading", "configuring", "building", "installing")
