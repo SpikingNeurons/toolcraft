@@ -274,6 +274,7 @@ class Status(Widget):
     spinner: SpinnerType = SpinnerType.star
     # spinner_style: Optional[StyleType] = None
     spinner_speed: float = 1.0
+    box_type: r_box.Box = r_box.ASCII
 
     @property
     def renderable(self) -> r_console.RenderableType:
@@ -285,21 +286,31 @@ class Status(Widget):
                 border_style="green",
                 # padding=(2, 2),
                 expand=True,
-                box=r_box.ASCII,
+                box=self.box_type,
             )
 
     def __post_init__(self):
         self._spinner = self.spinner.get_spinner(
             text=self.status, speed=self.spinner_speed
         )
+        # noinspection PyTypeChecker
+        self._time = None  # type: datetime.datetime
         super().__post_init__()
 
     def __enter__(self) -> "Status":
         super().__enter__()
         self._live.start()
+        self._spinner = SpinnerType.dots.get_spinner(text="Started ...")
+        self._time = datetime.datetime.now()
+        self.refresh(update_renderable=True)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        _elapsed_secs = (datetime.datetime.now() - self._time).total_seconds()
+        self._spinner = r_text.Text.from_markup(
+            f"{EMOJI['white_heavy_check_mark']} "
+            f"Finished in {_elapsed_secs} seconds ...")
+        self.refresh(update_renderable=True)
         self._live.stop()
         super().__exit__(exc_type, exc_val, exc_tb)
 
@@ -381,15 +392,6 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 04
         super().__post_init__()
-
-    def __enter__(self) -> "Progress":
-        super().__enter__()
-        # self._progress.start()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # self._progress.stop()
-        super().__exit__(exc_type, exc_val, exc_tb)
 
     def add_task(
         self, task_name: str, total: float, description: str = None
@@ -621,7 +623,7 @@ class StatusPanel(Widget, abc.ABC):
 
 
 @dataclasses.dataclass
-class SimpleStatusPanel(StatusPanel):
+class ProgressStatusPanel(StatusPanel):
     """
     We have table with one row for Progress and second for Status
 
@@ -647,35 +649,19 @@ class SimpleStatusPanel(StatusPanel):
 
     @property
     def renderable(self) -> r_console.RenderableType:
-        _table = r_table.Table.grid()
-        _table.add_row(
-            # r_panel.Panel(self.progress.renderable, box=r_box.HORIZONTALS)
-            self.progress.renderable
-        )
-        _table.add_row(
-            # r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
-            self.status.renderable
+        _progress = self.progress.renderable
+        _status = r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+        _group = r_console.Group(
+            _progress, _status
         )
         if self.title is None:
-            return _table
+            return _group
         else:
             return r_panel.Panel(
-                _table,
+                _group,
                 title=self.title,
                 border_style="green",
                 # padding=(2, 2),
                 expand=True,
                 box=r_box.ASCII,
             )
-
-    def __enter__(self) -> "SimpleStatusPanel":
-        # noinspection PyTypeChecker
-        super().__enter__()
-        # self.progress.__enter__()
-        # self.status.__enter__()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # self.status.__exit__(exc_type, exc_val, exc_tb)
-        # self.progress.__exit__(exc_type, exc_val, exc_tb)
-        super().__exit__(exc_type, exc_val, exc_tb)

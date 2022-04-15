@@ -905,7 +905,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         _start_time = datetime.datetime.now()
 
-        with richy.SimpleStatusPanel(
+        with richy.ProgressStatusPanel(
             title=_title,
         ) as _status:
 
@@ -1059,7 +1059,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
     @abc.abstractmethod
     def create_file(
-        self, *, file_key: str, status_panel: richy.SimpleStatusPanel = None
+        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
     ) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
@@ -1627,6 +1627,13 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Used to cache NpyMemMap instances to avoid creating them again and
         again.
         """
+
+        # We always log to main log file on first access ...
+        # If this breaks richy rendering then log only when not __call__ i.e.,
+        # uncomment code below ...
+        # If self.internal.on_call_kwargs is None:
+        _LOGGER.info(f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
+
         # Sometimes this can be called without using with context and no status
         # panel might be available ...
         # But note that this is just loading files which will not need on_call_kwargs,
@@ -1634,27 +1641,23 @@ class NpyFileGroup(FileGroup, abc.ABC):
         if self.internal.on_call_kwargs is not None:
             status_panel = self.internal.on_call_kwargs.get(
                 'status_panel', None
-            )  # type: richy.SimpleStatusPanel
+            )  # type: richy.ProgressStatusPanel
             if status_panel is not None:
                 status_panel.status.update(
                     f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
-        else:
-            # this might be okay when called directly ...
-            # but note that if we do via our __call__ API then the above clause will
-            # appropriately get triggered
-            _LOGGER.info(
-                f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
 
         # load memmaps
         _ret = {}
         for fk in self.file_keys:
             _ret[fk] = NpyMemMap(file_path=self.path / fk, )
+
+        # return
         return _ret
 
     # noinspection PyMethodOverriding
     def __call__(
         self, *,
-        status_panel: t.Optional[richy.SimpleStatusPanel],
+        status_panel: t.Optional[richy.ProgressStatusPanel],
         shuffle_seed: SHUFFLE_SEED_TYPE,
     ) -> "NpyFileGroup":
         # call super
@@ -1676,7 +1679,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         status_panel = \
             self.internal.on_call_kwargs[
                 'status_panel'
-            ]  # type: richy.SimpleStatusPanel
+            ]  # type: richy.ProgressStatusPanel
 
         # log
         _total = len(self.file_keys)
@@ -1698,7 +1701,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         status_panel = \
             self.internal.on_call_kwargs[
                 'status_panel'
-            ]  # type: richy.SimpleStatusPanel
+            ]  # type: richy.ProgressStatusPanel
         _total = len(self.file_keys)
         for i, k in enumerate(self.file_keys):
             if status_panel is not None:
@@ -2093,7 +2096,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.SimpleStatusPanel = None
+        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[
@@ -2181,7 +2184,7 @@ class FileGroupFromPaths(FileGroup):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.SimpleStatusPanel = None
+        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[

@@ -34,7 +34,7 @@ def try_status():
 
 
 def try_status_panel():
-    _sp = richy.SimpleStatusPanel(
+    _sp = richy.ProgressStatusPanel(
         title="Test Status Panel", tc_log=_LOGGER
     )
     with _sp:
@@ -65,8 +65,8 @@ def try_status_panel():
 
 def main():
     # try_progress()
-    # try_status()
-    try_status_panel()
+    try_status()
+    # try_status_panel()
 
 
 if __name__ == '__main__':

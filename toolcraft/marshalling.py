@@ -1017,7 +1017,7 @@ class Tracker:
 
     def __call__(
         self,
-        status_panel: t.Optional[richy.SimpleStatusPanel],
+        status_panel: t.Optional[richy.ProgressStatusPanel],
         **kwargs,
     ) -> "Tracker":
         """
@@ -1085,7 +1085,7 @@ class Tracker:
         with self:
             # get some vars
             _status_panel = self.internal.on_call_kwargs[
-                "status_panel"]  # type: richy.SimpleStatusPanel
+                "status_panel"]  # type: richy.ProgressStatusPanel
 
             # iterate
             if _status_panel is None:
