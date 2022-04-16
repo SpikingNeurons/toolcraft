@@ -9,10 +9,12 @@ _LOGGER = logger.get_logger()
 
 
 def try_progress():
-    for _ in richy.Progress.simple_track(sequence=[1, 2, 3, 4]):
+    for _ in richy.Progress.simple_track(sequence=[1, 2, 3, 4], tc_log=_LOGGER):
         time.sleep(1)
 
-    with richy.Progress.for_download_and_hashcheck(title="Test Progress") as _p:
+    with richy.Progress.for_download_and_hashcheck(
+        title="Test Progress", tc_log=_LOGGER,
+    ) as _p:
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 1"):
             time.sleep(0.2)
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 2"):
@@ -80,11 +82,31 @@ def try_status_panel():
         _s.update(spinner_speed=1.0, spinner=None, status="close")
         time.sleep(_time)
 
+    _sp = richy.ProgressStatusPanel(
+        title="Test Status Panel with overall progress", tc_log=_LOGGER,
+        overall_progress_iterable=[
+            ([1, 2, 3, 4], "task 1", "start"),
+            ([1, 2, 3, 4], "task 2", "next"),
+            ([1, 2, 3, 4], "task 3", "done"),
+            ([1, 2, 3, 4], "task 4", "close"),
+        ]
+    )
+    with _sp:
+        _p = _sp.progress
+        _s = _sp.status
+        _time = 0.2
+
+        for _sequence, _task_name, _status in _s:
+            for _ in _p.track(sequence=_sequence, task_name=_task_name):
+                time.sleep(_time)
+            _s.update(spinner_speed=1.0, spinner=None, status=_status)
+            time.sleep(_time)
+
 
 def main():
     # try_progress()
-    try_status()
-    # try_status_panel()
+    # try_status()
+    try_status_panel()
 
 
 if __name__ == '__main__':

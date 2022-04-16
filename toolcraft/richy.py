@@ -235,7 +235,7 @@ class Widget(abc.ABC):
         self._start_time = datetime.datetime.now()
 
         if self.tc_log is not None:
-            _title = '' if self.title is None else (self.title + ' ')
+            _title = (self.title + ' ') if bool(self.title) else ''
             self.tc_log.info(msg=_title + "started ...")
 
         self._live = r_live.Live(
@@ -256,7 +256,7 @@ class Widget(abc.ABC):
             #   via self.tc_log .... need to do this because the RichHandler is not able
             #   to write things to file like FileHandler ... explore later
             _secs = (datetime.datetime.now() - self._start_time).total_seconds()
-            _title = '' if self.title is None else (self.title + ' ')
+            _title = (self.title + ' ') if bool(self.title) else ''
             self.tc_log.info(msg=_title + f"finished in {_secs} seconds ...")
 
     def refresh(self, update_renderable: bool = False):
@@ -565,6 +565,7 @@ class Progress(Widget):
         title: t.Optional[str] = None,
         refresh_per_second: int = 10,
         console: r_console.Console = r_console.Console(record=True),
+        tc_log: logger.CustomLogger = None,
     ) -> "Progress":
         return Progress(
             title=title,  # setting this to str will add panel
@@ -587,6 +588,7 @@ class Progress(Widget):
             },
             console=console,
             refresh_per_second=refresh_per_second,
+            tc_log=tc_log,
         )
 
     @classmethod
@@ -598,19 +600,23 @@ class Progress(Widget):
         ],
         description: str = "Working...",
         total: float = None,
+        tc_log: logger.CustomLogger = None,
     ) -> t.Generator[r_progress.ProgressType, None, None]:
         """
         Simple progress bar for single task which iterates over sequence
 
         """
-        with cls.simple_progress(title="") as _progress:
+        with cls.simple_progress(title="", tc_log=tc_log) as _progress:
             yield from _progress.track(
                 sequence=sequence, task_name="single_task",
                 description=description, total=total,
             )
 
     @classmethod
-    def for_download_and_hashcheck(cls, title: str) -> "Progress":
+    def for_download_and_hashcheck(
+        cls, title: str,
+        tc_log: logger.CustomLogger = None,
+    ) -> "Progress":
         _progress = Progress(
             title=title,
             columns={
@@ -637,6 +643,7 @@ class Progress(Widget):
                     }
                 ),
             },
+            tc_log=tc_log,
         )
 
         return _progress
@@ -652,6 +659,11 @@ class ProgressStatusPanel(Widget):
       May de have method `self.log(...)` for this SimpleStatusPanel
     """
 
+    overall_progress_iterable: t.Union[
+        t.Sequence[r_progress.ProgressType],
+        t.Iterable[r_progress.ProgressType]
+    ] = None
+
     @property
     @util.CacheResult
     def progress(self) -> Progress:
@@ -664,7 +676,8 @@ class ProgressStatusPanel(Widget):
     def status(self) -> Status:
         return Status(
             title=None,
-            console=self.console, refresh_per_second=self.refresh_per_second
+            console=self.console, refresh_per_second=self.refresh_per_second,
+            overall_progress_iterable=self.overall_progress_iterable,
         )
 
     @property
