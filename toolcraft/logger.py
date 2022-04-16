@@ -166,12 +166,20 @@ class AddLoggingMetaFilter(logging.Filter):
         return True
 
 
-def get_formatter_for_rich_handler() -> logging.Formatter:
-    return logging.Formatter(
-        # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
-        # f'%(message)s'
-        f'%(message)s'
-    )
+# def get_formatter_for_stream_handler() -> logging.Formatter:
+#     return logging.Formatter(
+#         # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
+#         # f'%(message)s'
+#         f'%(message)s'
+#     )
+
+
+# def get_formatter_for_rich_handler() -> logging.Formatter:
+#     return logging.Formatter(
+#         # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
+#         # f'%(message)s'
+#         f'%(message)s'
+#     )
 
 
 def get_formatter_for_file_handler() -> logging.Formatter:
@@ -180,6 +188,31 @@ def get_formatter_for_file_handler() -> logging.Formatter:
         # f'%(message)s'
         f'\n%(asctime)s %(short_name)s:\n>>>\n%(message)s'
     )
+
+
+# def get_stream_handler() -> logging.StreamHandler:
+#
+#     # -------------------------------------------------------- 01
+#     # get handler
+#     # this can make multiple log files for now stick up with simple things
+#     # _h = logging.handlers.RotatingFileHandler()
+#     _h = logging.StreamHandler(stream=sys.stdout)
+#
+#     # -------------------------------------------------------- 02
+#     # set level
+#     _h.setLevel(level=logging.NOTSET)
+#
+#     # -------------------------------------------------------- 03
+#     # set formatter
+#     _h.setFormatter(fmt=get_formatter_for_stream_handler())
+#
+#     # -------------------------------------------------------- 04
+#     # add filters
+#     _h.addFilter(AddLoggingMetaFilter())
+#
+#     # -------------------------------------------------------- 05
+#     # return
+#     return _h
 
 
 def get_rich_handler() -> RichHandler:
@@ -198,6 +231,8 @@ def get_rich_handler() -> RichHandler:
         rich_tracebacks=True,
         show_path=True,
         locals_max_string=160,
+        # log_time_format="[%x %X]",
+        log_time_format="[%X]",
     )
 
     # -------------------------------------------------------- 02
@@ -208,36 +243,11 @@ def get_rich_handler() -> RichHandler:
 
     # -------------------------------------------------------- 03
     # set formatter
-    _h.setFormatter(fmt=get_formatter_for_rich_handler())
+    # _h.setFormatter(fmt=get_formatter_for_rich_handler())
 
     # -------------------------------------------------------- 04
     # add filters
     _h.addFilter(AddLoggingMetaFilter())
-
-    # -------------------------------------------------------- 05
-    # return
-    return _h
-
-
-def get_stream_handler() -> logging.StreamHandler:
-
-    # -------------------------------------------------------- 01
-    # get handler
-    # this can make multiple log files for now stick up with simple things
-    # _h = logging.handlers.RotatingFileHandler()
-    _h = logging.StreamHandler(stream=sys.stdout)
-
-    # -------------------------------------------------------- 02
-    # set level
-    _h.setLevel(level=logging.NOTSET)
-
-    # -------------------------------------------------------- 03
-    # set formatter
-    # _h.setFormatter(fmt=get_formatter_for_file_handler())
-
-    # -------------------------------------------------------- 04
-    # add filters
-    # _h.addFilter(AddLoggingMetaFilter())
 
     # -------------------------------------------------------- 05
     # return
@@ -522,7 +532,7 @@ setup_logging(
     level=logging.NOTSET,
     handlers=[
         get_rich_handler(),
-        get_stream_handler(),
+        # get_stream_handler(),
         get_file_handler(pathlib.Path("tmp.log")),
     ],
 )

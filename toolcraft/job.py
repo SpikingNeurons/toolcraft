@@ -413,7 +413,7 @@ class Job:
             # todo: here we can config that on server where things will be logged
             handlers=[
                 logger.get_rich_handler(),
-                logger.get_stream_handler(),
+                # logger.get_stream_handler(),
                 logger.get_file_handler(_log.local_path),
             ],
         )
@@ -974,7 +974,7 @@ class Runner(m.HashableClass, abc.ABC):
             level=logging.NOTSET,
             handlers=[
                 logger.get_rich_handler(),
-                logger.get_stream_handler(),
+                # logger.get_stream_handler(),
                 logger.get_file_handler(_log_file),
             ],
         )
