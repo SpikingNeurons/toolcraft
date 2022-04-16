@@ -134,7 +134,7 @@ class _Dapr(m.HashableClass):
             propagate=False,
             level=logging.INFO,
             handlers=[
-                logger.get_rich_handler(),
+                # logger.get_rich_handler(),
                 # logger.get_stream_handler(),
                 logger.get_file_handler(self.log_file),
             ],

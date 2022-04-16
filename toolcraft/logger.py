@@ -531,7 +531,7 @@ setup_logging(
     propagate=False,
     level=logging.NOTSET,
     handlers=[
-        get_rich_handler(),
+        # get_rich_handler(),
         # get_stream_handler(),
         get_file_handler(pathlib.Path("tmp.log")),
     ],

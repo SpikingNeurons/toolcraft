@@ -101,6 +101,7 @@ def try_status_panel():
                 time.sleep(_time)
             _s.update(spinner_speed=1.0, spinner=None, status=_status)
             time.sleep(_time)
+            _LOGGER.info("jjjjj")
 
 
 def main():

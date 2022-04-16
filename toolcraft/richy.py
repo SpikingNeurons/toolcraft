@@ -251,13 +251,19 @@ class Widget(abc.ABC):
 
         self._live.stop()
 
+        self.console.print("")
+
         if self.tc_log is not None:
             # todo: use `self.console.extract_*` methods to get console frame and log it
             #   via self.tc_log .... need to do this because the RichHandler is not able
             #   to write things to file like FileHandler ... explore later
             _secs = (datetime.datetime.now() - self._start_time).total_seconds()
             _title = (self.title + ' ') if bool(self.title) else ''
-            self.tc_log.info(msg=_title + f"finished in {_secs} seconds ...")
+            _ct = self.console.export_text()
+            self.tc_log.info(
+                msg=_title + f"finished in {_secs} seconds ...\n---\n"
+                # + _ct
+            )
 
     def refresh(self, update_renderable: bool = False):
         """
