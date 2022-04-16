@@ -698,3 +698,17 @@ class ProgressStatusPanel(Widget):
                 expand=True,
                 box=r_box.ASCII,
             )
+
+    def __enter__(self) -> "ProgressStatusPanel":
+        super().__enter__()
+        self.status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
+        self.refresh(update_renderable=True)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
+        self.status._spinner = r_text.Text.from_markup(
+            f"{EMOJI['white_heavy_check_mark']} "
+            f"Finished in {_elapsed_secs} seconds ...")
+        self.refresh(update_renderable=True)
+        super().__exit__(exc_type, exc_val, exc_tb)
