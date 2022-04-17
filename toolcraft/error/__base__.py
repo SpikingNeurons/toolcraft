@@ -3,7 +3,6 @@ import re
 
 from .. import logger
 
-
 # todo: for python 3 there is special method Exception().with_traceback() see
 #  if can be used .... also for stack trace instead if using inspect see if
 #  Exception().__traceback__ can be used
@@ -17,7 +16,7 @@ _EXCEPTION_HEADER = f"{_SKULL_EMOJI} >>> {{header}} <<< {_SKULL_EMOJI}"
 
 def camel_case_split(identifier):
     matches = re.finditer(
-        '.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+        ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", identifier)
     return [m.group(0) for m in matches]
 
 
@@ -25,20 +24,20 @@ class _CustomException(Exception):
     """
     todo: use `rich` libs traceback interface etc
     """
+
     # If not a validator then you need to explicitly raise instead of calling
     _RAISE_EXPLICITLY = False
 
     def __init__(
-        self, *,
+        self,
+        *,
         msgs: logger.MESSAGES_TYPE,
     ):
 
         # -----------------------------------------------------------------01
         # GET LOGGER
         _caller_frame = inspect.currentframe().f_back.f_back
-        _logger = logger.get_logger(
-            module=inspect.getmodule(_caller_frame)
-        )
+        _logger = logger.get_logger(module=inspect.getmodule(_caller_frame))
 
         # -----------------------------------------------------------------02
         # MESSAGES RELATED
@@ -66,13 +65,12 @@ class _CustomException(Exception):
         # test if it needs to be raised explicitly
         if self._RAISE_EXPLICITLY:
             from .code import RaiseExplicitly
-            raise RaiseExplicitly(
-                msgs=[
-                    f"Do not call {self.raise_if_failed} for class {self.__class__} "
-                    f"as it is configured to be raised explicitly.",
-                    f"Instead use keyword `raise`"
-                ]
-            )
+
+            raise RaiseExplicitly(msgs=[
+                f"Do not call {self.raise_if_failed} for class {self.__class__} "
+                f"as it is configured to be raised explicitly.",
+                f"Instead use keyword `raise`",
+            ])
 
         # raise only if failed i.e. super constructor was called
         try:

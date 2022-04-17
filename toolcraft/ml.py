@@ -7,11 +7,9 @@ import dataclasses
 import pathlib
 import typing as t
 
-from . import marshalling as m
-from . import util
-from . import settings
 from . import logger
-
+from . import marshalling as m
+from . import settings, util
 
 _LOGGER = logger.get_logger()
 

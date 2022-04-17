@@ -8,25 +8,28 @@ This code is auto-generated:
 ********************************************************************************
 """
 
-# noinspection PyProtectedMember
-import dearpygui._dearpygui as internal_dpg
-import dearpygui.dearpygui as dpg
 import dataclasses
 import enum
 import typing as t
 
-from .__base__ import Enum
-from .__base__ import Widget
-from .__base__ import MovableWidget
-from .__base__ import ContainerWidget
-from .__base__ import MovableContainerWidget
-from .__base__ import Callback
-from .__base__ import Registry
-from .__base__ import PlotSeries
-from .__base__ import PlotItem
-from .__base__ import PLOT_DATA_TYPE
-from .__base__ import COLOR_TYPE
-from .__base__ import USER_DATA
+# noinspection PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
+
+from .__base__ import (
+    COLOR_TYPE,
+    PLOT_DATA_TYPE,
+    USER_DATA,
+    Callback,
+    ContainerWidget,
+    Enum,
+    MovableContainerWidget,
+    MovableWidget,
+    PlotItem,
+    PlotSeries,
+    Registry,
+    Widget,
+)
 
 
 class EnDir(Enum, enum.Enum):
@@ -172,14 +175,14 @@ class HistogramSeries2D(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_2d_histogram_series(
             self.x,
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -192,7 +195,7 @@ class HistogramSeries2D(PlotSeries):
             density=self.density,
             outliers=self.outliers,
         )
-        
+
         return _ret
 
 
@@ -228,7 +231,7 @@ class Slider3D(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -243,10 +246,12 @@ class Slider3D(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -281,7 +286,7 @@ class Slider3D(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_3d_slider(
             parent=_parent_dpg_id,
@@ -310,13 +315,12 @@ class Slider3D(MovableWidget):
             min_z=self.min_z,
             scale=self.scale,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -326,8 +330,7 @@ class Slider3D(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -337,8 +340,7 @@ class Slider3D(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -384,21 +386,21 @@ class AreaSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_area_series(
             self.x,
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
             fill=self.fill,
             contribute_to_bounds=self.contribute_to_bounds,
         )
-        
+
         return _ret
 
 
@@ -439,21 +441,21 @@ class BarSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_bar_series(
             self.x,
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
             weight=self.weight,
             horizontal=self.horizontal,
         )
-        
+
         return _ret
 
 
@@ -485,7 +487,7 @@ class BoolValue(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_bool_value(
             parent=_parent_dpg_id,
@@ -495,7 +497,7 @@ class BoolValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -528,7 +530,7 @@ class Button(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -546,10 +548,12 @@ class Button(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -592,13 +596,12 @@ class Button(MovableWidget):
             arrow=self.arrow,
             direction=self.direction.value,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -608,8 +611,7 @@ class Button(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -619,8 +621,7 @@ class Button(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -681,7 +682,7 @@ class CandleSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_candle_series(
             self.dates,
@@ -691,7 +692,7 @@ class CandleSeries(PlotSeries):
             self.highs,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -700,7 +701,7 @@ class CandleSeries(PlotSeries):
             weight=self.weight,
             tooltip=self.tooltip,
         )
-        
+
         return _ret
 
 
@@ -730,7 +731,7 @@ class CheckBox(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -748,10 +749,12 @@ class CheckBox(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -765,7 +768,7 @@ class CheckBox(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_checkbox(
             parent=_parent_dpg_id,
@@ -786,13 +789,12 @@ class CheckBox(MovableWidget):
             track_offset=self.track_offset,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -802,8 +804,7 @@ class CheckBox(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -813,8 +814,7 @@ class CheckBox(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -855,7 +855,7 @@ class ColorButton(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -873,10 +873,12 @@ class ColorButton(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -920,13 +922,12 @@ class ColorButton(MovableWidget):
             no_border=self.no_border,
             no_drag_drop=self.no_drag_drop,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -936,8 +937,7 @@ class ColorButton(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -947,8 +947,7 @@ class ColorButton(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -985,7 +984,7 @@ class ColorValue(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_color_value(
             parent=_parent_dpg_id,
@@ -995,7 +994,7 @@ class ColorValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -1040,7 +1039,7 @@ class Colormap(Widget):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -1076,7 +1075,7 @@ class ColormapButton(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -1094,10 +1093,12 @@ class ColormapButton(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -1129,13 +1130,12 @@ class ColormapButton(MovableWidget):
             tracked=self.tracked,
             track_offset=self.track_offset,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1145,8 +1145,7 @@ class ColormapButton(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1156,8 +1155,7 @@ class ColormapButton(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1172,7 +1170,7 @@ class ColormapScale(MovableWidget):
     Refer:
     >>> dpg.add_colormap_scale
 
-     Adds a legend that pairs values with colors. This is typically used with a heat series. 
+     Adds a legend that pairs values with colors. This is typically used with a heat series.
 
     """
 
@@ -1198,7 +1196,7 @@ class ColormapScale(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -1207,7 +1205,9 @@ class ColormapScale(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # colormap (Union[int, str], optional): mvPlotColormap_* constants or mvColorMap uuid from a color map registry
     colormap: EnPlotColormap = EnPlotColormap.Default
@@ -1221,7 +1221,7 @@ class ColormapScale(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_colormap_scale(
             parent=_parent_dpg_id,
@@ -1240,13 +1240,12 @@ class ColormapScale(MovableWidget):
             min_scale=self.min_scale,
             max_scale=self.max_scale,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1284,7 +1283,7 @@ class ColormapSlider(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -1296,10 +1295,12 @@ class ColormapSlider(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -1332,13 +1333,12 @@ class ColormapSlider(MovableWidget):
             track_offset=self.track_offset,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1348,8 +1348,7 @@ class ColormapSlider(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1390,7 +1389,7 @@ class Combo(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -1408,10 +1407,12 @@ class Combo(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -1420,7 +1421,7 @@ class Combo(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (str, optional): Sets a selected item from the drop down by specifying the string value.
-    default_value: str = ''
+    default_value: str = ""
 
     # popup_align_left (bool, optional): Align the contents on the popup toward the left.
     popup_align_left: bool = False
@@ -1437,7 +1438,7 @@ class Combo(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_combo(
             parent=_parent_dpg_id,
@@ -1464,13 +1465,12 @@ class Combo(MovableWidget):
             no_preview=self.no_preview,
             height_mode=self.height_mode.value,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1480,8 +1480,7 @@ class Combo(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1491,8 +1490,7 @@ class Combo(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1524,7 +1522,7 @@ class DatePicker(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -1539,10 +1537,12 @@ class DatePicker(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -1551,7 +1551,11 @@ class DatePicker(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (dict, optional): ...
-    default_value: dict = dataclasses.field(default_factory=lambda: {'month_day': 14, 'year': 20, 'month': 5})
+    default_value: dict = dataclasses.field(default_factory=lambda: {
+        "month_day": 14,
+        "year": 20,
+        "month": 5
+    })
 
     # level (int, optional): Use avaliable constants. mvDatePickerLevel_Day, mvDatePickerLevel_Month, mvDatePickerLevel_Year
     level: EnDatePickerLevel = EnDatePickerLevel.Day
@@ -1578,13 +1582,12 @@ class DatePicker(MovableWidget):
             default_value=self.default_value,
             level=self.level.value,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1594,8 +1597,7 @@ class DatePicker(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1605,8 +1607,7 @@ class DatePicker(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1643,7 +1644,7 @@ class Double4Value(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_double4_value(
             parent=_parent_dpg_id,
@@ -1653,7 +1654,7 @@ class Double4Value(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -1685,7 +1686,7 @@ class DoubleValue(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_double_value(
             parent=_parent_dpg_id,
@@ -1695,7 +1696,7 @@ class DoubleValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -1728,7 +1729,7 @@ class DragFloat(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -1746,10 +1747,12 @@ class DragFloat(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -1761,7 +1764,7 @@ class DragFloat(MovableWidget):
     default_value: float = 0.0
 
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
-    format: str = '%0.3f'
+    format: str = "%0.3f"
 
     # speed (float, optional): Sets the sensitivity the float will be modified while dragging.
     speed: float = 1.0
@@ -1781,7 +1784,7 @@ class DragFloat(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_drag_float(
             parent=_parent_dpg_id,
@@ -1809,13 +1812,12 @@ class DragFloat(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1825,8 +1827,7 @@ class DragFloat(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1836,8 +1837,7 @@ class DragFloat(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -1875,7 +1875,7 @@ class DragFloatX(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -1893,10 +1893,12 @@ class DragFloatX(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -1911,7 +1913,7 @@ class DragFloatX(MovableWidget):
     size: int = 4
 
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
-    format: str = '%0.3f'
+    format: str = "%0.3f"
 
     # speed (float, optional): Sets the sensitivity the float will be modified while dragging.
     speed: float = 1.0
@@ -1931,7 +1933,7 @@ class DragFloatX(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_drag_floatx(
             parent=_parent_dpg_id,
@@ -1960,13 +1962,12 @@ class DragFloatX(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -1976,8 +1977,7 @@ class DragFloatX(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -1987,8 +1987,7 @@ class DragFloatX(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2026,7 +2025,7 @@ class DragInt(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -2044,10 +2043,12 @@ class DragInt(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -2059,7 +2060,7 @@ class DragInt(MovableWidget):
     default_value: int = 0
 
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
-    format: str = '%d'
+    format: str = "%d"
 
     # speed (float, optional): Sets the sensitivity the float will be modified while dragging.
     speed: float = 1.0
@@ -2079,7 +2080,7 @@ class DragInt(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_drag_int(
             parent=_parent_dpg_id,
@@ -2107,13 +2108,12 @@ class DragInt(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -2123,8 +2123,7 @@ class DragInt(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2134,8 +2133,7 @@ class DragInt(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2173,7 +2171,7 @@ class DragIntX(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -2191,10 +2189,12 @@ class DragIntX(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -2209,7 +2209,7 @@ class DragIntX(MovableWidget):
     size: int = 4
 
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
-    format: str = '%d'
+    format: str = "%d"
 
     # speed (float, optional): Sets the sensitivity the float will be modified while dragging.
     speed: float = 1.0
@@ -2229,7 +2229,7 @@ class DragIntX(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_drag_intx(
             parent=_parent_dpg_id,
@@ -2258,13 +2258,12 @@ class DragIntX(MovableWidget):
             no_input=self.no_input,
             clamped=self.clamped,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -2274,8 +2273,7 @@ class DragIntX(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -2285,8 +2283,7 @@ class DragIntX(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -2338,12 +2335,12 @@ class DragLine(PlotItem):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_drag_line(
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             callback=self.callback_fn,
@@ -2354,13 +2351,12 @@ class DragLine(PlotItem):
             show_label=self.show_label,
             vertical=self.vertical,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -2409,12 +2405,12 @@ class DragPoint(PlotItem):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_drag_point(
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             callback=self.callback_fn,
@@ -2424,13 +2420,12 @@ class DragPoint(PlotItem):
             thickness=self.thickness,
             show_label=self.show_label,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -2480,7 +2475,7 @@ class DynamicTexture(Widget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -2527,7 +2522,7 @@ class ErrorSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_error_series(
             self.x,
@@ -2536,14 +2531,14 @@ class ErrorSeries(PlotSeries):
             self.positive,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
             contribute_to_bounds=self.contribute_to_bounds,
             horizontal=self.horizontal,
         )
-        
+
         return _ret
 
 
@@ -2576,7 +2571,7 @@ class FileExtension(MovableWidget):
     height: int = 0
 
     # custom_text (str, optional): Replaces the displayed text in the drop down for this extension.
-    custom_text: str = ''
+    custom_text: str = ""
 
     # color (Union[List[int], Tuple[int, ...]], optional): Color for the text that will be shown with specified extensions.
     color: COLOR_TYPE = (-255, 0, 0, 255)
@@ -2596,7 +2591,7 @@ class FileExtension(MovableWidget):
             custom_text=self.custom_text,
             color=self.color,
         )
-        
+
         return _ret
 
 
@@ -2628,7 +2623,7 @@ class Float4Value(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_float4_value(
             parent=_parent_dpg_id,
@@ -2638,7 +2633,7 @@ class Float4Value(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -2670,7 +2665,7 @@ class FloatValue(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_float_value(
             parent=_parent_dpg_id,
@@ -2680,7 +2675,7 @@ class FloatValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -2712,7 +2707,7 @@ class FloatVectValue(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_float_vect_value(
             parent=_parent_dpg_id,
@@ -2722,7 +2717,7 @@ class FloatVectValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -2759,7 +2754,7 @@ class FontChars(Widget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -2800,7 +2795,7 @@ class FontRange(Widget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -2837,7 +2832,7 @@ class FontRangeHint(Widget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -2885,7 +2880,7 @@ class HeatSeries(PlotSeries):
     bounds_max: t.Any = (1.0, 1.0)
 
     # format (str, optional): ...
-    format: str = '%0.1f'
+    format: str = "%0.1f"
 
     # contribute_to_bounds (bool, optional): ...
     contribute_to_bounds: bool = True
@@ -2893,7 +2888,7 @@ class HeatSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_heat_series(
             self.x,
@@ -2901,7 +2896,7 @@ class HeatSeries(PlotSeries):
             self.cols,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -2912,7 +2907,7 @@ class HeatSeries(PlotSeries):
             format=self.format,
             contribute_to_bounds=self.contribute_to_bounds,
         )
-        
+
         return _ret
 
 
@@ -2968,13 +2963,13 @@ class HistogramSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_histogram_series(
             self.x,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -2987,7 +2982,7 @@ class HistogramSeries(PlotSeries):
             outliers=self.outliers,
             contribute_to_bounds=self.contribute_to_bounds,
         )
-        
+
         return _ret
 
 
@@ -3019,18 +3014,18 @@ class HLineSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_hline_series(
             self.x,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -3063,7 +3058,7 @@ class InputFloat(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -3081,10 +3076,12 @@ class InputFloat(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -3096,7 +3093,7 @@ class InputFloat(MovableWidget):
     default_value: float = 0.0
 
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
-    format: str = '%.3f'
+    format: str = "%.3f"
 
     # min_value (float, optional): Value for lower limit of input. By default this limits the step buttons. Use min_clamped to limit manual input.
     min_value: float = 0.0
@@ -3125,7 +3122,7 @@ class InputFloat(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_input_float(
             parent=_parent_dpg_id,
@@ -3156,13 +3153,12 @@ class InputFloat(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3172,8 +3168,7 @@ class InputFloat(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3183,8 +3178,7 @@ class InputFloat(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3222,7 +3216,7 @@ class InputFloatX(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -3240,10 +3234,12 @@ class InputFloatX(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -3255,7 +3251,7 @@ class InputFloatX(MovableWidget):
     default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
-    format: str = '%.3f'
+    format: str = "%.3f"
 
     # min_value (float, optional): Value for lower limit of input for each cell. Use min_clamped to turn on.
     min_value: float = 0.0
@@ -3281,7 +3277,7 @@ class InputFloatX(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_input_floatx(
             parent=_parent_dpg_id,
@@ -3311,13 +3307,12 @@ class InputFloatX(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3327,8 +3322,7 @@ class InputFloatX(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3338,8 +3332,7 @@ class InputFloatX(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3377,7 +3370,7 @@ class InputInt(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -3395,10 +3388,12 @@ class InputInt(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -3436,7 +3431,7 @@ class InputInt(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_input_int(
             parent=_parent_dpg_id,
@@ -3466,13 +3461,12 @@ class InputInt(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3482,8 +3476,7 @@ class InputInt(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3493,8 +3486,7 @@ class InputInt(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3532,7 +3524,7 @@ class InputIntX(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -3550,10 +3542,12 @@ class InputIntX(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -3588,7 +3582,7 @@ class InputIntX(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_input_intx(
             parent=_parent_dpg_id,
@@ -3617,13 +3611,12 @@ class InputIntX(MovableWidget):
             on_enter=self.if_entered,
             readonly=self.readonly,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3633,8 +3626,7 @@ class InputIntX(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3644,8 +3636,7 @@ class InputIntX(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3686,7 +3677,7 @@ class InputText(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -3704,10 +3695,12 @@ class InputText(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -3716,10 +3709,10 @@ class InputText(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (str, optional): ...
-    default_value: str = ''
+    default_value: str = ""
 
     # hint (str, optional): Displayed only when value is an empty string. Will reappear if input value is set to empty string. Will not show if default value is anything other than default empty string.
-    hint: str = ''
+    hint: str = ""
 
     # multiline (bool, optional): Allows for multiline text input.
     multiline: bool = False
@@ -3754,7 +3747,7 @@ class InputText(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_input_text(
             parent=_parent_dpg_id,
@@ -3788,13 +3781,12 @@ class InputText(MovableWidget):
             scientific=self.scientific,
             on_enter=self.if_entered,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3804,8 +3796,7 @@ class InputText(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -3815,8 +3806,7 @@ class InputText(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -3853,7 +3843,7 @@ class Int4Value(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_int4_value(
             parent=_parent_dpg_id,
@@ -3863,7 +3853,7 @@ class Int4Value(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -3895,7 +3885,7 @@ class IntValue(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_int_value(
             parent=_parent_dpg_id,
@@ -3905,7 +3895,7 @@ class IntValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -3946,13 +3936,12 @@ class ItemActivatedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -3998,13 +3987,12 @@ class ItemActiveHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4054,13 +4042,12 @@ class ItemClickedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4106,13 +4093,12 @@ class ItemDeactivatedAfterEditHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4158,13 +4144,12 @@ class ItemDeactivatedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4210,13 +4195,12 @@ class ItemEditedHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4262,13 +4246,12 @@ class ItemFocusHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4314,13 +4297,12 @@ class ItemHoverHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4366,13 +4348,12 @@ class ItemResizeHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4418,13 +4399,12 @@ class ItemToggledOpenHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4470,13 +4450,12 @@ class ItemVisibleHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4526,13 +4505,12 @@ class KeyDownHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4582,13 +4560,12 @@ class KeyPressHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4638,13 +4615,12 @@ class KeyReleaseHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4685,7 +4661,7 @@ class KnobFloat(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -4703,10 +4679,12 @@ class KnobFloat(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -4726,7 +4704,7 @@ class KnobFloat(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_knob_float(
             parent=_parent_dpg_id,
@@ -4751,13 +4729,12 @@ class KnobFloat(MovableWidget):
             min_value=self.min_value,
             max_value=self.max_value,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4767,8 +4744,7 @@ class KnobFloat(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -4778,8 +4754,7 @@ class KnobFloat(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -4819,19 +4794,19 @@ class LineSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_line_series(
             self.x,
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -4867,7 +4842,7 @@ class Listbox(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -4885,10 +4860,12 @@ class Listbox(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -4897,7 +4874,7 @@ class Listbox(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (str, optional): String value fo the item that will be selected by default.
-    default_value: str = ''
+    default_value: str = ""
 
     # num_items (int, optional): Expands the height of the listbox to show specified number of items.
     num_items: int = 3
@@ -4905,7 +4882,7 @@ class Listbox(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_listbox(
             parent=_parent_dpg_id,
@@ -4929,13 +4906,12 @@ class Listbox(MovableWidget):
             default_value=self.default_value,
             num_items=self.num_items,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -4945,8 +4921,7 @@ class Listbox(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -4956,8 +4931,7 @@ class Listbox(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -4995,7 +4969,7 @@ class LoadingIndicator(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -5004,7 +4978,9 @@ class LoadingIndicator(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # style (int, optional): 0 is rotating dots style, 1 is rotating bar style.
     style: int = 0
@@ -5051,13 +5027,12 @@ class LoadingIndicator(MovableWidget):
             color=self.color,
             secondary_color=self.secondary_color,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -5089,7 +5064,7 @@ class MenuItem(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -5104,7 +5079,7 @@ class MenuItem(MovableWidget):
     enabled: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -5116,7 +5091,7 @@ class MenuItem(MovableWidget):
     default_value: bool = False
 
     # shortcut (str, optional): Displays text on the menu item. Typically used to show a shortcut key command.
-    shortcut: str = ''
+    shortcut: str = ""
 
     # check (bool, optional): Displays a checkmark on the menu item when it is selected and placed in a menu.
     check: bool = False
@@ -5143,13 +5118,12 @@ class MenuItem(MovableWidget):
             shortcut=self.shortcut,
             check=self.check,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5159,8 +5133,7 @@ class MenuItem(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -5210,13 +5183,12 @@ class MouseClickHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5266,13 +5238,12 @@ class MouseDoubleClickHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5322,13 +5293,12 @@ class MouseDownHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5382,13 +5352,12 @@ class MouseDragHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5434,13 +5403,12 @@ class MouseMoveHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5490,13 +5458,12 @@ class MouseReleaseHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5542,13 +5509,12 @@ class MouseWheelHandler(Widget):
             callback=self.callback_fn,
             show=self.show,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5595,7 +5561,7 @@ class PieSeries(PlotSeries):
     show: bool = True
 
     # format (str, optional): ...
-    format: str = '%0.2f'
+    format: str = "%0.2f"
 
     # angle (float, optional): ...
     angle: float = 90.0
@@ -5606,7 +5572,7 @@ class PieSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_pie_series(
             self.x,
@@ -5616,7 +5582,7 @@ class PieSeries(PlotSeries):
             self.labels,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -5624,7 +5590,7 @@ class PieSeries(PlotSeries):
             angle=self.angle,
             normalize=self.normalize,
         )
-        
+
         return _ret
 
 
@@ -5665,12 +5631,12 @@ class Annotation(PlotItem):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_plot_annotation(
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
@@ -5679,7 +5645,7 @@ class Annotation(PlotItem):
             color=self.color,
             clamped=self.clamped,
         )
-        
+
         return _ret
 
 
@@ -5703,7 +5669,7 @@ class PlotLegend(Widget):
     use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -5736,13 +5702,12 @@ class PlotLegend(Widget):
             horizontal=self.horizontal,
             outside=self.outside,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -5783,7 +5748,7 @@ class ProgressBar(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -5795,10 +5760,12 @@ class ProgressBar(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -5807,7 +5774,7 @@ class ProgressBar(MovableWidget):
     track_offset: float = 0.5
 
     # overlay (str, optional): Overlayed text onto the bar that typically used to display the value of the progress.
-    overlay: str = ''
+    overlay: str = ""
 
     # default_value (float, optional): Normalized value to fill the bar from 0.0 to 1.0.
     default_value: float = 0.0
@@ -5815,7 +5782,7 @@ class ProgressBar(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_progress_bar(
             parent=_parent_dpg_id,
@@ -5837,13 +5804,12 @@ class ProgressBar(MovableWidget):
             overlay=self.overlay,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -5853,8 +5819,7 @@ class ProgressBar(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -5892,7 +5857,7 @@ class RadioButton(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -5910,10 +5875,12 @@ class RadioButton(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -5922,7 +5889,7 @@ class RadioButton(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (str, optional): Default selected radio option. Set by using the string value of the item.
-    default_value: str = ''
+    default_value: str = ""
 
     # horizontal (bool, optional): Displays the radio options horizontally.
     horizontal: bool = False
@@ -5930,7 +5897,7 @@ class RadioButton(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_radio_button(
             parent=_parent_dpg_id,
@@ -5953,13 +5920,12 @@ class RadioButton(MovableWidget):
             default_value=self.default_value,
             horizontal=self.horizontal,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -5969,8 +5935,7 @@ class RadioButton(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -5980,8 +5945,7 @@ class RadioButton(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -6035,7 +5999,7 @@ class RawTexture(Widget):
             use_internal_label=self.use_internal_label,
             format=self.format,
         )
-        
+
         return _ret
 
 
@@ -6070,19 +6034,19 @@ class ScatterSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_scatter_series(
             self.x,
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -6118,7 +6082,7 @@ class Selectable(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -6136,10 +6100,12 @@ class Selectable(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -6156,7 +6122,7 @@ class Selectable(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_selectable(
             parent=_parent_dpg_id,
@@ -6180,13 +6146,12 @@ class Selectable(MovableWidget):
             default_value=self.default_value,
             span_columns=self.span_columns,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -6196,8 +6161,7 @@ class Selectable(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -6207,8 +6171,7 @@ class Selectable(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -6243,7 +6206,9 @@ class Separator(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     def build(self) -> t.Union[int, str]:
 
@@ -6258,7 +6223,7 @@ class Separator(MovableWidget):
             show=self.show,
             pos=self.pos,
         )
-        
+
         return _ret
 
 
@@ -6290,7 +6255,7 @@ class SeriesValue(Widget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_series_value(
             parent=_parent_dpg_id,
@@ -6300,7 +6265,7 @@ class SeriesValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -6338,20 +6303,20 @@ class ShadeSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_shade_series(
             self.x,
             self.y1,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
             y2=self.y2,
         )
-        
+
         return _ret
 
 
@@ -6387,7 +6352,7 @@ class SimplePlot(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -6399,7 +6364,7 @@ class SimplePlot(MovableWidget):
     show: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -6411,7 +6376,7 @@ class SimplePlot(MovableWidget):
     default_value: PLOT_DATA_TYPE = ()
 
     # overlay (str, optional): overlays text (similar to a plot title)
-    overlay: str = ''
+    overlay: str = ""
 
     # histogram (bool, optional): ...
     histogram: bool = False
@@ -6428,7 +6393,7 @@ class SimplePlot(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_simple_plot(
             parent=_parent_dpg_id,
@@ -6453,13 +6418,12 @@ class SimplePlot(MovableWidget):
             min_scale=self.min_scale,
             max_scale=self.max_scale,
         )
-        
+
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -6469,8 +6433,7 @@ class SimplePlot(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -6511,7 +6474,7 @@ class SliderFloat(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -6529,10 +6492,12 @@ class SliderFloat(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -6559,12 +6524,12 @@ class SliderFloat(MovableWidget):
     max_value: float = 100.0
 
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
-    format: str = '%.3f'
+    format: str = "%.3f"
 
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_slider_float(
             parent=_parent_dpg_id,
@@ -6593,13 +6558,12 @@ class SliderFloat(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -6609,8 +6573,7 @@ class SliderFloat(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -6620,8 +6583,7 @@ class SliderFloat(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -6659,7 +6621,7 @@ class SliderFloatX(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -6677,10 +6639,12 @@ class SliderFloatX(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -6707,12 +6671,12 @@ class SliderFloatX(MovableWidget):
     max_value: float = 100.0
 
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
-    format: str = '%.3f'
+    format: str = "%.3f"
 
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_slider_floatx(
             parent=_parent_dpg_id,
@@ -6740,13 +6704,12 @@ class SliderFloatX(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -6756,8 +6719,7 @@ class SliderFloatX(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -6767,8 +6729,7 @@ class SliderFloatX(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -6809,7 +6770,7 @@ class SliderInt(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -6827,10 +6788,12 @@ class SliderInt(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -6857,12 +6820,12 @@ class SliderInt(MovableWidget):
     max_value: int = 100
 
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
-    format: str = '%d'
+    format: str = "%d"
 
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_slider_int(
             parent=_parent_dpg_id,
@@ -6891,13 +6854,12 @@ class SliderInt(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -6907,8 +6869,7 @@ class SliderInt(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -6918,8 +6879,7 @@ class SliderInt(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -6957,7 +6917,7 @@ class SliderIntX(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -6975,10 +6935,12 @@ class SliderIntX(MovableWidget):
     enabled: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -7005,12 +6967,12 @@ class SliderIntX(MovableWidget):
     max_value: int = 100
 
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
-    format: str = '%d'
+    format: str = "%d"
 
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_slider_intx(
             parent=_parent_dpg_id,
@@ -7038,13 +7000,12 @@ class SliderIntX(MovableWidget):
             max_value=self.max_value,
             format=self.format,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -7054,8 +7015,7 @@ class SliderIntX(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -7065,8 +7025,7 @@ class SliderIntX(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -7107,7 +7066,9 @@ class Spacer(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     def build(self) -> t.Union[int, str]:
 
@@ -7124,7 +7085,7 @@ class Spacer(MovableWidget):
             show=self.show,
             pos=self.pos,
         )
-        
+
         return _ret
 
 
@@ -7159,19 +7120,19 @@ class StairSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_stair_series(
             self.x,
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -7216,7 +7177,7 @@ class StaticTexture(Widget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -7254,20 +7215,20 @@ class StemSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_stem_series(
             self.x,
             self.y,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             indent=self.indent,
             source=_source_dpg_id,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -7294,12 +7255,12 @@ class StringValue(Widget):
     source: t.Optional[Widget] = None
 
     # default_value (str, optional): ...
-    default_value: str = ''
+    default_value: str = ""
 
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_string_value(
             parent=_parent_dpg_id,
@@ -7309,7 +7270,7 @@ class StringValue(Widget):
             source=_source_dpg_id,
             default_value=self.default_value,
         )
-        
+
         return _ret
 
 
@@ -7336,7 +7297,7 @@ class TabButton(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -7351,7 +7312,7 @@ class TabButton(MovableWidget):
     show: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -7394,13 +7355,12 @@ class TabButton(MovableWidget):
             trailing=self.trailing,
             no_tooltip=self.no_tooltip,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -7410,8 +7370,7 @@ class TabButton(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -7421,8 +7380,7 @@ class TabButton(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -7540,7 +7498,7 @@ class TableColumn(MovableWidget):
             indent_enable=self.indent_enable,
             indent_disable=self.indent_disable,
         )
-        
+
         return _ret
 
 
@@ -7555,7 +7513,7 @@ class Text(MovableWidget):
     """
 
     # default_value (str, optional): ...
-    default_value: str = ''
+    default_value: str = ""
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -7573,7 +7531,7 @@ class Text(MovableWidget):
     source: t.Optional[Widget] = None
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -7585,10 +7543,12 @@ class Text(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -7611,7 +7571,7 @@ class Text(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_text(
             parent=_parent_dpg_id,
@@ -7634,13 +7594,12 @@ class Text(MovableWidget):
             color=self.color,
             show_label=self.show_label,
         )
-        
+
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -7650,8 +7609,7 @@ class Text(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -7703,7 +7661,7 @@ class TextPoint(MovableWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_text_point(
             self.x,
@@ -7718,7 +7676,7 @@ class TextPoint(MovableWidget):
             y_offset=self.y_offset,
             vertical=self.vertical,
         )
-        
+
         return _ret
 
 
@@ -7763,7 +7721,7 @@ class ThemeColor(Widget):
             use_internal_label=self.use_internal_label,
             category=self.category.value,
         )
-        
+
         return _ret
 
 
@@ -7812,7 +7770,7 @@ class ThemeStyle(Widget):
             use_internal_label=self.use_internal_label,
             category=self.category.value,
         )
-        
+
         return _ret
 
 
@@ -7839,7 +7797,7 @@ class TimePicker(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -7854,10 +7812,12 @@ class TimePicker(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -7866,7 +7826,11 @@ class TimePicker(MovableWidget):
     track_offset: float = 0.5
 
     # default_value (dict, optional): ...
-    default_value: dict = dataclasses.field(default_factory=lambda: {'hour': 14, 'min': 32, 'sec': 23})
+    default_value: dict = dataclasses.field(default_factory=lambda: {
+        "hour": 14,
+        "min": 32,
+        "sec": 23
+    })
 
     # hour24 (bool, optional): Show 24 hour clock instead of 12 hour.
     hour24: bool = False
@@ -7893,13 +7857,12 @@ class TimePicker(MovableWidget):
             default_value=self.default_value,
             hour24=self.hour24,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -7909,8 +7872,7 @@ class TimePicker(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -7920,8 +7882,7 @@ class TimePicker(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -7958,18 +7919,18 @@ class VLineSeries(PlotSeries):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_vline_series(
             self.x,
             parent=_parent_dpg_id,
             use_internal_label=False,
-            label=None if self.label is None else self.label.split('#')[0],
+            label=None if self.label is None else self.label.split("#")[0],
             user_data=self.user_data,
             source=_source_dpg_id,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -8002,7 +7963,7 @@ class ChildWindow(MovableContainerWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -8011,10 +7972,12 @@ class ChildWindow(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -8070,13 +8033,12 @@ class ChildWindow(MovableContainerWidget):
             horizontal_scrollbar=self.horizontal_scrollbar,
             menubar=self.menubar,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -8130,7 +8092,7 @@ class Clipper(MovableContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-        
+
         return _ret
 
 
@@ -8157,7 +8119,7 @@ class CollapsingHeader(MovableContainerWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -8169,10 +8131,12 @@ class CollapsingHeader(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -8227,13 +8191,12 @@ class CollapsingHeader(MovableContainerWidget):
             leaf=self.leaf,
             bullet=self.bullet,
         )
-        
+
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -8243,8 +8206,7 @@ class CollapsingHeader(MovableContainerWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -8283,7 +8245,7 @@ class ColormapRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -8316,7 +8278,7 @@ class DragPayload(ContainerWidget):
     drop_data: t.Any = None
 
     # payload_type (str, optional): ...
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     def build(self) -> t.Union[int, str]:
 
@@ -8332,7 +8294,7 @@ class DragPayload(ContainerWidget):
             drop_data=self.drop_data,
             payload_type=self.payload_type,
         )
-        
+
         return _ret
 
 
@@ -8389,7 +8351,7 @@ class DrawArrow(MovableWidget):
             thickness=self.thickness,
             size=self.size,
         )
-        
+
         return _ret
 
 
@@ -8454,7 +8416,7 @@ class DrawBezierCubic(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-        
+
         return _ret
 
 
@@ -8515,7 +8477,7 @@ class DrawBezierQuadratic(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-        
+
         return _ret
 
 
@@ -8576,7 +8538,7 @@ class DrawCircle(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-        
+
         return _ret
 
 
@@ -8637,7 +8599,7 @@ class DrawEllipse(MovableWidget):
             thickness=self.thickness,
             segments=self.segments,
         )
-        
+
         return _ret
 
 
@@ -8686,7 +8648,7 @@ class DrawLayer(MovableContainerWidget):
             depth_clipping=self.depth_clipping,
             cull_mode=self.cull_mode.value,
         )
-        
+
         return _ret
 
 
@@ -8739,7 +8701,7 @@ class DrawLine(MovableWidget):
             color=self.color,
             thickness=self.thickness,
         )
-        
+
         return _ret
 
 
@@ -8776,7 +8738,7 @@ class DrawNode(MovableContainerWidget):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -8829,7 +8791,7 @@ class DrawPolygon(MovableWidget):
             fill=self.fill,
             thickness=self.thickness,
         )
-        
+
         return _ret
 
 
@@ -8882,7 +8844,7 @@ class DrawPolyline(MovableWidget):
             color=self.color,
             thickness=self.thickness,
         )
-        
+
         return _ret
 
 
@@ -8947,7 +8909,7 @@ class DrawQuad(MovableWidget):
             fill=self.fill,
             thickness=self.thickness,
         )
-        
+
         return _ret
 
 
@@ -9028,7 +8990,7 @@ class DrawRectangle(MovableWidget):
             rounding=self.rounding,
             thickness=self.thickness,
         )
-        
+
         return _ret
 
 
@@ -9081,7 +9043,7 @@ class DrawText(MovableWidget):
             color=self.color,
             size=self.size,
         )
-        
+
         return _ret
 
 
@@ -9142,7 +9104,7 @@ class DrawTriangle(MovableWidget):
             fill=self.fill,
             thickness=self.thickness,
         )
-        
+
         return _ret
 
 
@@ -9178,10 +9140,12 @@ class DrawList(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -9211,13 +9175,12 @@ class DrawList(MovableContainerWidget):
             tracked=self.tracked,
             track_offset=self.track_offset,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -9258,10 +9221,10 @@ class FileDialog(ContainerWidget):
     show: bool = True
 
     # default_path (str, optional): Path that the file dialog will default to when opened.
-    default_path: str = ''
+    default_path: str = ""
 
     # default_filename (str, optional): Default name that will show in the file name input.
-    default_filename: str = '.'
+    default_filename: str = "."
 
     # file_count (int, optional): Number of visible files in the dialog.
     file_count: int = 0
@@ -9273,10 +9236,12 @@ class FileDialog(ContainerWidget):
     directory_selector: bool = False
 
     # min_size (Union[List[int], Tuple[int, ...]], optional): Minimum window size.
-    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [100, 100])
+    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(
+        default_factory=lambda: [100, 100])
 
     # max_size (Union[List[int], Tuple[int, ...]], optional): Maximum window size.
-    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [30000, 30000])
+    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(
+        default_factory=lambda: [30000, 30000])
 
     def build(self) -> t.Union[int, str]:
 
@@ -9296,13 +9261,12 @@ class FileDialog(ContainerWidget):
             min_size=self.min_size,
             max_size=self.max_size,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -9356,7 +9320,7 @@ class FilterSet(MovableContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-        
+
         return _ret
 
 
@@ -9397,7 +9361,7 @@ class Font(ContainerWidget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -9431,7 +9395,7 @@ class FontRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -9461,7 +9425,7 @@ class Group(MovableContainerWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -9473,10 +9437,12 @@ class Group(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -9520,13 +9486,12 @@ class Group(MovableContainerWidget):
             horizontal_spacing=self.horizontal_spacing,
             xoffset=self.xoffset,
         )
-        
+
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -9536,8 +9501,7 @@ class Group(MovableContainerWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -9576,7 +9540,7 @@ class HandlerRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -9610,7 +9574,7 @@ class ItemHandlerRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -9637,7 +9601,7 @@ class Menu(MovableContainerWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -9649,7 +9613,7 @@ class Menu(MovableContainerWidget):
     enabled: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -9679,13 +9643,12 @@ class Menu(MovableContainerWidget):
             tracked=self.tracked,
             track_offset=self.track_offset,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -9735,7 +9698,7 @@ class MenuBar(ContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-        
+
         return _ret
 
 
@@ -9759,7 +9722,7 @@ class Node(MovableContainerWidget):
     use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -9771,10 +9734,12 @@ class Node(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -9808,13 +9773,12 @@ class Node(MovableContainerWidget):
             track_offset=self.track_offset,
             draggable=self.draggable,
         )
-        
+
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -9824,8 +9788,7 @@ class Node(MovableContainerWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -9860,7 +9823,7 @@ class NodeAttribute(MovableContainerWidget):
     show: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # tracked (bool, optional): Scroll tracking
     tracked: bool = False
@@ -9875,7 +9838,7 @@ class NodeAttribute(MovableContainerWidget):
     shape: int = 1
 
     # category (str, optional): Category
-    category: str = 'general'
+    category: str = "general"
 
     def build(self) -> t.Union[int, str]:
 
@@ -9895,7 +9858,7 @@ class NodeAttribute(MovableContainerWidget):
             shape=self.shape,
             category=self.category,
         )
-        
+
         return _ret
 
 
@@ -9928,7 +9891,7 @@ class Plot(MovableWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # callback (Callable, optional): Registers a callback.
     callback: Callback = None
@@ -9943,10 +9906,12 @@ class Plot(MovableWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -10068,13 +10033,12 @@ class Plot(MovableWidget):
             horizontal_mod=self.horizontal_mod,
             vertical_mod=self.vertical_mod,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -10084,8 +10048,7 @@ class Plot(MovableWidget):
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -10095,8 +10058,7 @@ class Plot(MovableWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -10125,7 +10087,7 @@ class XAxis(Widget):
     use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -10179,13 +10141,12 @@ class XAxis(Widget):
             lock_max=self.lock_max,
             time=self.time,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -10214,7 +10175,7 @@ class YAxis(Widget):
     use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -10268,13 +10229,12 @@ class YAxis(Widget):
             lock_max=self.lock_max,
             time=self.time,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -10324,10 +10284,12 @@ class SubPlots(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -10342,7 +10304,8 @@ class SubPlots(MovableContainerWidget):
     row_ratios: PLOT_DATA_TYPE = dataclasses.field(default_factory=lambda: [])
 
     # column_ratios (Union[List[float], Tuple[float, ...]], optional): ...
-    column_ratios: PLOT_DATA_TYPE = dataclasses.field(default_factory=lambda: [])
+    column_ratios: PLOT_DATA_TYPE = dataclasses.field(
+        default_factory=lambda: [])
 
     # no_title (bool, optional): ...
     no_title: bool = False
@@ -10404,13 +10367,12 @@ class SubPlots(MovableContainerWidget):
             link_all_y=self.link_all_y,
             column_major=self.column_major,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -10442,7 +10404,7 @@ class Tab(MovableContainerWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
     drop_callback: Callback = None
@@ -10451,7 +10413,7 @@ class Tab(MovableContainerWidget):
     show: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -10492,13 +10454,12 @@ class Tab(MovableContainerWidget):
             no_tooltip=self.no_tooltip,
             order_mode=self.order_mode,
         )
-        
+
         return _ret
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -10536,10 +10497,12 @@ class TabBar(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -10572,13 +10535,12 @@ class TabBar(MovableContainerWidget):
             track_offset=self.track_offset,
             reorderable=self.reorderable,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -10625,10 +10587,12 @@ class Table(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -10723,7 +10687,7 @@ class Table(MovableContainerWidget):
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.internal.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _source_dpg_id = getattr(self.source, "dpg_id", 0)
 
         _ret = internal_dpg.add_table(
             parent=_parent_dpg_id,
@@ -10769,13 +10733,12 @@ class Table(MovableContainerWidget):
             scrollY=self.scrollY,
             no_saved_settings=self.no_saved_settings,
         )
-        
+
         return _ret
 
     def callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.callback is None:
@@ -10810,7 +10773,7 @@ class TableCell(MovableContainerWidget):
     show: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     def build(self) -> t.Union[int, str]:
 
@@ -10825,7 +10788,7 @@ class TableCell(MovableContainerWidget):
             show=self.show,
             filter_key=self.filter_key,
         )
-        
+
         return _ret
 
 
@@ -10855,7 +10818,7 @@ class TableRow(MovableContainerWidget):
     show: bool = True
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     def build(self) -> t.Union[int, str]:
 
@@ -10870,7 +10833,7 @@ class TableRow(MovableContainerWidget):
             show=self.show,
             filter_key=self.filter_key,
         )
-        
+
         return _ret
 
 
@@ -10900,7 +10863,7 @@ class TemplateRegistry(Registry):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -10934,7 +10897,7 @@ class TextureRegistry(Registry):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -10975,7 +10938,7 @@ class ThemeComponent(MovableContainerWidget):
             use_internal_label=self.use_internal_label,
             enabled_state=self.enabled_state,
         )
-        
+
         return _ret
 
 
@@ -11012,7 +10975,7 @@ class Tooltip(ContainerWidget):
             use_internal_label=self.use_internal_label,
             show=self.show,
         )
-        
+
         return _ret
 
 
@@ -11039,7 +11002,7 @@ class TreeNode(MovableContainerWidget):
     indent: int = -1
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
-    payload_type: str = '$$DPG_PAYLOAD'
+    payload_type: str = "$$DPG_PAYLOAD"
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
     drag_callback: Callback = None
@@ -11051,10 +11014,12 @@ class TreeNode(MovableContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # filter_key (str, optional): Used by filter widget.
-    filter_key: str = ''
+    filter_key: str = ""
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
@@ -11109,13 +11074,12 @@ class TreeNode(MovableContainerWidget):
             bullet=self.bullet,
             selectable=self.selectable,
         )
-        
+
         return _ret
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drag_callback is None:
@@ -11125,8 +11089,7 @@ class TreeNode(MovableContainerWidget):
 
     def drop_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.drop_callback is None:
@@ -11161,7 +11124,7 @@ class ValueRegistry(Registry):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
         )
-        
+
         return _ret
 
 
@@ -11206,7 +11169,7 @@ class ViewportMenuBar(ContainerWidget):
             show=self.show,
             delay_search=self.delay_search,
         )
-        
+
         return _ret
 
 
@@ -11242,16 +11205,20 @@ class Window(ContainerWidget):
     show: bool = True
 
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
-    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+    pos: t.Union[t.List[int],
+                 t.Tuple[int,
+                         ...]] = dataclasses.field(default_factory=lambda: [])
 
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
     # min_size (Union[List[int], Tuple[int, ...]], optional): Minimum window size.
-    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [100, 100])
+    min_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(
+        default_factory=lambda: [100, 100])
 
     # max_size (Union[List[int], Tuple[int, ...]], optional): Maximum window size.
-    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [30000, 30000])
+    max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(
+        default_factory=lambda: [30000, 30000])
 
     # menubar (bool, optional): Shows or hides the menubar.
     menubar: bool = False
@@ -11340,13 +11307,12 @@ class Window(ContainerWidget):
             no_open_over_existing_popup=self.no_open_over_existing_popup,
             on_close=self.on_close_fn,
         )
-        
+
         return _ret
 
     def on_close_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
-            'was expecting the dpg_id to match ...'
+        assert sender_dpg_id == self.dpg_id, "was expecting the dpg_id to match ..."
 
         # logic ...
         if self.on_close is None:

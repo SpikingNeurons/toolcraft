@@ -34,18 +34,34 @@ todo: note that we can safely use this module for
   + state will use dapr state and hence no need for file_system there
 """
 import dataclasses
+import json
+import os
 import pathlib
 import typing as t
+
 import fsspec
-import os
-import toml
-import json
-import pyarrow as pa
 import gcsfs
+import pyarrow as pa
+import toml
+from fsspec.implementations.arrow import ArrowFSWrapper
+
+# currently, we support (or want to support these file systems)
+from fsspec.implementations.local import LocalFileSystem
+from fsspec.implementations.memory import MemoryFileSystem
 
 # todo: keep exploring these known_implementationsas they are updated
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from fsspec.registry import known_implementations
+
+# from fsspec.implementations.sftp import SFTPFileSystem
+# from fsspec.implementations.zip import ZipFileSystem
+# from fsspec.implementations.tar import TarFileSystem
+from gcsfs import GCSFileSystem
+
+from .. import error as e
+from .. import logger
+from .. import marshalling as m
+from .. import settings, util
 
 # todo: explore caching
 # from fsspec.implementations.cached import CachingFileSystem, \
@@ -59,33 +75,16 @@ from fsspec.registry import known_implementations
 # from pyarrow.fs import PyFileSystem, FSSpecHandler
 # pa_fs = PyFileSystem(FSSpecHandler(fs))
 
-# currently, we support (or want to support these file systems)
-from fsspec.implementations.local import LocalFileSystem
-from fsspec.implementations.memory import MemoryFileSystem
-from fsspec.implementations.arrow import ArrowFSWrapper
-# from fsspec.implementations.sftp import SFTPFileSystem
-# from fsspec.implementations.zip import ZipFileSystem
-# from fsspec.implementations.tar import TarFileSystem
-from gcsfs import GCSFileSystem
-
-from .. import error as e
-from .. import logger
-from .. import settings
-from .. import marshalling as m
-from .. import util
-
 _LOGGER = logger.get_logger()
 
 _FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, FileSystemConfig]
 
 
 @dataclasses.dataclass(frozen=True)
-@m.RuleChecker(
-    things_to_be_cached=['fs']
-)
+@m.RuleChecker(things_to_be_cached=["fs"])
 class FileSystemConfig(m.HashableClass):
     fs_name: str
-    protocol: t.Literal['gs', 'gcs', 'file']
+    protocol: t.Literal["gs", "gcs", "file"]
     root_dir: str
     kwargs: t.Dict[str, t.Any] = None
 
@@ -97,14 +96,11 @@ class FileSystemConfig(m.HashableClass):
         try:
             _protocol_class = fsspec.get_filesystem_class(self.protocol)
         except ImportError as _ie:
-            raise e.code.CodingError(
-                msgs=[
-                    f"You need to install some packages",
-                    {
-                        "raised_error": str(_ie)
-                    }
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"You need to install some packages", {
+                    "raised_error": str(_ie)
+                }
+            ])
         # some vars
         _kwargs = self.kwargs
         if _kwargs is None:
@@ -114,40 +110,37 @@ class FileSystemConfig(m.HashableClass):
         # make instance
         try:
             # --------------------------------------------------------- 02.01
-            if self.protocol in ['gs', 'gcs']:
+            if self.protocol in ["gs", "gcs"]:
                 # some vars
-                _credentials_file = settings.TC_HOME / self.kwargs['credentials']
-                _project = _kwargs['project']
-                _bucket = _kwargs['bucket']
+                _credentials_file = settings.TC_HOME / self.kwargs[
+                    "credentials"]
+                _project = _kwargs["project"]
+                _bucket = _kwargs["bucket"]
                 # make _fs
                 _fs = _protocol_class(
                     project=_project,
                     check_connection=True,
-                    token=_credentials_file.as_posix()
+                    token=_credentials_file.as_posix(),
                 )  # type: gcsfs.GCSFileSystem
                 # test if bucket exists
                 e.validation.ShouldBeOneOf(
-                    value=_bucket + '/',  # as buckets from _fs ahs suffix `/`
+                    value=_bucket + "/",  # as buckets from _fs ahs suffix `/`
                     values=_fs.buckets,
-                    msgs=[
-                        "Provided bucket is not available ..."
-                    ]
+                    msgs=["Provided bucket is not available ..."],
                 ).raise_if_failed()
             # --------------------------------------------------------- 02.02
             else:
                 _fs = _protocol_class(**_kwargs)
 
         except Exception as _ex:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Invalid kwargs supplied ... Class {_protocol_class} "
-                    f"cannot recognize them ...",
-                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
-                    {
-                        "raised_error": str(_ex)
-                    }
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Invalid kwargs supplied ... Class {_protocol_class} "
+                f"cannot recognize them ...",
+                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
+                {
+                    "raised_error": str(_ex)
+                },
+            ])
 
         # ------------------------------------------------------------- 03
         return _fs
@@ -160,54 +153,52 @@ class FileSystemConfig(m.HashableClass):
         # ------------------------------------------------------------- 02
         # validate protocol
         if self.protocol in known_implementations.keys():
-            _err_msg = "This protocol is known by gcsfs but not yet " \
-                       "implemented in `toolcraft`. Please raise PR for support ..."
+            _err_msg = (
+                "This protocol is known by gcsfs but not yet "
+                "implemented in `toolcraft`. Please raise PR for support ...")
         else:
-            _err_msg = "this protocol is not known by gcsfs and cannot be " \
-                       "supported by `toolcraft`"
-        e.validation.ShouldBeOneOf(
-            value=self.protocol, values=['gs', 'gcs', 'file'],
-            msgs=[_err_msg]
-        ).raise_if_failed()
+            _err_msg = ("this protocol is not known by gcsfs and cannot be "
+                        "supported by `toolcraft`")
+        e.validation.ShouldBeOneOf(value=self.protocol,
+                                   values=["gs", "gcs", "file"],
+                                   msgs=[_err_msg]).raise_if_failed()
 
         # ------------------------------------------------------------- 03
         # protocol specific validations
         # ------------------------------------------------------------- 03.01
         # if gcs related protocol validate kwargs
-        if self.protocol in ['gs', 'gcs']:
+        if self.protocol in ["gs", "gcs"]:
             # kwargs must be supplied
             if self.kwargs is None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory `kwargs` dict in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please supply mandatory `kwargs` dict in config "
+                    f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"
+                ])
             # get credentials
-            if 'credentials' not in self.kwargs.keys():
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `credentials` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
-                )
-            _credentials_file = settings.TC_HOME / self.kwargs['credentials']
+            if "credentials" not in self.kwargs.keys():
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please supply mandatory kwarg `credentials` in config "
+                    f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"
+                ])
+            _credentials_file = settings.TC_HOME / self.kwargs["credentials"]
             if not _credentials_file.exists():
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Cannot find credential file {_credentials_file}",
-                        f"Please create it using information from here:",
-                        "https://cloud.google.com/docs/authentication/"
-                        "getting-started#create-service-account-console",
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Cannot find credential file {_credentials_file}",
+                    f"Please create it using information from here:",
+                    "https://cloud.google.com/docs/authentication/"
+                    "getting-started#create-service-account-console",
+                ])
             # get project and bucket
-            if 'project' not in self.kwargs.keys():
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `project` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
-                )
-            if 'bucket' not in self.kwargs.keys():
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `bucket` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
-                )
+            if "project" not in self.kwargs.keys():
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please supply mandatory kwarg `project` in config "
+                    f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"
+                ])
+            if "bucket" not in self.kwargs.keys():
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please supply mandatory kwarg `bucket` in config "
+                    f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"
+                ])
 
         # ------------------------------------------------------------- 04
         # call property fs as it also validates creation
@@ -216,21 +207,17 @@ class FileSystemConfig(m.HashableClass):
         # ------------------------------------------------------------- 05
         # if root_dir in fs_config end with sep then raise error as we will be adding it
         if self.root_dir.endswith(self.fs.sep):
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"Please do not supply seperator `{self.fs.sep}` at end for "
-                    f"root_dir in config files. As we will take care of that ..."
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"Please do not supply seperator `{self.fs.sep}` at end for "
+                f"root_dir in config files. As we will take care of that ..."
+            ])
         # if CWD make sure that root_dir always start with .
         if self.fs_name == "CWD":
             if not self.root_dir.startswith("."):
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"For CWD file_system always make sure that root_dir "
-                        f"starts with '.', found {self.root_dir}"
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"For CWD file_system always make sure that root_dir "
+                    f"starts with '.', found {self.root_dir}"
+                ])
 
     @classmethod
     def get(cls, fs_name: str) -> "FileSystemConfig":
@@ -259,44 +246,49 @@ class FileSystemConfig(m.HashableClass):
             # if CWD and it was not there we know the default ... so make one
             if fs_name == "CWD":
                 _all_fs_config[fs_name] = {
-                    "protocol": "file", "root_dir": ".",
+                    "protocol": "file",
+                    "root_dir": ".",
                 }
                 # update settings and save
-                assert id(settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)
-                settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
+                assert id(
+                    settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)
+                settings.TC_CONFIG_FILE.write_text(
+                    toml.dumps(settings.TC_CONFIG))
                 # store to current _fs_config
                 _fs_config = _all_fs_config[fs_name]
             # else it is not CWD nor supported so raise error
             else:
-                raise e.validation.ConfigError(
-                    msgs=[
-                        f"Please provide file system settings for `{fs_name}` in dict "
-                        f"`file_systems`",
-                        f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-                    ]
-                )
+                raise e.validation.ConfigError(msgs=[
+                    f"Please provide file system settings for `{fs_name}` in dict "
+                    f"`file_systems`",
+                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
+                ])
         # --------------------------------------------------------- 02.03
         # make sure that _fs_config is dict
         e.validation.ShouldBeInstanceOf(
-            value=_fs_config, value_types=(dict, ), msgs=[
+            value=_fs_config,
+            value_types=(dict, ),
+            msgs=[
                 f"Was expecting dict for file system {fs_name} configured in settings",
-                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-            ]
+                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
+            ],
         ).raise_if_failed()
         # --------------------------------------------------------- 02.04
         # make sure that there we know thw settings i.e. they should be one or more
         # of these three
         for _k in _fs_config.keys():
             e.validation.ShouldBeOneOf(
-                value=_k, values=["protocol", "kwargs", "root_dir"],
+                value=_k,
+                values=["protocol", "kwargs", "root_dir"],
                 msgs=[
                     f"Invalid config provided for file system `{fs_name}` in settings",
-                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
-                ]
+                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
+                ],
             ).raise_if_failed()
         # --------------------------------------------------------- 02.05
         # make instance and save
-        _FILE_SYSTEM_CONFIGS[fs_name] = FileSystemConfig(fs_name=fs_name, **_fs_config)
+        _FILE_SYSTEM_CONFIGS[fs_name] = FileSystemConfig(fs_name=fs_name,
+                                                         **_fs_config)
 
         # --------------------------------------------------------- 03
         # return
@@ -379,6 +371,7 @@ class Path:
     >>> fsspec.AbstractFileSystem.upload
     >>> fsspec.AbstractFileSystem.walk
     """
+
     suffix_path: str
     fs_name: str
     details: t.Dict = None
@@ -387,17 +380,16 @@ class Path:
 
     @property
     def local_path(self) -> pathlib.Path:
-        if not isinstance(self.fs, fsspec.implementations.local.LocalFileSystem):
+        if not isinstance(self.fs,
+                          fsspec.implementations.local.LocalFileSystem):
             raise e.code.CodingError(
-                msgs=[
-                    "Only allowed when local file system ..."
-                ]
-            )
+                msgs=["Only allowed when local file system ..."])
         return pathlib.Path(self.full_path)
 
     def __post_init__(self):
         # set some vars for faster access
-        self.fs_config = FileSystemConfig.get(self.fs_name)  # type: FileSystemConfig
+        self.fs_config = FileSystemConfig.get(
+            self.fs_name)  # type: FileSystemConfig
         self.fs = self.fs_config.fs  # type: fsspec.AbstractFileSystem
         self.sep = self.fs.sep  # type: str
         self.root_path = self.fs_config.root_dir  # type: str
@@ -416,11 +408,9 @@ class Path:
 
     def __truediv__(self, other: str) -> "Path":
         if other.find(self.sep) != -1:
-            raise e.code.CodingError(
-                msgs=[
-                    f"we do not allow seperator `{self.sep}` in the token `{other}`"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"we do not allow seperator `{self.sep}` in the token `{other}`"
+            ])
         _suffix = self.suffix_path
         if _suffix != "":
             _suffix += self.sep + other
@@ -430,18 +420,14 @@ class Path:
 
     def __add__(self, other: str) -> "Path":
         if other.find(self.sep) != -1:
-            raise e.code.CodingError(
-                msgs=[
-                    f"we do not allow seperator {self.sep} in the token {other}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"we do not allow seperator {self.sep} in the token {other}"
+            ])
         return Path(suffix_path=self.suffix_path + other, fs_name=self.fs_name)
 
     @classmethod
     def get_root(cls, fs_name: str) -> "Path":
-        return Path(
-            fs_name=fs_name, suffix_path=""
-        )
+        return Path(fs_name=fs_name, suffix_path="")
 
     def exists(self) -> bool:
         return self.fs.exists(path=self.full_path)
@@ -453,20 +439,24 @@ class Path:
         return self.fs.isfile(path=self.full_path)
 
     def mkdir(self, create_parents: bool = True, **kwargs):
-        self.fs.mkdir(path=self.full_path, create_parents=create_parents, **kwargs)
+        self.fs.mkdir(path=self.full_path,
+                      create_parents=create_parents,
+                      **kwargs)
 
     def touch(self, truncate: bool = True):
         return self.fs.touch(path=self.full_path, truncate=truncate)
 
     def delete(self, recursive: bool = False, maxdepth: int = None):
-        return self.fs.delete(
-            path=self.full_path, recursive=recursive, maxdepth=maxdepth)
+        return self.fs.delete(path=self.full_path,
+                              recursive=recursive,
+                              maxdepth=maxdepth)
 
     def stat(self) -> t.Dict:
         return self.fs.stat(path=self.full_path)
 
     def open(
-        self, mode: str,
+        self,
+        mode: str,
         block_size=None,
         cache_options=None,
         compression=None,
@@ -477,18 +467,19 @@ class Path:
             # todo: use below options
             block_size=block_size,
             cache_options=cache_options,
-            compression=compression)
+            compression=compression,
+        )
 
     def write_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='w') as _f:
+        with self.fs.open(path=self.full_path, mode="w") as _f:
             _f.write(text)
 
     def append_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='a') as _f:
+        with self.fs.open(path=self.full_path, mode="a") as _f:
             _f.write(text)
 
     def read_text(self) -> str:
-        with self.fs.open(path=self.full_path, mode='r') as _f:
+        with self.fs.open(path=self.full_path, mode="r") as _f:
             return _f.read()
 
     def _post_process_res(self, _res) -> t.List["Path"]:
@@ -504,57 +495,56 @@ class Path:
         if self.fs_name == "CWD":
             # we replace `.` with cwd
             # todo: also test for linux
-            _root_path = _root_path.replace(".", os.getcwd().replace("\\", "/"))
+            _root_path = _root_path.replace(".",
+                                            os.getcwd().replace("\\", "/"))
 
         if isinstance(_res, dict):
             return [
                 Path(
                     suffix_path=_k.replace(_root_path, ""),
-                    fs_name=self.fs_name, details=_v)
-                for _k, _v in _res.items()
+                    fs_name=self.fs_name,
+                    details=_v,
+                ) for _k, _v in _res.items()
             ]
         elif isinstance(_res, list):
             return [
-                Path(suffix_path=_.replace(_root_path, ""), fs_name=self.fs_name)
-                for _ in _res
+                Path(suffix_path=_.replace(_root_path, ""),
+                     fs_name=self.fs_name) for _ in _res
             ]
         else:
-            raise e.code.NotSupported(
-                msgs=[f"Unknown type {type(_res)}"]
-            )
+            raise e.code.NotSupported(msgs=[f"Unknown type {type(_res)}"])
 
     def find(
-        self, path: str = ".",
-        maxdepth: int = None, withdirs: bool = False, detail: bool = False
+        self,
+        path: str = ".",
+        maxdepth: int = None,
+        withdirs: bool = False,
+        detail: bool = False,
     ) -> t.List["Path"]:
         _path = self.full_path if path == "." else self.full_path + self.sep + path
-        _res = self.fs.find(
-            path=_path, maxdepth=maxdepth, withdirs=withdirs, detail=detail
-        )
+        _res = self.fs.find(path=_path,
+                            maxdepth=maxdepth,
+                            withdirs=withdirs,
+                            detail=detail)
         return self._post_process_res(_res)
 
-    def glob(
-        self, pattern: str, detail: bool = False
-    ) -> t.List["Path"]:
+    def glob(self, pattern: str, detail: bool = False) -> t.List["Path"]:
         _pattern = self.full_path + "/" + pattern
         _res = self.fs.glob(path=_pattern, detail=detail)
         return self._post_process_res(_res)
 
-    def walk(
-        self,  path: str = ".", maxdepth: int = None, detail: bool = False
-    ) -> t.List["Path"]:
+    def walk(self,
+             path: str = ".",
+             maxdepth: int = None,
+             detail: bool = False) -> t.List["Path"]:
         _path = self.full_path if path == "." else self.full_path + self.sep + path
-        for _ in self.fs.walk(
-            path=_path, maxdepth=maxdepth, detail=detail
-        ):
-            yield Path(
-                suffix_path=_[0].replace(self.root_path, ""), fs_name=self.fs_name
-            ), self._post_process_res(_[1]), self._post_process_res(_[2])
+        for _ in self.fs.walk(path=_path, maxdepth=maxdepth, detail=detail):
+            yield Path(suffix_path=_[0].replace(self.root_path, ""),
+                       fs_name=self.fs_name), self._post_process_res(
+                           _[1]), self._post_process_res(_[2])
             # return self._post_process_res(_res)
 
-    def ls(
-        self, path: str = ".", detail: bool = False
-    ) -> t.List["Path"]:
+    def ls(self, path: str = ".", detail: bool = False) -> t.List["Path"]:
         _path = self.full_path if path == "." else self.full_path + self.sep + path
         _res = self.fs.ls(path=_path, detail=detail)
         return self._post_process_res(_res)
@@ -563,16 +553,17 @@ class Path:
         return len(self.ls()) == 0
 
     def rm(
-        self, path: t.Union[str, t.List[str]] = ".",
-        recursive: bool = False, maxdepth: int = None
+        self,
+        path: t.Union[str, t.List[str]] = ".",
+        recursive: bool = False,
+        maxdepth: int = None,
     ):
         if isinstance(path, str):
             path = [path]
         _new_path = []
         for _p in path:
-            _new_path.append(
-                self.full_path if _p == "." else self.full_path + self.sep + _p
-            )
+            _new_path.append(self.full_path if _p == "." else self.full_path +
+                             self.sep + _p)
         self.fs.rm(path=_new_path, recursive=recursive, maxdepth=maxdepth)
 
     def rm_file(self, path: str = "."):

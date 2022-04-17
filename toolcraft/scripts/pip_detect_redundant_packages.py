@@ -4,7 +4,7 @@ import pathlib
 import shutil
 import sys
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     if len(sys.argv) != 2:
         raise Exception(
@@ -45,4 +45,3 @@ if __name__ == '__main__':
     print("--------------------------------------------------------")
     input("PRESS ANY KEY TO EXIT ...")
     print()
-

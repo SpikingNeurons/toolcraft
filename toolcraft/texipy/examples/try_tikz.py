@@ -3,11 +3,9 @@ We do this tutorial in texipy
 https://www.overleaf.com/learn/latex/TikZ_package
 """
 
-from toolcraft.texipy import Document, Section, Color
-from toolcraft.texipy import tikz
+from toolcraft.texipy import Color, Document, Section, tikz
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     _doc = Document(
         title="TikZ tutorial",
         author="Praveen Kulkarni",

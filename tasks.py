@@ -169,7 +169,8 @@ def changelog(c, new_tag=None):
     # https://docs.github.com/en/rest/reference/repos#compare-two-commits
     # [USING GITHUB]
     _changelog_list = [
-        f"## Full Changelog: [{_last_stable_tag_name} >> {new_tag}](https://github.com/SpikingNeurons/toolcraft/compare/{_last_stable_tag_name}...{new_tag})", ""
+        f"## Full Changelog: [{_last_stable_tag_name} >> {new_tag}](https://github.com/SpikingNeurons/toolcraft/compare/{_last_stable_tag_name}...{new_tag})",
+        "",
     ]
 
     # we will avoid this for now

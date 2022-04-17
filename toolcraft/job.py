@@ -2,25 +2,25 @@
 todo: deprecate in favour of dapr module
 """
 import abc
+import dataclasses
 import datetime
 import enum
-import inspect
-import typing as t
-import dataclasses
-import os
-import yaml
-import sys
-import pickle
 import hashlib
+import inspect
+import os
+import pickle
+import sys
 import types
+import typing as t
 
-from . import logger
+import yaml
+
 from . import error as e
+from . import logger
 from . import marshalling as m
-from . import util
-from . import storage as s
 from . import richy
-
+from . import storage as s
+from . import util
 
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
@@ -38,6 +38,7 @@ class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     """
     todo: support ibm_lsf over ssh using https://www.fabfile.org
     """
+
     ibm_lsf = enum.auto()
     local = enum.auto()
     local_on_same_thread = enum.auto()
@@ -47,6 +48,7 @@ class JobFlowId(t.NamedTuple):
     """
     A tuple that helps you find job in the Flow
     """
+
     stage: int
     job_group: int
     job: int
@@ -59,6 +61,7 @@ class JobGroupFlowId(t.NamedTuple):
     """
     A tuple that helps you find job group in the Flow
     """
+
     stage: int
     job_group: int
 
@@ -81,16 +84,13 @@ class Tag:
     def create(self, data: t.Dict[str, t.Any] = None):
         if self.path.exists():
             raise e.code.CodingError(
-                msgs=[f"Tag at {self.path} already exists ..."]
-            )
+                msgs=[f"Tag at {self.path} already exists ..."])
         if data is None:
             data = {}
         if "time" in data.keys():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Do not supply key time in data dict we will add it ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Do not supply key time in data dict we will add it ..."
+            ])
         data["time"] = datetime.datetime.now()
         _LOGGER.info(msg=f"Creating tag {self.path}")
         self.path.write_text(text=yaml.safe_dump(data))
@@ -98,8 +98,7 @@ class Tag:
     def read(self) -> t.Dict[str, t.Any]:
         if not self.path.exists():
             raise e.code.CodingError(
-                msgs=[f"Tag at {self.path} does not exist ..."]
-            )
+                msgs=[f"Tag at {self.path} does not exist ..."])
         _LOGGER.info(msg=f"Reading tag {self.path}")
         return yaml.safe_load(self.path.read_text())
 
@@ -111,11 +110,9 @@ class Tag:
             _LOGGER.info(msg=f"Deleting tag {self.path}")
             self.path.delete()
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"The tag {self.path} does not exist so cannot delete ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"The tag {self.path} does not exist so cannot delete ..."
+            ])
 
     def update(self, data: t.Dict[str, t.Any]):
         # _LOGGER.info(msg=f"Updating tag {self.path}")
@@ -131,6 +128,7 @@ class TagManager:
       To support dynamic tags we might need some document storage database instead of
       fixed schema database ...
     """
+
     job: "Job"
 
     @property
@@ -200,10 +198,7 @@ class Job:
     def flow_id(self) -> JobFlowId:
         if self._flow_id is None:
             raise e.code.CodingError(
-                msgs=[
-                    f"This must be set by {Flow} using its items field ..."
-                ]
-            )
+                msgs=[f"This must be set by {Flow} using its items field ..."])
         return self._flow_id
 
     @flow_id.setter
@@ -211,9 +206,9 @@ class Job:
         if self._flow_id is None:
             self._flow_id = value
         else:
-            raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
-            )
+            raise e.code.CodingError(msgs=[
+                f"This property is already set you cannot set it again ..."
+            ])
 
     @property
     @util.CacheResult
@@ -263,7 +258,8 @@ class Job:
         self,
         runner: "Runner",
         method: t.Callable,
-        method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None,
+        method_kwargs: t.Dict[str, t.Union["Experiment", int, float,
+                                           str]] = None,
         wait_on: t.List["JobGroup"] = None,
     ):
         # assign some vars
@@ -280,14 +276,10 @@ class Job:
             # noinspection PyTypeChecker
             if id(self.method.__self__) != id(runner):
                 raise e.code.CodingError(
-                    msgs=["Was expecting them to be same instance"]
-                )
+                    msgs=["Was expecting them to be same instance"])
         except Exception as _ex:
             raise e.code.CodingError(
-                msgs=[
-                    f"Doesn't seem like a method of an instance ...", _ex
-                ]
-            )
+                msgs=[f"Doesn't seem like a method of an instance ...", _ex])
 
         # make sure that all kwargs are supplied
         _required_keys = list(inspect.signature(self.method).parameters.keys())
@@ -295,22 +287,20 @@ class Job:
         _provided_keys = list(self.method_kwargs.keys())
         _provided_keys.sort()
         if _required_keys != _provided_keys:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect method_kwargs has all keys required by method "
-                    f"{self.method} ",
-                    f"Also so not supply any extra kwargs ...",
-                    dict(
-                        _required_keys=_required_keys, _provided_keys=_provided_keys
-                    ),
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect method_kwargs has all keys required by method "
+                f"{self.method} ",
+                f"Also so not supply any extra kwargs ...",
+                dict(_required_keys=_required_keys,
+                     _provided_keys=_provided_keys),
+            ])
 
         # some special methods cannot be used for job
         # noinspection PyUnresolvedReferences
         e.validation.ShouldNotBeOneOf(
-            value=method.__func__, values=runner.methods_that_cannot_be_a_job(),
-            msgs=["Some special methods cannot be used as job ..."]
+            value=method.__func__,
+            values=runner.methods_that_cannot_be_a_job(),
+            msgs=["Some special methods cannot be used as job ..."],
         ).raise_if_failed()
 
         # if _EXPERIMENT_KWARG present
@@ -320,10 +310,10 @@ class Job:
             # make sure that it is not s.StorageHashable or any of its fields are
             # not s.StorageHashable
             _experiment.check_for_storage_hashable(
-                field_key=f"{_experiment.__class__.__name__}"
-            )
+                field_key=f"{_experiment.__class__.__name__}")
             # make <hex_hash>.info if not present
-            self.runner.monitor.make_experiment_info_file(experiment=_experiment)
+            self.runner.monitor.make_experiment_info_file(
+                experiment=_experiment)
 
     def check_health(self):
         # if job has already started
@@ -333,54 +323,48 @@ class Job:
             if self.is_finished:
                 _LOGGER.info(
                     msg=f"Job is already completed so skipping call ...",
-                    msgs=[_job_info]
+                    msgs=[_job_info],
                 )
                 return
             if self.is_failed:
                 _LOGGER.error(
                     msg=f"Previous job has failed so skipping call ...",
-                    msgs=["Delete previous calls files to make this call work ...",
-                          _job_info]
+                    msgs=[
+                        "Delete previous calls files to make this call work ...",
+                        _job_info,
+                    ],
                 )
                 return
             if self.is_running:
-                raise e.code.CodingError(
-                    msgs=[
-                        "This is bug ... there is ongoing job running ...",
-                        "Either you have abruptly killed previous jobs or you "
-                        "have run same job multiple times ...",
-                        "Also teh job might have failed and you missed to catch "
-                        "exception and set failed tag appropriately ... in that case "
-                        "check logs",
-                        _job_info,
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    "This is bug ... there is ongoing job running ...",
+                    "Either you have abruptly killed previous jobs or you "
+                    "have run same job multiple times ...",
+                    "Also teh job might have failed and you missed to catch "
+                    "exception and set failed tag appropriately ... in that case "
+                    "check logs",
+                    _job_info,
+                ])
         else:
             # if started tag does not exist then other tags should not exist
             if self.is_running:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `running` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
+                e.code.CodingError(msgs=[
+                    "Found tag for `running` ... we expect it to not be present "
+                    "as the job was never started",
+                    _job_info,
+                ])
             if self.is_finished:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `finished` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
+                e.code.CodingError(msgs=[
+                    "Found tag for `finished` ... we expect it to not be present "
+                    "as the job was never started",
+                    _job_info,
+                ])
             if self.is_failed:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `failed` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
+                e.code.CodingError(msgs=[
+                    "Found tag for `failed` ... we expect it to not be present "
+                    "as the job was never started",
+                    _job_info,
+                ])
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
@@ -406,6 +390,7 @@ class Job:
 
         # reconfig logger to change log file for job
         import logging
+
         _log = self.path / "toolcraft.log"
         logger.setup_logging(
             propagate=False,
@@ -429,32 +414,24 @@ class Job:
             _end = datetime.datetime.now()
             _LOGGER.info(
                 msg=f"Successfully finished job {self.id} at {_start.ctime()}",
-                msgs=[
-                    {
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                    }
-                ]
+                msgs=[{
+                    "started": _start.ctime(),
+                    "ended": _end.ctime(),
+                    "seconds": str((_end - _start).total_seconds()),
+                }],
             )
         except Exception as _ex:
             _failed = True
-            self.tag_manager.failed.create(
-                data={
-                    "exception": str(_ex)
-                }
-            )
+            self.tag_manager.failed.create(data={"exception": str(_ex)})
             _end = datetime.datetime.now()
             _LOGGER.info(
                 msg=f"Failed job {self.id} at {_start.ctime()}",
-                msgs=[
-                    {
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                        "exception": str(_ex),
-                    }
-                ]
+                msgs=[{
+                    "started": _start.ctime(),
+                    "ended": _end.ctime(),
+                    "seconds": str((_end - _start).total_seconds()),
+                    "exception": str(_ex),
+                }],
             )
             self.tag_manager.running.delete()
             # above thing will tell toolcraft that things failed gracefully
@@ -475,21 +452,18 @@ class Job:
         for _k, _v in self.method_kwargs.items():
             if _k == _EXPERIMENT_KWARG:
                 _v = _v.hex_hash
-            _kwargs_as_cli_strs.append(
-                f"{_k}={_v}"
-            )
-        _command = f"python {self.runner.py_script} " \
-                   f"{self.method.__func__.__name__} " \
-                   f"{' '.join(_kwargs_as_cli_strs)}"
+            _kwargs_as_cli_strs.append(f"{_k}={_v}")
+        _command = (f"python {self.runner.py_script} "
+                    f"{self.method.__func__.__name__} "
+                    f"{' '.join(_kwargs_as_cli_strs)}")
 
         # ------------------------------------------------------------- 02
         if cluster_type is JobRunnerClusterType.local:
             os.system(_command)
         elif cluster_type is JobRunnerClusterType.local_on_same_thread:
             _backup_argv = sys.argv
-            sys.argv = \
-                _backup_argv + [str(self.method.__func__.__name__)] + \
-                _kwargs_as_cli_strs
+            sys.argv = (_backup_argv + [str(self.method.__func__.__name__)] +
+                        _kwargs_as_cli_strs)
             self.runner.clone().run(cluster_type=cluster_type)
             sys.argv = _backup_argv
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
@@ -497,16 +471,14 @@ class Job:
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
             _log = self.path / "bsub.log"
-            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
+            _nxdi_prefix = f"bsub -oo {_log.local_path.as_posix()} -J {self.id} "
             if bool(self.wait_on):
-                _wait_on = \
-                    " && ".join([f"done({_.id})" for _ in self.wait_on])
+                _wait_on = " && ".join([f"done({_.id})" for _ in self.wait_on])
                 _nxdi_prefix += f'-w "{_wait_on}" '
             os.system(_nxdi_prefix + _command)
         else:
             raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {cluster_type}"]
-            )
+                msgs=[f"Unsupported cluster_type {cluster_type}"])
 
     @classmethod
     def from_cli(
@@ -515,12 +487,10 @@ class Job:
     ) -> "Job":
         # test if running on machines that execute jobs ...
         if runner.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This call is available only for jobs submitted to server ... "
-                    "it cannot be accessed by instance which launches jobs ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "This call is available only for jobs submitted to server ... "
+                "it cannot be accessed by instance which launches jobs ..."
+            ])
 
         # fetch from args
         _method_name = sys.argv[1]
@@ -530,7 +500,8 @@ class Job:
         for _arg in sys.argv[2:]:
             _key, _str_val = _arg.split("=")
             if _key == _EXPERIMENT_KWARG:
-                _val = runner.monitor.get_experiment_from_hex_hash(hex_hash=_str_val)
+                _val = runner.monitor.get_experiment_from_hex_hash(
+                    hex_hash=_str_val)
             else:
                 _val = _method_signature.parameters[_key].annotation(_str_val)
             _method_kwargs[_key] = _val
@@ -538,31 +509,26 @@ class Job:
         # return
         return Job(
             runner=runner,
-            method=_method, method_kwargs=_method_kwargs,
+            method=_method,
+            method_kwargs=_method_kwargs,
         )
 
     def save_artifact(self, name: str, data: t.Any):
         _file = self.artifacts_path / name
         if _file.exists():
             raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} already exists ... cannot write"
-                ]
-            )
+                msgs=[f"Artifact {name} already exists ... cannot write"])
         # todo: make this compatible for all type of path
-        with open(_file.local_path.as_posix(), 'wb') as _file:
+        with open(_file.local_path.as_posix(), "wb") as _file:
             pickle.dump(data, _file)
 
     def load_artifact(self, name: str) -> t.Any:
         _file = self.artifacts_path / name
         if not _file.exists():
             raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} does not exists ... cannot load"
-                ]
-            )
+                msgs=[f"Artifact {name} does not exists ... cannot load"])
         # todo: make this compatible for all type of path
-        with open(_file.local_path.as_posix(), 'rb') as _file:
+        with open(_file.local_path.as_posix(), "rb") as _file:
             return pickle.load(_file)
 
 
@@ -579,10 +545,7 @@ class JobGroup:
     def flow_id(self) -> JobGroupFlowId:
         if self._flow_id is None:
             raise e.code.CodingError(
-                msgs=[
-                    f"This must be set by {Flow} using its items field ..."
-                ]
-            )
+                msgs=[f"This must be set by {Flow} using its items field ..."])
         return self._flow_id
 
     @flow_id.setter
@@ -590,9 +553,9 @@ class JobGroup:
         if self._flow_id is None:
             self._flow_id = value
         else:
-            raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
-            )
+            raise e.code.CodingError(msgs=[
+                f"This property is already set you cannot set it again ..."
+            ])
 
     @property
     @util.CacheResult
@@ -622,10 +585,10 @@ class JobGroup:
         if self.is_on_main_machine:
             self._launch_on_cluster(cluster_type)
         else:
-            raise e.code.CodingError(
-                msgs=["We assume that this will never get called on cluster ",
-                      "JobGroup should only get called on main machine ..."]
-            )
+            raise e.code.CodingError(msgs=[
+                "We assume that this will never get called on cluster ",
+                "JobGroup should only get called on main machine ...",
+            ])
 
     def _launch_on_cluster(self, cluster_type: JobRunnerClusterType):
         # todo: also print jobs that were grouped for this job group ...
@@ -638,22 +601,21 @@ class JobGroup:
 
         # ------------------------------------------------------------- 02
         if cluster_type in [
-            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
+                JobRunnerClusterType.local,
+                JobRunnerClusterType.local_on_same_thread,
         ]:
             ...
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # needed to add -oo so that we do not get any emails ;)
             _log = self.runner.cwd / "job_group.log"
-            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
+            _nxdi_prefix = f"bsub -oo {_log.local_path.as_posix()} -J {self.id} "
             if bool(self.jobs):
-                _wait_on = \
-                    " && ".join([f"done({_.id})" for _ in self.jobs])
+                _wait_on = " && ".join([f"done({_.id})" for _ in self.jobs])
                 _nxdi_prefix += f'-w "{_wait_on}" '
             os.system(_nxdi_prefix + _command)
         else:
             raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"]
-            )
+                msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"])
 
 
 class Flow:
@@ -675,15 +637,13 @@ class Flow:
         # test if running on main machine which launches jobs
         # there will be only one arg
         if not runner.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This property `JobRunner.flow` should make instance of Flow.",
-                    "This instance can be create only on main machine from where the "
-                    "script is launched",
-                    "While when jobs are running on cluster they need not use this "
-                    "instance .. instead they will be using Job instance",
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "This property `JobRunner.flow` should make instance of Flow.",
+                "This instance can be create only on main machine from where the "
+                "script is launched",
+                "While when jobs are running on cluster they need not use this "
+                "instance .. instead they will be using Job instance",
+            ])
 
         # save reference
         self.stages = stages
@@ -693,12 +653,13 @@ class Flow:
         for _stage_id, _stage in enumerate(self.stages):
             for _job_group_id, _job_group in enumerate(_stage):
                 _job_group.flow_id = JobGroupFlowId(
-                    stage=_stage_id, job_group=_job_group_id,
+                    stage=_stage_id,
+                    job_group=_job_group_id,
                 )
                 for _job_id, _job in enumerate(_job_group.jobs):
-                    _job.flow_id = JobFlowId(
-                        stage=_stage_id, job_group=_job_group_id, job=_job_id
-                    )
+                    _job.flow_id = JobFlowId(stage=_stage_id,
+                                             job_group=_job_group_id,
+                                             job=_job_id)
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
@@ -708,8 +669,7 @@ class Flow:
         """
         # just check health of all jobs
         _sp = richy.ProgressStatusPanel(
-            title=f"Checking health of all jobs first ...", tc_log=_LOGGER
-        )
+            title=f"Checking health of all jobs first ...", tc_log=_LOGGER)
         with _sp:
             _p = _sp.progress
             _s = _sp.status
@@ -719,19 +679,19 @@ class Flow:
                 for _job_group in _stage:
                     _jobs += _job_group.jobs
             _job: Job
-            for _job in _p.track(
-                sequence=_jobs, task_name=f"check health"
-            ):
+            for _job in _p.track(sequence=_jobs, task_name=f"check health"):
                 _s.update(
                     spinner_speed=1.0,
-                    spinner=None, status=f"check health for {_job.flow_id} ..."
+                    spinner=None,
+                    status=f"check health for {_job.flow_id} ...",
                 )
                 _job.check_health()
             _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
 
         # call jobs ...
         if cluster_type in [
-            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
+                JobRunnerClusterType.local,
+                JobRunnerClusterType.local_on_same_thread,
         ]:
             for _stage in self.stages:
                 for _job_group in _stage:
@@ -740,31 +700,33 @@ class Flow:
                     _job_group(cluster_type)
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             _sp = richy.ProgressStatusPanel(
-                title=f"Launch stages on `{cluster_type.name}`", tc_log=_LOGGER
-            )
+                title=f"Launch stages on `{cluster_type.name}`",
+                tc_log=_LOGGER)
             with _sp:
                 _p = _sp.progress
                 _s = _sp.status
-                _s.update(spinner_speed=1.0, spinner=None, status="started ...")
+                _s.update(spinner_speed=1.0,
+                          spinner=None,
+                          status="started ...")
                 for _stage_id, _stage in enumerate(self.stages):
                     _jobs = []
                     for _job_group in _stage:
                         _jobs += _job_group.jobs
                         _jobs += [_job_group]
                     _job: t.Union[Job, JobGroup]
-                    for _job in _p.track(
-                        sequence=_jobs, task_name=f"stage {_stage_id:03d}"
-                    ):
+                    for _job in _p.track(sequence=_jobs,
+                                         task_name=f"stage {_stage_id:03d}"):
                         _s.update(
                             spinner_speed=1.0,
-                            spinner=None, status=f"launching {_job.flow_id} ..."
+                            spinner=None,
+                            status=f"launching {_job.flow_id} ...",
                         )
                         _job(cluster_type)
-                _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
+                _s.update(spinner_speed=1.0,
+                          spinner=None,
+                          status="finished ...")
         else:
-            raise e.code.NotSupported(
-                msgs=[f"Not supported {cluster_type}"]
-            )
+            raise e.code.NotSupported(msgs=[f"Not supported {cluster_type}"])
 
         # todo: add richy tracking panel ...that makes a layout for all stages and
         #  shows status of all jobs submitted above
@@ -808,23 +770,25 @@ class Monitor:
             _file.write_text(experiment.yaml())
 
     def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
-        _experiment_info_file = self.experiments_folder_path / f"{hex_hash}.info"
+        _experiment_info_file = self.experiments_folder_path / \
+            f"{hex_hash}.info"
         if _experiment_info_file.exists():
             # noinspection PyTypeChecker
             return m.HashableClass.get_class(_experiment_info_file).from_yaml(
-                _experiment_info_file
-            )
+                _experiment_info_file)
         else:
-            raise e.code.CodingError(
-                msgs=[f"We expect that you should have already created file "
-                      f"{_experiment_info_file}"]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect that you should have already created file "
+                f"{_experiment_info_file}"
+            ])
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments'],
-    things_not_to_be_overridden=['cwd', 'job', 'monitor'],
+    things_to_be_cached=[
+        "cwd", "job", "flow", "monitor", "registered_experiments"
+    ],
+    things_not_to_be_overridden=["cwd", "job", "monitor"],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -873,6 +837,7 @@ class Runner(m.HashableClass, abc.ABC):
     @property
     def py_script(self) -> str:
         import pathlib
+
         return pathlib.Path(sys.argv[0]).name
 
     @property
@@ -887,9 +852,10 @@ class Runner(m.HashableClass, abc.ABC):
         todo: adapt code so that the cwd can be on any other file system instead of CWD
         """
         import pathlib
+
         _py_script = self.py_script
         _folder_name = _py_script.replace(".py", "")
-        _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
+        _ret = s.Path(suffix_path=_folder_name, fs_name="CWD")
         e.code.AssertError(
             value1=_ret.local_path.as_posix(),
             value2=(pathlib.Path(_py_script).parent / _folder_name).as_posix(),
@@ -898,8 +864,8 @@ class Runner(m.HashableClass, abc.ABC):
                 f"{pathlib.Path.cwd() / _folder_name}",
                 f"While the accompanying script is at "
                 f"{pathlib.Path(_py_script).as_posix()}",
-                f"Please debug ..."
-            ]
+                f"Please debug ...",
+            ],
         ).raise_if_failed()
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
@@ -919,12 +885,10 @@ class Runner(m.HashableClass, abc.ABC):
     def job(self) -> Job:
 
         if len(sys.argv) == 1:
-            raise e.code.CodingError(
-                msgs=[
-                    "This job is available only for jobs submitted to server ... "
-                    "it cannot be accessed by instance which launches jobs ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "This job is available only for jobs submitted to server ... "
+                "it cannot be accessed by instance which launches jobs ..."
+            ])
         else:
             return Job.from_cli(runner=self)
 
@@ -936,7 +900,8 @@ class Runner(m.HashableClass, abc.ABC):
     def setup(self):
         _exps = self.registered_experiments
         _LOGGER.info(
-            f"Setting up {len(_exps)} experiments registered for this runner ...")
+            f"Setting up {len(_exps)} experiments registered for this runner ..."
+        )
         for _exp in _exps:
             _exp.setup()
 
@@ -966,8 +931,10 @@ class Runner(m.HashableClass, abc.ABC):
         # setup logger
         import logging
         import pathlib
+
         # note that this should always be local ... dont use `self.cwd`
-        _log_file = pathlib.Path(self.py_script.replace(".py", "")) / "runner.log"
+        _log_file = pathlib.Path(self.py_script.replace(".py",
+                                                        "")) / "runner.log"
         _log_file.parent.mkdir(parents=True, exist_ok=True)
         logger.setup_logging(
             propagate=False,
@@ -1016,19 +983,20 @@ class Runner(m.HashableClass, abc.ABC):
                 if _parameter_key == _EXPERIMENT_KWARG:
                     # _EXPERIMENT_KWARG must be first
                     if _EXPERIMENT_KWARG != _parameter_keys[1]:
-                        raise e.validation.NotAllowed(
-                            msgs=[
-                                f"If using `{_EXPERIMENT_KWARG}` kwarg in function "
-                                f"{_val} make sure that it is first kwarg i.e. it "
-                                f"immediately follows after self"
-                            ]
-                        )
+                        raise e.validation.NotAllowed(msgs=[
+                            f"If using `{_EXPERIMENT_KWARG}` kwarg in function "
+                            f"{_val} make sure that it is first kwarg i.e. it "
+                            f"immediately follows after self"
+                        ])
                     # _EXPERIMENT_KWARG annotation must be subclass of Experiment
                     e.validation.ShouldBeSubclassOf(
-                        value=_signature.parameters[_EXPERIMENT_KWARG].annotation,
+                        value=_signature.parameters[_EXPERIMENT_KWARG].
+                        annotation,
                         value_types=(Experiment, ),
-                        msgs=[f"Was expecting annotation for kwarg "
-                              f"`{_EXPERIMENT_KWARG}` to be proper subclass"]
+                        msgs=[
+                            f"Was expecting annotation for kwarg "
+                            f"`{_EXPERIMENT_KWARG}` to be proper subclass"
+                        ],
                     ).raise_if_failed()
                 # ----------------------------------------------- 02.05.02
                 # if self continue
@@ -1040,11 +1008,13 @@ class Runner(m.HashableClass, abc.ABC):
                     e.validation.ShouldBeSubclassOf(
                         value=_signature.parameters[_parameter_key].annotation,
                         value_types=(int, float, str),
-                        msgs=["We restrict annotation types for proper "
-                              "kwarg serialization so that they can be passed over "
-                              "cli ... and can also determine path for storage",
-                              f"Check kwarg `{_parameter_key}` defined in function "
-                              f"`{cls.__name__}.{_val.__name__}`"]
+                        msgs=[
+                            "We restrict annotation types for proper "
+                            "kwarg serialization so that they can be passed over "
+                            "cli ... and can also determine path for storage",
+                            f"Check kwarg `{_parameter_key}` defined in function "
+                            f"`{cls.__name__}.{_val.__name__}`",
+                        ],
                     ).raise_if_failed()
 
     def run(self, cluster_type: JobRunnerClusterType):

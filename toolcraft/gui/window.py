@@ -1,16 +1,13 @@
-import typing as t
 import dataclasses
+import typing as t
+
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 import dearpygui.dearpygui as dpg
 
 from .. import error as e
 from .. import util
-from . import dashboard
-from . import __base__
-from . import _auto
-from . import widget
-from . import EnMouseButton
+from . import EnMouseButton, __base__, _auto, dashboard, widget
 
 
 class WindowInternal(__base__.DpgInternal):
@@ -18,13 +15,11 @@ class WindowInternal(__base__.DpgInternal):
 
     def test_if_others_set(self):
         if not self.has("dash_board"):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Window {self.__class__} has no dash_board",
-                    f"Make sure you have called `Window.setup(dash_board)` "
-                    f"before building window",
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Window {self.__class__} has no dash_board",
+                f"Make sure you have called `Window.setup(dash_board)` "
+                f"before building window",
+            ])
 
 
 @dataclasses.dataclass
@@ -38,12 +33,10 @@ class Window(_auto.Window):
 
     @property
     def parent(self) -> None:
-        raise e.code.CodingError(
-            msgs=[
-                "Use of `parent` for `Window` is not allowed.",
-                "Please use `dash_board` instead.",
-            ]
-        )
+        raise e.code.CodingError(msgs=[
+            "Use of `parent` for `Window` is not allowed.",
+            "Please use `dash_board` instead.",
+        ])
 
     @property
     def dash_board(self) -> dashboard.Dashboard:
@@ -73,6 +66,7 @@ class PopUp(Window):
     Refer:
     >>> dpg.popup
     """
+
     # hover_over: widget.Widget = None
     # mousebutton: EnMouseButton = EnMouseButton.Right
     # min_size: t.Union[t.List[int], t.Tuple[int, ...]] = \
@@ -109,12 +103,10 @@ class FileDialog(_auto.FileDialog):
 
     @property
     def parent(self) -> None:
-        raise e.code.CodingError(
-            msgs=[
-                "Use of `parent` for `Window` is not allowed.",
-                "Please use `dash_board` instead.",
-            ]
-        )
+        raise e.code.CodingError(msgs=[
+            "Use of `parent` for `Window` is not allowed.",
+            "Please use `dash_board` instead.",
+        ])
 
     @property
     def dash_board(self) -> dashboard.Dashboard:

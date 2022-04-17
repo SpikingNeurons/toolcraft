@@ -1,10 +1,10 @@
 import pathlib
+
 import yaml
 
-from . import Tool
 from .. import error as e
-from .. import logger
-from .. import util
+from .. import logger, util
+from . import Tool
 
 
 class SftpTool(Tool):
@@ -23,13 +23,10 @@ class SftpTool(Tool):
         yaml_file = pathlib.Path(file_name)
         if not yaml_file.exists():
             raise e.validation.NotAllowed(
-                msgs=[
-                    f"We cannot find file `{file_name}`"
-                ]
-            )
+                msgs=[f"We cannot find file `{file_name}`"])
         yaml_str = yaml_file.read_text()
-        files_to_download = yaml.safe_load(yaml_str)['files']
-        sftp_details = yaml.safe_load(yaml_str)['sftp']
+        files_to_download = yaml.safe_load(yaml_str)["files"]
+        sftp_details = yaml.safe_load(yaml_str)["sftp"]
 
         # ------------------------------------------------------- 02
         # the download dir to store files
@@ -42,20 +39,18 @@ class SftpTool(Tool):
         # iterate over files to download and check hash
         cls.info(
             msg="Downloading and uploading files to SFTP server at:",
-            msgs=[
-                sftp_details
-            ]
+            msgs=[sftp_details],
         )
         for file_to_download in files_to_download:
             # create folder and file path
-            _file_folder = downloads_dir / file_to_download['folder']
+            _file_folder = downloads_dir / file_to_download["folder"]
             if not _file_folder.exists():
                 _file_folder.mkdir()
-            _file_path = _file_folder / file_to_download['file']
+            _file_path = _file_folder / file_to_download["file"]
 
             # if file exists ... just check hash
             if _file_path.exists():
-                util.check_hash_sha256(_file_path, file_to_download['hash'])
+                util.check_hash_sha256(_file_path, file_to_download["hash"])
                 continue
 
             # if file on server ... bypass
@@ -65,10 +60,10 @@ class SftpTool(Tool):
                 continue
 
             # download file
-            util.download_file(_file_path, file_to_download['url'])
+            util.download_file(_file_path, file_to_download["url"])
 
             # check hash
-            util.check_hash_sha256(_file_path, file_to_download['hash'])
+            util.check_hash_sha256(_file_path, file_to_download["hash"])
 
             # upload file to sftp
             # todo: add method to util.py to upload file using sftp_details

@@ -7,10 +7,22 @@ Aim:
   + Priority figures and tables
 """
 
-from . import helper
-from .__base__ import Font, Color, Scalar, Document, Section, SubSection, \
-    SubSubSection, Part, Paragraph, SubParagraph, Chapter, Fa, FontSize, \
-    Positioning, FloatObjAlignment
-from .symbol import Command, Glossary, Acronym, make_symbols_tex_file
-from . import tikz
-from . import table
+from . import helper, table, tikz
+from .__base__ import (
+    Chapter,
+    Color,
+    Document,
+    Fa,
+    FloatObjAlignment,
+    Font,
+    FontSize,
+    Paragraph,
+    Part,
+    Positioning,
+    Scalar,
+    Section,
+    SubParagraph,
+    SubSection,
+    SubSubSection,
+)
+from .symbol import Acronym, Command, Glossary, make_symbols_tex_file

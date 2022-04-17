@@ -20,8 +20,8 @@ todo: do not use `toolcraft.logger` and `toolcraft.error` instead have your
 
 """
 
-import pathlib
 import importlib
+import pathlib
 import sys
 
 from .__base__ import Tool
@@ -37,6 +37,5 @@ for f in pathlib.Path(__file__).parent.glob("*.py"):
     # import
     importlib.import_module(f".{f.stem}", __package__)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(Tool.run())

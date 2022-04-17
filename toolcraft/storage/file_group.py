@@ -14,26 +14,28 @@ todo: in context to mlflow this will also be used as log_artifact ... where
   we store arbitrary files
 """
 
-import requests
-import typing as t
-import subprocess
-import dataclasses
 import abc
-import numpy as np
-import gc
+import dataclasses
 import datetime
-import io
+import gc
 import hashlib
-import zipfile
-import gcsfs
+import io
 import platform
 import random
+import subprocess
+import typing as t
+import zipfile
 
-from .. import util, logger, settings
-from .. import storage as s
+import gcsfs
+import numpy as np
+import requests
+
 from .. import error as e
+from .. import logger
 from .. import marshalling as m
-from .. import richy
+from .. import richy, settings
+from .. import storage as s
+from .. import util
 from . import StorageHashable
 from .file_system import Path
 
@@ -43,15 +45,10 @@ if False:
 
 _LOGGER = logger.get_logger()
 
-SHUFFLE_SEED_TYPE = t.Union[
-    t.Literal[
-        'DETERMINISTIC_SHUFFLE',
-        'NO_SHUFFLE',
-        'DO_NOT_USE',
-        'NON_DETERMINISTIC_SHUFFLE',
-    ],
-    np.ndarray,
-]
+SHUFFLE_SEED_TYPE = t.Union[t.Literal["DETERMINISTIC_SHUFFLE", "NO_SHUFFLE",
+                                      "DO_NOT_USE",
+                                      "NON_DETERMINISTIC_SHUFFLE", ],
+                            np.ndarray, ]
 # noinspection PyUnresolvedReferences
 DETERMINISTIC_SHUFFLE = SHUFFLE_SEED_TYPE.__args__[0].__args__[0]
 # noinspection PyUnresolvedReferences
@@ -66,9 +63,7 @@ USE_ALL = slice(None, None, None)
 
 # note that this needs to be yaml serializable so do not have no.ndarray
 # although it is supported by NpyMemMap
-SELECT_TYPE = t.Union[
-    int, slice, t.List[int],
-]
+SELECT_TYPE = t.Union[int, slice, t.List[int], ]
 
 
 @dataclasses.dataclass
@@ -81,8 +76,7 @@ class FileGroupConfig(s.Config):
     # + like hash check e.g. FileGroup, NpyGroup etc.
     # + schema checks e.g. Table
     checked_on: t.List[datetime.datetime] = dataclasses.field(
-        default_factory=list
-    )
+        default_factory=list)
 
     # note that after lot of thinking we decided to have auto hashes in
     # config as config is the place where it is apt to save it ... if we know
@@ -122,19 +116,17 @@ class FileGroupConfig(s.Config):
         else:
             _last_check_time = self.checked_on[-1]
             _delta_time = datetime.datetime.now() - _last_check_time
-            return int(_delta_time.total_seconds()) > \
-                self.check_interval_choice
+            return int(
+                _delta_time.total_seconds()) > self.check_interval_choice
 
     # noinspection DuplicatedCode
     def append_checked_on(self):
         # this can never happen
         if len(self.checked_on) > self.LITERAL.checked_on_list_limit:
-            raise e.code.CodingError(
-                msgs=[
-                    f"This should never happens ... did you try to append "
-                    f"checked_on list multiple times"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"This should never happens ... did you try to append "
+                f"checked_on list multiple times"
+            ])
         # limit the list
         if len(self.checked_on) == self.LITERAL.checked_on_list_limit:
             self.checked_on = self.checked_on[1:]
@@ -144,8 +136,7 @@ class FileGroupConfig(s.Config):
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['file_keys'],
-)
+    things_to_be_cached=["file_keys"], )
 class FileGroup(StorageHashable, abc.ABC):
     """
     todo: While file_group.py is for blob storage. In future we can enable it to
@@ -197,14 +188,12 @@ class FileGroup(StorageHashable, abc.ABC):
     class LITERAL(StorageHashable.LITERAL):
         # used when keys are not defined for file_group ... especially useful
         # when there is only one file in the file group
-        file = 'file'
+        file = "file"
 
     @property
     @util.CacheResult
     def config(self) -> FileGroupConfig:
-        return FileGroupConfig(
-            hashable=self,
-        )
+        return FileGroupConfig(hashable=self, )
 
     @property
     @util.CacheResult
@@ -228,9 +217,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------01
         # Note that if some file_groups are missing we raise error ... either
         # all file_groups should be present or none of them should exist
-        _present_files = [
-            (self.path / fk).exists() for fk in self.file_keys
-        ]
+        _present_files = [(self.path / fk).exists() for fk in self.file_keys]
         _all_files_in_fg_present = all(_present_files)
         _some_files_in_fg_present = any(_present_files)
 
@@ -248,13 +235,11 @@ class FileGroup(StorageHashable, abc.ABC):
                 else:
                     _msg = "But all files in the file group are missing"
 
-                raise e.code.CodingError(
-                    msgs=[
-                        f"State manager files for file group `{self.name}` "
-                        f"are present in dir {self.path}.",
-                        _msg,
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"State manager files for file group `{self.name}` "
+                    f"are present in dir {self.path}.",
+                    _msg,
+                ])
 
         # ----------------------------------------------------------------04
         # if state manager files are not present then return False else if
@@ -275,12 +260,11 @@ class FileGroup(StorageHashable, abc.ABC):
             # expect path to be a dir
             if self.path.isfile():
                 raise e.code.CodingError(
-                    msgs=[
-                        f"We expect path to be a dir for FileGroup"
-                    ]
-                )
+                    msgs=[f"We expect path to be a dir for FileGroup"])
             # look inside path dir
-            for _path in self.path.find(maxdepth=0, detail=False, withdirs=True):
+            for _path in self.path.find(maxdepth=0,
+                                        detail=False,
+                                        withdirs=True):
                 if _path.name in self.file_keys and _path.isfile():
                     continue
                 # anything starting with `_` will be ignored
@@ -303,15 +287,13 @@ class FileGroup(StorageHashable, abc.ABC):
         # if file creation needed do not call this method
         # todo: remove later
         if not self.is_created:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We need to create files before trying to do periodic "
-                    f"check",
-                    f"Please make a call to {self.__class__.__name__}.create",
-                    f"Also make sure that you perform periodic check only "
-                    f"after checking `file_creation_needed` is not True"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We need to create files before trying to do periodic "
+                f"check",
+                f"Please make a call to {self.__class__.__name__}.create",
+                f"Also make sure that you perform periodic check only "
+                f"after checking `file_creation_needed` is not True",
+            ])
 
         # return
         return self.config.periodic_check_needed
@@ -334,7 +316,7 @@ class FileGroup(StorageHashable, abc.ABC):
     def explore(self):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
-        subprocess.Popen(f'explorer {self.path}')
+        subprocess.Popen(f"explorer {self.path}")
 
     # noinspection PyMethodMayBeStatic
     def get_gcp_file_system(self) -> gcsfs.GCSFileSystem:
@@ -346,30 +328,26 @@ class FileGroup(StorageHashable, abc.ABC):
         """
         if platform.system() != "Windows":
             raise e.code.CodingError(
-                msgs=[
-                    "Only supported for windows platform"
-                ]
-            )
+                msgs=["Only supported for windows platform"])
 
         # todo: update path for linux/unix
-        _cred_file = Path.HOME / "AppData" / "Roaming" / "gcloud" / \
-            "application_default_credentials.json"
+        _cred_file = (Path.HOME / "AppData" / "Roaming" / "gcloud" /
+                      "application_default_credentials.json")
 
         if not _cred_file.exists():
-            raise e.code.NotAllowed(
-                msgs=[
-                    "Please make sure that gcloud is installed ...",
-                    "Then run command `gcloud auth application-default login`",
-                    f"This should ideally generate credential file {_cred_file} ...",
-                    "Refer: https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login"
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                "Please make sure that gcloud is installed ...",
+                "Then run command `gcloud auth application-default login`",
+                f"This should ideally generate credential file {_cred_file} ...",
+                "Refer: https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login",
+            ])
 
         _fs = gcsfs.GCSFileSystem(token=_cred_file.as_posix())
 
         return _fs
 
-    def upload_to_gcp(self, bucket_name: str, folder_name: str, file_name: str):
+    def upload_to_gcp(self, bucket_name: str, folder_name: str,
+                      file_name: str):
         """
         Refer:
         https://filesystem-spec.readthedocs.io/en/latest/features.html
@@ -385,8 +363,7 @@ class FileGroup(StorageHashable, abc.ABC):
         if _fs.exists(_file_to_make):
             _LOGGER.warning(
                 msg=f"The file `{_file_to_make}` already exists on GCS "
-                    f"Use different name/location ..."
-            )
+                f"Use different name/location ...")
             return
 
         # this can get buckets but does not work for now
@@ -396,14 +373,14 @@ class FileGroup(StorageHashable, abc.ABC):
         # Zip in memory
         _LOGGER.info(msg=f"Make in memory zip file for {file_name}")
         _zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(
-            file=_zip_buffer, mode='a', compression=zipfile.ZIP_DEFLATED
-        ) as _zf:
+        with zipfile.ZipFile(file=_zip_buffer,
+                             mode="a",
+                             compression=zipfile.ZIP_DEFLATED) as _zf:
             for _f in logger.ProgressBar(
-                iterable=[
-                    self.info.path, self.config.path
-                ] + [self.path / _fk for _fk in self.file_keys],
-                desc="Zipping files", unit=" file"
+                    iterable=[self.info.path, self.config.path] +
+                [self.path / _fk for _fk in self.file_keys],
+                    desc="Zipping files",
+                    unit=" file",
             ):
                 _zf.write(_f, arcname=_f.name)
             _zf.close()
@@ -412,7 +389,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: make progressbar for streamed write
         # with _fs.transaction:  # todo: some issues with transaction
         _LOGGER.info(msg=f"Uploading `{file_name}` to cloud")
-        with _fs.open(_file_to_make, 'wb') as _zf_on_gc:
+        with _fs.open(_file_to_make, "wb") as _zf_on_gc:
             _zf_on_gc.write(_zip_buffer.getvalue())
 
     def get_hashes(self) -> t.Dict[str, str]:
@@ -426,38 +403,31 @@ class FileGroup(StorageHashable, abc.ABC):
             # we assume that the files will be created by now so we expect
             # the state_manager files to be present on the disk
             if not self.is_created:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Never call this until files are created. Only after "
-                        f"that the state files will be present on the disk"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"Never call this until files are created. Only after "
+                    f"that the state files will be present on the disk"
+                ])
 
             # check if auto_hashes present
             if self.config.auto_hashes is None:
                 raise e.code.CodingError(
-                    msgs=[
-                        f"We expect that auto_hashes will be set by now"
-                    ]
-                )
+                    msgs=[f"We expect that auto_hashes will be set by now"])
 
             # return
             return self.config.auto_hashes
 
         # if not auto hash then raise error to inform to override this method
         else:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"Since you have not configured for auto hashing we "
-                    f"expect you to override this method to provide hashes "
-                    f"dict.",
-                    f"Please check:",
-                    {
-                        'class': self.__class__,
-                        'name': self.name
-                    }
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"Since you have not configured for auto hashing we "
+                f"expect you to override this method to provide hashes "
+                f"dict.",
+                f"Please check:",
+                {
+                    "class": self.__class__,
+                    "name": self.name
+                },
+            ])
 
     @classmethod
     def hook_up_methods(cls):
@@ -489,29 +459,25 @@ class FileGroup(StorageHashable, abc.ABC):
         # when is_auto_hash do not override get_hashes else override get_hashes
         if self.is_auto_hash:
             if FileGroup.get_hashes != self.__class__.get_hashes:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"When in auto hashing mode do not override get_hashes",
-                        f"Please check:",
-                        {
-                            'class': self.__class__,
-                            'name': self.name
-                        }
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"When in auto hashing mode do not override get_hashes",
+                    f"Please check:",
+                    {
+                        "class": self.__class__,
+                        "name": self.name
+                    },
+                ])
         else:
             if FileGroup.get_hashes == self.__class__.get_hashes:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"When not in auto hashing mode please override "
-                        f"get_hashes to provide hashes",
-                        f"Please check:",
-                        {
-                            'class': self.__class__,
-                            'name': self.name
-                        }
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"When not in auto hashing mode please override "
+                    f"get_hashes to provide hashes",
+                    f"Please check:",
+                    {
+                        "class": self.__class__,
+                        "name": self.name
+                    },
+                ])
 
         # ---------------------------------------------------------- 03
         # Check if hash strings are of proper length and lower case
@@ -528,10 +494,9 @@ class FileGroup(StorageHashable, abc.ABC):
             for k, _hash in _hashes.items():
                 # check if key is known
                 e.validation.ShouldBeOneOf(
-                    value=k, values=self.file_keys,
-                    msgs=[
-                        f"The key {k} in hashes dict is not known"
-                    ]
+                    value=k,
+                    values=self.file_keys,
+                    msgs=[f"The key {k} in hashes dict is not known"],
                 ).raise_if_failed()
                 # This is in case we want to let code print hash that we want
                 # to supply
@@ -547,35 +512,28 @@ class FileGroup(StorageHashable, abc.ABC):
                 #     )
                 # check if value is lower case
                 if _hash.lower() != _hash:
-                    raise e.code.NotAllowed(
-                        msgs=[
-                            f"For consistency make sure that hashes are "
-                            f"lower case",
-                            f"Found a hash {_hash!r} with upper case "
-                            f"letter for key {k!r}."
-                        ]
-                    )
+                    raise e.code.NotAllowed(msgs=[
+                        f"For consistency make sure that hashes are "
+                        f"lower case",
+                        f"Found a hash {_hash!r} with upper case "
+                        f"letter for key {k!r}.",
+                    ])
 
             # For file group it is mandatory to know all file hashes when it is
             # not auto hash so check if all hashes provided
             for k in self.file_keys:
                 if k not in _hashes_keys:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Please provide hash for file_key `{k}` in "
-                            f"`get_hashes` method of class {self.__class__}"
-                        ]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"Please provide hash for file_key `{k}` in "
+                        f"`get_hashes` method of class {self.__class__}"
+                    ])
 
         # ---------------------------------------------------------- 04
         # check if duplicate file_keys
         if len(self.file_keys) != len(set(self.file_keys)):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"We found some duplicates in self.file_keys",
-                    self.file_keys
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"We found some duplicates in self.file_keys", self.file_keys
+            ])
 
     def init(self):
         # ----------------------------------------------------------- 01
@@ -593,12 +551,10 @@ class FileGroup(StorageHashable, abc.ABC):
             _info_backup_exists = _info_backup_path.exists()
             _config_backup_exists = _config_backup_path.exists()
             if _info_backup_exists ^ _config_backup_exists:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We expect both info and config backup file to be "
-                        f"present"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"We expect both info and config backup file to be "
+                    f"present"
+                ])
             if not _info_backup_exists:
                 # create backup
                 self.info.backup()
@@ -639,25 +595,21 @@ class FileGroup(StorageHashable, abc.ABC):
         # The check() must be called only needed to catch some coding errors we
         # do this
         if not self.is_created:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Do not try to check until all files are created, "
-                    f"make sure to call {self.__class__.__name__}.create()",
-                    f"Also make sure that you are first checking property "
-                    f"`file_creation_needed` before calling check()"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Do not try to check until all files are created, "
+                f"make sure to call {self.__class__.__name__}.create()",
+                f"Also make sure that you are first checking property "
+                f"`file_creation_needed` before calling check()",
+            ])
         # do not check for period if force check
         if not force:
             if not self.periodic_check_needed:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Find the bug in the code, you need to make sure if "
-                        f"periodic check is needed using property "
-                        f"self.periodic_check_needed then only call this "
-                        f"function"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"Find the bug in the code, you need to make sure if "
+                    f"periodic check is needed using property "
+                    f"self.periodic_check_needed then only call this "
+                    f"function"
+                ])
 
     def do_hash_check(self, compute: bool) -> t.Dict:
         """
@@ -673,9 +625,8 @@ class FileGroup(StorageHashable, abc.ABC):
         _correct_hashes = {} if compute else self.get_hashes()
         _failed_hashes = {}
         _computed_hashes = {}
-        _file_paths = {
-            fk: self.path/fk for fk in self.file_keys
-        }  # type: t.Dict[str, Path]
+        _file_paths = {fk: self.path / fk
+                       for fk in self.file_keys}  # type: t.Dict[str, Path]
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
         # needed are similar
@@ -684,15 +635,14 @@ class FileGroup(StorageHashable, abc.ABC):
         else:
             _title = f"Check hash for fg: {self.group_by}>>{self.name}"
         _LOGGER.info(_title)
-        _hash_check_panel = richy.Progress.for_download_and_hashcheck(title=_title)
+        _hash_check_panel = richy.Progress.for_download_and_hashcheck(
+            title=_title)
 
         # ------------------------------------------------------ 02
         # now add tasks
         for fk in self.file_keys:
-            _lengths[fk] = _file_paths[fk].stat()['size']
-            _hash_check_panel.add_task(
-                task_name=fk, total=_lengths[fk]
-            )
+            _lengths[fk] = _file_paths[fk].stat()["size"]
+            _hash_check_panel.add_task(task_name=fk, total=_lengths[fk])
 
         # ------------------------------------------------------ 03
         # now download files
@@ -701,15 +651,13 @@ class FileGroup(StorageHashable, abc.ABC):
             for fk in self.file_keys:
                 _hash_module = hashlib.sha256()
                 # get task id
-                with _file_paths[fk].open(mode='rb') as fb:
+                with _file_paths[fk].open(mode="rb") as fb:
                     _new_chunk_size = min(_lengths[fk] // 10, _chunk_size)
                     # compute
-                    for _chunk in iter(lambda: fb.read(_chunk_size), b''):
+                    for _chunk in iter(lambda: fb.read(_chunk_size), b""):
                         _hash_module.update(_chunk)
-                        _hash_check_panel.update(
-                            task_name=fk,
-                            advance=len(_chunk)
-                        )
+                        _hash_check_panel.update(task_name=fk,
+                                                 advance=len(_chunk))
                     fb.close()
                     _computed_hash = _hash_module.hexdigest()
                 # make dicts to return
@@ -721,12 +669,13 @@ class FileGroup(StorageHashable, abc.ABC):
                             state="failed",
                         )
                         _failed_hashes[fk] = {
-                            'correct  ': _correct_hashes[fk],
-                            'computed ': _computed_hash,
+                            "correct  ": _correct_hashes[fk],
+                            "computed ": _computed_hash,
                         }
 
         # ------------------------------------------------------ 03
-        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+        _total_seconds = (datetime.datetime.now() -
+                          _start_time).total_seconds()
         _LOGGER.info(f"Finished in {_total_seconds} seconds")
 
         # ------------------------------------------------------ 04
@@ -753,30 +702,23 @@ class FileGroup(StorageHashable, abc.ABC):
             self.info.delete()
             self.config.delete()
             # raise error
-            raise e.code.CodingError(
-                msgs=[
-                    f"Hashes for some files did not match. ",
-                    f"FileGroup: {self.name}",
-                    f"Check below",
-                    _failed_hashes,
-                    f"Check file system {self.path}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Hashes for some files did not match. ",
+                f"FileGroup: {self.name}",
+                f"Check below",
+                _failed_hashes,
+                f"Check file system {self.path}",
+            ])
 
     # noinspection PyUnusedLocal
-    def check_post_runner(
-        self, *, hooked_method_return_value: t.Any
-    ):
+    def check_post_runner(self, *, hooked_method_return_value: t.Any):
 
         # since things are now checked write to disk but before that make
         # sure to add checked on info
         self.config.append_checked_on()
         ...
 
-    def get_files_pre_runner(
-        self, *,
-        file_keys: t.List[str]
-    ):
+    def get_files_pre_runner(self, *, file_keys: t.List[str]):
         """
 
         todo:
@@ -795,59 +737,47 @@ class FileGroup(StorageHashable, abc.ABC):
             # ----------------------------------------------------------01.01
             # check if in file keys
             if file_key not in self.file_keys:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The supplied `file_key={file_key}` to "
-                        f"`{self.__class__}.get_file` method is not one of:",
-                        self.file_keys
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"The supplied `file_key={file_key}` to "
+                    f"`{self.__class__}.get_file` method is not one of:",
+                    self.file_keys,
+                ])
 
         # --------------------------------------------------------------02
         # check if created
         if not self.is_created:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Make sure to create files for instance of type "
-                    f"{self.__class__} before calling `get_files()`"
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"Make sure to create files for instance of type "
+                f"{self.__class__} before calling `get_files()`"
+            ])
 
         # --------------------------------------------------------------03
         # if periodic check needed
         if self.periodic_check_needed:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Make sure to perform check before using `get_file()` "
-                    f"for class {self.__class__}"
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"Make sure to perform check before using `get_file()` "
+                f"for class {self.__class__}"
+            ])
 
         # --------------------------------------------------------------04
         # delete if outdated
         if self.is_outdated:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Files are out dated for class {self.__class__}. You "
-                    f"need to delete it."
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"Files are out dated for class {self.__class__}. You "
+                f"need to delete it."
+            ])
 
     def get_files(
-        self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, t.Union[Path, "NpyMemMap"]]:
+            self, *,
+            file_keys: t.List[str]) -> t.Dict[str, t.Union[Path, "NpyMemMap"]]:
         """
         Default is to return Path
         """
-        return {
-            file_key: self.path / file_key
-            for file_key in file_keys
-        }
+        return {file_key: self.path / file_key for file_key in file_keys}
 
     # noinspection PyUnusedLocal
-    def get_files_post_runner(
-            self, *, hooked_method_return_value: t.Dict[str, t.Any]
-    ):
+    def get_files_post_runner(self, *,
+                              hooked_method_return_value: t.Dict[str, t.Any]):
         # --------------------------------------------------------------01
         # we are getting data so update the access info
         self.config.append_last_accessed_on()
@@ -872,15 +802,13 @@ class FileGroup(StorageHashable, abc.ABC):
         # if unknown files present throw error
         _unknown_files = self.unknown_paths_on_disk
         if bool(_unknown_files):
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"We were trying to create files for class "
-                    f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in dir `{self.path}` but, we "
-                    f"found below unknown files",
-                    [f.name for f in _unknown_files]
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"We were trying to create files for class "
+                f"{self.__class__.__name__!r} with base name "
+                f"{self.name!r} in dir `{self.path}` but, we "
+                f"found below unknown files",
+                [f.name for f in _unknown_files],
+            ])
 
     def create(self) -> t.List[Path]:
         """
@@ -905,11 +833,10 @@ class FileGroup(StorageHashable, abc.ABC):
 
         _start_time = datetime.datetime.now()
 
-        with richy.ProgressStatusPanel(
-            title=_title,
-        ) as _status:
+        with richy.ProgressStatusPanel(title=_title, ) as _status:
 
-            for k in _status.progress.track(self.file_keys, task_name="create"):
+            for k in _status.progress.track(self.file_keys,
+                                            task_name="create"):
 
                 # get expected file from key
                 _expected_file = self.path / k
@@ -920,41 +847,37 @@ class FileGroup(StorageHashable, abc.ABC):
                     continue
 
                 # if expected file not present then create
-                _created_file = _expected_file if _expected_file.exists() else \
-                    self.create_file(file_key=k, status_panel=_status)
+                _created_file = (_expected_file if _expected_file.exists() else
+                                 self.create_file(file_key=k,
+                                                  status_panel=_status))
 
                 # if check if created and expected file is same
                 if _expected_file != _created_file:
                     if not isinstance(_created_file, Path):
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"You are supported to return instance of {Path} ... "
-                                f"instead found {type(_created_file)}"
-                            ]
-                        )
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"The {self.__class__}.create() returns file path "
-                            f"which is not expected for key {k!r}",
-                            {
-                                "Expected": _expected_file,
-                                "Found": _created_file,
-                            },
-                        ]
-                    )
+                        raise e.code.CodingError(msgs=[
+                            f"You are supported to return instance of {Path} ... "
+                            f"instead found {type(_created_file)}"
+                        ])
+                    raise e.code.CodingError(msgs=[
+                        f"The {self.__class__}.create() returns file path "
+                        f"which is not expected for key {k!r}",
+                        {
+                            "Expected": _expected_file,
+                            "Found": _created_file,
+                        },
+                    ])
 
                 # append
                 _ret.append(_expected_file)
 
-        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+        _total_seconds = (datetime.datetime.now() -
+                          _start_time).total_seconds()
         _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
 
         # return list of created files
         return _ret
 
-    def create_post_runner(
-            self, *, hooked_method_return_value: t.List[Path]
-    ):
+    def create_post_runner(self, *, hooked_method_return_value: t.List[Path]):
         """
         The files are now created let us now do post handling
         # todo: if failed delete files that are created
@@ -967,63 +890,51 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------01.01
         # created files should be `list` and should not be empty
         if not isinstance(created_fs, list):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Expected a list from {self.__class__.create_file} but "
-                    f"instead found returned value of type "
-                    f"{type(created_fs)}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Expected a list from {self.__class__.create_file} but "
+                f"instead found returned value of type "
+                f"{type(created_fs)}"
+            ])
         # ----------------------------------------------------------------01.02
         # check if created file is proper and if it is on disk
         for f in created_fs:
             if not isinstance(f, Path):
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Method {self.create_file} should return the list of "
-                        f"files created, instead found {created_fs}"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"Method {self.create_file} should return the list of "
+                    f"files created, instead found {created_fs}"
+                ])
             if f not in expected_fs:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"File {f.name!r} generated by create method of class "
-                        f"{self.__class__} does not correspond to one of the "
-                        f"file keys given by property self.file_keys",
-                        self.file_keys
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"File {f.name!r} generated by create method of class "
+                    f"{self.__class__} does not correspond to one of the "
+                    f"file keys given by property self.file_keys",
+                    self.file_keys,
+                ])
             if not f.exists():
-                raise e.code.CodingError(
-                    msgs=[
-                        f"One of the file {f} you are returning from "
-                        f"self.create_file() is not present on the disk"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"One of the file {f} you are returning from "
+                    f"self.create_file() is not present on the disk"
+                ])
         # ----------------------------------------------------------------01.03
         # check if all key_paths i.e expected files are generated
         for f in expected_fs:
             if f not in created_fs:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We expect file {f.name} to be created",
-                        f"But the file was not created"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"We expect file {f.name} to be created",
+                    f"But the file was not created",
+                ])
 
         # ----------------------------------------------------------------02
         # if unknown files present throw error
         _unknown_files = self.unknown_paths_on_disk
         if bool(_unknown_files):
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"We have created files for class "
-                    f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in dir {self.path}. Below "
-                    f"unknown files were also created along with it.",
-                    [f.name for f in _unknown_files]
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"We have created files for class "
+                f"{self.__class__.__name__!r} with base name "
+                f"{self.name!r} in dir {self.path}. Below "
+                f"unknown files were also created along with it.",
+                [f.name for f in _unknown_files],
+            ])
 
         # ----------------------------------------------------------------03
         # make files read only
@@ -1044,12 +955,10 @@ class FileGroup(StorageHashable, abc.ABC):
         # will get set to None and then here we update it after computing hashes
         if self.is_auto_hash:
             if self.config.auto_hashes is not None:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We just generated files so we do not expect auto "
-                        f"hashes to be present in the config"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"We just generated files so we do not expect auto "
+                    f"hashes to be present in the config"
+                ])
             _auto_hashes = self.do_hash_check(compute=True)
             self.config.auto_hashes = _auto_hashes
 
@@ -1058,9 +967,10 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     @abc.abstractmethod
-    def create_file(
-        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
-    ) -> Path:
+    def create_file(self,
+                    *,
+                    file_key: str,
+                    status_panel: richy.ProgressStatusPanel = None) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
         create files on first call and subsequent file_keys will just fake
@@ -1092,13 +1002,13 @@ class FileGroup(StorageHashable, abc.ABC):
             # just let us warn user
             _LOGGER.warning(
                 msg=f"Deleting files automatically for file group "
-                    f"{self.__class__.__name__!r}",
+                f"{self.__class__.__name__!r}",
                 msgs=[
                     f"name: {self.name!r}",
                     f"path: {self.path}",
                     f"This is intentional as you have set "
-                    f"`config.DEBUG_HASHABLE_STATE = True`"
-                ]
+                    f"`config.DEBUG_HASHABLE_STATE = True`",
+                ],
             )
 
         # ---------------------------------------------------------------02
@@ -1128,28 +1038,23 @@ class FileGroup(StorageHashable, abc.ABC):
             # -----------------------------------------------------------03.02
             # delete all files for the group
             _LOGGER.info(msg=f"Deleting files for `{self.name}` ...")
-            for fk in richy.Progress.simple_track(
-                self.file_keys, description="Deleting ..."
-            ):
+            for fk in richy.Progress.simple_track(self.file_keys,
+                                                  description="Deleting ..."):
                 _key_path = self.path / fk
                 if _key_path.exists():
                     _key_path.rm_file()
                 else:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"If you deleted files manually this can happen",
-                            f"But if you didnt then this might be a bug",
-                            f"We were not able to find file {fk} for file_group "
-                            f"with path {self.path}"
-                        ]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"If you deleted files manually this can happen",
+                        f"But if you didnt then this might be a bug",
+                        f"We were not able to find file {fk} for file_group "
+                        f"with path {self.path}",
+                    ])
         else:
-            raise e.code.ExitGracefully(
-                msgs=[
-                    "We will terminate the program as you requested "
-                    "not to delete files..."
-                ]
-            )
+            raise e.code.ExitGracefully(msgs=[
+                "We will terminate the program as you requested "
+                "not to delete files..."
+            ])
 
 
 # noinspection PyArgumentList
@@ -1184,10 +1089,8 @@ class NpyMemMap:
         self.file_path = file_path
         # check if file_path exists
         if not file_path.is_file():
-            e.io.FileMustBeOnDiskOrNetwork(
-                path=file_path,
-                msgs=[]
-            ).raise_if_failed()
+            e.io.FileMustBeOnDiskOrNetwork(path=file_path,
+                                           msgs=[]).raise_if_failed()
 
         # ------------------------------------------------------------ 02
         # load memmap temporarily here to set some useful vars
@@ -1218,14 +1121,8 @@ class NpyMemMap:
         return self[:]
 
     def __getitem__(
-        self,
-        item: t.Union[
-            SELECT_TYPE,
-            t.Tuple[
-                SELECT_TYPE, ...
-            ]
-        ]
-    ) -> np.ndarray:
+            self, item: t.Union[SELECT_TYPE, t.Tuple[SELECT_TYPE,
+                                                     ...]]) -> np.ndarray:
         """
 
         todo: Performance analysis of randomly accessing numpy mem maps
@@ -1242,36 +1139,30 @@ class NpyMemMap:
         try:
             _call_helper = self.call_helper
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"When using with statement make sure to call __call__ "
-                    f"method so that call_helper attribute is available."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"When using with statement make sure to call __call__ "
+                f"method so that call_helper attribute is available."
+            ])
 
         # ---------------------------------------------------------- 02
         # if do_not_use raise error
         if _call_helper.do_not_use:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"You opted do_not_use=True hence you cannot use "
-                    f"__getitem__ method",
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"You opted do_not_use=True hence you cannot use "
+                f"__getitem__ method",
+            ])
 
         # ---------------------------------------------------------- 03
         # if single valued memmap then make sure that item is USE_ALL and
         # return ... no need to check for shuffle indices
         if len(_call_helper.memmap) == 1:
             if item != USE_ALL:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"For sanity we force you to use `:` while indexing "
-                        f"NpyMemMap's with single value",
-                        f"This allows to make sure that things are as "
-                        f"intended while accessing with shuffled indices"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"For sanity we force you to use `:` while indexing "
+                    f"NpyMemMap's with single value",
+                    f"This allows to make sure that things are as "
+                    f"intended while accessing with shuffled indices",
+                ])
             return _call_helper.memmap[USE_ALL]
 
         # ---------------------------------------------------------- 03
@@ -1285,19 +1176,15 @@ class NpyMemMap:
                 if isinstance(item[0], (int, slice, list, np.ndarray)):
                     item = (_call_helper.shuffle_indices[item[0]], *item[1:])
                 else:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"First element of tuple is not a int or slice "
-                            f"instead found type {type(item[0])}"
-                        ]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"First element of tuple is not a int or slice "
+                        f"instead found type {type(item[0])}"
+                    ])
             else:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The item can be int, slice or tuple instead found "
-                        f"type {type(item)}"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"The item can be int, slice or tuple instead found "
+                    f"type {type(item)}"
+                ])
 
         # ---------------------------------------------------------- 04
         # return
@@ -1315,7 +1202,7 @@ class NpyMemMap:
                 msgs=[
                     f"Some coding error we are sure that the NpyMemMap is "
                     f"opened with `shuffle_seed=NO_SHUFFLE`"
-                ]
+                ],
             ).raise_if_failed()
             return _call_helper.memmap
         # ---------------------------------------------------------- 04.02
@@ -1329,12 +1216,10 @@ class NpyMemMap:
             return _call_helper.memmap[
                 # this one is first dimension and works on memmap mostly used
                 # for shuffling
-                item[0]
-            ][
-                # remaining items ... note that slice(None, None, None) is
-                # used to select all elements after applying index item[0]
-                (USE_ALL, *item[1:])
-            ]
+                item[0]][
+                    # remaining items ... note that slice(None, None, None) is
+                    # used to select all elements after applying index item[0]
+                    (USE_ALL, *item[1:])]
         else:
             return _call_helper.memmap[item]
 
@@ -1348,15 +1233,13 @@ class NpyMemMap:
             # noinspection PyUnresolvedReferences
             _ = self.call_helper
             # we do not expect attribute call_helper here
-            raise e.code.CodingError(
-                msgs=[
-                    f"Call was already called on the NpyMemmap instance.",
-                    f"To avoid this you need to call __call__ with "
-                    f"help of `with` statement.",
-                    f"Also please check if the iterator opened using __call__ "
-                    f"is properly exhausted"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Call was already called on the NpyMemmap instance.",
+                f"To avoid this you need to call __call__ with "
+                f"help of `with` statement.",
+                f"Also please check if the iterator opened using __call__ "
+                f"is properly exhausted",
+            ])
         except AttributeError:
             # pass that's what we want
             ...
@@ -1375,12 +1258,10 @@ class NpyMemMap:
         try:
             _ = self.call_helper
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"When using with statement make sure to call __call__ "
-                    f"method so that call_helper attribute is available."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"When using with statement make sure to call __call__ "
+                f"method so that call_helper attribute is available."
+            ])
 
         # return self
         return self
@@ -1401,12 +1282,10 @@ class NpyMemMap:
         try:
             _ = self.call_helper
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"When using with statement make sure to call __call__ "
-                    f"method so that call_helper attribute is available."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"When using with statement make sure to call __call__ "
+                f"method so that call_helper attribute is available."
+            ])
         # reset
         del self.call_helper
         gc.collect()
@@ -1416,15 +1295,13 @@ class NpyMemMap:
         try:
             _ = self.call_helper
             # we do not expect attribute call_helper here
-            raise e.code.CodingError(
-                msgs=[
-                    f"May be you have not exited properly from within with "
-                    f"statement.",
-                    f"We expect call_helper attribute to be deleted by now",
-                    f"To avoid this you need to call __call__ with "
-                    f"help of `with` statement."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"May be you have not exited properly from within with "
+                f"statement.",
+                f"We expect call_helper attribute to be deleted by now",
+                f"To avoid this you need to call __call__ with "
+                f"help of `with` statement.",
+            ])
         except AttributeError:
             # pass that's what we want
             ...
@@ -1442,22 +1319,18 @@ class NpyMemMap:
         try:
             call_helper = self.call_helper
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect you to use `with` statement and make sure to "
-                    f"call __call__ method on it"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect you to use `with` statement and make sure to "
+                f"call __call__ method on it"
+            ])
 
         # make sure that do_not_use is set
         if not call_helper.do_not_use:
-            raise e.code.CodingError(
-                msgs=[
-                    f"You are using method {self.get_raw_memmap} and we "
-                    f"expect you to set `shuffle_seed=s.DO_NOT_USE` as you "
-                    f"want to use underlying memmap directly"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"You are using method {self.get_raw_memmap} and we "
+                f"expect you to set `shuffle_seed=s.DO_NOT_USE` as you "
+                f"want to use underlying memmap directly"
+            ])
 
         # return
         return self.call_helper.memmap
@@ -1478,22 +1351,18 @@ class NpyMemMap:
         try:
             call_helper = self.call_helper
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect you to use `with` statement and make sure to "
-                    f"call __call__ method on it"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect you to use `with` statement and make sure to "
+                f"call __call__ method on it"
+            ])
 
         # make sure that do_not_use is set
         if not call_helper.do_not_use:
-            raise e.code.CodingError(
-                msgs=[
-                    f"You are using method {self.random_examples} and we "
-                    f"expect you to set `shuffle_seed=s.DO_NOT_USE` as we will "
-                    f"access underlying memmap directly"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"You are using method {self.random_examples} and we "
+                f"expect you to set `shuffle_seed=s.DO_NOT_USE` as we will "
+                f"access underlying memmap directly"
+            ])
 
         # get sample indices
         np.random.seed(None)  # resets seed ... makes it non deterministic
@@ -1507,7 +1376,7 @@ class NpyMemMapCallHelper:
 
     @property
     def is_shuffled(self) -> bool:
-        return hasattr(self, 'shuffle_indices')
+        return hasattr(self, "shuffle_indices")
 
     def __init__(
         self,
@@ -1517,7 +1386,7 @@ class NpyMemMapCallHelper:
         # get memmap and length
         # noinspection PyTypeChecker
         self.memmap = np.load(npy_memmap.file_path, mmap_mode="r")
-        self.do_not_use = (str(shuffle_seed) == DO_NOT_USE)
+        self.do_not_use = str(shuffle_seed) == DO_NOT_USE
 
         # if length is 1 we cannot do any shuffle as the file may for single
         # element and as such we need not do anything
@@ -1535,24 +1404,20 @@ class NpyMemMapCallHelper:
 
         # if np.ndarray then check shape
         if isinstance(shuffle_seed, np.ndarray):
-            if not np.array_equal(
-                np.unique(shuffle_seed),
-                np.arange(_len, dtype=shuffle_seed.dtype)
-            ):
-                raise e.code.CodingError(
-                    msgs=[
-                        f"While supplying shuffle seed as shuffle indices "
-                        f"make sure that it has all values from 0 to {_len}",
-                        f"That is it must be a valid indices array that can "
-                        f"index entire underlying numpy memmap"
-                    ]
-                )
+            if not np.array_equal(np.unique(shuffle_seed),
+                                  np.arange(_len, dtype=shuffle_seed.dtype)):
+                raise e.code.CodingError(msgs=[
+                    f"While supplying shuffle seed as shuffle indices "
+                    f"make sure that it has all values from 0 to {_len}",
+                    f"That is it must be a valid indices array that can "
+                    f"index entire underlying numpy memmap",
+                ])
             self.shuffle_indices = shuffle_seed
             return
 
         # if DETERMINISTIC_SHUFFLE reassign it with deterministic seed
         if str(shuffle_seed) in [
-            DETERMINISTIC_SHUFFLE, NON_DETERMINISTIC_SHUFFLE
+                DETERMINISTIC_SHUFFLE, NON_DETERMINISTIC_SHUFFLE
         ]:
             if str(shuffle_seed) == NON_DETERMINISTIC_SHUFFLE:
                 shuffle_seed = None
@@ -1565,10 +1430,7 @@ class NpyMemMapCallHelper:
 
         # should not happen as above cases should handle everything
         raise e.code.CodingError(
-            msgs=[
-                f"Not able to process shuffle_seed {shuffle_seed}"
-            ]
-        )
+            msgs=[f"Not able to process shuffle_seed {shuffle_seed}"])
 
     def __del__(self):
         del self.memmap
@@ -1578,9 +1440,7 @@ class NpyMemMapCallHelper:
 
 
 @dataclasses.dataclass(frozen=True)
-@m.RuleChecker(
-    things_not_to_be_overridden=['get_files']
-)
+@m.RuleChecker(things_not_to_be_overridden=["get_files"])
 class NpyFileGroup(FileGroup, abc.ABC):
     """
     Rationale: In all subclasses do not cache the properties that return
@@ -1601,9 +1461,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
     @property
     @util.CacheResult
     def lengths(self) -> t.Dict[str, int]:
-        return {
-            k: len(v) for k, v in self.all_npy_mem_maps_cache.items()
-        }
+        return {k: len(v) for k, v in self.all_npy_mem_maps_cache.items()}
 
     @property
     def has_arbitrary_lengths(self) -> bool:
@@ -1632,7 +1490,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # If this breaks richy rendering then log only when not __call__ i.e.,
         # uncomment code below ...
         # If self.internal.on_call_kwargs is None:
-        _LOGGER.info(f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
+        _LOGGER.info(
+            f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
 
         # Sometimes this can be called without using with context and no status
         # panel might be available ...
@@ -1640,11 +1499,11 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # so we allow users to access without with context ...
         if self.internal.on_call_kwargs is not None:
             status_panel = self.internal.on_call_kwargs.get(
-                'status_panel', None
-            )  # type: richy.ProgressStatusPanel
+                "status_panel", None)  # type: richy.ProgressStatusPanel
             if status_panel is not None:
                 status_panel.status.update(
-                    f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
+                    f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}"
+                )
 
         # load memmaps
         _ret = {}
@@ -1656,7 +1515,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
     # noinspection PyMethodOverriding
     def __call__(
-        self, *,
+        self,
+        *,
         status_panel: t.Optional[richy.ProgressStatusPanel],
         shuffle_seed: SHUFFLE_SEED_TYPE,
     ) -> "NpyFileGroup":
@@ -1672,14 +1532,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
         super().on_enter()
 
         # get kwargs passed in call
-        shuffle_seed = \
-            self.internal.on_call_kwargs[
-                'shuffle_seed'
-            ]  # type: SHUFFLE_SEED_TYPE
-        status_panel = \
-            self.internal.on_call_kwargs[
-                'status_panel'
-            ]  # type: richy.ProgressStatusPanel
+        shuffle_seed = self.internal.on_call_kwargs[
+            "shuffle_seed"]  # type: SHUFFLE_SEED_TYPE
+        status_panel = self.internal.on_call_kwargs[
+            "status_panel"]  # type: richy.ProgressStatusPanel
 
         # log
         _total = len(self.file_keys)
@@ -1698,10 +1554,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
             v.__enter__()
 
     def on_exit(self, exc_type, exc_val, exc_tb):
-        status_panel = \
-            self.internal.on_call_kwargs[
-                'status_panel'
-            ]  # type: richy.ProgressStatusPanel
+        status_panel = self.internal.on_call_kwargs[
+            "status_panel"]  # type: richy.ProgressStatusPanel
         _total = len(self.file_keys)
         for i, k in enumerate(self.file_keys):
             if status_panel is not None:
@@ -1714,21 +1568,17 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # call super
         super().on_exit()
 
-    def get_files(
-        self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, NpyMemMap]:
+    def get_files(self, *, file_keys: t.List[str]) -> t.Dict[str, NpyMemMap]:
         # get spinner
         _spinner = logger.Spinner.get_last_spinner()
 
         # if spinner is None
         if _spinner is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We recently added spinner support so we expect that "
-                    f"get_files method is called from with with context of "
-                    f"active Spinner ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We recently added spinner support so we expect that "
+                f"get_files method is called from with with context of "
+                f"active Spinner ..."
+            ])
 
         # container
         _ret = {}
@@ -1737,27 +1587,24 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _num_files = len(file_keys)
         for i, file_key in enumerate(file_keys):
             # log
-            _spinner.text = f"{(i+1):03d}/{_num_files:03d} fetching file" \
-                            f" {file_key}"
+            _spinner.text = f"{(i+1):03d}/{_num_files:03d} fetching file" f" {file_key}"
 
             # get data
-            _data = NpyMemMap(file_path=self.path / file_key,)
+            _data = NpyMemMap(file_path=self.path / file_key, )
 
             # redundant check ... this was anyways checked while file creation
             # exists here for extra safety
             if len(_data) != self.shape[file_key][0]:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"This must be same and should be already checked in "
-                        f"{self.__class__.create_post_runner}",
-                        {
-                            "file_key": file_key,
-                            "found_shape": _data.shape,
-                            "expected_shape": self.shape[file_key],
-                        },
-                        f"Check class {self.__class__}"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"This must be same and should be already checked in "
+                    f"{self.__class__.create_post_runner}",
+                    {
+                        "file_key": file_key,
+                        "found_shape": _data.shape,
+                        "expected_shape": self.shape[file_key],
+                    },
+                    f"Check class {self.__class__}",
+                ])
 
             # store data in container
             _ret[file_key] = _data
@@ -1776,12 +1623,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # if file exists raise error
         if _file.exists():
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"The file {_file} already exists so we cannot overwrite "
-                    f"the file. Please delete it if possible."
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"The file {_file} already exists so we cannot overwrite "
+                f"the file. Please delete it if possible."
+            ])
 
         # save numpy data
         if isinstance(npy_data, np.ndarray):
@@ -1789,13 +1634,11 @@ class NpyFileGroup(FileGroup, abc.ABC):
         elif isinstance(npy_data, dict):
             util.npy_record_save(file=_file, npy_record_dict=npy_data)
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Unrecognized type of npy_data {type(npy_data)!r} for "
-                    f"file_key={file_key!r}",
-                    f"Expected numpy array or dict of numpy array"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Unrecognized type of npy_data {type(npy_data)!r} for "
+                f"file_key={file_key!r}",
+                f"Expected numpy array or dict of numpy array",
+            ])
 
         # return
         return _file
@@ -1810,36 +1653,30 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _dtype_keys.sort()
         _keys.sort()
         if _keys != _shape_keys:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The file_keys and the keys of shape dict do not match",
-                    {
-                        'file_keys': _keys,
-                        'shape_dict_keys': _shape_keys
-                    },
-                    f"Make sure to override property `shape` in class "
-                    f"{self.__class__} appropriately."
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"The file_keys and the keys of shape dict do not match",
+                {
+                    "file_keys": _keys,
+                    "shape_dict_keys": _shape_keys
+                },
+                f"Make sure to override property `shape` in class "
+                f"{self.__class__} appropriately.",
+            ])
         if _keys != _dtype_keys:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The file_keys and the keys of dtype dict do not match",
-                    {
-                        'file_keys': _keys,
-                        'dtype_dict_keys': _dtype_keys
-                    },
-                    f"Make sure to override property `dtype` in class "
-                    f"{self.__class__} appropriately."
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"The file_keys and the keys of dtype dict do not match",
+                {
+                    "file_keys": _keys,
+                    "dtype_dict_keys": _dtype_keys
+                },
+                f"Make sure to override property `dtype` in class "
+                f"{self.__class__} appropriately.",
+            ])
 
         # call super and return
         return super().create_pre_runner()
 
-    def create_post_runner(
-        self, *, hooked_method_return_value: t.List[Path]
-    ):
+    def create_post_runner(self, *, hooked_method_return_value: t.List[Path]):
         # ----------------------------------------------------------------01
         # load as memmaps
         _npy_memmaps = {}
@@ -1848,9 +1685,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # Note that files should be created on the disk if everything is
             # fine but state_manager files will be not on the disk and hence
             # we cannot use `self.get_file()`. Hence we rely on `s.NpyMemMap`.
-            _npy_memmaps[file_key] = NpyMemMap(
-                file_path=self.path / file_key,
-            )
+            _npy_memmaps[file_key] = NpyMemMap(file_path=self.path /
+                                               file_key, )
 
         # ----------------------------------------------------------------02
         # check shape, dtype
@@ -1868,28 +1704,24 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # ------------------------------------------------------------02.03
             # check dtype
             if _npy_memmap.dtype != _dtypes[file_key]:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Type mismatch for files created.",
-                        f"The data type for loaded numpy file from disk for "
-                        f"file_key `{file_key}` does not match.",
-                        f"Expected {self.dtype[file_key]} but found "
-                        f"{_npy_memmap.dtype}",
-                        f"Check file path: {self.path}"
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Type mismatch for files created.",
+                    f"The data type for loaded numpy file from disk for "
+                    f"file_key `{file_key}` does not match.",
+                    f"Expected {self.dtype[file_key]} but found "
+                    f"{_npy_memmap.dtype}",
+                    f"Check file path: {self.path}",
+                ])
             # ------------------------------------------------------------02.03
             # check shape
             if _npy_memmap.shape != _shapes[file_key]:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Shape mismatch for files created.",
-                        f"The shape for loaded numpy file from disk for "
-                        f"file_key `{file_key}` does not match.",
-                        f"Expected {_shapes[file_key]} but found "
-                        f"{_npy_memmap.shape}"
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Shape mismatch for files created.",
+                    f"The shape for loaded numpy file from disk for "
+                    f"file_key `{file_key}` does not match.",
+                    f"Expected {_shapes[file_key]} but found "
+                    f"{_npy_memmap.shape}",
+                ])
 
         # ----------------------------------------------------------------03
         # delete memmaps ... so that it is quickly eligible for garbage
@@ -1916,13 +1748,8 @@ class TempFileGroup(FileGroup, abc.ABC):
     def _root_dir(self) -> Path:
         return settings.Dir.TEMPORARY
 
-    def get_files(
-            self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
-        return {
-            file_key: self.path / file_key
-            for file_key in file_keys
-        }
+    def get_files(self, *, file_keys: t.List[str]) -> t.Dict[str, Path]:
+        return {file_key: self.path / file_key for file_key in file_keys}
 
     def get_file(self, file_key: str) -> Path:
         return self.get_files(file_keys=[file_key])[file_key]
@@ -1992,9 +1819,8 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         # ------------------------------------------------------ 01
         # get details
         _chunk_size = 1024 * 50
-        _file_paths = {
-            fk: self.path/fk for fk in self.file_keys
-        }  # type: t.Dict[str, Path]
+        _file_paths = {fk: self.path / fk
+                       for fk in self.file_keys}  # type: t.Dict[str, Path]
         _urls = self.get_urls()
         _raise_error = False
         _errors = {}
@@ -2002,15 +1828,16 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         _lengths = {}
         for fk in self.file_keys:
             if _file_paths[fk].exists():
-                _lengths[fk] = _file_paths[fk].stat()['size']
+                _lengths[fk] = _file_paths[fk].stat()["size"]
                 continue
             try:
                 _response = requests.get(_urls[fk], stream=True)
                 try:
-                    _length = int(_response.headers['content-length'])
+                    _length = int(_response.headers["content-length"])
                     _lengths[fk] = _length
                 except Exception as _ee:
-                    raise Exception("error getting content length: " + str(_ee))
+                    raise Exception("error getting content length: " +
+                                    str(_ee))
             except Exception as _exp:
                 raise _exp
 
@@ -2018,7 +1845,8 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         # get panels
         _title = f"Download for fg: {self.group_by}>>{self.name}"
         _LOGGER.info(_title)
-        _download_panel = richy.Progress.for_download_and_hashcheck(title=_title)
+        _download_panel = richy.Progress.for_download_and_hashcheck(
+            title=_title)
         # todo: make hash panel and add it to table and then render with live display
         #   see https://github.com/Textualize/rich/blob/master/examples/live_progress.py
         # _hash_check_panel = ...
@@ -2027,17 +1855,11 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         # now add tasks
         for fk in self.file_keys:
             if _file_paths[fk].exists():
-                _download_panel.add_task(
-                    task_name=fk, total=_lengths[fk]
-                )
+                _download_panel.add_task(task_name=fk, total=_lengths[fk])
             elif fk in _errors.keys():
-                _download_panel.add_task(
-                    task_name=fk, total=-1
-                )
+                _download_panel.add_task(task_name=fk, total=-1)
             else:
-                _download_panel.add_task(
-                    task_name=fk, total=_lengths[fk]
-                )
+                _download_panel.add_task(task_name=fk, total=_lengths[fk])
 
         # ------------------------------------------------------ 04
         # now download files
@@ -2046,10 +1868,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             for fk in self.file_keys:
                 # if already present just move forward
                 if _file_paths[fk].exists():
-                    _download_panel.update(
-                        task_name=fk,
-                        advance=_lengths[fk]
-                    )
+                    _download_panel.update(task_name=fk, advance=_lengths[fk])
                     _download_panel.update(
                         task_name=fk,
                         state="already_finished",
@@ -2064,54 +1883,45 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                     _raise_error = True
                     continue
                 try:
-                    with _file_paths[fk].open('wb') as _f:
+                    with _file_paths[fk].open("wb") as _f:
                         _response = requests.get(_urls[fk], stream=True)
                         for _chunk in _response.iter_content(
-                            chunk_size=min(_lengths[fk] // 10, _chunk_size)
-                        ):
+                                chunk_size=min(_lengths[fk] //
+                                               10, _chunk_size)):
                             if _chunk:  # filter out keep-alive new chunks
                                 _f.write(_chunk)
-                                _download_panel.update(
-                                    task_name=fk,
-                                    advance=len(_chunk)
-                                )
+                                _download_panel.update(task_name=fk,
+                                                       advance=len(_chunk))
                 except Exception as _exp:
                     _errors[fk] = str(_exp)
                     _raise_error = True
 
         # ------------------------------------------------------ 05
-        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
+        _total_seconds = (datetime.datetime.now() -
+                          _start_time).total_seconds()
         _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
 
         # ------------------------------------------------------ 06
         # raise error if _raise_error
         if _raise_error:
-            raise e.validation.NotAllowed(
-                msgs=["Check errors ...", _errors]
-            )
+            raise e.validation.NotAllowed(msgs=["Check errors ...", _errors])
 
         # ------------------------------------------------------ 07
         # return
         return list(_file_paths.values())
 
     # noinspection PyTypeChecker
-    def create_file(
-        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
-    ) -> Path:
-        raise e.code.CodingError(
-            msgs=[
-                f"This method need not be called as create method is "
-                f"overridden for class {self.__class__}"
-            ]
-        )
+    def create_file(self,
+                    *,
+                    file_key: str,
+                    status_panel: richy.ProgressStatusPanel = None) -> Path:
+        raise e.code.CodingError(msgs=[
+            f"This method need not be called as create method is "
+            f"overridden for class {self.__class__}"
+        ])
 
-    def get_files(
-        self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
-        return {
-            file_key: self.path / file_key
-            for file_key in file_keys
-        }
+    def get_files(self, *, file_keys: t.List[str]) -> t.Dict[str, Path]:
+        return {file_key: self.path / file_key for file_key in file_keys}
 
     def get_file(self, file_key: str) -> Path:
         return self.get_files(file_keys=[file_key])[file_key]
@@ -2158,13 +1968,8 @@ class FileGroupFromPaths(FileGroup):
             if _f.name not in self.file_keys
         ]
 
-    def get_files(
-        self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
-        return {
-            file_key: self.path / file_key
-            for file_key in file_keys
-        }
+    def get_files(self, *, file_keys: t.List[str]) -> t.Dict[str, Path]:
+        return {file_key: self.path / file_key for file_key in file_keys}
 
     def create(self) -> t.List[Path]:
 
@@ -2174,21 +1979,17 @@ class FileGroupFromPaths(FileGroup):
             _f = self.path / fk
             if not _f.exists():
                 raise e.code.CodingError(
-                    msgs=[
-                        f"We were expecting path {_f} to exist"
-                    ]
-                )
+                    msgs=[f"We were expecting path {_f} to exist"])
             _ret.append(_f)
 
         return _ret
 
     # noinspection PyTypeChecker
-    def create_file(
-        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
-    ) -> Path:
-        raise e.code.CodingError(
-            msgs=[
-                f"This method need not be called as create method is "
-                f"overridden for class {self.__class__}"
-            ]
-        )
+    def create_file(self,
+                    *,
+                    file_key: str,
+                    status_panel: richy.ProgressStatusPanel = None) -> Path:
+        raise e.code.CodingError(msgs=[
+            f"This method need not be called as create method is "
+            f"overridden for class {self.__class__}"
+        ])

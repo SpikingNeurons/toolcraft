@@ -1,16 +1,17 @@
-import typing as t
+import errno
 import pathlib
 import subprocess
-import errno
+import typing as t
 
-from .. import logger
 from .. import error as e
+from .. import logger
 
 _LOGGER = logger.get_logger()
 
 
 def make_pdf(
-    tex_file: pathlib.Path, pdf_file: pathlib.Path,
+    tex_file: pathlib.Path,
+    pdf_file: pathlib.Path,
     compiler: str = None,
     compiler_args: t.List = None,
     silent: bool = True,
@@ -35,16 +36,16 @@ def make_pdf(
     if compiler_args is None:
         compiler_args = []
     if compiler is not None:
-        compilers = ((compiler, []),)
+        compilers = ((compiler, []), )
     else:
         compilers = (
-            ('pdflatex', []),
-            ('latexmk',  ['--pdf']),
+            ("pdflatex", []),
+            ("latexmk", ["--pdf"]),
         )
 
-    main_arguments = ['--interaction=nonstopmode', tex_file.as_posix()]
+    main_arguments = ["--interaction=nonstopmode", tex_file.as_posix()]
 
-    check_output_kwargs = {'cwd': pdf_file.parent.as_posix()}
+    check_output_kwargs = {"cwd": pdf_file.parent.as_posix()}
 
     for compiler, arguments in compilers:
 
@@ -61,38 +62,39 @@ def make_pdf(
             if os_error.errno == errno.ENOENT:
                 # If compiler does not exist, try next in the list
                 continue
-            raise e.code.NotAllowed(
-                msgs=[ex_]
-            )
+            raise e.code.NotAllowed(msgs=[ex_])
         except subprocess.CalledProcessError as ex_:
             # For all other errors print the output and raise the error
-            raise e.code.NotAllowed(
-                msgs=[ex_.output.decode()]
-            )
+            raise e.code.NotAllowed(msgs=[ex_.output.decode()])
         else:
             if not silent:
                 _LOGGER.info(msg=output.decode())
 
         for _ext in [
-            'aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
-            'auxlock', 'acn', 'glo', 'ist',
+                "aux",
+                "log",
+                "out",
+                "fls",
+                "fdb_latexmk",
+                "dvi",
+                "auxlock",
+                "acn",
+                "glo",
+                "ist",
         ]:
-            (
-                pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
-            ).unlink(missing_ok=True)
+            (pdf_file.parent /
+             pdf_file.name.replace(".pdf", f".{_ext}")).unlink(missing_ok=True)
 
         # Compilation has finished, so no further compilers have to be
         # tried
         break
 
     else:
-        raise e.code.NotAllowed(
-            msgs=[
-                'We cannot find suitable LaTeX compiler ...',
-                'Either specify a LaTex compiler '
-                'or make sure you have latexmk or pdfLaTex installed.'
-            ]
-        )
+        raise e.code.NotAllowed(msgs=[
+            "We cannot find suitable LaTeX compiler ...",
+            "Either specify a LaTex compiler "
+            "or make sure you have latexmk or pdfLaTex installed.",
+        ])
 
 
 def make_math(in_: str) -> str:

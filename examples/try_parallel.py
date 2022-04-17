@@ -1,8 +1,10 @@
 import dataclasses
 import time
 import typing as t
-from toolcraft import parallel, logger
+
 import numpy as np
+
+from toolcraft import logger, parallel
 
 _LOGGER = logger.get_logger()
 
@@ -12,9 +14,7 @@ _LOGGER.info(msg="try parallel ...")
 @dataclasses.dataclass
 class SomeTask(parallel.Task):
 
-    def do_it(
-        self, task_runner: "SomeTaskRunner"
-    ) -> t.Tuple[int, int]:
+    def do_it(self, task_runner: "SomeTaskRunner") -> t.Tuple[int, int]:
         return task_runner.task_id, task_runner.fetch()
 
 
@@ -38,14 +38,13 @@ def main():
         for _ in range(20):
             yield SomeTask()
 
-    _pool = parallel.TaskRunnerPool(
-        task_runners=_task_runners, tasks=_task_gen()
-    )
+    _pool = parallel.TaskRunnerPool(task_runners=_task_runners,
+                                    tasks=_task_gen())
 
     with _pool:
         for _res in _pool.get_results():
             print(_res)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

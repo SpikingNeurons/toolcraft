@@ -12,22 +12,21 @@ import enum
 import pathlib
 import sys
 import time
-import rich
-import time
 import typing as t
-
-sys.path.append("..")
 
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+import rich
+
+from toolcraft import error as e
+from toolcraft import logger
 from toolcraft import marshalling as m
 from toolcraft import settings
 from toolcraft import storage as s
 from toolcraft import util
-from toolcraft import logger
-from toolcraft import error as e
 
+sys.path.append("..")
 
 _LOGGER = logger.get_logger()
 
@@ -54,21 +53,23 @@ def try_logging():
         msgs=[
             "JJKH wegbdkq2zuyhbviu ",
             ["sadas", "sadas", "uiyu", "ewgy"],
-            (1,2,3,"dfsdf"),
+            (1, 2, 3, "dfsdf"),
             {
-                "ee": 55, "gsedf": "dfsd"
-            }
-        ]
+                "ee": 55,
+                "gsedf": "dfsd"
+            },
+        ],
     )
 
 
 def try_exceptions():
     try:
-        raise e.code.CodingError(
-            msgs=[
-                "I am wrong ...", "But why ???", {1: 1, 2: 3}, ["q", "tt", "yy"]
-            ]
-        )
+        raise e.code.CodingError(msgs=[
+            "I am wrong ...", "But why ???", {
+                1: 1,
+                2: 3
+            }, ["q", "tt", "yy"]
+        ])
     except Exception as _e:
         _LOGGER.exception(msg="Traceback")
 
@@ -79,5 +80,5 @@ def main():
     try_exceptions()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

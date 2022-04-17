@@ -22,18 +22,30 @@ todo: storage in point of view of mlflow (also see top of individual module for
 """
 
 from . import file_system
-from .file_system import Path, FileSystemConfig
 from .__base__ import StorageHashable
-from .state import Info, Config, Suffix
+from .file_group import (
+    DETERMINISTIC_SHUFFLE,
+    DO_NOT_USE,
+    NO_SHUFFLE,
+    NON_DETERMINISTIC_SHUFFLE,
+    SELECT_TYPE,
+    SHUFFLE_SEED_TYPE,
+    USE_ALL,
+    DownloadFileGroup,
+    FileGroup,
+    FileGroupConfig,
+    FileGroupFromPaths,
+    NpyFileGroup,
+    NpyMemMap,
+    TempFileGroup,
+)
+from .file_system import FileSystemConfig, Path
 from .folder import Folder
-from .file_group import FileGroup, FileGroupFromPaths, NpyMemMap, SHUFFLE_SEED_TYPE, \
-    DETERMINISTIC_SHUFFLE, NO_SHUFFLE, DO_NOT_USE, USE_ALL, \
-    SELECT_TYPE, NON_DETERMINISTIC_SHUFFLE, FileGroupConfig
-from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup
-from .table import Table, Filter, make_expression
-
+from .state import Config, Info, Suffix
+from .table import Filter, Table, make_expression
 
 # a call so that the CWD FileSystem is loaded if defined in config.toml or else it
 # will add default CWD FileSystem ... also it will save it to config.toml
 FileSystemConfig.get("CWD")
-assert "CWD" in file_system.available_file_systems(), "must be there by now ..."
+assert "CWD" in file_system.available_file_systems(
+), "must be there by now ..."

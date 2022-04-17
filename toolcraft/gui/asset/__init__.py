@@ -5,8 +5,8 @@ import typing as t
 import dearpygui.dearpygui as dpg
 from dearpygui_ext import themes
 
-from ... import util
 from ... import error as e
+from ... import util
 
 _ASSET_FOLDER = pathlib.Path(__file__).parent.resolve()
 
@@ -38,12 +38,5 @@ class Theme(enum.Enum):
         elif self is self.LIGHT:
             _THEMES_CACHE[self] = themes.create_theme_imgui_light()
         else:
-            raise e.code.NotSupported(
-                msgs=[
-                    f"Theme {self} is not supported"
-                ]
-            )
+            raise e.code.NotSupported(msgs=[f"Theme {self} is not supported"])
         return _THEMES_CACHE[self]
-
-
-

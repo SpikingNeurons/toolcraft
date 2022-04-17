@@ -1,14 +1,13 @@
-import dataclasses
-import typing as t
-import pathlib
-import datetime
 import abc
+import dataclasses
+import datetime
 import enum
+import pathlib
+import typing as t
 
-from . import helper
-from .. import logger
-from .. import util
 from .. import error as e
+from .. import logger, util
+from . import helper
 
 _LOGGER = logger.get_logger()
 
@@ -17,6 +16,7 @@ class Font(enum.Enum):
     """
     todo: figure out other options later
     """
+
     italic = "\\itshape"
     footnotesize = "\\footnotesize"
 
@@ -43,6 +43,7 @@ class Color(enum.Enum):
         we have 19 colors below available
 
     """
+
     # setting ⟨color⟩ to none disables filling/drawing locally
     none = "none"
 
@@ -85,6 +86,7 @@ class FontSize(enum.Enum):
 
     todo: currently inline is implemented ... later implement as environment too
     """
+
     Huge = "\\Huge"
     huge = "\\huge"
     LARGE = "\\LARGE"
@@ -108,6 +110,7 @@ class Fa(enum.Enum):
     Options supported by \\usepackage{fontawesome5}
     All fonts: http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
     """
+
     check = "\\faCheck"
     times = "\\faTimes"
     check_circle = "\\faCheckCircle"
@@ -163,19 +166,18 @@ class Scalar(t.NamedTuple):
     textwidth:	    Width of the text area in the page
     topmargin:	    Length of the top margin
     """
+
     value: t.Union[int, float]
-    unit: t.Literal[
-        '',
-        'pt', 'mm', 'cm', 'in', 'ex', 'em', 'mu', 'sp',
-        'bp', 'dd', 'pc',
-        # special lengths
-        'baselineskip', 'columnsep', 'columnwidth', 'evensidemargin', 'linewidth',
-        'oddsidemargin', 'paperwidth', 'paperheight', 'parindent', 'parskip',
-        'tabcolsep', 'textheight', 'textwidth', 'topmargin',
-    ] = ''
+    unit: t.Literal["", "pt", "mm", "cm", "in", "ex", "em", "mu", "sp", "bp",
+                    "dd", "pc",
+                    # special lengths
+                    "baselineskip", "columnsep", "columnwidth",
+                    "evensidemargin", "linewidth", "oddsidemargin",
+                    "paperwidth", "paperheight", "parindent", "parskip",
+                    "tabcolsep", "textheight", "textwidth", "topmargin", ] = ""
 
     def __str__(self):
-        if self.unit == 'textwidth':
+        if self.unit == "textwidth":
             if self.value in [1, 1.0]:
                 return f"\\{self.unit}"
             else:
@@ -186,54 +188,42 @@ class Scalar(t.NamedTuple):
     def __mul__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
         if isinstance(other, Scalar):
             if other.unit != self.unit:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "Units should match ...", dict(self=self.unit, other=other.unit)
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    "Units should match ...",
+                    dict(self=self.unit, other=other.unit),
+                ])
             other = other.value
-        return Scalar(
-            value=self.value * other, unit=self.unit
-        )
+        return Scalar(value=self.value * other, unit=self.unit)
 
     def __add__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
         if isinstance(other, Scalar):
             if other.unit != self.unit:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "Units should match ...", dict(self=self.unit, other=other.unit)
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    "Units should match ...",
+                    dict(self=self.unit, other=other.unit),
+                ])
             other = other.value
-        return Scalar(
-            value=self.value + other, unit=self.unit
-        )
+        return Scalar(value=self.value + other, unit=self.unit)
 
     def __sub__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
         if isinstance(other, Scalar):
             if other.unit != self.unit:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "Units should match ...", dict(self=self.unit, other=other.unit)
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    "Units should match ...",
+                    dict(self=self.unit, other=other.unit),
+                ])
             other = other.value
-        return Scalar(
-            value=self.value - other, unit=self.unit
-        )
+        return Scalar(value=self.value - other, unit=self.unit)
 
     def __truediv__(self, other: t.Union[int, float, "Scalar"]) -> "Scalar":
         if isinstance(other, Scalar):
             if other.unit != self.unit:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "Units should match ...", dict(self=self.unit, other=other.unit)
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    "Units should match ...",
+                    dict(self=self.unit, other=other.unit),
+                ])
             other = other.value
-        return Scalar(
-            value=self.value / other, unit=self.unit
-        )
+        return Scalar(value=self.value / other, unit=self.unit)
 
 
 class FloatObjAlignment(enum.Enum):
@@ -247,6 +237,7 @@ class FloatObjAlignment(enum.Enum):
 
     https://www.overleaf.com/learn/latex/Text_alignment
     """
+
     centering = "\\centering"
     raggedright = "\\raggedright"
     raggedleft = "\\raggedleft"
@@ -263,6 +254,7 @@ class Positioning:
     https://www.overleaf.com/learn/latex/Positioning_of_Figures
     https://www.overleaf.com/learn/latex/Positioning_images_and_tables
     """
+
     # Will place the here approximately.
     here: bool = False
     # Position at the top of the page.
@@ -342,33 +334,31 @@ class LaTeX(abc.ABC):
                     _._doc = self._doc
                 else:
                     if id(_._doc) != id(self._doc):
-                        raise e.code.CodingError(
-                            msgs=["Different instances of _doc found ... "
-                                  "there must be only one"]
-                        )
+                        raise e.code.CodingError(msgs=[
+                            "Different instances of _doc found ... "
+                            "there must be only one"
+                        ])
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
-                        value=_.label, values=self._doc.labels,
-                        msgs=[
-                            f"Please use a unique label ..."
-                        ]
+                        value=_.label,
+                        values=self._doc.labels,
+                        msgs=[f"Please use a unique label ..."],
                     ).raise_if_failed()
                     self._doc.labels.append(_.label)
 
         # create str
         if self.use_new_lines:
-            return self.open_clause + "%\n\n" + \
-                   self.generate() + "\n\n" + \
-                   self.close_clause + "%"
+            return (self.open_clause + "%\n\n" + self.generate() + "\n\n" +
+                    self.close_clause + "%")
         else:
             return self.open_clause + self.generate() + self.close_clause
 
     def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
         if not self.allow_add_items:
-            raise e.code.NotAllowed(
-                msgs=[f"You are not allowed to use `add_items` method for class "
-                      f"{self.__class__}"]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"You are not allowed to use `add_items` method for class "
+                f"{self.__class__}"
+            ])
         if self._doc is not None:
             item._doc = self._doc
         self._items.append(item)
@@ -423,7 +413,10 @@ class Document(LaTeX):
             _tt.append(f"\\date{{{self.date}}}%")
         if bool(_tt):
             _tt = ["% >> title related"] + _tt + [""]
-        _ret = _tt + ["% >> begin document", "\\begin{document}%", ]
+        _ret = _tt + [
+            "% >> begin document",
+            "\\begin{document}%",
+        ]
         if bool(_tt):
             _ret += ["\\maketitle"]
         return "\n".join(_ret)
@@ -436,24 +429,21 @@ class Document(LaTeX):
         super().init_validate()
         if self.label is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set label for {self.__class__}"]
-            )
+                msgs=[f"No need to set label for {self.__class__}"])
 
     def init(self):
         super().init()
         if self._doc is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set doc for {self.__class__}"]
-            )
+                msgs=[f"No need to set doc for {self.__class__}"])
         # noinspection PyAttributeOutsideInit
         self._doc = self  # as this is Document class
 
         # if main tex file not on disk automatically reset to None
         if self.main_tex_file is not None:
             if not pathlib.Path(self.main_tex_file).exists():
-                _LOGGER.warning(
-                    msg=f"Main text file {self.main_tex_file} is "
-                        f"not on disk so using default setting")
+                _LOGGER.warning(msg=f"Main text file {self.main_tex_file} is "
+                                f"not on disk so using default setting")
                 self.main_tex_file = None
 
     def write(
@@ -467,8 +457,7 @@ class Document(LaTeX):
             f"% >> generated on {datetime.datetime.now().ctime()}",
             "",
             "% >> init",
-            "\\documentclass{article}"
-            if self.main_tex_file is None else
+            "\\documentclass{article}" if self.main_tex_file is None else
             f"\\documentclass[{self.main_tex_file}]{{subfiles}}",
             ("" if self.main_tex_file is None else "% ") +
             f"\\usepackage{{{self.usepackage_file.split('.')[0]}}}",
@@ -489,7 +478,7 @@ class Document(LaTeX):
             helper.make_pdf(
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
-                         (_save_to_file.name.split(".")[0] + ".pdf"),
+                (_save_to_file.name.split(".")[0] + ".pdf"),
             )
 
 
@@ -503,8 +492,8 @@ class ChAndSec(LaTeX, abc.ABC):
 
     @property
     def open_clause(self) -> str:
-        _ret = f"% >> {self.command}: `{self.name}` start " \
-               f"\n\\{self.command}{{{self.name}}}"
+        _ret = (f"% >> {self.command}: `{self.name}` start "
+                f"\n\\{self.command}{{{self.name}}}")
         if self.label is not None:
             _ret += f"\\label{{{self.label}}}"
         return _ret
@@ -545,6 +534,7 @@ class Part(ChAndSec):
     Note that \\part and \\chapter are only available in report and
     book document classes.
     """
+
     ...
 
 
@@ -554,4 +544,5 @@ class Chapter(ChAndSec):
     Note that \\part and \\chapter are only available in report and
     book document classes.
     """
+
     ...

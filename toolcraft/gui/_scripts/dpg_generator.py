@@ -1,25 +1,34 @@
+import datetime
 import inspect
 import pathlib
+import re
+import typing as t
+from typing import NamedTuple
+
 import dearpygui
 import dearpygui.dearpygui as dpg
-from typing import NamedTuple
-import typing as t
-import re
-import datetime
 
 _WRAP_TEXT_WIDTH = 70
 _NEEDED_ENUMS = {}  # type: t.Dict[str, 'EnumDef']
 
 _SKIP_METHODS = [
     # not required
-    dpg.contextmanager, dpg.deprecated,
-    dpg.add_alias, dpg.remove_alias, dpg.does_alias_exist,
-    dpg.get_alias_id, dpg.get_aliases, dpg.set_item_alias,
+    dpg.contextmanager,
+    dpg.deprecated,
+    dpg.add_alias,
+    dpg.remove_alias,
+    dpg.does_alias_exist,
+    dpg.get_alias_id,
+    dpg.get_aliases,
+    dpg.set_item_alias,
     dpg.does_item_exist,
-    dpg.generate_uuid, dpg.get_all_items,
-    dpg.get_dearpygui_version, dpg.get_item_alias, dpg.get_values,
-    dpg.run_callbacks, dpg.get_callback_queue,
-
+    dpg.generate_uuid,
+    dpg.get_all_items,
+    dpg.get_dearpygui_version,
+    dpg.get_item_alias,
+    dpg.get_values,
+    dpg.run_callbacks,
+    dpg.get_callback_queue,
     # handled methods by Widget
     dpg.delete_item,  # Widget.delete
     dpg.enable_item,  # Widget.enable
@@ -41,7 +50,6 @@ _SKIP_METHODS = [
     dpg.reset_pos,  # Widget.reset_pos
     dpg.show_item_debug,  # Widget.show_debug
     dpg.unstage,  # Widget.unstage
-
     # handled methods by Table
     dpg.highlight_table_cell,  # Table.highlight_cell
     dpg.highlight_table_column,  # Table.highlight_column
@@ -54,7 +62,6 @@ _SKIP_METHODS = [
     dpg.is_table_row_highlighted,  # Table.is_row_highlighted
     dpg.set_table_row_color,  # Table.set_row_color
     dpg.unset_table_row_color,  # Table.unset_row_color
-
     # handled methods by Plot
     dpg.fit_axis_data,  # XAxis.fit_data, YAxis.fit_data,
     dpg.get_axis_limits,  # XAxis.get_limits, YAxis.get_limits,
@@ -64,10 +71,8 @@ _SKIP_METHODS = [
     dpg.set_axis_limits,  # XAxis.set_limits, YAxis.set_limits
     dpg.set_axis_limits_auto,  # XAxis.set_limits_auto, YAxis.set_limits_auto
     dpg.set_axis_ticks,  # XAxis.set_ticks, YAxis.set_ticks
-
     # handled by window.PopUp
     dpg.popup,
-
     # handled methods by Widget.__setattr__
     dpg.set_item_callback,
     dpg.set_item_drag_callback,
@@ -92,7 +97,6 @@ _SKIP_METHODS = [
     dpg.set_item_callback,
     dpg.set_item_callback,
     dpg.set_item_callback,
-
     # handled state commands
     dpg.get_item_state,  # Widget.dpg_state property
     dpg.is_item_hovered,
@@ -114,7 +118,6 @@ _SKIP_METHODS = [
     dpg.get_item_rect_size,
     dpg.get_item_rect_min,
     dpg.get_item_rect_max,
-
     # handled config commands
     dpg.get_item_configuration,  # Widget.dpg_config property
     dpg.is_item_shown,
@@ -132,7 +135,6 @@ _SKIP_METHODS = [
     dpg.get_item_drop_callback,
     dpg.get_item_user_data,
     dpg.get_item_source,
-
     # handled info commands
     dpg.get_item_info,  # Widget.dpg_info property
     dpg.get_item_slot,
@@ -143,7 +145,6 @@ _SKIP_METHODS = [
     dpg.get_item_theme,
     dpg.get_item_font,
     dpg.get_item_disabled_theme,
-
     # we assume and keep it at Dashboard level i.e. static method
     # assuming there will be only one dashboard instance
     dpg.get_active_window,
@@ -172,30 +173,43 @@ _SKIP_METHODS = [
     dpg.get_dearpygui_version,  # Dashboard.get_app_configuration
     dpg.get_total_time,  # Dashboard.get_total_time
     dpg.get_windows,  # Dashboard.get_windows
-
     # todo: con be supported after having four enums for mvColorEdit_
-    dpg.add_color_edit, dpg.add_color_picker,
-
+    dpg.add_color_edit,
+    dpg.add_color_picker,
     # todo: support later when static and dynamic textures are supported
-    dpg.add_image, dpg.add_image_button, dpg.add_image_series, dpg.draw_image,
+    dpg.add_image,
+    dpg.add_image_button,
+    dpg.add_image_series,
+    dpg.draw_image,
     dpg.draw_image_quad,
-
     # todo: support when using node editor
-    dpg.node_editor, dpg.add_node_link, dpg.clear_selected_links,
-    dpg.clear_selected_nodes, dpg.get_selected_links, dpg.get_selected_nodes,
-
+    dpg.node_editor,
+    dpg.add_node_link,
+    dpg.clear_selected_links,
+    dpg.clear_selected_nodes,
+    dpg.get_selected_links,
+    dpg.get_selected_nodes,
     # todo: may be these need to be used as Widget methods and not as Widget's
-    dpg.bind_colormap, dpg.bind_font, dpg.bind_item_font,
-    dpg.bind_item_handler_registry, dpg.bind_item_theme,
-    dpg.bind_template_registry, dpg.bind_theme, dpg.get_text_size,
-
+    dpg.bind_colormap,
+    dpg.bind_font,
+    dpg.bind_item_font,
+    dpg.bind_item_handler_registry,
+    dpg.bind_item_theme,
+    dpg.bind_template_registry,
+    dpg.bind_theme,
+    dpg.get_text_size,
     # todo: transform related animation things
-    dpg.apply_transform, dpg.create_fps_matrix, dpg.create_lookat_matrix,
-    dpg.create_orthographic_matrix, dpg.create_perspective_matrix,
-    dpg.create_rotation_matrix, dpg.create_scale_matrix, dpg.create_translation_matrix,
-
+    dpg.apply_transform,
+    dpg.create_fps_matrix,
+    dpg.create_lookat_matrix,
+    dpg.create_orthographic_matrix,
+    dpg.create_perspective_matrix,
+    dpg.create_rotation_matrix,
+    dpg.create_scale_matrix,
+    dpg.create_translation_matrix,
     # todo: viewport ... useful to make visual code style docking
-    dpg.viewport_drawlist,  # this can be a Container ... but note that it is not a Widget
+    dpg.
+    viewport_drawlist,  # this can be a Container ... but note that it is not a Widget
     dpg.create_viewport,
     dpg.get_viewport_configuration,
     dpg.get_viewport_clear_color,
@@ -233,38 +247,62 @@ _SKIP_METHODS = [
     dpg.set_viewport_title,
     dpg.set_viewport_vsync,
     dpg.set_viewport_width,
-    dpg.show_viewport, dpg.toggle_viewport_fullscreen,
-
+    dpg.show_viewport,
+    dpg.toggle_viewport_fullscreen,
     # todo: when grabbing UI frames for examples
-    dpg.output_frame_buffer, dpg.save_image,
-
+    dpg.output_frame_buffer,
+    dpg.save_image,
     # todo: dpg related
-    dpg.create_context, dpg.destroy_context, dpg.empty_container_stack,
-    dpg.last_container, dpg.last_item, dpg.setup_dearpygui,
+    dpg.create_context,
+    dpg.destroy_context,
+    dpg.empty_container_stack,
+    dpg.last_container,
+    dpg.last_item,
+    dpg.setup_dearpygui,
     dpg.last_root,  # is registry or window ... adapt based on that
-    dpg.set_item_children, dpg.set_primary_window,
-    dpg.show_tool, dpg.show_debug, dpg.show_about, dpg.show_documentation,
-    dpg.show_font_manager, dpg.show_item_registry, dpg.show_imgui_demo,
+    dpg.set_item_children,
+    dpg.set_primary_window,
+    dpg.show_tool,
+    dpg.show_debug,
+    dpg.show_about,
+    dpg.show_documentation,
+    dpg.show_font_manager,
+    dpg.show_item_registry,
+    dpg.show_imgui_demo,
     dpg.show_implot_demo,
     dpg.show_metrics,
     dpg.show_style_editor,
     dpg.start_dearpygui,
     dpg.stop_dearpygui,
     dpg.top_container_stack,
-
     # todo: dont know what to do
-    dpg.configure_app, dpg.configure_item, dpg.configure_viewport,
-    dpg.capture_next_item, dpg.get_colormap_color,
+    dpg.configure_app,
+    dpg.configure_item,
+    dpg.configure_viewport,
+    dpg.capture_next_item,
+    dpg.get_colormap_color,
     dpg.get_file_dialog_info,  # maybe class method for FileDialog widget
-    dpg.load_image, dpg.lock_mutex, dpg.mutex, dpg.unlock_mutex,
-    dpg.pop_container_stack, dpg.push_container_stack,
+    dpg.load_image,
+    dpg.lock_mutex,
+    dpg.mutex,
+    dpg.unlock_mutex,
+    dpg.pop_container_stack,
+    dpg.push_container_stack,
     dpg.add_char_remap,
-    dpg.render_dearpygui_frame, dpg.reorder_items,
-    dpg.sample_colormap, dpg.save_init_file,
-    dpg.set_global_font_scale, dpg.set_frame_callback, dpg.set_exit_callback,
+    dpg.render_dearpygui_frame,
+    dpg.reorder_items,
+    dpg.sample_colormap,
+    dpg.save_init_file,
+    dpg.set_global_font_scale,
+    dpg.set_frame_callback,
+    dpg.set_exit_callback,
     dpg.split_frame,
-    dpg.track_item, dpg.untrack_item,
-    dpg.theme, dpg.stage, dpg.get_clipboard_text, dpg.set_clipboard_text,
+    dpg.track_item,
+    dpg.untrack_item,
+    dpg.theme,
+    dpg.stage,
+    dpg.get_clipboard_text,
+    dpg.set_clipboard_text,
 ]
 
 
@@ -291,7 +329,11 @@ class DpgDef:
     @property
     def is_plot_related(self) -> bool:
         if self.fn in [
-            dpg.plot, dpg.plot_axis, dpg.subplots, dpg.add_plot_legend, dpg.add_simple_plot,
+                dpg.plot,
+                dpg.plot_axis,
+                dpg.subplots,
+                dpg.add_plot_legend,
+                dpg.add_simple_plot,
         ]:
             return True
         else:
@@ -300,7 +342,9 @@ class DpgDef:
     @property
     def is_plot_items_related(self) -> bool:
         if self.fn in [
-            dpg.add_plot_annotation, dpg.add_drag_line, dpg.add_drag_point,
+                dpg.add_plot_annotation,
+                dpg.add_drag_line,
+                dpg.add_drag_point,
         ]:
             return True
         else:
@@ -308,14 +352,17 @@ class DpgDef:
 
     @property
     def is_plot_series_related(self) -> bool:
-        if self.fn.__name__.startswith("add") and self.fn.__name__.endswith("series"):
+        if self.fn.__name__.startswith("add") and self.fn.__name__.endswith(
+                "series"):
             return True
         else:
             return False
 
     @property
     def is_table_related(self) -> bool:
-        if self.fn in [dpg.table, dpg.table_cell, dpg.table_row, dpg.add_table_column]:
+        if self.fn in [
+                dpg.table, dpg.table_cell, dpg.table_row, dpg.add_table_column
+        ]:
             return True
         else:
             return False
@@ -343,9 +390,9 @@ class DpgDef:
     @property
     def _call_prefix(self) -> str:
 
-        _call_prefix = \
-            f"internal_dpg.add_{self.fn.__name__}" \
-            if self.is_container else f"internal_dpg.{self.fn.__name__}"
+        _call_prefix = (f"internal_dpg.add_{self.fn.__name__}"
+                        if self.is_container else
+                        f"internal_dpg.{self.fn.__name__}")
 
         if self.fn == dpg.plot_axis:
             _call_prefix = f"internal_dpg.add_{self.fn.__name__}"
@@ -377,7 +424,8 @@ class DpgDef:
             _class_name = "Registry"
         else:
             if self.fn in [
-                dpg.window, dpg.file_dialog,
+                    dpg.window,
+                    dpg.file_dialog,
             ]:
                 _class_name = "ContainerWidget"
         return _class_name
@@ -387,13 +435,12 @@ class DpgDef:
         # ------------------------------------------------------- 01
         # generate name based on method and parameters
         if self.fn == dpg.plot_axis:
-            if self.parametrize['axis'] == 'dpg.mvXAxis':
+            if self.parametrize["axis"] == "dpg.mvXAxis":
                 return "XAxis"
-            if self.parametrize['axis'] == 'dpg.mvYAxis':
+            if self.parametrize["axis"] == "dpg.mvYAxis":
                 return "YAxis"
             raise Exception(
-                f"Unknown parameter value for axis {self.parametrize['axis']}"
-            )
+                f"Unknown parameter value for axis {self.parametrize['axis']}")
 
         # ------------------------------------------------------- 02
         # if you reach here means parameters are not needed
@@ -434,21 +481,21 @@ class DpgDef:
         _track = False
         for _l in self.fn.__doc__.split("\n"):
             _l_strip = _l.strip()
-            if _l_strip in ['Returns:', 'Yields:']:
+            if _l_strip in ["Returns:", "Yields:"]:
                 break
-            if _l_strip == 'Args:':
+            if _l_strip == "Args:":
                 _track = True
                 continue
             if _track:
-                _k = _l_strip.replace("*", '').split(' ')[0]
-                _v = _l_strip.split(':')[1].strip()
-                if _v == '':
-                    _v = '...'
-                _v = _l_strip.split(':')[0].strip() + ": " + _v
+                _k = _l_strip.replace("*", "").split(" ")[0]
+                _v = _l_strip.split(":")[1].strip()
+                if _v == "":
+                    _v = "..."
+                _v = _l_strip.split(":")[0].strip() + ": " + _v
                 _docs_dict[_k] = _v
             else:
                 _main_doc.append(_l)
-        _docs_dict['main_doc'] = "\n".join(_main_doc)
+        _docs_dict["main_doc"] = "\n".join(_main_doc)
         return _docs_dict
 
     @property
@@ -458,21 +505,21 @@ class DpgDef:
         _ret = []
 
         # ignore params
-        _ignore_params = ['id', 'parent', 'tag', 'before', 'kwargs']
+        _ignore_params = ["id", "parent", "tag", "before", "kwargs"]
 
         # ignore axis param if needed
         if self.fn in [dpg.plot_axis, dpg.add_plot_axis]:
-            _ignore_params.append('axis')
+            _ignore_params.append("axis")
 
         if self.is_plot_series_related or self.is_plot_items_related:
             _ignore_params.append("use_internal_label")
             if "use_internal_label" not in [
-                _param.name for _param in self.fn_signature.parameters.values()
+                    _param.name
+                    for _param in self.fn_signature.parameters.values()
             ]:
                 raise Exception(
                     f"This looks like plot series related method so we expect "
-                    f"param use_internal_label"
-                )
+                    f"param use_internal_label")
 
         # loop over all params
         for _param in self.fn_signature.parameters.values():
@@ -486,22 +533,20 @@ class DpgDef:
                 continue
 
             # param type
-            _param_type = f"{_param.annotation}".replace(
-                'typing', 't'
-            ).replace(
-                "<class '", ""
-            ).replace(
-                "'>", ""
-            ).replace(
-                "t.Callable", "Callback"
-            )
+            _param_type = (f"{_param.annotation}".replace(
+                "typing",
+                "t").replace("<class '",
+                             "").replace("'>",
+                                         "").replace("t.Callable", "Callback"))
 
             # if below type then it is PLOT_DATA_TYPE
             if _param_type == "t.Union[t.List[float], t.Tuple[float, ...]]":
                 _param_type = "PLOT_DATA_TYPE"
             # if below type then it is COLOR_TYPE
-            if _param_name.find("color") != -1 and \
-                    _param_name not in ["colormap", "multicolor"]:
+            if _param_name.find("color") != -1 and _param_name not in [
+                    "colormap",
+                    "multicolor",
+            ]:
                 if self.fn == dpg.add_colormap:
                     if _param_name == "colors":
                         _param_type = "t.List[COLOR_TYPE]"
@@ -512,8 +557,7 @@ class DpgDef:
                         f"We assume that fn param `{self.fn.__name__}:{_param_name}` "
                         f"is a color type so dpg param type must be "
                         f"<t.Union[t.List[int], t.Tuple[int, ...]]>, but found type "
-                        f"<{_param_type}>"
-                    )
+                        f"<{_param_type}>")
 
             # is callback
             _is_callback = _param_type.find("Callback") != -1
@@ -529,10 +573,11 @@ class DpgDef:
 
             # if param is enum we will get _enum_def
             _enum_def = None
-            if _param_name not in ['source', 'before']:
+            if _param_name not in ["source", "before"]:
                 _enum_def = CodeMaker.fetch_enum_def_from_fn_param_doc(
-                    method=self.fn, param_name=_param_name, param_doc=_param_doc
-                )
+                    method=self.fn,
+                    param_name=_param_name,
+                    param_doc=_param_doc)
                 if _enum_def is not None:
                     self.enum_defs_needed.append(_enum_def)
 
@@ -550,29 +595,33 @@ class DpgDef:
                 _param_dpg_value = "self.if_entered"
             if _param_name == "label":
                 if self.is_plot_series_related or self.is_plot_items_related:
-                    _param_dpg_value = "None if self.label is None else self.label.split('#')[0]"
+                    _param_dpg_value = (
+                        "None if self.label is None else self.label.split('#')[0]"
+                    )
             if _is_callback:
                 _param_dpg_value += "_fn"
             if _enum_def is not None:
                 _param_type = _enum_def.enum_name
                 _param_value = _enum_def.get_enum_instance_str_from_value(
-                    value=_param_value
-                )
+                    value=_param_value)
                 _param_dpg_value = f"self.{_param_name}.value"
 
             # update param value if not empty
             # noinspection PyUnresolvedReferences,PyProtectedMember
             if _param_value != inspect._empty:
                 if _param_value in [
-                    "", "$$DPG_PAYLOAD", ".", "general",
-                ] or str(_param_value).startswith('%'):
+                        "",
+                        "$$DPG_PAYLOAD",
+                        ".",
+                        "general",
+                ] or str(_param_value).startswith("%"):
                     _param_value = f"'{_param_value}'"
                 elif isinstance(_param_value, list):
-                    _param_value = f"dataclasses.field(" \
-                                   f"default_factory=lambda: {_param_value})"
+                    _param_value = (f"dataclasses.field("
+                                    f"default_factory=lambda: {_param_value})")
                 elif isinstance(_param_value, dict):
-                    _param_value = f"dataclasses.field(" \
-                                   f"default_factory=lambda: {_param_value})"
+                    _param_value = (f"dataclasses.field("
+                                    f"default_factory=lambda: {_param_value})")
 
             # append
             _ret.append(
@@ -583,8 +632,7 @@ class DpgDef:
                     value=_param_value,
                     dpg_value=_param_dpg_value,
                     doc=_param_doc,
-                )
-            )
+                ))
 
         # final return
         return _ret
@@ -601,7 +649,7 @@ class DpgDef:
         if self.is_frozen:
             _frozen = "(frozen=True)"
         # code header
-        _lines = [
+        _lines = ([
             "",
             "",
             f"@dataclasses.dataclass{_frozen}",
@@ -610,7 +658,7 @@ class DpgDef:
             "\tRefer:",
             f"\t>>> dpg.{self.fn.__name__}",
             "",
-        ] + [self.docs['main_doc']] + ['\t"""', ""]
+        ] + [self.docs["main_doc"]] + ['\t"""', ""])
         # ------------------------------------------------------- 03.02
         # make fields
         for _pd in self.param_defs:
@@ -633,18 +681,22 @@ class DpgDef:
         # get same values in local vars
         _local_val_lines = []
         if self.is_parent_param_present:
-            _local_val_lines += ["\t\t_parent_dpg_id = self.internal.parent.dpg_id"]
+            _local_val_lines += [
+                "\t\t_parent_dpg_id = self.internal.parent.dpg_id"
+            ]
         if self.is_source_param_present:
-            _local_val_lines += ["\t\t_source_dpg_id = getattr(self.source, 'dpg_id', 0)"]
+            _local_val_lines += [
+                "\t\t_source_dpg_id = getattr(self.source, 'dpg_id', 0)"
+            ]
         if bool(_local_val_lines):
             _local_val_lines = [""] + _local_val_lines
         # ------------------------------------------------------- 03.04.02
         # add some internal params needed for dpg call
         _internal_params = {}
         if self.is_parent_param_present:
-            _internal_params['parent'] = "_parent_dpg_id"
+            _internal_params["parent"] = "_parent_dpg_id"
         if self.is_plot_series_related or self.is_plot_items_related:
-            _internal_params['use_internal_label'] = "False"
+            _internal_params["use_internal_label"] = "False"
         # ------------------------------------------------------- 03.04.03
         _parametrized_params = {} if self.parametrize is None else self.parametrize
         # ------------------------------------------------------- 03.04.04
@@ -702,7 +754,7 @@ class DpgDef:
         fn: t.Callable,
         # used to generate multiple widgets based on parameters supplied that will be
         # hardcoded in build method
-        parametrize: t.Dict[str, str] = None
+        parametrize: t.Dict[str, str] = None,
     ):
         # -------------------------------------------------------- 01
         self.fn = fn
@@ -721,18 +773,19 @@ class DpgDef:
         self.is_source_param_present = False
         self.is_parent_param_present = False
         for _param in self.fn_signature.parameters.values():
-            if _param.name == 'before':
+            if _param.name == "before":
                 assert _param.annotation == t.Union[int, str]
                 self.is_before_param_present = True
-            if _param.name == 'source':
+            if _param.name == "source":
                 assert _param.annotation == t.Union[int, str]
                 self.is_source_param_present = True
-            if _param.name == 'parent':
+            if _param.name == "parent":
                 assert _param.annotation == t.Union[int, str]
                 self.is_parent_param_present = True
         if self.is_before_param_present:
             if not self.is_parent_param_present:
-                raise Exception("If before is present then parent should also be present")
+                raise Exception(
+                    "If before is present then parent should also be present")
 
         # -------------------------------------------------------- 05
         self.name = self._name
@@ -745,9 +798,9 @@ class DpgDef:
     def fn_fake_call(self, parent):
         _kwargs = {}
 
-        if 'x' in self.fn_signature.parameters.keys():
-            _kwargs['x'] = [1., 2.]
-            _kwargs['y'] = [1., 2.]
+        if "x" in self.fn_signature.parameters.keys():
+            _kwargs["x"] = [1.0, 2.0]
+            _kwargs["y"] = [1.0, 2.0]
 
         if bool(self.parametrize):
             # noinspection PyTypeChecker
@@ -792,24 +845,21 @@ class EnumDef:
         _lines = [_.replace("\t", "    ") for _ in _lines]
         return _lines
 
-    def __init__(
-        self,
-        dpg_enum_prefix: str,
-        dpg_enum_values: t.List[str]
-    ):
+    def __init__(self, dpg_enum_prefix: str, dpg_enum_values: t.List[str]):
         self.dpg_enum_prefix = dpg_enum_prefix
         self.dpg_enum_values = dpg_enum_values
-        self.enum_name = "En" + self.dpg_enum_prefix.replace("mv", "").replace("_", "")
+        self.enum_name = "En" + self.dpg_enum_prefix.replace("mv", "").replace(
+            "_", "")
         self.code = self._code
 
     def __eq__(self, other):
-        return self.dpg_enum_prefix == other.dpg_enum_prefix and \
-               self.dpg_enum_values == other.dpg_enum_values
+        return (self.dpg_enum_prefix == other.dpg_enum_prefix
+                and self.dpg_enum_values == other.dpg_enum_values)
 
     def get_dpg_val_to_enum_val(self, dpg_val: str) -> str:
         _ret = dpg_val.replace(self.dpg_enum_prefix, "")
-        if _ret == 'None':
-            _ret = 'NONE'
+        if _ret == "None":
+            _ret = "NONE"
         return _ret
 
     def get_enum_instance_str_from_value(self, value: int) -> str:
@@ -832,8 +882,7 @@ class EnumDef:
             raise Exception(
                 f"Cannot fetch enum instance str for enum {self.enum_name}. "
                 f"The value {value} is not one of "
-                f"{_dpg_values} for enum fields {self.dpg_enum_values}"
-            )
+                f"{_dpg_values} for enum fields {self.dpg_enum_values}")
 
         # return
         _selected_dpg_v = self.get_dpg_val_to_enum_val(_selected_dpg_v)
@@ -889,15 +938,16 @@ from .__base__ import USER_DATA
         # noinspection PyTypeChecker
         _enum_defs = [
             self.fetch_enum_def_from_fn_param_doc(
-                method=None, param_name=None,
-                param_doc="  Union[int, str]  mvMouseButton_*  "
+                method=None,
+                param_name=None,
+                param_doc="  Union[int, str]  mvMouseButton_*  ",
             ),
         ]
 
     @staticmethod
     def fetch_enum_def_from_fn_param_doc(
-        method: t.Callable, param_name: str, param_doc: str
-    ) -> t.Optional[EnumDef]:
+            method: t.Callable, param_name: str,
+            param_doc: str) -> t.Optional[EnumDef]:
         """
         If we detect that widget param doc can be a enum field we return tuple i.e.
         (possible enum name, and the enum fields) else we return None ...
@@ -921,12 +971,10 @@ from .__base__ import USER_DATA
         # if dpg field and no enum values raise error if cannot be handled
         if _is_dpg_id:
             if not bool(_enum_val_s):
-                raise Exception(
-                    f"There are no enum fields detected for "
-                    f"\n\tmethod: {method} "
-                    f"\n\tparameter: {param_name} "
-                    f"\n\tdoc: {param_doc}"
-                )
+                raise Exception(f"There are no enum fields detected for "
+                                f"\n\tmethod: {method} "
+                                f"\n\tparameter: {param_name} "
+                                f"\n\tdoc: {param_doc}")
 
         # ----------------------------------------------------------------- 05
         # there is no enum for this then return
@@ -963,8 +1011,8 @@ from .__base__ import USER_DATA
 
         # ----------------------------------------------------------------- 09
         # build enum num def and see if proper duplicate
-        _enum_def = EnumDef(
-            dpg_enum_prefix=_enum_prefix, dpg_enum_values=_enum_val_s)
+        _enum_def = EnumDef(dpg_enum_prefix=_enum_prefix,
+                            dpg_enum_values=_enum_val_s)
         if _enum_def.enum_name not in _NEEDED_ENUMS.keys():
             _NEEDED_ENUMS[_enum_def.enum_name] = _enum_def
         else:
@@ -972,8 +1020,7 @@ from .__base__ import USER_DATA
             if _enum_def != _other_enum_def:
                 raise Exception(
                     f"Inspect enum {_enum_def.enum_name} and update it above so "
-                    f"that every enum is unique"
-                )
+                    f"that every enum is unique")
 
         # ----------------------------------------------------------------- 10
         # return
@@ -1015,8 +1062,8 @@ from .__base__ import USER_DATA
             if _fn_src.find("@contextmanager") != -1:
                 # ------------------------------------------------------ 05.01.01
                 # should not start with add
-                assert not _fn.__name__.startswith("add_"), \
-                    f"was not expecting to start with add_ >> {_fn}"
+                assert not _fn.__name__.startswith(
+                    "add_"), f"was not expecting to start with add_ >> {_fn}"
                 # ------------------------------------------------------ 05.01.02
                 # check if corresponding add_ present
                 _fn_name_with_add = "add_" + _fn.__name__
@@ -1033,7 +1080,8 @@ from .__base__ import USER_DATA
                     # -------------------------------------------------- 05.02.01
                     # also make sure that it has context manager
                     _fn_without_add = getattr(dpg, _fn_name_without_add)
-                    if inspect.getsource(_fn_without_add).find("@contextmanager") == -1:
+                    if inspect.getsource(_fn_without_add).find(
+                            "@contextmanager") == -1:
                         raise Exception(
                             f"Was expecting {_fn_without_add} to have contextmanager"
                         )
@@ -1044,8 +1092,16 @@ from .__base__ import USER_DATA
             # ---------------------------------------------------------- 06
             # append
             if _fn == dpg.plot_axis:
-                _ret.append(DpgDef(fn=_fn, parametrize={'axis': 'dpg.mvXAxis'}, ))
-                _ret.append(DpgDef(fn=_fn, parametrize={'axis': 'dpg.mvYAxis'}, ))
+                _ret.append(
+                    DpgDef(
+                        fn=_fn,
+                        parametrize={"axis": "dpg.mvXAxis"},
+                    ))
+                _ret.append(
+                    DpgDef(
+                        fn=_fn,
+                        parametrize={"axis": "dpg.mvYAxis"},
+                    ))
             else:
                 _ret.append(DpgDef(fn=_fn))
 
@@ -1053,9 +1109,8 @@ from .__base__ import USER_DATA
         return _ret
 
     @staticmethod
-    def add_auto_imports_to_py_file(
-        output_file: pathlib.Path, import_lines: t.List[str]
-    ):
+    def add_auto_imports_to_py_file(output_file: pathlib.Path,
+                                    import_lines: t.List[str]):
         # ---------------------------------------------------------- 01
         # get tags and their index
         _start_tag = "# auto pk; start >>>"
@@ -1069,18 +1124,19 @@ from .__base__ import USER_DATA
             if _l == _end_tag:
                 _end_tag_index = _i
         if _start_tag_index is None:
-            raise Exception(f"Did not find start tag `{_start_tag}` in file {output_file}")
+            raise Exception(
+                f"Did not find start tag `{_start_tag}` in file {output_file}")
         if _end_tag_index is None:
-            raise Exception(f"Did not find start tag `{_end_tag}` in file {output_file}")
+            raise Exception(
+                f"Did not find start tag `{_end_tag}` in file {output_file}")
         if _end_tag_index <= _start_tag_index:
             raise Exception(f"{_end_tag_index} <= {_start_tag_index}")
         # ---------------------------------------------------------- 02
-        _start_lines = _output_file_lines[:_start_tag_index+1]
+        _start_lines = _output_file_lines[:_start_tag_index + 1]
         _end_lines = _output_file_lines[_end_tag_index:]
         # ---------------------------------------------------------- 03
-        output_file.write_text(
-            "\n".join(_start_lines + import_lines + _end_lines)
-        )
+        output_file.write_text("\n".join(_start_lines + import_lines +
+                                         _end_lines))
 
     def make_widget_py(self):
         # -------------------------------- 01
@@ -1092,7 +1148,9 @@ from .__base__ import USER_DATA
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related or _widget_def.is_plot_items_related:
+            if (_widget_def.is_plot_related or _widget_def.is_table_related
+                    or _widget_def.is_plot_series_related
+                    or _widget_def.is_plot_items_related):
                 continue
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")
@@ -1136,12 +1194,8 @@ from .__base__ import USER_DATA
             _widget_lines += _widget_def.code
 
         # -------------------------------- 03
-        _output_file.write_text(
-            self.header +
-            "\n".join(
-                _enum_lines + _widget_lines + [""]
-            )
-        )
+        _output_file.write_text(self.header +
+                                "\n".join(_enum_lines + _widget_lines + [""]))
 
     def make_enum_py(self):
         # -------------------------------- 01
@@ -1182,8 +1236,11 @@ def try_dpg_children(_dpg_def: DpgDef, _all_dpg_defs: t.List[DpgDef]):
     dpg.create_viewport()
     dpg.setup_dearpygui()
 
-    with dpg.window(label="Dear PyGui Demo", width=800, height=800,
-                    pos=(100, 100), tag="__demo_id") as w1:
+    with dpg.window(label="Dear PyGui Demo",
+                    width=800,
+                    height=800,
+                    pos=(100, 100),
+                    tag="__demo_id") as w1:
 
         _ret = []
         if _dpg_def.is_container:
@@ -1216,5 +1273,5 @@ def main():
     #         print("\t\t\t: ", _child_dpg_def.fn)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
