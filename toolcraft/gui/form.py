@@ -78,7 +78,7 @@ class HashableMethodsRunnerForm(Form):
                 hashable=_hashable, fn_name=_callable_name
             )
             # create button widget
-            _button = _use_method_in_form_obj.get_gui_button(
+            _button = _use_method_in_form_obj.get_button_widget(
                 hashable=_hashable,
                 receiver=_receiver,
                 allow_refresh=True,
@@ -157,7 +157,7 @@ class DoubleSplitForm(Form):
 
         # ----------------------------------------------------- 01
         # create button widget
-        _button = _use_method_in_form_obj.get_gui_button(
+        _button = _use_method_in_form_obj.get_button_widget(
             hashable=hashable,
             receiver=self.receiver_panel,
             allow_refresh=self.allow_refresh,

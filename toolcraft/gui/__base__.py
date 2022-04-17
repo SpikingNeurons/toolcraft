@@ -560,7 +560,6 @@ class Widget(Dpg, abc.ABC):
     def delete(self):
         # if tagged then untag
         Tag.remove(tag_or_widget=self, not_exists_ok=True)
-
         # delete the dpg UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
         # todo: make _widget unusable ... figure out

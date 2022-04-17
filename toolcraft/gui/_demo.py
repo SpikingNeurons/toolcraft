@@ -1193,7 +1193,7 @@ def show_demo():
 
                                 _text_id = dpg.add_text("0/0")
                                 with dpg.item_handler_registry(
-                                        tag="__demo_item_reg1_" + str(i)):
+                                    tag="__demo_item_reg1_" + str(i)):
                                     dpg.add_item_visible_handler(
                                         user_data=[_text_id, _child_id],
                                         callback=_update_yscroll_info)
@@ -1216,7 +1216,7 @@ def show_demo():
                                         dpg.add_text("Item " + str(j))
                         _text_id = dpg.add_text("0/0")
                         with dpg.item_handler_registry(
-                                tag="__demo_item_reg2_" + str(i)):
+                            tag="__demo_item_reg2_" + str(i)):
                             dpg.add_item_visible_handler(
                                 user_data=[_text_id, _child_id],
                                 callback=_update_xscroll_info)
@@ -1736,7 +1736,7 @@ def show_demo():
                         for i in range(3):
                             _text_id = dpg.add_text("(w: 0.0f)")
                             with dpg.item_handler_registry(
-                                    tag="__demo_item_reg4_" + str(i)):
+                                tag="__demo_item_reg4_" + str(i)):
                                 dpg.add_item_visible_handler(user_data=_text_id,
                                                              callback=lambda s, a,
                                                                              u: dpg.set_value(
@@ -1764,7 +1764,7 @@ def show_demo():
                         for i in range(4):
                             _text_id = dpg.add_text("(w: 0.0f)")
                             with dpg.item_handler_registry(
-                                    tag="__demo_item_reg5_" + str(i)):
+                                tag="__demo_item_reg5_" + str(i)):
                                 dpg.add_item_visible_handler(user_data=_text_id,
                                                              callback=lambda s, a,
                                                                              u: dpg.set_value(
@@ -2542,7 +2542,8 @@ def show_demo():
                                                       time=True)
                             with dpg.plot_axis(dpg.mvYAxis, label="USD"):
                                 dpg.add_candle_series(dates, opens, closes, lows, highs,
-                                                      label="GOOGL")
+                                                      label="GOOGL",
+                                                      time_unit=dpg.mvTimeUnit_Hr)
                                 dpg.fit_axis_data(dpg.top_container_stack())
                             dpg.fit_axis_data(xaxis)
 
@@ -2970,10 +2971,10 @@ def show_demo():
             dpg.add_text("Ctrl+Click to remove a link.", bullet=True)
 
             with dpg.node_editor(
-                    callback=lambda sender, app_data: dpg.add_node_link(app_data[0],
-                                                                        app_data[1],
-                                                                        parent=sender),
-                    delink_callback=lambda sender, app_data: dpg.delete_item(app_data)):
+                callback=lambda sender, app_data: dpg.add_node_link(app_data[0],
+                                                                    app_data[1],
+                                                                    parent=sender),
+                delink_callback=lambda sender, app_data: dpg.delete_item(app_data)):
                 with dpg.node(label="Node 1", pos=[10, 10]):
                     with dpg.node_attribute():
                         dpg.add_input_float(label="F1", width=150)

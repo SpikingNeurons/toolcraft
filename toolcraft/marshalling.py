@@ -90,6 +90,8 @@ class UseMethodInForm:
         self.fn = fn
 
         # store self inside fn
+        # also check `cls.get_from_hashable_fn` which will help get access
+        # to this instance
         setattr(fn, f"_{self.__class__.__name__}", self)
 
         # return fn as this is decorator
@@ -117,7 +119,7 @@ class UseMethodInForm:
                 ]
             )
 
-    def get_gui_button(
+    def get_button_widget(
         self,
         hashable: "HashableClass",
         receiver: "gui.widget.ContainerWidget",
