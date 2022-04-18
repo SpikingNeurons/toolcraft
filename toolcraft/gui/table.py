@@ -29,6 +29,16 @@ class Cell(_auto.TableCell):
 
 @dataclasses.dataclass
 class Row(_auto.TableRow):
+    """
+    todo: for now we are forcing to have Cell in each row ...
+      this is not necessary ... update if we want blank rows ... for now we assume
+      that it can stretch table dynamically
+    """
+
+    @property
+    @util.CacheResult
+    def children(self) -> t.List[Cell]:
+        return []
 
     def __getitem__(
         self, item: int

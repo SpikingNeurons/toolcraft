@@ -414,6 +414,11 @@ class Plot(_auto.Plot):
 @dataclasses.dataclass
 class SubPlots(_auto.SubPlots):
 
+    @property
+    @util.CacheResult
+    def children(self) -> t.List[Plot]:
+        return []
+
     def __call__(self, widget: Plot, before: Plot = None):
         # we also need to add cells in row
         if isinstance(widget, Plot):
