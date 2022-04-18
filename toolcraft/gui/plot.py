@@ -317,7 +317,7 @@ class Plot(_auto.Plot):
             if plot_item.label in self.all_plot_items.keys():
                 raise e.validation.NotAllowed(
                     msgs=[
-                        f"There already exists a plot_series with label "
+                        f"There already exists a plot_item with label "
                         f"`{plot_item.label}`"
                     ]
                 )
@@ -343,16 +343,36 @@ class Plot(_auto.Plot):
             ]
         ).raise_if_failed()
 
-    def delete(self):
-        self.clear()
-        return super().delete()
-
     def get_query_area(self) -> t.Tuple[float, float]:
         """
         Refer:
         >>> dpg.get_plot_query_area
         """
         return tuple(internal_dpg.get_plot_query_area(self.dpg_id))
+
+    def delete(self):
+
+        # to delete any plot series
+        self.y1_axis.delete()
+        if self.num_of_y_axis == 2:
+            self.y2_axis.delete()
+        elif self.num_of_y_axis == 3:
+            self.y2_axis.delete()
+            self.y3_axis.delete()
+
+        # to delete annotations, drag_line, drag_plot
+        _plot_items_keys = list(self.all_plot_items.keys())
+        for _k in _plot_items_keys:
+            _plot_item = self.all_plot_items[_k]
+            if isinstance(_plot_item, Annotation):
+                _plot_item.delete()
+            elif isinstance(_plot_item, DragLine):
+                _plot_item.delete()
+            elif isinstance(_plot_item, DragPoint):
+                _plot_item.delete()
+
+        # super delete
+        return super().delete()
 
     def clear(
         self,
@@ -365,15 +385,15 @@ class Plot(_auto.Plot):
     ):
         # to delete any plot series
         if y1_axis:
-            self.y1_axis.delete()
+            self.y1_axis.clear()
         if self.num_of_y_axis == 2:
             if y2_axis:
-                self.y2_axis.delete()
+                self.y2_axis.clear()
         elif self.num_of_y_axis == 3:
             if y2_axis:
-                self.y2_axis.delete()
+                self.y2_axis.clear()
             if y3_axis:
-                self.y3_axis.delete()
+                self.y3_axis.clear()
 
         # to delete annotations, drag_line, drag_plot
         _plot_items_keys = list(self.all_plot_items.keys())
