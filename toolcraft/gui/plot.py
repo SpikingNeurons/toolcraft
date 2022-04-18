@@ -311,8 +311,11 @@ class Plot(_auto.Plot):
     def is_queried(self) -> bool:
         return internal_dpg.is_plot_queried(self.dpg_id)
 
-    # noinspection PyMethodOverriding,PyUnresolvedReferences
-    def __call__(self, plot_item: PlotItem):
+    def add_plot_item(self, plot_item: PlotItem):
+        """
+        Note that plot_item are not MovableWidget, also Plot is not ContainerWidget
+        So we use all_plot_items property to store them with Plot instance
+        """
         if isinstance(plot_item, PlotItem):
             if plot_item.label in self.all_plot_items.keys():
                 raise e.validation.NotAllowed(
@@ -363,15 +366,10 @@ class Plot(_auto.Plot):
         # to delete annotations, drag_line, drag_plot
         _plot_items_keys = list(self.all_plot_items.keys())
         for _k in _plot_items_keys:
-            _plot_item = self.all_plot_items[_k]
-            if isinstance(_plot_item, Annotation):
-                _plot_item.delete()
-            elif isinstance(_plot_item, DragLine):
-                _plot_item.delete()
-            elif isinstance(_plot_item, DragPoint):
-                _plot_item.delete()
+            # note that this will also delete the key from `self.all_plot_items`
+            self.all_plot_items[_k].delete()
 
-        # super delete
+        # super delete ... so that Plot is removed from parent ContainerWidget
         return super().delete()
 
     def clear(
@@ -395,16 +393,20 @@ class Plot(_auto.Plot):
             if y3_axis:
                 self.y3_axis.clear()
 
+        # clearing is deleting
         # to delete annotations, drag_line, drag_plot
         _plot_items_keys = list(self.all_plot_items.keys())
         for _k in _plot_items_keys:
             _plot_item = self.all_plot_items[_k]
+            # note that this will also delete the key from `self.all_plot_items`
             if isinstance(_plot_item, Annotation) and annotations:
                 _plot_item.delete()
             elif isinstance(_plot_item, DragLine) and drag_lines:
                 _plot_item.delete()
             elif isinstance(_plot_item, DragPoint) and drag_points:
                 _plot_item.delete()
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[])
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
