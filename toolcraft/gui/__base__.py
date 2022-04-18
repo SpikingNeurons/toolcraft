@@ -5,17 +5,18 @@ The rule for now is to
 """
 import abc
 import dataclasses
-import typing as t
 import enum
-import dearpygui.dearpygui as dpg
+import typing as t
+
 # noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 import numpy as np
 
 from .. import error as e
 from .. import logger
-from .. import util
 from .. import marshalling as m
+from .. import util
 from . import asset
 
 _LOGGER = logger.get_logger()
@@ -25,32 +26,27 @@ PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
-    from . import window
-    from . import plot
+    from . import plot, window
 
 
 class Tag:
     _container = {}  # type: t.Dict[str, Widget]
 
     @classmethod
-    def add(cls, tag: str, widget: 'Widget'):
+    def add(cls, tag: str, widget: "Widget"):
         # if tag is already used up
         if tag in cls._container.keys():
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"A widget with tag `{tag}` already exists. "
-                    f"Please select some unique name."
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"A widget with tag `{tag}` already exists. "
+                f"Please select some unique name."
+            ])
 
         # if already tagged raise error
         if widget.is_tagged:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"The widget is already tagged with tag {widget.tag} "
-                    f"so we cannot assign new tag {tag} ..."
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"The widget is already tagged with tag {widget.tag} "
+                f"so we cannot assign new tag {tag} ..."
+            ])
 
         # save reference inside widget
         widget.internal.tag = tag
@@ -59,46 +55,43 @@ class Tag:
         cls._container[tag] = widget
 
     @classmethod
-    def get_tag(cls, widget: 'Widget') -> str:
+    def get_tag(cls, widget: "Widget") -> str:
         if widget.is_tagged:
             return widget.internal.tag
-        raise e.validation.NotAllowed(
-            msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
-        )
+        raise e.validation.NotAllowed(msgs=[
+            "This widget was never tagged ... so we cannot retrieve the tag"
+        ])
 
     @classmethod
-    def get_widget(cls, tag: str) -> 'Widget':
+    def get_widget(cls, tag: str) -> "Widget":
         try:
             return cls._container[tag]
         except KeyError:
             raise e.code.NotAllowed(
-                msgs=[
-                    f"The is no widget registered with tag `{tag}`"
-                ]
-            )
+                msgs=[f"The is no widget registered with tag `{tag}`"])
 
     @classmethod
-    def exists(cls, tag_or_widget: t.Union[str, 'Widget']) -> bool:
+    def exists(cls, tag_or_widget: t.Union[str, "Widget"]) -> bool:
         if isinstance(tag_or_widget, str):
             return tag_or_widget in cls._container.keys()
         elif isinstance(tag_or_widget, Widget):
             return tag_or_widget.is_tagged
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(tag_or_widget)}"])
+            raise e.code.ShouldNeverHappen(
+                msgs=[f"Unknown type {type(tag_or_widget)}"])
 
     @classmethod
-    def remove(cls, tag_or_widget: t.Union[str, 'Widget'], not_exists_ok: bool):
+    def remove(cls, tag_or_widget: t.Union[str, "Widget"],
+               not_exists_ok: bool):
         # if tag does not exist
         if not cls.exists(tag_or_widget):
             if not_exists_ok:
                 return
             else:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        "There is no widget tagged with the tag name "
-                        f"`{tag_or_widget}` hence there is nothing to remove"
-                    ]
-                )
+                raise e.code.NotAllowed(msgs=[
+                    "There is no widget tagged with the tag name "
+                    f"`{tag_or_widget}` hence there is nothing to remove"
+                ])
 
         # since tag exists remove it ... also set internal.tag to None
         _tag = tag_or_widget
@@ -109,8 +102,7 @@ class Tag:
             cls.get_widget(tag_or_widget).internal.tag = None
         else:
             raise e.code.CodingError(
-                msgs=[f"Unknown type {type(tag_or_widget)}"]
-            )
+                msgs=[f"Unknown type {type(tag_or_widget)}"])
         del cls._container[_tag]
 
 
@@ -132,9 +124,10 @@ class EnColor(Enum, enum.Enum):
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['dpg_state', 'dpg_config', ]
-)
+@m.RuleChecker(things_not_to_be_cached=[
+    "dpg_state",
+    "dpg_config",
+])
 class _WidgetDpg(m.YamlRepr, abc.ABC):
 
     @property
@@ -168,67 +161,67 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
 
     @property
     def is_hovered(self) -> bool:
-        return self.dpg_state['hovered']
+        return self.dpg_state["hovered"]
 
     @property
     def is_active(self) -> bool:
-        return self.dpg_state['active']
+        return self.dpg_state["active"]
 
     @property
     def is_focused(self) -> bool:
-        return self.dpg_state['focused']
+        return self.dpg_state["focused"]
 
     @property
     def is_clicked(self) -> bool:
-        return self.dpg_state['clicked']
+        return self.dpg_state["clicked"]
 
     @property
     def is_left_clicked(self) -> bool:
-        return self.dpg_state['left_clicked']
+        return self.dpg_state["left_clicked"]
 
     @property
     def is_right_clicked(self) -> bool:
-        return self.dpg_state['right_clicked']
+        return self.dpg_state["right_clicked"]
 
     @property
     def is_middle_clicked(self) -> bool:
-        return self.dpg_state['middle_clicked']
+        return self.dpg_state["middle_clicked"]
 
     @property
     def is_visible(self) -> bool:
-        return self.dpg_state['visible']
+        return self.dpg_state["visible"]
 
     @property
     def is_edited(self) -> bool:
-        return self.dpg_state['edited']
+        return self.dpg_state["edited"]
 
     @property
     def is_activated(self) -> bool:
-        return self.dpg_state['activated']
+        return self.dpg_state["activated"]
 
     @property
     def is_deactivated(self) -> bool:
-        return self.dpg_state['deactivated']
+        return self.dpg_state["deactivated"]
 
     @property
     def is_deactivated_after_edit(self) -> bool:
-        return self.dpg_state['deactivated_after_edit']
+        return self.dpg_state["deactivated_after_edit"]
 
     @property
     def is_toggled_open(self) -> bool:
-        return self.dpg_state['toggled_open']
+        return self.dpg_state["toggled_open"]
 
     @property
     def is_ok(self) -> bool:
-        return self.dpg_state['ok']
+        return self.dpg_state["ok"]
 
     @property
     def is_shown(self) -> bool:
-        return self.dpg_config['show']
+        return self.dpg_config["show"]
 
     @property
     def is_enabled(self) -> bool:
-        return self.dpg_config['enabled']
+        return self.dpg_config["enabled"]
 
     # @property
     # def pos(self) -> t.Tuple[int, int]:
@@ -236,19 +229,19 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
 
     @property
     def available_content_region(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['content_region_avail'])
+        return tuple(self.dpg_state["content_region_avail"])
 
     @property
     def rect_size(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['rect_size'])
+        return tuple(self.dpg_state["rect_size"])
 
     @property
     def rect_min(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['rect_min'])
+        return tuple(self.dpg_state["rect_min"])
 
     @property
     def rect_max(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['rect_max'])
+        return tuple(self.dpg_state["rect_max"])
 
     def __post_init__(self):
         self.init_validate()
@@ -288,15 +281,13 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
             # check if Widget and only allow if Form
             if isinstance(v, Widget):
                 if not isinstance(self, Form):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Check field {self.__class__}.{f_name}",
-                            f"You cannot have instance of class {v.__class__} as "
-                            f"dataclass fields of {self.__class__}.",
-                            f"This is only allowed for {Form} where we only allow "
-                            f"{Widget}"
-                        ]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"Check field {self.__class__}.{f_name}",
+                        f"You cannot have instance of class {v.__class__} as "
+                        f"dataclass fields of {self.__class__}.",
+                        f"This is only allowed for {Form} where we only allow "
+                        f"{Widget}",
+                    ])
 
     def init(self):
         ...
@@ -306,29 +297,24 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
         # ---------------------------------------------------- 01
         # check if already built
         if self.is_built:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget is already built and registered with:",
-                    {
-                        'parent': self.internal.parent.__class__,
-                    },
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Widget is already built and registered with:",
+                {
+                    "parent": self.internal.parent.__class__,
+                },
+            ])
 
     @abc.abstractmethod
     def build(self) -> t.Union[int, str]:
         ...
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect build to return int which happens to be dpg_id"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect build to return int which happens to be dpg_id"
+            ])
 
         # test if remaining internals are set
         self.internal.test_if_others_set()
@@ -481,22 +467,21 @@ class WidgetInternal(m.Internal):
     tag: str = None
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["tag", "parent", ]
+        return super().vars_that_can_be_overwritten() + [
+            "tag",
+            "parent",
+        ]
 
     def test_if_others_set(self):
         if not self.has("parent"):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is not a children to any parent",
-                    f"Please use some container widget and add this Widget",
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Widget {self.__class__} is not a children to any parent",
+                f"Please use some container widget and add this Widget",
+            ])
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['is_tagged']
-)
+@m.RuleChecker(things_not_to_be_cached=["is_tagged"])
 class Widget(_WidgetDpg, abc.ABC):
 
     @property
@@ -520,7 +505,7 @@ class Widget(_WidgetDpg, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.widget.{cls.__name__}"
 
-    def get_user_data(self) -> 'USER_DATA':
+    def get_user_data(self) -> "USER_DATA":
         """
         Almost every subclassed Widget will have this field but we cannot have it here
         as dataclass mechanism does not allow it. So we offer this utility method
@@ -532,12 +517,10 @@ class Widget(_WidgetDpg, abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting class {self.__class__} to have field `user_data`",
-                    "This is intended to be used by callback mechanism"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Was expecting class {self.__class__} to have field `user_data`",
+                "This is intended to be used by callback mechanism",
+            ])
 
     def get_tag(self) -> str:
         return Tag.get_tag(widget=self)
@@ -556,18 +539,13 @@ class Widget(_WidgetDpg, abc.ABC):
         # todo: make _widget unusable ... figure out
 
 
-USER_DATA = t.Dict[
-    str, t.Union[
-        int, float, str, slice, tuple, list, dict, None,
-        m.FrozenEnum, m.HashableClass, Widget,
-    ]
-]
+USER_DATA = t.Dict[str,
+                   t.Union[int, float, str, slice, tuple, list, dict, None,
+                           m.FrozenEnum, m.HashableClass, Widget, ], ]
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['index_in_parent_children']
-)
+@m.RuleChecker(things_not_to_be_cached=["index_in_parent_children"])
 class MovableWidget(Widget, abc.ABC):
 
     @property
@@ -578,7 +556,9 @@ class MovableWidget(Widget, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.movable_widget.{cls.__name__}"
 
-    def move(self, parent: "ContainerWidget" = None, before: "MovableWidget" = None):
+    def move(self,
+             parent: "ContainerWidget" = None,
+             before: "MovableWidget" = None):
         """
         Move the item in `parent` or put it before `before`
         """
@@ -586,15 +566,13 @@ class MovableWidget(Widget, abc.ABC):
         # check
         # ---------------------------------------------- 01.01
         # either parent or before should be supplied
-        if not((parent is None) ^ (before is None)):
-            raise e.code.CodingError(
-                msgs=[
-                    "Either supply parent or before",
-                    "No need to provide both as parent can extracted from before",
-                    "While if you supply parent that means you want to add to "
-                    "bottom of its children",
-                ]
-            )
+        if not ((parent is None) ^ (before is None)):
+            raise e.code.CodingError(msgs=[
+                "Either supply parent or before",
+                "No need to provide both as parent can extracted from before",
+                "While if you supply parent that means you want to add to "
+                "bottom of its children",
+            ])
 
         # ---------------------------------------------- 02
         # related to kwarg `before`
@@ -606,14 +584,12 @@ class MovableWidget(Widget, abc.ABC):
             # if before is not None check if it is in parent and get its index
             _before_index = parent.index_in_children(before)
             if _before_index is None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"We cannot find `before` widget in children of `parent` "
-                        f"you want to move in",
-                        "Provide `before` from same `parent` you want to move in or "
-                        "supply `None`",
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"We cannot find `before` widget in children of `parent` "
+                    f"you want to move in",
+                    "Provide `before` from same `parent` you want to move in or "
+                    "supply `None`",
+                ])
 
         # ---------------------------------------------- 03
         # first pop from self.parent.children
@@ -632,8 +608,10 @@ class MovableWidget(Widget, abc.ABC):
         if self.is_built:
             # noinspection PyUnresolvedReferences
             internal_dpg.move_item(
-                self.dpg_id, parent=parent.dpg_id,
-                before=0 if before is None else before.dpg_id)
+                self.dpg_id,
+                parent=parent.dpg_id,
+                before=0 if before is None else before.dpg_id,
+            )
 
     def move_up(self) -> bool:
         """
@@ -644,7 +622,7 @@ class MovableWidget(Widget, abc.ABC):
         _index = self.parent.index_in_children(self)
         if _index == 0:
             return False
-        _children_list.insert(_index-1, _children_list.pop(_index))
+        _children_list.insert(_index - 1, _children_list.pop(_index))
         internal_dpg.move_item_up(self.dpg_id)
         return True
 
@@ -655,9 +633,9 @@ class MovableWidget(Widget, abc.ABC):
         """
         _children_list = self.parent.children
         _index = self.parent.index_in_children(self)
-        if _index == len(_children_list)-1:
+        if _index == len(_children_list) - 1:
             return False
-        _children_list.insert(_index+1, _children_list.pop(_index))
+        _children_list.insert(_index + 1, _children_list.pop(_index))
         internal_dpg.move_item_down(self.dpg_id)
         return True
 
@@ -669,8 +647,7 @@ class MovableWidget(Widget, abc.ABC):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_to_be_cached=['children'],
-)
+    things_to_be_cached=["children"], )
 class ContainerWidget(Widget, abc.ABC):
     """
     Widget that can hold children
@@ -697,27 +674,23 @@ class ContainerWidget(Widget, abc.ABC):
         # -------------------------------------------------- 01.01
         # check if supports before
         if not isinstance(widget, MovableWidget):
-            raise e.code.CodingError(
-                msgs=[
-                    f"{self.__class__} is not {MovableWidget} i.e. it does not "
-                    f"supports before so you cannot "
-                    f"add it as children",
-                    f"Check if it is possible to have {widget.__class__} as a "
-                    f"property of class {self.__class__} instead",
-                    f"If not movable widget then you might think of having it as "
-                    f"property ... instead of using add_child mechanism",
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"{self.__class__} is not {MovableWidget} i.e. it does not "
+                f"supports before so you cannot "
+                f"add it as children",
+                f"Check if it is possible to have {widget.__class__} as a "
+                f"property of class {self.__class__} instead",
+                f"If not movable widget then you might think of having it as "
+                f"property ... instead of using add_child mechanism",
+            ])
         # -------------------------------------------------- 01.02
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
         if widget.is_built:
-            raise e.code.NotAllowed(
-                msgs=[
-                    "The widget you are trying to add is already built",
-                    "May be you want to `move()` widget instead.",
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                "The widget you are trying to add is already built",
+                "May be you want to `move()` widget instead.",
+            ])
 
         # -------------------------------------------------- 03
         # set internals
@@ -745,20 +718,18 @@ class ContainerWidget(Widget, abc.ABC):
 
     def clone(self) -> "ContainerWidget":
         if bool(self.children):
-            raise e.code.CodingError(
-                msgs=[
-                    "Cannot clone as you have added some widgets as children for "
-                    f"the container widget {self.__class__}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "Cannot clone as you have added some widgets as children for "
+                f"the container widget {self.__class__}"
+            ])
         # noinspection PyTypeChecker
         return super().clone()
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
         # call super
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+        super().build_post_runner(
+            hooked_method_return_value=hooked_method_return_value)
 
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
@@ -805,10 +776,8 @@ class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_to_be_cached=['form_fields_container'],
-    things_not_to_be_overridden=['build']
-)
+@m.RuleChecker(things_to_be_cached=["form_fields_container"],
+               things_not_to_be_overridden=["build"])
 class Form(MovableWidget, abc.ABC):
     """
     Form is a special widget which creates a `form_fields_container` container and
@@ -826,6 +795,7 @@ class Form(MovableWidget, abc.ABC):
       allow fields of form to be dynamically deleted ... but that is not the case now
       So do only if needed
     """
+
     title: str
     collapsing_header_open: bool
 
@@ -844,6 +814,7 @@ class Form(MovableWidget, abc.ABC):
         Override this property to achieve the same.
         """
         from .widget import Group
+
         return Group()
 
     @classmethod
@@ -955,8 +926,8 @@ class Form(MovableWidget, abc.ABC):
         # set internals
         from .widget import CollapsingHeader
 
-        _ch = CollapsingHeader(
-            label=self.title, default_open=self.collapsing_header_open)
+        _ch = CollapsingHeader(label=self.title,
+                               default_open=self.collapsing_header_open)
         _ch(widget=self.form_fields_container)
         _ch.internal.parent = self.parent
 
@@ -1039,12 +1010,10 @@ class Registry(m.YamlRepr, abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting class {self.__class__} to have field `user_data`",
-                    "This is intended to be used by callback mechanism"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Was expecting class {self.__class__} to have field `user_data`",
+                "This is intended to be used by callback mechanism",
+            ])
 
     def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
