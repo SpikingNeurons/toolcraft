@@ -549,9 +549,6 @@ class Widget(_WidgetDpg, abc.ABC):
         Tag.remove(tag_or_widget=self, not_exists_ok=False)
 
     def delete(self):
-        print(":::::::::::::::::::::::::::::::::")
-        print(self.yaml())
-        print(self.dpg_id)
         # if tagged then untag
         Tag.remove(tag_or_widget=self, not_exists_ok=True)
         # delete the dpg UI counterpart
