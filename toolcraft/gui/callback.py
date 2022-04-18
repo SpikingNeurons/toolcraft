@@ -133,8 +133,10 @@ class HashableMethodRunnerCallback(Callback):
                    f"{_hashable.hex_hash[-10:]}.{self.group_tag}"
 
         # get widget for given tag if present
-        # noinspection PyTypeChecker
-        _widget = Tag.get_widget(tag=_tag)
+        if Tag.exists(tag_or_widget=_tag):
+            _widget = Tag.get_widget(tag=_tag)
+        else:
+            _widget = None
         _before_widget = None
 
         # if allow refresh then delete widget and set it to None so that it
@@ -165,15 +167,15 @@ class HashableMethodRunnerCallback(Callback):
         if _widget is None:
             # get actual result widget we are interested to display ... and make
             # it child to receiver
-            _widget = util.rgetattr(
+            _new_widget = util.rgetattr(
                 _hashable, self.callable_name)()  # type: widget.MovableWidget
 
             # tag it as it was newly created
-            _widget.tag_it(tag=_tag)
+            _new_widget.tag_it(tag=_tag)
 
             # add to receiver children
-            _receiver(_widget)
+            _receiver(_new_widget)
 
             # move widget
             if _before_widget is not None:
-                _widget.move(before=_before_widget)
+                _new_widget.move(before=_before_widget)

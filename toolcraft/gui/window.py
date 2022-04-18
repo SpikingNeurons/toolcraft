@@ -13,7 +13,7 @@ from . import widget
 from . import EnMouseButton
 
 
-class WindowInternal(__base__.DpgInternal):
+class WindowInternal(__base__.WidgetInternal):
     dash_board: dashboard.Dashboard
 
     def test_if_others_set(self):

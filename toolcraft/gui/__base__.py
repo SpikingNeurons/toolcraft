@@ -35,75 +35,84 @@ class Tag:
 
     @classmethod
     def add(cls, tag: str, widget: 'Widget'):
+        # if tag is already used up
         if tag in cls._container.keys():
             raise e.code.NotAllowed(
                 msgs=[
-                    f"A widget with tag `{tag}` already exists."
+                    f"A widget with tag `{tag}` already exists. "
+                    f"Please select some unique name."
                 ]
             )
+
+        # if already tagged raise error
         if widget.is_tagged:
             raise e.code.NotAllowed(
                 msgs=[
-                    f"The widget is already tagged with tag {widget.internal.tag} "
+                    f"The widget is already tagged with tag {widget.tag} "
                     f"so we cannot assign new tag {tag} ..."
                 ]
             )
+
+        # save reference inside widget
+        widget.internal.tag = tag
+
+        # save in global container
         cls._container[tag] = widget
 
     @classmethod
-    def get_tag(cls, widget: 'Widget') -> t.Optional[str]:
-        for k, v in cls._container.items():
-            if id(widget) == id(v):
-                return k
-        return None
+    def get_tag(cls, widget: 'Widget') -> str:
+        if widget.is_tagged:
+            return widget.internal.tag
+        raise e.validation.NotAllowed(
+            msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
+        )
 
     @classmethod
-    def get_widget(cls, tag: str) -> t.Optional['Widget']:
-        return cls._container.get(tag, None)
+    def get_widget(cls, tag: str) -> 'Widget':
+        try:
+            return cls._container[tag]
+        except KeyError:
+            raise e.code.NotAllowed(
+                msgs=[
+                    f"The is no widget registered with tag `{tag}`"
+                ]
+            )
 
     @classmethod
     def exists(cls, tag_or_widget: t.Union[str, 'Widget']) -> bool:
         if isinstance(tag_or_widget, str):
             return tag_or_widget in cls._container.keys()
         elif isinstance(tag_or_widget, Widget):
-            return cls.get_tag(widget=tag_or_widget) is not None
+            return tag_or_widget.is_tagged
         else:
             raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(tag_or_widget)}"])
 
     @classmethod
     def remove(cls, tag_or_widget: t.Union[str, 'Widget'], not_exists_ok: bool):
-        if isinstance(tag_or_widget, str):
-            if tag_or_widget in cls._container.keys():
-                del cls._container[tag_or_widget]
+        # if tag does not exist
+        if not cls.exists(tag_or_widget):
+            if not_exists_ok:
+                return
             else:
-                if not_exists_ok:
-                    return
                 raise e.code.NotAllowed(
                     msgs=[
                         "There is no widget tagged with the tag name "
                         f"`{tag_or_widget}` hence there is nothing to remove"
                     ]
                 )
-        elif isinstance(tag_or_widget, Widget):
-            # get tag
-            _tag = cls.get_tag(widget=tag_or_widget)
-            # if the widget was not tagged then raise error
-            if _tag is None:
-                if not_exists_ok:
-                    return
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The widget you want to untag was never tagged"
-                    ]
-                )
-            # remove the tagged widget
-            del cls._container[_tag]
+
+        # since tag exists remove it ... also set internal.tag to None
+        _tag = tag_or_widget
+        if isinstance(tag_or_widget, Widget):
+            _tag = tag_or_widget.tag
+            tag_or_widget.internal.tag = None
+        elif isinstance(tag_or_widget, str):
+            cls.get_widget(tag_or_widget).internal.tag = None
         else:
             raise e.code.CodingError(
-                msgs=[
-                    f"Unknown type {type(tag_or_widget)} ..."
-                ]
+                msgs=[f"Unknown type {type(tag_or_widget)}"]
             )
+        del cls._container[_tag]
 
 
 class Enum(m.FrozenEnum, enum.Enum):
@@ -123,16 +132,6 @@ class EnColor(Enum, enum.Enum):
     RED = (255, 0, 0, 255)
 
 
-class DpgInternal(m.Internal):
-    dpg_id: t.Union[int, str]
-    is_build_done: bool
-
-    def test_if_others_set(self):
-        raise NotImplementedError(
-            f"Implement in class {self.__class__}"
-        )
-
-
 @dataclasses.dataclass
 @m.RuleChecker(
     things_not_to_be_cached=['dpg_state', 'dpg_config', ]
@@ -140,9 +139,13 @@ class DpgInternal(m.Internal):
 class Dpg(m.YamlRepr, abc.ABC):
 
     @property
-    @util.CacheResult
-    def internal(self) -> DpgInternal:
-        return DpgInternal(owner=self)
+    def is_tagged(self) -> bool:
+        return self.internal.tag is not None
+
+    @property
+    def tag(self) -> str:
+        # noinspection PyTypeChecker
+        return Tag.get_tag(widget=self)
 
     @property
     def is_built(self) -> bool:
@@ -482,11 +485,14 @@ class Dpg(m.YamlRepr, abc.ABC):
         internal_dpg.configure_item(self.dpg_id, enabled=False)
 
 
-class WidgetInternal(DpgInternal):
+class WidgetInternal(m.Internal):
     parent: "ContainerWidget"
+    dpg_id: t.Union[int, str]
+    is_build_done: bool
+    tag: str = None
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["parent", ]
+        return super().vars_that_can_be_overwritten() + ["tag", "parent", ]
 
     def test_if_others_set(self):
         if not self.has("parent"):
@@ -508,10 +514,6 @@ class Widget(Dpg, abc.ABC):
     @util.CacheResult
     def internal(self) -> WidgetInternal:
         return WidgetInternal(owner=self)
-
-    @property
-    def is_tagged(self) -> bool:
-        return Tag.exists(tag_or_widget=self)
 
     @property
     def parent(self) -> "ContainerWidget":
@@ -558,6 +560,9 @@ class Widget(Dpg, abc.ABC):
         Tag.remove(tag_or_widget=self, not_exists_ok=False)
 
     def delete(self):
+        print(":::::::::::::::::::::::::::::::::")
+        print(self.yaml())
+        print(self.dpg_id)
         # if tagged then untag
         Tag.remove(tag_or_widget=self, not_exists_ok=True)
         # delete the dpg UI counterpart
@@ -568,7 +573,7 @@ class Widget(Dpg, abc.ABC):
 USER_DATA = t.Dict[
     str, t.Union[
         int, float, str, slice, tuple, list, dict, None,
-        m.FrozenEnum, m.HashableClass, Widget, pathlib.Path,
+        m.FrozenEnum, m.HashableClass, Widget,
     ]
 ]
 
@@ -1036,7 +1041,7 @@ class Registry(m.YamlRepr, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.registry.{cls.__name__}"
 
-    def get_user_data(self) -> 'USER_DATA':
+    def get_user_data(self) -> USER_DATA:
         """
         Almost every subclassed Registry will have this field but we cannot have it here
         as dataclass mechanism does not allow it. So we offer this utility method
@@ -1062,20 +1067,8 @@ class Registry(m.YamlRepr, abc.ABC):
         return _ret
 
 
-class PlotSeriesInternal(DpgInternal):
+class PlotSeriesInternal(WidgetInternal):
     parent: "plot.YAxis"
-
-    def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["parent", ]
-
-    def test_if_others_set(self):
-        if not self.has("parent"):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is not a children to any parent",
-                    f"Please use some `YAxis` and add this Widget",
-                ]
-            )
 
 
 @dataclasses.dataclass
@@ -1100,20 +1093,8 @@ class PlotSeries(Widget, abc.ABC):
         return super().delete()
 
 
-class PlotItemInternal(DpgInternal):
+class PlotItemInternal(WidgetInternal):
     parent: "plot.Plot"
-
-    def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["parent", ]
-
-    def test_if_others_set(self):
-        if not self.has("parent"):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is not a children to any parent",
-                    f"Please use some `Plot` and add this Widget",
-                ]
-            )
 
 
 @dataclasses.dataclass
