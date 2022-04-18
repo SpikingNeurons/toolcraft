@@ -371,14 +371,14 @@ class SimpleHashableClass(m.HashableClass):
         _plot_y1_axis = _plot.y1_axis
         _plot_y1_axis(
             gui.plot.ScatterSeries(
-                label="line 1",
+                label="scatter 1",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100),
             )
         )
         _plot_y1_axis(
             gui.plot.ScatterSeries(
-                label="line 2",
+                label="scatter 2",
                 x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100),
             )
@@ -412,9 +412,8 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
-    # topic5: SimpleHashablesMethodsRunnerForm = SimpleHashablesMethodsRunnerForm(
-    #     allow_refresh=True
-    # )
+    # topic5: gui.form.HashableMethodsRunnerForm = SimpleHashableClass(
+    #     some_value="hashable.all_plots ...").all_plots()
 
 
 def basic_dashboard():

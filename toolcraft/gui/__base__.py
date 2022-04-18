@@ -5,7 +5,6 @@ The rule for now is to
 """
 import abc
 import dataclasses
-import pathlib
 import typing as t
 import enum
 import dearpygui.dearpygui as dpg
@@ -136,7 +135,7 @@ class EnColor(Enum, enum.Enum):
 @m.RuleChecker(
     things_not_to_be_cached=['dpg_state', 'dpg_config', ]
 )
-class Dpg(m.YamlRepr, abc.ABC):
+class _WidgetDpg(m.YamlRepr, abc.ABC):
 
     @property
     def is_tagged(self) -> bool:
@@ -287,18 +286,8 @@ class Dpg(m.YamlRepr, abc.ABC):
             v = getattr(self, f_name)
 
             # check if Widget and only allow if Form
-            if isinstance(v, Dpg):
-                if isinstance(self, Form):
-                    if not isinstance(v, Widget):
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"Check field {self.__class__}.{f_name}",
-                                f"For {Form} you can have fields that are {Widget}. ",
-                                f"But seems like you are adding non widget {Dpg} class "
-                                f"{v.__class__} to this class {self.__class__}"
-                            ]
-                        )
-                else:
+            if isinstance(v, Widget):
+                if not isinstance(self, Form):
                     raise e.code.CodingError(
                         msgs=[
                             f"Check field {self.__class__}.{f_name}",
@@ -508,7 +497,7 @@ class WidgetInternal(m.Internal):
 @m.RuleChecker(
     things_not_to_be_cached=['is_tagged']
 )
-class Widget(Dpg, abc.ABC):
+class Widget(_WidgetDpg, abc.ABC):
 
     @property
     @util.CacheResult

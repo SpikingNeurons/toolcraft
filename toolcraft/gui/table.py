@@ -67,6 +67,27 @@ class Table(_auto.Table):
     # ...
     columns: t.List[Column] = None
 
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # make sure that column is supplied
+        if self.columns is None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Please supply mandatory field `columns` ..."
+                ]
+            )
+
+    def init(self):
+        # call super
+        super().init()
+
+        # now call rows so that they add self to themselves
+        if bool(self.rows):
+            for _r in self.rows:
+                _r()
+
     @property
     @util.CacheResult
     def children(self) -> t.List[Row]:
@@ -109,7 +130,6 @@ class Table(_auto.Table):
                 return self.rows[item[0]][item[1]]
         else:
             raise e.code.CodingError(msgs=[f"Unknown type {type(item)}"])
-            raise
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -209,7 +229,6 @@ class Table(_auto.Table):
                 _cols.append(Column(label=_))
         else:
             raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
-            raise
 
         # make rows
         _rows = []
@@ -218,7 +237,6 @@ class Table(_auto.Table):
                 _rows.append(Row())
         else:
             raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
-            raise
 
         return Table(rows=_rows, columns=_cols)
 
@@ -251,7 +269,7 @@ class Table(_auto.Table):
         """
         internal_dpg.set_table_row_color(self.dpg_id, row, color)
 
-    def unset_row_color(self, row: int, color: COLOR_TYPE):
+    def unset_row_color(self, row: int):
         """
         Refer:
         >>> dpg.unset_table_row_color
@@ -272,12 +290,12 @@ class Table(_auto.Table):
         """
         internal_dpg.unhighlight_table_cell(self.dpg_id, row, col)
 
-    def is_cell_highlight(self, row: int, col: int) -> bool:
+    def is_cell_highlighted(self, row: int, col: int) -> bool:
         """
         Refer:
-        >>> dpg.is_table_cell_highlight
+        >>> dpg.is_table_cell_highlighted
         """
-        return internal_dpg.is_table_cell_highlight(self.dpg_id, row, col)
+        return internal_dpg.is_table_cell_highlighted(self.dpg_id, row, col)
 
     def highlight_column(self, col: int, color: COLOR_TYPE):
         """
@@ -293,12 +311,12 @@ class Table(_auto.Table):
         """
         internal_dpg.unhighlight_table_column(self.dpg_id, col)
 
-    def is_column_highlight(self, col: int) -> bool:
+    def is_column_highlighted(self, col: int) -> bool:
         """
         Refer:
-        >>> dpg.is_table_column_highlight
+        >>> dpg.is_table_column_highlighted
         """
-        return internal_dpg.is_table_column_highlight(self.dpg_id, col)
+        return internal_dpg.is_table_column_highlighted(self.dpg_id, col)
 
     def highlight_row(self, row: int, color: COLOR_TYPE):
         """
@@ -314,9 +332,9 @@ class Table(_auto.Table):
         """
         internal_dpg.unhighlight_table_row(self.dpg_id, row)
 
-    def is_row_highlight(self, row: int) -> bool:
+    def is_row_highlighted(self, row: int) -> bool:
         """
         Refer:
-        >>> dpg.is_table_row_highlight
+        >>> dpg.is_table_row_highlighted
         """
-        return internal_dpg.is_table_row_highlight(self.dpg_id, row)
+        return internal_dpg.is_table_row_highlighted(self.dpg_id, row)

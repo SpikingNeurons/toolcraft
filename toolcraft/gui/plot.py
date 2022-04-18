@@ -305,7 +305,6 @@ class Plot(_auto.Plot):
             )
         _ret = YAxis()
         _ret.internal.parent = self
-        _ret.internal.root = self.root
         return _ret
 
     @property
@@ -366,15 +365,15 @@ class Plot(_auto.Plot):
     ):
         # to delete any plot series
         if y1_axis:
-            self.y1_axis.clear()
+            self.y1_axis.delete()
         if self.num_of_y_axis == 2:
             if y2_axis:
-                self.y2_axis.clear()
+                self.y2_axis.delete()
         elif self.num_of_y_axis == 3:
             if y2_axis:
-                self.y2_axis.clear()
+                self.y2_axis.delete()
             if y3_axis:
-                self.y3_axis.clear()
+                self.y3_axis.delete()
 
         # to delete annotations, drag_line, drag_plot
         _plot_items_keys = list(self.all_plot_items.keys())
