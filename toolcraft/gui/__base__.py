@@ -23,6 +23,10 @@ COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
+# container widget stack ... to add to parent automatically
+_CONTAINER_WIDGET_STACK: t.List["ContainerWidget"] = []
+
+
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
     from . import window
@@ -535,9 +539,48 @@ class Widget(_WidgetDpg, abc.ABC):
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
         return None
 
+    # noinspection PyMethodOverriding
+    def __call__(self):
+        raise e.code.NotAllowed(
+            msgs=[f"__call__ is blocked for class {self.__class__} ... "
+                  f"this is only allowed for {ContainerWidget}"]
+        )
+
+    def init(self):
+        global _CONTAINER_WIDGET_STACK
+
+        # if there is parent container then raise error
+        if bool(_CONTAINER_WIDGET_STACK):
+            raise e.code.CodingError(
+                msgs=[
+                    f"Widget of class {self.__class__} is created in with context ..."
+                    f"Note that only {MovableWidget} can be added to {ContainerWidget} "
+                    f"and normal widgets that are not movable should be used as "
+                    f"properties",
+                ]
+            )
+
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.widget.{cls.__name__}"
+
+    def on_enter(self):
+        raise e.code.NotAllowed(
+            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget} so "
+                  f"you cannot use with context"]
+        )
+
+        # we do not want behaviour of parent as __call__ is overridden
+        # super().on_enter()
+
+    def on_exit(self, exc_type, exc_val, exc_tb):
+        raise e.code.NotAllowed(
+            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget} so "
+                  f"you cannot use with context"]
+        )
+
+        # we do not want behaviour of parent as __call__ is overridden
+        # super().on_exit()
 
     def get_user_data(self) -> 'USER_DATA':
         """
@@ -592,6 +635,13 @@ class MovableWidget(Widget, abc.ABC):
     @property
     def index_in_parent_children(self) -> int:
         return self.parent.index_in_children(self)
+
+    def init(self):
+        global _CONTAINER_WIDGET_STACK
+
+        # if there is parent container add to it
+        if bool(_CONTAINER_WIDGET_STACK):
+            _CONTAINER_WIDGET_STACK[-1](widget=self)
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -761,6 +811,20 @@ class ContainerWidget(Widget, abc.ABC):
             return self.children.index(child)
         except ValueError:
             return None
+
+    def on_enter(self):
+        global _CONTAINER_WIDGET_STACK
+        _CONTAINER_WIDGET_STACK.append(self)
+
+        # we do not want behaviour of parent as __call__ is overridden
+        # super().on_enter()
+
+    def on_exit(self, exc_type, exc_val, exc_tb):
+        global _CONTAINER_WIDGET_STACK
+        _CONTAINER_WIDGET_STACK.pop()
+
+        # we do not want behaviour of parent as __call__ is overridden
+        # super().on_exit()
 
     def clone(self) -> "ContainerWidget":
         if bool(self.children):

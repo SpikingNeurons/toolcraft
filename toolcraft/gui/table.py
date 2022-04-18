@@ -64,6 +64,24 @@ class Row(_auto.TableRow):
         for _ in range(_num_columns):
             super().__call__(widget=Cell())
 
+    def on_enter(self):
+        raise e.code.CodingError(
+            msgs=[
+                f"Although {Row} is ContainerWidget we block using with context as "
+                f"the cells will be already created for and hence instead use "
+                f"indexing i.w., use __getitem__"
+            ]
+        )
+
+    def on_exit(self, exc_type, exc_val, exc_tb):
+        raise e.code.CodingError(
+            msgs=[
+                f"Although {Row} is ContainerWidget we block using with context as "
+                f"the cells will be already created for and hence instead use "
+                f"indexing i.w., use __getitem__"
+            ]
+        )
+
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.table.{cls.__name__}"
