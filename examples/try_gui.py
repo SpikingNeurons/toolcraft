@@ -60,82 +60,21 @@ class Plotting(gui.form.Form):
     )
 
     def plot_some_examples(self):
-        # ------------------------------------------------------- 01
-        # _simple_plot
-        ...
-
-        # ------------------------------------------------------- 02
-        # _line_plot
-        self.line_plot.legend.show = False
-        _line_plot_y1_axis = self.line_plot.y1_axis
-        for _i in range(4):
-            _line_plot_y1_axis(
-                gui.plot.LineSeries(
-                    label=f"line {_i}",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
-            )
-        for _i in range(4):
-            _line_plot_y1_axis(
-                gui.plot.LineSeries(
-                    label=f"grouped_lines#{_i}",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
-            )
-        _line_plot_y1_axis(
-            gui.plot.VLineSeries(x=[1.0, 2.0], label="vline 1")
-        )
-        _line_plot_y1_axis(
-            gui.plot.VLineSeries(x=[10.0, 11.0], label="vline 2")
-        )
-        _line_plot_y1_axis(
-            gui.plot.HLineSeries(x=[1.0, 2.0], label="hline 1")
-        )
-        _line_plot_y1_axis(
-            gui.plot.HLineSeries(x=[10.0, 11.0], label="hline 2")
-        )
-
-        # ------------------------------------------------------- 03
-        # scatter plot
-        _scatter_plot_y1_axis = self.scatter_plot.y1_axis
-        _scatter_plot_y1_axis(
-            gui.plot.ScatterSeries(
-                label="scatter 1",
-                x=np.random.normal(1.0, scale=2.0, size=100),
+        with self.line_plot.y1_axis:
+            gui.plot.LineSeries(
+                label="line 1",
+                x=np.arange(100),
                 y=np.random.normal(0.0, scale=2.0, size=100),
             )
-        )
-        _scatter_plot_y1_axis(
-            gui.plot.ScatterSeries(
-                label="scatter 2",
-                x=np.random.normal(0.0, scale=2.0, size=100),
-                y=np.random.normal(1.0, scale=2.0, size=100),
+            gui.plot.LineSeries(
+                label="line 2",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
             )
-        )
-
-        # ------------------------------------------------------- 04
-        # sub plots
-        _subplot = self.subplot
-        for i in range(4):
-            _plot = gui.plot.Plot(height=200)
-            _subplot(widget=_plot)
-            _plot_y1_axis = _plot.y1_axis
-            _plot_y1_axis(
-                gui.plot.LineSeries(
-                    label="line 1",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
-            )
-            _plot_y1_axis(
-                gui.plot.LineSeries(
-                    label="line 2",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
-            )
+            gui.plot.VLineSeries(x=[1.0, 2.0], label="vline 1")
+            gui.plot.VLineSeries(x=[10.0, 11.0], label="vline 2")
+            gui.plot.HLineSeries(x=[1.0, 2.0], label="hline 1")
+            gui.plot.HLineSeries(x=[10.0, 11.0], label="hline 2")
 
 
 @dataclasses.dataclass
@@ -178,7 +117,7 @@ class PlottingWithUpdates(gui.form.Form):
                 )
                 _y1_axis = _form.line_plot.y1_axis
                 _y1_axis(_ls)
-                _ls_ks = list(_y1_axis.all_plot_series.keys())
+                _ls_ks = [_.label for _ in _y1_axis.children]
                 _form.combo_select.items = _ls_ks
                 _form.combo_select.default_value = _ls_ks[-1]
 
@@ -228,7 +167,7 @@ class PlottingWithUpdates(gui.form.Form):
                 _combo_select_value = _form.combo_select.get_value()
                 if _combo_select_value == '':
                     return
-                _plot_series = _y1_axis.all_plot_series[_combo_select_value]
+                _plot_series = _y1_axis[_combo_select_value]
                 _plot_series.x = np.arange(100)
                 _plot_series.y = np.random.normal(0.0, scale=2.0, size=100)
 
@@ -252,8 +191,8 @@ class PlottingWithUpdates(gui.form.Form):
                 _combo_select_value = _form.combo_select.get_value()
                 if _combo_select_value == '':
                     return
-                _y1_axis.all_plot_series[_combo_select_value].delete()
-                _ls_ks = list(_y1_axis.all_plot_series.keys())
+                _y1_axis[_combo_select_value].delete()
+                _ls_ks = [_.label for _ in _y1_axis.children]
                 _form.combo_select.items = _ls_ks
                 try:
                     _form.combo_select.default_value = _ls_ks[-1]
@@ -278,41 +217,6 @@ class PlottingWithUpdates(gui.form.Form):
         _button_bar(self.delete_button)
 
         return _button_bar
-
-    def plot_some_examples(self):
-        # ------------------------------------------------------- 01
-        # _simple_plot
-        ...
-
-        # ------------------------------------------------------- 02
-        # _line_plot
-        _line_plot_y1_axis = self.line_plot.y1_axis
-        _line_plot_y1_axis(
-            gui.plot.LineSeries(
-                label="line 1",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
-            )
-        )
-        _line_plot_y1_axis(
-            gui.plot.LineSeries(
-                label="line 2",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
-            )
-        )
-        _line_plot_y1_axis(
-            gui.plot.VLineSeries(x=[1.0, 2.0], label="vline 1")
-        )
-        _line_plot_y1_axis(
-            gui.plot.VLineSeries(x=[10.0, 11.0], label="vline 2")
-        )
-        _line_plot_y1_axis(
-            gui.plot.HLineSeries(x=[1.0, 2.0], label="hline 1")
-        )
-        _line_plot_y1_axis(
-            gui.plot.HLineSeries(x=[10.0, 11.0], label="hline 2")
-        )
 
 
 @dataclasses.dataclass(frozen=True)

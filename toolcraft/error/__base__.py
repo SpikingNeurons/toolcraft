@@ -1,5 +1,7 @@
 import inspect
 import re
+import yaml
+from rich.console import Console
 
 from .. import logger
 
@@ -51,6 +53,15 @@ class _CustomException(Exception):
         # -----------------------------------------------------------------03
         # log
         _logger.error(msg=_header, msgs=msgs)
+        # log with rich
+        # todo: doing this here as the error does not appear on console
+        #   need to investigate how to use RichHandler to log to file as well as console
+        _console = Console()
+        _console.print_exception(show_locals=False, width=None)
+        _rich_print = "\n\n" + _header
+        if msgs is not None:
+            _rich_print += "\n" + yaml.dump(msgs)
+        _console.print(_rich_print)
 
         # -----------------------------------------------------------------04
         # if the parent i.e. this __init__ was called from child that means the

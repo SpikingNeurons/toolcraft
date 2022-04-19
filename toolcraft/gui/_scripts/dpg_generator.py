@@ -325,11 +325,15 @@ class DpgDef:
         # if dec by @contextmanager then is container
         _is_container = self.fn_src.find("@contextmanager") != -1
 
-        # x_axis is not container anyways and y_axis we will handle so in case of
-        # plot_axis fn we force it to be not container
+        # x_axis is not container but y_axis is
         # >>> check 'gui.plot.XAxis' and `gui.plot.YAxis`
         if self.fn == dpg.plot_axis:
-            _is_container = False
+            if self.parametrize['axis'] == 'dpg.mvXAxis':
+                _is_container = False
+            elif self.parametrize['axis'] == 'dpg.mvYAxis':
+                _is_container = True
+            else:
+                raise Exception(f"Unknown {self.parametrize['axis']} ...")
 
         # return
         return _is_container

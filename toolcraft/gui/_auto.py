@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.4.0
->> Time: 2022-03-20 04:35
+>> Time: 2022-04-19 02:30
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -10195,7 +10195,7 @@ class XAxis(Widget):
 
 
 @dataclasses.dataclass
-class YAxis(Widget):
+class YAxis(ContainerWidget):
     """
     Refer:
     >>> dpg.plot_axis

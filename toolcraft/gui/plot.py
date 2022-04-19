@@ -113,49 +113,44 @@ class XAxis(_auto.XAxis):
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_to_be_cached=['all_plot_series'],
-)
 class YAxis(_auto.YAxis):
 
     @property
     @util.CacheResult
-    def all_plot_series(self) -> t.Dict[str, PlotSeries]:
-        return {}
+    def children(self) -> t.List[PlotSeries]:
+        return []
 
-    # noinspection PyMethodOverriding,PyUnresolvedReferences
-    def __call__(self, plot_series: PlotSeries):
-        if isinstance(plot_series, PlotSeries):
-            if plot_series.label in self.all_plot_series.keys():
+    @property
+    def restrict_children_type(self) -> t.Type[PlotSeries]:
+        return PlotSeries
+
+    def __getitem__(self, item: str) -> PlotSeries:
+        for _ in self.children:
+            if _.label == item:
+                return _
+        e.validation.ShouldBeOneOf(
+            value=item, values=[_.label for _ in self.children],
+            msgs=["There is no plot_series with this label name"]
+        ).raise_if_failed()
+
+    # noinspection PyMethodOverriding
+    def __call__(self, widget: PlotSeries):
+        if isinstance(widget, PlotSeries):
+            if widget.label in [_.label for _ in self.children]:
                 raise e.validation.NotAllowed(
                     msgs=[
                         f"There already exists a plot_series with label "
-                        f"`{plot_series.label}`",
+                        f"`{widget.label}`",
                         f"Note that if you want to share label across multiple series "
                         f"then append `#<some unique name>` to label to make it unique "
                         f"per plot series",
                     ]
                 )
-            self.all_plot_series[plot_series.label] = plot_series
-            plot_series.internal.parent = self
-            if self.is_built:
-                plot_series.build()
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_series)}"])
+        super().__call__(widget=widget)
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
-
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
-        # call super
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
-
-        # now it is time to render children
-        for _ps in self.all_plot_series.values():
-            _ps.build()
 
     def delete(self):
         self.clear()
@@ -167,17 +162,6 @@ class YAxis(_auto.YAxis):
         >>> dpg.fit_axis_data
         """
         internal_dpg.fit_axis_data(axis=self.dpg_id)
-
-    def clear(self):
-        """
-        Refer:
-        >>> dpg.delete_item
-        """
-        # https://github.com/hoffstadt/DearPyGui/discussions/1328
-        # internal_dpg.delete_item(item=self.dpg_id, children_only=True, slot=1)
-        _ks = list(self.all_plot_series.keys())
-        for _k in _ks:
-            self.all_plot_series[_k].delete()
 
     def get_limits(self) -> t.List[float]:
         """
@@ -441,12 +425,12 @@ class SubPlots(_auto.SubPlots):
     def children(self) -> t.List[Plot]:
         return []
 
+    @property
+    def restrict_children_type(self) -> t.Type[Plot]:
+        return Plot
+
     def __call__(self, widget: Plot, before: Plot = None):
-        # we also need to add cells in row
-        if isinstance(widget, Plot):
-            super().__call__(widget, before)
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
+        super().__call__(widget, before)
 
     @classmethod
     def yaml_tag(cls) -> str:

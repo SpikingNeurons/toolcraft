@@ -539,6 +539,13 @@ class Widget(_WidgetDpg, abc.ABC):
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
         return None
 
+    def __eq__(self, other):
+        """
+        Needed for ContainerWidget.index_in_children to work ...
+        as data related things like PlotSeries have numpy arrays
+        """
+        return id(self) == id(other)
+
     # noinspection PyMethodOverriding
     def __call__(self):
         raise e.code.NotAllowed(
@@ -549,16 +556,9 @@ class Widget(_WidgetDpg, abc.ABC):
     def init(self):
         global _CONTAINER_WIDGET_STACK
 
-        # if there is parent container then raise error
+        # if there is parent container add to it
         if bool(_CONTAINER_WIDGET_STACK):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget of class {self.__class__} is created in with context ..."
-                    f"Note that only {MovableWidget} can be added to {ContainerWidget} "
-                    f"and normal widgets that are not movable should be used as "
-                    f"properties",
-                ]
-            )
+            _CONTAINER_WIDGET_STACK[-1](widget=self)
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -611,6 +611,9 @@ class Widget(_WidgetDpg, abc.ABC):
         Tag.remove(tag_or_widget=self, not_exists_ok=False)
 
     def delete(self):
+        # remove from parent
+        _widget = self.parent.children.pop(self.parent.index_in_children(self))
+
         # if tagged then untag
         Tag.remove(tag_or_widget=self, not_exists_ok=True)
         # delete the dpg UI counterpart
@@ -627,21 +630,7 @@ USER_DATA = t.Dict[
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['index_in_parent_children']
-)
 class MovableWidget(Widget, abc.ABC):
-
-    @property
-    def index_in_parent_children(self) -> int:
-        return self.parent.index_in_children(self)
-
-    def init(self):
-        global _CONTAINER_WIDGET_STACK
-
-        # if there is parent container add to it
-        if bool(_CONTAINER_WIDGET_STACK):
-            _CONTAINER_WIDGET_STACK[-1](widget=self)
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -730,11 +719,6 @@ class MovableWidget(Widget, abc.ABC):
         internal_dpg.move_item_down(self.dpg_id)
         return True
 
-    def delete(self):
-        _children_list = self.parent.children
-        _widget = self.parent.children.pop(self.index_in_parent_children)
-        return super().delete()
-
 
 @dataclasses.dataclass
 @m.RuleChecker(
@@ -753,28 +737,42 @@ class ContainerWidget(Widget, abc.ABC):
     def children(self) -> t.List[MovableWidget]:
         return []
 
+    @property
+    def restrict_children_type(self) -> t.Type[MovableWidget]:
+        """
+        Default is to restrict MovableWidget but you can override this to have
+        Widget's as the __call__ method can accept Widget
+        """
+        return MovableWidget
+
     # noinspection PyMethodOverriding
-    def __call__(self, widget: MovableWidget, before: MovableWidget = None):
+    def __call__(self, widget: Widget, before: MovableWidget = None):
         self._add_child(widget=widget)
         if before is not None:
-            widget.move(before=before)
+            if isinstance(widget, MovableWidget):
+                widget.move(before=before)
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        "Do not supply `before` as `widget` is not movable"
+                    ]
+                )
 
-    def _add_child(self, widget: MovableWidget):
+    def _add_child(self, widget: Widget):
 
         # -------------------------------------------------- 01
         # validate
         # -------------------------------------------------- 01.01
-        # check if supports before
-        if not isinstance(widget, MovableWidget):
+        # check if child supported
+        if not isinstance(widget, self.restrict_children_type):
             raise e.code.CodingError(
                 msgs=[
-                    f"{self.__class__} is not {MovableWidget} i.e. it does not "
-                    f"supports before so you cannot "
-                    f"add it as children",
+                    f"The widget that can be added to this container widget is "
+                    f"restricted to type {self.restrict_children_type} "
+                    f"but you are adding widget of type {type(widget)}",
                     f"Check if it is possible to have {widget.__class__} as a "
-                    f"property of class {self.__class__} instead",
-                    f"If not movable widget then you might think of having it as "
-                    f"property ... instead of using add_child mechanism",
+                    f"property of class {self.__class__} instead especially if "
+                    f"it is not {MovableWidget}",
                 ]
             )
         # -------------------------------------------------- 01.02
@@ -806,11 +804,26 @@ class ContainerWidget(Widget, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.container_widget.{cls.__name__}"
 
-    def index_in_children(self, child: MovableWidget) -> t.Optional[int]:
+    def index_in_children(self, child: Widget) -> int:
         try:
-            return self.children.index(child)
-        except ValueError:
-            return None
+            for _i, _ in enumerate(self.children):
+                if id(_) == id(child):
+                    return _i
+            # index does not work as there are numpy arrays in some
+            # widgets like PlotSeries
+            # todo: numpy data fields of Widget should be stored in some property
+            #  (like `data`) rather than having it as dataclass field ...
+            #  this will also avoid parsing to yaml by `m.Tracker` and data will be
+            #  separate from Widget defination as anyways it can be updated
+            # return self.children.index(child)
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[
+                    "You have not supplied valid child ... "
+                    "please make sure you use this only for valid children",
+                    _e
+                ]
+            )
 
     def on_enter(self):
         global _CONTAINER_WIDGET_STACK
@@ -876,15 +889,6 @@ class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.movable_container_widget.{cls.__name__}"
-
-    def delete(self):
-        self.clear()
-        _children_list = self.parent.children
-        _widget = self.parent.children.pop(self.index_in_parent_children)
-        # super of ContainerWidget is MovableWidget and
-        # super of MovableWidget is Widget
-        # noinspection PySuperArguments
-        return super(MovableWidget, self).delete()
 
 
 @dataclasses.dataclass
@@ -1155,11 +1159,6 @@ class PlotSeries(Widget, abc.ABC):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.plot.{cls.__name__}"
-
-    def delete(self):
-        # noinspection PyUnresolvedReferences
-        del self.parent.all_plot_series[self.label]
-        return super().delete()
 
 
 class PlotItemInternal(WidgetInternal):

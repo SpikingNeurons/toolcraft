@@ -40,9 +40,11 @@ class Row(_auto.TableRow):
     def children(self) -> t.List[Cell]:
         return []
 
-    def __getitem__(
-        self, item: int
-    ) -> Cell:
+    @property
+    def restrict_children_type(self) -> t.Type[Cell]:
+        return Cell
+
+    def __getitem__(self, item: int) -> Cell:
         # noinspection PyTypeChecker
         return self.children[item]
 
@@ -120,7 +122,11 @@ class Table(_auto.Table):
     @util.CacheResult
     def children(self) -> t.List[Row]:
         # noinspection PyTypeChecker
-        return self.rows
+        return [] if self.rows is None else self.rows
+
+    @property
+    def restrict_children_type(self) -> t.Type[Row]:
+        return Row
 
     def __call__(self, widget: Row, before: Row = None):
 
@@ -128,8 +134,6 @@ class Table(_auto.Table):
         if isinstance(widget, Row):
             # this will add cells based on number of columns
             widget()
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(widget)}"])
 
         # call super to add in children
         _ret = super().__call__(widget, before)
