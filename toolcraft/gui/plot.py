@@ -1,10 +1,11 @@
 import dataclasses
 import typing as t
+import abc
 import dearpygui.dearpygui as dpg
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 
-from .__base__ import PlotSeries, PlotItem
+from .__base__ import PlotSeries, PlotItem, PlotContainerItem, PlotMovableItem
 from . import _auto
 from .. import error as e
 from .. import util
@@ -20,10 +21,6 @@ from ._auto import BarSeries
 # noinspection PyUnresolvedReferences
 from ._auto import CandleSeries
 # noinspection PyUnresolvedReferences
-from ._auto import DragLine
-# noinspection PyUnresolvedReferences
-from ._auto import DragPoint
-# noinspection PyUnresolvedReferences
 from ._auto import ErrorSeries
 # noinspection PyUnresolvedReferences
 from ._auto import HeatSeries
@@ -35,8 +32,6 @@ from ._auto import HLineSeries
 from ._auto import LineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import PieSeries
-# noinspection PyUnresolvedReferences
-from ._auto import Annotation
 # noinspection PyUnresolvedReferences
 from ._auto import ScatterSeries
 # noinspection PyUnresolvedReferences
@@ -60,18 +55,26 @@ class Simple(_auto.SimplePlot):
 
 @dataclasses.dataclass
 class Legend(_auto.PlotLegend):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+    ...
 
 
 @dataclasses.dataclass
-class XAxis(_auto.XAxis):
+class Annotation(_auto.PlotAnnotation):
+    ...
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+
+@dataclasses.dataclass
+class DragLine(_auto.PlotDragLine):
+    ...
+
+
+@dataclasses.dataclass
+class DragPoint(_auto.PlotDragPoint):
+    ...
+
+
+@dataclasses.dataclass
+class XAxis(_auto.PlotXAxis):
 
     def fit_data(self):
         """
@@ -113,7 +116,7 @@ class XAxis(_auto.XAxis):
 
 
 @dataclasses.dataclass
-class YAxis(_auto.YAxis):
+class YAxis(_auto.PlotYAxis):
 
     @property
     @util.CacheResult
@@ -121,8 +124,8 @@ class YAxis(_auto.YAxis):
         return []
 
     @property
-    def restrict_children_type(self) -> t.Type[PlotSeries]:
-        return PlotSeries
+    def restrict_children_type(self) -> t.List[t.Type[PlotSeries]]:
+        return [PlotSeries]
 
     def __getitem__(self, item: str) -> PlotSeries:
         for _ in self.children:
@@ -146,11 +149,7 @@ class YAxis(_auto.YAxis):
                         f"per plot series",
                     ]
                 )
-        super().__call__(widget=widget)
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+        super().__call__(widget=widget, before=None)
 
     def delete(self):
         self.clear()
@@ -239,29 +238,36 @@ class Plot(_auto.Plot):
 
     @property
     @util.CacheResult
-    def all_plot_items(self) -> t.Dict[str, PlotItem]:
-        return {}
+    def children(self) -> t.List[PlotMovableItem]:
+        return []
+
+    @property
+    def restrict_children_type(self) -> t.List[t.Type[PlotMovableItem]]:
+        return [PlotMovableItem]
 
     @property
     @util.CacheResult
     def legend(self) -> Legend:
-        _ret = Legend()
-        _ret.internal.parent = self
-        return _ret
+        with self:
+            _ret = Legend()
+            _ret.internal.parent = self
+            return _ret
 
     @property
     @util.CacheResult
     def x_axis(self) -> XAxis:
-        _ret = XAxis()
-        _ret.internal.parent = self
-        return _ret
+        with self:
+            _ret = XAxis()
+            _ret.internal.parent = self
+            return _ret
 
     @property
     @util.CacheResult
     def y1_axis(self) -> YAxis:
-        _ret = YAxis()
-        _ret.internal.parent = self
-        return _ret
+        with self:
+            _ret = YAxis()
+            _ret.internal.parent = self
+            return _ret
 
     @property
     @util.CacheResult
@@ -273,9 +279,10 @@ class Plot(_auto.Plot):
                     f"Please set the field `num_of_y_axis` to be one of [2, 3]"
                 ]
             )
-        _ret = YAxis()
-        _ret.internal.parent = self
-        return _ret
+        with self:
+            _ret = YAxis()
+            _ret.internal.parent = self
+            return _ret
 
     @property
     @util.CacheResult
@@ -287,37 +294,25 @@ class Plot(_auto.Plot):
                     f"Please set the field `num_of_y_axis` to be 3 to use this property"
                 ]
             )
-        _ret = YAxis()
-        _ret.internal.parent = self
-        return _ret
+        with self:
+            _ret = YAxis()
+            _ret.internal.parent = self
+            return _ret
 
     @property
     def is_queried(self) -> bool:
         return internal_dpg.is_plot_queried(self.dpg_id)
 
-    def add_plot_item(self, plot_item: PlotItem):
-        """
-        Note that plot_item are not MovableWidget, also Plot is not ContainerWidget
-        So we use all_plot_items property to store them with Plot instance
-        """
-        if isinstance(plot_item, PlotItem):
-            if plot_item.label in self.all_plot_items.keys():
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"There already exists a plot_item with label "
-                        f"`{plot_item.label}`"
-                    ]
-                )
-            self.all_plot_items[plot_item.label] = plot_item
-            plot_item.internal.parent = self
-            if self.is_built:
-                plot_item.build()
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[f"unknown type {type(plot_item)}"])
+    # noinspection PyMethodOverriding
+    def __call__(self, widget: PlotMovableItem, before: PlotMovableItem = None):
+        # these are not movable children and will be fixed for a given plot,
+        # so we don't want them to be in self.children
+        # but for build to happen we have taken care in property and post_build_runner
+        if isinstance(widget, (Legend, XAxis, YAxis)):
+            return
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+        # call super for normal process
+        super().__call__(widget=widget, before=before)
 
     def init_validate(self):
         # call super
@@ -329,6 +324,10 @@ class Plot(_auto.Plot):
                 "Please crosscheck the value for field num_of_y_axis"
             ]
         ).raise_if_failed()
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.plot.{cls.__name__}"
 
     def get_query_area(self) -> t.Tuple[float, float]:
         """
@@ -377,28 +376,22 @@ class Plot(_auto.Plot):
             if y3_axis:
                 self.y3_axis.clear()
 
-        # clearing is deleting
-        # to delete annotations, drag_line, drag_plot
-        _plot_items_keys = list(self.all_plot_items.keys())
-        for _k in _plot_items_keys:
-            _plot_item = self.all_plot_items[_k]
-            # note that this will also delete the key from `self.all_plot_items`
-            if isinstance(_plot_item, Annotation) and annotations:
-                _plot_item.delete()
-            elif isinstance(_plot_item, DragLine) and drag_lines:
-                _plot_item.delete()
-            elif isinstance(_plot_item, DragPoint) and drag_points:
-                _plot_item.delete()
-            else:
-                raise e.code.ShouldNeverHappen(msgs=[])
+        # calling super clear will remove all annotations, drag_lines and drag_points,
+        # so we redefine here
+        # clearing is deleting for annotations, drag_line, drag_plot
+        _children_copy = self.children.copy()
+        for _c in _children_copy:
+            if isinstance(_c, Annotation) and annotations:
+                _c.delete()
+            if isinstance(_c, DragLine) and drag_lines:
+                _c.delete()
+            if isinstance(_c, DragPoint) and drag_points:
+                _c.delete()
+        del _children_copy
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
     ):
-
-        # call super
-        super().build_post_runner(
-            hooked_method_return_value=hooked_method_return_value)
 
         # build other things
         # note that annotations if any will be taken care by build_post_runner as
@@ -413,8 +406,9 @@ class Plot(_auto.Plot):
             self.y3_axis.build()
 
         # now it is time to render children
-        for _ps in self.all_plot_items.values():
-            _ps.build()
+        # call super
+        super().build_post_runner(
+            hooked_method_return_value=hooked_method_return_value)
 
 
 @dataclasses.dataclass
@@ -426,8 +420,8 @@ class SubPlots(_auto.SubPlots):
         return []
 
     @property
-    def restrict_children_type(self) -> t.Type[Plot]:
-        return Plot
+    def restrict_children_type(self) -> t.List[t.Type[Plot]]:
+        return [Plot]
 
     def __call__(self, widget: Plot, before: Plot = None):
         super().__call__(widget, before)

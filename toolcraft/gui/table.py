@@ -41,8 +41,8 @@ class Row(_auto.TableRow):
         return []
 
     @property
-    def restrict_children_type(self) -> t.Type[Cell]:
-        return Cell
+    def restrict_children_type(self) -> t.List[t.Type[Cell]]:
+        return [Cell]
 
     def __getitem__(self, item: int) -> Cell:
         # noinspection PyTypeChecker
@@ -125,8 +125,8 @@ class Table(_auto.Table):
         return [] if self.rows is None else self.rows
 
     @property
-    def restrict_children_type(self) -> t.Type[Row]:
-        return Row
+    def restrict_children_type(self) -> t.List[t.Type[Row]]:
+        return [Row]
 
     def __call__(self, widget: Row, before: Row = None):
 

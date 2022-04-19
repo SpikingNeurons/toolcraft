@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.4.0
->> Time: 2022-04-19 02:30
+>> Time: 2022-04-19 08:50
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -24,6 +24,8 @@ from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PlotItem
+from .__base__ import PlotMovableItem
+from .__base__ import PlotContainerItem
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
 from .__base__ import USER_DATA
@@ -2296,7 +2298,7 @@ class DragIntX(MovableWidget):
 
 
 @dataclasses.dataclass
-class DragLine(PlotItem):
+class PlotDragLine(PlotMovableItem):
     """
     Refer:
     >>> dpg.add_drag_line
@@ -2370,7 +2372,7 @@ class DragLine(PlotItem):
 
 
 @dataclasses.dataclass
-class DragPoint(PlotItem):
+class PlotDragPoint(PlotMovableItem):
     """
     Refer:
     >>> dpg.add_drag_point
@@ -5629,7 +5631,7 @@ class PieSeries(PlotSeries):
 
 
 @dataclasses.dataclass
-class Annotation(PlotItem):
+class PlotAnnotation(PlotMovableItem):
     """
     Refer:
     >>> dpg.add_plot_annotation
@@ -5684,7 +5686,7 @@ class Annotation(PlotItem):
 
 
 @dataclasses.dataclass
-class PlotLegend(Widget):
+class PlotLegend(PlotItem):
     """
     Refer:
     >>> dpg.add_plot_legend
@@ -5698,9 +5700,6 @@ class PlotLegend(Widget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
@@ -5726,9 +5725,9 @@ class PlotLegend(Widget):
 
         _ret = internal_dpg.add_plot_legend(
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,
@@ -9900,7 +9899,7 @@ class NodeAttribute(MovableContainerWidget):
 
 
 @dataclasses.dataclass
-class Plot(MovableWidget):
+class Plot(MovableContainerWidget):
     """
     Refer:
     >>> dpg.plot
@@ -10106,7 +10105,7 @@ class Plot(MovableWidget):
 
 
 @dataclasses.dataclass
-class XAxis(Widget):
+class PlotXAxis(PlotItem):
     """
     Refer:
     >>> dpg.plot_axis
@@ -10120,9 +10119,6 @@ class XAxis(Widget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
@@ -10164,9 +10160,9 @@ class XAxis(Widget):
         _ret = internal_dpg.add_plot_axis(
             dpg.mvXAxis,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,
@@ -10195,7 +10191,7 @@ class XAxis(Widget):
 
 
 @dataclasses.dataclass
-class YAxis(ContainerWidget):
+class PlotYAxis(PlotContainerItem):
     """
     Refer:
     >>> dpg.plot_axis
@@ -10209,9 +10205,6 @@ class YAxis(ContainerWidget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
@@ -10253,9 +10246,9 @@ class YAxis(ContainerWidget):
         _ret = internal_dpg.add_plot_axis(
             dpg.mvYAxis,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,

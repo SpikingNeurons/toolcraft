@@ -131,6 +131,8 @@ from ._auto import Separator
 # noinspection PyUnresolvedReferences
 from ._auto import SeriesValue
 # noinspection PyUnresolvedReferences
+from ._auto import SimplePlot
+# noinspection PyUnresolvedReferences
 from ._auto import SliderFloat
 # noinspection PyUnresolvedReferences
 from ._auto import SliderFloatX
@@ -218,6 +220,10 @@ from ._auto import MenuBar
 from ._auto import Node
 # noinspection PyUnresolvedReferences
 from ._auto import NodeAttribute
+# noinspection PyUnresolvedReferences
+from ._auto import Plot
+# noinspection PyUnresolvedReferences
+from ._auto import SubPlots
 # noinspection PyUnresolvedReferences
 from ._auto import Tab
 # noinspection PyUnresolvedReferences

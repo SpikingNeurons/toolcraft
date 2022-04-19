@@ -290,16 +290,11 @@ class DpgDef:
 
     @property
     def is_plot_related(self) -> bool:
+        # this means that items that Plot class can hold
+        # note that plot, subplots and simple_plot are not the children of plot
         if self.fn in [
-            dpg.plot, dpg.plot_axis, dpg.subplots, dpg.add_plot_legend, dpg.add_simple_plot,
-        ]:
-            return True
-        else:
-            return False
-
-    @property
-    def is_plot_items_related(self) -> bool:
-        if self.fn in [
+            # dpg.plot, dpg.subplots, dpg.add_simple_plot,
+            dpg.plot_axis, dpg.add_plot_legend,
             dpg.add_plot_annotation, dpg.add_drag_line, dpg.add_drag_point,
         ]:
             return True
@@ -363,20 +358,32 @@ class DpgDef:
             if self.is_before_param_present:
                 if self.is_container:
                     _class_name = "MovableContainerWidget"
-                    if self.fn == dpg.plot:
-                        # as we will handle this i.e. the container part
-                        _class_name = "MovableWidget"
+
                 else:
                     _class_name = "MovableWidget"
+
+                    # plot series for y-axis ...
+                    # always have before and are not containers
                     if self.is_plot_series_related:
                         _class_name = "PlotSeries"
-                    if self.is_plot_items_related:
-                        _class_name = "PlotItem"
+
+                    # if plot related
+                    if self.is_plot_related:
+                        _class_name = "PlotMovableItem"
             else:
                 if self.is_container:
                     _class_name = "ContainerWidget"
                 else:
                     _class_name = "Widget"
+
+                # if plot related
+                if self.is_plot_related:
+                    if self.is_container:
+                        # this happens only for YAxis
+                        _class_name = "PlotContainerItem"
+                    else:
+                        _class_name = "PlotItem"
+
         elif self.is_registry:
             _class_name = "Registry"
         else:
@@ -392,9 +399,9 @@ class DpgDef:
         # generate name based on method and parameters
         if self.fn == dpg.plot_axis:
             if self.parametrize['axis'] == 'dpg.mvXAxis':
-                return "XAxis"
+                return "PlotXAxis"
             if self.parametrize['axis'] == 'dpg.mvYAxis':
-                return "YAxis"
+                return "PlotYAxis"
             raise Exception(
                 f"Unknown parameter value for axis {self.parametrize['axis']}"
             )
@@ -419,8 +426,10 @@ class DpgDef:
             return "Slider3D"
         if self.fn == dpg.add_2d_histogram_series:
             return "HistogramSeries2D"
-        if self.fn == dpg.add_plot_annotation:
-            return "Annotation"
+        if self.fn == dpg.add_drag_line:
+            return "PlotDragLine"
+        if self.fn == dpg.add_drag_point:
+            return "PlotDragPoint"
 
         # ------------------------------------------------------- 04
         # default name generation
@@ -468,7 +477,7 @@ class DpgDef:
         if self.fn in [dpg.plot_axis, dpg.add_plot_axis]:
             _ignore_params.append('axis')
 
-        if self.is_plot_series_related or self.is_plot_items_related:
+        if self.is_plot_series_related or self.is_plot_related:
             _ignore_params.append("use_internal_label")
             if "use_internal_label" not in [
                 _param.name for _param in self.fn_signature.parameters.values()
@@ -553,7 +562,7 @@ class DpgDef:
                 _param_dpg_name = "on_enter"
                 _param_dpg_value = "self.if_entered"
             if _param_name == "label":
-                if self.is_plot_series_related or self.is_plot_items_related:
+                if self.is_plot_series_related or self.is_plot_related:
                     _param_dpg_value = "None if self.label is None else self.label.split('#')[0]"
             if _is_callback:
                 _param_dpg_value += "_fn"
@@ -647,7 +656,7 @@ class DpgDef:
         _internal_params = {}
         if self.is_parent_param_present:
             _internal_params['parent'] = "_parent_dpg_id"
-        if self.is_plot_series_related or self.is_plot_items_related:
+        if self.is_plot_series_related or self.is_plot_related:
             _internal_params['use_internal_label'] = "False"
         # ------------------------------------------------------- 03.04.03
         _parametrized_params = {} if self.parametrize is None else self.parametrize
@@ -878,6 +887,8 @@ from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PlotItem
+from .__base__ import PlotMovableItem
+from .__base__ import PlotContainerItem
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
 from .__base__ import USER_DATA
@@ -1096,7 +1107,7 @@ from .__base__ import USER_DATA
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related or _widget_def.is_plot_items_related:
+            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related or _widget_def.is_plot_related:
                 continue
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")
@@ -1114,7 +1125,9 @@ from .__base__ import USER_DATA
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if _widget_def.is_plot_series_related or _widget_def.is_plot_items_related:
+            # note that is_plot_related things will be again redefined in ../plot.py
+            # so no need to add import
+            if _widget_def.is_plot_series_related:
                 _lines.append(_dis_inspect)
                 _lines.append(f"from ._auto import {_widget_def.name}")
 

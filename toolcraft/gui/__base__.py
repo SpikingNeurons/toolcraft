@@ -738,12 +738,12 @@ class ContainerWidget(Widget, abc.ABC):
         return []
 
     @property
-    def restrict_children_type(self) -> t.Type[MovableWidget]:
+    def restrict_children_type(self) -> t.List[t.Type[MovableWidget]]:
         """
         Default is to restrict MovableWidget but you can override this to have
         Widget's as the __call__ method can accept Widget
         """
-        return MovableWidget
+        return [MovableWidget]
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: Widget, before: MovableWidget = None):
@@ -764,10 +764,10 @@ class ContainerWidget(Widget, abc.ABC):
         # validate
         # -------------------------------------------------- 01.01
         # check if child supported
-        if not isinstance(widget, self.restrict_children_type):
+        if not isinstance(widget, tuple(self.restrict_children_type)):
             raise e.code.CodingError(
                 msgs=[
-                    f"The widget that can be added to this container widget is "
+                    f"The widget that can be added to {self.__class__} is "
                     f"restricted to type {self.restrict_children_type} "
                     f"but you are adding widget of type {type(widget)}",
                     f"Check if it is possible to have {widget.__class__} as a "
@@ -792,6 +792,7 @@ class ContainerWidget(Widget, abc.ABC):
 
         # -------------------------------------------------- 04
         # we can now store widget inside children list
+        # noinspection PyTypeChecker
         self.children.append(widget)
 
         # -------------------------------------------------- 05
@@ -1158,7 +1159,8 @@ class PlotSeries(Widget, abc.ABC):
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+        # ys -> Y Series
+        return f"gui.plot.ys.{cls.__name__}"
 
 
 class PlotItemInternal(WidgetInternal):
@@ -1179,9 +1181,41 @@ class PlotItem(Widget, abc.ABC):
 
     @classmethod
     def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+        # i -> item
+        return f"gui.plot.i.{cls.__name__}"
 
-    def delete(self):
-        # noinspection PyUnresolvedReferences
-        del self.parent.all_plot_items[self.label]
-        return super().delete()
+
+@dataclasses.dataclass
+class PlotMovableItem(MovableWidget, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> PlotItemInternal:
+        return PlotItemInternal(owner=self)
+
+    @property
+    def parent(self) -> "plot.Plot":
+        return self.internal.parent
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        # ci -> movable item
+        return f"gui.plot.mi.{cls.__name__}"
+
+
+@dataclasses.dataclass
+class PlotContainerItem(ContainerWidget, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> PlotItemInternal:
+        return PlotItemInternal(owner=self)
+
+    @property
+    def parent(self) -> "plot.Plot":
+        return self.internal.parent
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        # ci -> container item
+        return f"gui.plot.ci.{cls.__name__}"

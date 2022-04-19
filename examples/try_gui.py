@@ -67,6 +67,8 @@ class Plotting(gui.form.Form):
 
         # ------------------------------------------------------- 02
         # _line_plot
+        _ = self.line_plot.x_axis
+        _ = self.line_plot.legend
         with self.line_plot.y1_axis:
             gui.plot.LineSeries(
                 label="line 1",
