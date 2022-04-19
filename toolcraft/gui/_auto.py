@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.4.0
->> Time: 2022-04-19 08:50
+>> Time: 2022-04-19 14:48
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -24,8 +24,6 @@ from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PlotItem
-from .__base__ import PlotMovableItem
-from .__base__ import PlotContainerItem
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
 from .__base__ import USER_DATA
@@ -2298,7 +2296,7 @@ class DragIntX(MovableWidget):
 
 
 @dataclasses.dataclass
-class PlotDragLine(PlotMovableItem):
+class PlotDragLine(PlotItem):
     """
     Refer:
     >>> dpg.add_drag_line
@@ -2372,7 +2370,7 @@ class PlotDragLine(PlotMovableItem):
 
 
 @dataclasses.dataclass
-class PlotDragPoint(PlotMovableItem):
+class PlotDragPoint(PlotItem):
     """
     Refer:
     >>> dpg.add_drag_point
@@ -5631,7 +5629,7 @@ class PieSeries(PlotSeries):
 
 
 @dataclasses.dataclass
-class PlotAnnotation(PlotMovableItem):
+class PlotAnnotation(PlotItem):
     """
     Refer:
     >>> dpg.add_plot_annotation
@@ -5686,7 +5684,7 @@ class PlotAnnotation(PlotMovableItem):
 
 
 @dataclasses.dataclass
-class PlotLegend(PlotItem):
+class PlotLegend(Widget):
     """
     Refer:
     >>> dpg.add_plot_legend
@@ -10105,7 +10103,7 @@ class Plot(MovableContainerWidget):
 
 
 @dataclasses.dataclass
-class PlotXAxis(PlotItem):
+class PlotXAxis(Widget):
     """
     Refer:
     >>> dpg.plot_axis
@@ -10191,7 +10189,7 @@ class PlotXAxis(PlotItem):
 
 
 @dataclasses.dataclass
-class PlotYAxis(PlotContainerItem):
+class PlotYAxis(ContainerWidget):
     """
     Refer:
     >>> dpg.plot_axis

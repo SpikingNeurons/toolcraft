@@ -5,7 +5,7 @@ import dearpygui.dearpygui as dpg
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 
-from .__base__ import PlotSeries, PlotItem, PlotContainerItem, PlotMovableItem
+from .__base__ import PlotSeries, PlotItem, PlotItemInternal
 from . import _auto
 from .. import error as e
 from .. import util
@@ -55,26 +55,38 @@ class Simple(_auto.SimplePlot):
 
 @dataclasses.dataclass
 class Legend(_auto.PlotLegend):
-    ...
 
+    @property
+    @util.CacheResult
+    def internal(self) -> PlotItemInternal:
+        return PlotItemInternal(owner=self)
 
-@dataclasses.dataclass
-class Annotation(_auto.PlotAnnotation):
-    ...
+    @property
+    def parent(self) -> "Plot":
+        return self.internal.parent
 
-
-@dataclasses.dataclass
-class DragLine(_auto.PlotDragLine):
-    ...
-
-
-@dataclasses.dataclass
-class DragPoint(_auto.PlotDragPoint):
-    ...
+    @classmethod
+    def yaml_tag(cls) -> str:
+        # ci -> movable item
+        return f"gui.plot.{cls.__name__}"
 
 
 @dataclasses.dataclass
 class XAxis(_auto.PlotXAxis):
+
+    @property
+    @util.CacheResult
+    def internal(self) -> PlotItemInternal:
+        return PlotItemInternal(owner=self)
+
+    @property
+    def parent(self) -> "Plot":
+        return self.internal.parent
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        # ci -> movable item
+        return f"gui.plot.{cls.__name__}"
 
     def fit_data(self):
         """
@@ -120,6 +132,15 @@ class YAxis(_auto.PlotYAxis):
 
     @property
     @util.CacheResult
+    def internal(self) -> PlotItemInternal:
+        return PlotItemInternal(owner=self)
+
+    @property
+    def parent(self) -> "Plot":
+        return self.internal.parent
+
+    @property
+    @util.CacheResult
     def children(self) -> t.List[PlotSeries]:
         return []
 
@@ -150,6 +171,11 @@ class YAxis(_auto.PlotYAxis):
                     ]
                 )
         super().__call__(widget=widget, before=None)
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        # ci -> movable item
+        return f"gui.plot.{cls.__name__}"
 
     def delete(self):
         self.clear()
@@ -192,6 +218,21 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.set_axis_ticks
         """
         internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+
+
+@dataclasses.dataclass
+class Annotation(_auto.PlotAnnotation):
+    ...
+
+
+@dataclasses.dataclass
+class DragLine(_auto.PlotDragLine):
+    ...
+
+
+@dataclasses.dataclass
+class DragPoint(_auto.PlotDragPoint):
+    ...
 
 
 @dataclasses.dataclass
@@ -238,12 +279,12 @@ class Plot(_auto.Plot):
 
     @property
     @util.CacheResult
-    def children(self) -> t.List[PlotMovableItem]:
+    def children(self) -> t.List[PlotItem]:
         return []
 
     @property
-    def restrict_children_type(self) -> t.List[t.Type[PlotMovableItem]]:
-        return [PlotMovableItem]
+    def restrict_children_type(self) -> t.List[t.Type[PlotItem]]:
+        return [PlotItem]
 
     @property
     @util.CacheResult
@@ -304,9 +345,9 @@ class Plot(_auto.Plot):
         return internal_dpg.is_plot_queried(self.dpg_id)
 
     # noinspection PyMethodOverriding
-    def __call__(self, widget: PlotMovableItem, before: PlotMovableItem = None):
+    def __call__(self, widget: PlotItem, before: PlotItem = None):
         # these are not movable children and will be fixed for a given plot,
-        # so we don't want them to be in self.children
+        # so we don't want them to be in `self.children`
         # but for build to happen we have taken care in property and post_build_runner
         if isinstance(widget, (Legend, XAxis, YAxis)):
             return
@@ -392,6 +433,10 @@ class Plot(_auto.Plot):
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
     ):
+        # now it is time to render children
+        # call super
+        super().build_post_runner(
+            hooked_method_return_value=hooked_method_return_value)
 
         # build other things
         # note that annotations if any will be taken care by build_post_runner as
@@ -404,11 +449,6 @@ class Plot(_auto.Plot):
         elif self.num_of_y_axis == 3:
             self.y2_axis.build()
             self.y3_axis.build()
-
-        # now it is time to render children
-        # call super
-        super().build_post_runner(
-            hooked_method_return_value=hooked_method_return_value)
 
 
 @dataclasses.dataclass

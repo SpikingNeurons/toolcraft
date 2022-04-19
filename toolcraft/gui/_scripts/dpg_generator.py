@@ -368,21 +368,16 @@ class DpgDef:
                         _class_name = "PlotSeries"
 
                     # if plot related
+                    # note that apart from XAxis, YAxis and Legend rest all are movable
+                    # also note that XAxis, YAxis and Legend are handled separately
+                    # as they are not true children to Plot
                     if self.is_plot_related:
-                        _class_name = "PlotMovableItem"
+                        _class_name = "PlotItem"
             else:
                 if self.is_container:
                     _class_name = "ContainerWidget"
                 else:
                     _class_name = "Widget"
-
-                # if plot related
-                if self.is_plot_related:
-                    if self.is_container:
-                        # this happens only for YAxis
-                        _class_name = "PlotContainerItem"
-                    else:
-                        _class_name = "PlotItem"
 
         elif self.is_registry:
             _class_name = "Registry"
@@ -887,8 +882,6 @@ from .__base__ import Callback
 from .__base__ import Registry
 from .__base__ import PlotSeries
 from .__base__ import PlotItem
-from .__base__ import PlotMovableItem
-from .__base__ import PlotContainerItem
 from .__base__ import PLOT_DATA_TYPE
 from .__base__ import COLOR_TYPE
 from .__base__ import USER_DATA

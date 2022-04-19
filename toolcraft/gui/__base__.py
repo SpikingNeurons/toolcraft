@@ -1168,25 +1168,7 @@ class PlotItemInternal(WidgetInternal):
 
 
 @dataclasses.dataclass
-class PlotItem(Widget, abc.ABC):
-
-    @property
-    @util.CacheResult
-    def internal(self) -> PlotItemInternal:
-        return PlotItemInternal(owner=self)
-
-    @property
-    def parent(self) -> "plot.Plot":
-        return self.internal.parent
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        # i -> item
-        return f"gui.plot.i.{cls.__name__}"
-
-
-@dataclasses.dataclass
-class PlotMovableItem(MovableWidget, abc.ABC):
+class PlotItem(MovableWidget, abc.ABC):
 
     @property
     @util.CacheResult
@@ -1200,22 +1182,4 @@ class PlotMovableItem(MovableWidget, abc.ABC):
     @classmethod
     def yaml_tag(cls) -> str:
         # ci -> movable item
-        return f"gui.plot.mi.{cls.__name__}"
-
-
-@dataclasses.dataclass
-class PlotContainerItem(ContainerWidget, abc.ABC):
-
-    @property
-    @util.CacheResult
-    def internal(self) -> PlotItemInternal:
-        return PlotItemInternal(owner=self)
-
-    @property
-    def parent(self) -> "plot.Plot":
-        return self.internal.parent
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        # ci -> container item
-        return f"gui.plot.ci.{cls.__name__}"
+        return f"gui.plot.{cls.__name__}"
