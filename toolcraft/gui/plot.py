@@ -65,6 +65,10 @@ class Legend(_auto.PlotLegend):
     def parent(self) -> "Plot":
         return self.internal.parent
 
+    @property
+    def registered_as_child(self) -> bool:
+        return False
+
     @classmethod
     def yaml_tag(cls) -> str:
         # ci -> movable item
@@ -82,6 +86,10 @@ class XAxis(_auto.PlotXAxis):
     @property
     def parent(self) -> "Plot":
         return self.internal.parent
+
+    @property
+    def registered_as_child(self) -> bool:
+        return False
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -140,6 +148,10 @@ class YAxis(_auto.PlotYAxis):
         return self.internal.parent
 
     @property
+    def registered_as_child(self) -> bool:
+        return False
+
+    @property
     @util.CacheResult
     def children(self) -> t.List[PlotSeries]:
         return []
@@ -176,10 +188,6 @@ class YAxis(_auto.PlotYAxis):
     def yaml_tag(cls) -> str:
         # ci -> movable item
         return f"gui.plot.{cls.__name__}"
-
-    def delete(self):
-        self.clear()
-        return super().delete()
 
     def fit_data(self):
         """
@@ -380,18 +388,14 @@ class Plot(_auto.Plot):
     def delete(self):
 
         # to delete any plot series
+        self.legend.delete()
+        self.x_axis.delete()
         self.y1_axis.delete()
         if self.num_of_y_axis == 2:
             self.y2_axis.delete()
         elif self.num_of_y_axis == 3:
             self.y2_axis.delete()
             self.y3_axis.delete()
-
-        # to delete annotations, drag_line, drag_plot
-        _plot_items_keys = list(self.all_plot_items.keys())
-        for _k in _plot_items_keys:
-            # note that this will also delete the key from `self.all_plot_items`
-            self.all_plot_items[_k].delete()
 
         # super delete ... so that Plot is removed from parent ContainerWidget
         return super().delete()

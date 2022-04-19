@@ -539,6 +539,10 @@ class Widget(_WidgetDpg, abc.ABC):
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
         return None
 
+    @property
+    def registered_as_child(self) -> bool:
+        return True
+
     def __eq__(self, other):
         """
         Needed for ContainerWidget.index_in_children to work ...
@@ -612,10 +616,13 @@ class Widget(_WidgetDpg, abc.ABC):
 
     def delete(self):
         # remove from parent
-        _widget = self.parent.children.pop(self.parent.index_in_children(self))
+        # some widgets like XAxis, YAxis, Legend are not in parent.children
+        if self.registered_as_child:
+            _widget = self.parent.children.pop(self.parent.index_in_children(self))
 
         # if tagged then untag
         Tag.remove(tag_or_widget=self, not_exists_ok=True)
+
         # delete the dpg UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
         # todo: make _widget unusable ... figure out
@@ -806,25 +813,24 @@ class ContainerWidget(Widget, abc.ABC):
         return f"gui.container_widget.{cls.__name__}"
 
     def index_in_children(self, child: Widget) -> int:
-        try:
-            for _i, _ in enumerate(self.children):
-                if id(_) == id(child):
-                    return _i
-            # index does not work as there are numpy arrays in some
-            # widgets like PlotSeries
-            # todo: numpy data fields of Widget should be stored in some property
-            #  (like `data`) rather than having it as dataclass field ...
-            #  this will also avoid parsing to yaml by `m.Tracker` and data will be
-            #  separate from Widget defination as anyways it can be updated
-            # return self.children.index(child)
-        except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[
-                    "You have not supplied valid child ... "
-                    "please make sure you use this only for valid children",
-                    _e
-                ]
-            )
+        for _i, _ in enumerate(self.children):
+            if id(_) == id(child):
+                return _i
+        # index does not work as there are numpy arrays in some
+        # widgets like PlotSeries
+        # todo: numpy data fields of Widget should be stored in some property
+        #  (like `data`) rather than having it as dataclass field ...
+        #  this will also avoid parsing to yaml by `m.Tracker` and data will be
+        #  separate from Widget defination as anyways it can be updated
+        # return self.children.index(child)
+
+        # raise error if noting returned
+        raise e.code.CodingError(
+            msgs=[
+                "You have not supplied valid child ... "
+                "please make sure you use this only for valid children",
+            ]
+        )
 
     def on_enter(self):
         global _CONTAINER_WIDGET_STACK
