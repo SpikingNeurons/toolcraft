@@ -151,7 +151,7 @@ class HashableMethodRunnerCallback(Callback):
                 # used non movable Widgets
                 try:
                     _before_widget = _widget.parent.children[
-                        _widget.index_in_parent_children + 1
+                        _widget.parent.index_in_children(_widget) + 1
                     ]
                 except IndexError:
                     ...

@@ -60,6 +60,13 @@ class Plotting(gui.form.Form):
     )
 
     def plot_some_examples(self):
+        # ------------------------------------------------------- 01
+        # _simple_plot
+        # todo: add the simple plot form dpg
+        ...
+
+        # ------------------------------------------------------- 02
+        # _line_plot
         with self.line_plot.y1_axis:
             gui.plot.LineSeries(
                 label="line 1",
@@ -75,6 +82,37 @@ class Plotting(gui.form.Form):
             gui.plot.VLineSeries(x=[10.0, 11.0], label="vline 2")
             gui.plot.HLineSeries(x=[1.0, 2.0], label="hline 1")
             gui.plot.HLineSeries(x=[10.0, 11.0], label="hline 2")
+
+        # ------------------------------------------------------- 03
+        # scatter plot
+        with self.scatter_plot.y1_axis:
+            gui.plot.ScatterSeries(
+                label="scatter 1",
+                x=np.random.normal(1.0, scale=2.0, size=100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
+            )
+            gui.plot.ScatterSeries(
+                label="scatter 2",
+                x=np.random.normal(0.0, scale=2.0, size=100),
+                y=np.random.normal(1.0, scale=2.0, size=100),
+            )
+
+        # ------------------------------------------------------- 04
+        # sub plots
+        with self.subplot:
+            for i in range(4):
+                _plot = gui.plot.Plot(height=200)
+                with _plot.y1_axis:
+                    gui.plot.LineSeries(
+                        label="line 1",
+                        x=np.arange(100),
+                        y=np.random.normal(0.0, scale=2.0, size=100),
+                    )
+                    gui.plot.LineSeries(
+                        label="line 2",
+                        x=np.arange(100),
+                        y=np.random.normal(0.0, scale=2.0, size=100),
+                    )
 
 
 @dataclasses.dataclass

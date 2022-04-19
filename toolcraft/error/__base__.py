@@ -2,6 +2,7 @@ import inspect
 import re
 import yaml
 from rich.console import Console
+from rich.traceback import Traceback, Trace
 
 from .. import logger
 
@@ -57,8 +58,9 @@ class _CustomException(Exception):
         # todo: doing this here as the error does not appear on console
         #   need to investigate how to use RichHandler to log to file as well as console
         _console = Console()
-        _console.print_exception(show_locals=False, width=None)
-        _rich_print = "\n\n" + _header
+        # this can be done only in try catch block as traceback is not available
+        # _console.print_exception(show_locals=False, width=None)
+        _rich_print = "\n" + _header
         if msgs is not None:
             _rich_print += "\n" + yaml.dump(msgs)
         _console.print(_rich_print)

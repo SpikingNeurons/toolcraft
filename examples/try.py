@@ -1,4 +1,10 @@
 import dearpygui.dearpygui as dpg
+import sys
+try:
+    raise Exception("ggg")
+except Exception:
+    _1, _2, _3 = sys.exc_info()
+    ...
 
 dpg.create_context()
 
