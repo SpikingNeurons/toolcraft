@@ -36,6 +36,7 @@ from rich import prompt as r_prompt
 from . import logger
 from . import util
 from . import error as e
+from . import marshalling as m
 
 
 class SpinnerType(enum.Enum):
@@ -658,7 +659,6 @@ class Progress(Widget):
 @dataclasses.dataclass
 class ProgressStatusPanel(Widget):
     """
-    We have table with one row for Progress and second for Status
 
     todo: Add one more row that dumps logs using Text so that it stays inside Panel
       This will help us have some information while Panel is still live
@@ -692,6 +692,71 @@ class ProgressStatusPanel(Widget):
         _status = r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
         _group = r_console.Group(
             _progress, _status
+        )
+        if self.title is None:
+            return _group
+        else:
+            return r_panel.Panel(
+                _group,
+                title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=r_box.ASCII,
+            )
+
+    def __enter__(self) -> "ProgressStatusPanel":
+        super().__enter__()
+        self.status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
+        self.refresh(update_renderable=True)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
+        self.status._spinner = r_text.Text.from_markup(
+            f"{EMOJI['white_heavy_check_mark']} "
+            f"Finished in {_elapsed_secs} seconds ...")
+        self.refresh(update_renderable=True)
+        super().__exit__(exc_type, exc_val, exc_tb)
+
+
+@dataclasses.dataclass
+class FitProgressStatusPanel(Widget):
+
+    epochs: int
+    train_dataset: m.HashableClass
+    validate_dataset: m.HashableClass
+
+    @property
+    @util.CacheResult
+    def train_progress(self) -> Progress:
+        return Progress.simple_progress(
+            title="train", console=self.console,
+            refresh_per_second=self.refresh_per_second)
+
+    @property
+    @util.CacheResult
+    def validate_progress(self) -> Progress:
+        return Progress.simple_progress(
+            title="validate", console=self.console,
+            refresh_per_second=self.refresh_per_second)
+
+    @property
+    @util.CacheResult
+    def status(self) -> Status:
+        return Status(
+            title=None,
+            console=self.console, refresh_per_second=self.refresh_per_second,
+            overall_progress_iterable=range(self.epochs),
+        )
+
+    @property
+    def renderable(self) -> r_console.RenderableType:
+        _train_progress = self.train_progress.renderable
+        _validate_progress = self.validate_progress.renderable
+        _status = r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+        _group = r_console.Group(
+            r_console.Group(_train_progress, _validate_progress, ), _status
         )
         if self.title is None:
             return _group

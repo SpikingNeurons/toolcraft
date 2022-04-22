@@ -1712,7 +1712,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             v.__exit__(exc_type, exc_val, exc_tb)
 
         # call super
-        super().on_exit()
+        super().on_exit(exc_type, exc_val, exc_tb)
 
     def get_files(
         self, *, file_keys: t.List[str]
