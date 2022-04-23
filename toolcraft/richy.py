@@ -36,9 +36,14 @@ from rich import prompt as r_prompt
 from . import logger
 from . import util
 from . import error as e
-from . import marshalling as m
+
+# noinspection PyUnreachableCode
+if False:
+    # noinspection PyUnresolvedReferences
+    from . import marshalling as m
 
 
+# noinspection PyArgumentList
 class SpinnerType(enum.Enum):
     """
     Refer
@@ -722,10 +727,13 @@ class ProgressStatusPanel(Widget):
 
 @dataclasses.dataclass
 class FitProgressStatusPanel(Widget):
+    """
+    This is beit specialized for Dataset class ... may be ... move this later to respective modules
+    """
 
-    epochs: int
-    train_dataset: m.HashableClass
-    validate_dataset: m.HashableClass
+    epochs: int = None
+    train_dataset: "m.HashableClass" = None
+    validate_dataset: "m.HashableClass" = None
 
     @property
     @util.CacheResult
@@ -754,15 +762,20 @@ class FitProgressStatusPanel(Widget):
     def renderable(self) -> r_console.RenderableType:
         _train_progress = self.train_progress.renderable
         _validate_progress = self.validate_progress.renderable
-        _status = r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
-        _group = r_console.Group(
-            r_console.Group(_train_progress, _validate_progress, ), _status
+        _status_renderable = self.status.renderable
+        _table = r_table.Table.grid()
+        _table.add_row(
+            r_panel.Panel.fit(_train_progress, title="Train"),
+            r_panel.Panel.fit(_validate_progress, title="Validate"),
+        )
+        _table.add_row(
+            r_panel.Panel.fit(_status_renderable, box=r_box.HORIZONTALS)
         )
         if self.title is None:
-            return _group
+            return _table
         else:
             return r_panel.Panel(
-                _group,
+                _table,
                 title=self.title,
                 border_style="green",
                 # padding=(2, 2),
@@ -770,7 +783,7 @@ class FitProgressStatusPanel(Widget):
                 box=r_box.ASCII,
             )
 
-    def __enter__(self) -> "ProgressStatusPanel":
+    def __enter__(self) -> "FitProgressStatusPanel":
         super().__enter__()
         self.status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
         self.refresh(update_renderable=True)
@@ -783,3 +796,4 @@ class FitProgressStatusPanel(Widget):
             f"Finished in {_elapsed_secs} seconds ...")
         self.refresh(update_renderable=True)
         super().__exit__(exc_type, exc_val, exc_tb)
+
