@@ -993,6 +993,17 @@ class Tracker:
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
 
+    @property
+    def iterable_length(self) -> int:
+        raise e.code.NotSupported(
+            msgs=[
+                f"Class {self.__class__} does not support this ... Please override if you want to use this ..."
+            ]
+        )
+
+    def __len__(self) -> int:
+        return self.iterable_length
+
     @classmethod
     def __init_subclass__(cls, **kwargs):
         # declare
