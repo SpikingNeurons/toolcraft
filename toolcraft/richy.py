@@ -391,7 +391,7 @@ class ProgressTask:
 
     def update(
         self,
-        advance: float = None, state: str = None,
+        advance: float = None,
         total: float = None, description: str = None, **fields,
     ):
         """
@@ -409,7 +409,7 @@ class ProgressTask:
             )
         self.rich_progress.update(
             task_id=self.rich_task.id,
-            advance=advance, state=state, total=total,
+            advance=advance, total=total,
             description=description, **fields,
         )
 
@@ -503,7 +503,7 @@ class Progress(Widget):
 
     def update(
         self,
-        advance: float = None, state: str = None,
+        advance: float = None,
         total: float = None, description: str = None, **fields,
     ):
         """
@@ -512,7 +512,7 @@ class Progress(Widget):
         """
         if bool(self.tasks):
             next(reversed(self.tasks.values())).update(
-                advance=advance, state=state, total=total, description=description, **fields
+                advance=advance, total=total, description=description, **fields
             )
         else:
             raise e.code.CodingError(
@@ -732,4 +732,87 @@ class ProgressStatusPanel(Widget):
             f"Finished in {_elapsed_secs} seconds ...")
         self.refresh(update_renderable=True)
         super().__exit__(exc_type, exc_val, exc_tb)
+
+
+@dataclasses.dataclass
+class FitProgressStatusPanel(Widget):
+
+    epochs: int = None
+
+    @property
+    @util.CacheResult
+    def train_progress(self) -> Progress:
+        return self.make_richy_progress()
+
+    @property
+    @util.CacheResult
+    def validate_progress(self) -> Progress:
+        return self.make_richy_progress()
+
+    @property
+    @util.CacheResult
+    def status(self) -> Status:
+        return Status(
+            title=None,
+            console=self.console, refresh_per_second=self.refresh_per_second,
+            overall_progress_iterable=range(self.epochs),
+        )
+
+    @property
+    def renderable(self) -> r_console.RenderableType:
+        _train_progress = self.train_progress.renderable
+        _validate_progress = self.validate_progress.renderable
+        _status_renderable = self.status.renderable
+        _table = r_table.Table.grid()
+        _table.add_row(
+            r_panel.Panel.fit(_train_progress, title="Train", box=r_box.HORIZONTALS),
+            r_panel.Panel.fit(_validate_progress, title="Validate", box=r_box.HORIZONTALS),
+        )
+        _status = r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+        _group = r_console.Group(
+            _table, _status
+        )
+        if self.title is None:
+            return _group
+        else:
+            return r_panel.Panel(
+                _group,
+                title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=r_box.ASCII,
+            )
+
+    def __enter__(self) -> "FitProgressStatusPanel":
+        super().__enter__()
+        self.status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
+        self.refresh(update_renderable=True)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
+        self.status._spinner = r_text.Text.from_markup(
+            f"{EMOJI['white_heavy_check_mark']} "
+            f"Finished in {_elapsed_secs} seconds ...")
+        self.refresh(update_renderable=True)
+        super().__exit__(exc_type, exc_val, exc_tb)
+
+    def make_richy_progress(self) -> Progress:
+        return Progress(
+            columns={
+                "text": r_progress.TextColumn(
+                    "[progress.description]{task.description}"),
+                "progress": r_progress.BarColumn(),
+                "percentage": r_progress.TextColumn(
+                    "[progress.percentage]{task.percentage:>3.0f}%"),
+                # "time_remaining": r_progress.TimeRemainingColumn(),
+                "acc": r_progress.TextColumn("[green]{task.fields[acc]:.2f}"),
+                "loss": r_progress.TextColumn("[yellow]{task.fields[loss]:.3f}"),
+                "status": SpinnerColumn(),
+            },
+            console=self.console,
+            refresh_per_second=self.refresh_per_second,
+            tc_log=self.tc_log,
+        )
 
