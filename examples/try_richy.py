@@ -114,6 +114,7 @@ def try_fit_progress_status_panel():
         _train_samples = 200000
         _validate_samples = 100000
         for _epoch in _status_panel:
+            _status_panel.update(status=f"Fitting epoch {_epoch} ...")
             _train_task = _train_progress.add_task(
                 task_name=f"ep {_epoch:03d}", total=_train_samples,
                 acc=float("nan"), loss=float("inf")
@@ -129,9 +130,9 @@ def try_fit_progress_status_panel():
 
 
 def main():
-    try_progress()
-    try_status()
-    try_status_panel()
+    # try_progress()
+    # try_status()
+    # try_status_panel()
     try_fit_progress_status_panel()
 
 
