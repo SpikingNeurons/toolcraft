@@ -127,12 +127,17 @@ def try_fit_progress_status_panel():
             )
             for _ in range(_validate_samples):
                 _validate_task.update(advance=1, acc=_*0.1, loss=_*0.01)
+        _status_panel.set_final_message(
+            message=f"Found best epoch at {2} for val loss {0.004}"
+                    f"\n+ train   : acc: {1.0} | loss: {4.33}"
+                    f"\n+ validate: acc: {1.0} | loss: {4.33}"
+        )
 
 
 def main():
-    try_progress()
-    try_status()
-    try_status_panel()
+    # try_progress()
+    # try_status()
+    # try_status_panel()
     try_fit_progress_status_panel()
 
 

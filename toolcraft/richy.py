@@ -31,6 +31,7 @@ from rich import progress as r_progress
 from rich import status as r_status
 from rich import panel as r_panel
 from rich import box as r_box
+from rich import markdown as r_markdown
 from rich import prompt as r_prompt
 
 from . import logger
@@ -275,21 +276,29 @@ class Status(Widget):
 
     @property
     def renderable(self) -> r_console.RenderableType:
-        # get spinner
-        _ret = self._spinner
+        # grp container
+        _grp = []
 
         # overall progress
         if self.overall_progress_iterable is not None:
-            _ret = r_console.Group(
-                self._overall_progress.renderable, _ret,
-            )
+            _grp.append(self._overall_progress.renderable)
+
+        # get spinner
+        _grp.append(self._spinner)
+
+        # if message there
+        if self._final_message is not None:
+            _grp.append(self._final_message)
+
+        # make actual group
+        _grp = r_console.Group(*_grp)
 
         # add title
         if self.title is None:
-            return _ret
+            return _grp
         else:
             return r_panel.Panel(
-                _ret, title=self.title,
+                _grp, title=self.title,
                 border_style="green",
                 # padding=(2, 2),
                 expand=True,
@@ -301,6 +310,9 @@ class Status(Widget):
         self._spinner = self.spinner.get_spinner(
             text=self.status, speed=self.spinner_speed
         )
+
+        # make message
+        self._final_message = None
 
         # make overall progress
         if self.overall_progress_iterable is not None:
@@ -351,6 +363,11 @@ class Status(Widget):
                     f"To iterate please set field `overall_progress_iterable`"
                 ]
             )
+
+    def set_final_message(self, message: str):
+        # noinspection PyAttributeOutsideInit
+        self._final_message = r_markdown.Markdown("\n---\n" + message)
+        self.refresh(update_renderable=True)
 
     def update(
         self,
@@ -755,7 +772,7 @@ class FitProgressStatusPanel(Widget):
         return Status(
             title=None,
             console=self.console, refresh_per_second=self.refresh_per_second,
-            overall_progress_iterable=range(self.epochs),
+            overall_progress_iterable=range(1, self.epochs + 1),
         )
 
     @property
