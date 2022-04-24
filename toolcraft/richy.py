@@ -149,71 +149,36 @@ class SpinnerColumn(r_progress.SpinnerColumn):
     # noinspection PyMissingConstructor
     def __init__(
         self,
-        states: t.Dict[str, t.Union[str, r_text.Text, r_spinner.Spinner, SpinnerType]],
-        start_state_key: str = "start",
-        finished_state_key: str = "finished",
+        start_state: t.Union[str, r_text.Text, r_spinner.Spinner, SpinnerType] = SpinnerType.dots,
+        finished_state: t.Union[str, r_text.Text] = EMOJI["white_heavy_check_mark"],
         table_column: t.Optional[r_table.Column] = None,
     ):
-        # transform states to respective rich elements
-        self.states = {}
-        for _k, _v in states.items():
-            if isinstance(_v, SpinnerType):
-                _v = _v.get_spinner()
-            elif isinstance(_v, str):
-                _v = r_text.Text.from_markup(_v)
-
-            # if not str then it is Text or Spinner so directly assign
-            self.states[_k] = _v
-
-        # set some keys
-        self.start_state_key = start_state_key
-        self.finished_state_key = finished_state_key
+        # set states
+        self.start_state = \
+            start_state.get_spinner() \
+            if isinstance(start_state, SpinnerType) \
+            else start_state  # type: t.Union[str, r_text.Text, r_spinner.Spinner]
+        self.finished_state = finished_state
 
         # call super __init__ while skipping the immediate parent
         # note that we will not need spinner property
         super(r_progress.SpinnerColumn, self).__init__(table_column=table_column)
 
     def render(self, task: r_progress.Task) -> r_console.RenderableType:
+        # if task finished return
+        if task.finished:
+            return self.finished_state
+
         # if state is provided in task then use it
-        _state_key = task.fields.get("state", None)
+        _spinner_state = task.fields.get("spinner_state", None)
 
-        # if state was not provided in task guess it
-        if _state_key is None:
-            if task.finished:
-                _state_key = self.finished_state_key
-            else:
-                try:
-                    _state_key = task.current_state_key
-                except AttributeError:
-                    # this is firs time for task so set it to start
-                    task.current_state_key = self.start_state_key
-                    _state_key = task.current_state_key
+        # if state was not provided then infer from start state
+        if _spinner_state is None:
+            _spinner_state = self.start_state
 
-        # else since state_key is provided by task make sure that
-        # it is not finished_state_key ... needed to avoid any race conditions
-        else:
-            if _state_key == self.finished_state_key:
-                raise Exception(
-                    f"Please refrain from using `finished_state_key={_state_key}` as "
-                    f"this will be automatically set when `task.finished`. "
-                    f"This is done to avoid race conditions ..."
-                )
-
-        # backup
-        task.current_state_key = _state_key  # backup
-
-        # render
-        try:
-            _current_state = self.states[_state_key]
-            if isinstance(_current_state, r_text.Text):
-                return _current_state
-            elif isinstance(_current_state, r_spinner.Spinner):
-                return _current_state.render(task.get_time())
-            else:
-                raise Exception(f"Unknown type {type(_current_state)}")
-        except KeyError:
-            raise KeyError(f"Unknown state_key `{_state_key}`. "
-                           f"Should be on of {self.states.keys()}")
+        # now return thing to render
+        return _spinner_state.render(task.get_time()) \
+            if isinstance(_spinner_state, r_spinner.Spinner) else _spinner_state
 
 
 @dataclasses.dataclass
@@ -349,12 +314,8 @@ class Status(Widget):
                     "time_elapsed": r_progress.TimeElapsedColumn(),
                     "time_remaining": r_progress.TimeRemainingColumn(),
                     "status": SpinnerColumn(
-                        start_state_key="start",
-                        finished_state_key="finished",
-                        states={
-                            "start": SpinnerType.dots,
-                            "finished": EMOJI["white_heavy_check_mark"],
-                        }
+                        start_state=SpinnerType.dots,
+                        finished_state=EMOJI["white_heavy_check_mark"],
                     ),
                 },
                 console=self.console,
@@ -419,6 +380,59 @@ class Status(Widget):
 
 
 @dataclasses.dataclass
+class ProgressTask:
+    rich_progress: r_progress.Progress
+    rich_task: r_progress.Task
+    total: float
+
+    def __post_init__(self):
+        self._failed = False
+        self._already_finished = False
+
+    def update(
+        self,
+        advance: float = None, state: str = None,
+        total: float = None, description: str = None, **fields,
+    ):
+        """
+        When you pass special `**fields`
+        + `spinner_state` it will be consumed by ProgressColumn
+        >>> SpinnerColumn
+        """
+        if self._failed:
+            raise e.code.CodingError(
+                msgs=["Cannot update anything as the task has failed ..."]
+            )
+        if self._already_finished:
+            raise e.code.CodingError(
+                msgs=["The task is already finished ... so there should be no call for update ..."]
+            )
+        self.rich_progress.update(
+            task_id=self.rich_task.id,
+            advance=advance, state=state, total=total,
+            description=description, **fields,
+        )
+
+    def failed(self):
+        # update
+        self.update(spinner_state=EMOJI["cross_mark"])
+        # set as failed so that update is unusable ...
+        # noinspection PyAttributeOutsideInit
+        self._failed = True
+
+    def already_finished(self):
+        # update ... note we set full length so that any progress bar is fully filled
+        self.update(
+            advance=self.total,
+            spinner_state=EMOJI["heavy_check_mark"],
+        )
+        # set as already_finished so that update is unusable ...
+        # noinspection PyAttributeOutsideInit
+        self._already_finished = True
+
+
+
+@dataclasses.dataclass
 class Progress(Widget):
     """
     Note that this is not ProgressBar nor Progress
@@ -460,41 +474,52 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 02
         # empty container for added tasks
-        self.tasks = {}  # type: t.Dict[str, r_progress.Task]
+        self.tasks = {}  # type: t.Dict[str, ProgressTask]
 
         # ------------------------------------------------------------ 03
         super().__post_init__()
 
     def add_task(
-        self, task_name: str, total: float, description: str = None
-    ) -> r_progress.TaskID:
+        self, task_name: str, total: float, description: str = None, **fields
+    ) -> ProgressTask:
+        # test if fields are defined in columns for progress bar
+        for _k in fields.keys():
+            e.validation.ShouldBeOneOf(
+                value=_k, values=list(self.columns.keys()),
+                msgs=[f"You have not specified how to render extra field {_k} in `Progress.columns`"]
+            ).raise_if_failed()
+
+        # add task
         _tid = self._progress.add_task(
-            description=description or task_name, total=total,
+            description=description or task_name, total=total, **fields,
         )
         for _rt in self._progress.tasks:
             if _rt.id == _tid:
-                self.tasks[task_name] = _rt
+                self.tasks[task_name] = ProgressTask(rich_progress=self._progress, rich_task=_rt, total=total)
                 break
-        return _tid
+
+        # return
+        return self.tasks[task_name]
 
     def update(
-        self, task_name: str = None,
+        self,
         advance: float = None, state: str = None,
-        total: float = None, description: str = None
+        total: float = None, description: str = None, **fields,
     ):
-        if task_name is None:
-            if len(self.tasks) == 1:
-                task_name = list(self.tasks.keys())[0]
-            else:
-                raise e.code.NotAllowed(
-                    msgs=["You must supply task_name kwarg when number of "
-                          "tasks is not one"]
-                )
-        self._progress.update(
-            task_id=self.tasks[task_name].id,
-            advance=advance, state=state, total=total,
-            description=description,
-        )
+        """
+        This is just for convenience.
+        It will just look for last added task and update it.
+        """
+        if bool(self.tasks):
+            next(reversed(self.tasks.values())).update(
+                advance=advance, state=state, total=total, description=description, **fields
+            )
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    f"There are no tasks added yet ..."
+                ]
+            )
 
     def track(
         self,
@@ -551,12 +576,12 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 03
         # add task
-        self.add_task(task_name=task_name, total=task_total, description=description)
+        _task = self.add_task(task_name=task_name, total=task_total, description=description)
 
         # ------------------------------------------------------------ 04
         # yield and hence auto track
         # todo: explore --- self.rich_progress.live.auto_refresh
-        task_id = self.tasks[task_name].id
+        task_id = _task.rich_task.id
         if self._progress.live.auto_refresh:
             # noinspection PyProtectedMember
             with r_progress._TrackThread(
@@ -589,14 +614,7 @@ class Progress(Widget):
                     "[progress.percentage]{task.percentage:>3.0f}%"),
                 "time_elapsed": r_progress.TimeElapsedColumn(),
                 "time_remaining": r_progress.TimeRemainingColumn(),
-                "status": SpinnerColumn(
-                    start_state_key="start",
-                    finished_state_key="finished",
-                    states={
-                        "start": SpinnerType.dots,
-                        "finished": EMOJI["white_heavy_check_mark"],
-                    }
-                ),
+                "status": SpinnerColumn(),
             },
             console=console,
             refresh_per_second=refresh_per_second,
@@ -644,16 +662,7 @@ class Progress(Widget):
                 #     "[progress.percentage]{task.percentage:>3.0f}%"),
                 "download": r_progress.DownloadColumn(),
                 "time_elapsed": r_progress.TimeElapsedColumn(),
-                "status": SpinnerColumn(
-                    start_state_key="start",
-                    finished_state_key="finished",
-                    states={
-                        "start": SpinnerType.dots,
-                        "finished": EMOJI["white_heavy_check_mark"],
-                        "already_finished": EMOJI["heavy_check_mark"],
-                        "failed": EMOJI["cross_mark"],
-                    }
-                ),
+                "status": SpinnerColumn(),
             },
             tc_log=tc_log,
         )

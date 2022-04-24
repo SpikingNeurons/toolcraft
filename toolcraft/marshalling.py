@@ -1093,32 +1093,40 @@ class Tracker:
         self.on_exit(exc_type, exc_val, exc_tb)
 
     def __iter__(self) -> t.Iterable:
-        # the with statement here helps users to directly iterate over
-        # hashable class without using with statement ... but nonetheless we
-        # expect you to call __call__ while looping over
-        with self:
-            # get some vars
-            _status_panel = self.internal.on_call_kwargs[
-                "status_panel"]  # type: richy.ProgressStatusPanel
+        # get some vars
+        _status_panel = self.internal.on_call_kwargs[
+            "status_panel"]  # type: richy.ProgressStatusPanel
 
-            # iterate
-            if _status_panel is None:
+        # iterate
+        if _status_panel is None:
+            if self.in_with_context:
                 for _ in self.on_iter():
                     yield _
             else:
-                if self.iterates_infinitely:
-                    raise e.code.NotAllowed(
-                        msgs=[
-                            "We cannot consume status_panel as this class iterates "
-                            "infinitely ... ",
-                            "you need to pass `status_panel=None` and handle it "
-                            "on your own",
-                        ]
-                    )
+                with self:
+                    for _ in self.on_iter():
+                        yield _
+        else:
+            if self.iterates_infinitely:
+                raise e.code.NotAllowed(
+                    msgs=[
+                        "We cannot consume status_panel as this class iterates "
+                        "infinitely ... ",
+                        "you need to pass `status_panel=None` and handle it "
+                        "on your own",
+                    ]
+                )
+            if self.in_with_context:
                 for _ in _status_panel.progress.track(
                     self.on_iter(), total=self.iterable_length, task_name="iterating"
                 ):
                     yield _
+            else:
+                with self:
+                    for _ in _status_panel.progress.track(
+                        self.on_iter(), total=self.iterable_length, task_name="iterating"
+                    ):
+                        yield _
 
     def __del__(self):
         self.on_del()

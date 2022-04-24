@@ -706,20 +706,14 @@ class FileGroup(StorageHashable, abc.ABC):
                     # compute
                     for _chunk in iter(lambda: fb.read(_chunk_size), b''):
                         _hash_module.update(_chunk)
-                        _hash_check_panel.update(
-                            task_name=fk,
-                            advance=len(_chunk)
-                        )
+                        _hash_check_panel.tasks[fk].update(advance=len(_chunk),)
                     fb.close()
                     _computed_hash = _hash_module.hexdigest()
                 # make dicts to return
                 _computed_hashes[fk] = _computed_hash
                 if not compute:
                     if _computed_hash != _correct_hashes[fk]:
-                        _hash_check_panel.update(
-                            task_name=fk,
-                            state="failed",
-                        )
+                        _hash_check_panel.tasks[fk].failed()
                         _failed_hashes[fk] = {
                             'correct  ': _correct_hashes[fk],
                             'computed ': _computed_hash,
@@ -2046,21 +2040,11 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             for fk in self.file_keys:
                 # if already present just move forward
                 if _file_paths[fk].exists():
-                    _download_panel.update(
-                        task_name=fk,
-                        advance=_lengths[fk]
-                    )
-                    _download_panel.update(
-                        task_name=fk,
-                        state="already_finished",
-                    )
+                    _download_panel.tasks[fk].already_finished()
                     continue
                 # if there was error earlier update task ...
                 if fk in _errors.keys():
-                    _download_panel.update(
-                        task_name=fk,
-                        state="failed",
-                    )
+                    _download_panel.tasks[fk].failed()
                     _raise_error = True
                     continue
                 try:
@@ -2071,10 +2055,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         ):
                             if _chunk:  # filter out keep-alive new chunks
                                 _f.write(_chunk)
-                                _download_panel.update(
-                                    task_name=fk,
-                                    advance=len(_chunk)
-                                )
+                                _download_panel.tasks[fk].update(advance=len(_chunk),)
                 except Exception as _exp:
                     _errors[fk] = str(_exp)
                     _raise_error = True
