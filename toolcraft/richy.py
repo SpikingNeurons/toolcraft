@@ -233,7 +233,7 @@ class Widget(abc.ABC):
             _title = (self.title + ' ') if bool(self.title) else ''
             _ct = self.console.export_text()
             self.tc_log.info(
-                msg=_title + f"finished in {_secs} seconds ...\n---\n"
+                msg=_title + f"finished in {_secs} seconds ..."
                 # + _ct
             )
 
@@ -317,6 +317,7 @@ class Status(Widget):
         # make overall progress
         if self.overall_progress_iterable is not None:
             self._overall_progress = Progress(
+                tc_log=self.tc_log,
                 columns={
                     "text": r_progress.TextColumn(
                         "[progress.description]{task.description}"),
@@ -368,6 +369,8 @@ class Status(Widget):
         # noinspection PyAttributeOutsideInit
         self._final_message = r_markdown.Markdown("\n---\n" + message)
         self.refresh(update_renderable=True)
+        if self.tc_log is not None:
+            self.tc_log.info(msg=message)
 
     def update(
         self,
@@ -446,7 +449,6 @@ class ProgressTask:
         # set as already_finished so that update is unusable ...
         # noinspection PyAttributeOutsideInit
         self._already_finished = True
-
 
 
 @dataclasses.dataclass
@@ -705,6 +707,7 @@ class ProgressStatusPanel(Widget):
     @util.CacheResult
     def progress(self) -> Progress:
         return Progress.simple_progress(
+            tc_log=self.tc_log,
             title=None, console=self.console,
             refresh_per_second=self.refresh_per_second)
 
@@ -712,6 +715,7 @@ class ProgressStatusPanel(Widget):
     @util.CacheResult
     def status(self) -> Status:
         return Status(
+            tc_log=self.tc_log,
             title=None,
             console=self.console, refresh_per_second=self.refresh_per_second,
             overall_progress_iterable=self.overall_progress_iterable,
@@ -770,6 +774,7 @@ class FitProgressStatusPanel(Widget):
     @util.CacheResult
     def status(self) -> Status:
         return Status(
+            tc_log=self.tc_log,
             title=None,
             console=self.console, refresh_per_second=self.refresh_per_second,
             overall_progress_iterable=range(1, self.epochs + 1),
