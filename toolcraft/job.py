@@ -340,63 +340,6 @@ class Job:
             # make <hex_hash>.info if not present
             self.runner.monitor.make_experiment_info_file(experiment=_experiment)
 
-    def check_health(self):
-        # if job has already started
-        _job_info = {"job_id": self.id, "path": self.path.full_path}
-        if self.is_started:
-            # if job was finished then skip
-            if self.is_finished:
-                _LOGGER.info(
-                    msg=f"Job is already completed so skipping call ...",
-                    msgs=[_job_info]
-                )
-                return
-            if self.is_failed:
-                _LOGGER.error(
-                    msg=f"Previous job has failed so skipping call ...",
-                    msgs=["Delete previous calls files to make this call work ...",
-                          _job_info]
-                )
-                return
-            if self.is_running:
-                raise e.code.CodingError(
-                    msgs=[
-                        "This is bug ... there is ongoing job running ...",
-                        "Either you have abruptly killed previous jobs or you "
-                        "have run same job multiple times ...",
-                        "Also teh job might have failed and you missed to catch "
-                        "exception and set failed tag appropriately ... in that case "
-                        "check logs",
-                        _job_info,
-                    ]
-                )
-        else:
-            # if started tag does not exist then other tags should not exist
-            if self.is_running:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `running` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
-            if self.is_finished:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `finished` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
-            if self.is_failed:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `failed` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
-
     def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
         self.check_health()
@@ -555,6 +498,63 @@ class Job:
             runner=runner,
             method=_method, method_kwargs=_method_kwargs,
         )
+
+    def check_health(self):
+        # if job has already started
+        _job_info = {"job_id": self.id, "path": self.path.full_path}
+        if self.is_started:
+            # if job was finished then skip
+            if self.is_finished:
+                _LOGGER.info(
+                    msg=f"Job is already completed so skipping call ...",
+                    msgs=[_job_info]
+                )
+                return
+            if self.is_failed:
+                _LOGGER.error(
+                    msg=f"Previous job has failed so skipping call ...",
+                    msgs=["Delete previous calls files to make this call work ...",
+                          _job_info]
+                )
+                return
+            if self.is_running:
+                raise e.code.CodingError(
+                    msgs=[
+                        "This is bug ... there is ongoing job running ...",
+                        "Either you have abruptly killed previous jobs or you "
+                        "have run same job multiple times ...",
+                        "Also teh job might have failed and you missed to catch "
+                        "exception and set failed tag appropriately ... in that case "
+                        "check logs",
+                        _job_info,
+                    ]
+                )
+        else:
+            # if started tag does not exist then other tags should not exist
+            if self.is_running:
+                e.code.CodingError(
+                    msgs=[
+                        "Found tag for `running` ... we expect it to not be present "
+                        "as the job was never started",
+                        _job_info
+                    ]
+                )
+            if self.is_finished:
+                e.code.CodingError(
+                    msgs=[
+                        "Found tag for `finished` ... we expect it to not be present "
+                        "as the job was never started",
+                        _job_info
+                    ]
+                )
+            if self.is_failed:
+                e.code.CodingError(
+                    msgs=[
+                        "Found tag for `failed` ... we expect it to not be present "
+                        "as the job was never started",
+                        _job_info
+                    ]
+                )
 
     def save_tf_chkpt(self, name: str, tf_chkpt: tf.train.Checkpoint):
         """
@@ -920,7 +920,7 @@ class Monitor:
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments'],
-    things_not_to_be_overridden=['cwd', 'job', 'monitor'],
+    things_not_to_be_overridden=['cwd', 'job', 'monitor', 'get_another_job'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1013,8 +1013,7 @@ class Runner(m.HashableClass, abc.ABC):
     @property
     @util.CacheResult
     def job(self) -> Job:
-
-        if len(sys.argv) == 1:
+        if self.is_on_main_machine:
             raise e.code.CodingError(
                 msgs=[
                     "This job is available only for jobs submitted to server ... "
@@ -1038,7 +1037,20 @@ class Runner(m.HashableClass, abc.ABC):
 
     @classmethod
     def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
-        return [cls.run, cls.init]
+        return [cls.run, cls.init, cls.clone, cls.get_another_job]
+
+    def get_another_job(
+        self, method: t.Callable, method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None
+    ):
+        _job = Job(runner=self, method=method, method_kwargs=method_kwargs)
+        if not _job.is_finished:
+            raise e.code.CodingError(
+                msgs=[
+                    "The job you are requesting is not finished",
+                    "Please check the `flow` as jobs that are completed can only be accessed",
+                ]
+            )
+        return _job
 
     def clone(self) -> "Runner":
         # get clone
@@ -1091,7 +1103,7 @@ class Runner(m.HashableClass, abc.ABC):
 
             # --------------------------------------------------- 02.02
             # ignore some special methods
-            for _val in cls.methods_that_cannot_be_a_job():
+            if _val in cls.methods_that_cannot_be_a_job():
                 continue
 
             # --------------------------------------------------- 02.03
@@ -1120,12 +1132,16 @@ class Runner(m.HashableClass, abc.ABC):
                             ]
                         )
                     # _EXPERIMENT_KWARG annotation must be subclass of Experiment
-                    e.validation.ShouldBeSubclassOf(
-                        value=_signature.parameters[_EXPERIMENT_KWARG].annotation,
-                        value_types=(Experiment, ),
-                        msgs=[f"Was expecting annotation for kwarg "
-                              f"`{_EXPERIMENT_KWARG}` to be proper subclass"]
-                    ).raise_if_failed()
+                    # todo: sometimes sting annotations are used so they cannot be checked ... fix this
+                    #   for now we bypass
+                    _ann = _signature.parameters[_EXPERIMENT_KWARG].annotation
+                    if not isinstance(_ann, str):
+                        e.validation.ShouldBeSubclassOf(
+                            value=_ann,
+                            value_types=(Experiment, ),
+                            msgs=[f"Was expecting annotation for kwarg "
+                                  f"`{_EXPERIMENT_KWARG}` to be proper subclass"]
+                        ).raise_if_failed()
                 # ----------------------------------------------- 02.05.02
                 # if self continue
                 elif _parameter_key == "self":
