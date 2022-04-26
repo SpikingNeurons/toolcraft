@@ -21,6 +21,13 @@ from . import util
 from . import storage as s
 from . import richy
 
+try:
+    import tensorflow as tf
+    from tensorflow.python.training.tracking import util as tf_util
+except ImportError:
+    tf = None
+    tf_util = None
+
 
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
@@ -234,6 +241,14 @@ class Job:
     @util.CacheResult
     def artifacts_path(self) -> s.Path:
         _ret = self.path / "artifacts"
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    @property
+    @util.CacheResult
+    def tf_chkpts_path(self) -> s.Path:
+        _ret = self.path / "tf_chkpts"
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -541,7 +556,83 @@ class Job:
             method=_method, method_kwargs=_method_kwargs,
         )
 
+    def save_tf_chkpt(self, name: str, tf_chkpt: tf.train.Checkpoint):
+        """
+        todo: make this compatible for all type of path
+        """
+        # check if tensorflow available
+        if tf is None:
+            raise e.code.CodingError(
+                msgs=["Tensorflow is not available so cannot call dont use this method"]
+            )
+
+        # if name has . do not allow
+        if name.find(".") != -1:
+            raise e.validation.NotAllowed(
+                msgs=[f"Tensorflow checkpoint saving mechanism does not allow `.` in checkpoint names ... "
+                      f"Correct the value `{name}`"]
+            )
+
+        # check if files present
+        _file = self.tf_chkpts_path / name
+        _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
+        _index_file = self.tf_chkpts_path / f"{name}.index"
+        if _file.exists() or _data_file.exists() or _index_file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"looks like there is already a checkpoint artifact or simple artifact for name '{name}' present"
+                ]
+            )
+
+        # write
+        # options have type tf.train.CheckpointOptions
+        tf_chkpt.write(file_prefix=_file.local_path.as_posix(), options=None)
+
+    def restore_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
+        """
+        todo: make this compatible for all type of path
+        """
+        # check if tensorflow available
+        if tf is None:
+            raise e.code.CodingError(
+                msgs=["Tensorflow is not available so cannot call dont use this method"]
+            )
+
+        # check if respective files present
+        _file = self.tf_chkpts_path / name
+        _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
+        _index_file = self.tf_chkpts_path / f"{name}.index"
+        if not _data_file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"was expecting {_data_file.name} to be present on the disk ..."
+                ]
+            )
+        if not _index_file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"was expecting {_index_file.name} to be present on the disk ..."
+                ]
+            )
+        if _file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"This should not happen as tensorflow saves things as data and index file ..."
+                ]
+            )
+
+        # options have type tf.train.CheckpointOptions
+        _status = tf_chkpt.read(
+            save_path=_file.local_path.as_posix(), options=None)  # type: tf_util.CheckpointLoadStatus
+        _status.assert_existing_objects_matched()
+        _status.assert_nontrivial_match()
+        _status.expect_partial()
+        _status.assert_consumed()
+
     def save_artifact(self, name: str, data: t.Any):
+        """
+        todo: make this compatible for all type of path
+        """
         _file = self.artifacts_path / name
         if _file.exists():
             raise e.code.CodingError(
@@ -549,19 +640,24 @@ class Job:
                     f"Artifact {name} already exists ... cannot write"
                 ]
             )
-        # todo: make this compatible for all type of path
+
         with open(_file.local_path.as_posix(), 'wb') as _file:
             pickle.dump(data, _file)
 
     def load_artifact(self, name: str) -> t.Any:
+        """
+        todo: make this compatible for all type of path
+        """
+
         _file = self.artifacts_path / name
+
         if not _file.exists():
             raise e.code.CodingError(
                 msgs=[
                     f"Artifact {name} does not exists ... cannot load"
                 ]
             )
-        # todo: make this compatible for all type of path
+
         with open(_file.local_path.as_posix(), 'rb') as _file:
             return pickle.load(_file)
 
