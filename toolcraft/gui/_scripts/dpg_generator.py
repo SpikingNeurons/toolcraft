@@ -156,6 +156,7 @@ _SKIP_METHODS = [
     dpg.get_mouse_drag_delta,
     dpg.get_mouse_pos,
     dpg.get_plot_mouse_pos,
+    dpg.get_platform,
     dpg.is_dearpygui_running,
     dpg.is_key_down,
     dpg.is_key_pressed,
@@ -900,6 +901,10 @@ from .__base__ import USER_DATA
                 method=None, param_name=None,
                 param_doc="  Union[int, str]  mvMouseButton_*  "
             ),
+            self.fetch_enum_def_from_fn_param_doc(
+                method=None, param_name=None,
+                param_doc="  Union[int, str]  mvPlatform_*  "
+            ),
         ]
 
     @staticmethod
@@ -918,8 +923,8 @@ from .__base__ import USER_DATA
         # ----------------------------------------------------------------- 02
         # param name has star
         _param_name_has_star = False
-        if len(_enum_val_s) == 1:
-            _param_name_has_star = _enum_val_s[0].find("*") != -1
+        for _ in _enum_val_s:
+            _param_name_has_star = (_.find("*") != -1) or _param_name_has_star
 
         # ----------------------------------------------------------------- 03
         # is param dog_id type

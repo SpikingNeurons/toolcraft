@@ -46,7 +46,7 @@ generate-setup-file = false
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0.0"
 PyYAML = "^6.0.0"
-dearpygui = "1.4.0"
+dearpygui = "1.6.0"
 pandas = "^1.4.1"
 pyarrow = "^7.0.0"
 toml = "^0.10.2"

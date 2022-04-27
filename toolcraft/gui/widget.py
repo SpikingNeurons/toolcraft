@@ -31,6 +31,10 @@ from ._auto import Double4Value
 # noinspection PyUnresolvedReferences
 from ._auto import DoubleValue
 # noinspection PyUnresolvedReferences
+from ._auto import DragDouble
+# noinspection PyUnresolvedReferences
+from ._auto import DragDoublex
+# noinspection PyUnresolvedReferences
 from ._auto import DragFloat
 # noinspection PyUnresolvedReferences
 from ._auto import DragFloatX
@@ -54,6 +58,10 @@ from ._auto import FontChars
 from ._auto import FontRange
 # noinspection PyUnresolvedReferences
 from ._auto import FontRangeHint
+# noinspection PyUnresolvedReferences
+from ._auto import InputDouble
+# noinspection PyUnresolvedReferences
+from ._auto import InputDoublex
 # noinspection PyUnresolvedReferences
 from ._auto import InputFloat
 # noinspection PyUnresolvedReferences
@@ -133,6 +141,10 @@ from ._auto import SeriesValue
 # noinspection PyUnresolvedReferences
 from ._auto import SimplePlot
 # noinspection PyUnresolvedReferences
+from ._auto import SliderDouble
+# noinspection PyUnresolvedReferences
+from ._auto import SliderDoublex
+# noinspection PyUnresolvedReferences
 from ._auto import SliderFloat
 # noinspection PyUnresolvedReferences
 from ._auto import SliderFloatX
@@ -166,6 +178,8 @@ from ._auto import Clipper
 from ._auto import CollapsingHeader
 # noinspection PyUnresolvedReferences
 from ._auto import ColormapRegistry
+# noinspection PyUnresolvedReferences
+from ._auto import CustomSeries
 # noinspection PyUnresolvedReferences
 from ._auto import DragPayload
 # noinspection PyUnresolvedReferences

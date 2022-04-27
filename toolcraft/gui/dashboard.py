@@ -16,6 +16,7 @@ from . import callback
 from . import form
 from .. import dapr
 from .. import logger
+from . import EnPlatform
 
 
 _LOGGER = logger.get_logger()
@@ -316,6 +317,15 @@ class Dashboard(m.YamlRepr, abc.ABC):
         """
         # noinspection PyArgumentList
         return tuple(internal_dpg.get_plot_mouse_pos(**kwargs))
+
+    @staticmethod
+    def get_platform(**kwargs) -> EnPlatform:
+        """
+        Refer:
+        >>> dpg.get_platform
+        """
+        # noinspection PyArgumentList
+        return EnPlatform(internal_dpg.get_platform(**kwargs))
 
     @staticmethod
     def get_total_time(**kwargs) -> float:

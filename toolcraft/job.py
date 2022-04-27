@@ -556,7 +556,8 @@ class Job:
                     ]
                 )
 
-    def save_tf_chkpt(self, name: str, tf_chkpt: tf.train.Checkpoint):
+    # noinspection PyUnresolvedReferences
+    def save_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
         """
         todo: make this compatible for all type of path
         """
