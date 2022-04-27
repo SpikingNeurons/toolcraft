@@ -894,7 +894,7 @@ from .__base__ import USER_DATA
             raise Exception("Should be empty ... only call once")
         self.all_dpg_defs = self.fetch_all_dpg_defs()
 
-        # some enums are not detected via doc string sso we add it here
+        # some enums are not detected via doc string, so we add it here
         # noinspection PyTypeChecker
         _enum_defs = [
             self.fetch_enum_def_from_fn_param_doc(
