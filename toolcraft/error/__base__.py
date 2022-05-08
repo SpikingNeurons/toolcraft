@@ -49,7 +49,8 @@ class _CustomException(Exception):
         _header = " ".join(camel_case_split(self.__class__.__name__)).upper()
         _header = _EXCEPTION_HEADER.format(header=_header)
         # call super to set the header as short message
-        super().__init__(_header)
+        _msg = _header + "\n" + "\n--- ".join(msgs)
+        super().__init__(f"{_msg}")
 
         # -----------------------------------------------------------------03
         # log

@@ -8,6 +8,8 @@ import inspect
 import typing as t
 import dataclasses
 import os
+
+import numpy as np
 import yaml
 import sys
 import pickle
@@ -204,34 +206,33 @@ class Job:
         return self.tag_manager.failed.exists()
 
     @property
-    def flow_id(self) -> JobFlowId:
+    def flow_id(self) -> str:
         if self._flow_id is None:
             raise e.code.CodingError(
                 msgs=[
-                    f"This must be set by {Flow} using its items field ..."
+                    f"This must be automatically set by code ..."
                 ]
             )
         return self._flow_id
 
     @flow_id.setter
-    def flow_id(self, value: JobFlowId):
-        if self._flow_id is None:
-            self._flow_id = value
-        else:
-            raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
-            )
-
-    @property
-    @util.CacheResult
-    def id(self) -> str:
+    def flow_id(self, value: str):
         """
         This takes in account
         + fn_name
         + fn_kwargs if present
         + experiment hex_hash if present
         """
-        return f"x{self.path.suffix_path.replace('/', 'x')}xJ"
+        if self._flow_id is None:
+            self._flow_id = value + f"|{self.path.suffix_path.replace('/', '|')}"
+        else:
+            raise e.code.CodingError(
+                msgs=[f"This property is already set you cannot set it again ..."]
+            )
+
+    @property
+    def job_id(self) -> str:
+        return f"x{hashlib.sha256(self.flow_id.encode('utf-8')).hexdigest()[:16]}"
 
     @property
     def is_on_main_machine(self) -> bool:
@@ -252,6 +253,16 @@ class Job:
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
+
+    @property
+    def wait_on_jobs(self) -> t.List["Job"]:
+        _wait_on_jobs = []
+        for _j in self.wait_on:
+            if isinstance(_j, Job):
+                _wait_on_jobs += [_j]
+            else:
+                _wait_on_jobs += _j.bottom_jobs
+        return _wait_on_jobs
 
     @property
     @util.CacheResult
@@ -279,16 +290,16 @@ class Job:
         runner: "Runner",
         method: t.Callable,
         method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None,
-        wait_on: t.List["JobGroup"] = None,
+        wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
     ):
         # assign some vars
         self.runner = runner
         # noinspection PyTypeChecker
         self.method = method  # type: types.MethodType
         self.method_kwargs = method_kwargs or {}
-        self.wait_on = wait_on or []
+        self.wait_on = wait_on or []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
         # noinspection PyTypeChecker
-        self._flow_id = None  # type: JobFlowId
+        self._flow_id = None  # type: str
 
         # make sure that method is from same runner instance
         try:
@@ -376,19 +387,35 @@ class Job:
             ],
         )
         _start = datetime.datetime.now()
-        _LOGGER.info(msg=f"Starting job {self.id} at {_start.ctime()}")
+        _LOGGER.info(
+            msg=f"Starting job ...",
+            msgs=[
+                {
+                    "flow-id": self.flow_id,
+                    "job-id": self.job_id,
+                    "started": _start.ctime(),
+                }
+            ]
+        )
         self.tag_manager.started.create()
         self.tag_manager.running.create()
         _failed = False
         try:
+            for _wj in self.wait_on_jobs:
+                if not _wj.is_finished:
+                    raise Exception(
+                        f"Wait-on job with flow-id {_wj.flow_id} and job-id {_wj.job_id} is supposed to be finished ..."
+                    )
             self.method(**self.method_kwargs)
             self.tag_manager.running.delete()
             self.tag_manager.finished.create()
             _end = datetime.datetime.now()
             _LOGGER.info(
-                msg=f"Successfully finished job {self.id} at {_start.ctime()}",
+                msg=f"Successfully finished job ...",
                 msgs=[
                     {
+                        "flow-id": self.flow_id,
+                        "job-id": self.job_id,
                         "started": _start.ctime(),
                         "ended": _end.ctime(),
                         "seconds": str((_end - _start).total_seconds()),
@@ -404,9 +431,11 @@ class Job:
             )
             _end = datetime.datetime.now()
             _LOGGER.info(
-                msg=f"Failed job {self.id} at {_start.ctime()}",
+                msg=f"Failed job ...",
                 msgs=[
                     {
+                        "flow-id": self.flow_id,
+                        "job-id": self.job_id,
                         "started": _start.ctime(),
                         "ended": _end.ctime(),
                         "seconds": str((_end - _start).total_seconds()),
@@ -455,10 +484,11 @@ class Job:
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
             _log = self.path / "bsub.log"
-            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
-            if bool(self.wait_on):
+            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.job_id} '
+            _wait_on_jobs = self.wait_on_jobs
+            if bool(_wait_on_jobs):
                 _wait_on = \
-                    " && ".join([f"done({_.id})" for _ in self.wait_on])
+                    " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
                 _nxdi_prefix += f'-w "{_wait_on}" '
             os.system(_nxdi_prefix + _command)
         else:
@@ -493,15 +523,31 @@ class Job:
                 _val = _method_signature.parameters[_key].annotation(_str_val)
             _method_kwargs[_key] = _val
 
+        # search job from runner.flow
+        _search_job = None
+        for _stage in runner.flow.stages:
+            for _j in _stage.all_jobs:
+                if _j.method == _method and _j.method_kwargs == _method_kwargs and _j.runner == runner:
+                    if _search_job is not None:
+                        raise e.code.CodingError(
+                            msgs=[
+                                "Multiple jobs match for the given cli kwargs"
+                            ]
+                        )
+                    _search_job = _j
+
+        # if no job found raise
+        if _search_job is None:
+            raise e.code.ShouldNeverHappen(
+                msgs=["We expect to find a matching job ..."]
+            )
+
         # return
-        return Job(
-            runner=runner,
-            method=_method, method_kwargs=_method_kwargs,
-        )
+        return _search_job
 
     def check_health(self):
         # if job has already started
-        _job_info = {"job_id": self.id, "path": self.path.full_path}
+        _job_info = {"flow-id": self.flow_id, "job-id": self.job_id, "path": self.path.full_path}
         if self.is_started:
             # if job was finished then skip
             if self.is_finished:
@@ -663,59 +709,85 @@ class Job:
             return pickle.load(_file)
 
 
-class JobGroup:
+class JobGroup(abc.ABC):
     """
-    Job's in this JobGroup will run in parallel and other JobGroup's can
-      wait on previous JobGroup's
     We can have multiple JobGroup within
       stages so that we can move ahead with next stages if we only depend on one of
       JobGroup from previous stage
     """
 
     @property
-    def flow_id(self) -> JobGroupFlowId:
+    def flow_id(self) -> str:
         if self._flow_id is None:
             raise e.code.CodingError(
                 msgs=[
-                    f"This must be set by {Flow} using its items field ..."
+                    f"This must be automatically set by code ..."
                 ]
             )
         return self._flow_id
 
     @flow_id.setter
-    def flow_id(self, value: JobGroupFlowId):
+    def flow_id(self, value: str):
         if self._flow_id is None:
             self._flow_id = value
+            _len = len(self.jobs)
+            for _i, _j in enumerate(self.jobs):
+                if isinstance(_j, Job):
+                    _j.flow_id = f"{value}.j{_i:0{_len}d}"
+                elif isinstance(_j, SequentialJobGroup):
+                    _j.flow_id = f"{value}.s{_i:0{_len}d}"
+                elif isinstance(_j, ParallelJobGroup):
+                    _j.flow_id = f"{value}.p{_i:0{_len}d}"
+                else:
+                    raise e.code.CodingError(
+                        msgs=[f"unsupported type {type(_j)}"]
+                    )
         else:
             raise e.code.CodingError(
                 msgs=[f"This property is already set you cannot set it again ..."]
             )
 
     @property
-    @util.CacheResult
-    def id(self) -> str:
-        """
-        A unique id for job group ...
-        """
-        _job_ids = "-".join([_.id for _ in self.jobs])
-        return f"x{hashlib.sha256(_job_ids.encode('utf-8')).hexdigest()}xJG"
-
-    @property
     def is_on_main_machine(self) -> bool:
         return self.runner.is_on_main_machine
+
+    @property
+    @util.CacheResult
+    def all_jobs(self) -> t.List[Job]:
+        _ret = []
+        for _j in self.jobs:
+            if isinstance(_j, Job):
+                _ret += [_j]
+            else:
+                _ret += _j.all_jobs
+        return _ret
+
+    @property
+    @abc.abstractmethod
+    def bottom_jobs(self) -> t.List[Job]:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def top_jobs(self) -> t.List[Job]:
+        ...
 
     def __init__(
         self,
         runner: "Runner",
-        jobs: t.List[Job],
+        jobs: t.List[t.Union["ParallelJobGroup", "SequentialJobGroup", Job]],
     ):
         # save vars
         self.runner = runner
         self.jobs = jobs
         # noinspection PyTypeChecker
-        self._flow_id = None  # type: JobGroupFlowId
+        self._flow_id = None  # type: str
+
+        # call init
+        self.init()
 
     def __call__(self, cluster_type: JobRunnerClusterType):
+        raise
         if self.is_on_main_machine:
             self._launch_on_cluster(cluster_type)
         else:
@@ -752,50 +824,111 @@ class JobGroup:
                 msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"]
             )
 
+    def init(self):
+        ...
+
+
+class SequentialJobGroup(JobGroup):
+    """
+    The jobs here will run in sequential
+    """
+
+    @property
+    @util.CacheResult
+    def bottom_jobs(self) -> t.List[Job]:
+        """
+        What do we wait on
+        """
+        _last = self.jobs[-1]
+        if isinstance(_last, Job):
+            return [_last]
+        else:
+            return _last.bottom_jobs
+
+    @property
+    @util.CacheResult
+    def top_jobs(self) -> t.List[Job]:
+        """
+        What do we start with
+        """
+        _first = self.jobs[0]
+        if isinstance(_first, Job):
+            return [_first]
+        else:
+            return _first.top_jobs
+
+    def init(self):
+        # call super
+        super().init()
+
+        # this ties up all jobs in list to execute one after other
+        for _ in range(1, len(self.jobs)):
+            _j = self.jobs[_]
+            _pj = self.jobs[_-1]
+            if isinstance(_j, Job):
+                _j.wait_on.append(_pj)
+            else:
+                for __j in _j.top_jobs:
+                    __j.wait_on.append(_pj)
+
+
+class ParallelJobGroup(JobGroup):
+    """
+    The jobs here will run in parallel
+    """
+
+    @property
+    @util.CacheResult
+    def bottom_jobs(self) -> t.List[Job]:
+        """
+        What do we wait on
+        """
+        _ret = []
+        for _j in self.jobs:
+            if isinstance(_j, Job):
+                _ret += [_j]
+            else:
+                _ret += _j.bottom_jobs
+        return _ret
+
+    @property
+    @util.CacheResult
+    def top_jobs(self) -> t.List[Job]:
+        """
+        What do we start with
+        """
+        _ret = []
+        for _j in self.jobs:
+            if isinstance(_j, Job):
+                _ret += [_j]
+            else:
+                _ret += _j.top_jobs
+        return _ret
+
 
 class Flow:
     """
     This will decide how jobs will be executed on cluster
     Gets called when script is called without arguments
 
-    Elements within list are run in parallel
-    A sequence of lists is run sequentially
-    First element of every list waits for last element of element in previous list
-      >> Easy way to thing is UI layouts div mechanism
+    Note that stages are made up of list of ParallelJobGroup, while within each ParallelJobGroup we can have
+    ParallelJobGroup or SequentialJobGroup ... note that if you want to wait JobGroup within stage to wait over
+    previous JobGroup then you need to define that with wait_on
     """
 
     def __init__(
         self,
-        stages: t.List[t.List[JobGroup]],
+        stages: t.List[ParallelJobGroup],
         runner: "Runner",
     ):
-        # test if running on main machine which launches jobs
-        # there will be only one arg
-        if not runner.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This property `JobRunner.flow` should make instance of Flow.",
-                    "This instance can be create only on main machine from where the "
-                    "script is launched",
-                    "While when jobs are running on cluster they need not use this "
-                    "instance .. instead they will be using Job instance",
-                ]
-            )
-
         # save reference
         self.stages = stages
         self.runner = runner
 
         # set flow ids
+        _len = len(self.stages)
         for _stage_id, _stage in enumerate(self.stages):
-            for _job_group_id, _job_group in enumerate(_stage):
-                _job_group.flow_id = JobGroupFlowId(
-                    stage=_stage_id, job_group=_job_group_id,
-                )
-                for _job_id, _job in enumerate(_job_group.jobs):
-                    _job.flow_id = JobFlowId(
-                        stage=_stage_id, job_group=_job_group_id, job=_job_id
-                    )
+            _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
@@ -812,29 +945,42 @@ class Flow:
             _s = _sp.status
             _s.update(spinner_speed=1.0, spinner=None, status="started ...")
             _jobs = []
-            for _stage_id, _stage in enumerate(self.stages):
-                for _job_group in _stage:
-                    _jobs += _job_group.jobs
+            for _stage in self.stages:
+                _jobs += _stage.all_jobs
             _job: Job
             for _job in _p.track(
                 sequence=_jobs, task_name=f"check health"
             ):
-                _s.update(
-                    spinner_speed=1.0,
-                    spinner=None, status=f"check health for {_job.flow_id} ..."
-                )
+                _s.update(status=f"check health for {_job.flow_id} ...")
                 _job.check_health()
-            _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
 
         # call jobs ...
         if cluster_type in [
             JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
         ]:
+            _completed_jobs = []
+            _all_jobs = []
             for _stage in self.stages:
-                for _job_group in _stage:
-                    for _job in _job_group.jobs:
-                        _job(cluster_type)
-                    _job_group(cluster_type)
+                _all_jobs += _stage.all_jobs
+            for _j in _all_jobs:
+                _wait_jobs = []
+                for _wo in _j.wait_on:
+                    if isinstance(_wo, Job):
+                        _wait_jobs += [_wo]
+                    else:
+                        _wait_jobs += _wo.bottom_jobs
+                for _wj in _wait_jobs:
+                    if _wj not in _completed_jobs:
+                        raise e.code.CodingError(
+                            msgs=[
+                                "When not on server we expect that property `all_jobs` should resolve in such "
+                                "a way that all `wait_on` jobs must be already done ..",
+                                f"Check {_wj.flow_id} which should be completed by now ..."
+                            ]
+                        )
+                print(_j.flow_id, "<<<<<<<<<<<<<<<<<<<<<<")
+                _j(cluster_type)
+                _completed_jobs.append(_j)
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             _sp = richy.ProgressStatusPanel(
                 title=f"Launch stages on `{cluster_type.name}`", tc_log=_LOGGER
@@ -844,11 +990,8 @@ class Flow:
                 _s = _sp.status
                 _s.update(spinner_speed=1.0, spinner=None, status="started ...")
                 for _stage_id, _stage in enumerate(self.stages):
-                    _jobs = []
-                    for _job_group in _stage:
-                        _jobs += _job_group.jobs
-                        _jobs += [_job_group]
-                    _job: t.Union[Job, JobGroup]
+                    _jobs = _stage.all_jobs
+                    _job: t.Union[Job, ParallelJobGroup]
                     for _job in _p.track(
                         sequence=_jobs, task_name=f"stage {_stage_id:03d}"
                     ):
@@ -857,7 +1000,6 @@ class Flow:
                             spinner=None, status=f"launching {_job.flow_id} ..."
                         )
                         _job(cluster_type)
-                _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
         else:
             raise e.code.NotSupported(
                 msgs=[f"Not supported {cluster_type}"]
@@ -875,6 +1017,30 @@ class Flow:
         #    - dapr telemetry
         #  IMP: see docstring we can even have dearpygui client if we can submit jobs
         #    and track jobs via ssh
+
+    def view(self):
+        # import
+        from . import gui
+
+        # define dashboard class
+        @dataclasses.dataclass
+        class FlowDashboard(gui.dashboard.BasicDashboard):
+            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
+
+            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.runner.py_script}")
+
+            container: gui.widget.Group = gui.widget.Group()
+
+        # make dashboard
+        _dashboard = FlowDashboard(title="Flow Dashboard")
+
+        # add stages
+        with _dashboard.container:
+            for _i, _stage in enumerate(self.stages):
+                gui.widget.CollapsingHeader(label=f"Stage {_i}")
+
+        # run
+        _dashboard.run()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1165,6 +1331,9 @@ class Runner(m.HashableClass, abc.ABC):
             self.flow(cluster_type)
         else:
             self.job(cluster_type)
+
+    def view(self):
+        self.flow.view()
 
 
 @dataclasses.dataclass(frozen=True)

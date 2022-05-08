@@ -60,6 +60,8 @@ class Dashboard(m.YamlRepr, abc.ABC):
       Also maybe add field save_state for Widget so that we know that only
       these widgets state needs to be saved
     """
+    # todo: this title needs to set the main title of the entire UI ...
+    #  i.e. it should replace "DearPyGui" ... right now has no effect
     title: str
     width: int = 1370
     height: int = 1200
