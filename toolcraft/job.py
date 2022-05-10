@@ -487,7 +487,7 @@ class Job:
             if bool(_wait_on_jobs):
                 _wait_on = \
                     " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
-                _nxdi_prefix += ["-w", f'"{_wait_on}"']
+                _nxdi_prefix += ["-w", f"\"{_wait_on}\""]
             _command = _nxdi_prefix + _command
             subprocess.run(_command)
 
