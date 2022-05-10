@@ -7,9 +7,7 @@ import enum
 import inspect
 import typing as t
 import dataclasses
-import os
-
-import numpy as np
+import subprocess
 import yaml
 import sys
 import pickle
@@ -49,7 +47,6 @@ class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     """
     ibm_lsf = enum.auto()
     local = enum.auto()
-    local_on_same_thread = enum.auto()
 
 
 class JobFlowId(t.NamedTuple):
@@ -400,11 +397,13 @@ class Job:
         self.tag_manager.started.create()
         self.tag_manager.running.create()
         _failed = False
+        print("pppppppppppppppppppppppppp", self.flow_id, self.job_id)
         try:
             for _wj in self.wait_on_jobs:
                 if not _wj.is_finished:
-                    raise Exception(
-                        f"Wait-on job with flow-id {_wj.flow_id} and job-id {_wj.job_id} is supposed to be finished ..."
+                    raise e.code.CodingError(
+                        msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
+                              f"{_wj.job_id} is supposed to be finished ..."]
                     )
             self.method(**self.method_kwargs)
             self.tag_manager.running.delete()
@@ -465,32 +464,34 @@ class Job:
             _kwargs_as_cli_strs.append(
                 f"{_k}={_v}"
             )
-        _command = f"python {self.runner.py_script} " \
-                   f"{self.method.__func__.__name__} " \
-                   f"{' '.join(_kwargs_as_cli_strs)}"
+        _command = [
+            "python", self.runner.py_script, self.method.__func__.__name__, *_kwargs_as_cli_strs
+        ]
 
         # ------------------------------------------------------------- 02
+        # launch
+        # todo: might be feasible only with `local` not sure about `ibm_lsf`
+        #   + figure out how `subprocess.run` kwargs can be used to pull the console rendered by subprocess i.e.
+        #     things like rich ui can be grabbed and streamed
+        #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
+        # ------------------------------------------------------------- 02.01
         if cluster_type is JobRunnerClusterType.local:
-            os.system(_command)
-        elif cluster_type is JobRunnerClusterType.local_on_same_thread:
-            _backup_argv = sys.argv
-            sys.argv = \
-                _backup_argv + [str(self.method.__func__.__name__)] + \
-                _kwargs_as_cli_strs
-            self.runner.clone().run(cluster_type=cluster_type)
-            sys.argv = _backup_argv
+            subprocess.run(_command)
+        # ------------------------------------------------------------- 02.03
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # todo: when self.path is not local we need to see how to log files ...
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
             _log = self.path / "bsub.log"
-            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.job_id} '
+            _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), "-J", self.job_id]
             _wait_on_jobs = self.wait_on_jobs
             if bool(_wait_on_jobs):
                 _wait_on = \
                     " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
-                _nxdi_prefix += f'-w "{_wait_on}" '
-            os.system(_nxdi_prefix + _command)
+                _nxdi_prefix += ["-w", f'"{_wait_on}"']
+            subprocess.run(_nxdi_prefix + _command)
+
+        # ------------------------------------------------------------- 02.04
         else:
             raise e.code.ShouldNeverHappen(
                 msgs=[f"Unsupported cluster_type {cluster_type}"]
@@ -786,44 +787,6 @@ class JobGroup(abc.ABC):
         # call init
         self.init()
 
-    def __call__(self, cluster_type: JobRunnerClusterType):
-        raise
-        if self.is_on_main_machine:
-            self._launch_on_cluster(cluster_type)
-        else:
-            raise e.code.CodingError(
-                msgs=["We assume that this will never get called on cluster ",
-                      "JobGroup should only get called on main machine ..."]
-            )
-
-    def _launch_on_cluster(self, cluster_type: JobRunnerClusterType):
-        # todo: also print jobs that were grouped for this job group ...
-        #   both for JobRunnerClusterType.local and JobRunnerClusterType.ibm_lsf
-
-        # ------------------------------------------------------------- 01
-        # make command to run on cli
-        # there is nothing to do here as this is just a blank job that waits ...
-        _command = "python -c 'import time; time.sleep(1)'"
-
-        # ------------------------------------------------------------- 02
-        if cluster_type in [
-            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
-        ]:
-            ...
-        elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            # needed to add -oo so that we do not get any emails ;)
-            _log = self.runner.cwd / "job_group.log"
-            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
-            if bool(self.jobs):
-                _wait_on = \
-                    " && ".join([f"done({_.id})" for _ in self.jobs])
-                _nxdi_prefix += f'-w "{_wait_on}" '
-            os.system(_nxdi_prefix + _command)
-        else:
-            raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"]
-            )
-
     def init(self):
         ...
 
@@ -955,14 +918,16 @@ class Flow:
                 _job.check_health()
 
         # call jobs ...
-        if cluster_type in [
-            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
-        ]:
+        if cluster_type is JobRunnerClusterType.local:
+            # tracker containers
             _completed_jobs = []
             _all_jobs = []
             for _stage in self.stages:
                 _all_jobs += _stage.all_jobs
+
+            # loop over all jobs in flow
             for _j in _all_jobs:
+                # extract wait on jobs that need to finished before calling _j
                 _wait_jobs = []
                 for _wo in _j.wait_on:
                     if isinstance(_wo, Job):
@@ -978,9 +943,14 @@ class Flow:
                                 f"Check {_wj.flow_id} which should be completed by now ..."
                             ]
                         )
+
                 print(_j.flow_id, "<<<<<<<<<<<<<<<<<<<<<<")
+                # call _j
                 _j(cluster_type)
+
+                # append to list as job is completed
                 _completed_jobs.append(_j)
+
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             _sp = richy.ProgressStatusPanel(
                 title=f"Launch stages on `{cluster_type.name}`", tc_log=_LOGGER
@@ -1209,6 +1179,10 @@ class Runner(m.HashableClass, abc.ABC):
     def get_another_job(
         self, method: t.Callable, method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None
     ):
+        """
+        In some cases you might want to access results from other job so this is the method for it.
+        The only restriction is that the requested job must be completed ...
+        """
         _job = Job(runner=self, method=method, method_kwargs=method_kwargs)
         if not _job.is_finished:
             raise e.code.CodingError(
@@ -1218,21 +1192,6 @@ class Runner(m.HashableClass, abc.ABC):
                 ]
             )
         return _job
-
-    def clone(self) -> "Runner":
-        # get clone
-        # noinspection PyTypeChecker
-        _clone = super().clone()  # type: Runner
-
-        # todo: not elegant but improve if needed later ...
-        #   this leads to tedious cloning ... as we need to always examine runner for
-        #   single thread and multiple threads
-        # we need to update property ...
-        # useful for JobRunnerClusterType.local_on_same_thread
-        _clone.registered_experiments.extend(self.registered_experiments)
-
-        # return
-        return _clone
 
     def init(self):
         # call super

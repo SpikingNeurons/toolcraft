@@ -1176,7 +1176,7 @@ class Tracker:
         """
         ...
 
-    def prefetch_stuff_before_first_call(self):
+    def prefetch_stuff_before_first_call(self, call_only_once: bool = True):
         """
         Handle expensive things that can reduce load on consecutive calls
         on same instance.
@@ -1194,9 +1194,10 @@ class Tracker:
 
         """
         if self.internal.has("prefetched_on_first_call"):
-            raise e.code.CodingError(msgs=[
-                f"The method `prefetch_stuff` can be called only once ..."
-            ])
+            if call_only_once:
+                raise e.code.CodingError(msgs=[
+                    f"The method `prefetch_stuff` can be called only once ..."
+                ])
         else:
             # set var
             self.internal.prefetched_on_first_call = True
