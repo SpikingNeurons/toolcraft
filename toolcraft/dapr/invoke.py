@@ -212,7 +212,6 @@ class Invoke:
     def __call__(self, fn: t.Callable):
         # wrap fn
         def _fn(_self: m.HashableClass, **kwargs):
-            print("ppppppppppppppppppppppppppp")
             print(_self.yaml(), kwargs)
             if DAPR.MODE is DaprMode.client:
                 return invoke_for_hashable_on_client(

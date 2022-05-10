@@ -385,7 +385,7 @@ class Job:
         )
         _start = datetime.datetime.now()
         _LOGGER.info(
-            msg=f"Starting job ...",
+            msg=f"Starting job on worker machine ...",
             msgs=[
                 {
                     "flow-id": self.flow_id,
@@ -397,7 +397,6 @@ class Job:
         self.tag_manager.started.create()
         self.tag_manager.running.create()
         _failed = False
-        print("pppppppppppppppppppppppppp", self.flow_id, self.job_id)
         try:
             for _wj in self.wait_on_jobs:
                 if not _wj.is_finished:
@@ -410,7 +409,7 @@ class Job:
             self.tag_manager.finished.create()
             _end = datetime.datetime.now()
             _LOGGER.info(
-                msg=f"Successfully finished job ...",
+                msg=f"Successfully finished job on worker machine ...",
                 msgs=[
                     {
                         "flow-id": self.flow_id,
@@ -430,7 +429,7 @@ class Job:
             )
             _end = datetime.datetime.now()
             _LOGGER.info(
-                msg=f"Failed job ...",
+                msg=f"Failed job on worker machine ...",
                 msgs=[
                     {
                         "flow-id": self.flow_id,
@@ -489,13 +488,21 @@ class Job:
                 _wait_on = \
                     " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
                 _nxdi_prefix += ["-w", f'"{_wait_on}"']
-            subprocess.run(_nxdi_prefix + _command)
+            _command = _nxdi_prefix + _command
+            subprocess.run(_command)
 
         # ------------------------------------------------------------- 02.04
         else:
             raise e.code.ShouldNeverHappen(
                 msgs=[f"Unsupported cluster_type {cluster_type}"]
             )
+
+        # ------------------------------------------------------------- 03
+        # log
+        _LOGGER.info(
+            msg=f"Launching jobs from main machine with below command...",
+            msgs=[_command]
+        )
 
     @classmethod
     def from_cli(
@@ -944,7 +951,6 @@ class Flow:
                             ]
                         )
 
-                print(_j.flow_id, "<<<<<<<<<<<<<<<<<<<<<<")
                 # call _j
                 _j(cluster_type)
 
