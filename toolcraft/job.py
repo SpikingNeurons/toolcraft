@@ -31,7 +31,6 @@ except ImportError:
 
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
-_EXPERIMENT_KWARG = "experiment"
 
 
 @dataclasses.dataclass
@@ -265,19 +264,20 @@ class Job:
     @util.CacheResult
     def path(self) -> s.Path:
         """
-        Note that folder nesting is dependent on `self.fn` signature ...
+        Note that if group_by is defined in Experiment then the nested folders are created and `hashable.hex_hash`
+        is created inside it.
 
-        todo: integrate this with storage with partition_columns ...
-          note that first pivot will then be experiment name ...
+        As an advantage we can have different instances made up of different Experiment classes store in same nested
+        folders. This can be easily achieved by having group_by of those Experiment classes return similar things ;)
+
+        todo: integrate this with storage with partition_columns ... (not important do only if necessary)
         """
         _ret = self.runner.cwd
         _ret /= self.method.__func__.__name__
-        for _key in inspect.signature(self.method).parameters.keys():
-            _value = self.method_kwargs[_key]
-            if _key == _EXPERIMENT_KWARG:
-                _ret /= _value.hex_hash
-            else:
-                _ret /= str(_value)
+        if self.experiment is not None:
+            for _ in self.experiment.group_by:
+                _ret /= _
+            _ret /= self.experiment.hex_hash
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -286,14 +286,14 @@ class Job:
         self,
         runner: "Runner",
         method: t.Callable,
-        method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None,
+        experiment: t.Optional["Experiment"] = None,
         wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
     ):
         # assign some vars
         self.runner = runner
         # noinspection PyTypeChecker
         self.method = method  # type: types.MethodType
-        self.method_kwargs = method_kwargs or {}
+        self.experiment = experiment
         self.wait_on = wait_on or []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
         # noinspection PyTypeChecker
         self._flow_id = None  # type: str
@@ -312,41 +312,17 @@ class Job:
                 ]
             )
 
-        # make sure that all kwargs are supplied
-        _required_keys = list(inspect.signature(self.method).parameters.keys())
-        _required_keys.sort()
-        _provided_keys = list(self.method_kwargs.keys())
-        _provided_keys.sort()
-        if _required_keys != _provided_keys:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect method_kwargs has all keys required by method "
-                    f"{self.method} ",
-                    f"Also so not supply any extra kwargs ...",
-                    dict(
-                        _required_keys=_required_keys, _provided_keys=_provided_keys
-                    ),
-                ]
-            )
-
-        # some special methods cannot be used for job
-        # noinspection PyUnresolvedReferences
-        e.validation.ShouldNotBeOneOf(
-            value=method.__func__, values=runner.methods_that_cannot_be_a_job(),
-            msgs=["Some special methods cannot be used as job ..."]
-        ).raise_if_failed()
-
-        # if _EXPERIMENT_KWARG present
-        if _EXPERIMENT_KWARG in self.method_kwargs.keys():
-            # get
-            _experiment = self.method_kwargs[_EXPERIMENT_KWARG]
+        # if experiment provided
+        if self.experiment is not None:
             # make sure that it is not s.StorageHashable or any of its fields are
             # not s.StorageHashable
-            _experiment.check_for_storage_hashable(
-                field_key=f"{_experiment.__class__.__name__}"
+            # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
+            # use with storage ... this will avoid creating files/folders and doing any IO
+            self.experiment.check_for_storage_hashable(
+                field_key=f"{self.experiment.__class__.__name__}"
             )
             # make <hex_hash>.info if not present
-            self.runner.monitor.make_experiment_info_file(experiment=_experiment)
+            self.runner.monitor.make_experiment_info_file(experiment=self.experiment)
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
@@ -404,7 +380,10 @@ class Job:
                         msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
                               f"{_wj.job_id} is supposed to be finished ..."]
                     )
-            self.method(**self.method_kwargs)
+            if self.experiment is None:
+                self.method()
+            else:
+                self.method(experiment=self.experiment)
             self.tag_manager.running.delete()
             self.tag_manager.finished.create()
             _end = datetime.datetime.now()
@@ -456,16 +435,11 @@ class Job:
         """
         # ------------------------------------------------------------- 01
         # make command to run on cli
-        _kwargs_as_cli_strs = []
-        for _k, _v in self.method_kwargs.items():
-            if _k == _EXPERIMENT_KWARG:
-                _v = _v.hex_hash
-            _kwargs_as_cli_strs.append(
-                f"{_k}={_v}"
-            )
         _command = [
-            "python", self.runner.py_script, self.method.__func__.__name__, *_kwargs_as_cli_strs
+            "python", self.runner.py_script, self.method.__func__.__name__,
         ]
+        if self.experiment is not None:
+            _command += [self.experiment.hex_hash]
 
         # ------------------------------------------------------------- 02
         # launch
@@ -518,24 +492,28 @@ class Job:
                 ]
             )
 
-        # fetch from args
+        # fetch method
         _method_name = sys.argv[1]
         _method = getattr(runner, _method_name)
-        _method_signature = inspect.signature(_method)
-        _method_kwargs = {}
-        for _arg in sys.argv[2:]:
-            _key, _str_val = _arg.split("=")
-            if _key == _EXPERIMENT_KWARG:
-                _val = runner.monitor.get_experiment_from_hex_hash(hex_hash=_str_val)
-            else:
-                _val = _method_signature.parameters[_key].annotation(_str_val)
-            _method_kwargs[_key] = _val
+
+        # fetch experiment
+        if len(sys.argv) == 2:
+            _experiment = None
+        elif len(sys.argv) == 3:
+            _experiment = runner.monitor.get_experiment_from_hex_hash(hex_hash=sys.argv[2])
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "there can be only two or three sys arguments ... found",
+                    sys.argv,
+                ]
+            )
 
         # search job from runner.flow
         _search_job = None
         for _stage in runner.flow.stages:
             for _j in _stage.all_jobs:
-                if _j.method == _method and _j.method_kwargs == _method_kwargs and _j.runner == runner:
+                if _j.method == _method and _j.experiment == _experiment and _j.runner == runner:
                     if _search_job is not None:
                         raise e.code.CodingError(
                             msgs=[
@@ -995,9 +973,11 @@ class Flow:
         #    and track jobs via ssh
 
     def view(self):
+        # ------------------------------------------------------------------- 01
         # import
         from . import gui
 
+        # ------------------------------------------------------------------- 02
         # define dashboard class
         @dataclasses.dataclass
         class FlowDashboard(gui.dashboard.BasicDashboard):
@@ -1005,15 +985,62 @@ class Flow:
 
             title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.runner.py_script}")
 
+            hr1: gui.widget.Separator = gui.widget.Separator()
+            hr2: gui.widget.Separator = gui.widget.Separator()
+            hr3: gui.widget.Separator = gui.widget.Separator()
+
             container: gui.widget.Group = gui.widget.Group()
 
+            hr4: gui.widget.Separator = gui.widget.Separator()
+            hr5: gui.widget.Separator = gui.widget.Separator()
+            hr6: gui.widget.Separator = gui.widget.Separator()
+
+        # ------------------------------------------------------------------- 03
         # make dashboard
         _dashboard = FlowDashboard(title="Flow Dashboard")
 
+        # ------------------------------------------------------------------- 04
         # add stages
         with _dashboard.container:
             for _i, _stage in enumerate(self.stages):
-                gui.widget.CollapsingHeader(label=f"Stage {_i}")
+                # ----------------------------------------------------------- 04.01
+                # add stage label
+                gui.widget.Separator()
+                gui.widget.Separator()
+                gui.widget.Text(f"*** [[ STAGE {_i} ]] ***")
+
+                # ----------------------------------------------------------- 04.02
+                # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
+                #  + currently we will get all jobs in stage and render them
+                #  + we can have window pop-up for any JobGroup and then again have any JobGroup or jobs
+                #    rendered inside it
+                #  + may-be we need not differentiate between Sequential and Parallel JobGroup's ... we can
+                #    just have spinners if job is running or status icons indicating job status ... may be the
+                #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
+
+                _form = gui.form.DoubleSplitForm(
+                    title=f"*** [[ STAGE {_i} ]] ***",
+                    callable_name="gui", allow_refresh=False, collapsing_header_open=False,
+                )
+
+
+
+
+                # ----------------------------------------------------------- 04.03
+                # make collapsing headers that can collect all jobs with same method
+                # _collapsing_headers_for_method = {}
+                # for _job in _stage.all_jobs:
+                #     if _job.method.__name__ not in _collapsing_headers_for_method:
+                #         _collapsing_headers_for_method[_job.method.__name__] = \
+                #             gui.widget.CollapsingHeader(_job.method.__name__)
+                #
+                # for _k, _ch in _collapsing_headers_for_method.items():
+                #     with _ch:
+                #         gui.widget.Text(f"{_k} .....")
+                #     with _ch:
+                #         gui.widget.Text(f"{_k} ..........")
+                #     with _ch:
+                #         gui.widget.Text(f"{_k} ................")
 
         # run
         _dashboard.run()
@@ -1183,13 +1210,13 @@ class Runner(m.HashableClass, abc.ABC):
         return [cls.run, cls.init, cls.clone, cls.get_another_job]
 
     def get_another_job(
-        self, method: t.Callable, method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None
+        self, method: t.Callable, experiment: t.Optional["Experiment"]
     ):
         """
         In some cases you might want to access results from other job so this is the method for it.
         The only restriction is that the requested job must be completed ...
         """
-        _job = Job(runner=self, method=method, method_kwargs=method_kwargs)
+        _job = Job(runner=self, method=method, experiment=experiment)
         if not _job.is_finished:
             raise e.code.CodingError(
                 msgs=[
@@ -1221,6 +1248,7 @@ class Runner(m.HashableClass, abc.ABC):
 
     @classmethod
     def class_init(cls):
+
         # ------------------------------------------------------- 01
         # call super
         super().class_init()
@@ -1249,47 +1277,39 @@ class Runner(m.HashableClass, abc.ABC):
             _parameter_keys = list(_signature.parameters.keys())
 
             # --------------------------------------------------- 02.05
-            # loop over parameters
-            for _parameter_key in _parameter_keys:
-                # ----------------------------------------------- 02.05.01
-                # if _EXPERIMENT_KWARG parameter
-                if _parameter_key == _EXPERIMENT_KWARG:
-                    # _EXPERIMENT_KWARG must be first
-                    if _EXPERIMENT_KWARG != _parameter_keys[1]:
-                        raise e.validation.NotAllowed(
-                            msgs=[
-                                f"If using `{_EXPERIMENT_KWARG}` kwarg in function "
-                                f"{_val} make sure that it is first kwarg i.e. it "
-                                f"immediately follows after self"
-                            ]
-                        )
-                    # _EXPERIMENT_KWARG annotation must be subclass of Experiment
-                    # todo: sometimes sting annotations are used so they cannot be checked ... fix this
-                    #   for now we bypass
-                    _ann = _signature.parameters[_EXPERIMENT_KWARG].annotation
-                    if not isinstance(_ann, str):
-                        e.validation.ShouldBeSubclassOf(
-                            value=_ann,
-                            value_types=(Experiment, ),
-                            msgs=[f"Was expecting annotation for kwarg "
-                                  f"`{_EXPERIMENT_KWARG}` to be proper subclass"]
-                        ).raise_if_failed()
-                # ----------------------------------------------- 02.05.02
-                # if self continue
-                elif _parameter_key == "self":
-                    continue
-                # ----------------------------------------------- 02.05.03
-                # else make sure that annotation is int, float or str ...
-                else:
-                    e.validation.ShouldBeSubclassOf(
-                        value=_signature.parameters[_parameter_key].annotation,
-                        value_types=(int, float, str),
-                        msgs=["We restrict annotation types for proper "
-                              "kwarg serialization so that they can be passed over "
-                              "cli ... and can also determine path for storage",
-                              f"Check kwarg `{_parameter_key}` defined in function "
-                              f"`{cls.__name__}.{_val.__name__}`"]
-                    ).raise_if_failed()
+            # you must have self
+            if "self" not in _parameter_keys:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Any method defined in class {cls} can be used for job ... ",
+                        f"So we expect it to have `self` i.e., it should be instance method",
+                        f"If you are using anything special either make it private with `_` or define it in "
+                        f"{cls.methods_that_cannot_be_a_job}"
+                    ]
+                )
+
+            # --------------------------------------------------- 02.06
+            # if no other kwarg it's okay
+            if len(_parameter_keys) == 1:
+                ...
+            # if two keys then second kwarg must be "experiment"
+            elif len(_parameter_keys) == 2:
+                if _parameter_keys[1] != "experiment":
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"Any method defined in class {cls} can be used for job ... ",
+                            f"So if you are specifying any kwarg then it can only be `experiment` of type {Experiment}",
+                            f"Found {_parameter_keys[1]}"
+                        ]
+                    )
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Any method defined in class {cls} can be used for job ... ",
+                        "We only restrict you to have one or no kwarg ... and if one kwarg is supplied "
+                        "then it can be only named `experiment`"
+                    ]
+                )
 
     def run(self, cluster_type: JobRunnerClusterType):
         if self.is_on_main_machine:
@@ -1303,6 +1323,10 @@ class Runner(m.HashableClass, abc.ABC):
 
 @dataclasses.dataclass(frozen=True)
 class Experiment(m.HashableClass):
+    """
+    Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
+    be stored in same folder hierarchy if some portion of first strs of group_by matches...
+    """
 
     # runner
     runner: Runner
