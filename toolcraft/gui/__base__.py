@@ -218,7 +218,9 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
                     )
 
     def init(self):
-        ...
+        raise e.code.CodingError(
+            msgs=["will be anyways overridden by Widget class so this can never be called ..."]
+        )
 
     def build_pre_runner(self):
 
@@ -227,7 +229,7 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
         if self.is_built:
             raise e.code.CodingError(
                 msgs=[
-                    f"Widget is already built and registered with:",
+                    f"Widget {self.__class__} is already built and registered with:",
                     {
                         'parent': self.internal.parent.__class__,
                     },
@@ -543,6 +545,10 @@ class Widget(_WidgetDpg, abc.ABC):
     def registered_as_child(self) -> bool:
         return True
 
+    @property
+    def is_in_gui_with_mode(self) -> bool:
+        return bool(_CONTAINER_WIDGET_STACK)
+
     def __eq__(self, other):
         """
         Needed for ContainerWidget.index_in_children to work ...
@@ -560,7 +566,8 @@ class Widget(_WidgetDpg, abc.ABC):
     def init(self):
         global _CONTAINER_WIDGET_STACK
 
-        # if there is parent container add to it
+        # if there is parent container that is available via with context then add to it
+        # this is only for using with `with` syntax
         if bool(_CONTAINER_WIDGET_STACK):
             _CONTAINER_WIDGET_STACK[-1](widget=self)
 
@@ -570,7 +577,7 @@ class Widget(_WidgetDpg, abc.ABC):
 
     def on_enter(self):
         raise e.code.NotAllowed(
-            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget} so "
+            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
                   f"you cannot use with context"]
         )
 
@@ -579,7 +586,7 @@ class Widget(_WidgetDpg, abc.ABC):
 
     def on_exit(self, exc_type, exc_val, exc_tb):
         raise e.code.NotAllowed(
-            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget} so "
+            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
                   f"you cannot use with context"]
         )
 

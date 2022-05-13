@@ -29,6 +29,11 @@ except ImportError:
     tf_util = None
 
 
+# noinspection PyUnreachableCode
+if False:
+    from . import gui
+
+
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
 
@@ -172,6 +177,55 @@ class TagManager:
         return Tag(name="description", manager=self)
 
 
+@dataclasses.dataclass(frozen=True)
+class JobViewer(m.HashableClass):
+
+    method_name: str
+    experiment: t.Optional["Experiment"]
+
+    @property
+    def button_label(self) -> str:
+        if self.experiment is None:
+            return self.method_name
+        _title, _args = self.experiment.label
+        return "\n".join([_title, *_args])
+
+    @m.UseMethodInForm(
+        label_fmt="button_label"
+    )
+    def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
+        from . import gui
+        return gui.form.HashableMethodsRunnerForm(
+            title=self.button_label,
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=[],
+            collapsing_header_open=True,
+        )
+
+    @m.UseMethodInForm(label_fmt="Info")
+    def info_widget(self) -> "gui.widget.Text":
+        """
+        We override as we are interested in field `experiment` and not `self` ...
+        """
+        # import
+        from . import gui
+        # make
+        _experiment = self.experiment
+        if _experiment is None:
+            _text = f"method: {self.method_name}"
+        else:
+            _text = f"method: {self.method_name}\n\n" \
+                    f"hex-hash: {_experiment.hex_hash}\n\n" \
+                    f"{_experiment.yaml()}"
+        # noinspection PyUnresolvedReferences
+        _ret_widget = gui.widget.Text(default_value=_text)
+        # return
+        return _ret_widget
+
+
 class Job:
     """
     Note that this job is available only on server i.e. to the submitted job on
@@ -179,6 +233,11 @@ class Job:
 
     Note this can read cli args and construct `method` and `method_kwargs` fields
     """
+
+    @property
+    @util.CacheResult
+    def viewer(self) -> JobViewer:
+        return JobViewer(experiment=self.experiment, method_name=self.method.__name__)
 
     @property
     @util.CacheResult
@@ -1000,48 +1059,37 @@ class Flow:
         _dashboard = FlowDashboard(title="Flow Dashboard")
 
         # ------------------------------------------------------------------- 04
-        # add stages
+        # make gui
+        _forms = {}
         with _dashboard.container:
             for _i, _stage in enumerate(self.stages):
                 # ----------------------------------------------------------- 04.01
                 # add stage label
                 gui.widget.Separator()
                 gui.widget.Separator()
-                gui.widget.Text(f"*** [[ STAGE {_i} ]] ***")
 
                 # ----------------------------------------------------------- 04.02
-                # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
-                #  + currently we will get all jobs in stage and render them
-                #  + we can have window pop-up for any JobGroup and then again have any JobGroup or jobs
-                #    rendered inside it
-                #  + may-be we need not differentiate between Sequential and Parallel JobGroup's ... we can
-                #    just have spinners if job is running or status icons indicating job status ... may be the
-                #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
-
-                _form = gui.form.DoubleSplitForm(
-                    title=f"*** [[ STAGE {_i} ]] ***",
-                    callable_name="gui", allow_refresh=False, collapsing_header_open=False,
+                _forms[_i] = gui.form.DoubleSplitForm(
+                    title=f"*** [[ STAGE {_i:03d} ]] ***",
+                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
                 )
 
+        # ------------------------------------------------------------------- 05
+        # add jobs for corresponding stages
+        for _i, _stage in enumerate(self.stages):
+            # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
+            #  + currently we will get all jobs in stage and render them
+            #  + we can have window pop-up for any JobGroup and then again have any JobGroup or jobs
+            #    rendered inside it
+            #  + may-be we need not differentiate between Sequential and Parallel JobGroup's ... we can
+            #    just have spinners if job is running or status icons indicating job status ... may be the
+            #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
+            for _job in _stage.all_jobs:
+                _forms[_i].add(
+                    hashable=_job.viewer, group_key=_job.viewer.method_name,
+                )
 
-
-
-                # ----------------------------------------------------------- 04.03
-                # make collapsing headers that can collect all jobs with same method
-                # _collapsing_headers_for_method = {}
-                # for _job in _stage.all_jobs:
-                #     if _job.method.__name__ not in _collapsing_headers_for_method:
-                #         _collapsing_headers_for_method[_job.method.__name__] = \
-                #             gui.widget.CollapsingHeader(_job.method.__name__)
-                #
-                # for _k, _ch in _collapsing_headers_for_method.items():
-                #     with _ch:
-                #         gui.widget.Text(f"{_k} .....")
-                #     with _ch:
-                #         gui.widget.Text(f"{_k} ..........")
-                #     with _ch:
-                #         gui.widget.Text(f"{_k} ................")
-
+        # ------------------------------------------------------------------- 06
         # run
         _dashboard.run()
 
@@ -1322,7 +1370,7 @@ class Runner(m.HashableClass, abc.ABC):
 
 
 @dataclasses.dataclass(frozen=True)
-class Experiment(m.HashableClass):
+class Experiment(m.HashableClass, abc.ABC):
     """
     Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
     be stored in same folder hierarchy if some portion of first strs of group_by matches...
@@ -1340,3 +1388,8 @@ class Experiment(m.HashableClass):
 
     def setup(self):
         _LOGGER.info(f" >> Setup experiment: {self.hex_hash}")
+
+    @property
+    @abc.abstractmethod
+    def label(self) -> t.Tuple[str, t.List[str]]:
+        ...

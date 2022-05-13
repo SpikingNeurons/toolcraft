@@ -52,7 +52,6 @@ MESSAGES_TYPE = t.List[
 
 class CustomLogger(logging.Logger):
 
-
     # noinspection PyMethodOverriding
     # def debug(self, *, msg: str, msgs: MESSAGES_TYPE = None):
     def debug(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):

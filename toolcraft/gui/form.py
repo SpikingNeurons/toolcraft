@@ -2,6 +2,7 @@ import dataclasses
 import typing as t
 
 from .. import util
+from .. import error as e
 from .. import marshalling as m
 from .__base__ import Form
 from .. import gui
@@ -100,48 +101,38 @@ class DoubleSplitForm(Form):
 
     @property
     @util.CacheResult
-    def _table(self) -> table.Table:
-        # create table
-        _table = table.Table.table_from_literals(
-            rows=1,
-            cols=2,
-        )
-        _table.header_row = False
-        _table.resizable = True
-        # _table.policy = gui.En
-        _table.borders_innerH = True
-        _table.borders_outerH = True
-        _table.borders_innerV = True
-        _table.borders_outerV = True
-
-        # return
+    def form_fields_container(self) -> table.Table:
+        with widget.Group(horizontal=False) as _grp:
+            # create table
+            _table = table.Table.table_from_literals(
+                rows=1,
+                cols=2,
+            )
+            _table.header_row = False
+            _table.resizable = True
+            # _table.policy = gui.En
+            _table.borders_innerH = True
+            _table.borders_outerH = True
+            _table.borders_innerV = True
+            _table.borders_outerV = True
         return _table
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> widget.Group:
-        _grp = widget.Group(horizontal=False)
-        _grp(widget=self._table)
-        return _grp
+    def button_panel(self) -> widget.Group:
+        with self.form_fields_container[0, 0]:
+            return widget.Group(horizontal=False)
 
     @property
     @util.CacheResult
-    def button_panel(self) -> widget.Group:
-        _grp = widget.Group(horizontal=False)
-        self._table[0, 0](_grp)
-        return _grp
+    def receiver_panel(self) -> widget.Group:
+        with self.form_fields_container[0, 1]:
+            return widget.Group(horizontal=False)
 
     @property
     @util.CacheResult
     def button_panel_group(self) -> t.Dict[str, gui.widget.CollapsingHeader]:
         return {}
-
-    @property
-    @util.CacheResult
-    def receiver_panel(self) -> widget.Group:
-        _grp = widget.Group(horizontal=False)
-        self._table[0, 1](_grp)
-        return _grp
 
     def add(
         self,
@@ -150,23 +141,21 @@ class DoubleSplitForm(Form):
     ):
 
         # ----------------------------------------------------- 01
+        # check if using with mode for gui
+        if self.is_in_gui_with_mode:
+            raise e.code.CodingError(
+                msgs=[
+                    f"To add elements to {self.__class__.__name__!r} exist from gui with mode ..."
+                ]
+            )
+
+        # ----------------------------------------------------- 02
         # get UseMethodInForm
         _use_method_in_form_obj = m.UseMethodInForm.get_from_hashable_fn(
             hashable=hashable, fn_name=self.callable_name
         )
 
-        # ----------------------------------------------------- 01
-        # create button widget
-        _button = _use_method_in_form_obj.get_button_widget(
-            hashable=hashable,
-            receiver=self.receiver_panel,
-            allow_refresh=self.allow_refresh,
-            # we can maintain this as we will be using single `callable_name` and hence
-            # no use for this kwarg
-            group_tag=None,
-        )
-
-        # ----------------------------------------------------- 02
+        # ----------------------------------------------------- 03
         # get container
         if group_key is None:
             _container = self.button_panel
@@ -174,12 +163,21 @@ class DoubleSplitForm(Form):
             if group_key in self.button_panel_group.keys():
                 _container = self.button_panel_group[group_key]
             else:
-                self.button_panel_group[group_key] = gui.widget.CollapsingHeader(
-                    label=group_key, default_open=False,
-                )
-                _container = self.button_panel_group[group_key]
-                self.button_panel(widget=_container)
+                with self.button_panel:
+                    self.button_panel_group[group_key] = gui.widget.CollapsingHeader(
+                        label=group_key, default_open=False,
+                    )
+                    _container = self.button_panel_group[group_key]
 
-        # ----------------------------------------------------- 03
-        # add button widget
-        _container(widget=_button)
+        # ----------------------------------------------------- 04
+        # create button widget ... note use of with context so that it can also work when
+        # `add` is called inside `with` context
+        with _container:
+            _use_method_in_form_obj.get_button_widget(
+                hashable=hashable,
+                receiver=self.receiver_panel,
+                allow_refresh=self.allow_refresh,
+                # we can maintain this as we will be using single `callable_name` and hence
+                # no use for this kwarg
+                group_tag=None,
+            )

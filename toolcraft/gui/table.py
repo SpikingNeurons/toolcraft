@@ -71,7 +71,7 @@ class Row(_auto.TableRow):
             msgs=[
                 f"Although {Row} is ContainerWidget we block using with context as "
                 f"the cells will be already created for and hence instead use "
-                f"indexing i.w., use __getitem__"
+                f"indexing i.e., use __getitem__"
             ]
         )
 
@@ -80,7 +80,7 @@ class Row(_auto.TableRow):
             msgs=[
                 f"Although {Row} is ContainerWidget we block using with context as "
                 f"the cells will be already created for and hence instead use "
-                f"indexing i.w., use __getitem__"
+                f"indexing i.e., use __getitem__"
             ]
         )
 
@@ -96,27 +96,6 @@ class Table(_auto.Table):
 
     # ...
     columns: t.List[Column] = None
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # make sure that column is supplied
-        if self.columns is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Please supply mandatory field `columns` ..."
-                ]
-            )
-
-    def init(self):
-        # call super
-        super().init()
-
-        # now call rows so that they add self to themselves
-        if bool(self.rows):
-            for _r in self.rows:
-                _r()
 
     @property
     @util.CacheResult
@@ -162,6 +141,27 @@ class Table(_auto.Table):
                 return self.rows[item[0]][item[1]]
         else:
             raise e.code.CodingError(msgs=[f"Unknown type {type(item)}"])
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # make sure that column is supplied
+        if self.columns is None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Please supply mandatory field `columns` ..."
+                ]
+            )
+
+    def init(self):
+        # call super
+        super().init()
+
+        # now call rows so that they add self to themselves
+        if bool(self.rows):
+            for _r in self.rows:
+                _r()
 
     @classmethod
     def yaml_tag(cls) -> str:
