@@ -184,10 +184,11 @@ class JobViewer(m.HashableClass):
     experiment: t.Optional["Experiment"]
 
     @property
+    @util.CacheResult
     def button_label(self) -> str:
         if self.experiment is None:
             return self.method_name
-        _title, _args = self.experiment.label
+        _title, _args = self.experiment.gui_label
         return "\n".join([_title, *_args])
 
     @m.UseMethodInForm(
@@ -196,7 +197,7 @@ class JobViewer(m.HashableClass):
     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
         from . import gui
         return gui.form.HashableMethodsRunnerForm(
-            title=self.button_label,
+            title=self.button_label.split("\n")[0],
             group_tag="simple",
             hashable=self,
             close_button=True,
@@ -1391,5 +1392,5 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def label(self) -> t.Tuple[str, t.List[str]]:
+    def gui_label(self) -> t.Tuple[str, t.List[str]]:
         ...
