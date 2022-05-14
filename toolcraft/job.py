@@ -198,6 +198,20 @@ class JobViewer(m.HashableClass):
 
     @property
     @util.CacheResult
+    def job(self) -> "Job":
+        _ret = self.internal.job
+        if _ret.experiment != self.experiment:
+            raise e.code.CodingError(
+                msgs=["Job set to this JobViewer is not correct ..."]
+            )
+        if _ret.method.__name__ != self.method_name:
+            raise e.code.CodingError(
+                msgs=[f"The method name set is not correct"]
+            )
+        return _ret
+
+    @property
+    @util.CacheResult
     def button_label(self) -> str:
         if self.experiment is None:
             return self.method_name
@@ -215,7 +229,7 @@ class JobViewer(m.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=[],
+            callable_names=["tags_gui", ],
             collapsing_header_open=True,
         )
 
@@ -238,6 +252,10 @@ class JobViewer(m.HashableClass):
         _ret_widget = gui.widget.Text(default_value=_text)
         # return
         return _ret_widget
+
+    @m.UseMethodInForm(label_fmt="tags")
+    def tags_gui(self) -> "gui.widget.Text":
+        return self.job.tag_manager.tags_gui()
 
 
 class Job:
