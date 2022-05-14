@@ -176,12 +176,25 @@ class TagManager:
     def description(self) -> Tag:
         return Tag(name="description", manager=self)
 
+    def tags_gui(self) -> "gui.widget.Text":
+        from . import gui
+        return gui.widget.Text(default_value="....ffff...")
+
+
+class JobViewerInternal(m.Internal):
+    job: "Job"
+
 
 @dataclasses.dataclass(frozen=True)
 class JobViewer(m.HashableClass):
 
     method_name: str
     experiment: t.Optional["Experiment"]
+
+    @property
+    @util.CacheResult
+    def internal(self) -> JobViewerInternal:
+        return JobViewerInternal(owner=self)
 
     @property
     @util.CacheResult
@@ -238,7 +251,9 @@ class Job:
     @property
     @util.CacheResult
     def viewer(self) -> JobViewer:
-        return JobViewer(experiment=self.experiment, method_name=self.method.__name__)
+        _ret = JobViewer(experiment=self.experiment, method_name=self.method.__name__)
+        _ret.internal.job = self
+        return _ret
 
     @property
     @util.CacheResult
