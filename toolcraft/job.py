@@ -178,7 +178,22 @@ class TagManager:
 
     def tags_gui(self) -> "gui.widget.Text":
         from . import gui
-        return gui.widget.Text(default_value="....ffff...")
+        _ret = ""
+        if self.finished.exists():
+            _ret += "--- FINISHED JOB ---\n\n"
+        if self.failed.exists():
+            _ret += "XXX--- FAILED JOB ---XXX\n\n"
+        if self.started.exists():
+            _ret += f"started at: {self.started.read()}\n"
+        if self.running.exists():
+            _ret += f"running from: {self.running.read()}\n"
+        if self.failed.exists():
+            _ret += f"failed at: {self.failed.read()}\n"
+        if self.finished.exists():
+            _ret += f"finished at: {self.finished.read()}\n"
+        if self.description.exists():
+            _ret += f"\n-- description --\n {self.description.read()}\n"
+        return gui.widget.Text(default_value=_ret)
 
 
 class JobViewerInternal(m.Internal):
