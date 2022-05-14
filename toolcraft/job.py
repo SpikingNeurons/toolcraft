@@ -238,8 +238,18 @@ class JobViewer(m.HashableClass):
     )
     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
         from . import gui
+
+        _title = self.button_label.split("\n")[0] + "\n--- "
+        _job = self.job
+        if _job.is_running:
+            _title += "RUNNING --- "
+        if _job.is_failed:
+            _title += "FAILED --- "
+        if _job.is_finished:
+            _title += "FINISHED --- "
+
         return gui.form.HashableMethodsRunnerForm(
-            title=self.button_label.split("\n")[0],
+            title=_title,
             group_tag="simple",
             hashable=self,
             close_button=True,
