@@ -297,6 +297,23 @@ class JobViewer(m.HashableClass):
     @m.UseMethodInForm(
         label_fmt="button_label"
     )
+    def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
+        # import
+        from . import gui
+
+        # if finished return
+        if self.job.is_finished:
+            return self.job_gui()
+
+        # execute job
+        ...
+
+        # return gui
+        return self.job_gui()
+
+    @m.UseMethodInForm(
+        label_fmt="button_label"
+    )
     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
         from . import gui
 
@@ -328,11 +345,11 @@ class JobViewer(m.HashableClass):
         from . import gui
         # make
         _experiment = self.experiment
-        if _experiment is None:
-            _text = f"method: {self.method_name}"
-        else:
-            _text = f"method: {self.method_name}\n\n" \
-                    f"hex-hash: {_experiment.hex_hash}\n\n" \
+        _text = f"job-id: {self.job.job_id}\n" \
+                f"flow-id: {self.job.flow_id}\n" \
+                f"method: {self.method_name}\n\n"
+        if _experiment is not None:
+            _text += f"hex-hash: {_experiment.hex_hash}\n" \
                     f"{_experiment.yaml()}"
         # noinspection PyUnresolvedReferences
         _ret_widget = gui.widget.Text(default_value=_text)
@@ -1089,21 +1106,31 @@ class Flow:
     Note that stages are made up of list of ParallelJobGroup, while within each ParallelJobGroup we can have
     ParallelJobGroup or SequentialJobGroup ... note that if you want to wait JobGroup within stage to wait over
     previous JobGroup then you need to define that with wait_on
+
+    Note that `other_jobs` are related to methods with `experiment` kwarg. It is mostly jobs that are run on client
+    to debug or get some info from job runs that were run on server ... the data will be generated on client where
+    viewer is used ... and jobs will be run only when interacted with viewer ...
+    example:
+    + debug model to find out learning rate
     """
 
     def __init__(
         self,
         stages: t.List[ParallelJobGroup],
         runner: "Runner",
+        other_jobs: t.List[Job],
     ):
         # save reference
         self.stages = stages
         self.runner = runner
+        self.other_jobs = other_jobs
 
         # set flow ids
         _len = len(self.stages)
         for _stage_id, _stage in enumerate(self.stages):
             _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
+        for _j in other_jobs:
+            _j.flow_id = f"#[other]"
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
@@ -1229,21 +1256,31 @@ class Flow:
         # ------------------------------------------------------------------- 04
         # make gui
         _forms = {}
+        _other_jobs_form = None
         with _dashboard.container:
+            # --------------------------------------------------------------- 04.01
+            # for stages
             for _i, _stage in enumerate(self.stages):
-                # ----------------------------------------------------------- 04.01
-                # add stage label
                 gui.widget.Separator()
                 gui.widget.Separator()
-
-                # ----------------------------------------------------------- 04.02
                 _forms[_i] = gui.form.DoubleSplitForm(
                     title=f"*** [[ STAGE {_i:03d} ]] ***",
                     callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
                 )
+            # --------------------------------------------------------------- 04.02
+            # for other jobs that will be run on client with gui
+            if bool(self.other_jobs):
+                gui.widget.Separator()
+                gui.widget.Separator()
+                _other_jobs_form = gui.form.DoubleSplitForm(
+                    title=f"*** [[ OTHER JOBS ]] ***",
+                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=False,
+                )
 
         # ------------------------------------------------------------------- 05
-        # add jobs for corresponding stages
+        # add jobs to forms
+        # ------------------------------------------------------------------- 05.01
+        # for stages
         for _i, _stage in enumerate(self.stages):
             # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
             #  + currently we will get all jobs in stage and render them
@@ -1253,9 +1290,12 @@ class Flow:
             #    just have spinners if job is running or status icons indicating job status ... may be the
             #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
             for _job in _stage.all_jobs:
-                _forms[_i].add(
-                    hashable=_job.viewer, group_key=_job.viewer.method_name,
-                )
+                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
+        # ------------------------------------------------------------------- 05.02
+        # for other jobs that will be run on client with gui
+        if bool(self.other_jobs):
+            for _job in self.other_jobs:
+                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
 
         # ------------------------------------------------------------------- 06
         # run
