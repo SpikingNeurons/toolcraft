@@ -382,9 +382,9 @@ def basic_dashboard():
         hashable=SimpleHashableClass(some_value="fourth hashable ..."),
         group_key="Group 2 ..."
     )
-    _dash.topic5.register(key="aaa", gui_name="a", fn=lambda: gui.widget.Text("aaa..."))
-    _dash.topic5.register(key="bbb", gui_name="b", fn=lambda: gui.widget.Text("bbb..."))
-    _dash.topic5.register(key="ccc", gui_name="c", fn=lambda: gui.widget.Text("ccc..."))
+    _dash.topic5.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
+    _dash.topic5.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
+    _dash.topic5.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
     _dash.run()
 
 
