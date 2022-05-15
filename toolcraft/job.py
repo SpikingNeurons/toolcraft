@@ -250,7 +250,7 @@ class JobViewer(m.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["tags_gui", ],
+            callable_names=["tags_gui", "artifacts_gui"],
             collapsing_header_open=True,
         )
 
@@ -279,8 +279,36 @@ class JobViewer(m.HashableClass):
         return self.job.tag_manager.tags_gui()
 
     @m.UseMethodInForm(label_fmt="artifacts")
-    def artifacts_gui(self) -> "gui.widget.Text":
-        ...
+    def artifacts_gui(self) -> "gui.form.ButtonBarForm":
+        # import
+        from . import gui
+
+        # class for ButtonBarForm that supports loading artifacts
+        @dataclasses.dataclass
+        class __ButtonBarForm(gui.form.ButtonBarForm):
+
+            @property
+            @util.CacheResult
+            def callback(self) -> gui.callback.Callback:
+
+                # make class for callback handling
+                @dataclasses.dataclass(frozen=True)
+                class __Callback(gui.callback.Callback):
+                    # noinspection PyMethodParameters
+                    def fn(_self, sender: gui.widget.Widget):
+                        _key = sender.get_user_data()["key"]
+                        self.receiver.clear()
+                        with self.receiver:
+                            self.mapper[_key]()
+
+                return __Callback()
+
+        _form = __ButtonBarForm(title=None, collapsing_header_open=False)
+        _form.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
+        _form.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
+        _form.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
+
+        return _form
 
 
 class Job:

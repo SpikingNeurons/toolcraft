@@ -16,11 +16,6 @@ class ButtonBarForm(Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> widget.Group:
-        return widget.Group()
-
-    @property
-    @util.CacheResult
     def button_bar(self) -> widget.Group:
         with self.form_fields_container:
             return widget.Group(horizontal=True)
@@ -102,22 +97,15 @@ class HashableMethodsRunnerForm(Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> widget.Group:
-        _ret = widget.Group()
-        _gp = _ret
-        _gp(widget=self.button_bar)
-        _gp(widget=self.receiver)
-        return _ret
-
-    @property
-    @util.CacheResult
     def button_bar(self) -> widget.Group:
-        return widget.Group(horizontal=True)
+        with self.form_fields_container:
+            return widget.Group(horizontal=True)
 
     @property
     @util.CacheResult
     def receiver(self) -> widget.Group:
-        return widget.Group()
+        with self.form_fields_container:
+            return widget.Group()
 
     def init(self):
         # call super
@@ -170,19 +158,18 @@ class DoubleSplitForm(Form):
     @property
     @util.CacheResult
     def form_fields_container(self) -> table.Table:
-        with widget.Group(horizontal=False) as _grp:
-            # create table
-            _table = table.Table.table_from_literals(
-                rows=1,
-                cols=2,
-            )
-            _table.header_row = False
-            _table.resizable = True
-            # _table.policy = gui.En
-            _table.borders_innerH = True
-            _table.borders_outerH = True
-            _table.borders_innerV = True
-            _table.borders_outerV = True
+        # create table
+        _table = table.Table.table_from_literals(
+            rows=1,
+            cols=2,
+        )
+        _table.header_row = False
+        _table.resizable = True
+        # _table.policy = gui.En
+        _table.borders_innerH = True
+        _table.borders_outerH = True
+        _table.borders_innerV = True
+        _table.borders_outerV = True
         return _table
 
     @property

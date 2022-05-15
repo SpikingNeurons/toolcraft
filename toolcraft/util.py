@@ -651,8 +651,10 @@ def CacheResult(*dec_args, **dec_kwargs):
             ]
         )
     # ---------------------------------------------------------------- 01.05
-    # the dec function should not be local
-    if dec_args[0].__qualname__.find('<locals>') != -1:
+    # the dec function should not be local function
+    # but note that it is okay if it is method of local class ...
+    #   as in that case it will be "<...>.<locals>.SomeClassName.method"
+    if dec_args[0].__qualname__.split(".")[-2] == "<locals>":
         raise e.validation.NotAllowed(
             msgs=[
                 f"We do not allow to use CacheResult decorator to be used "
