@@ -356,8 +356,7 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
-    # topic5: gui.form.HashableMethodsRunnerForm = SimpleHashableClass(
-    #     some_value="hashable.all_plots ...").all_plots()
+    topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
 
 
 def basic_dashboard():
@@ -383,14 +382,9 @@ def basic_dashboard():
         hashable=SimpleHashableClass(some_value="fourth hashable ..."),
         group_key="Group 2 ..."
     )
-    # # noinspection PyTypeChecker
-    # _dash.topic5.add(
-    #     hashable=SimpleHashableClass(some_value="first hashable ...")
-    # )
-    # # noinspection PyTypeChecker
-    # _dash.topic5.add(
-    #     hashable=SimpleHashableClass(some_value="second hashable ...")
-    # )
+    _dash.topic5.register(key="aaa", gui_name="a", fn=lambda: gui.widget.Text("aaa..."))
+    _dash.topic5.register(key="bbb", gui_name="b", fn=lambda: gui.widget.Text("bbb..."))
+    _dash.topic5.register(key="ccc", gui_name="c", fn=lambda: gui.widget.Text("ccc..."))
     _dash.run()
 
 

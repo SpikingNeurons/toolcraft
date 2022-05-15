@@ -38,11 +38,7 @@ _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
 
 
-@dataclasses.dataclass
-class Viewer:
-    runner: "Runner"
-    fn: t.Callable
-    fn_kwargs: t.Dict
+ARTIFACT_VIEWERS = util.SmartDict(allow_nested_dict_or_list=False, )
 
 
 class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
@@ -281,6 +277,10 @@ class JobViewer(m.HashableClass):
     @m.UseMethodInForm(label_fmt="tags")
     def tags_gui(self) -> "gui.widget.Text":
         return self.job.tag_manager.tags_gui()
+
+    @m.UseMethodInForm(label_fmt="artifacts")
+    def artifacts_gui(self) -> "gui.widget.Text":
+        ...
 
 
 class Job:

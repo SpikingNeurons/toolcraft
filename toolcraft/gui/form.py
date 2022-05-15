@@ -12,6 +12,74 @@ from . import callback
 
 
 @dataclasses.dataclass
+class ButtonBarForm(Form):
+
+    @property
+    @util.CacheResult
+    def form_fields_container(self) -> widget.Group:
+        return widget.Group()
+
+    @property
+    @util.CacheResult
+    def button_bar(self) -> widget.Group:
+        with self.form_fields_container:
+            return widget.Group(horizontal=True)
+
+    @property
+    @util.CacheResult
+    def receiver(self) -> widget.Group:
+        with self.form_fields_container:
+            return widget.Group()
+
+    @property
+    @util.CacheResult
+    def callback(self) -> gui.callback.Callback:
+
+        # make class for callback handling
+        @dataclasses.dataclass(frozen=True)
+        class __Callback(gui.callback.Callback):
+            # noinspection PyMethodParameters
+            def fn(_self, sender: gui.widget.Widget):
+                _key = sender.get_user_data()["key"]
+                self.receiver.clear()
+                with self.receiver:
+                    self.mapper[_key]()
+
+        return __Callback()
+
+    @property
+    @util.CacheResult
+    def mapper(self) -> t.Dict[str, t.Callable]:
+        return {}
+
+    def register(self, key: str, fn: t.Callable, gui_name: str = None, ):
+        # just set default
+        if gui_name is None:
+            gui_name = key
+
+        # check if already mapped
+        e.validation.ShouldNotBeOneOf(
+            value=key, values=list(self.mapper.keys()),
+            msgs=["Looks like you have already registered gui function for this key"]
+        ).raise_if_failed()
+
+        # test if in with context
+        if self.is_in_gui_with_mode:
+            raise e.code.CodingError(
+                msgs=["Register new buttons and their gui methods outside gui related with context"]
+            )
+
+        # add
+        self.mapper[key] = fn
+
+        # make button and add it to container
+        with self.button_bar:
+            gui.widget.Button(
+                label=gui_name, callback=self.callback, user_data={"key": key},
+            )
+
+
+@dataclasses.dataclass
 class HashableMethodsRunnerForm(Form):
     """
     This is the form which appears on right side of split window. And it needs

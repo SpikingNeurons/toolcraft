@@ -150,7 +150,7 @@ class _SmartListDict:
     def __init__(
         self,
         allow_nested_dict_or_list: bool,
-        supplied_items: t.Optional[t.Union[list, dict]],
+        supplied_items: t.Optional[t.Union[list, dict]] = None,
         use_specific_class: t.Type = None,
         allowed_types: t.Tuple[t.Type] = t.Any,
     ):
@@ -197,7 +197,7 @@ class _SmartListDict:
                     )
                 # populate
                 for k, v in supplied_items.items():
-                    if isinstance(k, str):
+                    if not isinstance(k, str):
                         raise e.code.NotAllowed(
                             msgs=[
                                 f"We expect dict key to be str but found type "
@@ -207,7 +207,6 @@ class _SmartListDict:
                     _items[k] = self._make_it_smart(v)
         else:
             raise e.code.ShouldNeverHappen(msgs=[f"Unsupported type {type(self)}"])
-            raise
         # store it
         self._items = _items  # type: t.Union[list, dict]
 
