@@ -38,7 +38,72 @@ _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
 
 
-ARTIFACT_VIEWERS = util.SmartDict(allow_nested_dict_or_list=False, )
+class ArtifactViewer:
+    """
+    Just add static methods to the subclasses ... and make sure that they have only one arg named `data`
+
+    Note that this class has no static methods
+
+    Then any artifact-file that is saved in artifacts folder and whose name matches one of static method of this
+    class is supported ...
+
+    Unknown file names will get a Text widget stating that it is `unknown artifact`
+
+    For supporting more artifacts simple extend this class and any static methods in child class will be registered
+
+    todo: this pattern seems good for register-plugins kind of things ... see if it can be added elsewhere
+    """
+
+    _fn_mapper = {}
+
+    def __init_subclass__(cls, **kwargs):
+        # validation
+        # todo: add validation to test if only static methods are defined the subclasses
+
+        # detect fn's and register
+        for _ in dir(cls):
+            if _.startswith("_"):
+                continue
+            if _ in ArtifactViewer._fn_mapper.keys():
+                raise e.code.CodingError(
+                    msgs=[f"You have already registered artifact-viewer for "
+                          f"key: {_} with function {ArtifactViewer._fn_mapper[_]}"]
+                )
+            ArtifactViewer._fn_mapper[_] = getattr(cls, _)
+
+    @staticmethod
+    def call(artifact: str, data: dict) -> "gui.widget.Widget":
+        from . import gui
+        if artifact not in ArtifactViewer._fn_mapper.keys():
+            return gui.widget.Text(f"view not provided for artifact name {artifact!r} ... cannot render ...")
+        return ArtifactViewer._fn_mapper[artifact](data=data)
+
+
+class ArtifactViewerForSca(ArtifactViewer):
+    """
+    Let this be here we will eventually move this or have more classes to register views
+    """
+
+    @staticmethod
+    def train_history(data: dict) -> "gui.widget.Widget":
+        from . import gui
+        return gui.widget.Text("train_history" + str(data))
+
+    @staticmethod
+    def validate_history(data: dict) -> "gui.widget.Widget":
+        from . import gui
+        return gui.widget.Text("validate_history" + str(data))
+
+    @staticmethod
+    def guessing_entropy(data: dict) -> "gui.widget.Widget":
+        from . import gui
+        return gui.widget.Text("guessing_entropy" + str(data))
+
+    @staticmethod
+    def prob_masses(data: dict) -> "gui.widget.Widget":
+        from . import gui
+        return gui.widget.Text("prob_masses" + str(data))
+
 
 
 class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
@@ -131,7 +196,7 @@ class Tag:
 @dataclasses.dataclass
 class TagManager:
     """
-    todo: we might want these tags to be save state on some state server ...
+    todo: we might want these tags to save state on some state server ...
       so that we can check states there ...
     todo: can we route all tags to simple database file ...
       To support dynamic tags we might need some document storage database instead of
@@ -280,6 +345,57 @@ class JobViewer(m.HashableClass):
 
     @m.UseMethodInForm(label_fmt="artifacts")
     def artifacts_gui(self) -> "gui.form.ButtonBarForm":
+        return self.job.artifact_manager.artifacts_gui()
+
+
+@dataclasses.dataclass
+class ArtifactManager:
+    job: "Job"
+
+    @property
+    @util.CacheResult
+    def path(self) -> s.Path:
+        _ret = self.job.path / "artifacts"
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    def save(self, name: str, data: t.Any):
+        """
+        todo: make this compatible for all type of path
+        """
+        _file = self.path / name
+        if _file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Artifact {name} already exists ... cannot write"
+                ]
+            )
+
+        with open(_file.local_path.as_posix(), 'wb') as _file:
+            pickle.dump(data, _file)
+
+    def load(self, name: str) -> t.Any:
+        """
+        todo: make this compatible for all type of path
+        """
+
+        _file = self.path / name
+
+        if not _file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Artifact {name} does not exists ... cannot load"
+                ]
+            )
+
+        with open(_file.local_path.as_posix(), 'rb') as _file:
+            return pickle.load(_file)
+
+    def available_artifacts(self) -> t.List[str]:
+        return [_.name for _ in self.path.ls()]
+
+    def artifacts_gui(self) -> "gui.form.ButtonBarForm":
         # import
         from . import gui
 
@@ -289,24 +405,24 @@ class JobViewer(m.HashableClass):
 
             @property
             @util.CacheResult
-            def callback(self) -> gui.callback.Callback:
+            def callback(self_1) -> gui.callback.Callback:
 
                 # make class for callback handling
                 @dataclasses.dataclass(frozen=True)
                 class __Callback(gui.callback.Callback):
                     # noinspection PyMethodParameters
-                    def fn(_self, sender: gui.widget.Widget):
+                    def fn(self_2, sender: gui.widget.Widget):
                         _key = sender.get_user_data()["key"]
-                        self.receiver.clear()
-                        with self.receiver:
-                            self.mapper[_key]()
+                        self_1.receiver.clear()
+                        with self_1.receiver:
+                            ArtifactViewer.call(artifact=_key, data=self.load(name=_key))
 
                 return __Callback()
 
         _form = __ButtonBarForm(title=None, collapsing_header_open=False)
-        _form.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
-        _form.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
-        _form.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
+
+        for _ in self.available_artifacts():
+            _form.register(key=_, fn=None)
 
         return _form
 
@@ -330,6 +446,11 @@ class Job:
     @util.CacheResult
     def tag_manager(self) -> TagManager:
         return TagManager(job=self)
+
+    @property
+    @util.CacheResult
+    def artifact_manager(self) -> ArtifactManager:
+        return ArtifactManager(job=self)
 
     @property
     def is_started(self) -> bool:
@@ -379,14 +500,6 @@ class Job:
     @property
     def is_on_main_machine(self) -> bool:
         return self.runner.is_on_main_machine
-
-    @property
-    @util.CacheResult
-    def artifacts_path(self) -> s.Path:
-        _ret = self.path / "artifacts"
-        if not _ret.exists():
-            _ret.mkdir(create_parents=True)
-        return _ret
 
     @property
     @util.CacheResult
@@ -807,38 +920,6 @@ class Job:
         _status.assert_nontrivial_match()
         _status.expect_partial()
         _status.assert_consumed()
-
-    def save_artifact(self, name: str, data: t.Any):
-        """
-        todo: make this compatible for all type of path
-        """
-        _file = self.artifacts_path / name
-        if _file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} already exists ... cannot write"
-                ]
-            )
-
-        with open(_file.local_path.as_posix(), 'wb') as _file:
-            pickle.dump(data, _file)
-
-    def load_artifact(self, name: str) -> t.Any:
-        """
-        todo: make this compatible for all type of path
-        """
-
-        _file = self.artifacts_path / name
-
-        if not _file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} does not exists ... cannot load"
-                ]
-            )
-
-        with open(_file.local_path.as_posix(), 'rb') as _file:
-            return pickle.load(_file)
 
 
 class JobGroup(abc.ABC):

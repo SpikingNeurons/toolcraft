@@ -47,7 +47,7 @@ class ButtonBarForm(Form):
     def mapper(self) -> t.Dict[str, t.Callable]:
         return {}
 
-    def register(self, key: str, fn: t.Callable, gui_name: str = None, ):
+    def register(self, key: str, fn: t.Optional[t.Callable], gui_name: str = None, ):
         # just set default
         if gui_name is None:
             gui_name = key
