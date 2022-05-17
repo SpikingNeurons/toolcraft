@@ -302,11 +302,12 @@ class JobViewer(m.HashableClass):
         from . import gui
 
         # if finished return
-        if self.job.is_finished:
+        _job = self.job
+        if _job.is_finished:
             return self.job_gui()
 
         # execute job
-        ...
+        _job(cluster_type=JobRunnerClusterType.local)
 
         # return gui
         return self.job_gui()

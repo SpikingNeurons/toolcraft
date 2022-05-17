@@ -33,6 +33,11 @@ todo: Also refer
   https://guild.ai/
   https://github.com/ml-tooling/ml-workspace
 
+todo: asyncio (https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.loop.run_in_executor)
+  + for io bound use concurrent.futures.ThreadPoolExecutor()
+  + for cpu bound use concurrent.futures.ProcessPoolExecutor()
+
+
 """
 __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
