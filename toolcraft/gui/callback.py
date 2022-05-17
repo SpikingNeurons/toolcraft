@@ -6,7 +6,7 @@ from .. import util
 from .. import marshalling as m
 from .. import error as e
 from . import widget, asset
-from .__base__ import Callback, Tag
+from .__base__ import Callback
 
 
 @dataclasses.dataclass(frozen=True)
@@ -133,10 +133,12 @@ class HashableMethodRunnerCallback(Callback):
                    f"{_hashable.hex_hash[-10:]}.{self.group_tag}"
 
         # get widget for given tag if present
-        if Tag.exists(tag_or_widget=_tag):
-            _widget = Tag.get_widget(tag=_tag)
-        else:
-            _widget = None
+        # .... doesn't matter if you use sender or _receiver as there is one dashboard for all
+        #      This might change if we have multiple dashboard instances
+        _dash_board = _receiver.dash_board
+        # todo: precaution check ... remove later
+        assert id(_dash_board) == id(sender.dash_board), "must be same ..."
+        _widget = _dash_board.tags.get(_tag, None)
         _before_widget = None
 
         # if allow refresh then delete widget and set it to None so that it
@@ -171,7 +173,7 @@ class HashableMethodRunnerCallback(Callback):
                 _hashable, self.callable_name)()  # type: widget.MovableWidget
 
             # tag it as it was newly created
-            _new_widget.tag_it(tag=_tag)
+            _dash_board.tag_widget(tag=_tag, widget=_new_widget)
 
             # add to receiver children
             _receiver(_new_widget)

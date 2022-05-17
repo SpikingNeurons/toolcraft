@@ -401,98 +401,6 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
         internal_dpg.configure_item(self.dpg_id, enabled=False)
 
 
-class Tag:
-    """
-    todo: check contextvars ... might not be needed for tag ....
-      but can be useful when we want simple names which are repeatable
-      across many windows ... this will keep tags have readable names but based on
-      context we can bring uniqueness ... especially useful for asyncio
-      https://docs.python.org/3/library/contextvars.html
-    """
-    _container = {}  # type: t.Dict[str, Widget]
-
-    @classmethod
-    def add(cls, tag: str, widget: 'Widget'):
-        # if tag is already used up
-        if tag in cls._container.keys():
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"A widget with tag `{tag}` already exists. "
-                    f"Please select some unique name."
-                ]
-            )
-
-        # if already tagged raise error
-        if widget.is_tagged:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"The widget is already tagged with tag {widget.tag} "
-                    f"so we cannot assign new tag {tag} ..."
-                ]
-            )
-
-        # save reference inside widget
-        widget.internal.tag = tag
-
-        # save in global container
-        cls._container[tag] = widget
-
-    @classmethod
-    def get_tag(cls, widget: 'Widget') -> str:
-        if widget.is_tagged:
-            return widget.internal.tag
-        raise e.validation.NotAllowed(
-            msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
-        )
-
-    @classmethod
-    def get_widget(cls, tag: str) -> 'Widget':
-        try:
-            return cls._container[tag]
-        except KeyError:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"The is no widget registered with tag `{tag}`"
-                ]
-            )
-
-    @classmethod
-    def exists(cls, tag_or_widget: t.Union[str, 'Widget']) -> bool:
-        if isinstance(tag_or_widget, str):
-            return tag_or_widget in cls._container.keys()
-        elif isinstance(tag_or_widget, Widget):
-            return tag_or_widget.is_tagged
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(tag_or_widget)}"])
-
-    @classmethod
-    def remove(cls, tag_or_widget: t.Union[str, 'Widget'], not_exists_ok: bool):
-        # if tag does not exist
-        if not cls.exists(tag_or_widget):
-            if not_exists_ok:
-                return
-            else:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        "There is no widget tagged with the tag name "
-                        f"`{tag_or_widget}` hence there is nothing to remove"
-                    ]
-                )
-
-        # since tag exists remove it ... also set internal.tag to None
-        _tag = tag_or_widget
-        if isinstance(tag_or_widget, Widget):
-            _tag = tag_or_widget.tag
-            tag_or_widget.internal.tag = None
-        elif isinstance(tag_or_widget, str):
-            cls.get_widget(tag_or_widget).internal.tag = None
-        else:
-            raise e.code.CodingError(
-                msgs=[f"Unknown type {type(tag_or_widget)}"]
-            )
-        del cls._container[_tag]
-
-
 class WidgetInternal(_WidgetDpgInternal):
     parent: "ContainerWidget"
     is_build_done: bool
@@ -513,7 +421,7 @@ class WidgetInternal(_WidgetDpgInternal):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_not_to_be_cached=['is_tagged']
+    things_not_to_be_cached=['is_tagged', 'get_tag']
 )
 class Widget(_WidgetDpg, abc.ABC):
     """
@@ -529,11 +437,6 @@ class Widget(_WidgetDpg, abc.ABC):
         return self.internal.tag is not None
 
     @property
-    def tag(self) -> str:
-        # noinspection PyTypeChecker
-        return Tag.get_tag(widget=self)
-
-    @property
     def is_built(self) -> bool:
         return self.internal.has(item="is_build_done")
 
@@ -547,8 +450,17 @@ class Widget(_WidgetDpg, abc.ABC):
         return self.internal.parent
 
     @property
+    @util.CacheResult
     def root(self) -> "window.Window":
         return self.parent.root
+
+    @property
+    @util.CacheResult
+    def dash_board(self) -> "Dashboard":
+        """
+        root is always Window and Window has Dashboard
+        """
+        return self.root.dash_board
 
     @property
     def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
@@ -626,13 +538,17 @@ class Widget(_WidgetDpg, abc.ABC):
             )
 
     def get_tag(self) -> str:
-        return Tag.get_tag(widget=self)
+        if self.is_tagged:
+            return self.internal.tag
+        raise e.validation.NotAllowed(
+            msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
+        )
 
     def tag_it(self, tag: str):
-        Tag.add(tag=tag, widget=self)
+        self.dash_board.tag_widget(tag=tag, widget=self)
 
-    def untag_it(self):
-        Tag.remove(tag_or_widget=self, not_exists_ok=False)
+    def untag_it(self, not_exists_ok: bool = False):
+        self.dash_board.untag_widget(tag_or_widget=self, not_exists_ok=not_exists_ok)
 
     def delete(self):
         # remove from parent
@@ -641,7 +557,8 @@ class Widget(_WidgetDpg, abc.ABC):
             _widget = self.parent.children.pop(self.parent.index_in_children(self))
 
         # if tagged then untag
-        Tag.remove(tag_or_widget=self, not_exists_ok=True)
+        if self.is_tagged:
+            self.untag_it(not_exists_ok=True)
 
         # delete the dpg UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
@@ -1223,7 +1140,8 @@ class DashboardInternal(m.Internal):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_not_to_be_overridden=['run']
+    things_not_to_be_overridden=['run', 'tags'],
+    things_to_be_cached=['tags'],
 )
 class Dashboard(m.YamlRepr, abc.ABC):
     """
@@ -1265,6 +1183,20 @@ class Dashboard(m.YamlRepr, abc.ABC):
     @util.CacheResult
     def internal(self) -> DashboardInternal:
         return DashboardInternal(owner=self)
+
+    @property
+    @util.CacheResult
+    def tags(self) -> t.Dict[str, Widget]:
+        """
+        We save tagged widgets with dashboard for all windows and widgets to access
+
+        todo: check contextvars ... might not be needed for tag ....
+          but can be useful when we want simple names which are repeatable
+          across many windows ... this will keep tags have readable names but based on
+          context we can bring uniqueness ... especially useful for asyncio
+          https://docs.python.org/3/library/contextvars.html
+        """
+        return {}
 
     def __post_init__(self):
         self.init_validate()
@@ -1533,6 +1465,66 @@ class Dashboard(m.YamlRepr, abc.ABC):
         """
         # noinspection PyArgumentList
         return internal_dpg.get_total_time(**kwargs)
+
+    def get_widget_from_tag(self, tag: str) -> Widget:
+        if tag in self.tags.keys():
+            return self.tags[tag]
+        else:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"We cannot find widget for tag {tag!r}."
+                ]
+            )
+
+    def tag_widget(self, tag: str, widget: Widget):
+        # if tag is already used up
+        if tag in self.tags.keys():
+            raise e.code.NotAllowed(
+                msgs=[
+                    f"A widget with tag `{tag}` already exists. "
+                    f"Please select some unique name."
+                ]
+            )
+
+        # if already tagged raise error
+        if widget.is_tagged:
+            raise e.code.NotAllowed(
+                msgs=[
+                    f"The widget is already tagged with tag {widget.tag} "
+                    f"so we cannot assign new tag {tag} ..."
+                ]
+            )
+
+        # save reference inside widget
+        widget.internal.tag = tag
+
+        # save in global container
+        self.tags[tag] = widget
+
+    def untag_widget(self, tag_or_widget: t.Union[str, Widget], not_exists_ok: bool = False):
+        # get tag
+        _tag = tag_or_widget
+        if isinstance(tag_or_widget, Widget):
+            _tag = tag_or_widget.internal.tag
+
+        # if tag name not present
+        if _tag not in self.tags.keys():
+            if not_exists_ok:
+                return
+            else:
+                raise e.code.NotAllowed(
+                    msgs=[
+                        "There is no widget tagged with the tag name "
+                        f"`{_tag}` hence there is nothing to remove"
+                    ]
+                )
+
+        # get tag
+        _widget = self.tags[_tag]
+
+        # since tag exists remove it ... also set internal.tag to None
+        _widget.internal.tag = None
+        del self.tags[_tag]
 
     @abc.abstractmethod
     def setup(self):
