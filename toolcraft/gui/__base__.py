@@ -416,9 +416,10 @@ class AsyncUpdateFn(t.NamedTuple):
     widget: "Widget"
     fn: t.Callable
     update_period: float
+    update_always: bool = False
 
     async def __call__(self):
-        if self.widget.is_visible:
+        if self.update_always or self.widget.is_visible:
             await asyncio.sleep(self.update_period)
             return self.fn(widget=self.widget)
 
