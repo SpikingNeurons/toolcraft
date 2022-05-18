@@ -273,6 +273,8 @@ class SimpleHashableClass(m.HashableClass):
 
     def txt_update_fn(self, widget: gui.widget.Text):
         widget.set_value(f"{int(widget.get_value())+1:03d}")
+        if int(widget.get_value()) == 20:
+            return "STOP"
 
     @m.UseMethodInForm(
         label_fmt="all_plots_gui_label"
