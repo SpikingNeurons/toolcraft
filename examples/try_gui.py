@@ -271,10 +271,17 @@ class SimpleHashableClass(m.HashableClass):
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
-    def txt_update_fn(self, widget: gui.widget.Text):
-        widget.set_value(f"{int(widget.get_value())+1:03d}")
-        if int(widget.get_value()) == 20:
-            return "STOP"
+    async def txt_update_fn(self, widget: gui.widget.Text):
+        while True:
+            widget.set_value(f"{int(widget.get_value())+1:03d}")
+            if self.some_value == "first hashable ...":
+                await asyncio.sleep(1)
+                if int(widget.get_value()) == 10:
+                    break
+            else:
+                await asyncio.sleep(0.1)
+                if int(widget.get_value()) == 50:
+                    break
 
     @m.UseMethodInForm(
         label_fmt="all_plots_gui_label"
@@ -284,7 +291,7 @@ class SimpleHashableClass(m.HashableClass):
         with _grp:
             gui.widget.Text(default_value="count")
             _txt = gui.widget.Text(default_value="000")
-            _txt.set_async_update_fn(fn=self.txt_update_fn, update_period=0.0)
+            _txt.set_async_update_fn(fn=self.txt_update_fn)
         return _grp
 
     @m.UseMethodInForm(

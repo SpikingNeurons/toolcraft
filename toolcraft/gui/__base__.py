@@ -427,8 +427,6 @@ class AsyncUpdateFn:
     fn: t.Callable
     widget: "Widget"
     extra_widgets: t.Dict[str, "Widget"] = None
-    update_period: float = 1.0
-    update_always: bool = False
 
     def __post_init__(self):
         if not self.widget.is_built:
@@ -439,34 +437,12 @@ class AsyncUpdateFn:
                 ]
             )
 
-    async def __call__(self):
-        # check if widget visible and then update
-        if self.update_always or self.widget.is_visible:
-
-            # async sleep
-            await asyncio.sleep(self.update_period)
-
-            # call fn
-            _kwargs = dict(widget=self.widget)
-            if bool(self.extra_widgets):
-                _kwargs.update(self.extra_widgets)
-            _ret = self.fn(**_kwargs)
-
-            # if returns special var "stop" we will stop tracking by removing this namedtuple
-            if _ret == "STOP":
-                del self.widget.dash_board.async_update_fns[id(self)]
-
-            # return
-            return _ret
-
     @classmethod
     def create(
         cls,
         fn: t.Callable,
         widget: "Widget",
         extra_widgets: t.Dict[str, "Widget"] = None,
-        update_period: float = 1.0,
-        update_always: bool = False,
     ):
         """
         note that call to .create will auto register to dashboard for async update tracking
@@ -474,21 +450,18 @@ class AsyncUpdateFn:
 
         if widget.is_built:
             _nt = AsyncUpdateFn(
-                fn=fn, widget=widget, update_period=update_period,
-                update_always=update_always, extra_widgets=extra_widgets)
-            widget.dash_board.async_update_fns[id(_nt)] = _nt
+                fn=fn, widget=widget, extra_widgets=extra_widgets)
+            widget.dash_board.async_update_fns_queue.put_nowait(_nt)
         else:
             if bool(widget.internal.post_build_fns):
                 widget.internal.post_build_fns.append(
                     functools.partial(
-                        widget.set_async_update_fn, fn=fn, update_period=update_period,
-                        update_always=update_always, extra_widgets=extra_widgets)
+                        widget.set_async_update_fn, fn=fn, extra_widgets=extra_widgets)
                 )
             else:
                 widget.internal.post_build_fns = [
                     functools.partial(
-                        widget.set_async_update_fn, fn=fn, update_period=update_period,
-                        update_always=update_always, extra_widgets=extra_widgets)
+                        widget.set_async_update_fn, fn=fn, extra_widgets=extra_widgets)
                 ]
 
 
@@ -637,8 +610,7 @@ class Widget(_WidgetDpg, abc.ABC):
         )
 
     def set_async_update_fn(
-        self, fn: t.Callable, update_period: float = 1.0,
-        update_always: bool = False, extra_widgets: t.Dict[str, "Widget"] = None
+        self, fn: t.Callable, extra_widgets: t.Dict[str, "Widget"] = None
     ):
         """
         Shortcut method to apply async updates for widgets created on the fly
@@ -646,7 +618,7 @@ class Widget(_WidgetDpg, abc.ABC):
         """
         # note that call to .create will auto register to dashboard for async update tracking
         AsyncUpdateFn.create(
-            fn=fn, update_period=update_period, update_always=update_always, extra_widgets=extra_widgets, widget=self,
+            fn=fn, extra_widgets=extra_widgets, widget=self,
         )
 
     def build_post_runner(
@@ -676,9 +648,6 @@ class Widget(_WidgetDpg, abc.ABC):
         # if tagged then untag
         if self.is_tagged:
             self.untag_it(not_exists_ok=True)
-
-        # remove async_update_fn's if any
-        self.stop_async_update(ignore_error=True)
 
         # delete the dpg UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
@@ -1260,8 +1229,8 @@ class DashboardInternal(m.Internal):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_not_to_be_overridden=['run', 'tags', 'async_update_fns'],
-    things_to_be_cached=['tags', 'async_update_fns'],
+    things_not_to_be_overridden=['run', 'tags', 'async_update_fns_queue'],
+    things_to_be_cached=['tags', 'async_update_fns_queue'],
 )
 class Dashboard(m.YamlRepr, abc.ABC):
     """
@@ -1298,7 +1267,6 @@ class Dashboard(m.YamlRepr, abc.ABC):
     title: str
     width: int = 1370
     height: int = 1200
-    update_period: float = 0.01
 
     @property
     @util.CacheResult
@@ -1307,8 +1275,8 @@ class Dashboard(m.YamlRepr, abc.ABC):
 
     @property
     @util.CacheResult
-    def async_update_fns(self) -> t.Dict[int, AsyncUpdateFn]:
-        return {}
+    def async_update_fns_queue(self) -> asyncio.Queue:
+        return asyncio.Queue()
 
     @property
     @util.CacheResult
@@ -1664,51 +1632,90 @@ class Dashboard(m.YamlRepr, abc.ABC):
     def build(self):
         ...
 
-    async def gui_main(self):
-        """
-        Refer:
-        >>> dpg.start_dearpygui()
-        """
-        dpg.show_viewport()
-        if not internal_dpg.is_viewport_ok():
-            raise RuntimeError("Viewport was not created and shown.")
+    async def async_main_update(self):
+        _q = self.async_update_fns_queue
+        _loop = asyncio.get_event_loop()
+        while True:
+            # await and get any queued task
+            _async_update_fn = await self.async_update_fns_queue.get()
+
+            # call _async_update_fn in async mode in event loop
+            _kwargs = dict(widget=_async_update_fn.widget)
+            if bool(_async_update_fn.extra_widgets):
+                _kwargs.update(_async_update_fn.extra_widgets)
+            _task = _loop.create_task(_async_update_fn.fn(**_kwargs))
+
+            # this will remove task that just finished
+            _q.task_done()
+
+    async def async_main_dpg(self):
         if settings.PYC_DEBUGGING:
             while internal_dpg.is_dearpygui_running():
                 # add this extra line for callback debug
                 # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
                 dpg.run_callbacks(dpg.get_callback_queue())
+                # dpg frame render
                 internal_dpg.render_dearpygui_frame()
                 await asyncio.sleep(0)
         else:
             while internal_dpg.is_dearpygui_running():
+                # dpg frame render
                 internal_dpg.render_dearpygui_frame()
                 await asyncio.sleep(0)
 
-    async def gui_async_update(self):
-        _async_update_rate = self.update_period
-        while True:
-            # small delay
-            await asyncio.sleep(_async_update_rate)
-            # call async fns
-            await asyncio.gather(
-                *[
-                    _() for _ in self.async_update_fns.values()
-                ]
-            )
-
     async def async_main(self):
+        """
+        Refer:
+        >>> dpg.start_dearpygui()
+
+        Also explore `asyncio.to_thread` which will launch io thread
+        + useful for io-bound tasks
+        + for cpu-bound with python no use due to GIL but can be used with external libs without that release gil-locks
+          then this can be used for cpu-bound too ...
+        >>> asyncio.to_thread
+
+        todo: implement ThreadPoolExecutor (for IO-bound tasks) and ProcessPoolExecutor (for CPU-bound tasks)
+          use for CPU-bound and IO-bound task task ... but note that you have no access to vars in main process (may-be)
+          might need to make this more general so move to `toolcraft.job`
+          most likely make fn await on these threads after deciding on API and understanding asyncio pool's
+          Refer: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+        """
+        # ----------------------------------------------------------- 01
         # get event loop
-        loop = asyncio.get_event_loop()
+        _loop = asyncio.get_event_loop()
 
-        # make two tasks
-        main_task = loop.create_task(self.gui_main())
-        update_task = loop.create_task(self.gui_async_update())
+        # ----------------------------------------------------------- 02
+        # create tasks
+        _dpg_task = _loop.create_task(self.async_main_dpg())
+        _update_task = _loop.create_task(self.async_main_update())
 
-        # await on main task which ends when ui window is closed
-        await main_task
+        # ----------------------------------------------------------- 03
+        # await on dpg task and cancel update task
+        await _dpg_task
+        _update_task.cancel()
 
-        # note that update tasks runs infinitely, so we need to cancel it
-        update_task.cancel()
+        # ----------------------------------------------------------- 02
+        # infinite loop until is_dearpygui_running
+        # while internal_dpg.is_dearpygui_running():
+        #
+        #     # for debug
+        #     if settings.PYC_DEBUGGING:
+        #         # add this extra line for callback debug
+        #         # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
+        #         dpg.run_callbacks(dpg.get_callback_queue())
+        #
+        #     # dpg frame runder
+        #     internal_dpg.render_dearpygui_frame()
+
+            # our async tasks ... if present a async task will be called and then will be removed from dict
+            # _async_update_fn = await self.async_update_fns.get()
+            # print("???????????????????????", _async_update_fn)
+            # for _async_update_fn in self.async_update_fns.values():
+            #     _kwargs = dict(widget=_async_update_fn.widget)
+            #     if bool(_async_update_fn.extra_widgets):
+            #         _kwargs.update(_async_update_fn.extra_widgets)
+            #     _task = _loop.create_task(_async_update_fn.fn(**_kwargs))
+            #     del _async_update_fn.widget.dash_board.async_update_fns[id(_async_update_fn)]
 
     def run(self):
         # -------------------------------------------------- 01
@@ -1726,6 +1733,9 @@ class Dashboard(m.YamlRepr, abc.ABC):
         dpg.configure_app(manual_callback_management=_pyc_debug)
         dpg.create_viewport()
         dpg.setup_dearpygui()
+        dpg.show_viewport()
+        if not internal_dpg.is_viewport_ok():
+            raise RuntimeError("Viewport was not created and shown.")
 
         # -------------------------------------------------- 03
         # setup and layout
