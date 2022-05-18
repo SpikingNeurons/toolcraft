@@ -7,6 +7,7 @@ import abc
 import dataclasses
 import asyncio
 import typing as t
+import functools
 import enum
 import dearpygui.dearpygui as dpg
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -401,13 +402,51 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
         internal_dpg.configure_item(self.dpg_id, enabled=False)
 
 
+class AsyncUpdateFn(t.NamedTuple):
+    """
+    Note that this executes in same process and thread and you have full control as it is interlaced
+    execution and ideal for gui
+
+    todo: also animations and transitions can be handled with this ...
+      i.e. without need for ThreadPoolExecutor and ProcessPoolExecutor
+
+    For IO-bound and CPU-bound we need to spawn thread/process with ThreadPoolExecutor and ProcessPoolExecutor
+    https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+    """
+    widget: "Widget"
+    fn: t.Callable
+    update_period: float
+
+    async def __call__(self):
+        if self.widget.is_visible:
+            await asyncio.sleep(self.update_period)
+            return self.fn(widget=self.widget)
+
+
+class AsyncUpdateInProcessFn(t.NamedTuple):
+    """
+    todo: use for CPU-bound task ... but note that you have no access to vars in main process (may-be)
+    todo: might need to make this more general so move to `toolcraft.job`
+    https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+    """
+
+
+class AsyncUpdateInThreadFn(t.NamedTuple):
+    """
+    todo: use for IO-bound task ...
+    todo: might need to make this more general so move to `toolcraft.job`
+    https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+    """
+
+
 class WidgetInternal(_WidgetDpgInternal):
     parent: "ContainerWidget"
     is_build_done: bool
     tag: str = None
+    post_build_fns: t.List[t.Callable] = None
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["tag", "parent", ]
+        return super().vars_that_can_be_overwritten() + ["tag", "parent", "post_build_fns", ]
 
     def test_if_others_set(self):
         if not self.has("parent"):
@@ -544,6 +583,47 @@ class Widget(_WidgetDpg, abc.ABC):
             msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
         )
 
+    def set_async_update_fn(self, fn: t.Callable, update_period: float = 1.0):
+        if self.is_built:
+            if id(self) in self.dash_board.async_update_fns:
+                raise e.code.CodingError(
+                    msgs=["Cannot set async_update_fn as it was already set ..."]
+                )
+            else:
+                self.dash_board.async_update_fns[id(self)] = \
+                    AsyncUpdateFn(fn=fn, widget=self, update_period=update_period)
+        else:
+            if bool(self.internal.post_build_fns):
+                self.internal.post_build_fns.append(
+                    functools.partial(self.set_async_update_fn, fn=fn, update_period=update_period)
+                )
+            else:
+                self.internal.post_build_fns = [
+                    functools.partial(self.set_async_update_fn, fn=fn, update_period=update_period)
+                ]
+
+    def remove_async_update_fn(self, ignore_error: bool = False):
+        if id(self) in self.dash_board.async_update_fns:
+            # we pop as we do not want `widget.delete()` to get triggered
+            self.dash_board.async_update_fns.pop(id(self))
+        else:
+            if not ignore_error:
+                raise e.code.CodingError(
+                    msgs=["Cannot remove async_update_fn as it was never set ..."]
+                )
+
+    def build_post_runner(
+        self, *, hooked_method_return_value: t.Union[int, str]
+    ):
+        # call super
+        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+
+        # call post_build_fns
+        if bool(self.internal.post_build_fns):
+            for _fn in self.internal.post_build_fns:
+                _fn()
+            self.internal.post_build_fns = None
+
     def tag_it(self, tag: str):
         self.dash_board.tag_widget(tag=tag, widget=self)
 
@@ -559,6 +639,9 @@ class Widget(_WidgetDpg, abc.ABC):
         # if tagged then untag
         if self.is_tagged:
             self.untag_it(not_exists_ok=True)
+
+        # remove async_update_fn's if any
+        self.remove_async_update_fn(ignore_error=True)
 
         # delete the dpg UI counterpart
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
@@ -1140,8 +1223,8 @@ class DashboardInternal(m.Internal):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_not_to_be_overridden=['run', 'tags'],
-    things_to_be_cached=['tags'],
+    things_not_to_be_overridden=['run', 'tags', 'async_update_fns'],
+    things_to_be_cached=['tags', 'async_update_fns'],
 )
 class Dashboard(m.YamlRepr, abc.ABC):
     """
@@ -1178,11 +1261,17 @@ class Dashboard(m.YamlRepr, abc.ABC):
     title: str
     width: int = 1370
     height: int = 1200
+    update_period: float = 0.01
 
     @property
     @util.CacheResult
     def internal(self) -> DashboardInternal:
         return DashboardInternal(owner=self)
+
+    @property
+    @util.CacheResult
+    def async_update_fns(self) -> t.Dict[int, AsyncUpdateFn]:
+        return {}
 
     @property
     @util.CacheResult
@@ -1559,14 +1648,18 @@ class Dashboard(m.YamlRepr, abc.ABC):
                 await asyncio.sleep(0)
 
     async def gui_async_update(self):
-        _cnt = 0
+        _async_update_rate = self.update_period
         while True:
-            # ---------------------------------------------------- 01
-            # async wait
-            _cnt += 1
-            await asyncio.sleep(1)
+            # small delay
+            await asyncio.sleep(_async_update_rate)
 
             # ---------------------------------------------------- 02
+            # call async fns
+            await asyncio.gather(
+                *[
+                    _() for _ in self.async_update_fns.values()
+                ]
+            )
 
     async def async_main(self):
         # get event loop
@@ -1613,7 +1706,10 @@ class Dashboard(m.YamlRepr, abc.ABC):
 
         # -------------------------------------------------- 05
         # call gui main code in async
-        asyncio.run(self.async_main())
+        asyncio.run(
+            self.async_main(),
+            debug=_pyc_debug,
+        )
 
         # -------------------------------------------------- 06
         # destroy

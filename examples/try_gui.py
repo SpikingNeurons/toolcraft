@@ -1,6 +1,8 @@
+import asyncio
 import dataclasses
 import typing as t
 import sys
+import time
 
 sys.path.append("..")
 
@@ -266,8 +268,22 @@ class SimpleHashableClass(m.HashableClass):
 
     @property
     def all_plots_gui_label(self) -> str:
-        return f"{self.__class__.__name__}.{self.hex_hash} (all_plots)\n" \
+        return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
+
+    def txt_update_fn(self, widget: gui.widget.Text):
+        widget.set_value(f"{int(widget.get_value())+1:03d}")
+
+    @m.UseMethodInForm(
+        label_fmt="all_plots_gui_label"
+    )
+    def get_async_ui(self) -> gui.widget.Group:
+        _grp = gui.widget.Group(horizontal=True)
+        with _grp:
+            gui.widget.Text(default_value="count")
+            _txt = gui.widget.Text(default_value="000")
+            _txt.set_async_update_fn(fn=self.txt_update_fn, update_period=0.0)
+        return _grp
 
     @m.UseMethodInForm(
         label_fmt="all_plots_gui_label"
@@ -340,6 +356,15 @@ class MyDoubleSplitForm(gui.form.DoubleSplitForm):
 
 
 @dataclasses.dataclass
+class AsyncUpdateForm(gui.form.DoubleSplitForm):
+
+    title: str = "Async update form ..."
+    callable_name: str = "get_async_ui"
+    allow_refresh: bool = False
+    collapsing_header_open: bool = False
+
+
+@dataclasses.dataclass
 class MyDashboard(gui.dashboard.BasicDashboard):
 
     theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
@@ -357,6 +382,8 @@ class MyDashboard(gui.dashboard.BasicDashboard):
     topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
     topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
+
+    topic6: gui.form.DoubleSplitForm = AsyncUpdateForm()
 
 
 def basic_dashboard():
@@ -385,6 +412,13 @@ def basic_dashboard():
     _dash.topic5.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
     _dash.topic5.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
     _dash.topic5.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
+    # noinspection PyTypeChecker
+    _dash.topic6.add(
+        hashable=SimpleHashableClass(some_value="first hashable ..."),
+    )
+    _dash.topic6.add(
+        hashable=SimpleHashableClass(some_value="second hashable ..."),
+    )
     _dash.run()
 
 
