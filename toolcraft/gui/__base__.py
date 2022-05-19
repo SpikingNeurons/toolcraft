@@ -1633,11 +1633,30 @@ class Dashboard(m.YamlRepr, abc.ABC):
         ...
 
     async def async_main_update(self):
+        """
+        Instead of maintaining finite worker pool (made via _loop.create_task) that processes async_update_fns_queue
+        ... we launch task as and when the async_update_fn is available i.e. infinite tasks are spawned
+            but note that this runs concurrently in main gui thread
+        ... this seems okay as tasks are lightweight and gui all tasks need to be concurrent
+            (also we might have a lot of them)
+
+        todo: explore `_loop.to_thread` good for io bound tasks ...
+          also good for cpu-bound if external lib releases gil-locks like cython ...
+          NOTE: that this will spawn real threads
+            so not ideal for gui
+            but good for io and cpu tasks that release gil locks
+
+        todo: also investigate
+          ThreadPoolExecutor (for IO-bound tasks) and .... (`_loop.to_thread` actually uses this)
+          ProcessPoolExecutor (for CPU-bound tasks)
+          https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+
+        """
         _q = self.async_update_fns_queue
         _loop = asyncio.get_event_loop()
         while True:
             # await and get any queued task
-            _async_update_fn = await self.async_update_fns_queue.get()
+            _async_update_fn = await _q.get()
 
             # call _async_update_fn in async mode in event loop
             _kwargs = dict(widget=_async_update_fn.widget)
@@ -1645,7 +1664,8 @@ class Dashboard(m.YamlRepr, abc.ABC):
                 _kwargs.update(_async_update_fn.extra_widgets)
             _task = _loop.create_task(_async_update_fn.fn(**_kwargs))
 
-            # this will remove task that just finished
+            # this will remove task that just finished ... but note that the above task if not completed will
+            # still run concurrently until completion
             _q.task_done()
 
     async def async_main_dpg(self):
@@ -1693,29 +1713,6 @@ class Dashboard(m.YamlRepr, abc.ABC):
         # await on dpg task and cancel update task
         await _dpg_task
         _update_task.cancel()
-
-        # ----------------------------------------------------------- 02
-        # infinite loop until is_dearpygui_running
-        # while internal_dpg.is_dearpygui_running():
-        #
-        #     # for debug
-        #     if settings.PYC_DEBUGGING:
-        #         # add this extra line for callback debug
-        #         # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
-        #         dpg.run_callbacks(dpg.get_callback_queue())
-        #
-        #     # dpg frame runder
-        #     internal_dpg.render_dearpygui_frame()
-
-            # our async tasks ... if present a async task will be called and then will be removed from dict
-            # _async_update_fn = await self.async_update_fns.get()
-            # print("???????????????????????", _async_update_fn)
-            # for _async_update_fn in self.async_update_fns.values():
-            #     _kwargs = dict(widget=_async_update_fn.widget)
-            #     if bool(_async_update_fn.extra_widgets):
-            #         _kwargs.update(_async_update_fn.extra_widgets)
-            #     _task = _loop.create_task(_async_update_fn.fn(**_kwargs))
-            #     del _async_update_fn.widget.dash_board.async_update_fns[id(_async_update_fn)]
 
     def run(self):
         # -------------------------------------------------- 01
