@@ -85,6 +85,7 @@ pytest = "^7.0.1"
 pytest-cov = "^3.0.0"
 pytest-xdist = "^2.5.0"
 invoke = "^1.6.0"
+pyprof2calltree = "^1.4.5"
 
 
 

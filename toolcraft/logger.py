@@ -480,7 +480,10 @@ def get_logger(
     # we do not want to complicate things like earlier code to modify name to emoji
     # instead we will book keep meta info here ... so that if needed you can use some
     # custom logging.Filter to add it to LogRecord
-    _logger_name = module.__name__
+    if module is not None:
+        _logger_name = module.__name__
+    else:
+        _logger_name = None
     # if logger with same name already present then return it
     if _logger_name in _ALL_LOGGERS_META.keys():
         # noinspection PyTypeChecker
