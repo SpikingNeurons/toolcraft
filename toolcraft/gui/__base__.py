@@ -539,6 +539,13 @@ class Widget(_WidgetDpg, abc.ABC):
     def is_in_gui_with_mode(self) -> bool:
         return bool(_CONTAINER_WIDGET_STACK)
 
+    @property
+    def does_exist(self) -> bool:
+        """
+        Will return False if self.delete() is called as the dpg item will no longer be available
+        """
+        return dpg.does_item_exist(item=self.dpg_id)
+
     def __eq__(self, other):
         """
         Needed for ContainerWidget.index_in_children to work ...

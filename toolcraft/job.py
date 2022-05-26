@@ -11,6 +11,7 @@ import subprocess
 import yaml
 import sys
 import pickle
+import asyncio
 import hashlib
 import types
 
@@ -294,6 +295,30 @@ class JobViewer(m.HashableClass):
         _title, _args = self.experiment.gui_label
         return "\n".join([_title, *_args])
 
+    async def job_gui_with_run_update_fn(self, widget: "gui.form.HashableMethodsRunnerForm"):
+        # import
+        from . import gui
+
+        # noinspection PyTypeChecker
+        _blink = None  # type: gui.widget.Text
+        while (not self.job.is_finished) and widget.does_exist:
+
+            # dont update if not visible
+            # todo: can we await on bool flags ???
+            if not widget.is_visible:
+                await asyncio.sleep(0.2)
+                continue
+
+            # update widget title
+            await asyncio.sleep(0.5)
+
+            if _blink is None:
+                with widget.button_bar:
+                    _blink = gui.widget.Text(default_value="...")
+            else:
+                _blink.delete()
+                _blink = None
+
     @m.UseMethodInForm(
         label_fmt="button_label"
     )
@@ -303,14 +328,18 @@ class JobViewer(m.HashableClass):
 
         # if finished return
         _job = self.job
-        if _job.is_finished:
+        if _job.is_finished or _job.is_failed:
             return self.job_gui()
 
+        # get form
+        _form = self.job_gui()
+        _form.set_async_update_fn(fn=self.job_gui_with_run_update_fn)
+
         # execute job
-        _job(cluster_type=JobRunnerClusterType.local)
+        # _job(cluster_type=JobRunnerClusterType.local)
 
         # return gui
-        return self.job_gui()
+        return _form
 
     @m.UseMethodInForm(
         label_fmt="button_label"
@@ -320,12 +349,12 @@ class JobViewer(m.HashableClass):
 
         _title = self.button_label.split("\n")[0] + "\n--- "
         _job = self.job
-        if _job.is_running:
-            _title += "RUNNING --- "
         if _job.is_failed:
             _title += "FAILED --- "
-        if _job.is_finished:
+        elif _job.is_finished:
             _title += "FINISHED --- "
+        else:
+            _title += "??? --- "
 
         return gui.form.HashableMethodsRunnerForm(
             title=_title,

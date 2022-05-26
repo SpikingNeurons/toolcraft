@@ -273,7 +273,7 @@ class SimpleHashableClass(m.HashableClass):
 
     async def txt_update_fn(self, widget: gui.widget.Text):
         # loop infinitely
-        while True:
+        while widget.does_exist:
 
             # dont update if not visible
             # todo: can we await on bool flags ???
@@ -285,7 +285,7 @@ class SimpleHashableClass(m.HashableClass):
             widget.set_value(f"{int(widget.get_value())+1:03d}")
 
             # change update rate based on some value
-            if self.some_value == "first hashable ...":
+            if self.some_value == "first hashable .w..":
                 await asyncio.sleep(1)
                 if int(widget.get_value()) == 10:
                     break
