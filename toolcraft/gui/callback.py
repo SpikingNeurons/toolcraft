@@ -6,7 +6,7 @@ from .. import util
 from .. import marshalling as m
 from .. import error as e
 from . import widget, asset
-from .__base__ import Callback
+from .__base__ import Callback, EnColor
 
 
 @dataclasses.dataclass(frozen=True)
@@ -64,8 +64,9 @@ class CloseWidgetCallback(Callback):
     @classmethod
     def get_button_widget(
         cls, widget_to_delete: widget.Widget, label="Close [X]",
-    ) -> widget.Button:
-        return widget.Button(
+    ) -> widget.ColorButton:
+        return widget.ColorButton(
+            default_value=EnColor.RED.value,
             label=label,
             callback=cls(),
             user_data={'widget_to_delete': widget_to_delete},
