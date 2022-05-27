@@ -548,8 +548,7 @@ class Widget(_WidgetDpg, abc.ABC):
 
     def __eq__(self, other):
         """
-        Needed for ContainerWidget.index_in_children to work ...
-        as data related things like PlotSeries have numpy arrays
+        Helps in finding children
         """
         return id(self) == id(other)
 
@@ -650,7 +649,7 @@ class Widget(_WidgetDpg, abc.ABC):
         # remove from parent
         # some widgets like XAxis, YAxis, Legend are not in parent.children
         if self.registered_as_child:
-            _widget = self.parent.children.pop(self.parent.index_in_children(self))
+            del self.parent.children[id(self)]
 
         # if tagged then untag
         if self.is_tagged:
@@ -688,41 +687,28 @@ class MovableWidget(Widget, abc.ABC):
             raise e.code.CodingError(
                 msgs=[
                     "Either supply parent or before",
-                    "No need to provide both as parent can extracted from before",
+                    "No need to provide both as parent can be extracted from before",
                     "While if you supply parent that means you want to add to "
                     "bottom of its children",
                 ]
             )
 
         # ---------------------------------------------- 02
-        # related to kwarg `before`
+        # if before provided extract parent from it
         if parent is None:
             # noinspection PyUnresolvedReferences
             parent = before.parent
-        _before_index = None
-        if before is not None:
-            # if before is not None check if it is in parent and get its index
-            _before_index = parent.index_in_children(before)
-            if _before_index is None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"We cannot find `before` widget in children of `parent` "
-                        f"you want to move in",
-                        "Provide `before` from same `parent` you want to move in or "
-                        "supply `None`",
-                    ]
-                )
 
         # ---------------------------------------------- 03
-        # first pop from self.parent.children
-        self.parent.children.pop(self.parent.index_in_children(self))
+        # first del from self.parent.children
+        del self.parent.children[id(self)]
 
         # ---------------------------------------------- 04
         # now move it to new parent.children
-        if _before_index is None:
-            parent.children.append(self)
+        if before is None:
+            parent.children[id(self)] = self
         else:
-            parent.children.insert(_before_index, self)
+            parent.children.insert_before(key=id(before), key_values={id(self): self})
 
         # ---------------------------------------------- 05
         # sync the move
@@ -733,31 +719,39 @@ class MovableWidget(Widget, abc.ABC):
                 self.dpg_id, parent=parent.dpg_id,
                 before=0 if before is None else before.dpg_id)
 
+    def before(self) -> t.Optional["MovableWidget"]:
+        return self.parent.children.before(key=id(self))
+
+    def after(self) -> t.Optional["MovableWidget"]:
+        return self.parent.children.after(key=id(self))
+
     def move_up(self) -> bool:
         """
         If already on top returns False
-        Else moves up by one index and returns True as it moved up
+        Else moves up and return True as it moved up
         """
-        _children_list = self.parent.children
-        _index = self.parent.index_in_children(self)
-        if _index == 0:
+        _before = self.before()
+        if _before is None:
             return False
-        _children_list.insert(_index-1, _children_list.pop(_index))
-        internal_dpg.move_item_up(self.dpg_id)
-        return True
+        else:
+            del self.parent.children[id(self)]
+            self.parent.children.insert_before(key=_before[0], key_values={id(self): self})
+            internal_dpg.move_item_up(self.dpg_id)
+            return True
 
     def move_down(self) -> bool:
         """
         If already at bottom returns False
-        Else moves down by one index and returns True as it moved down
+        Else moves down and return True as it moved up
         """
-        _children_list = self.parent.children
-        _index = self.parent.index_in_children(self)
-        if _index == len(_children_list)-1:
+        _after = self.after()
+        if _after is None:
             return False
-        _children_list.insert(_index+1, _children_list.pop(_index))
-        internal_dpg.move_item_down(self.dpg_id)
-        return True
+        else:
+            del self.parent.children[id(self)]
+            self.parent.children.insert_after(key=_after[0], key_values={id(self): self})
+            internal_dpg.move_item_down(self.dpg_id)
+            return True
 
 
 @dataclasses.dataclass
@@ -774,11 +768,13 @@ class ContainerWidget(Widget, abc.ABC):
 
     @property
     @util.CacheResult
-    def children(self) -> t.List[MovableWidget]:
-        return []
+    def children(self) -> util.SmartDict:
+        return util.SmartDict(
+            allow_nested_dict_or_list=False, allowed_types=tuple(self.restrict_children_type)
+        )
 
     @property
-    def restrict_children_type(self) -> t.List[t.Type[MovableWidget]]:
+    def restrict_children_type(self) -> t.List[t.Type]:
         """
         Default is to restrict MovableWidget but you can override this to have
         Widget's as the __call__ method can accept Widget
@@ -801,21 +797,6 @@ class ContainerWidget(Widget, abc.ABC):
     def _add_child(self, widget: Widget):
 
         # -------------------------------------------------- 01
-        # validate
-        # -------------------------------------------------- 01.01
-        # check if child supported
-        if not isinstance(widget, tuple(self.restrict_children_type)):
-            raise e.code.CodingError(
-                msgs=[
-                    f"The widget that can be added to {self.__class__} is "
-                    f"restricted to type {self.restrict_children_type} "
-                    f"but you are adding widget of type {type(widget)}",
-                    f"Check if it is possible to have {widget.__class__} as a "
-                    f"property of class {self.__class__} instead especially if "
-                    f"it is not {MovableWidget}",
-                ]
-            )
-        # -------------------------------------------------- 01.02
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
         if widget.is_built:
@@ -826,16 +807,16 @@ class ContainerWidget(Widget, abc.ABC):
                 ]
             )
 
-        # -------------------------------------------------- 03
+        # -------------------------------------------------- 02
         # set internals
         widget.internal.parent = self
 
-        # -------------------------------------------------- 04
+        # -------------------------------------------------- 03
         # we can now store widget inside children list
         # noinspection PyTypeChecker
-        self.children.append(widget)
+        self.children[id(widget)] = widget
 
-        # -------------------------------------------------- 05
+        # -------------------------------------------------- 04
         # if thw parent widget is already built we need to build this widget here
         # else it will be built when build() on super parent is called
         if self.is_built:
@@ -844,26 +825,6 @@ class ContainerWidget(Widget, abc.ABC):
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.container_widget.{cls.__name__}"
-
-    def index_in_children(self, child: Widget) -> int:
-        for _i, _ in enumerate(self.children):
-            if id(_) == id(child):
-                return _i
-        # index does not work as there are numpy arrays in some
-        # widgets like PlotSeries
-        # todo: numpy data fields of Widget should be stored in some property
-        #  (like `data`) rather than having it as dataclass field ...
-        #  this will also avoid parsing to yaml by `m.Tracker` and data will be
-        #  separate from Widget defination as anyways it can be updated
-        # return self.children.index(child)
-
-        # raise error if noting returned
-        raise e.code.CodingError(
-            msgs=[
-                "You have not supplied valid child ... "
-                "please make sure you use this only for valid children",
-            ]
-        )
 
     def on_enter(self):
         global _CONTAINER_WIDGET_STACK
@@ -898,7 +859,7 @@ class ContainerWidget(Widget, abc.ABC):
 
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
-        for child in self.children:
+        for child in self.children.values():
             child.build()
 
     def hide(self, children_only: bool = False):
@@ -913,10 +874,9 @@ class ContainerWidget(Widget, abc.ABC):
             super().hide()
 
     def clear(self):
-        _children_copy = self.children.copy()
-        for _c in _children_copy:
-            _c.delete()
-        del _children_copy
+        _children = self.children
+        for _k in list(_children.keys()):
+            _children[_k].delete()
 
     def delete(self):
         self.clear()
@@ -1100,10 +1060,9 @@ class Form(MovableWidget, abc.ABC):
         return _c.build()
 
     def clear(self):
-        _children_copy = self.form_fields_container.children.copy()
-        for _c in _children_copy:
-            _c.delete()
-        del _children_copy
+        _children = self.form_fields_container.children
+        for _k in list(_children.keys()):
+            _children[_k].delete()
 
     def delete(self):
         self.clear()

@@ -138,8 +138,9 @@ class HashableMethodRunnerCallback(Callback):
         _dash_board = _receiver.dash_board
         # todo: precaution check ... remove later
         assert id(_dash_board) == id(sender.dash_board), "must be same ..."
+        # noinspection PyTypeChecker
         _widget = _dash_board.tags.get(_tag, None)
-        _before_widget = None
+        _after_widget = None
 
         # if allow refresh then delete widget and set it to None so that it
         # can be created again
@@ -149,13 +150,12 @@ class HashableMethodRunnerCallback(Callback):
                 # fetch _before_widget
                 # we are assuming this will be MovableWidget ... Note that we want to
                 # keep this way and if possible modify other code ... this is possible
-                # for container widgets and we do not see that this callback will be
-                # used non movable Widgets
+                # for container widgets, and we do not see that this callback will be
+                # used for non-movable Widgets
                 try:
-                    _before_widget = _widget.parent.children[
-                        _widget.parent.index_in_children(_widget) + 1
-                    ]
-                except IndexError:
+                    _widget: widget.MovableWidget
+                    _after_widget = _widget.after()
+                except AttributeError:
                     ...
                 # this will delete itself
                 # this will also remove itself from `parent.children`
@@ -179,5 +179,5 @@ class HashableMethodRunnerCallback(Callback):
             _receiver(_new_widget)
 
             # move widget
-            if _before_widget is not None:
-                _new_widget.move(before=_before_widget)
+            if _after_widget is not None:
+                _new_widget.move(before=_after_widget)

@@ -152,27 +152,22 @@ class YAxis(_auto.PlotYAxis):
         return False
 
     @property
-    @util.CacheResult
-    def children(self) -> t.List[PlotSeries]:
-        return []
-
-    @property
     def restrict_children_type(self) -> t.List[t.Type[PlotSeries]]:
         return [PlotSeries]
 
     def __getitem__(self, item: str) -> PlotSeries:
-        for _ in self.children:
+        for _ in self.children.values():
             if _.label == item:
                 return _
         e.validation.ShouldBeOneOf(
-            value=item, values=[_.label for _ in self.children],
+            value=item, values=[_.label for _ in self.children.values()],
             msgs=["There is no plot_series with this label name"]
         ).raise_if_failed()
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: PlotSeries):
         if isinstance(widget, PlotSeries):
-            if widget.label in [_.label for _ in self.children]:
+            if widget.label in [_.label for _ in self.children.values()]:
                 raise e.validation.NotAllowed(
                     msgs=[
                         f"There already exists a plot_series with label "
@@ -284,11 +279,6 @@ class Plot(_auto.Plot):
     height: int = 400
 
     num_of_y_axis: t.Literal[1, 2, 3] = 1
-
-    @property
-    @util.CacheResult
-    def children(self) -> t.List[PlotItem]:
-        return []
 
     @property
     def restrict_children_type(self) -> t.List[t.Type[PlotItem]]:
@@ -424,15 +414,15 @@ class Plot(_auto.Plot):
         # calling super clear will remove all annotations, drag_lines and drag_points,
         # so we redefine here
         # clearing is deleting for annotations, drag_line, drag_plot
-        _children_copy = self.children.copy()
-        for _c in _children_copy:
+        _children = self.children
+        for _k in list(_children.keys()):
+            _c = _children[_k]
             if isinstance(_c, Annotation) and annotations:
                 _c.delete()
             if isinstance(_c, DragLine) and drag_lines:
                 _c.delete()
             if isinstance(_c, DragPoint) and drag_points:
                 _c.delete()
-        del _children_copy
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
@@ -457,11 +447,6 @@ class Plot(_auto.Plot):
 
 @dataclasses.dataclass
 class SubPlots(_auto.SubPlots):
-
-    @property
-    @util.CacheResult
-    def children(self) -> t.List[Plot]:
-        return []
 
     @property
     def restrict_children_type(self) -> t.List[t.Type[Plot]]:

@@ -159,7 +159,7 @@ class PlottingWithUpdates(gui.form.Form):
                 )
                 _y1_axis = _form.line_plot.y1_axis
                 _y1_axis(_ls)
-                _ls_ks = [_.label for _ in _y1_axis.children]
+                _ls_ks = [_.label for _ in _y1_axis.children.values()]
                 _form.combo_select.items = _ls_ks
                 _form.combo_select.default_value = _ls_ks[-1]
 
@@ -234,7 +234,7 @@ class PlottingWithUpdates(gui.form.Form):
                 if _combo_select_value == '':
                     return
                 _y1_axis[_combo_select_value].delete()
-                _ls_ks = [_.label for _ in _y1_axis.children]
+                _ls_ks = [_.label for _ in _y1_axis.children.values()]
                 _form.combo_select.items = _ls_ks
                 try:
                     _form.combo_select.default_value = _ls_ks[-1]
@@ -285,7 +285,7 @@ class SimpleHashableClass(m.HashableClass):
             widget.set_value(f"{int(widget.get_value())+1:03d}")
 
             # change update rate based on some value
-            if self.some_value == "first hashable .w..":
+            if self.some_value == "first hashable ...":
                 await asyncio.sleep(1)
                 if int(widget.get_value()) == 10:
                     break

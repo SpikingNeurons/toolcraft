@@ -36,17 +36,17 @@ class Row(_auto.TableRow):
     """
 
     @property
-    @util.CacheResult
-    def children(self) -> t.List[Cell]:
-        return []
-
-    @property
     def restrict_children_type(self) -> t.List[t.Type[Cell]]:
         return [Cell]
 
+    @property
+    def parent(self) -> "Table":
+        # noinspection PyTypeChecker
+        return super().parent
+
     def __getitem__(self, item: int) -> Cell:
         # noinspection PyTypeChecker
-        return self.children[item]
+        return self.children.get(item)
 
     # noinspection PyMethodOverriding
     def __call__(self):
@@ -98,12 +98,6 @@ class Table(_auto.Table):
     columns: t.List[Column] = None
 
     @property
-    @util.CacheResult
-    def children(self) -> t.List[Row]:
-        # noinspection PyTypeChecker
-        return [] if self.rows is None else self.rows
-
-    @property
     def restrict_children_type(self) -> t.List[t.Type[Row]]:
         return [Row]
 
@@ -138,7 +132,7 @@ class Table(_auto.Table):
             if item[0] == slice(None, None, None):
                 return self.columns[item[1]]
             else:
-                return self.rows[item[0]][item[1]]
+                return self.children.get(item[0])[item[1]]
         else:
             raise e.code.CodingError(msgs=[f"Unknown type {type(item)}"])
 
@@ -155,46 +149,15 @@ class Table(_auto.Table):
             )
 
     def init(self):
-        # call super
-        super().init()
-
-        # now call rows so that they add self to themselves
-        if bool(self.rows):
-            for _r in self.rows:
-                _r()
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.table.{cls.__name__}"
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # check mandatory fields
-        if self.rows is None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Please supply mandatory field `rows`"
-                ]
-            )
-        if self.columns is None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Please supply mandatory field `columns`"
-                ]
-            )
-
-    def init(self):
         # -------------------------------------------------- 01
         # call super
         super().init()
 
-        # -------------------------------------------------- 03
+        # -------------------------------------------------- 02
         # do things for columns that we do when add_child is called
         _c: Column
         for _c in self.columns:
-            # ---------------------------------------------- 03.01
+            # ---------------------------------------------- 02.01
             # should not be built
             if _c.is_built:
                 raise e.code.NotAllowed(
@@ -202,31 +165,30 @@ class Table(_auto.Table):
                         "The column should not be built ..."
                     ]
                 )
-            # ---------------------------------------------- 03.02
+            # ---------------------------------------------- 02.02
             # set internals
             _c.internal.parent = self
 
+        # -------------------------------------------------- 03
+        # now call rows so that they add self to themselves
+        if bool(self.rows):
+            for _r in self.rows:
+                _r.internal.parent = self
+                self(_r)
+
         # -------------------------------------------------- 04
-        # make rows list
-        # hack as the call below will add to `self.children` i.e. even `self.rows`
-        _backup_rows = self.__dict__['rows']
-        self.__dict__['rows'] = []
-        for _r in _backup_rows:
-            # set internals
-            _r.internal.parent = self
-            # note that internals are set when we add row widget
-            self(_r)
-        # this is because they both need to point to same list container and helpful
-        # to avoid any bugs
-        assert id(self.rows) == id(self.children)
+        # rows are managed by children so we hack this to remove reference to Rows
+        # todo: instead of using hack have block access via __getattr__ and raise warning ... for now this will suffice
+        #   ... also pycharm stops type hinting when __getattr__ is overridden :(
+        self.__dict__['rows'] = None
+
+    @classmethod
+    def yaml_tag(cls) -> str:
+        return f"gui.table.{cls.__name__}"
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
     ):
-        # Note that the rows will be handled by `build_post_runner` which calls `build`
-        # on children where children are nothing but rows
-        assert id(self.children) == id(self.rows), "check for sanity ..."
-
         # call super
         # Note ancestry
         #   > MovableContainerWidget > (ContainerWidget, MovableWidget) > Widget > Dpg
@@ -243,7 +205,7 @@ class Table(_auto.Table):
 
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
-        for child in self.children:
+        for child in self.children.values():
             child.build()
 
     @classmethod
