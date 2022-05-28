@@ -367,6 +367,8 @@ class SmartDict(_SmartListDict):
             raise e.validation.NotAllowed(
                 msgs=["The index exceeds the number of items availbale in smart dict"]
             )
+        if index < 0:
+            index = len(self._items) + index
         for _i, _ in enumerate(self._items.keys()):
             if _i == index:
                 return self._items[_]

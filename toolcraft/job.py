@@ -8,6 +8,7 @@ import inspect
 import typing as t
 import dataclasses
 import subprocess
+import itertools
 import yaml
 import sys
 import pickle
@@ -296,12 +297,14 @@ class JobViewer(m.HashableClass):
         return "\n".join([_title, *_args])
 
     async def job_gui_with_run_update_fn(self, widget: "gui.form.HashableMethodsRunnerForm"):
-        # import
-        from . import gui
 
-        # noinspection PyTypeChecker
-        _blink = None  # type: gui.widget.Text
-        while (not self.job.is_finished) and widget.does_exist:
+        # add blink animation
+        _blink_iter = itertools.cycle([".", "..", "...", "...."])
+        _blink = widget.button_bar.children.get(-1)
+
+        # loop until job is finished or widget is deleted
+        _job = self.job
+        while (not (_job.is_finished or _job.is_failed)) and widget.does_exist:
 
             # dont update if not visible
             # todo: can we await on bool flags ???
@@ -309,22 +312,22 @@ class JobViewer(m.HashableClass):
                 await asyncio.sleep(0.2)
                 continue
 
-            # update widget title
+            # update blink
             await asyncio.sleep(0.5)
+            _blink.default_value = next(_blink_iter)
 
-            if _blink is None:
-                with widget.button_bar:
-                    _blink = gui.widget.Text(default_value="...")
-            else:
-                _blink.delete()
-                _blink = None
+        # delete _blink
+        if _job.is_failed:
+            _blink.default_value = "--- FAILED ---"
+        elif _job.is_finished:
+            _blink.default_value = "--- FINISHED ---"
+        else:
+            _blink.default_value = "--- ??? ---"
 
     @m.UseMethodInForm(
         label_fmt="button_label"
     )
     def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
-        # import
-        from . import gui
 
         # if finished return
         _job = self.job
@@ -336,7 +339,7 @@ class JobViewer(m.HashableClass):
         _form.set_async_update_fn(fn=self.job_gui_with_run_update_fn)
 
         # execute job
-        # _job(cluster_type=JobRunnerClusterType.local)
+        _job(cluster_type=JobRunnerClusterType.local)
 
         # return gui
         return _form
@@ -347,17 +350,8 @@ class JobViewer(m.HashableClass):
     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
         from . import gui
 
-        _title = self.button_label.split("\n")[0] + "\n--- "
-        _job = self.job
-        if _job.is_failed:
-            _title += "FAILED --- "
-        elif _job.is_finished:
-            _title += "FINISHED --- "
-        else:
-            _title += "??? --- "
-
-        return gui.form.HashableMethodsRunnerForm(
-            title=_title,
+        _ret = gui.form.HashableMethodsRunnerForm(
+            title=self.button_label.split("\n")[0],
             group_tag="simple",
             hashable=self,
             close_button=True,
@@ -365,6 +359,17 @@ class JobViewer(m.HashableClass):
             callable_names=["tags_gui", "artifacts_gui"],
             collapsing_header_open=True,
         )
+
+        _job = self.job
+        with _ret.button_bar:
+            if _job.is_failed:
+                gui.widget.Text(default_value="--- FAILED ---")
+            elif _job.is_finished:
+                gui.widget.Text(default_value="--- FINISHED ---")
+            else:
+                gui.widget.Text(default_value="--- ??? ---")
+
+        return _ret
 
     @m.UseMethodInForm(label_fmt="Info")
     def info_widget(self) -> "gui.widget.Text":
@@ -815,18 +820,18 @@ class Job:
                 ]
             )
 
-        # search job from runner.flow
+        # search job from `runner.flow.stages` and `runner.flow.other_jobs`
         _search_job = None
-        for _stage in runner.flow.stages:
-            for _j in _stage.all_jobs:
-                if _j.method == _method and _j.experiment == _experiment and _j.runner == runner:
-                    if _search_job is not None:
-                        raise e.code.CodingError(
-                            msgs=[
-                                "Multiple jobs match for the given cli kwargs"
-                            ]
-                        )
-                    _search_job = _j
+        for _j in itertools.chain.from_iterable(
+            [_stage.all_jobs for _stage in runner.flow.stages] + [runner.flow.other_jobs]):
+            if _j.method == _method and _j.experiment == _experiment and _j.runner == runner:
+                if _search_job is not None:
+                    raise e.code.CodingError(
+                        msgs=[
+                            "Multiple jobs match for the given cli kwargs"
+                        ]
+                    )
+                _search_job = _j
 
         # if no job found raise
         if _search_job is None:
@@ -1604,7 +1609,13 @@ class Runner(m.HashableClass, abc.ABC):
             self.job(cluster_type)
 
     def view(self):
-        self.flow.view()
+        """
+        if command line args are present then we will call job ... as maybe you want to run job from viewer ...
+        """
+        if self.is_on_main_machine:
+            self.flow.view()
+        else:
+            self.job(JobRunnerClusterType.local)
 
 
 @dataclasses.dataclass(frozen=True)
