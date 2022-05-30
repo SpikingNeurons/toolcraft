@@ -239,7 +239,7 @@ class TagManager:
     def description(self) -> Tag:
         return Tag(name="description", manager=self)
 
-    def tags_gui(self) -> "gui.widget.Text":
+    def gui(self) -> "gui.widget.Text":
         from . import gui
         _ret = ""
         if self.finished.exists():
@@ -324,9 +324,7 @@ class JobViewer(m.HashableClass):
         else:
             _blink.default_value = "--- ??? ---"
 
-    @m.UseMethodInForm(
-        label_fmt="button_label"
-    )
+    @m.UseMethodInForm(label_fmt="button_label")
     def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
 
         # if finished return
@@ -344,9 +342,7 @@ class JobViewer(m.HashableClass):
         # return gui
         return _form
 
-    @m.UseMethodInForm(
-        label_fmt="button_label"
-    )
+    @m.UseMethodInForm(label_fmt="button_label")
     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
         from . import gui
 
@@ -356,7 +352,7 @@ class JobViewer(m.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["tags_gui", "artifacts_gui"],
+            callable_names=["tags_gui", "artifacts_gui", "log_stream_gui"],
             collapsing_header_open=True,
         )
 
@@ -393,11 +389,101 @@ class JobViewer(m.HashableClass):
 
     @m.UseMethodInForm(label_fmt="tags")
     def tags_gui(self) -> "gui.widget.Text":
-        return self.job.tag_manager.tags_gui()
+        return self.job.tag_manager.gui()
 
     @m.UseMethodInForm(label_fmt="artifacts")
     def artifacts_gui(self) -> "gui.form.ButtonBarForm":
-        return self.job.artifact_manager.artifacts_gui()
+        return self.job.artifact_manager.gui()
+
+    @m.UseMethodInForm(label_fmt="log")
+    def log_stream_gui(self) -> "gui.widget.Group":
+        return self.job.log_stream_manager.gui()
+
+
+@dataclasses.dataclass
+class LogStreamManager:
+    """
+    """
+    job: "Job"
+
+    @property
+    @util.CacheResult
+    def streams(self) -> t.Dict[str, t.List[str]]:
+        return {
+            "stdout": [], "stderr": []
+        }
+
+    async def read_stream(self, stream, stream_type: str):
+        """
+        todo: see if we can directly point buffers ...
+          - with toolcraft.logger this will be still more like str ...
+            but we need to see how we adapt the loggers with richy console buffers
+          - with richy may be we can later map this to textures
+        """
+        _stream_store = self.streams[stream_type]
+        while True:
+            await asyncio.sleep(0.2)
+            _line = await stream.readline()
+            if _line:
+                _stream_store.append(_line)
+            else:
+                break
+
+    async def run_subprocess(self, command: t.List[str]) -> int:
+
+        _process = await asyncio.create_subprocess_exec(
+            *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+
+        asyncio.create_task(self.read_stream(_process.stdout, "stdout"))
+
+        asyncio.create_task(self.read_stream(_process.stderr, "stderr"))
+
+        _return_code = await _process.wait()
+
+        return _return_code
+
+    def gui(self) -> "gui.widget.Group":
+
+        """
+        IMPORTANT ...
+        Note that gui will always be created when log button is clicked and can be deleted anytime when we
+        interact with dashboard. For this reason we maintain logs in `streams` property so that gui can be dynamically
+        created and deleted without losing streams.
+
+        todo: We will have this as `toolcraft.gui.Widget` eventually
+        todo: merge this is with LogHandler where logger names can be used as keys to have update the LogWidget
+          parts that can be made in lines similar to `gui.form.DoubleSplitForm`
+        todo: also need to figure out if `toolcraft.richy.Console` which has buffer can be directly rendered as texture
+          ... as a side note that `toolcraft.richy.Console` can render html and svg files but at the end of entire execution
+          ... need to know how to render partially updated rich consoles
+
+        todo: MEGA TASK: convert this to --> toolcraft rich console + toolcraft logger + toolcraft gui widget
+
+
+        Responsible to show logs for `Job._launch_on_main_machine` ...
+          that is when jobs will be launched on local machine or ibm_lsf
+
+        Inspired from https://kevinmccarthy.org/2016/07/25/streaming-subprocess-stdin-and-stdout-with-asyncio-in-python/
+
+        The Job._launch_on_main_machine will launch jobs from main machine where UI is available so we can view
+        Jobs with this manager
+
+        For JobRunnerClusterType.local
+         + we will depend on our loggers
+        For JobRunnerClusterType.ibm_lsf
+         + todo: we need to monitor using bsub commands as we know the job ids
+         + todo: maybe make a form for ibm_lsf system where users can click buttons to launch bsub commands
+
+        """
+        # import
+        from . import gui
+
+        with gui.widget.Group() as _grp:
+            with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
+                ...
+            with gui.widget.CollapsingHeader(label="STDERR", default_open=False):
+                ...
+            return _grp
 
 
 @dataclasses.dataclass
@@ -447,7 +533,7 @@ class ArtifactManager:
     def available_artifacts(self) -> t.List[str]:
         return [_.name for _ in self.path.ls()]
 
-    def artifacts_gui(self) -> "gui.form.ButtonBarForm":
+    def gui(self) -> "gui.form.ButtonBarForm":
         # import
         from . import gui
 
@@ -503,6 +589,11 @@ class Job:
     @util.CacheResult
     def artifact_manager(self) -> ArtifactManager:
         return ArtifactManager(job=self)
+
+    @property
+    @util.CacheResult
+    def log_stream_manager(self) -> LogStreamManager:
+        return LogStreamManager(job=self)
 
     @property
     def is_started(self) -> bool:
@@ -760,7 +851,9 @@ class Job:
         #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
         # ------------------------------------------------------------- 02.01
         if cluster_type is JobRunnerClusterType.local:
+            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             subprocess.run(_command)
+            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>...............")
         # ------------------------------------------------------------- 02.03
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # todo: when self.path is not local we need to see how to log files ...

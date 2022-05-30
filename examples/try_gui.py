@@ -302,7 +302,9 @@ class SimpleHashableClass(m.HashableClass):
         with _grp:
             gui.widget.Text(default_value="count")
             _txt = gui.widget.Text(default_value="000")
-            _txt.set_async_update_fn(fn=self.txt_update_fn)
+            gui.AsyncUpdateFn(
+                fn=self.txt_update_fn, dashboard_or_widget=_txt, fn_kwargs=dict(widget=_txt)
+            )
         return _grp
 
     @m.UseMethodInForm(

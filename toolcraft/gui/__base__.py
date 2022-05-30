@@ -405,13 +405,13 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
 @dataclasses.dataclass
 class AsyncUpdateFn:
     """
+
     Note that this executes in same process and thread and you have full control as it is interlaced
     execution and ideal for gui
 
-    In current form only lite weight fn can be used as we use concurrency ... while update period can be
-      controlled via `update_period`
-    But any delays will stall UI .... so need to have ThreadPoolExecutor and ProcessPoolExecutor to do things in
-      parallel process or parallel thread instead of concurrent interlaced execution ...
+    In current form only lite weight fn can be used as we use concurrency and there is no threading so any delays
+    will stall UI .... so need to have ThreadPoolExecutor and ProcessPoolExecutor to do things in parallel process or
+    parallel thread instead of concurrent interlaced execution ...
 
     todo: also animations and transitions can be handled with this ...
       i.e. without need for ThreadPoolExecutor and ProcessPoolExecutor
@@ -423,46 +423,80 @@ class AsyncUpdateFn:
       might need to make this more general so move to `toolcraft.job`
       most likely make fn await on these threads after deciding on API and understanding asyncio pool's
       Refer: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+
+    Note on `dashboard_or_widget` field
+      + Dashboard is the place where `AsyncUpdateFn.fn` will eventually be queued to be called finally in async tasks
+        that run concurrently
+        >>> Dashboard.async_main_update
+      + If Dashboard is availble then use it
+      + But while creating UI on the fly we create widgets ... it can have dashboard only after it is built
+        so we provide option where you can supply widget from which dashboard will be extracted so that
+        `AsyncUpdateFn.fn` can be sun by queue in Dashboard ...
+
     """
+    dashboard_or_widget: t.Union["Widget", "Dashboard"]
     fn: t.Callable
-    widget: "Widget"
-    extra_widgets: t.Dict[str, "Widget"] = None
+    fn_kwargs: t.Dict[str, t.Any] = None
 
     def __post_init__(self):
-        if not self.widget.is_built:
-            raise e.code.CodingError(
+        # if dashboard then just add to queue
+        if isinstance(self.dashboard_or_widget, Dashboard):
+            self.dashboard_or_widget.async_update_fns_queue.put_nowait(self)
+        # if widget then
+        elif isinstance(self.dashboard_or_widget, Widget):
+            # if widget is already built then just add to queue
+            if self.dashboard_or_widget.is_built:
+                self.add_to_dashboard_queue_post_build_fn()
+            # else we delay adding to dashboard queue after widget is built
+            else:
+                if bool(self.dashboard_or_widget.internal.post_build_fns):
+                    self.dashboard_or_widget.internal.post_build_fns.append(self.add_to_dashboard_queue_post_build_fn)
+                else:
+                    self.dashboard_or_widget.internal.post_build_fns = [self.add_to_dashboard_queue_post_build_fn]
+        # else raise error
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(self.dashboard_or_widget)}"])
+
+    async def safe_call(self):
+        """
+        This makes call in try catch so that any errors in async task can be grabbed ...
+        """
+        try:
+            _kwargs = {}
+            if bool(self.fn_kwargs):
+                _kwargs.update(self.fn_kwargs)
+            await self.fn(**_kwargs)
+        except Exception as _e:
+            raise e.code.ShouldNeverHappen(
                 msgs=[
-                    "The main widget is not built so cannot create the instance",
-                    f"You can still register to make instance later on build using class method {AsyncUpdateFn.create}"
+                    "The async task has failed",
+                    {
+                        "fn": self.fn
+                    },
+                    _e
                 ]
             )
 
-    @classmethod
-    def create(
-        cls,
-        fn: t.Callable,
-        widget: "Widget",
-        extra_widgets: t.Dict[str, "Widget"] = None,
-    ):
-        """
-        note that call to .create will auto register to dashboard for async update tracking
-        """
-
-        if widget.is_built:
-            _nt = AsyncUpdateFn(
-                fn=fn, widget=widget, extra_widgets=extra_widgets)
-            widget.dash_board.async_update_fns_queue.put_nowait(_nt)
-        else:
-            if bool(widget.internal.post_build_fns):
-                widget.internal.post_build_fns.append(
-                    functools.partial(
-                        widget.set_async_update_fn, fn=fn, extra_widgets=extra_widgets)
-                )
-            else:
-                widget.internal.post_build_fns = [
-                    functools.partial(
-                        widget.set_async_update_fn, fn=fn, extra_widgets=extra_widgets)
+    def add_to_dashboard_queue_post_build_fn(self):
+        # should be Widget
+        if not isinstance(self.dashboard_or_widget, Widget):
+            raise e.code.CodingError(
+                msgs=[
+                    "This function is supposed to be called when dashboard_or_widget is Widget"
                 ]
+            )
+
+        # should be built
+        if not self.dashboard_or_widget.is_built:
+            raise e.code.CodingError(
+                msgs=[
+                    "We expect that this method will be called by widget post_build_fns so that dashboard can "
+                    "be accessed"
+                ]
+            )
+
+        # finally add to dashboard queue
+        self.dashboard_or_widget.dash_board.async_update_fns_queue.put_nowait(self)
 
 
 class WidgetInternal(_WidgetDpgInternal):
@@ -613,18 +647,6 @@ class Widget(_WidgetDpg, abc.ABC):
             return self.internal.tag
         raise e.validation.NotAllowed(
             msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
-        )
-
-    def set_async_update_fn(
-        self, fn: t.Callable, extra_widgets: t.Dict[str, "Widget"] = None
-    ):
-        """
-        Shortcut method to apply async updates for widgets created on the fly
-        Note that the fn can then only accept one kwarg named `widget`
-        """
-        # note that call to .create will auto register to dashboard for async update tracking
-        AsyncUpdateFn.create(
-            fn=fn, extra_widgets=extra_widgets, widget=self,
         )
 
     def build_post_runner(
@@ -1618,21 +1640,18 @@ class Dashboard(m.YamlRepr, abc.ABC):
           https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
 
         """
-        _q = self.async_update_fns_queue
-        _loop = asyncio.get_event_loop()
+        # this will run infinitely ...
         while True:
-            # await and get any queued task
-            _async_update_fn = await _q.get()
+
+            # await and get any queued AsyncUpdateFn
+            _async_update_fn = await self.async_update_fns_queue.get()  # type: AsyncUpdateFn
 
             # call _async_update_fn in async mode in event loop
-            _kwargs = dict(widget=_async_update_fn.widget)
-            if bool(_async_update_fn.extra_widgets):
-                _kwargs.update(_async_update_fn.extra_widgets)
-            _task = _loop.create_task(_async_update_fn.fn(**_kwargs))
+            _task = asyncio.create_task(_async_update_fn.safe_call())  # type: asyncio.Task
 
             # this will remove task that just finished ... but note that the above task if not completed will
-            # still run concurrently until completion
-            _q.task_done()
+            # still run concurrently until completion (make sure that fn ends and does not run infinitely)
+            self.async_update_fns_queue.task_done()
 
     async def async_main_dpg(self):
         if settings.PYC_DEBUGGING:
