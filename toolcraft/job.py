@@ -352,7 +352,7 @@ class JobViewer(m.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["tags_gui", "artifacts_gui", "log_stream_gui"],
+            callable_names=["tags_gui", "artifacts_gui", ],
             collapsing_header_open=True,
         )
 
@@ -394,10 +394,6 @@ class JobViewer(m.HashableClass):
     @m.UseMethodInForm(label_fmt="artifacts")
     def artifacts_gui(self) -> "gui.form.ButtonBarForm":
         return self.job.artifact_manager.gui()
-
-    @m.UseMethodInForm(label_fmt="log")
-    def log_stream_gui(self) -> "gui.widget.Group":
-        return self.job.log_stream_manager.gui()
 
 
 @dataclasses.dataclass
@@ -442,6 +438,33 @@ class LogStreamManager:
 
         return _return_code
 
+    async def gui_update(self, widget: "gui.widget.Text", stream_type: str):
+
+        # stream container
+        _stream_store = self.streams[stream_type]
+
+        # some vars to see if update needed
+        _num_lines = 0
+
+        # loop infinitely
+        while widget.does_exist:
+
+            # dont update if not visible
+            # todo: can we await on bool flags ???
+            if not widget.is_visible:
+                await asyncio.sleep(0.5)
+                continue
+
+            # if no new lines have been streamed ... then skip update
+            if _num_lines == len(_stream_store):
+                continue
+
+            # update _num_lines
+            _num_lines = len(_stream_store)
+
+            # update
+            widget.default_value = "\n".join(_stream_store)
+
     def gui(self) -> "gui.widget.Group":
 
         """
@@ -480,9 +503,17 @@ class LogStreamManager:
 
         with gui.widget.Group() as _grp:
             with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
-                ...
+                _std_out_txt = gui.widget.Text(default_value="... std out ...")
+                gui.AsyncUpdateFn(
+                    dashboard_or_widget=_std_out_txt,
+                    fn=self.gui_update, fn_kwargs=dict(widget=_std_out_txt, stream_type="stdout")
+                )
             with gui.widget.CollapsingHeader(label="STDERR", default_open=False):
-                ...
+                _std_err_txt = gui.widget.Text(default_value="... std err ...")
+                gui.AsyncUpdateFn(
+                    dashboard_or_widget=_std_err_txt,
+                    fn=self.gui_update, fn_kwargs=dict(widget=_std_err_txt, stream_type="stderr")
+                )
             return _grp
 
 
@@ -851,9 +882,7 @@ class Job:
         #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
         # ------------------------------------------------------------- 02.01
         if cluster_type is JobRunnerClusterType.local:
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
             subprocess.run(_command)
-            print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>...............")
         # ------------------------------------------------------------- 02.03
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # todo: when self.path is not local we need to see how to log files ...

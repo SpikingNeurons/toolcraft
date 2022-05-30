@@ -13,28 +13,6 @@ from . import callback
 
 
 @dataclasses.dataclass
-class LogForm(Form):
-
-    @property
-    @util.CacheResult
-    def std_out_log(self) -> widget.Text:
-        with self.form_fields_container:
-            with widget.CollapsingHeader(default_open=True, label="STDOUT"):
-                return widget.Text()
-
-    @property
-    @util.CacheResult
-    def std_err_log(self) -> widget.Text:
-        # just so that std out is at top
-        _ = self.std_out_log
-
-        # create for std err
-        with self.form_fields_container:
-            with widget.CollapsingHeader(default_open=False, label="STDERR"):
-                return widget.Text()
-
-
-@dataclasses.dataclass
 class ButtonBarForm(Form):
 
     @property
