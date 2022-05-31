@@ -646,8 +646,13 @@ class Engine:
 
     @classmethod
     async def _main_sleep(cls, widget: "Widget", time: float):
-        await asyncio.sleep(time)
-        widget.update_resume()
+        try:
+            await asyncio.sleep(time)
+            widget.update_resume()
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {Engine._main_sleep}", _e]
+            )
 
     @classmethod
     async def main_sleep(cls):

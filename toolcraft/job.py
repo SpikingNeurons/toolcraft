@@ -379,20 +379,21 @@ class JobViewer(m.HashableClass):
     def run_gui(self) -> "gui.widget.Group":
         # first run job
         # run gui
-        return self.job.log_stream_manager.gui()
+        return self.job.sub_process_manager.gui()
 
 
 @dataclasses.dataclass
-class LogStreamManager:
+class SubProcessManager:
     """
     """
     job: "Job"
+    completed: bool = False
 
     @property
     @util.CacheResult
     def streams(self) -> t.Dict[str, t.List[str]]:
         return {
-            "stdout": [], "stderr": []
+            "stdout": [], "stderr": [],
         }
 
     async def read_stream(self, stream, stream_type: str):
@@ -402,56 +403,45 @@ class LogStreamManager:
             but we need to see how we adapt the loggers with richy console buffers
           - with richy may be we can later map this to textures
         """
-        _stream_store = self.streams[stream_type]
-        while True:
-            await asyncio.sleep(0.2)
-            _line = await stream.readline()
-            if _line:
-                _stream_store.append(_line)
-            else:
-                break
+        try:
 
-    async def run_subprocess(self, command: t.List[str]) -> int:
+            _stream_store = self.streams[stream_type]
+            while True:
+                await asyncio.sleep(0.2)
+                _line = await stream.readline()
+                if _line:
+                    _stream_store.append(_line)
+                else:
+                    break
 
-        _process = await asyncio.create_subprocess_exec(
-            *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {self.read_stream}", _e]
+            )
 
-        asyncio.create_task(self.read_stream(_process.stdout, "stdout"))
+    async def run(self, command: t.List[str]) -> int:
+        try:
 
-        asyncio.create_task(self.read_stream(_process.stderr, "stderr"))
+            assert self.completed is False, "Was expecting to be false"
 
-        _return_code = await _process.wait()
+            _process = await asyncio.create_subprocess_exec(
+                *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        return _return_code
+            _stdout_task = asyncio.create_task(self.read_stream(_process.stdout, "stdout"))
 
-    async def gui_update(self, widget: "gui.widget.Text", stream_type: str):
+            _stderr_task = asyncio.create_task(self.read_stream(_process.stderr, "stderr"))
 
-        # stream container
-        _stream_store = self.streams[stream_type]
+            _return_code = await _process.wait()
+            _stdout_task.cancel()
+            _stderr_task.cancel()
+            self.completed = True
 
-        # some vars to see if update needed
-        _num_lines = -1
+            return _return_code
 
-        # loop infinitely
-        while widget.does_exist:
-
-            # small sleep
-            await asyncio.sleep(1)
-
-            # dont update if not visible
-            # todo: can we await on bool flags ???
-            if not widget.is_visible:
-                continue
-
-            # if no new lines have been streamed ... then skip update
-            if _num_lines == len(_stream_store):
-                continue
-
-            # update _num_lines
-            _num_lines = len(_stream_store)
-
-            # update
-            widget.default_value = "\n".join(_stream_store)
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {self.run}", _e]
+            )
 
     def gui(self) -> "gui.widget.Group":
 
@@ -491,23 +481,42 @@ class LogStreamManager:
 
         @dataclasses.dataclass
         class __MyText(gui.widget.Text):
+
             stream_type: str = None
-            def update(self):
-                ...
+            blink_animate: t.Iterator = dataclasses.field(
+                default_factory=lambda: itertools.cycle(["..", "....", "......", "........"]))
+
+            def update(self_):
+
+                # stream container
+                _stream_store = self.streams[self_.stream_type]
+
+                # sleep
+                if self.completed:
+                    self_.default_value = "\n".join([f"... completed {self_.stream_type} ..."] + _stream_store)
+                    self_.sleep()
+                    return
+                else:
+                    # frequent pause before updating ...
+                    self_.sleep(1.0)
+
+                # if not visible do nothing
+                # todo: can we await on bool flags ???
+                if not self_.is_visible:
+                    return
+
+                # update
+                _fetch_stream_msg = f"... fetching {self_.stream_type} stream " + next(self_.blink_animate)
+                if bool(_stream_store):
+                    self_.default_value = "\n".join([_fetch_stream_msg] + _stream_store)
+                else:
+                    self_.default_value = _fetch_stream_msg
 
         with gui.widget.Group() as _grp:
             with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
-                _std_out_txt = gui.widget.Text(default_value="... std out ...")
-                gui.AsyncUpdateFn(
-                    dashboard_or_widget=_std_out_txt,
-                    fn=self.gui_update, fn_kwargs=dict(widget=_std_out_txt, stream_type="stdout")
-                )
+                __MyText(default_value="... fetching stdout stream ...", stream_type="stdout")
             with gui.widget.CollapsingHeader(label="STDERR", default_open=False):
-                _std_err_txt = gui.widget.Text(default_value="... std err ...")
-                gui.AsyncUpdateFn(
-                    dashboard_or_widget=_std_err_txt,
-                    fn=self.gui_update, fn_kwargs=dict(widget=_std_err_txt, stream_type="stderr")
-                )
+                __MyText(default_value="... fetching stderr stream ...", stream_type="stderr")
             return _grp
 
 
@@ -617,8 +626,8 @@ class Job:
 
     @property
     @util.CacheResult
-    def log_stream_manager(self) -> LogStreamManager:
-        return LogStreamManager(job=self)
+    def sub_process_manager(self) -> SubProcessManager:
+        return SubProcessManager(job=self)
 
     @property
     def is_started(self) -> bool:
