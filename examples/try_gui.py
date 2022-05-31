@@ -271,20 +271,18 @@ class MyText(gui.widget.Text):
 
     def update(self):
 
-        # set value
         self.set_value(f"{int(self.get_value()) + 1:03d}")
 
         if self.some_value == "first hashable ...":
-            self.sleep(2)
-        else:
-            self.sleep(0.5)
-
-        if self.some_value == "first hashable ...":
             if int(self.get_value()) == 3:
-                self.update_pause()
+                self.sleep()
+            else:
+                self.sleep(2)
         else:
             if int(self.get_value()) == 10:
-                self.update_pause()
+                self.sleep()
+            else:
+                self.sleep(0.5)
 
 
 @dataclasses.dataclass(frozen=True)

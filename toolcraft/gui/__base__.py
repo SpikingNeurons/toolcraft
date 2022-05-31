@@ -990,9 +990,10 @@ class Widget(_WidgetDpg, abc.ABC):
                 _fn()
             self.internal.post_build_fns = None
 
-    def sleep(self, time: float):
+    def sleep(self, time: float = None):
         self.update_pause()
-        Engine.sleep_queue.put_nowait((self, time))
+        if time is not None:
+            Engine.sleep_queue.put_nowait((self, time))
 
     def tag_it(self, tag: str):
         Engine.tag_widget(tag=tag, widget=self)
@@ -1034,6 +1035,14 @@ class Widget(_WidgetDpg, abc.ABC):
         ...
 
     def update(self):
+        """
+        todo: async update that can have await ... (Try this is try_* rough work first ...)
+          A method run can be spread over multiple frames where
+            only part of code until next await executes in a given frame ...
+          Note that also deletion needs to happen after entire update is executed ...
+            or maybe for every await in update method check if deletion is requested
+
+        """
         ...
 
     def update_pause(self):
@@ -1056,6 +1065,10 @@ class Widget(_WidgetDpg, abc.ABC):
         # pause
         if _id not in Engine.update_pause:
             Engine.update_pause.append(_id)
+        else:
+            raise e.code.CodingError(
+                msgs=["This widget was already scheduled to be paused for this frame ..."]
+            )
 
     def update_resume(self):
         # is available for update
@@ -1077,6 +1090,10 @@ class Widget(_WidgetDpg, abc.ABC):
         # resume
         if self not in Engine.update_resume:
             Engine.update_resume.append(self)
+        else:
+            raise e.code.CodingError(
+                msgs=["This widget was already scheduled to be resumed for this frame ..."]
+            )
 
     def destroy(self):
         # should not be present
