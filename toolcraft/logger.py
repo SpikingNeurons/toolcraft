@@ -46,6 +46,7 @@ MESSAGES_TYPE = t.List[
         t.List,
         t.Tuple,
         t.Dict,
+        Exception,
     ]
 ]
 

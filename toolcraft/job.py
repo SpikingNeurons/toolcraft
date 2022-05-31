@@ -296,51 +296,31 @@ class JobViewer(m.HashableClass):
         _title, _args = self.experiment.gui_label
         return "\n".join([_title, *_args])
 
-    async def job_gui_with_run_update_fn(self, widget: "gui.form.HashableMethodsRunnerForm"):
-
-        # add blink animation
-        _blink_iter = itertools.cycle([".", "..", "...", "...."])
-        _blink = widget.button_bar.children.get(-1)
-
-        # loop until job is finished or widget is deleted
-        _job = self.job
-        while (not (_job.is_finished or _job.is_failed)) and widget.does_exist:
-
-            # dont update if not visible
-            # todo: can we await on bool flags ???
-            if not widget.is_visible:
-                await asyncio.sleep(0.2)
-                continue
-
-            # update blink
-            await asyncio.sleep(0.5)
-            _blink.default_value = next(_blink_iter)
-
-        # delete _blink
-        if _job.is_failed:
-            _blink.default_value = "--- FAILED ---"
-        elif _job.is_finished:
-            _blink.default_value = "--- FINISHED ---"
-        else:
-            _blink.default_value = "--- ??? ---"
-
     @m.UseMethodInForm(label_fmt="button_label")
     def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
+        # import
+        from . import gui
 
         # if finished return
         _job = self.job
         if _job.is_finished or _job.is_failed:
             return self.job_gui()
 
-        # get form
-        _form = self.job_gui()
-        _form.set_async_update_fn(fn=self.job_gui_with_run_update_fn)
+        _ret = gui.form.HashableMethodsRunnerForm(
+            title=self.button_label.split("\n")[0],
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=["tags_gui", "artifacts_gui", "run_gui"],
+            collapsing_header_open=True,
+        )
 
-        # execute job
-        _job(cluster_type=JobRunnerClusterType.local)
+        with _ret.button_bar:
+            _txt = gui.widget.Text(default_value="<-- please run")
+            _txt.move_up()
 
-        # return gui
-        return _form
+        return _ret
 
     @m.UseMethodInForm(label_fmt="button_label")
     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
@@ -363,7 +343,7 @@ class JobViewer(m.HashableClass):
             elif _job.is_finished:
                 gui.widget.Text(default_value="--- FINISHED ---")
             else:
-                gui.widget.Text(default_value="--- ??? ---")
+                raise e.code.ShouldNeverHappen(msgs=[])
 
         return _ret
 
@@ -394,6 +374,12 @@ class JobViewer(m.HashableClass):
     @m.UseMethodInForm(label_fmt="artifacts")
     def artifacts_gui(self) -> "gui.form.ButtonBarForm":
         return self.job.artifact_manager.gui()
+
+    @m.UseMethodInForm(label_fmt="run")
+    def run_gui(self) -> "gui.widget.Group":
+        # first run job
+        # run gui
+        return self.job.log_stream_manager.gui()
 
 
 @dataclasses.dataclass
@@ -444,15 +430,17 @@ class LogStreamManager:
         _stream_store = self.streams[stream_type]
 
         # some vars to see if update needed
-        _num_lines = 0
+        _num_lines = -1
 
         # loop infinitely
         while widget.does_exist:
 
+            # small sleep
+            await asyncio.sleep(1)
+
             # dont update if not visible
             # todo: can we await on bool flags ???
             if not widget.is_visible:
-                await asyncio.sleep(0.5)
                 continue
 
             # if no new lines have been streamed ... then skip update
@@ -500,6 +488,12 @@ class LogStreamManager:
         """
         # import
         from . import gui
+
+        @dataclasses.dataclass
+        class __MyText(gui.widget.Text):
+            stream_type: str = None
+            def update(self):
+                ...
 
         with gui.widget.Group() as _grp:
             with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
@@ -1456,7 +1450,7 @@ class Flow:
 
         # ------------------------------------------------------------------- 06
         # run
-        _dashboard.run()
+        gui.Engine.run(_dashboard)
 
 
 @dataclasses.dataclass(frozen=True)

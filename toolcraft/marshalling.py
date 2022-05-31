@@ -997,7 +997,8 @@ class Tracker:
     def iterable_length(self) -> int:
         raise e.code.NotSupported(
             msgs=[
-                f"Class {self.__class__} does not support this ... Please override if you want to use this ..."
+                f"Class {self.__class__} does not support `iterable_length` ... ",
+                f"Please override if you want to use this ..."
             ]
         )
 

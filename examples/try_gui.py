@@ -261,6 +261,32 @@ class PlottingWithUpdates(gui.form.Form):
         return _button_bar
 
 
+@dataclasses.dataclass
+class MyText(gui.widget.Text):
+
+    some_value: str = None
+
+    def init(self):
+        super().init()
+
+    def update(self):
+
+        # set value
+        self.set_value(f"{int(self.get_value()) + 1:03d}")
+
+        if self.some_value == "first hashable ...":
+            self.sleep(2)
+        else:
+            self.sleep(0.5)
+
+        if self.some_value == "first hashable ...":
+            if int(self.get_value()) == 3:
+                self.update_pause()
+        else:
+            if int(self.get_value()) == 10:
+                self.update_pause()
+
+
 @dataclasses.dataclass(frozen=True)
 class SimpleHashableClass(m.HashableClass):
 
@@ -271,40 +297,14 @@ class SimpleHashableClass(m.HashableClass):
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
-    async def txt_update_fn(self, widget: gui.widget.Text):
-        # loop infinitely
-        while widget.does_exist:
-
-            # dont update if not visible
-            # todo: can we await on bool flags ???
-            if not widget.is_visible:
-                await asyncio.sleep(0.2)
-                continue
-
-            # update widget
-            widget.set_value(f"{int(widget.get_value())+1:03d}")
-
-            # change update rate based on some value
-            if self.some_value == "first hashable ...":
-                await asyncio.sleep(1)
-                if int(widget.get_value()) == 10:
-                    break
-            else:
-                await asyncio.sleep(0.1)
-                if int(widget.get_value()) == 50:
-                    break
-
     @m.UseMethodInForm(
         label_fmt="all_plots_gui_label"
     )
-    def get_async_ui(self) -> gui.widget.Group:
+    def get_updating_ui(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
         with _grp:
             gui.widget.Text(default_value="count")
-            _txt = gui.widget.Text(default_value="000")
-            gui.AsyncUpdateFn(
-                fn=self.txt_update_fn, dashboard_or_widget=_txt, fn_kwargs=dict(widget=_txt)
-            )
+            _txt = MyText(default_value="000", some_value=self.some_value)
         return _grp
 
     @m.UseMethodInForm(
@@ -378,10 +378,10 @@ class MyDoubleSplitForm(gui.form.DoubleSplitForm):
 
 
 @dataclasses.dataclass
-class AsyncUpdateForm(gui.form.DoubleSplitForm):
+class UpdatingForm(gui.form.DoubleSplitForm):
 
-    title: str = "Async update form ..."
-    callable_name: str = "get_async_ui"
+    title: str = "Updating form ..."
+    callable_name: str = "get_updating_ui"
     allow_refresh: bool = False
     collapsing_header_open: bool = False
 
@@ -405,7 +405,7 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
 
-    topic6: gui.form.DoubleSplitForm = AsyncUpdateForm()
+    topic6: gui.form.DoubleSplitForm = UpdatingForm()
 
 
 def basic_dashboard():
@@ -441,7 +441,7 @@ def basic_dashboard():
     _dash.topic6.add(
         hashable=SimpleHashableClass(some_value="second hashable ..."),
     )
-    _dash.run()
+    gui.Engine.run(_dash)
 
 
 def demo():

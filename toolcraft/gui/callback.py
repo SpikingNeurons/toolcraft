@@ -6,7 +6,7 @@ from .. import util
 from .. import marshalling as m
 from .. import error as e
 from . import widget, asset
-from .__base__ import Callback, EnColor
+from .__base__ import Callback, EnColor, Engine
 
 
 @dataclasses.dataclass(frozen=True)
@@ -136,11 +136,12 @@ class HashableMethodRunnerCallback(Callback):
         # get widget for given tag if present
         # .... doesn't matter if you use sender or _receiver as there is one dashboard for all
         #      This might change if we have multiple dashboard instances
+        # todo: we are using Engine we do not need this
         _dash_board = _receiver.dash_board
         # todo: precaution check ... remove later
         assert id(_dash_board) == id(sender.dash_board), "must be same ..."
         # noinspection PyTypeChecker
-        _widget = _dash_board.tags.get(_tag, None)
+        _widget = Engine.tags.get(_tag, None)
         _after_widget = None
 
         # if allow refresh then delete widget and set it to None so that it
@@ -174,7 +175,7 @@ class HashableMethodRunnerCallback(Callback):
                 _hashable, self.callable_name)()  # type: widget.MovableWidget
 
             # tag it as it was newly created
-            _dash_board.tag_widget(tag=_tag, widget=_new_widget)
+            Engine.tag_widget(tag=_tag, widget=_new_widget)
 
             # add to receiver children
             _receiver(_new_widget)
