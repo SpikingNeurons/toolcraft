@@ -403,134 +403,6 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
         internal_dpg.configure_item(self.dpg_id, enabled=False)
 
 
-@dataclasses.dataclass
-class AsyncUpdateFn:
-    """
-
-    Note that this executes in same process and thread and you have full control as it is interlaced
-    execution and ideal for gui
-
-    In current form only lite weight fn can be used as we use concurrency and there is no threading so any delays
-    will stall UI .... so need to have ThreadPoolExecutor and ProcessPoolExecutor to do things in parallel process or
-    parallel thread instead of concurrent interlaced execution ...
-
-    todo: also animations and transitions can be handled with this ...
-      i.e. without need for ThreadPoolExecutor and ProcessPoolExecutor
-      Note that we need to remove widget from async updates via `widget.stop_async_update()` ...
-        so this needs to be done in fn ... this will allow us to track lot of widgets for async updates
-
-    todo: implement ThreadPoolExecutor (for IO-bound tasks) and ProcessPoolExecutor (for CPU-bound tasks)
-      use for CPU-bound and IO-bound task task ... but note that you have no access to vars in main process (may-be)
-      might need to make this more general so move to `toolcraft.job`
-      most likely make fn await on these threads after deciding on API and understanding asyncio pool's
-      Refer: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
-
-    todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
-      so we bypass it here ... make sure to take care of things as `AsyncUpdateFn.fn` are not aware of
-      widget deletions plus `AsyncUpdateFn.fn` can work with multiple widgets so do not have any magic
-      solution ...
-      The more complex solution will be Unity style where all widgets have life cycle
-      ... setup, update, final
-      ... but this will require having async task run for each widget and build complex Unity3D system
-
-    todo: Explore making game engine style async project inspired by unity or find any opensource solution in python
-      https://docs.unity3d.com/ScriptReference/MonoBehaviour.html
-      Implement MonoBehaviour things like:
-      + Start - Use this for initialization
-      + Update - Update is called once per frame
-      + FixedUpdate - Frame-rate independent message for physics calculations
-                      has the frequency of the physics system; it is called every fixed frame-rate frame
-      + LateUpdate - LateUpdate is called every frame, if the Behaviour is enabled.
-      + OnGUI - OnGUI is called for rendering and handling GUI events.
-      + OnDisable - This function is called when the behaviour becomes disabled.
-      + OnEnable - This function is called when the object becomes enabled and active.
-
-    Note on `dashboard_or_widget` field
-      + Dashboard is the place where `AsyncUpdateFn.fn` will eventually be queued to be called finally in async tasks
-        that run concurrently
-        >>> Dashboard.async_main_update
-      + If Dashboard is availble then use it
-      + But while creating UI on the fly we create widgets ... it can have dashboard only after it is built
-        so we provide option where you can supply widget from which dashboard will be extracted so that
-        `AsyncUpdateFn.fn` can be sun by queue in Dashboard ...
-
-    """
-    dashboard_or_widget: t.Union["Widget", "Dashboard"]
-    fn: t.Callable[..., t.Awaitable]
-    fn_kwargs: t.Dict[str, t.Any] = None
-
-    def __post_init__(self):
-        # if dashboard then just add to queue
-        if isinstance(self.dashboard_or_widget, Dashboard):
-            self.dashboard_or_widget.async_update_fns_queue.put_nowait(self)
-        # if widget then
-        elif isinstance(self.dashboard_or_widget, Widget):
-            # if widget is already built then just add to queue
-            if self.dashboard_or_widget.is_built:
-                self.add_to_dashboard_queue_post_build_fn()
-            # else we delay adding to dashboard queue after widget is built
-            else:
-                if bool(self.dashboard_or_widget.internal.post_build_fns):
-                    self.dashboard_or_widget.internal.post_build_fns.append(self.add_to_dashboard_queue_post_build_fn)
-                else:
-                    self.dashboard_or_widget.internal.post_build_fns = [self.add_to_dashboard_queue_post_build_fn]
-        # else raise error
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(self.dashboard_or_widget)}"])
-
-    async def safe_call(self):
-        """
-        This makes call in try catch so that any errors in async task can be grabbed ...
-        """
-        try:
-            _kwargs = {}
-            if bool(self.fn_kwargs):
-                _kwargs.update(self.fn_kwargs)
-            _ret = await self.fn(**_kwargs)
-        except SystemError as _e:
-            # todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
-            #   so we bypass it here ... make sure to take care of things as `AsyncUpdateFn.fn` are not aware of
-            #   widget deletions plus `AsyncUpdateFn.fn` can work with multiple widgets so do not have any magic
-            #   solution ...
-            #   The more complex solution will be Unity style where all widgets have life cycle
-            #   ... setup, update, final
-            #   ... but this will require having async task run for each widget and build complex Unity3D system
-            ...
-        except Exception as _e:
-            # noinspection PyUnresolvedReferences
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    "The async task has failed",
-                    {
-                        "module": self.fn.__module__,
-                        "fn": self.fn.__qualname__,
-                    },
-                    _e
-                ]
-            )
-
-    def add_to_dashboard_queue_post_build_fn(self):
-        # should be Widget
-        if not isinstance(self.dashboard_or_widget, Widget):
-            raise e.code.CodingError(
-                msgs=[
-                    "This function is supposed to be called when dashboard_or_widget is Widget"
-                ]
-            )
-
-        # should be built
-        if not self.dashboard_or_widget.is_built:
-            raise e.code.CodingError(
-                msgs=[
-                    "We expect that this method will be called by widget post_build_fns so that dashboard can "
-                    "be accessed"
-                ]
-            )
-
-        # finally add to dashboard queue
-        self.dashboard_or_widget.dash_board.async_update_fns_queue.put_nowait(self)
-
-
 class WidgetInternal(_WidgetDpgInternal):
     parent: "ContainerWidget"
     is_build_done: bool
@@ -575,19 +447,24 @@ class Engine:
       + print - Logs message to the Unity Console (identical to Debug.Log).
       By figuring out which method is overridden we can decide to call it ...
     """
-    # ...
+    # --------------------------------- 01
+    # to refer widgets anywhere
     tags: t.Dict[str, "Widget"] = {}
 
-    # lifecycle
+    # --------------------------------- 02
+    # lifecycle method - updates every frame
     update: t.Dict[int, "Widget"] = {}
+    # lifecycle method - updates at fix frequency ... still to improve
     fixed_update: t.Dict[int, "Widget"] = {}
-    destroy: t.List["Widget"] = []
-    update_pause: t.List[int] = []
-    update_resume: t.List["Widget"] = []
-    sleep_queue: asyncio.Queue = asyncio.Queue()
+
+    # --------------------------------- 03
+    # tasks - can have variation for io tasks, cpu tasks and tasks in thread where need to
+    #         explore removing gil locks in cython
+    #       - currently restricting to single thread concurrent tasks implemented using queues
+    concurrent_task_queue: asyncio.Queue = asyncio.Queue()
 
     @classmethod
-    async def main_lifecycle(cls):
+    async def lifecycle(cls):
         """
         Instead of maintaining finite worker pool (made via _loop.create_task) that processes async_update_fns_queue
         ... we launch task as and when the async_update_fn is available i.e. infinite tasks are spawned
@@ -623,72 +500,31 @@ class Engine:
                 for _ in Engine.update.values():
                     _.update()
 
-                # call update_pause phase
-                for _ in Engine.update_pause:
-                    del Engine.update[_]
-                Engine.update_pause.clear()
-
-                # call update_resume phase
-                for _ in Engine.update_resume:
-                    Engine.update[id(_)] = _
-                Engine.update_resume.clear()
-
-                # call destroy ... if there is something for deletion ...
-                # todo: when closed things will not get deleted appropriately
-                for _ in Engine.destroy:
-                    _.delete()
-                Engine.destroy.clear()
+                # todo: other phases nut need to rethink design ...
+                #   note that destroy for widget.delete is not effective
+                # # call update_pause phase
+                # for _ in Engine.update_pause:
+                #     del Engine.update[_]
+                # Engine.update_pause.clear()
+                #
+                # # call update_resume phase
+                # for _ in Engine.update_resume:
+                #     Engine.update[id(_)] = _
+                # Engine.update_resume.clear()
+                #
+                # # call destroy ... if there is something for deletion ...
+                # # todo: when closed things will not get deleted appropriately
+                # for _ in Engine.destroy:
+                #     _.delete()
+                # Engine.destroy.clear()
 
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.main_lifecycle}", _e]
+                msgs=[f"Exception in {Engine.lifecycle}", _e]
             )
 
     @classmethod
-    async def _main_sleep(cls, widget: "Widget", time: float):
-        try:
-            await asyncio.sleep(time)
-            widget.update_resume()
-        except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine._main_sleep}", _e]
-            )
-
-    @classmethod
-    async def main_sleep(cls):
-        try:
-            while True:
-                _widget, _time = await Engine.sleep_queue.get()
-                asyncio.create_task(cls._main_sleep(_widget, _time))
-                Engine.sleep_queue.task_done()
-        except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.main_sleep}", _e]
-            )
-
-    @classmethod
-    async def main_dpg(cls):
-        try:
-            if settings.PYC_DEBUGGING:
-                while internal_dpg.is_dearpygui_running():
-                    # add this extra line for callback debug
-                    # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
-                    dpg.run_callbacks(dpg.get_callback_queue())
-                    # dpg frame render
-                    internal_dpg.render_dearpygui_frame()
-                    await asyncio.sleep(0)
-            else:
-                while internal_dpg.is_dearpygui_running():
-                    # dpg frame render
-                    internal_dpg.render_dearpygui_frame()
-                    await asyncio.sleep(0)
-        except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.main_dpg}", _e]
-            )
-
-    @classmethod
-    async def main_lifecycle_physics(cls):
+    async def lifecycle_physics(cls):
         """
         todo: pending ... the destroy in main_lifecycle can cause problems
         """
@@ -706,7 +542,118 @@ class Engine:
                     _.fixed_update()
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.main_lifecycle_physics}", _e]
+                msgs=[f"Exception in {Engine.lifecycle_physics}", _e]
+            )
+
+    @classmethod
+    async def concurrent_task_run(
+        cls, fn: t.Callable[..., t.Awaitable], fn_kwargs: t.Optional[t.Dict[str, t.Any]]):
+        """
+        This makes call in try catch so that any errors in async task can be grabbed ...
+        """
+        try:
+            _kwargs = {}
+            if bool(fn_kwargs):
+                _kwargs.update(fn_kwargs)
+            _ret = await fn(**_kwargs)
+        except SystemError as _e:
+            # todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
+            #   so we bypass it here ... make sure to take care of things as `AsyncUpdateFn.fn` are not aware of
+            #   widget deletions plus `AsyncUpdateFn.fn` can work with multiple widgets so do not have any magic
+            #   solution ...
+            #   The more complex solution will be Unity style where all widgets have life cycle
+            #   ... setup, update, final
+            #   ... but this will require having async task run for each widget and build complex Unity3D system
+            ...
+        except Exception as _e:
+            # noinspection PyUnresolvedReferences
+            raise e.code.ShouldNeverHappen(
+                msgs=[
+                    "The async task has failed",
+                    {
+                        "module": fn.__module__,
+                        "fn": fn.__qualname__,
+                    },
+                    _e
+                ]
+            )
+
+    @classmethod
+    def concurrent_task_add(
+        cls, fn: t.Callable[..., t.Awaitable], fn_kwargs: t.Optional[t.Dict[str, t.Any]] = None
+    ):
+        cls.concurrent_task_queue.put_nowait((fn, fn_kwargs))
+
+    @classmethod
+    async def concurrent_task(cls):
+        """
+        Note that this executes in same process and thread and you have full control as it is interlaced
+        execution and ideal for gui
+
+        In current form only lite weight fn can be used as we use concurrency and there is no threading so any delays
+        will stall UI .... so need to have ThreadPoolExecutor and ProcessPoolExecutor to do things in parallel process or
+        parallel thread instead of concurrent interlaced execution ...
+
+        todo: also animations and transitions can be handled with this ...
+          i.e. without need for ThreadPoolExecutor and ProcessPoolExecutor
+          Note that we need to remove widget from async updates via `widget.stop_async_update()` ...
+            so this needs to be done in fn ... this will allow us to track lot of widgets for async updates
+
+        todo: implement ThreadPoolExecutor (for IO-bound tasks) and ProcessPoolExecutor (for CPU-bound tasks)
+          use for CPU-bound and IO-bound task task ... but note that you have no access to vars in main process (may-be)
+          might need to make this more general so move to `toolcraft.job`
+          most likely make fn await on these threads after deciding on API and understanding asyncio pool's
+          Refer: https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor
+
+        todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
+          so we bypass it here ... make sure to take care of things as `AsyncUpdateFn.fn` are not aware of
+          widget deletions plus `AsyncUpdateFn.fn` can work with multiple widgets so do not have any magic
+          solution ...
+          The more complex solution will be Unity style where all widgets have life cycle
+          ... setup, update, final
+          ... but this will require having async task run for each widget and build complex Unity3D system
+
+        todo: Explore making game engine style async project inspired by unity or find any opensource solution in python
+          https://docs.unity3d.com/ScriptReference/MonoBehaviour.html
+          Implement MonoBehaviour things like:
+          + Start - Use this for initialization
+          + Update - Update is called once per frame
+          + FixedUpdate - Frame-rate independent message for physics calculations
+                          has the frequency of the physics system; it is called every fixed frame-rate frame
+          + LateUpdate - LateUpdate is called every frame, if the Behaviour is enabled.
+          + OnGUI - OnGUI is called for rendering and handling GUI events.
+          + OnDisable - This function is called when the behaviour becomes disabled.
+          + OnEnable - This function is called when the object becomes enabled and active.
+        """
+        try:
+            while True:
+                _fn, _fn_kwargs = await Engine.concurrent_task_queue.get()
+                asyncio.create_task(cls.concurrent_task_run(_fn, _fn_kwargs))
+                Engine.concurrent_task_queue.task_done()
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {Engine.concurrent_task}", _e]
+            )
+
+    @classmethod
+    async def dpg(cls):
+        try:
+            if settings.PYC_DEBUGGING:
+                while internal_dpg.is_dearpygui_running():
+                    # add this extra line for callback debug
+                    # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
+                    dpg.run_callbacks(dpg.get_callback_queue())
+                    # dpg frame render
+                    internal_dpg.render_dearpygui_frame()
+                    await asyncio.sleep(0)
+            else:
+                while internal_dpg.is_dearpygui_running():
+                    # dpg frame render
+                    internal_dpg.render_dearpygui_frame()
+                    await asyncio.sleep(0)
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {Engine.dpg}", _e]
             )
 
     @classmethod
@@ -731,15 +678,15 @@ class Engine:
         # ----------------------------------------------------------- 01
         # create tasks
         # todo: use asyncio.to_thread but due to GIL no use hence only use for IO ... some hope if this lib is cython
-        _dpg_task = asyncio.create_task(cls.main_dpg())
-        _lifecycle_task = asyncio.create_task(cls.main_lifecycle())
-        _sleep_task = asyncio.create_task(cls.main_sleep())
+        _dpg = asyncio.create_task(cls.dpg())
+        _lifecycle = asyncio.create_task(cls.lifecycle())
+        _concurrent_task = asyncio.create_task(cls.concurrent_task())
 
         # ----------------------------------------------------------- 03
         # await on dpg task and cancel update task
-        await _dpg_task
-        _lifecycle_task.cancel()
-        _sleep_task.cancel()
+        await _dpg
+        _lifecycle.cancel()
+        _concurrent_task.cancel()
 
     @classmethod
     def run(cls, dash: "Dashboard"):
@@ -995,11 +942,6 @@ class Widget(_WidgetDpg, abc.ABC):
                 _fn()
             self.internal.post_build_fns = None
 
-    def sleep(self, time: float = None):
-        self.update_pause()
-        if time is not None:
-            Engine.sleep_queue.put_nowait((self, time))
-
     def tag_it(self, tag: str):
         Engine.tag_widget(tag=tag, widget=self)
 
@@ -1049,66 +991,6 @@ class Widget(_WidgetDpg, abc.ABC):
 
         """
         ...
-
-    def update_pause(self):
-        # is available for update
-        if self.__class__.update == Widget.update:
-            raise e.code.CodingError(
-                msgs=[
-                    f"this widget does not have update lifecycle method ... ",
-                    f"check {self.__class__.update} != {Widget.update}",
-                ]
-            )
-
-        # should be present
-        _id = id(self)
-        if _id not in Engine.update.keys():
-            raise e.code.CodingError(
-                msgs=["this widget was never scheduled to update ... so cannot pause"]
-            )
-
-        # pause
-        if _id not in Engine.update_pause:
-            Engine.update_pause.append(_id)
-        else:
-            raise e.code.CodingError(
-                msgs=["This widget was already scheduled to be paused for this frame ..."]
-            )
-
-    def update_resume(self):
-        # is available for update
-        if self.__class__.update == Widget.update:
-            raise e.code.CodingError(
-                msgs=[
-                    f"this widget does not have update lifecycle method ... ",
-                    f"check {self.__class__.update} != {Widget.update}",
-                ]
-            )
-
-        # should not be present
-        _id = id(self)
-        if _id in Engine.update.keys():
-            raise e.code.CodingError(
-                msgs=["this widget is scheduled to update ... so cannot resume"]
-            )
-
-        # resume
-        if self not in Engine.update_resume:
-            Engine.update_resume.append(self)
-        else:
-            raise e.code.CodingError(
-                msgs=["This widget was already scheduled to be resumed for this frame ..."]
-            )
-
-    def destroy(self):
-        # should not be present
-        if self in Engine.destroy:
-            raise e.code.CodingError(
-                msgs=["The widget is already set for destruction ..."]
-            )
-
-        # destroy
-        Engine.destroy.append(self)
 
 
 USER_DATA = t.Dict[
