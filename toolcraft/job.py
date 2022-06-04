@@ -443,6 +443,38 @@ class SubProcessManager:
                 msgs=[f"Exception in {self.run}", _e]
             )
 
+    async def gui_update(self, stream_type: str, txt: "gui.widget.Text"):
+        # get ref to stream
+        _stream_store = self.streams[stream_type]
+
+        # some vars
+        _blink_animate = itertools.cycle(["..", "....", "......", "........"])
+
+        # loop until widget present
+        while txt.does_exist:
+
+            # if completed update txt ...
+            # don't care if things are visible or not ... just make final update and leave
+            if self.completed:
+                txt.default_value = "\n".join([f"... completed {stream_type} ..."] + _stream_store)
+                break
+
+            # dont update if not visible ... add a micro pause
+            # todo: can we await on bool flags ???
+            if not txt.is_visible:
+                await asyncio.sleep(0.2)
+                continue
+
+            # frequent pause before updating ...
+            await asyncio.sleep(1.0)
+
+            # update
+            _fetch_stream_msg = f"... fetching {stream_type} stream " + next(_blink_animate)
+            if bool(_stream_store):
+                txt.default_value = "\n".join([_fetch_stream_msg] + _stream_store)
+            else:
+                txt.default_value = _fetch_stream_msg
+
     def gui(self) -> "gui.widget.Group":
 
         """
@@ -479,44 +511,13 @@ class SubProcessManager:
         # import
         from . import gui
 
-        @dataclasses.dataclass
-        class __MyText(gui.widget.Text):
-
-            stream_type: str = None
-            blink_animate: t.Iterator = dataclasses.field(
-                default_factory=lambda: itertools.cycle(["..", "....", "......", "........"]))
-
-            def update(self_):
-
-                # stream container
-                _stream_store = self.streams[self_.stream_type]
-
-                # sleep
-                if self.completed:
-                    self_.default_value = "\n".join([f"... completed {self_.stream_type} ..."] + _stream_store)
-                    self_.sleep()
-                    return
-                else:
-                    # frequent pause before updating ...
-                    self_.sleep(1.0)
-
-                # if not visible do nothing
-                # todo: can we await on bool flags ???
-                if not self_.is_visible:
-                    return
-
-                # update
-                _fetch_stream_msg = f"... fetching {self_.stream_type} stream " + next(self_.blink_animate)
-                if bool(_stream_store):
-                    self_.default_value = "\n".join([_fetch_stream_msg] + _stream_store)
-                else:
-                    self_.default_value = _fetch_stream_msg
-
         with gui.widget.Group() as _grp:
             with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
-                __MyText(default_value="... fetching stdout stream ...", stream_type="stdout")
+                _txt = gui.widget.Text(default_value="... fetching stdout stream ...")
+                gui.Engine.concurrent_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stdout", txt=_txt))
             with gui.widget.CollapsingHeader(label="STDERR", default_open=False):
-                __MyText(default_value="... fetching stderr stream ...", stream_type="stderr")
+                _txt = gui.widget.Text(default_value="... fetching stderr stream ...")
+                gui.Engine.concurrent_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stderr", txt=_txt))
             return _grp
 
 
