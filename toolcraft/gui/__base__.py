@@ -458,10 +458,11 @@ class Engine:
     fixed_update: t.Dict[int, "Widget"] = {}
 
     # --------------------------------- 03
-    # tasks - can have variation for io tasks, cpu tasks and tasks in thread where need to
-    #         explore removing gil locks in cython
-    #       - currently restricting to single thread concurrent tasks implemented using queues
-    concurrent_task_queue: asyncio.Queue = asyncio.Queue()
+    # - can have variation for io tasks, cpu tasks and tasks in thread where need to
+    #   explore removing gil locks in cython
+    # - currently restricting to single thread concurrent tasks implemented using queues
+    gui_task_queue: asyncio.Queue = asyncio.Queue()
+    cpu_task_queue: asyncio.Queue = asyncio.Queue()
 
     @classmethod
     async def lifecycle(cls):
@@ -547,46 +548,11 @@ class Engine:
 
     @classmethod
     async def concurrent_task_run(
-        cls, fn: t.Callable[..., t.Awaitable], fn_kwargs: t.Optional[t.Dict[str, t.Any]]):
+        cls, fn: t.Callable[..., t.Awaitable], fn_kwargs: t.Optional[t.Dict[str, t.Any]]
+    ):
         """
         This makes call in try catch so that any errors in async task can be grabbed ...
-        """
-        try:
-            _kwargs = {}
-            if bool(fn_kwargs):
-                _kwargs.update(fn_kwargs)
-            _ret = await fn(**_kwargs)
-        except SystemError as _e:
-            # todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
-            #   so we bypass it here ... make sure to take care of things as `AsyncUpdateFn.fn` are not aware of
-            #   widget deletions plus `AsyncUpdateFn.fn` can work with multiple widgets so do not have any magic
-            #   solution ...
-            #   The more complex solution will be Unity style where all widgets have life cycle
-            #   ... setup, update, final
-            #   ... but this will require having async task run for each widget and build complex Unity3D system
-            ...
-        except Exception as _e:
-            # noinspection PyUnresolvedReferences
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    "The async task has failed",
-                    {
-                        "module": fn.__module__,
-                        "fn": fn.__qualname__,
-                    },
-                    _e
-                ]
-            )
 
-    @classmethod
-    def concurrent_task_add(
-        cls, fn: t.Callable[..., t.Awaitable], fn_kwargs: t.Optional[t.Dict[str, t.Any]] = None
-    ):
-        cls.concurrent_task_queue.put_nowait((fn, fn_kwargs))
-
-    @classmethod
-    async def concurrent_task(cls):
-        """
         Note that this executes in same process and thread and you have full control as it is interlaced
         execution and ideal for gui
 
@@ -626,13 +592,74 @@ class Engine:
           + OnEnable - This function is called when the object becomes enabled and active.
         """
         try:
+            _kwargs = {}
+            if bool(fn_kwargs):
+                _kwargs.update(fn_kwargs)
+            _ret = await fn(**_kwargs)
+        except SystemError as _e:
+            # todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
+            #   so we bypass it here ... make sure to take care of things as `AsyncUpdateFn.fn` are not aware of
+            #   widget deletions plus `AsyncUpdateFn.fn` can work with multiple widgets so do not have any magic
+            #   solution ...
+            #   The more complex solution will be Unity style where all widgets have life cycle
+            #   ... setup, update, final
+            #   ... but this will require having async task run for each widget and build complex Unity3D system
+            ...
+        except Exception as _e:
+            # noinspection PyUnresolvedReferences
+            raise e.code.ShouldNeverHappen(
+                msgs=[
+                    "The async task has failed",
+                    {
+                        "module": fn.__module__,
+                        "fn": fn.__qualname__,
+                    },
+                    _e
+                ]
+            )
+
+    @classmethod
+    def cpu_task_add(
+        cls, fn: t.Callable[..., t.Awaitable], fn_kwargs: t.Optional[t.Dict[str, t.Any]] = None
+    ):
+        cls.cpu_task_queue.put_nowait((fn, fn_kwargs))
+
+    @classmethod
+    def gui_task_add(
+        cls, fn: t.Callable[..., t.Awaitable], fn_kwargs: t.Optional[t.Dict[str, t.Any]] = None
+    ):
+        cls.gui_task_queue.put_nowait((fn, fn_kwargs))
+
+    @classmethod
+    async def cpu_task(cls):
+        """
+        for now we use .... improve to use threads if possible or something else
+        >>> cls.concurrent_task_run
+        """
+        try:
             while True:
-                _fn, _fn_kwargs = await Engine.concurrent_task_queue.get()
+                _fn, _fn_kwargs = await Engine.cpu_task_queue.get()
                 asyncio.create_task(cls.concurrent_task_run(_fn, _fn_kwargs))
-                Engine.concurrent_task_queue.task_done()
+                Engine.cpu_task_queue.task_done()
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.concurrent_task}", _e]
+                msgs=[f"Exception in {Engine.cpu_task}", _e]
+            )
+
+    @classmethod
+    async def gui_task(cls):
+        """
+        for now we use .... improve to use threads if possible or something else
+        >>> cls.concurrent_task_run
+        """
+        try:
+            while True:
+                _fn, _fn_kwargs = await Engine.gui_task_queue.get()
+                asyncio.create_task(cls.concurrent_task_run(_fn, _fn_kwargs))
+                Engine.gui_task_queue.task_done()
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {Engine.gui_task}", _e]
             )
 
     @classmethod
@@ -680,13 +707,15 @@ class Engine:
         # todo: use asyncio.to_thread but due to GIL no use hence only use for IO ... some hope if this lib is cython
         _dpg = asyncio.create_task(cls.dpg())
         _lifecycle = asyncio.create_task(cls.lifecycle())
-        _concurrent_task = asyncio.create_task(cls.concurrent_task())
+        _gui_task = asyncio.create_task(cls.gui_task())
+        _cpu_task = asyncio.create_task(cls.cpu_task())
 
         # ----------------------------------------------------------- 03
         # await on dpg task and cancel update task
         await _dpg
         _lifecycle.cancel()
-        _concurrent_task.cancel()
+        _gui_task.cancel()
+        _cpu_task.cancel()
 
     @classmethod
     def run(cls, dash: "Dashboard"):

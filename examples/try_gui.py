@@ -326,7 +326,7 @@ class SimpleHashableClass(m.HashableClass):
         with _grp:
             gui.widget.Text(default_value="count")
             _txt = gui.widget.Text(default_value="000")
-            gui.Engine.concurrent_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
+            gui.Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
         return _grp
 
     @m.UseMethodInForm(

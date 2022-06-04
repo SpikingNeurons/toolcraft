@@ -378,6 +378,9 @@ class JobViewer(m.HashableClass):
     @m.UseMethodInForm(label_fmt="run")
     def run_gui(self) -> "gui.widget.Group":
         # first run job
+        if not self.job.is_started:
+            from . import gui
+            gui.Engine.cpu_task_add(fn=self.job.sub_process_manager.run)
         # run gui
         return self.job.sub_process_manager.gui()
 
@@ -387,7 +390,7 @@ class SubProcessManager:
     """
     """
     job: "Job"
-    completed: bool = False
+    process_return_code: t.Optional[int] = None
 
     @property
     @util.CacheResult
@@ -410,7 +413,7 @@ class SubProcessManager:
                 await asyncio.sleep(0.2)
                 _line = await stream.readline()
                 if _line:
-                    _stream_store.append(_line)
+                    _stream_store.append(_line.decode())
                 else:
                     break
 
@@ -419,22 +422,22 @@ class SubProcessManager:
                 msgs=[f"Exception in {self.read_stream}", _e]
             )
 
-    async def run(self, command: t.List[str]) -> int:
+    async def run(self) -> int:
         try:
 
-            assert self.completed is False, "Was expecting to be false"
+            assert self.process_return_code is None, "Was expecting to be None"
 
             _process = await asyncio.create_subprocess_exec(
-                *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                *self.job.cli_command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
             _stdout_task = asyncio.create_task(self.read_stream(_process.stdout, "stdout"))
 
             _stderr_task = asyncio.create_task(self.read_stream(_process.stderr, "stderr"))
 
             _return_code = await _process.wait()
-            _stdout_task.cancel()
-            _stderr_task.cancel()
-            self.completed = True
+            # _stdout_task.cancel()
+            # _stderr_task.cancel()
+            self.process_return_code = _return_code
 
             return _return_code
 
@@ -455,8 +458,9 @@ class SubProcessManager:
 
             # if completed update txt ...
             # don't care if things are visible or not ... just make final update and leave
-            if self.completed:
-                txt.default_value = "\n".join([f"... completed {stream_type} ..."] + _stream_store)
+            if self.process_return_code is not None:
+                txt.default_value = "\n".join(
+                    [f"... completed run with error code {self.process_return_code} ..."] + _stream_store)
                 break
 
             # dont update if not visible ... add a micro pause
@@ -514,10 +518,10 @@ class SubProcessManager:
         with gui.widget.Group() as _grp:
             with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
                 _txt = gui.widget.Text(default_value="... fetching stdout stream ...")
-                gui.Engine.concurrent_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stdout", txt=_txt))
+                gui.Engine.gui_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stdout", txt=_txt))
             with gui.widget.CollapsingHeader(label="STDERR", default_open=False):
                 _txt = gui.widget.Text(default_value="... fetching stderr stream ...")
-                gui.Engine.concurrent_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stderr", txt=_txt))
+                gui.Engine.gui_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stderr", txt=_txt))
             return _grp
 
 
@@ -698,6 +702,15 @@ class Job:
         return _wait_on_jobs
 
     @property
+    def cli_command(self) -> t.List[str]:
+        _command = [
+            "python", self.runner.py_script, self.method.__func__.__name__,
+        ]
+        if self.experiment is not None:
+            _command += [self.experiment.hex_hash]
+        return _command
+
+    @property
     @util.CacheResult
     def path(self) -> s.Path:
         """
@@ -722,7 +735,7 @@ class Job:
     def __init__(
         self,
         runner: "Runner",
-        method: t.Callable,
+        method: types.MethodType,
         experiment: t.Optional["Experiment"] = None,
         wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
     ):
@@ -872,11 +885,7 @@ class Job:
         """
         # ------------------------------------------------------------- 01
         # make command to run on cli
-        _command = [
-            "python", self.runner.py_script, self.method.__func__.__name__,
-        ]
-        if self.experiment is not None:
-            _command += [self.experiment.hex_hash]
+        _command = self.cli_command
 
         # ------------------------------------------------------------- 02
         # launch
