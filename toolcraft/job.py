@@ -89,23 +89,27 @@ class ArtifactViewerForSca(ArtifactViewer):
     @staticmethod
     def train_history(data: dict) -> "gui.widget.Widget":
         from . import gui
-        return gui.widget.Text("train_history" + str(data))
+        return gui.widget.Text("train_history: " + str(data))
 
     @staticmethod
     def validate_history(data: dict) -> "gui.widget.Widget":
         from . import gui
-        return gui.widget.Text("validate_history" + str(data))
+        return gui.widget.Text("validate_history: " + str(data))
 
     @staticmethod
     def guessing_entropy(data: dict) -> "gui.widget.Widget":
         from . import gui
-        return gui.widget.Text("guessing_entropy" + str(data))
+        return gui.widget.Text("guessing_entropy: " + str(data))
 
     @staticmethod
     def prob_masses(data: dict) -> "gui.widget.Widget":
         from . import gui
-        return gui.widget.Text("prob_masses" + str(data))
+        return gui.widget.Text("prob_masses: " + str(data))
 
+    @staticmethod
+    def find_lr(data: dict) -> "gui.widget.Widget":
+        from . import gui
+        return gui.widget.Text("find_lr: " + str(data))
 
 
 class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
@@ -735,7 +739,7 @@ class Job:
     def __init__(
         self,
         runner: "Runner",
-        method: types.MethodType,
+        method: t.Callable,
         experiment: t.Optional["Experiment"] = None,
         wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
     ):

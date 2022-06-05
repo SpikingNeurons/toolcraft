@@ -995,10 +995,14 @@ class Tracker:
 
     @property
     def iterable_length(self) -> int:
+        """
+        return -1 to indicate it is yielding infinitely ...
+        """
         raise e.code.NotSupported(
             msgs=[
                 f"Class {self.__class__} does not support `iterable_length` ... ",
-                f"Please override if you want to use this ..."
+                f"Please override if you want to iterate on this class instance also remember "
+                f"to override on_iter  ..."
             ]
         )
 
@@ -1108,12 +1112,12 @@ class Tracker:
                     for _ in self.on_iter():
                         yield _
         else:
-            if self.iterates_infinitely:
+            if self.iterable_length == -1:
                 raise e.code.NotAllowed(
                     msgs=[
                         "We cannot consume status_panel as this class iterates "
                         "infinitely ... ",
-                        "you need to pass `status_panel=None` and handle it "
+                        "you might need to pass `status_panel=None` and handle it "
                         "on your own",
                     ]
                 )
