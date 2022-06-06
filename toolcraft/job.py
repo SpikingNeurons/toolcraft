@@ -564,9 +564,9 @@ class ArtifactManager:
                     def fn(self_2, sender: gui.widget.Widget):
                         _key = sender.get_user_data()["key"]
                         self_1.receiver.clear()
-                        with self_1.receiver:
-                            ArtifactViewer.call(
+                        _w = ArtifactViewer.call(
                                 artifact=_key, experiment=self.job.experiment, data=self.load(name=_key))
+                        self_1.receiver(_w)
 
                 return __Callback()
 

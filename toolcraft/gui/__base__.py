@@ -1082,10 +1082,18 @@ class MovableWidget(Widget, abc.ABC):
                 before=0 if before is None else before.dpg_id)
 
     def before(self) -> t.Optional["MovableWidget"]:
-        return self.parent.children.before(key=id(self))
+        _ret = self.parent.children.before(key=id(self))
+        if _ret is None:
+            return _ret
+        else:
+            return _ret[1]
 
-    def after(self) -> t.Optional["MovableWidget"]:
-        return self.parent.children.after(key=id(self))
+    def after(self) -> t.Optional[t.Tuple[t.Union[int, str], "MovableWidget"]]:
+        _ret = self.parent.children.after(key=id(self))
+        if _ret is None:
+            return _ret
+        else:
+            return _ret[1]
 
     def move_up(self) -> bool:
         """
@@ -1097,7 +1105,7 @@ class MovableWidget(Widget, abc.ABC):
             return False
         else:
             del self.parent.children[id(self)]
-            self.parent.children.insert_before(key=_before[0], key_values={id(self): self})
+            self.parent.children.insert_before(key=id(_before), key_values={id(self): self})
             if self.is_built:
                 internal_dpg.move_item_up(self.dpg_id)
             return True
@@ -1112,7 +1120,7 @@ class MovableWidget(Widget, abc.ABC):
             return False
         else:
             del self.parent.children[id(self)]
-            self.parent.children.insert_after(key=_after[0], key_values={id(self): self})
+            self.parent.children.insert_after(key=id(_after), key_values={id(self): self})
             if self.is_built:
                 internal_dpg.move_item_down(self.dpg_id)
             return True
