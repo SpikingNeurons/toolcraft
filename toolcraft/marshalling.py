@@ -1966,12 +1966,16 @@ class HashableClass(YamlRepr, abc.ABC):
         # Note that this happens only once as we always keep on cleaning the dict
         if settings.DO_RULE_CHECK:
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
+            _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
             if bool(_rc_keys):
                 _LOGGER.info(
                     msg=f"Detected {len(_rc_keys)} new classes so "
-                        f"performing rule checks ...")
+                        f"performing rule checks ...",
+                    # msgs=[_modules],
+                )
                 for _rc_k in richy.Progress.simple_track(
-                    _rc_keys, description=f"Rule Checking ..."
+                    _rc_keys,
+                    description=f"Rule Check ({len(_rc_keys)} classes) ..."
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
                     del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]

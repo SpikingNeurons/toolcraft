@@ -74,42 +74,11 @@ class ArtifactViewer:
             ArtifactViewer._fn_mapper[_] = getattr(cls, _)
 
     @staticmethod
-    def call(artifact: str, data: dict) -> "gui.widget.Widget":
+    def call(artifact: str, experiment: "Experiment", data: dict) -> "gui.widget.Widget":
         from . import gui
         if artifact not in ArtifactViewer._fn_mapper.keys():
             return gui.widget.Text(f"view not provided for artifact name {artifact!r} ... cannot render ...")
-        return ArtifactViewer._fn_mapper[artifact](data=data)
-
-
-class ArtifactViewerForSca(ArtifactViewer):
-    """
-    Let this be here we will eventually move this or have more classes to register views
-    """
-
-    @staticmethod
-    def train_history(data: dict) -> "gui.widget.Widget":
-        from . import gui
-        return gui.widget.Text("train_history: " + str(data))
-
-    @staticmethod
-    def validate_history(data: dict) -> "gui.widget.Widget":
-        from . import gui
-        return gui.widget.Text("validate_history: " + str(data))
-
-    @staticmethod
-    def guessing_entropy(data: dict) -> "gui.widget.Widget":
-        from . import gui
-        return gui.widget.Text("guessing_entropy: " + str(data))
-
-    @staticmethod
-    def prob_masses(data: dict) -> "gui.widget.Widget":
-        from . import gui
-        return gui.widget.Text("prob_masses: " + str(data))
-
-    @staticmethod
-    def find_lr(data: dict) -> "gui.widget.Widget":
-        from . import gui
-        return gui.widget.Text("find_lr: " + str(data))
+        return ArtifactViewer._fn_mapper[artifact](experiment=experiment, data=data)
 
 
 class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
@@ -596,7 +565,8 @@ class ArtifactManager:
                         _key = sender.get_user_data()["key"]
                         self_1.receiver.clear()
                         with self_1.receiver:
-                            ArtifactViewer.call(artifact=_key, data=self.load(name=_key))
+                            ArtifactViewer.call(
+                                artifact=_key, experiment=self.job.experiment, data=self.load(name=_key))
 
                 return __Callback()
 
