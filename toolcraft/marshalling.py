@@ -1411,6 +1411,8 @@ class YamlRepr(Tracker):
 
     NOTE: do nat make this class abstract as FrozenEnum like classes will not
     work
+
+    todo: read about Yaml syntax here https://www.redhat.com/sysadmin/yaml-beginners
     """
 
     @classmethod
