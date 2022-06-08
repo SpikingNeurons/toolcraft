@@ -69,7 +69,8 @@ class ArtifactViewer:
             if _ in ArtifactViewer._fn_mapper.keys():
                 raise e.code.CodingError(
                     msgs=[f"You have already registered artifact-viewer for "
-                          f"key: {_} with function {ArtifactViewer._fn_mapper[_]}"]
+                          f"key `{_}` with function "
+                          f"{ArtifactViewer._fn_mapper[_]}"]
                 )
             ArtifactViewer._fn_mapper[_] = getattr(cls, _)
 
@@ -385,7 +386,6 @@ class SubProcessManager:
                 await asyncio.sleep(0.2)
                 _line = await stream.readline()
                 if _line:
-                    # todo: issue with windows terminal .... unsupported unicode bytes are not passed as ?
                     _stream_store.append(_line.decode())
                 else:
                     break
