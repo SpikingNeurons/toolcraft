@@ -1651,13 +1651,15 @@ class NpyFileGroup(FileGroup, abc.ABC):
     # noinspection PyMethodOverriding
     def __call__(
         self, *,
-        status_panel: t.Optional[richy.ProgressStatusPanel],
         shuffle_seed: SHUFFLE_SEED_TYPE,
+        status_panel: t.Optional[richy.ProgressStatusPanel] = None,
+        status_panel_progress_task_name: t.Optional[str] = None,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
         return super().__call__(
             status_panel=status_panel,
+            status_panel_progress_task_name=status_panel_progress_task_name,
             shuffle_seed=shuffle_seed,
         )
 

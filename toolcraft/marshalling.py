@@ -1036,7 +1036,8 @@ class Tracker:
 
     def __call__(
         self,
-        status_panel: t.Optional[richy.ProgressStatusPanel],
+        status_panel: t.Optional[richy.ProgressStatusPanel] = None,
+        status_panel_progress_task_name: t.Optional[str] = None,
         **kwargs,
     ) -> "Tracker":
         """
@@ -1058,7 +1059,8 @@ class Tracker:
             ])
         else:
             # add status_panel if supplied
-            _on_call_kwargs = {"status_panel": status_panel}
+            _on_call_kwargs = {"status_panel": status_panel,
+                               "status_panel_progress_task_name": status_panel_progress_task_name}
 
             # add remaining kwargs
             _on_call_kwargs.update(kwargs)
@@ -1101,6 +1103,10 @@ class Tracker:
         # get some vars
         _status_panel = self.internal.on_call_kwargs[
             "status_panel"]  # type: richy.ProgressStatusPanel
+        _status_panel_progress_task_name = self.internal.on_call_kwargs[
+            "status_panel_progress_task_name"]  # type: str
+        if _status_panel_progress_task_name is None:
+            _status_panel_progress_task_name = "iterating"
 
         # iterate
         if _status_panel is None:
@@ -1122,14 +1128,16 @@ class Tracker:
                     ]
                 )
             if self.in_with_context:
+                _status_panel.status.update("-- " + _status_panel_progress_task_name)
                 for _ in _status_panel.progress.track(
-                    self.on_iter(), total=self.iterable_length, task_name="iterating"
+                    self.on_iter(), total=self.iterable_length, task_name=_status_panel_progress_task_name
                 ):
                     yield _
             else:
                 with self:
+                    _status_panel.status.update("-- " + _status_panel_progress_task_name)
                     for _ in _status_panel.progress.track(
-                        self.on_iter(), total=self.iterable_length, task_name="iterating"
+                        self.on_iter(), total=self.iterable_length, task_name=_status_panel_progress_task_name
                     ):
                         yield _
 
