@@ -372,7 +372,7 @@ class SubProcessManager:
             "stdout": [], "stderr": [],
         }
 
-    async def read_stream(self, stream, stream_type: str):
+    async def read_stream(self, stream: asyncio.streams.StreamReader, stream_type: str):
         """
         todo: see if we can directly point buffers ...
           - with toolcraft.logger this will be still more like str ...
@@ -380,12 +380,12 @@ class SubProcessManager:
           - with richy may be we can later map this to textures
         """
         try:
-
             _stream_store = self.streams[stream_type]
             while True:
                 await asyncio.sleep(0.2)
                 _line = await stream.readline()
                 if _line:
+                    # todo: issue with windows terminal .... unsupported unicode bytes are not passed as ?
                     _stream_store.append(_line.decode())
                 else:
                     break
