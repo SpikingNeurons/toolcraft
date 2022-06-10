@@ -296,52 +296,44 @@ class SimpleHashableClass(m.HashableClass):
                f" >> some_value - {self.some_value}"
 
     async def txt_update_fn(self, widget: gui.widget.Text):
-        # loop infinitely
-        while widget.does_exist:
+        try:
 
-            # dont update if not visible
-            # todo: can we await on bool flags ???
-            if not widget.is_visible:
-                await asyncio.sleep(0.2)
-                continue
+            # loop infinitely
+            while widget.does_exist:
 
-            # update widget
-            widget.set_value(f"{int(widget.get_value())+1:03d}")
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not widget.is_visible:
+                    await asyncio.sleep(0.2)
+                    continue
 
-            # change update rate based on some value
-            if self.some_value == "first hashable ...":
-                await asyncio.sleep(1)
-                if int(widget.get_value()) == 10:
-                    break
+                # update widget
+                widget.set_value(f"{int(widget.get_value())+1:03d}")
+
+                # change update rate based on some value
+                if self.some_value == "first hashable ...":
+                    await asyncio.sleep(1)
+                    if int(widget.get_value()) == 10:
+                        break
+                else:
+                    await asyncio.sleep(0.1)
+                    if int(widget.get_value()) == 50:
+                        break
+
+        except Exception as _e:
+            if widget.does_exist:
+                raise _e
             else:
-                await asyncio.sleep(0.1)
-                if int(widget.get_value()) == 50:
-                    break
+                ...
 
-    @m.UseMethodInForm(
-        label_fmt="all_plots_gui_label"
-    )
-    def get_concurrently_updating_ui(self) -> gui.widget.Group:
+    @m.UseMethodInForm(label_fmt="concurrent_update")
+    def concurrent_update(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
         with _grp:
             gui.widget.Text(default_value="count")
             _txt = gui.widget.Text(default_value="000")
             gui.Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
         return _grp
-
-    @m.UseMethodInForm(
-        label_fmt="all_plots_gui_label"
-    )
-    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
-        return gui.form.HashableMethodsRunnerForm(
-            title=self.all_plots_gui_label,
-            group_tag="simple",
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=["some_line_plot",  "some_scatter_plot"],
-            collapsing_header_open=True,
-        )
 
     @m.UseMethodInForm(label_fmt="line")
     def some_line_plot(self) -> gui.plot.Plot:
@@ -389,21 +381,26 @@ class SimpleHashableClass(m.HashableClass):
         )
         return _plot
 
+    @m.UseMethodInForm(
+        label_fmt="all_plots_gui_label"
+    )
+    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
+        return gui.form.HashableMethodsRunnerForm(
+            title=self.all_plots_gui_label,
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=["some_line_plot",  "some_scatter_plot", "concurrent_update"],
+            collapsing_header_open=True,
+        )
+
 
 @dataclasses.dataclass
 class MyDoubleSplitForm(gui.form.DoubleSplitForm):
 
     title: str = "Double split form ..."
     callable_name: str = "all_plots"
-    allow_refresh: bool = False
-    collapsing_header_open: bool = False
-
-
-@dataclasses.dataclass
-class UpdatingForm(gui.form.DoubleSplitForm):
-
-    title: str = "Updating form ..."
-    callable_name: str = "get_concurrently_updating_ui"
     allow_refresh: bool = False
     collapsing_header_open: bool = False
 
@@ -426,8 +423,6 @@ class MyDashboard(gui.dashboard.BasicDashboard):
     topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
     topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
-
-    topic6: gui.form.DoubleSplitForm = UpdatingForm()
 
 
 def basic_dashboard():
@@ -456,13 +451,7 @@ def basic_dashboard():
     _dash.topic5.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
     _dash.topic5.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
     _dash.topic5.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
-    # noinspection PyTypeChecker
-    _dash.topic6.add(
-        hashable=SimpleHashableClass(some_value="first hashable ..."),
-    )
-    _dash.topic6.add(
-        hashable=SimpleHashableClass(some_value="second hashable ..."),
-    )
+
     gui.Engine.run(_dash)
 
 
