@@ -459,61 +459,18 @@ class AsyncTask(abc.ABC):
     def is_completed(self) -> bool:
         return self._is_completed
 
-    @property
-    def return_value(self) -> t.Any:
-        if self.is_completed:
-            return self._return_value
-        else:
-            raise e.code.CodingError(msgs=["Access this property only when task is completed ..."])
-
-    @property
-    @util.CacheResult
-    def is_blocking(self) -> bool:
-        _is_blocking = self.__class__.blocking_fn != AsyncTask.blocking_fn
-        _is_awaitable = self.__class__.awaitable_fn != AsyncTask.awaitable_fn
-        if not (_is_blocking ^ _is_awaitable):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Either {AsyncTask.blocking_fn} or {AsyncTask.awaitable_fn} must be overridden",
-                    dict(_is_blocking=_is_blocking, _is_awaitable=_is_awaitable)
-                ]
-            )
-        return _is_blocking
-
     def __post_init__(self):
-        # ----------------------------------------------------- 01
-        # validation
-        # ----------------------------------------------------- 01.01
-        # either blocking_fn or awaitable_fn must be overridden
-        _ = self.is_blocking
-
         # ----------------------------------------------------- 01
         # set some vars
         self._is_completed = False
-        self._return_value = None
 
-    def blocking_fn(self):
-        raise e.code.CodingError(
-            msgs=[f"You need to override to use this blocking_fn in class {self.__class__}"]
-        )
-
-    async def awaitable_fn(self):
-        raise e.code.CodingError(
-            msgs=[f"You need to override to use this awaitable_fn in class {self.__class__}"]
-        )
-
-    def add_to_task_queue(self):
-        Engine.async_task_queue.put_nowait(self)
-
-    async def _run_concurrently_awaitable(self):
+    async def _run_concurrently(self):
         try:
             assert not self._is_completed, "must be false"
-            assert self._return_value is None, "must be None"
-            _ret = await self.awaitable_fn()
+            _ret = await self.fn()
             assert not self._is_completed, "must be false"
-            assert self._return_value is None, "must be None"
+            assert _ret is None, "No need to return anything from async function"
             self._is_completed = True
-            self._return_value = _ret
         except SystemError as _e:
             # todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
             #   so we bypass it here ... make sure to take care of things as `AsyncUpdateFn.fn` are not aware of
@@ -526,7 +483,7 @@ class AsyncTask(abc.ABC):
         except Exception as _e:
             raise e.code.ShouldNeverHappen(
                 msgs=[
-                    "The awaitable async task has failed",
+                    "The async task has failed",
                     {
                         "module": self.__module__,
                         "class": self.__class__,
@@ -535,15 +492,13 @@ class AsyncTask(abc.ABC):
                 ]
             )
 
-    def _run_concurrently(self):
+    async def fn(self):
+        raise e.code.CodingError(
+            msgs=[f"You need to override to use this awaitable_fn in class {self.__class__}"]
+        )
 
-        assert not self._is_completed, "must be false"
-        assert self._return_value is None, "must be None"
-
-        if self.is_blocking:
-            ...
-        else:
-            asyncio.create_task(self._run_concurrently_awaitable())
+    def add_to_task_queue(self):
+        Engine.async_task_queue.put_nowait(self)
 
 
 class Engine:
@@ -678,7 +633,7 @@ class Engine:
             while True:
                 _async_task: AsyncTask = await Engine.async_task_queue.get()
                 # noinspection PyProtectedMember
-                _async_task._run_concurrently()
+                asyncio.create_task(_async_task._run_concurrently())
                 Engine.async_task_queue.task_done()
         except Exception as _e:
             raise e.code.CodingError(

@@ -286,12 +286,61 @@ class MyText(gui.widget.Text):
 
 
 @dataclasses.dataclass
+class BlockingTask(gui.AsyncTask):
+
+    receiver_grp: gui.widget.Group
+
+    def some_fn(self) -> gui.widget.Text:
+        time.sleep(5)
+        return gui.widget.Text(default_value="done sleeping for 5 seconds")
+
+    async def fn(self):
+        # get reference
+        _grp = self.receiver_grp
+
+        try:
+
+            # loop infinitely
+            while _grp.does_exist:
+
+                # if not build continue
+                if not _grp.is_built:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not _grp.is_visible:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # update widget
+                widget.set_value(f"{int(widget.get_value())+1:03d}")
+
+                # change update rate based on some value
+                if self.some_value == "first hashable ...":
+                    await asyncio.sleep(1)
+                    if int(widget.get_value()) == 10:
+                        break
+                else:
+                    await asyncio.sleep(0.1)
+                    if int(widget.get_value()) == 50:
+                        break
+
+        except Exception as _e:
+            if widget.does_exist:
+                raise _e
+            else:
+                ...
+
+
+@dataclasses.dataclass
 class AwaitableTask(gui.AsyncTask):
 
     txt_widget: gui.widget.Text
     some_value: str
 
-    async def awaitable_fn(self):
+    async def fn(self):
         # get reference
         widget = self.txt_widget
 
@@ -302,6 +351,7 @@ class AwaitableTask(gui.AsyncTask):
 
                 # if not build continue
                 if not widget.is_built:
+                    await asyncio.sleep(0.2)
                     continue
 
                 # dont update if not visible
@@ -355,7 +405,7 @@ class SimpleHashableClass(m.HashableClass):
         with _grp:
             gui.widget.Text(default_value="count")
             _txt = gui.widget.Text(default_value="000")
-            AwaitableTask(txt_widget=_txt, some_value=self.some_value).add_to_task_queue()
+            BlockingTask().add_to_task_queue()
         return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
