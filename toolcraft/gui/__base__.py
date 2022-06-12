@@ -423,6 +423,41 @@ class WidgetInternal(_WidgetDpgInternal):
 
 
 @dataclasses.dataclass
+class BlockingFn:
+
+    fn: t.Callable
+
+    @property
+    def is_completed(self) -> bool:
+        return self._is_completed
+
+    @property
+    def is_failed(self) -> bool:
+        return self._exception is not None
+
+    @property
+    def return_value(self) -> t.Any:
+        if self.is_completed:
+            return self._return_value
+        else:
+            raise e.code.CodingError(
+                msgs=["use this property only when fn called is completed"]
+            )
+
+    @property
+    def exception_if_any(self) -> t.Optional[Exception]:
+        return self._exception
+
+    def __post_init__(self):
+        self._is_completed = False
+        self._return_value = None
+        self._exception = None
+
+    def __call__(self):
+        ...
+
+
+@dataclasses.dataclass
 class AsyncTask(abc.ABC):
 
     """
