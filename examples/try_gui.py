@@ -340,8 +340,17 @@ class SimpleHashableClass(m.HashableClass):
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
-    @m.UseMethodInForm(label_fmt="update")
-    def update(self) -> gui.widget.Group:
+    @m.UseMethodInForm(label_fmt="awaitable_task")
+    def awaitable_task(self) -> gui.widget.Group:
+        _grp = gui.widget.Group(horizontal=True)
+        with _grp:
+            gui.widget.Text(default_value="count")
+            _txt = gui.widget.Text(default_value="000")
+            AwaitableTask(txt_widget=_txt, some_value=self.some_value).add_to_task_queue()
+        return _grp
+
+    @m.UseMethodInForm(label_fmt="blocking_task")
+    def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
         with _grp:
             gui.widget.Text(default_value="count")
@@ -410,7 +419,7 @@ class SimpleHashableClass(m.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["some_line_plot",  "some_scatter_plot", "update", ],
+            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task", ],
             collapsing_header_open=True,
         )
 
