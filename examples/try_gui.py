@@ -285,21 +285,24 @@ class MyText(gui.widget.Text):
                 self.sleep(0.5)
 
 
-@dataclasses.dataclass(frozen=True)
-class SimpleHashableClass(m.HashableClass):
+@dataclasses.dataclass
+class AwaitableTask(gui.AsyncTask):
 
+    txt_widget: gui.widget.Text
     some_value: str
 
-    @property
-    def all_plots_gui_label(self) -> str:
-        return f"{self.__class__.__name__}.{self.hex_hash}\n" \
-               f" >> some_value - {self.some_value}"
+    async def awaitable_fn(self):
+        # get reference
+        widget = self.txt_widget
 
-    async def txt_update_fn(self, widget: gui.widget.Text):
         try:
 
             # loop infinitely
             while widget.does_exist:
+
+                # if not build continue
+                if not widget.is_built:
+                    continue
 
                 # dont update if not visible
                 # todo: can we await on bool flags ???
@@ -326,14 +329,30 @@ class SimpleHashableClass(m.HashableClass):
             else:
                 ...
 
-    @m.UseMethodInForm(label_fmt="concurrent_update")
-    def concurrent_update(self) -> gui.widget.Group:
+
+@dataclasses.dataclass(frozen=True)
+class SimpleHashableClass(m.HashableClass):
+
+    some_value: str
+
+    @property
+    def all_plots_gui_label(self) -> str:
+        return f"{self.__class__.__name__}.{self.hex_hash}\n" \
+               f" >> some_value - {self.some_value}"
+
+    @m.UseMethodInForm(label_fmt="update")
+    def update(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
         with _grp:
             gui.widget.Text(default_value="count")
             _txt = gui.widget.Text(default_value="000")
-            gui.Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
+            AwaitableTask(txt_widget=_txt, some_value=self.some_value).add_to_task_queue()
         return _grp
+
+    # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
+    # def async_update(self) -> gui.widget.Widget:
+    #     time.sleep(5)
+    #     return gui.widget.Text(default_value="I am done in 5 seconds ...")
 
     @m.UseMethodInForm(label_fmt="line")
     def some_line_plot(self) -> gui.plot.Plot:
@@ -391,7 +410,7 @@ class SimpleHashableClass(m.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["some_line_plot",  "some_scatter_plot", "concurrent_update"],
+            callable_names=["some_line_plot",  "some_scatter_plot", "update", ],
             collapsing_header_open=True,
         )
 

@@ -22,6 +22,7 @@ from . import marshalling as m
 from . import util
 from . import storage as s
 from . import richy
+from . import settings
 
 try:
     import tensorflow as tf
@@ -357,6 +358,106 @@ class JobViewer(m.HashableClass):
             gui.Engine.cpu_task_add(fn=self.job.sub_process_manager.run)
         # run gui
         return self.job.sub_process_manager.gui()
+
+
+@dataclasses.dataclass
+class AsyncTaskRunner:
+    fn: t.Callable
+    fn_kwargs: t.Dict = dataclasses.field(default_factory=dict)
+    results: t.Dict = dataclasses.field(default_factory=dict)
+    _task_queue: t.ClassVar[asyncio.Queue] = None
+
+    @property
+    def is_completed(self) -> bool:
+        return "return" in self.results.keys()
+
+    def __post_init__(self):
+        # ---------------------------------------------------- 01
+        # first instance creation will launch task consumer
+        if self._task_queue is None:
+            self._task_queue = asyncio.Queue()
+            self._run()
+
+        # ---------------------------------------------------- 02
+        # validation
+        # ---------------------------------------------------- 02.01
+        # results key must not be present in dict
+        if "results" in self.fn_kwargs.keys():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Please do not use `results` fn kwarg as "
+                    f"it is reserved and will be auto supplied ..."
+                ]
+            )
+        # ---------------------------------------------------- 02.02
+        # return key should not be in results dict
+        if "return" in self.results.keys():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Key `return` is reserved and we will add it based on return value of {self.fn}",
+                    f"So avoid using the reserved key `return`"
+                ]
+            )
+        # ---------------------------------------------------- 02.03
+        # make sure that fn signature has results kwarg
+        if "results" not in inspect.signature(self.fn).parameters.keys():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Please provide mandatory kwarg `results` for fn {self.fn}",
+                    f"This is the only way we can read results from function running asynchronously"
+                ]
+            )
+
+        # ---------------------------------------------------- 03
+        # update fn_kwargs
+        self.fn_kwargs["results"] = self.results
+
+    async def __call__(self):
+        try:
+            _ret = await self.fn(**self.fn_kwargs)
+            if "return" in self.results.keys():
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Key `return` is reserved and we will add it based on return value of {self.fn}",
+                        f"So avoid adding the reserved key `return` inside the code given by {self.fn}"
+                    ]
+                )
+            self.results["return"] = _ret
+        except (Exception, SystemError) as _e:
+            # noinspection PyUnresolvedReferences
+            raise e.code.ShouldNeverHappen(
+                msgs=[
+                    "The async task has failed",
+                    {
+                        "module": fn.__module__,
+                        "fn": fn.__qualname__,
+                    },
+                    _e
+                ]
+            )
+
+    @classmethod
+    async def _task(cls):
+        # noinspection PyTypeChecker
+        _async_task_runner = None
+        try:
+            while True:
+                _async_task_runner: AsyncTaskRunner = await cls._task_queue.get()
+                asyncio.create_task(_async_task_runner())
+                cls._task_queue.task_done()
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {cls._task}", _e, str(_async_task_runner)]
+            )
+
+    @classmethod
+    def _run(cls):
+        _pyc_debug = settings.PYC_DEBUGGING
+        asyncio.run(cls._task(), debug=_pyc_debug, )
+
+    def submit(self):
+        # add this task to queue
+        self._task_queue.put_nowait(self)
 
 
 @dataclasses.dataclass
