@@ -423,7 +423,7 @@ class WidgetInternal(_WidgetDpgInternal):
 
 
 @dataclasses.dataclass
-class BlockingFn:
+class BlockingTask:
 
     fn: t.Callable
 
@@ -439,6 +439,10 @@ class BlockingFn:
     def return_value(self) -> t.Any:
         if self.is_completed:
             return self._return_value
+        elif self.is_failed:
+            raise e.code.CodingError(
+                msgs=["the fn call is failed so return value has no meaning"]
+            )
         else:
             raise e.code.CodingError(
                 msgs=["use this property only when fn called is completed"]
@@ -454,11 +458,52 @@ class BlockingFn:
         self._exception = None
 
     def __call__(self):
-        ...
+        if self._is_completed:
+            raise e.code.CodingError(msgs=["_is_completed must be false"])
+        if self._return_value is not None:
+            raise e.code.CodingError(msgs=["_return_value must be None"])
+        if self._exception is not None:
+            raise e.code.CodingError(msgs=["_exception must be None"])
+        try:
+            print(">>>>>>>>>>>>>>>> running blocking fn")
+            _ret = self.fn()
+            print(">>>>>>>>>>>>>>>> finished blocking fn")
+            if self._is_completed:
+                raise e.code.CodingError(
+                    msgs=[
+                        "_is_completed must be false",
+                        f"looks like {self.fn} has set it"
+                    ]
+                )
+            if self._return_value is not None:
+                raise e.code.CodingError(
+                    msgs=[
+                        "_return_value must be None",
+                        f"looks like {self.fn} has set it"
+                    ]
+                )
+            self._is_completed = True
+            self._return_value = _ret
+        except Exception as _e:
+            if self._exception is not None:
+                raise e.code.CodingError(
+                    msgs=[
+                        "_exception must be None",
+                        f"looks like {self.fn} has set it"
+                    ]
+                )
+            self._exception = _e
+
+    async def _run_concurrently(self):
+        asyncio.create_task(self())
+        await asyncio.sleep(0)
+
+    def add_to_task_queue(self):
+        Engine.blocking_task_queue.put_nowait(self)
 
 
 @dataclasses.dataclass
-class AsyncTask(abc.ABC):
+class AwaitableTask(abc.ABC):
 
     """
     This makes call in try catch so that any errors in async task can be grabbed ...
@@ -495,16 +540,29 @@ class AsyncTask(abc.ABC):
         return self._is_completed
 
     def __post_init__(self):
-        # ----------------------------------------------------- 01
-        # set some vars
         self._is_completed = False
 
     async def _run_concurrently(self):
         try:
-            assert not self._is_completed, "must be false"
+            if self._is_completed:
+                raise e.code.CodingError(
+                    msgs=["_is_completed must be false"]
+                )
             _ret = await self.fn()
-            assert not self._is_completed, "must be false"
-            assert _ret is None, "No need to return anything from async function"
+            if self._is_completed:
+                raise e.code.CodingError(
+                    msgs=[
+                        "_is_completed must be false",
+                        f"looks like {self.fn} has set it ..."
+                    ]
+                )
+            if _ret is not None:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"The fn {self.fn} must return None",
+                        "Please do not return anything"
+                    ]
+                )
             self._is_completed = True
         except SystemError as _e:
             # todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
@@ -518,7 +576,7 @@ class AsyncTask(abc.ABC):
         except Exception as _e:
             raise e.code.ShouldNeverHappen(
                 msgs=[
-                    "The async task has failed",
+                    "The awaitable async task has failed",
                     {
                         "module": self.__module__,
                         "class": self.__class__,
@@ -529,11 +587,11 @@ class AsyncTask(abc.ABC):
 
     async def fn(self):
         raise e.code.CodingError(
-            msgs=[f"You need to override to use this awaitable_fn in class {self.__class__}"]
+            msgs=[f"You need to override to use this fn in class {self.__class__}"]
         )
 
     def add_to_task_queue(self):
-        Engine.async_task_queue.put_nowait(self)
+        Engine.awaitable_task_queue.put_nowait(self)
 
 
 class Engine:
@@ -575,7 +633,8 @@ class Engine:
     # - can have variation for io tasks, cpu tasks and tasks in thread where need to
     #   explore removing gil locks in cython
     # - currently restricting to single thread concurrent tasks implemented using queues
-    async_task_queue: asyncio.Queue = asyncio.Queue()
+    awaitable_task_queue: asyncio.Queue = asyncio.Queue()
+    blocking_task_queue: asyncio.Queue = asyncio.Queue()
 
     @classmethod
     async def lifecycle_loop(cls):
@@ -660,19 +719,35 @@ class Engine:
             )
 
     @classmethod
-    async def async_task_runner_loop(cls):
+    async def awaitable_task_runner_loop(cls):
         """
         for now we use .... improve to use threads if possible or something else
         """
         try:
             while True:
-                _async_task: AsyncTask = await Engine.async_task_queue.get()
+                _awaitable_task: AwaitableTask = await Engine.awaitable_task_queue.get()
                 # noinspection PyProtectedMember
-                asyncio.create_task(_async_task._run_concurrently())
-                Engine.async_task_queue.task_done()
+                asyncio.create_task(_awaitable_task._run_concurrently())
+                Engine.awaitable_task_queue.task_done()
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.async_task_runner_loop}", _e]
+                msgs=[f"Exception in {Engine.awaitable_task_runner_loop}", _e]
+            )
+
+    @classmethod
+    async def blocking_task_runner_loop(cls):
+        """
+        for now we use .... improve to use threads if possible or something else
+        """
+        try:
+            while True:
+                _blocking_task: BlockingTask = await Engine.blocking_task_queue.get()
+                # noinspection PyProtectedMember
+                asyncio.create_task(_blocking_task._run_concurrently())
+                Engine.blocking_task_queue.task_done()
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {Engine.blocking_task_runner_loop}", _e]
             )
 
     @classmethod
@@ -720,13 +795,15 @@ class Engine:
         # todo: use asyncio.to_thread but due to GIL no use hence only use for IO ... some hope if this lib is cython
         _dpg = asyncio.create_task(cls.dpg_loop())
         _lifecycle = asyncio.create_task(cls.lifecycle_loop())
-        _async_task = asyncio.create_task(cls.async_task_runner_loop())
+        _async_task = asyncio.create_task(cls.awaitable_task_runner_loop())
+        _blocking_task = asyncio.create_task(cls.blocking_task_runner_loop())
 
         # ----------------------------------------------------------- 03
         # await on dpg task and cancel update task
         await _dpg
         _lifecycle.cancel()
         _async_task.cancel()
+        _blocking_task.cancel()
 
     @classmethod
     def run(cls, dash: "Dashboard"):

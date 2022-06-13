@@ -1,5 +1,6 @@
 import asyncio
 import dataclasses
+import itertools
 import typing as t
 import sys
 import time
@@ -286,7 +287,7 @@ class MyText(gui.widget.Text):
 
 
 @dataclasses.dataclass
-class BlockingTask(gui.AsyncTask):
+class _BlockingTask(gui.AwaitableTask):
 
     receiver_grp: gui.widget.Group
 
@@ -297,6 +298,10 @@ class BlockingTask(gui.AsyncTask):
     async def fn(self):
         # get reference
         _grp = self.receiver_grp
+        _blinkers = itertools.cycle(
+            ["..", "....", "......"]
+        )
+        _blocking_task = gui.BlockingTask(self.some_fn)
 
         try:
 
@@ -314,28 +319,38 @@ class BlockingTask(gui.AsyncTask):
                     await asyncio.sleep(0.2)
                     continue
 
-                # update widget
-                widget.set_value(f"{int(widget.get_value())+1:03d}")
+                # clear grp
+                _grp.clear()
 
-                # change update rate based on some value
-                if self.some_value == "first hashable ...":
-                    await asyncio.sleep(1)
-                    if int(widget.get_value()) == 10:
-                        break
+                # if fn is failed
+                if _blocking_task.is_failed:
+                    raise _blocking_task.exception_if_any
+
+                # if fn completed then get return value
+                if _blocking_task.is_completed:
+                    _ret = _blocking_task.return_value
+                    _grp(widget=_ret)
+                    break
+
+                # if fn is still running then blink
                 else:
-                    await asyncio.sleep(0.1)
-                    if int(widget.get_value()) == 50:
-                        break
+                    with _grp:
+                        gui.widget.Text(default_value=next(_blinkers))
+                    continue
 
         except Exception as _e:
-            if widget.does_exist:
+            # only raise if ui is visible
+            if _grp.does_exist:
                 raise _e
-            else:
-                ...
+
+            # if widget is visible or not if _blocking_fn has failed then
+            # this has nothing to do ui
+            if _blocking_task.is_failed:
+                raise _e
 
 
 @dataclasses.dataclass
-class AwaitableTask(gui.AsyncTask):
+class AwaitableTask(gui.AwaitableTask):
 
     txt_widget: gui.widget.Text
     some_value: str
@@ -399,13 +414,14 @@ class SimpleHashableClass(m.HashableClass):
             AwaitableTask(txt_widget=_txt, some_value=self.some_value).add_to_task_queue()
         return _grp
 
+    def some_blocking_fn(self) -> gui.widget.Text:
+        time.sleep(5)
+        return gui.widget.Text(default_value="done sleeping for 5 seconds")
+
     @m.UseMethodInForm(label_fmt="blocking_task")
     def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
-        with _grp:
-            gui.widget.Text(default_value="count")
-            _txt = gui.widget.Text(default_value="000")
-            BlockingTask().add_to_task_queue()
+        gui.BlockingTask(self.some_blocking_fn).add_to_task_queue()
         return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
