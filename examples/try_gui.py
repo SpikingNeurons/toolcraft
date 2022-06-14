@@ -372,7 +372,7 @@ class AwaitableTask(gui.AwaitableTask):
 
 
 @dataclasses.dataclass
-class BlockingTask(gui.AwaitableTask):
+class AwaitableWithBlockingFnTask(gui.AwaitableTask):
 
     receiver_grp: gui.widget.Group
     blocking_fn: t.Callable
@@ -467,7 +467,7 @@ class SimpleHashableClass(m.HashableClass):
     @m.UseMethodInForm(label_fmt="blocking_task")
     def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
-        BlockingTask(blocking_fn=self.some_blocking_fn, receiver_grp=_grp).add_to_task_queue()
+        AwaitableWithBlockingFnTask(blocking_fn=self.some_blocking_fn, receiver_grp=_grp).add_to_task_queue()
         return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
