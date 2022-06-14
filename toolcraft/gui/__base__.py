@@ -451,24 +451,6 @@ class BlockingTask:
     def __post_init__(self):
         self._future = None
 
-    def __call__(self):
-        if self._future is not None:
-            raise e.code.CodingError(msgs=["_future must be None"])
-        try:
-            print(">>>>>>>>>>>>>>>> running blocking fn")
-            _ret = self.fn()
-            print(">>>>>>>>>>>>>>>> finished blocking fn")
-            self._future = _ret
-        except Exception as _e:
-            if self._exception is not None:
-                raise e.code.CodingError(
-                    msgs=[
-                        "_exception must be None",
-                        f"looks like {self.fn} has set it"
-                    ]
-                )
-            self._exception = _e
-
     async def _run_concurrently(self):
         """
         This method will dispatch job to ProcessPoolExecutor or ThreadPoolExecutor and quickly return

@@ -371,6 +371,71 @@ class AwaitableTask(gui.AwaitableTask):
                 ...
 
 
+@dataclasses.dataclass
+class BlockingTask(gui.AwaitableTask):
+
+    receiver_grp: gui.widget.Group
+    blocking_fn: t.Callable
+
+    async def fn(self):
+        # get reference
+        _grp = self.receiver_grp
+        _blinker = itertools.cycle(["..", "....", "......"])
+
+        try:
+
+            # schedule blocking task to run in queue
+            _blocking_task = gui.BlockingTask(
+                fn=self.blocking_fn, concurrent=False
+            )
+            _blocking_task.add_to_task_queue()
+            _future = None
+            while _future is None:
+                await asyncio.sleep(0.4)
+                _future = _blocking_task.future
+
+            # loop infinitely
+            while _grp.does_exist:
+
+                # if not build continue
+                if not _grp.is_built:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not _grp.is_visible:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # clear group
+                _grp.clear()
+
+                # if running
+                if _future.running():
+                    with _grp:
+                        gui.widget.Text(default_value=next(_blinker))
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # if done
+                if _future.done():
+                    _exp = _future.exception()
+                    if _exp is None:
+                        _grp(widget=_future.result())
+                        break
+                    else:
+                        with _grp:
+                            gui.widget.Text(default_value="Failed ...")
+                            raise _exp
+
+        except Exception as _e:
+            if _grp.does_exist:
+                raise _e
+            else:
+                ...
+
+
 @dataclasses.dataclass(frozen=True)
 class SimpleHashableClass(m.HashableClass):
 
@@ -395,14 +460,14 @@ class SimpleHashableClass(m.HashableClass):
         # self.click_count_for_blocking_fn += 1
         _cnt = self.click_count_for_blocking_fn
         print("sleeping ...", self.some_value, _cnt)
-        time.sleep(5)
+        time.sleep(10)
         print("finished sleeping ...", self.some_value, _cnt)
         return gui.widget.Text(default_value="done sleeping for 5 seconds")
 
     @m.UseMethodInForm(label_fmt="blocking_task")
     def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
-        gui.BlockingTask(self.some_blocking_fn, concurrent=False).add_to_task_queue()
+        BlockingTask(blocking_fn=self.some_blocking_fn, receiver_grp=_grp).add_to_task_queue()
         return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
