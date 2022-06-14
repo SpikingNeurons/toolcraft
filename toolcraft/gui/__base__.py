@@ -14,6 +14,7 @@ import dearpygui.dearpygui as dpg
 # noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 import numpy as np
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, Future
 
 from .. import error as e
 from .. import logger
@@ -444,62 +445,20 @@ class BlockingTask:
     concurrent: bool
 
     @property
-    def is_completed(self) -> bool:
-        return self._is_completed
-
-    @property
-    def is_failed(self) -> bool:
-        return self._exception is not None
-
-    @property
-    def return_value(self) -> t.Any:
-        if self.is_completed:
-            return self._return_value
-        elif self.is_failed:
-            raise e.code.CodingError(
-                msgs=["the fn call is failed so return value has no meaning"]
-            )
-        else:
-            raise e.code.CodingError(
-                msgs=["use this property only when fn called is completed"]
-            )
-
-    @property
-    def exception_if_any(self) -> t.Optional[Exception]:
-        return self._exception
+    def future(self) -> Future:
+        return self._future
 
     def __post_init__(self):
-        self._is_completed = False
-        self._return_value = None
-        self._exception = None
+        self._future = None
 
     def __call__(self):
-        if self._is_completed:
-            raise e.code.CodingError(msgs=["_is_completed must be false"])
-        if self._return_value is not None:
-            raise e.code.CodingError(msgs=["_return_value must be None"])
-        if self._exception is not None:
-            raise e.code.CodingError(msgs=["_exception must be None"])
+        if self._future is not None:
+            raise e.code.CodingError(msgs=["_future must be None"])
         try:
             print(">>>>>>>>>>>>>>>> running blocking fn")
             _ret = self.fn()
             print(">>>>>>>>>>>>>>>> finished blocking fn")
-            if self._is_completed:
-                raise e.code.CodingError(
-                    msgs=[
-                        "_is_completed must be false",
-                        f"looks like {self.fn} has set it"
-                    ]
-                )
-            if self._return_value is not None:
-                raise e.code.CodingError(
-                    msgs=[
-                        "_return_value must be None",
-                        f"looks like {self.fn} has set it"
-                    ]
-                )
-            self._is_completed = True
-            self._return_value = _ret
+            self._future = _ret
         except Exception as _e:
             if self._exception is not None:
                 raise e.code.CodingError(
@@ -514,8 +473,31 @@ class BlockingTask:
         """
         This method will dispatch job to ProcessPoolExecutor or ThreadPoolExecutor and quickly return
         """
-        asyncio.create_task(self())
-        await asyncio.sleep(0)
+        try:
+            if self._future is not None:
+                raise e.code.CodingError(msgs=["_future must be None"])
+
+            if self.concurrent:
+                _future = Engine.thread_pool_executor.submit(self.fn)
+            else:
+                _future = Engine.process_pool_executor.submit(self.fn)
+
+            self._future = _future
+
+        except SystemError as _e:
+            # todo: see AwaitableTask._run_concurrently
+            ...
+        except Exception as _e:
+            raise e.code.ShouldNeverHappen(
+                msgs=[
+                    f"The blocking async task (concurrent={self.concurrent}) has failed",
+                    {
+                        "module": self.__module__,
+                        "class": self.__class__,
+                    },
+                    _e
+                ]
+            )
 
     def add_to_task_queue(self):
         Engine.task_queue.put_nowait(self)
@@ -653,7 +635,22 @@ class Engine:
     fixed_update: t.Dict[int, "Widget"] = {}
 
     # --------------------------------- 03
+    # queue that can process AwaitableTask and BlockingTask
     task_queue: asyncio.Queue = asyncio.Queue()
+
+    # --------------------------------- 04
+    # note we have kept worker=1 so that logs will not pollute
+    # todo: increase number of workers when logging is done entirely to files so that stdout doesn't get polluted
+    #   especially useful for process_pool_executor
+    # note that any tasks that will be executed by thread_pool_executor will slow main thread
+    # todo: test if tasks executed by thread_pool_executor truly slow down main thread
+    # note only purpose of thread_pool_executor is so that ordinary non awaitable function can be run in async
+    #   for awaitable functions anyways we have AwaitableTask .... but remember that there needs to be small
+    #   pauses between await
+    # used by BlockingTask when concurrent=True
+    thread_pool_executor = ThreadPoolExecutor(max_workers=4)
+    # used by BlockingTask when concurrent=False
+    process_pool_executor = ProcessPoolExecutor(max_workers=4)
 
     @classmethod
     async def lifecycle_loop(cls):
@@ -747,7 +744,7 @@ class Engine:
         """
         try:
             while True:
-                _awaitable_task: t.Union[AwaitableTask] = await Engine.task_queue.get()
+                _awaitable_task: t.Union[AwaitableTask, BlockingTask] = await Engine.task_queue.get()
                 # noinspection PyProtectedMember
                 asyncio.create_task(_awaitable_task._run_concurrently())
                 Engine.task_queue.task_done()
@@ -815,9 +812,20 @@ class Engine:
         # ----------------------------------------------------------- 04
         # await on dpg task and cancel update task
         await _dpg
+        _LOGGER.info(msg="Gui closed ...")
+        # _LOGGER.info(msg="lifecycle loop cancelled ...")
         # _lifecycle.cancel()
+        # _LOGGER.info(msg="lifecycle physics loop cancelled ...")
         # _lifecycle_physics.cancel()
+        _LOGGER.info(msg="task runner loop cancelled ...")
         _task_runner.cancel()
+
+        # ----------------------------------------------------------- 05
+        # shutdown pool executors
+        _LOGGER.info(msg="Shutting down `thread_pool_executor`")
+        cls.thread_pool_executor.shutdown(wait=True)
+        _LOGGER.info(msg="Shutting down `process_pool_executor`")
+        cls.process_pool_executor.shutdown(wait=True)
 
     @classmethod
     def run(cls, dash: "Dashboard"):

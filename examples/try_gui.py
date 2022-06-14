@@ -375,6 +375,7 @@ class AwaitableTask(gui.AwaitableTask):
 class SimpleHashableClass(m.HashableClass):
 
     some_value: str
+    click_count_for_blocking_fn: int = 0
 
     @property
     def all_plots_gui_label(self) -> str:
@@ -391,13 +392,17 @@ class SimpleHashableClass(m.HashableClass):
         return _grp
 
     def some_blocking_fn(self) -> gui.widget.Text:
+        # self.click_count_for_blocking_fn += 1
+        _cnt = self.click_count_for_blocking_fn
+        print("sleeping ...", self.some_value, _cnt)
         time.sleep(5)
+        print("finished sleeping ...", self.some_value, _cnt)
         return gui.widget.Text(default_value="done sleeping for 5 seconds")
 
     @m.UseMethodInForm(label_fmt="blocking_task")
     def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
-        gui.BlockingTask(self.some_blocking_fn, concurrent=True).add_to_task_queue()
+        gui.BlockingTask(self.some_blocking_fn, concurrent=False).add_to_task_queue()
         return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
