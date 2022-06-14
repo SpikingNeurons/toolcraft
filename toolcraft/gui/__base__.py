@@ -424,8 +424,24 @@ class WidgetInternal(_WidgetDpgInternal):
 
 @dataclasses.dataclass
 class BlockingTask:
+    """
+    Note multi-threading for IO and multi-processing for CPU intensive tasks
+    https://engineering.contentsquare.com/2018/multithreading-vs-multiprocessing-in-python/
+
+    multi-threading ... use for infinite threads that are light weight nut run concurrently
+                        note that asyncio syntax is great but we need to await and make sure that code
+                        within await is fast
+    multiprocessing ... True parallelism but there is overhead to launch threads or else need to maintain pool
+                        of fix threads
+
+    Note that AwaitableTask tasks need you to await ... so keep fast running code between two awaits
+    Note AwaitableTask and BlockingTask with concurrent=True is same .... with only difference that you need not
+    care for using await syntax and normal blocking function run in interleaved fashion
+    """
 
     fn: t.Callable
+    # if true will use multi-threading else will use multiprocessing
+    concurrent: bool
 
     @property
     def is_completed(self) -> bool:
@@ -495,17 +511,24 @@ class BlockingTask:
             self._exception = _e
 
     async def _run_concurrently(self):
+        """
+        This method will dispatch job to ProcessPoolExecutor or ThreadPoolExecutor and quickly return
+        """
         asyncio.create_task(self())
         await asyncio.sleep(0)
 
     def add_to_task_queue(self):
-        Engine.blocking_task_queue.put_nowait(self)
+        Engine.task_queue.put_nowait(self)
 
 
 @dataclasses.dataclass
 class AwaitableTask(abc.ABC):
 
     """
+    Note that AwaitableTask tasks need you to await ... so keep fast running code between two awaits
+    Note AwaitableTask and BlockingTask with concurrent=True is same .... with only difference that you need not
+    care for using await syntax and normal blocking function run in interleaved fashion
+
     This makes call in try catch so that any errors in async task can be grabbed ...
 
     Note that this executes in same process and thread and you have full control as it is interlaced
@@ -591,7 +614,7 @@ class AwaitableTask(abc.ABC):
         )
 
     def add_to_task_queue(self):
-        Engine.awaitable_task_queue.put_nowait(self)
+        Engine.task_queue.put_nowait(self)
 
 
 class Engine:
@@ -630,11 +653,7 @@ class Engine:
     fixed_update: t.Dict[int, "Widget"] = {}
 
     # --------------------------------- 03
-    # - can have variation for io tasks, cpu tasks and tasks in thread where need to
-    #   explore removing gil locks in cython
-    # - currently restricting to single thread concurrent tasks implemented using queues
-    awaitable_task_queue: asyncio.Queue = asyncio.Queue()
-    blocking_task_queue: asyncio.Queue = asyncio.Queue()
+    task_queue: asyncio.Queue = asyncio.Queue()
 
     @classmethod
     async def lifecycle_loop(cls):
@@ -719,35 +738,22 @@ class Engine:
             )
 
     @classmethod
-    async def awaitable_task_runner_loop(cls):
+    async def task_runner_loop(cls):
         """
         for now we use .... improve to use threads if possible or something else
+
+        - can have variation for io tasks, cpu tasks and tasks in thread where need to
+          explore removing gil locks in cython
         """
         try:
             while True:
-                _awaitable_task: AwaitableTask = await Engine.awaitable_task_queue.get()
+                _awaitable_task: t.Union[AwaitableTask] = await Engine.task_queue.get()
                 # noinspection PyProtectedMember
                 asyncio.create_task(_awaitable_task._run_concurrently())
-                Engine.awaitable_task_queue.task_done()
+                Engine.task_queue.task_done()
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.awaitable_task_runner_loop}", _e]
-            )
-
-    @classmethod
-    async def blocking_task_runner_loop(cls):
-        """
-        for now we use .... improve to use threads if possible or something else
-        """
-        try:
-            while True:
-                _blocking_task: BlockingTask = await Engine.blocking_task_queue.get()
-                # noinspection PyProtectedMember
-                asyncio.create_task(_blocking_task._run_concurrently())
-                Engine.blocking_task_queue.task_done()
-        except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.blocking_task_runner_loop}", _e]
+                msgs=[f"Exception in {Engine.task_runner_loop}", _e]
             )
 
     @classmethod
@@ -791,19 +797,27 @@ class Engine:
                  https://docs.python.org/3/library/asyncio-task.html#asyncio.to_thread
         """
         # ----------------------------------------------------------- 01
-        # create tasks
+        # create tasks dpg brad and butter
         # todo: use asyncio.to_thread but due to GIL no use hence only use for IO ... some hope if this lib is cython
         _dpg = asyncio.create_task(cls.dpg_loop())
-        _lifecycle = asyncio.create_task(cls.lifecycle_loop())
-        _async_task = asyncio.create_task(cls.awaitable_task_runner_loop())
-        _blocking_task = asyncio.create_task(cls.blocking_task_runner_loop())
+
+        # ----------------------------------------------------------- 02
+        # todo: work this out when we want to have lifecycle for widgets
+        # _lifecycle = asyncio.create_task(cls.lifecycle_loop())
+        # _lifecycle_physics = asyncio.create_task(cls.lifecycle_physics_loop())
 
         # ----------------------------------------------------------- 03
+        # todo this loop can go on parallel processes where they will loop infinitely and wait for tasks
+        #   but may be not overhead as we will have different tasks coming at rare intervals and we do not wat top
+        #   rob cpus from tasks that run on different cpus
+        _task_runner = asyncio.create_task(cls.task_runner_loop())
+
+        # ----------------------------------------------------------- 04
         # await on dpg task and cancel update task
         await _dpg
-        _lifecycle.cancel()
-        _async_task.cancel()
-        _blocking_task.cancel()
+        # _lifecycle.cancel()
+        # _lifecycle_physics.cancel()
+        _task_runner.cancel()
 
     @classmethod
     def run(cls, dash: "Dashboard"):

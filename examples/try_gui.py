@@ -263,30 +263,6 @@ class PlottingWithUpdates(gui.form.Form):
 
 
 @dataclasses.dataclass
-class MyText(gui.widget.Text):
-
-    some_value: str = None
-
-    def init(self):
-        super().init()
-
-    def update(self):
-
-        self.set_value(f"{int(self.get_value()) + 1:03d}")
-
-        if self.some_value == "first hashable ...":
-            if int(self.get_value()) == 3:
-                self.sleep()
-            else:
-                self.sleep(2)
-        else:
-            if int(self.get_value()) == 10:
-                self.sleep()
-            else:
-                self.sleep(0.5)
-
-
-@dataclasses.dataclass
 class _BlockingTask(gui.AwaitableTask):
 
     receiver_grp: gui.widget.Group
@@ -421,7 +397,7 @@ class SimpleHashableClass(m.HashableClass):
     @m.UseMethodInForm(label_fmt="blocking_task")
     def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
-        gui.BlockingTask(self.some_blocking_fn).add_to_task_queue()
+        gui.BlockingTask(self.some_blocking_fn, concurrent=True).add_to_task_queue()
         return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
