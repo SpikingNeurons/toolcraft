@@ -6,6 +6,7 @@ The rule for now is to
 import abc
 import dataclasses
 import asyncio
+import itertools
 import types
 import typing as t
 import functools
