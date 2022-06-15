@@ -581,6 +581,147 @@ class AwaitableTask(abc.ABC):
         Engine.task_queue.put_nowait(self)
 
 
+@dataclasses.dataclass
+class SubProcessTask(AwaitableTask):
+    """
+    Basically an AwaitableTask that can can call cli arguments via BlockingTask using subprocess and can read
+    stdout and stdin streams
+    """
+    job: "Job"
+    process_return_code: t.Optional[int] = None
+
+    @property
+    @util.CacheResult
+    def streams(self) -> t.Dict[str, t.List[str]]:
+        return {
+            "stdout": [], "stderr": [],
+        }
+
+    async def read_stream(self, stream: asyncio.streams.StreamReader, stream_type: str):
+        """
+        todo: see if we can directly point buffers ...
+          - with toolcraft.logger this will be still more like str ...
+            but we need to see how we adapt the loggers with richy console buffers
+          - with richy may be we can later map this to textures
+        """
+        try:
+            _stream_store = self.streams[stream_type]
+            while True:
+                await asyncio.sleep(0.2)
+                _line = await stream.readline()
+                if _line:
+                    _stream_store.append(_line.decode())
+                else:
+                    break
+
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {self.read_stream}", _e]
+            )
+
+    async def run(self) -> int:
+        try:
+
+            assert self.process_return_code is None, "Was expecting to be None"
+
+            _process = await asyncio.create_subprocess_exec(
+                *self.job.cli_command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+
+            _stdout_task = asyncio.create_task(self.read_stream(_process.stdout, "stdout"))
+
+            _stderr_task = asyncio.create_task(self.read_stream(_process.stderr, "stderr"))
+
+            _return_code = await _process.wait()
+            # _stdout_task.cancel()
+            # _stderr_task.cancel()
+            self.process_return_code = _return_code
+
+            return _return_code
+
+        except Exception as _e:
+            raise e.code.CodingError(
+                msgs=[f"Exception in {self.run}", _e]
+            )
+
+    async def gui_update(self, stream_type: str, txt: "gui.widget.Text"):
+        # get ref to stream
+        _stream_store = self.streams[stream_type]
+
+        # some vars
+        _blink_animate = itertools.cycle(["..", "....", "......", "........"])
+
+        # loop until widget present
+        while txt.does_exist:
+
+            # if completed update txt ...
+            # don't care if things are visible or not ... just make final update and leave
+            if self.process_return_code is not None:
+                txt.default_value = "\n".join(
+                    [f"... completed run with error code {self.process_return_code} ..."] + _stream_store)
+                break
+
+            # dont update if not visible ... add a micro pause
+            # todo: can we await on bool flags ???
+            if not txt.is_visible:
+                await asyncio.sleep(0.2)
+                continue
+
+            # frequent pause before updating ...
+            await asyncio.sleep(1.0)
+
+            # update
+            _fetch_stream_msg = f"... fetching {stream_type} stream " + next(_blink_animate)
+            if bool(_stream_store):
+                txt.default_value = "\n".join([_fetch_stream_msg] + _stream_store)
+            else:
+                txt.default_value = _fetch_stream_msg
+
+    def gui(self) -> "gui.widget.Group":
+
+        """
+        IMPORTANT ...
+        Note that gui will always be created when log button is clicked and can be deleted anytime when we
+        interact with dashboard. For this reason we maintain logs in `streams` property so that gui can be dynamically
+        created and deleted without losing streams.
+
+        todo: We will have this as `toolcraft.gui.Widget` eventually
+        todo: merge this is with LogHandler where logger names can be used as keys to have update the LogWidget
+          parts that can be made in lines similar to `gui.form.DoubleSplitForm`
+        todo: also need to figure out if `toolcraft.richy.Console` which has buffer can be directly rendered as texture
+          ... as a side note that `toolcraft.richy.Console` can render html and svg files but at the end of entire execution
+          ... need to know how to render partially updated rich consoles
+
+        todo: MEGA TASK: convert this to --> toolcraft rich console + toolcraft logger + toolcraft gui widget
+
+
+        Responsible to show logs for `Job._launch_on_main_machine` ...
+          that is when jobs will be launched on local machine or ibm_lsf
+
+        Inspired from https://kevinmccarthy.org/2016/07/25/streaming-subprocess-stdin-and-stdout-with-asyncio-in-python/
+
+        The Job._launch_on_main_machine will launch jobs from main machine where UI is available so we can view
+        Jobs with this manager
+
+        For JobRunnerClusterType.local
+         + we will depend on our loggers
+        For JobRunnerClusterType.ibm_lsf
+         + todo: we need to monitor using bsub commands as we know the job ids
+         + todo: maybe make a form for ibm_lsf system where users can click buttons to launch bsub commands
+
+        """
+        # import
+        from . import gui
+
+        with gui.widget.Group() as _grp:
+            with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
+                _txt = gui.widget.Text(default_value="... fetching stdout stream ...")
+                gui.Engine.gui_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stdout", txt=_txt))
+            with gui.widget.CollapsingHeader(label="STDERR", default_open=False):
+                _txt = gui.widget.Text(default_value="... fetching stderr stream ...")
+                gui.Engine.gui_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stderr", txt=_txt))
+            return _grp
+
+
 class Engine:
     """
     > tags
