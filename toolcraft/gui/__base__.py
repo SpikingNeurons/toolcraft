@@ -9,7 +9,9 @@ import asyncio
 import inspect
 import itertools
 import subprocess
+import sys
 import time
+import traceback
 import types
 import typing as t
 import functools
@@ -485,12 +487,17 @@ class BlockingTask:
             # todo: see AwaitableTask._run_concurrently
             ...
         except Exception as _e:
+            _exc_type, _exc_obj, _exc_tb = sys.exc_info()
+            traceback.print_exception(_exc_type, _exc_obj, _exc_tb)
             raise e.code.ShouldNeverHappen(
                 msgs=[
                     f"The blocking async task (concurrent={self.concurrent}) has failed",
                     {
                         "module": self.__module__,
                         "class": self.__class__,
+                        "_exc_type": str(_exc_type),
+                        "_exc_obj": str(_exc_obj),
+                        "_exc_tb": str(_exc_tb),
                     },
                     _e
                 ]
@@ -588,12 +595,17 @@ class AwaitableTask(abc.ABC):
             #   ... but this will require having async task run for each widget and build complex Unity3D system
             ...
         except Exception as _e:
+            _exc_type, _exc_obj, _exc_tb = sys.exc_info()
+            traceback.print_exception(_exc_type, _exc_obj, _exc_tb)
             raise e.code.ShouldNeverHappen(
                 msgs=[
                     "The awaitable async task has failed",
                     {
                         "module": self.__module__,
                         "class": self.__class__,
+                        "_exc_type": str(_exc_type),
+                        "_exc_obj": str(_exc_obj),
+                        "_exc_tb": str(_exc_tb),
                     },
                     _e
                 ]
@@ -601,262 +613,6 @@ class AwaitableTask(abc.ABC):
 
     def add_to_task_queue(self):
         Engine.task_queue.put_nowait(self)
-
-
-@dataclasses.dataclass
-class SubProcessTask:
-    """
-    Basically an AwaitableTask that can can call cli arguments via BlockingTask using subprocess and can read
-    stdout and stdin streams
-    """
-    cli_command: t.List[str]
-
-    @property
-    @util.CacheResult
-    def stdout_stream(self) -> t.List[str]:
-        return []
-
-    @property
-    @util.CacheResult
-    def stderr_stream(self) -> t.List[str]:
-        return []
-
-    @property
-    @util.CacheResult
-    def blocking_task(self) -> "BlockingTask":
-        """
-        Note we cache and also queue this task on first call as we do not want to get this task
-        launched multiple times
-
-        """
-        from . import BlockingTask
-        _bt = BlockingTask(
-            fn=self.blocking_fn, concurrent=False
-        )
-        _bt.add_to_task_queue()
-        return _bt
-
-    def blocking_fn(self):
-        _stdout_stream, _stderr_stream = self.stdout_stream, self.stderr_stream
-        _process = subprocess.Popen(
-            self.cli_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
-        )
-        while True:
-            _ret_code = _process.poll()
-            if _ret_code is None:
-                time.sleep(0.4)
-                _stdout_stream += _process.stdout.readlines()
-                _stderr_stream += _process.stderr.readlines()
-                continue
-            else:
-                if _ret_code == 0:
-                    _final_lines = ["="*30, f"Finished with return code {_ret_code}", "="*30]
-                else:
-                    _final_lines = ["="*30, f"Failed with return code {_ret_code}", "="*30]
-                _stdout_stream += _process.stdout.readlines() + _final_lines
-                _stderr_stream += _process.stderr.readlines() + _final_lines
-                if _ret_code != 0:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Below cli command failed with error code {_ret_code}:",
-                            self.cli_command,
-                            f"The stderr from subprocess is as below:", _stderr_stream,
-                        ]
-                    )
-                else:
-                    break
-
-    async def _fn(self):
-        from . import widget, BlockingTask
-        _grp = self.receiver_grp
-        _blinker = itertools.cycle(["..", "....", "......"])
-
-        try:
-
-            # calling property will schedule blocking task to run in queue only once
-            # so consecutive calls will safely bypass calling blocking_fn
-            _blocking_task = self.blocking_task
-
-            # try to get future ... for first call to property the future might not be available, so we await
-            _future = None
-            while _future is None:
-                await asyncio.sleep(0.4)
-                _future = _blocking_task.future
-
-            # loop infinitely
-            while _grp.does_exist:
-
-                # if not build continue
-                if not _grp.is_built:
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # dont update if not visible
-                # todo: can we await on bool flags ???
-                if not _grp.is_visible:
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # clear group
-                _grp.clear()
-
-                # if running
-                if _future.running():
-                    with _grp:
-                        widget.Text(default_value="="*15 + " STDOUT " + "="*15)
-                        widget.Text(default_value="\n".join(self.stdout_stream))
-                        widget.Text(default_value=next(_blinker))
-                        widget.Text(default_value="="*15 + " ====== " + "="*15)
-                        widget.Text(default_value="="*15 + " STDERR " + "="*15)
-                        widget.Text(default_value="\n".join(self.stderr_stream))
-                        widget.Text(default_value="="*15 + " ====== " + "="*15)
-                    await asyncio.sleep(0.6)
-                    continue
-
-                # if done
-                if _future.done():
-                    _exp = _future.exception()
-                    if _exp is None:
-                        with _grp:
-                            widget.Text(default_value="="*15 + " SUCCESS " + "="*14)
-                            widget.Text(default_value="="*15 + " ====== " + "="*15)
-                        break
-                    else:
-                        with _grp:
-                            widget.Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
-                            widget.Text(default_value="X"*15 + " FAILURE " + "X"*14)
-                            widget.Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
-                        raise _exp
-
-        except Exception as _e:
-            if _grp.does_exist:
-                raise _e
-            else:
-                ...
-
-    async def read_stream(self, stream: asyncio.streams.StreamReader, stream_type: str):
-        """
-        todo: see if we can directly point buffers ...
-          - with toolcraft.logger this will be still more like str ...
-            but we need to see how we adapt the loggers with richy console buffers
-          - with richy may be we can later map this to textures
-        """
-        try:
-            _stream_store = self.streams[stream_type]
-            while True:
-                await asyncio.sleep(0.2)
-                _line = await stream.readline()
-                if _line:
-                    _stream_store.append(_line.decode())
-                else:
-                    break
-
-        except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {self.read_stream}", _e]
-            )
-
-    async def run(self) -> int:
-        try:
-
-            assert self.process_return_code is None, "Was expecting to be None"
-
-            _process = await asyncio.create_subprocess_exec(
-                *self.job.cli_command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-
-            _stdout_task = asyncio.create_task(self.read_stream(_process.stdout, "stdout"))
-
-            _stderr_task = asyncio.create_task(self.read_stream(_process.stderr, "stderr"))
-
-            _return_code = await _process.wait()
-            # _stdout_task.cancel()
-            # _stderr_task.cancel()
-            self.process_return_code = _return_code
-
-            return _return_code
-
-        except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {self.run}", _e]
-            )
-
-    async def gui_update(self, stream_type: str, txt: "gui.widget.Text"):
-        # get ref to stream
-        _stream_store = self.streams[stream_type]
-
-        # some vars
-        _blink_animate = itertools.cycle(["..", "....", "......", "........"])
-
-        # loop until widget present
-        while txt.does_exist:
-
-            # if completed update txt ...
-            # don't care if things are visible or not ... just make final update and leave
-            if self.process_return_code is not None:
-                txt.default_value = "\n".join(
-                    [f"... completed run with error code {self.process_return_code} ..."] + _stream_store)
-                break
-
-            # dont update if not visible ... add a micro pause
-            # todo: can we await on bool flags ???
-            if not txt.is_visible:
-                await asyncio.sleep(0.2)
-                continue
-
-            # frequent pause before updating ...
-            await asyncio.sleep(1.0)
-
-            # update
-            _fetch_stream_msg = f"... fetching {stream_type} stream " + next(_blink_animate)
-            if bool(_stream_store):
-                txt.default_value = "\n".join([_fetch_stream_msg] + _stream_store)
-            else:
-                txt.default_value = _fetch_stream_msg
-
-    def gui(self) -> "gui.widget.Group":
-
-        """
-        IMPORTANT ...
-        Note that gui will always be created when log button is clicked and can be deleted anytime when we
-        interact with dashboard. For this reason we maintain logs in `streams` property so that gui can be dynamically
-        created and deleted without losing streams.
-
-        todo: We will have this as `toolcraft.gui.Widget` eventually
-        todo: merge this is with LogHandler where logger names can be used as keys to have update the LogWidget
-          parts that can be made in lines similar to `gui.form.DoubleSplitForm`
-        todo: also need to figure out if `toolcraft.richy.Console` which has buffer can be directly rendered as texture
-          ... as a side note that `toolcraft.richy.Console` can render html and svg files but at the end of entire execution
-          ... need to know how to render partially updated rich consoles
-
-        todo: MEGA TASK: convert this to --> toolcraft rich console + toolcraft logger + toolcraft gui widget
-
-
-        Responsible to show logs for `Job._launch_on_main_machine` ...
-          that is when jobs will be launched on local machine or ibm_lsf
-
-        Inspired from https://kevinmccarthy.org/2016/07/25/streaming-subprocess-stdin-and-stdout-with-asyncio-in-python/
-
-        The Job._launch_on_main_machine will launch jobs from main machine where UI is available so we can view
-        Jobs with this manager
-
-        For JobRunnerClusterType.local
-         + we will depend on our loggers
-        For JobRunnerClusterType.ibm_lsf
-         + todo: we need to monitor using bsub commands as we know the job ids
-         + todo: maybe make a form for ibm_lsf system where users can click buttons to launch bsub commands
-
-        """
-        # import
-        from . import gui
-
-        with gui.widget.Group() as _grp:
-            with gui.widget.CollapsingHeader(label="STDOUT", default_open=True):
-                _txt = gui.widget.Text(default_value="... fetching stdout stream ...")
-                gui.Engine.gui_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stdout", txt=_txt))
-            with gui.widget.CollapsingHeader(label="STDERR", default_open=False):
-                _txt = gui.widget.Text(default_value="... fetching stderr stream ...")
-                gui.Engine.gui_task_add(fn=self.gui_update, fn_kwargs=dict(stream_type="stderr", txt=_txt))
-            return _grp
 
 
 class Engine:

@@ -460,66 +460,163 @@ class SubProcessManager:
         """
         from . import gui
         _bt = gui.BlockingTask(
-            fn=self.blocking_fn, concurrent=False
+            fn=self.blocking_fn,
+            # todo: making this false raises pickling error as the blocking task is run in different thread
+            #    we need to investigate if we want to fix this
+            concurrent=True
         )
         _bt.add_to_task_queue()
         return _bt
 
-    @property
-    @util.CacheResult
-    def _subprocess_task(self) -> "gui.SubProcessTask":
-        from . import gui
-        return gui.SubProcessTask(
-            cli_command=self.job.cli_command,
-            receiver_grp=...
-        )
+    async def awaitable_fn(self, receiver_grp: "gui.widget.Group"):
+        from .gui.widget import Text
+        _blinker = itertools.cycle(["..", "....", "......"])
+
+        try:
+
+            # calling property will schedule blocking task to run in queue only once
+            # so consecutive calls will safely bypass calling blocking_fn
+            _blocking_task = self.blocking_task
+
+            # try to get future ... for first call to property the future might not be available, so we await
+            _future = None
+            while _future is None:
+                await asyncio.sleep(0.4)
+                _future = _blocking_task.future
+
+            # loop infinitely
+            while receiver_grp.does_exist:
+
+                # small sleep
+                await asyncio.sleep(0.6)
+
+                # if not build continue
+                if not receiver_grp.is_built:
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not receiver_grp.is_visible:
+                    continue
+
+                # clear group
+                receiver_grp.clear()
+
+                # add streams
+                with receiver_grp:
+                    Text(default_value="="*15 + " STDOUT " + "="*15)
+                    Text(default_value="\n".join(self.stdout_stream))
+                    Text(default_value="="*15 + " ====== " + "="*15)
+                    Text(default_value="="*15 + " STDERR " + "="*15)
+                    Text(default_value="\n".join(self.stderr_stream))
+                    Text(default_value="="*15 + " ====== " + "="*15)
+
+                # if running
+                if _future.running():
+                    with receiver_grp:
+                        Text(default_value=next(_blinker))
+                    continue
+
+                # if done
+                if _future.done():
+                    _exp = _future.exception()
+                    if _exp is None:
+                        with receiver_grp:
+                            Text(default_value="="*15 + " ======= " + "="*14)
+                            Text(default_value="="*15 + " SUCCESS " + "="*14)
+                            Text(default_value="="*15 + " ======= " + "="*14)
+                        break
+                    else:
+                        with receiver_grp:
+                            Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
+                            Text(default_value="X"*15 + " FAILURE " + "X"*14)
+                            Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
+                        raise _exp
+
+        except Exception as _e:
+            if receiver_grp.does_exist:
+                raise _e
+            else:
+                ...
 
     def blocking_fn(self):
+        """
+        todo: need to see why streams updated here do not show up in awaitable fn ...
+        """
+
         _stdout_stream, _stderr_stream = self.stdout_stream, self.stderr_stream
         _process = subprocess.Popen(
             self.job.cli_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
         )
-        while True:
-            _ret_code = _process.poll()
-            if _ret_code is None:
-                time.sleep(0.4)
-                _stdout_stream += _process.stdout.readlines()
-                _stderr_stream += _process.stderr.readlines()
-                continue
-            else:
-                if _ret_code == 0:
-                    _final_lines = ["="*30, f"Finished with return code {_ret_code}", "="*30]
-                else:
-                    _final_lines = ["="*30, f"Failed with return code {_ret_code}", "="*30]
-                _stdout_stream += _process.stdout.readlines() + _final_lines
-                _stderr_stream += _process.stderr.readlines() + _final_lines
-                if _ret_code != 0:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Below cli command failed with error code {_ret_code}:",
-                            self.job.cli_command,
-                            f"The stderr from subprocess is as below:", _stderr_stream,
-                        ]
-                    )
-                else:
-                    break
+        for _line in _process.stdout:
+            _stdout_stream.append(_line)
+        for _line in _process.stderr:
+            _stderr_stream.append(_line)
+
+        _stdout_stream.append("... waiting for process to finish ...")
+        _stderr_stream.append("... waiting for process to finish ...")
+        _process.wait()
+
+        _ret_code = _process.returncode
+        if _ret_code == 0:
+            _final_lines = ["=" * 30, f"Finished with return code {_ret_code}", "=" * 30]
+            _stdout_stream.extend(_final_lines)
+        else:
+            _final_lines = ["=" * 30, f"Failed with return code {_ret_code}", "=" * 30]
+            _stderr_stream.extend(_final_lines)
+        if _ret_code != 0:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Below cli command failed with error code {_ret_code}:",
+                    self.job.cli_command,
+                    f"The stderr from subprocess is as below:", _stderr_stream,
+                ]
+            )
 
     def gui(self) -> "gui.widget.Group":
         # import
         from . import gui
 
+        # test that the there is no residual job running failed started or completed
+        # todo: only is_started check should suffice ...
+        if self.job.is_started:
+            raise e.code.CodingError(
+                msgs=[
+                    "You might not need to call this multiple times!!!",
+                    "Job has already started for cli command: ", self.job.cli_command,
+                ]
+            )
+        if self.job.is_running:
+            raise e.code.CodingError(
+                msgs=[
+                    "Multiple calls detected for cli command: ", self.job.cli_command,
+                ]
+            )
+        if self.job.is_failed:
+            raise e.code.CodingError(
+                msgs=[
+                    "You might not need to call this multiple times!!!",
+                    "Previous call to below cli command has failed: ", self.job.cli_command,
+                ]
+            )
+        if self.job.is_finished:
+            raise e.code.CodingError(
+                msgs=[
+                    "You might not need to call this multiple times!!!",
+                    "Previous call to below cli command has finished: ", self.job.cli_command,
+                ]
+            )
+
         # return widget
         _grp = gui.widget.Group()
 
-        # run job if it was never run
-        if not self.job.is_started:
-            ...
+        # make awaitable task and run that can read process streams
+        gui.AwaitableTask(
+            fn=self.awaitable_fn, fn_kwargs=dict(receiver_grp=_grp)
+        ).add_to_task_queue()
 
-
-        # first run job
-        if not self.job.is_started:
-            from . import gui
-            gui.Engine.cpu_task_add(fn=self.job.sub_process_manager.run)
+        # return
+        return _grp
 
 
 class Job:
