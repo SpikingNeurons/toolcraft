@@ -6,7 +6,10 @@ The rule for now is to
 import abc
 import dataclasses
 import asyncio
+import inspect
 import itertools
+import subprocess
+import time
 import types
 import typing as t
 import functools
@@ -27,6 +30,7 @@ from . import asset
 # noinspection PyUnreachableCode
 if False:
     from . import EnPlatform
+    from . import widget, BlockingTask
 
 _LOGGER = logger.get_logger()
 COLOR_TYPE = t.Tuple[int, int, int, int]
@@ -444,12 +448,22 @@ class BlockingTask:
     fn: t.Callable
     # if true will use multi-threading else will use multiprocessing
     concurrent: bool
+    fn_kwargs: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
 
     @property
     def future(self) -> Future:
         return self._future
 
     def __post_init__(self):
+        # validation
+        if inspect.iscoroutinefunction(self.fn):
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"The function {self.fn} should not be async i.e. awaitable ..."
+                ]
+            )
+
+        # set some vars
         self._future = None
 
     async def _run_concurrently(self):
@@ -461,9 +475,9 @@ class BlockingTask:
                 raise e.code.CodingError(msgs=["_future must be None"])
 
             if self.concurrent:
-                _future = Engine.thread_pool_executor.submit(self.fn)
+                _future = Engine.thread_pool_executor.submit(self.fn, **self.fn_kwargs)
             else:
-                _future = Engine.process_pool_executor.submit(self.fn)
+                _future = Engine.process_pool_executor.submit(self.fn, **self.fn_kwargs)
 
             self._future = _future
 
@@ -523,11 +537,23 @@ class AwaitableTask(abc.ABC):
       ... but this will require having async task run for each widget and build complex Unity3D system
     """
 
+    fn: t.Callable
+    fn_kwargs: t.Dict[str, t.Any] = dataclasses.field(default_factory=dict)
+
     @property
     def is_completed(self) -> bool:
         return self._is_completed
 
     def __post_init__(self):
+        # validation
+        if not inspect.iscoroutinefunction(self.fn):
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"The function {self.fn} needs to be async i.e. awaitable ..."
+                ]
+            )
+
+        # set some vars
         self._is_completed = False
 
     async def _run_concurrently(self):
@@ -536,7 +562,7 @@ class AwaitableTask(abc.ABC):
                 raise e.code.CodingError(
                     msgs=["_is_completed must be false"]
                 )
-            _ret = await self.fn()
+            _ret = await self.fn(**self.fn_kwargs)
             if self._is_completed:
                 raise e.code.CodingError(
                     msgs=[
@@ -573,30 +599,140 @@ class AwaitableTask(abc.ABC):
                 ]
             )
 
-    async def fn(self):
-        raise e.code.CodingError(
-            msgs=[f"You need to override to use this fn in class {self.__class__}"]
-        )
-
     def add_to_task_queue(self):
         Engine.task_queue.put_nowait(self)
 
 
 @dataclasses.dataclass
-class SubProcessTask(AwaitableTask):
+class SubProcessTask:
     """
     Basically an AwaitableTask that can can call cli arguments via BlockingTask using subprocess and can read
     stdout and stdin streams
     """
-    job: "Job"
-    process_return_code: t.Optional[int] = None
+    cli_command: t.List[str]
 
     @property
     @util.CacheResult
-    def streams(self) -> t.Dict[str, t.List[str]]:
-        return {
-            "stdout": [], "stderr": [],
-        }
+    def stdout_stream(self) -> t.List[str]:
+        return []
+
+    @property
+    @util.CacheResult
+    def stderr_stream(self) -> t.List[str]:
+        return []
+
+    @property
+    @util.CacheResult
+    def blocking_task(self) -> "BlockingTask":
+        """
+        Note we cache and also queue this task on first call as we do not want to get this task
+        launched multiple times
+
+        """
+        from . import BlockingTask
+        _bt = BlockingTask(
+            fn=self.blocking_fn, concurrent=False
+        )
+        _bt.add_to_task_queue()
+        return _bt
+
+    def blocking_fn(self):
+        _stdout_stream, _stderr_stream = self.stdout_stream, self.stderr_stream
+        _process = subprocess.Popen(
+            self.cli_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
+        )
+        while True:
+            _ret_code = _process.poll()
+            if _ret_code is None:
+                time.sleep(0.4)
+                _stdout_stream += _process.stdout.readlines()
+                _stderr_stream += _process.stderr.readlines()
+                continue
+            else:
+                if _ret_code == 0:
+                    _final_lines = ["="*30, f"Finished with return code {_ret_code}", "="*30]
+                else:
+                    _final_lines = ["="*30, f"Failed with return code {_ret_code}", "="*30]
+                _stdout_stream += _process.stdout.readlines() + _final_lines
+                _stderr_stream += _process.stderr.readlines() + _final_lines
+                if _ret_code != 0:
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"Below cli command failed with error code {_ret_code}:",
+                            self.cli_command,
+                            f"The stderr from subprocess is as below:", _stderr_stream,
+                        ]
+                    )
+                else:
+                    break
+
+    async def _fn(self):
+        from . import widget, BlockingTask
+        _grp = self.receiver_grp
+        _blinker = itertools.cycle(["..", "....", "......"])
+
+        try:
+
+            # calling property will schedule blocking task to run in queue only once
+            # so consecutive calls will safely bypass calling blocking_fn
+            _blocking_task = self.blocking_task
+
+            # try to get future ... for first call to property the future might not be available, so we await
+            _future = None
+            while _future is None:
+                await asyncio.sleep(0.4)
+                _future = _blocking_task.future
+
+            # loop infinitely
+            while _grp.does_exist:
+
+                # if not build continue
+                if not _grp.is_built:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not _grp.is_visible:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # clear group
+                _grp.clear()
+
+                # if running
+                if _future.running():
+                    with _grp:
+                        widget.Text(default_value="="*15 + " STDOUT " + "="*15)
+                        widget.Text(default_value="\n".join(self.stdout_stream))
+                        widget.Text(default_value=next(_blinker))
+                        widget.Text(default_value="="*15 + " ====== " + "="*15)
+                        widget.Text(default_value="="*15 + " STDERR " + "="*15)
+                        widget.Text(default_value="\n".join(self.stderr_stream))
+                        widget.Text(default_value="="*15 + " ====== " + "="*15)
+                    await asyncio.sleep(0.6)
+                    continue
+
+                # if done
+                if _future.done():
+                    _exp = _future.exception()
+                    if _exp is None:
+                        with _grp:
+                            widget.Text(default_value="="*15 + " SUCCESS " + "="*14)
+                            widget.Text(default_value="="*15 + " ====== " + "="*15)
+                        break
+                    else:
+                        with _grp:
+                            widget.Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
+                            widget.Text(default_value="X"*15 + " FAILURE " + "X"*14)
+                            widget.Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
+                        raise _exp
+
+        except Exception as _e:
+            if _grp.does_exist:
+                raise _e
+            else:
+                ...
 
     async def read_stream(self, stream: asyncio.streams.StreamReader, stream_type: str):
         """

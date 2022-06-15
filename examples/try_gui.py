@@ -262,180 +262,6 @@ class PlottingWithUpdates(gui.form.Form):
         return _button_bar
 
 
-@dataclasses.dataclass
-class _BlockingTask(gui.AwaitableTask):
-
-    receiver_grp: gui.widget.Group
-
-    def some_fn(self) -> gui.widget.Text:
-        time.sleep(5)
-        return gui.widget.Text(default_value="done sleeping for 5 seconds")
-
-    async def fn(self):
-        # get reference
-        _grp = self.receiver_grp
-        _blinkers = itertools.cycle(
-            ["..", "....", "......"]
-        )
-        _blocking_task = gui.BlockingTask(self.some_fn)
-
-        try:
-
-            # loop infinitely
-            while _grp.does_exist:
-
-                # if not build continue
-                if not _grp.is_built:
-                    await asyncio.sleep(0.2)
-                    continue
-
-                # dont update if not visible
-                # todo: can we await on bool flags ???
-                if not _grp.is_visible:
-                    await asyncio.sleep(0.2)
-                    continue
-
-                # clear grp
-                _grp.clear()
-
-                # if fn is failed
-                if _blocking_task.is_failed:
-                    raise _blocking_task.exception_if_any
-
-                # if fn completed then get return value
-                if _blocking_task.is_completed:
-                    _ret = _blocking_task.return_value
-                    _grp(widget=_ret)
-                    break
-
-                # if fn is still running then blink
-                else:
-                    with _grp:
-                        gui.widget.Text(default_value=next(_blinkers))
-                    continue
-
-        except Exception as _e:
-            # only raise if ui is visible
-            if _grp.does_exist:
-                raise _e
-
-            # if widget is visible or not if _blocking_fn has failed then
-            # this has nothing to do ui
-            if _blocking_task.is_failed:
-                raise _e
-
-
-@dataclasses.dataclass
-class AwaitableTask(gui.AwaitableTask):
-
-    txt_widget: gui.widget.Text
-    some_value: str
-
-    async def fn(self):
-        # get reference
-        widget = self.txt_widget
-
-        try:
-
-            # loop infinitely
-            while widget.does_exist:
-
-                # if not build continue
-                if not widget.is_built:
-                    await asyncio.sleep(0.2)
-                    continue
-
-                # dont update if not visible
-                # todo: can we await on bool flags ???
-                if not widget.is_visible:
-                    await asyncio.sleep(0.2)
-                    continue
-
-                # update widget
-                widget.set_value(f"{int(widget.get_value())+1:03d}")
-
-                # change update rate based on some value
-                if self.some_value == "first hashable ...":
-                    await asyncio.sleep(1)
-                    if int(widget.get_value()) == 10:
-                        break
-                else:
-                    await asyncio.sleep(0.1)
-                    if int(widget.get_value()) == 50:
-                        break
-
-        except Exception as _e:
-            if widget.does_exist:
-                raise _e
-            else:
-                ...
-
-
-@dataclasses.dataclass
-class AwaitableWithBlockingFnTask(gui.AwaitableTask):
-
-    receiver_grp: gui.widget.Group
-    blocking_fn: t.Callable
-
-    async def fn(self):
-        # get reference
-        _grp = self.receiver_grp
-        _blinker = itertools.cycle(["..", "....", "......"])
-
-        try:
-
-            # schedule blocking task to run in queue
-            _blocking_task = gui.BlockingTask(
-                fn=self.blocking_fn, concurrent=False
-            )
-            _blocking_task.add_to_task_queue()
-            _future = None
-            while _future is None:
-                await asyncio.sleep(0.4)
-                _future = _blocking_task.future
-
-            # loop infinitely
-            while _grp.does_exist:
-
-                # if not build continue
-                if not _grp.is_built:
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # dont update if not visible
-                # todo: can we await on bool flags ???
-                if not _grp.is_visible:
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # clear group
-                _grp.clear()
-
-                # if running
-                if _future.running():
-                    with _grp:
-                        gui.widget.Text(default_value=next(_blinker))
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # if done
-                if _future.done():
-                    _exp = _future.exception()
-                    if _exp is None:
-                        _grp(widget=_future.result())
-                        break
-                    else:
-                        with _grp:
-                            gui.widget.Text(default_value="Failed ...")
-                            raise _exp
-
-        except Exception as _e:
-            if _grp.does_exist:
-                raise _e
-            else:
-                ...
-
-
 @dataclasses.dataclass(frozen=True)
 class SimpleHashableClass(m.HashableClass):
 
@@ -447,13 +273,52 @@ class SimpleHashableClass(m.HashableClass):
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
+    async def some_awaitable_fn(self, txt_widget: gui.widget.Text):
+
+        try:
+
+            # loop infinitely
+            while txt_widget.does_exist:
+
+                # if not build continue
+                if not txt_widget.is_built:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not txt_widget.is_visible:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # update widget
+                txt_widget.set_value(f"{int(txt_widget.get_value())+1:03d}")
+
+                # change update rate based on some value
+                if self.some_value == "first hashable ...":
+                    await asyncio.sleep(1)
+                    if int(txt_widget.get_value()) == 10:
+                        break
+                else:
+                    await asyncio.sleep(0.1)
+                    if int(txt_widget.get_value()) == 50:
+                        break
+
+        except Exception as _e:
+            if txt_widget.does_exist:
+                raise _e
+            else:
+                ...
+
     @m.UseMethodInForm(label_fmt="awaitable_task")
     def awaitable_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
         with _grp:
             gui.widget.Text(default_value="count")
             _txt = gui.widget.Text(default_value="000")
-            AwaitableTask(txt_widget=_txt, some_value=self.some_value).add_to_task_queue()
+            gui.AwaitableTask(
+                fn=self.some_awaitable_fn, fn_kwargs=dict(txt_widget=_txt)
+            ).add_to_task_queue()
         return _grp
 
     def some_blocking_fn(self) -> gui.widget.Text:
@@ -464,10 +329,71 @@ class SimpleHashableClass(m.HashableClass):
         print("finished sleeping ...", self.some_value, _cnt)
         return gui.widget.Text(default_value="done sleeping for 5 seconds")
 
+    async def some_awaitable_fn_with_blocking_task(
+        self, receiver_grp: gui.widget.Group
+    ):
+        # get reference
+        _blinker = itertools.cycle(["..", "....", "......"])
+
+        try:
+
+            # schedule blocking task to run in queue
+            _blocking_task = gui.BlockingTask(
+                fn=self.some_blocking_fn, concurrent=False
+            )
+            _blocking_task.add_to_task_queue()
+            _future = None
+            while _future is None:
+                await asyncio.sleep(0.4)
+                _future = _blocking_task.future
+
+            # loop infinitely
+            while receiver_grp.does_exist:
+
+                # if not build continue
+                if not receiver_grp.is_built:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not receiver_grp.is_visible:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # clear group
+                receiver_grp.clear()
+
+                # if running
+                if _future.running():
+                    with receiver_grp:
+                        gui.widget.Text(default_value=next(_blinker))
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # if done
+                if _future.done():
+                    _exp = _future.exception()
+                    if _exp is None:
+                        receiver_grp(widget=_future.result())
+                        break
+                    else:
+                        with receiver_grp:
+                            gui.widget.Text(default_value="Failed ...")
+                            raise _exp
+
+        except Exception as _e:
+            if receiver_grp.does_exist:
+                raise _e
+            else:
+                ...
+
     @m.UseMethodInForm(label_fmt="blocking_task")
     def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
-        AwaitableWithBlockingFnTask(blocking_fn=self.some_blocking_fn, receiver_grp=_grp).add_to_task_queue()
+        gui.AwaitableTask(
+            fn=self.some_awaitable_fn_with_blocking_task, fn_kwargs=dict(receiver_grp=_grp)
+        ).add_to_task_queue()
         return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)

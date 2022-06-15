@@ -15,6 +15,7 @@ import pickle
 import asyncio
 import hashlib
 import types
+import time
 
 from . import logger
 from . import error as e
@@ -352,11 +353,6 @@ class JobViewer(m.HashableClass):
 
     @m.UseMethodInForm(label_fmt="run")
     def run_gui(self) -> "gui.widget.Group":
-        # first run job
-        if not self.job.is_started:
-            from . import gui
-            gui.Engine.cpu_task_add(fn=self.job.sub_process_manager.run)
-        # run gui
         return self.job.sub_process_manager.gui()
 
 
@@ -438,6 +434,92 @@ class ArtifactManager:
             _form.register(key=_, fn=None)
 
         return _form
+
+
+@dataclasses.dataclass
+class SubProcessManager:
+
+    job: "Job"
+
+    @property
+    @util.CacheResult
+    def stdout_stream(self) -> t.List[str]:
+        return []
+
+    @property
+    @util.CacheResult
+    def stderr_stream(self) -> t.List[str]:
+        return []
+
+    @property
+    @util.CacheResult
+    def blocking_task(self) -> "gui.BlockingTask":
+        """
+        Note we cache and also queue this task on first call as we do not want to get this task
+        launched multiple times
+        """
+        from . import gui
+        _bt = gui.BlockingTask(
+            fn=self.blocking_fn, concurrent=False
+        )
+        _bt.add_to_task_queue()
+        return _bt
+
+    @property
+    @util.CacheResult
+    def _subprocess_task(self) -> "gui.SubProcessTask":
+        from . import gui
+        return gui.SubProcessTask(
+            cli_command=self.job.cli_command,
+            receiver_grp=...
+        )
+
+    def blocking_fn(self):
+        _stdout_stream, _stderr_stream = self.stdout_stream, self.stderr_stream
+        _process = subprocess.Popen(
+            self.job.cli_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
+        )
+        while True:
+            _ret_code = _process.poll()
+            if _ret_code is None:
+                time.sleep(0.4)
+                _stdout_stream += _process.stdout.readlines()
+                _stderr_stream += _process.stderr.readlines()
+                continue
+            else:
+                if _ret_code == 0:
+                    _final_lines = ["="*30, f"Finished with return code {_ret_code}", "="*30]
+                else:
+                    _final_lines = ["="*30, f"Failed with return code {_ret_code}", "="*30]
+                _stdout_stream += _process.stdout.readlines() + _final_lines
+                _stderr_stream += _process.stderr.readlines() + _final_lines
+                if _ret_code != 0:
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"Below cli command failed with error code {_ret_code}:",
+                            self.job.cli_command,
+                            f"The stderr from subprocess is as below:", _stderr_stream,
+                        ]
+                    )
+                else:
+                    break
+
+    def gui(self) -> "gui.widget.Group":
+        # import
+        from . import gui
+
+        # return widget
+        _grp = gui.widget.Group()
+
+        # run job if it was never run
+        if not self.job.is_started:
+            ...
+
+
+        # first run job
+        if not self.job.is_started:
+            from . import gui
+            gui.Engine.cpu_task_add(fn=self.job.sub_process_manager.run)
 
 
 class Job:
