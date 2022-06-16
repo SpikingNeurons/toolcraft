@@ -364,12 +364,7 @@ def make_complicated_figure():
 
 if __name__ == '__main__':
 
-    _doc = Document(
-        title="TikZ tutorial",
-        author="Praveen Kulkarni",
-        date="\\today",
-        main_tex_file="../main.tex",
-    )
+    _doc = Document()
 
     _doc.add_item(make_complicated_figure())
 
