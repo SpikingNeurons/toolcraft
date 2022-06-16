@@ -90,6 +90,8 @@ if __name__ == '__main__':
         author="Praveen Kulkarni",
         date="\\today",
         main_tex_file="../main.tex",
+        symbols_file="symbols.tex",
+        usepackage_file="usepackage.sty",
     )
 
     _section_1 = Section(

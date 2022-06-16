@@ -10,7 +10,7 @@ Aim:
 from . import helper
 from .__base__ import Font, Color, Scalar, Document, Section, SubSection, \
     SubSubSection, Part, Paragraph, SubParagraph, Chapter, Fa, FontSize, \
-    Positioning, FloatObjAlignment
+    Positioning, FloatObjAlignment, Beamer
 from .symbol import Command, Glossary, Acronym, make_symbols_tex_file
 from . import tikz
 from . import table

@@ -393,11 +393,101 @@ class LaTeX(abc.ABC):
 
 
 @dataclasses.dataclass
+class Beamer(LaTeX):
+
+    theme: str = "Boadilla"
+    aspect_ratio: t.Literal[1610, 169, 149, 54, 43, 32] = 169
+    title: str = None
+    sub_title: str = None
+    author: str = None
+    institute: str = None
+    date: str = None
+
+    symbols_file: str = "symbols.tex"
+    usepackage_file: str = "usepackage.sty"
+
+    @property
+    def open_clause(self) -> str:
+        _tt = []
+        _tt.append(f"\\usetheme{{{self.theme}}}%")
+        if self.title is not None:
+            _tt.append(f"\\title{{{self.title}}}%")
+        if self.sub_title is not None:
+            _tt.append(f"\\subtitle{{{self.sub_title}}}%")
+        if self.author is not None:
+            _tt.append(f"\\author{{{self.author}}}%")
+        if self.institute is not None:
+            _tt.append(f"\\institute{{{self.institute}}}%")
+        if self.date is not None:
+            _tt.append(f"\\date{{{self.date}}}%")
+        if bool(_tt):
+            _tt = ["% >> title related"] + _tt + [""]
+        _ret = _tt + ["% >> begin document", "\\begin{document}%", ]
+        _ret += [
+            "", "% >> make title page",
+            "\\begin{frame} \\titlepage \\end{frame}",
+        ]
+        return "\n".join(_ret)
+
+    @property
+    def close_clause(self) -> str:
+        return "% >> end document\n\\end{document}"
+
+    def init_validate(self):
+        super().init_validate()
+        if self.label is not None:
+            raise e.code.CodingError(
+                msgs=[f"No need to set label for {self.__class__}"]
+            )
+
+    def init(self):
+        super().init()
+        if self._doc is not None:
+            raise e.code.CodingError(
+                msgs=[f"No need to set doc for {self.__class__}"]
+            )
+        # noinspection PyAttributeOutsideInit
+        self._doc = self  # as this is Document class
+
+    def write(
+        self,
+        save_to_file: str,
+        make_pdf: bool = False,
+    ):
+        # ----------------------------------------------- 01
+        # make document
+        _all_lines = [
+            # f"% >> generated on {datetime.datetime.now().ctime()}",
+            "",
+            "% >> init",
+            f"\\documentclass[aspectratio={self.aspect_ratio}]{{beamer}}",
+            f"\\usepackage{{{self.usepackage_file.split('.')[0]}}}",
+            f"\\input{{{self.symbols_file.split('.')[0]}}}",
+            "",
+            str(self),
+            "",
+        ]
+
+        # ----------------------------------------------- 02
+        _save_to_file = pathlib.Path(save_to_file)
+        _save_to_file.write_text("\n".join(_all_lines))
+
+        # ----------------------------------------------- 03
+        # make pdf if requested
+        if make_pdf:
+            helper.make_pdf(
+                tex_file=_save_to_file,
+                pdf_file=_save_to_file.parent /
+                         (_save_to_file.name.split(".")[0] + ".pdf"),
+            )
+
+
+@dataclasses.dataclass
 class Document(LaTeX):
 
-    title: t.Union[str, None] = None
-    author: t.Union[str, None] = None
-    date: t.Union[str, None] = None
+    title: str = None
+    author: str = None
+    date: str = None
 
     main_tex_file: t.Union[None, str] = "../main.tex"
     symbols_file: str = "symbols.tex"

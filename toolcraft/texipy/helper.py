@@ -76,6 +76,8 @@ def make_pdf(
         for _ext in [
             'aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
             'auxlock', 'acn', 'glo', 'ist',
+            # beamer related ...
+            'toc', 'snm', 'nav',
         ]:
             (
                 pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
