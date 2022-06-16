@@ -112,3 +112,4 @@ site/
 /toolcraft/texipy/examples/*.pdf
 /toolcraft/texipy/examples/*.tex
 /toolcraft/texipy/examples/*.log
+/toolcraft/texipy/examples/usepackage.sty

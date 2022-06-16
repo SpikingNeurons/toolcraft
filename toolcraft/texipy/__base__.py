@@ -456,6 +456,23 @@ class Document(LaTeX):
                         f"not on disk so using default setting")
                 self.main_tex_file = None
 
+        # handle symbols_file
+        if not pathlib.Path(self.symbols_file).exists():
+            _LOGGER.warning(
+                msg=f"The configured symbols file {self.symbols_file} is "
+                    f"not on disk so using creating default file ...")
+            pathlib.Path(self.symbols_file).touch()
+
+        # handle usepackage_file
+        if not pathlib.Path(self.usepackage_file).exists():
+            _LOGGER.warning(
+                msg=f"The configured usepackage file {self.usepackage_file} is "
+                    f"not on disk so using creating default file ...")
+            pathlib.Path(self.usepackage_file).touch()
+            pathlib.Path(self.usepackage_file).write_text(
+                (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
+            )
+
     def write(
         self,
         save_to_file: str,
@@ -464,7 +481,7 @@ class Document(LaTeX):
         # ----------------------------------------------- 01
         # make document
         _all_lines = [
-            f"% >> generated on {datetime.datetime.now().ctime()}",
+            # f"% >> generated on {datetime.datetime.now().ctime()}",
             "",
             "% >> init",
             "\\documentclass{article}"

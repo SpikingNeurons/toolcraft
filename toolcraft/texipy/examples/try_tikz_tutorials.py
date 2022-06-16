@@ -105,9 +105,6 @@ if __name__ == '__main__':
         name="A Picture for Karl's Students", label="sec1:karls_student"
     ).add_item(item=part_1_tut_1())
 
-
     _doc.add_item(_section_1.add_item(_section_1_tut_0).add_item(_section_1_tut_1))
-
-
 
     _doc.write(save_to_file="try.tex", make_pdf=True)
