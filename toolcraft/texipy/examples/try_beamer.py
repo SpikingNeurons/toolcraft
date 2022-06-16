@@ -2,6 +2,7 @@
 Replicate:
 https://ctan.org/pkg/beamer?lang=en
 https://ftp.agdsn.de/pub/mirrors/latex/dante/macros/latex/contrib/beamer/doc/beameruserguide.pdf
+https://latex-beamer.com/quick-start/
 """
 
 
@@ -12,12 +13,17 @@ from toolcraft.texipy import tikz
 if __name__ == '__main__':
 
     _ppt = Beamer(
-        theme="Boadilla",
+        theme="Goettingen",
         title="My Presentation",
+        short_title="My Ppt",
         sub_title="With subtitle subtitle ...",
-        author="Praveen Kulkarni",
+        author="\nPraveen Kulkarni\\inst{1,2}\n\\and\nPraveen Kulkarni\\inst{1}\n",
+        short_author="P. Kulkarni et al.",
         date="\\today",
-        institute="My Organization",
+        institute="\n"
+                  "\\inst{1}NXP Semiconductors Germany GmbH \n"
+                  "\\and \n"
+                  "\\inst{2}Radboud University, Nijmegen, Netherlands \n",
         symbols_file="symbols.tex",
         usepackage_file="usepackage.sty",
     )

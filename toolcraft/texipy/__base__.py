@@ -393,15 +393,57 @@ class LaTeX(abc.ABC):
 
 
 @dataclasses.dataclass
+class BeamerFrame(LaTeX):
+
+    @property
+    def open_clause(self) -> str:
+        _ret = "% >> frame start " \
+               "\n\\begin{frame}"
+        if self.label is not None:
+            _ret += f"\\label{{{self.label}}}"
+        return _ret
+
+    @property
+    def close_clause(self) -> str:
+        return "% >> frame end ...\n" \
+               "\\end{frame}"
+
+
+@dataclasses.dataclass
 class Beamer(LaTeX):
 
-    theme: str = "Boadilla"
+    # refer: https://latex-beamer.com/tutorials/beamer-themes/
+    theme: t.Literal[
+        'default', 'Darmstadt', 'Malmoe', 'AnnArbor', 'Dresden', 'Marburg', 'Antibes', 'Frankfurt', 'Montpellier',
+        'Bergen', 'Goettingen', 'PaloAlto', 'Berkeley', 'Hannover', 'Pittsburgh', 'Berlin', 'Ilmenau', 'Rochester',
+        'Boadilla', 'JuanLesPins', 'Singapore', 'CambridgeUS', 'Luebeck', 'Szeged', 'Copenhagen', 'Madrid', 'Warsaw',
+    ] = "Berkeley"
+
+    # refer:
     aspect_ratio: t.Literal[1610, 169, 149, 54, 43, 32] = 169
+
     title: str = None
+    short_title: str = None
     sub_title: str = None
     author: str = None
+    short_author: str = None
     institute: str = None
+    short_institute: str = None
     date: str = None
+    # logo: ... # 3. Add a logo in Beamer https://latex-beamer.com/quick-start/
+
+    # https://tex.stackexchange.com/questions/137022/how-to-insert-page-number-in-beamer-navigation-symbols
+    # figure out how to have options to modify template
+    add_to_beamer_template: str = \
+        "\n" \
+        "\\addtobeamertemplate{navigation symbols}{}{%\n" \
+        "\\usebeamerfont{footline}%\n" \
+        "\\usebeamercolor[fg]{footline}%\n" \
+        "\\hspace{1em}%\n" \
+        "\\raisebox{1.5pt}[0pt][0pt]{\\insertframenumber/\\inserttotalframenumber\n}" \
+        "}\n" \
+        "\\setbeamercolor{footline}{fg=blue}\n" \
+        "\\setbeamerfont{footline}{series=\\bfseries}\n"
 
     symbols_file: str = "symbols.tex"
     usepackage_file: str = "usepackage.sty"
@@ -410,14 +452,30 @@ class Beamer(LaTeX):
     def open_clause(self) -> str:
         _tt = []
         _tt.append(f"\\usetheme{{{self.theme}}}%")
+        if self.add_to_beamer_template is not None:
+            _tt.append(
+                self.add_to_beamer_template
+            )
         if self.title is not None:
-            _tt.append(f"\\title{{{self.title}}}%")
+            _title = "\\title"
+            if self.short_title is not None:
+                _title += f"[{self.short_title}]"
+            _title += f"{{{self.title}}}%"
+            _tt.append(_title)
         if self.sub_title is not None:
             _tt.append(f"\\subtitle{{{self.sub_title}}}%")
         if self.author is not None:
-            _tt.append(f"\\author{{{self.author}}}%")
+            _auth = "\\author"
+            if self.short_author is not None:
+                _auth += f"[{self.short_author}]"
+            _auth += f"{{{self.author}}}%"
+            _tt.append(_auth)
         if self.institute is not None:
-            _tt.append(f"\\institute{{{self.institute}}}%")
+            _inst = "\\institute"
+            if self.short_institute is not None:
+                _inst += f"[{self.short_institute}]"
+            _inst += f"{{{self.institute}}}%"
+            _tt.append(_inst)
         if self.date is not None:
             _tt.append(f"\\date{{{self.date}}}%")
         if bool(_tt):
@@ -425,7 +483,7 @@ class Beamer(LaTeX):
         _ret = _tt + ["% >> begin document", "\\begin{document}%", ]
         _ret += [
             "", "% >> make title page",
-            "\\begin{frame} \\titlepage \\end{frame}",
+            "\\begin{frame}\n\\titlepage\n\\end{frame}",
         ]
         return "\n".join(_ret)
 
@@ -486,7 +544,11 @@ class Beamer(LaTeX):
 class Document(LaTeX):
 
     title: str = None
+    short_title: str = None
     author: str = None
+    short_author: str = None
+    institute: str = None
+    short_institute: str = None
     date: str = None
 
     main_tex_file: t.Union[None, str] = "../main.tex"
@@ -506,9 +568,23 @@ class Document(LaTeX):
     def open_clause(self) -> str:
         _tt = []
         if self.title is not None:
-            _tt.append(f"\\title{{{self.title}}}%")
+            _title = "\\title"
+            if self.short_title is not None:
+                _title += f"[{self.short_title}]"
+            _title += f"{{{self.title}}}%"
+            _tt.append(_title)
         if self.author is not None:
-            _tt.append(f"\\author{{{self.author}}}%")
+            _auth = "\\author"
+            if self.short_author is not None:
+                _auth += f"[{self.short_author}]"
+            _auth += f"{{{self.author}}}%"
+            _tt.append(_auth)
+        if self.institute is not None:
+            _inst = "\\institute"
+            if self.short_institute is not None:
+                _inst += f"[{self.short_institute}]"
+            _inst += f"{{{self.institute}}}%"
+            _tt.append(_inst)
         if self.date is not None:
             _tt.append(f"\\date{{{self.date}}}%")
         if bool(_tt):
