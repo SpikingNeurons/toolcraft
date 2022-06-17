@@ -374,15 +374,13 @@ class LaTeX(abc.ABC):
             if _close_clause != "":
                 _close_clause += "\n"
             if self.use_single_line_repr:
-                return f"\n" + \
-                       _sta + \
+                return _sta + \
                        self.open_clause + \
                        self.generate() + \
                        _close_clause + \
                        _end
             else:
-                return f"\n" + \
-                       _sta + \
+                return _sta + \
                        self.open_clause + \
                        f"\n% {'--' * self.depth} \n" + \
                        self.generate() + \
@@ -394,8 +392,7 @@ class LaTeX(abc.ABC):
             #     raise e.code.CodingError(
             #         msgs=["was expecting to repr to be single line ... implement if you want this"]
             #     )
-            return f"\n" + \
-                   _sta + \
+            return _sta + \
                    self.open_clause + \
                    self.generate() + \
                    self.close_clause + "\n" + \
@@ -437,96 +434,6 @@ class LaTeX(abc.ABC):
 
     def generate(self) -> str:
         return "\n".join([str(_) for _ in self._items])
-
-
-@dataclasses.dataclass
-class BeamerTableOfContentsFrame(LaTeX):
-    """
-    TableOfContents geared for Beamer ... for normal TableOfContents implement separately
-    """
-
-    title: str = "Outline"
-    hide_all_subsections: bool = False
-    pause_sections: bool = False
-    current_section: bool = False
-    current_sub_section: bool = False
-
-    # https://tex.stackexchange.com/questions/11100/beamer-atbeginsection-and-insertsubsectionnavigation
-    section_style: str = None  # "show//hide"
-    sub_section_style: str = None  # "hide//show//hide"
-
-    @property
-    def allow_add_items(self) -> bool:
-        """
-        This is specialized frame to hold table of content so we do not allow to add items
-        """
-        return False
-
-    @property
-    def open_clause(self) -> str:
-
-        # add \AtBeginSubsection[]
-        if self.current_section or self.current_sub_section:
-            _ret = "\\AtBeginSubsection[]{\n" \
-                   "\\begin{frame}\n"
-        else:
-            _ret = "\\begin{frame}\n"
-
-        # add other frame settings
-        if self.label is not None:
-            _ret += f"\\label{{{self.label}}}\n"
-        if self.title is not None:
-            _ret += f"\\frametitle{{{self.title}}}\n"
-
-        # tableofcontents with options ...
-        _toc = "\\tableofcontents["
-        _toc_options = []
-        if self.hide_all_subsections:
-            _toc_options.append("hideallsubsections")
-        if self.pause_sections:
-            _toc_options.append("pausesections")
-        if self.current_section:
-            _toc_options.append("currentsection")
-        if self.current_sub_section:
-            _toc_options.append("currentsubsection")
-        if self.section_style is not None:
-            _toc_options.append(f"sectionstyle={self.section_style}")
-        if self.sub_section_style is not None:
-            _toc_options.append(f"subsectionstyle={self.sub_section_style}")
-        _toc = _toc + ",".join(_toc_options) + "]\n"
-        _ret += _toc
-
-        # add final clause
-        if self.current_section or self.current_sub_section:
-            _ret += "\\end{frame}}"
-        else:
-            _ret += "\\end{frame}"
-
-        # return
-        return _ret
-
-    @property
-    def close_clause(self) -> str:
-        return ""
-
-
-@dataclasses.dataclass
-class BeamerFrame(LaTeX):
-
-    title: str = None
-
-    @property
-    def open_clause(self) -> str:
-        _ret = "\\begin{frame}\n"
-        if self.label is not None:
-            _ret += f"\\label{{{self.label}}}\n"
-        if self.title is not None:
-            _ret += f"\\frametitle{{{self.title}}}"
-        return _ret
-
-    @property
-    def close_clause(self) -> str:
-        return "\\end{frame}"
 
 
 @dataclasses.dataclass
@@ -750,15 +657,11 @@ class Document(LaTeX):
                     f"not on disk so using creating default file ...")
             pathlib.Path(self.symbols_file).touch()
 
-        # handle usepackage_file
-        if not pathlib.Path(self.usepackage_file).exists():
-            _LOGGER.warning(
-                msg=f"The configured usepackage file {self.usepackage_file} is "
-                    f"not on disk so using creating default file ...")
-            pathlib.Path(self.usepackage_file).touch()
-            pathlib.Path(self.usepackage_file).write_text(
-                (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
-            )
+        # handle usepackage_file ... we always overwrite with our default file
+        pathlib.Path(self.usepackage_file).unlink()
+        pathlib.Path(self.usepackage_file).write_text(
+            (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
+        )
 
     def write(
         self,
@@ -793,6 +696,60 @@ class Document(LaTeX):
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
                          (_save_to_file.name.split(".")[0] + ".pdf"),
+            )
+
+
+@dataclasses.dataclass
+class List(LaTeX):
+    """
+    https://latex-tutorial.com/tutorials/lists/
+
+    todo: Add bullet styles support https://latex-tutorial.com/bullet-styles/
+          Currently using str's
+    """
+    type: t.Literal['itemize', 'enumerate', 'description'] = 'itemize'
+    items: t.Union[
+        t.List[t.Union[str, "List"]],
+        t.List[t.Tuple[str, str]]
+    ] = None
+
+    @property
+    def allow_add_items(self) -> bool:
+        return False
+
+    @property
+    def open_clause(self) -> str:
+        _ret = f"\\begin{{{self.type}}}\n"
+        return _ret
+
+    def generate(self) -> str:
+        _ret = ""
+        for _item in self.items:
+            if isinstance(_item, str):
+                _ret += f"\\item {_item}\n"
+            elif isinstance(_item, List):
+                if _item._parent is not None:
+                    raise e.code.CodingError(
+                        msgs=["Was expecting lis to not have parent"]
+                    )
+                _item._parent = self
+                _ret += str(_item)
+            elif isinstance(_item, tuple):
+                # refer for styles https://latex-tutorial.com/bullet-styles/
+                _bullet_style, _value = _item
+                _ret += f"\\item[{_bullet_style}] {_value}\n"
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[])
+        return _ret
+
+    @property
+    def close_clause(self) -> str:
+        return f"\\end{{{self.type}}}"
+
+    def init_validate(self):
+        if self.items is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please supply mandatory field items"]
             )
 
 
