@@ -309,10 +309,6 @@ class LaTeX(abc.ABC):
         return []
 
     @property
-    def use_new_lines(self) -> bool:
-        return True
-
-    @property
     def allow_add_items(self) -> bool:
         return True
 
@@ -326,6 +322,29 @@ class LaTeX(abc.ABC):
     def close_clause(self) -> str:
         ...
 
+    @property
+    def depth(self) -> int:
+        if id(self) == id(self._parent):
+            return 1
+        else:
+            return self._parent.depth + 1
+
+    @property
+    def use_single_line_repr(self) -> bool:
+        return False
+
+    @property
+    def doc(self) -> t.Union["Document", "Beamer"]:
+        if id(self) == id(self._parent):
+            if isinstance(self, (Document, Beamer)):
+                return self
+            else:
+                raise e.code.CodingError(
+                    msgs=[f"Dis you set parent with wrong class {self.__class__} ???"]
+                )
+        else:
+            return self._parent.doc
+
     def __post_init__(self):
 
         # if self.items is None:
@@ -338,30 +357,49 @@ class LaTeX(abc.ABC):
         # assign _doc to any items first ...
         for _ in self._items:
             if not isinstance(_, str):
-                if _._doc is None:
-                    _._doc = self._doc
-                else:
-                    if id(_._doc) != id(self._doc):
-                        raise e.code.CodingError(
-                            msgs=["Different instances of _doc found ... "
-                                  "there must be only one"]
-                        )
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
-                        value=_.label, values=self._doc.labels,
+                        value=_.label, values=self.doc.labels,
                         msgs=[
                             f"Please use a unique label ..."
                         ]
                     ).raise_if_failed()
-                    self._doc.labels.append(_.label)
+                    self.doc.labels.append(_.label)
 
         # create str
-        if self.use_new_lines:
-            return self.open_clause + "%\n\n" + \
-                   self.generate() + "\n\n" + \
-                   self.close_clause + "%"
+        _sta = f"% {'>>' * self.depth} {self.__class__.__name__} .. START \n"
+        _end = f"% {'<<' * self.depth} {self.__class__.__name__} .. END \n"
+        if self.allow_add_items:
+            _close_clause = self.close_clause
+            if _close_clause != "":
+                _close_clause += "\n"
+            if self.use_single_line_repr:
+                return f"\n" + \
+                       _sta + \
+                       self.open_clause + \
+                       self.generate() + \
+                       _close_clause + \
+                       _end
+            else:
+                return f"\n" + \
+                       _sta + \
+                       self.open_clause + \
+                       f"\n% {'--' * self.depth} \n" + \
+                       self.generate() + \
+                       f"\n% {'--' * self.depth} \n" + \
+                       _close_clause + \
+                       _end
         else:
-            return self.open_clause + self.generate() + self.close_clause
+            # if not self.use_single_line_repr:
+            #     raise e.code.CodingError(
+            #         msgs=["was expecting to repr to be single line ... implement if you want this"]
+            #     )
+            return f"\n" + \
+                   _sta + \
+                   self.open_clause + \
+                   self.generate() + \
+                   self.close_clause + "\n" + \
+                   _end
 
     def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
         if not self.allow_add_items:
@@ -369,8 +407,13 @@ class LaTeX(abc.ABC):
                 msgs=[f"You are not allowed to use `add_items` method for class "
                       f"{self.__class__}"]
             )
-        if self._doc is not None:
-            item._doc = self._doc
+        if isinstance(item, LaTeX):
+            if item._parent is None:
+                item._parent = self
+            else:
+                raise e.code.CodingError(
+                    msgs=["We expect _parent of item not to be set ..."]
+                )
         self._items.append(item)
         return self
 
@@ -379,14 +422,18 @@ class LaTeX(abc.ABC):
 
     def init(self):
         # noinspection PyTypeChecker,PyAttributeOutsideInit
-        self._doc = None  # type: Document
+        self._parent = None  # type: LaTeX
 
         # if any dataclass field is instance of subclass of LaTeX then assign self._doc
         for f in dataclasses.fields(self):
             _v = getattr(self, f.name)
             if isinstance(_v, LaTeX):
-                if _v._doc is None:
-                    _v._doc = self._doc
+                if _v._parent is None:
+                    _v._parent = self
+                else:
+                    raise e.code.CodingError(
+                        msgs=["mst be set by add_item or init method ..."]
+                    )
 
     def generate(self) -> str:
         return "\n".join([str(_) for _ in self._items])
@@ -402,6 +449,7 @@ class BeamerTableOfContentsFrame(LaTeX):
     hide_all_subsections: bool = False
     pause_sections: bool = False
     current_section: bool = False
+    current_sub_section: bool = False
 
     # https://tex.stackexchange.com/questions/11100/beamer-atbeginsection-and-insertsubsectionnavigation
     section_style: str = None  # "show//hide"
@@ -416,12 +464,19 @@ class BeamerTableOfContentsFrame(LaTeX):
 
     @property
     def open_clause(self) -> str:
-        _ret = "% >> table of contents ... \n" \
-               "\\begin{frame}\n"
+
+        # add \AtBeginSubsection[]
+        if self.current_section or self.current_sub_section:
+            _ret = "\\AtBeginSubsection[]{\n" \
+                   "\\begin{frame}\n"
+        else:
+            _ret = "\\begin{frame}\n"
+
+        # add other frame settings
         if self.label is not None:
             _ret += f"\\label{{{self.label}}}\n"
         if self.title is not None:
-            _ret += f"\\frametitle{{{self.title}}}%\n"
+            _ret += f"\\frametitle{{{self.title}}}\n"
 
         # tableofcontents with options ...
         _toc = "\\tableofcontents["
@@ -432,15 +487,20 @@ class BeamerTableOfContentsFrame(LaTeX):
             _toc_options.append("pausesections")
         if self.current_section:
             _toc_options.append("currentsection")
+        if self.current_sub_section:
+            _toc_options.append("currentsubsection")
         if self.section_style is not None:
             _toc_options.append(f"sectionstyle={self.section_style}")
         if self.sub_section_style is not None:
             _toc_options.append(f"subsectionstyle={self.sub_section_style}")
-        _toc = _toc + ",".join(_toc_options) + "]%\n"
+        _toc = _toc + ",".join(_toc_options) + "]\n"
         _ret += _toc
 
-        # final close clause
-        _ret += "\\end{frame}%"
+        # add final clause
+        if self.current_section or self.current_sub_section:
+            _ret += "\\end{frame}}"
+        else:
+            _ret += "\\end{frame}"
 
         # return
         return _ret
@@ -457,8 +517,7 @@ class BeamerFrame(LaTeX):
 
     @property
     def open_clause(self) -> str:
-        _ret = "% >> frame start \n" \
-               "\\begin{frame}\n"
+        _ret = "\\begin{frame}\n"
         if self.label is not None:
             _ret += f"\\label{{{self.label}}}\n"
         if self.title is not None:
@@ -467,8 +526,7 @@ class BeamerFrame(LaTeX):
 
     @property
     def close_clause(self) -> str:
-        return "% >> frame end ...\n" \
-               "\\end{frame}"
+        return "\\end{frame}"
 
 
 @dataclasses.dataclass
@@ -498,14 +556,16 @@ class Beamer(LaTeX):
     # figure out how to have options to modify template
     add_to_beamer_template: str = \
         "\n" \
-        "\\addtobeamertemplate{navigation symbols}{}{%\n" \
-        "\\usebeamerfont{footline}%\n" \
-        "\\usebeamercolor[fg]{footline}%\n" \
-        "\\hspace{1em}%\n" \
+        "\\addtobeamertemplate{navigation symbols}{}{\n" \
+        "\\usebeamerfont{footline}\n" \
+        "\\usebeamercolor[fg]{footline}\n" \
+        "\\hspace{1em}\n" \
         "\\raisebox{1.5pt}[0pt][0pt]{\\insertframenumber/\\inserttotalframenumber\n}" \
         "}\n" \
         "\\setbeamercolor{footline}{fg=blue}\n" \
-        "\\setbeamerfont{footline}{series=\\bfseries}\n"
+        "\\setbeamerfont{footline}{series=\\bfseries}\n" \
+        "\\setbeamertemplate{itemize items}[square]\n" \
+        "\\setbeamertemplate{enumerate items}[square]\n"
 
     symbols_file: str = "symbols.tex"
     usepackage_file: str = "usepackage.sty"
@@ -518,7 +578,7 @@ class Beamer(LaTeX):
     @property
     def open_clause(self) -> str:
         _tt = []
-        _tt.append(f"\\usetheme{{{self.theme}}}%")
+        _tt.append(f"\\usetheme{{{self.theme}}}")
         if self.add_to_beamer_template is not None:
             _tt.append(
                 self.add_to_beamer_template
@@ -527,36 +587,33 @@ class Beamer(LaTeX):
             _title = "\\title"
             if self.short_title is not None:
                 _title += f"[{self.short_title}]"
-            _title += f"{{{self.title}}}%"
+            _title += f"{{{self.title}}}"
             _tt.append(_title)
         if self.sub_title is not None:
-            _tt.append(f"\\subtitle{{{self.sub_title}}}%")
+            _tt.append(f"\\subtitle{{{self.sub_title}}}")
         if self.author is not None:
             _auth = "\\author"
             if self.short_author is not None:
                 _auth += f"[{self.short_author}]"
-            _auth += f"{{{self.author}}}%"
+            _auth += f"{{{self.author}}}"
             _tt.append(_auth)
         if self.institute is not None:
             _inst = "\\institute"
             if self.short_institute is not None:
                 _inst += f"[{self.short_institute}]"
-            _inst += f"{{{self.institute}}}%"
+            _inst += f"{{{self.institute}}}"
             _tt.append(_inst)
         if self.date is not None:
-            _tt.append(f"\\date{{{self.date}}}%")
-        if bool(_tt):
-            _tt = ["% >> title related"] + _tt + [""]
-        _ret = _tt + ["% >> begin document", "\\begin{document}%", ]
+            _tt.append(f"\\date{{{self.date}}}")
+        _ret = _tt + ["\\begin{document}"]
         _ret += [
-            "", "% >> make title page",
             "\\begin{frame}\n\\titlepage\n\\end{frame}",
         ]
         return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
-        return "% >> end document\n\\end{document}"
+        return "\\end{document}"
 
     def init_validate(self):
         super().init_validate()
@@ -567,12 +624,12 @@ class Beamer(LaTeX):
 
     def init(self):
         super().init()
-        if self._doc is not None:
+        if self._parent is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set doc for {self.__class__}"]
+                msgs=[f"No need to set _parent for {self.__class__}"]
             )
         # noinspection PyAttributeOutsideInit
-        self._doc = self  # as this is Document class
+        self._parent = self
 
     def write(
         self,
@@ -582,9 +639,8 @@ class Beamer(LaTeX):
         # ----------------------------------------------- 01
         # make document
         _all_lines = [
-            # f"% >> generated on {datetime.datetime.now().ctime()}",
+            # f"% Generated on {datetime.datetime.now().ctime()}",
             "",
-            "% >> init",
             f"\\documentclass[aspectratio={self.aspect_ratio}]{{beamer}}",
             f"\\usepackage{{{self.usepackage_file.split('.')[0]}}}",
             f"\\input{{{self.symbols_file.split('.')[0]}}}",
@@ -638,32 +694,30 @@ class Document(LaTeX):
             _title = "\\title"
             if self.short_title is not None:
                 _title += f"[{self.short_title}]"
-            _title += f"{{{self.title}}}%"
+            _title += f"{{{self.title}}}"
             _tt.append(_title)
         if self.author is not None:
             _auth = "\\author"
             if self.short_author is not None:
                 _auth += f"[{self.short_author}]"
-            _auth += f"{{{self.author}}}%"
+            _auth += f"{{{self.author}}}"
             _tt.append(_auth)
         if self.institute is not None:
             _inst = "\\institute"
             if self.short_institute is not None:
                 _inst += f"[{self.short_institute}]"
-            _inst += f"{{{self.institute}}}%"
+            _inst += f"{{{self.institute}}}"
             _tt.append(_inst)
         if self.date is not None:
-            _tt.append(f"\\date{{{self.date}}}%")
-        if bool(_tt):
-            _tt = ["% >> title related"] + _tt + [""]
-        _ret = _tt + ["% >> begin document", "\\begin{document}%", ]
+            _tt.append(f"\\date{{{self.date}}}")
+        _ret = _tt + ["\\begin{document}"]
         if bool(_tt):
             _ret += ["\\maketitle"]
         return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
-        return "% >> end document\n\\end{document}"
+        return "\\end{document}"
 
     def init_validate(self):
         super().init_validate()
@@ -674,12 +728,12 @@ class Document(LaTeX):
 
     def init(self):
         super().init()
-        if self._doc is not None:
+        if self._parent is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set doc for {self.__class__}"]
+                msgs=[f"No need to set _parent for {self.__class__}"]
             )
         # noinspection PyAttributeOutsideInit
-        self._doc = self  # as this is Document class
+        self._parent = self
 
         # if main tex file not on disk automatically reset to None
         if self.main_tex_file is not None:
@@ -714,9 +768,8 @@ class Document(LaTeX):
         # ----------------------------------------------- 01
         # make document
         _all_lines = [
-            # f"% >> generated on {datetime.datetime.now().ctime()}",
+            # f"% Generated on {datetime.datetime.now().ctime()}",
             "",
-            "% >> init",
             "\\documentclass{article}"
             if self.main_tex_file is None else
             f"\\documentclass[{self.main_tex_file}]{{subfiles}}",
@@ -753,15 +806,14 @@ class ChAndSec(LaTeX, abc.ABC):
 
     @property
     def open_clause(self) -> str:
-        _ret = f"% >> {self.command}: `{self.name}` start " \
-               f"\n\\{self.command}{{{self.name}}}"
+        _ret = f"\\{self.command}{{{self.name}}}"
         if self.label is not None:
             _ret += f"\\label{{{self.label}}}"
         return _ret
 
     @property
     def close_clause(self) -> str:
-        return f"% >> {self.command}: `{self.name}` end ..."
+        return ""
 
 
 @dataclasses.dataclass

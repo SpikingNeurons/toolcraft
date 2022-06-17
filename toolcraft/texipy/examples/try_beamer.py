@@ -34,6 +34,12 @@ if __name__ == '__main__':
         )
     )
 
+    _ppt.add_item(
+        item=BeamerTableOfContentsFrame(
+            title="Outline", hide_all_subsections=False, current_section=True,
+        )
+    )
+
     _ppt.add_item(item=BeamerFrame(title="First Frame", label="first_frame").add_item("This is first frame ..."))
 
     _ppt.write(save_to_file="try.tex", make_pdf=True)

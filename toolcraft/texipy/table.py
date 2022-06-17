@@ -192,7 +192,7 @@ class MultiRowCell(LaTeX):
     value: t.Union[LaTeX, str] = None
 
     @property
-    def use_new_lines(self) -> bool:
+    def allow_add_items(self) -> bool:
         return False
 
     @property
@@ -202,10 +202,6 @@ class MultiRowCell(LaTeX):
     @property
     def close_clause(self) -> str:
         return ""
-
-    @property
-    def allow_add_items(self) -> bool:
-        return False
 
     def init_validate(self):
         # call super
@@ -242,7 +238,7 @@ class MultiColumnCell(LaTeX):
     value: t.Union[LaTeX, str] = None
 
     @property
-    def use_new_lines(self) -> bool:
+    def allow_add_items(self) -> bool:
         return False
 
     @property
@@ -252,10 +248,6 @@ class MultiColumnCell(LaTeX):
     @property
     def close_clause(self) -> str:
         return ""
-
-    @property
-    def allow_add_items(self) -> bool:
-        return False
 
     def init_validate(self):
         # call super
@@ -294,8 +286,8 @@ class Row(LaTeX):
     height: Scalar = None
 
     @property
-    def use_new_lines(self) -> bool:
-        return False
+    def use_single_line_repr(self) -> bool:
+        return True
 
     @property
     def open_clause(self) -> str:
@@ -333,8 +325,8 @@ class Row(LaTeX):
 class TableColsDef(LaTeX):
 
     @property
-    def use_new_lines(self) -> bool:
-        return False
+    def use_single_line_repr(self) -> bool:
+        return True
 
     @property
     def open_clause(self) -> str:
@@ -496,9 +488,8 @@ class Table(LaTeX):
             _ret = []
         else:
             _ret = [
-                f"% >> start table `{'...' if self.label is None else self.label}`",
                 f"\\begin{{table}}"
-                f"{'' if self.positioning is None else self.positioning}%",
+                f"{'' if self.positioning is None else self.positioning}",
             ]
 
         # add alignment
@@ -510,9 +501,6 @@ class Table(LaTeX):
             _ret.append(f"\\caption{{{self.caption}}}%")
         if self.label is not None:
             _ret.append(f"\\label{{{self.label}}}%")
-
-        # add comment
-        _ret.append(f"% >> start {self.latex_type}")
 
         # make width
         _width = ""
