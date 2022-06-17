@@ -6,7 +6,7 @@ https://latex-beamer.com/quick-start/
 """
 
 
-from toolcraft.texipy import Section, Color, SubSection
+from toolcraft.texipy import Section, Color, SubSection, List
 from toolcraft.texipy import tikz, beamer
 
 
@@ -40,6 +40,19 @@ if __name__ == '__main__':
         )
     )
 
-    _ppt.add_item(item=beamer.Frame(title="First Frame", label="first_frame").add_item("This is first frame ..."))
+    _ppt.add_item(
+        item=beamer.Frame(
+            title="First Frame", label="first_frame"
+        ).add_item(
+            item=List(
+                type='enumerate',
+                items=[
+                    "Apple", "Mango",
+                    # List(type='enumerate', items=["Apple", "Mango", "Orange"]),
+                    "Orange"
+                ]
+            )
+        )
+    )
 
     _ppt.write(save_to_file="try.tex", make_pdf=True)

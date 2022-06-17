@@ -103,6 +103,13 @@ class FontSize(enum.Enum):
         return f"{{{self} {text}}}"
 
 
+class Ding(enum.Enum):
+    """
+    todo: add support for ding for bullet styles
+          https://latex-tutorial.com/bullet-styles/
+    """
+
+
 class Fa(enum.Enum):
     """
     Options supported by \\usepackage{fontawesome5}
