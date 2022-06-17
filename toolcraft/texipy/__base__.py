@@ -468,18 +468,27 @@ class Beamer(LaTeX):
 
     # https://tex.stackexchange.com/questions/137022/how-to-insert-page-number-in-beamer-navigation-symbols
     # figure out how to have options to modify template
-    add_to_beamer_template: str = \
-        "\n" \
-        "\\addtobeamertemplate{navigation symbols}{}{\n" \
-        "\\usebeamerfont{footline}\n" \
-        "\\usebeamercolor[fg]{footline}\n" \
-        "\\hspace{1em}\n" \
-        "\\raisebox{1.5pt}[0pt][0pt]{\\insertframenumber/\\inserttotalframenumber\n}" \
-        "}\n" \
-        "\\setbeamercolor{footline}{fg=blue}\n" \
-        "\\setbeamerfont{footline}{series=\\bfseries}\n" \
-        "\\setbeamertemplate{itemize items}[square]\n" \
-        "\\setbeamertemplate{enumerate items}[square]\n"
+    add_to_beamer_template: str = "\n".join(
+        [
+            "",
+            # "\\setbeamercolor{structure}{fg=blue}",
+            "\\usetheme[left]{Goettingen}",
+            # "\\setbeamercolor{navigation symbols}{fg=green, bg=blue!50}",
+            # "\\setbeamercolor{palette sidebar secondary}{fg=yellow,bg=blue}",
+            # "\\setbeamercolor{section in sidebar shaded}{fg=red,bg=black}",
+            # "\\setbeamercolor{footline}{fg=teal}",
+            # "\\setbeamertemplate{itemize items}[square]",
+            # "\\setbeamertemplate{enumerate items}[square]",
+            "\\setbeamerfont{footline}{series=\\bfseries}",
+            "\\addtobeamertemplate{navigation symbols}{}{",
+            # "\\usebeamerfont{footline}",
+            # "\\usebeamercolor[fg]{footline}",
+            "\\hspace{1em}",
+            "\\raisebox{1.5pt}[0pt][0pt]{\\insertframenumber/\\inserttotalframenumber}",
+            "}",
+            # "\\setbeamercolor{structure}{fg=red}\n",
+        ]
+    )
 
     symbols_file: str = "symbols.tex"
     usepackage_file: str = "usepackage.sty"
@@ -492,11 +501,11 @@ class Beamer(LaTeX):
     @property
     def open_clause(self) -> str:
         _tt = []
-        _tt.append(f"\\usetheme{{{self.theme}}}")
         if self.add_to_beamer_template is not None:
             _tt.append(
                 self.add_to_beamer_template
             )
+        # _tt.append(f"\\usetheme[left]{{{self.theme}}}")
         if self.title is not None:
             _title = "\\title"
             if self.short_title is not None:
@@ -544,6 +553,19 @@ class Beamer(LaTeX):
             )
         # noinspection PyAttributeOutsideInit
         self._parent = self
+
+        # handle symbols_file
+        if not pathlib.Path(self.symbols_file).exists():
+            _LOGGER.warning(
+                msg=f"The configured symbols file {self.symbols_file} is "
+                    f"not on disk so using creating default file ...")
+            pathlib.Path(self.symbols_file).touch()
+
+        # handle usepackage_file ... we always overwrite with our default file
+        pathlib.Path(self.usepackage_file).unlink()
+        pathlib.Path(self.usepackage_file).write_text(
+            (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
+        )
 
     def write(
         self,
