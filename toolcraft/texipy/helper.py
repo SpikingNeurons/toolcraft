@@ -76,15 +76,16 @@ def make_pdf(
                 _LOGGER.info(msg=output.decode())
 
         if _second_run:
-            for _ext in [
-                'aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
-                'auxlock', 'acn', 'glo', 'ist',
-                # beamer related ...
-                'snm', 'nav',
-            ]:
-                (
-                    pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
-                ).unlink(missing_ok=True)
+            ...
+            # for _ext in [
+            #     'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
+            #     'auxlock', 'acn', 'glo', 'ist',
+            #     # beamer related ...
+            #     'snm', 'nav',
+            # ]:
+            #     (
+            #         pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
+            #     ).unlink(missing_ok=True)
         else:
             # so that toc is handled
             make_pdf(
