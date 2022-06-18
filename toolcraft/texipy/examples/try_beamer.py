@@ -13,7 +13,7 @@ import try_table, try_tikz, try_document
 
 def _outline(current_section):
     return beamer.TableOfContents(
-        title="Outline", hide_all_subsections=True, current_section=current_section,
+        title="Outline", hide_all_subsections=False, current_section=current_section,
     )
 if __name__ == '__main__':
 
