@@ -31,7 +31,7 @@ if __name__ == '__main__':
                   "\\inst{2}Organization Two \n",
         symbols_file="symbols.tex",
         usepackage_file="usepackage.sty",
-        bib_file="zotero.bib",
+        # bib_file="zotero.bib",
     )
 
     # ------------------------------------------------ add all sections
@@ -106,15 +106,15 @@ if __name__ == '__main__':
     )
 
     # ------------------------------------------------ add section ref
-    # _section_ref.add_item(
-    #     beamer.Frame(
-    #         title="References", label="ref", allow_frame_breaks=True,
-    #     ).add_item(
-    #         item="\\addbibresource{zotero.bib}"
-    #     ).add_item(
-    #         item="\\bibliographystyle{amsalpha}"
-    #     )
-    # )
+    _section_ref.add_item(
+        beamer.Frame(
+            title="References", label="ref", allow_frame_breaks=True,
+        ).add_item(
+            item="\\bibliographystyle{plain}"
+        ).add_item(
+            item="\\bibliography{zotero}"
+        )
+    )
 
     # ------------------------------------------------ write
     _ppt.write(save_to_file="try.tex", make_pdf=True)
