@@ -41,9 +41,16 @@ if __name__ == '__main__':
     #     )
     # )
 
+    # ------------------------------------------------ add all sections
     _section_1 = Section(
         label="sec1", name="Section One ..."
     )
+    _section_2 = Section(
+        label="sec2", name="Section Two ..."
+    )
+    _ppt.add_item(_section_1).add_item(_section_2)
+
+    # ------------------------------------------------ add all section 1
     _frame_1 = beamer.Frame(
         title="List1", label="list"
     ).add_item(
@@ -58,20 +65,24 @@ if __name__ == '__main__':
     )
     _section_1.add_item(item=_frame_1)
 
-    _section_2 = Section(
-        label="sec2", name="Section Two ..."
+    # ------------------------------------------------ add all section 2
+    _section_2_1 = SubSection(label="sec2:tikz", name="Section Two ... TikZ")
+    _section_2_2 = SubSection(label="sec2:table", name="Section Two ... Table")
+    _section_2.add_item(_section_2_1).add_item(_section_2_2)
+    _section_2_1.add_item(
+        beamer.Frame(
+            title="TikZ figure", label="tikz"
+        ).add_item(
+            item=try_tikz.make_complicated_figure()
+        )
     )
-    _frame_2 = beamer.Frame(
-        title="List2", label="list2"
-    ).add_item(
-        item=try_tikz.make_complicated_figure()
+    _section_2_2.add_item(
+        beamer.Frame(
+            title="Table", label="table"
+        ).add_item(
+            item=try_table.make_table()
+        )
     )
-    _section_2.add_item(item=_frame_2)
 
-    _ppt.add_item(
-        item=_section_1
-    ).add_item(
-        item=_section_2
-    )
-
+    # ------------------------------------------------ write
     _ppt.write(save_to_file="try.tex", make_pdf=True)

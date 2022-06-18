@@ -10,10 +10,12 @@ _LOGGER = logger.get_logger()
 
 
 def make_pdf(
-    tex_file: pathlib.Path, pdf_file: pathlib.Path,
+    tex_file: pathlib.Path,
+    pdf_file: pathlib.Path,
     compiler: str = None,
     compiler_args: t.List = None,
     silent: bool = True,
+    _second_run: bool = False,
 ):
     """
     Refer:
@@ -73,15 +75,22 @@ def make_pdf(
             if not silent:
                 _LOGGER.info(msg=output.decode())
 
-        for _ext in [
-            'aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
-            'auxlock', 'acn', 'glo', 'ist',
-            # beamer related ...
-            'toc', 'snm', 'nav',
-        ]:
-            (
-                pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
-            ).unlink(missing_ok=True)
+        if _second_run:
+            for _ext in [
+                'aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
+                'auxlock', 'acn', 'glo', 'ist',
+                # beamer related ...
+                'snm', 'nav',
+            ]:
+                (
+                    pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
+                ).unlink(missing_ok=True)
+        else:
+            # so that toc is handled
+            make_pdf(
+                tex_file=tex_file, pdf_file=pdf_file, compiler=compiler, compiler_args=compiler_args,
+                silent=silent, _second_run=True,
+            )
 
         # Compilation has finished, so no further compilers have to be
         # tried

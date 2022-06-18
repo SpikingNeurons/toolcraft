@@ -45,7 +45,7 @@ class TableOfContents(LaTeX):
             _ret += f"\\frametitle{{{self.title}}}\n"
 
         # tableofcontents with options ...
-        _toc = "\\tableofcontents["
+        _toc = "\\tableofcontents"
         _toc_options = []
         if self.hide_all_subsections:
             _toc_options.append("hideallsubsections")
@@ -59,14 +59,17 @@ class TableOfContents(LaTeX):
             _toc_options.append(f"sectionstyle={self.section_style}")
         if self.sub_section_style is not None:
             _toc_options.append(f"subsectionstyle={self.sub_section_style}")
-        _toc = _toc + ",".join(_toc_options) + "]\n"
+        if bool(_toc_options):
+            _toc += "[" + ",".join(_toc_options) + "]"
+        else:
+            _toc += "[]"
         _ret += _toc
 
         # add final clause
         if self.current_section or self.current_sub_section:
-            _ret += "\\end{frame}}"
+            _ret += "\n\\end{frame}}"
         else:
-            _ret += "\\end{frame}"
+            _ret += "\n\\end{frame}"
 
         # return
         return _ret
