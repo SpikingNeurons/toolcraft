@@ -464,6 +464,7 @@ class Beamer(LaTeX):
     institute: str = None
     short_institute: str = None
     date: str = None
+    bib_file: str = None
     # logo: ... # 3. Add a logo in Beamer https://latex-beamer.com/quick-start/
 
     # https://tex.stackexchange.com/questions/137022/how-to-insert-page-number-in-beamer-navigation-symbols
@@ -501,10 +502,20 @@ class Beamer(LaTeX):
     @property
     def open_clause(self) -> str:
         _tt = []
+
         if self.add_to_beamer_template is not None:
             _tt.append(
                 self.add_to_beamer_template
             )
+
+        if self.bib_file is not None:
+            # https://github.com/FedericoTartarini/youtube-beamer-tutorial/blob/%234-bibliography/main.tex
+            # _tt.append("\\usepackage[backend=biber, style=authoryear]{biblatex}")
+            # _tt.append("\\usepackage{biblatex}")
+            # _tt.append(f"\\addbibresource{{{self.bib_file}}}")
+            # _tt.append("\\AtBeginBibliography{\\small}")
+            ...
+
         # _tt.append(f"\\usetheme[left]{{{self.theme}}}")
         if self.title is not None:
             _title = "\\title"
@@ -562,7 +573,8 @@ class Beamer(LaTeX):
             pathlib.Path(self.symbols_file).touch()
 
         # handle usepackage_file ... we always overwrite with our default file
-        pathlib.Path(self.usepackage_file).unlink()
+        if pathlib.Path(self.usepackage_file).exists():
+            pathlib.Path(self.usepackage_file).unlink()
         pathlib.Path(self.usepackage_file).write_text(
             (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
         )

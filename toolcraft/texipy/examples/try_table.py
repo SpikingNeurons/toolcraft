@@ -48,12 +48,13 @@ def compute_simulated_dataset_acc():
     print(_acc*100.)
 
 
-def make_table():
+def make_table(scale: t.Tuple[float, float] = None):
 
     # compute_simulated_dataset_acc()
 
     _table = table.Table(
         type='X',
+        scale=scale,
         caption="Results for standard and \\mtovc classifier",
         label="table:results",
         positioning=Positioning(here=True, top=True, special_float_page=True),

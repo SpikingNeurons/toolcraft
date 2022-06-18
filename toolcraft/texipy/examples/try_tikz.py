@@ -340,12 +340,13 @@ def make_edges(
     _tikz.add_path(_nonambig_legend_path)
 
 
-def make_complicated_figure():
+def make_complicated_figure(scale: t.Tuple[float, float] = None):
 
     _tikz = tikz.TikZ(
         caption="Learnable Labels Vs. Ambiguous Labels", label="fig:ambig",
         positioning=Positioning(here=True, top=True, special_float_page=True),
         alignment=FloatObjAlignment.centering,
+        scale=scale,
     )
     # _tikz.show_debug_grid(width=_WIDTH + .01, height=_HEIGHT, step=_STEP)
 

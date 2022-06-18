@@ -296,9 +296,9 @@ class Row(LaTeX):
     @property
     def close_clause(self) -> str:
         if self.height is None:
-            _ret = " \\\\ %"
+            _ret = " \\\\ "
         else:
-            _ret = f" \\\\ [{self.height}] %"
+            _ret = f" \\\\ [{self.height}] "
         return _ret
 
     def __len__(self):
@@ -410,16 +410,16 @@ class Table(LaTeX):
 
     Note we assume that you have added below packages
       (see Zotero/Latex for manual)
-      \\RequirePackage{array}%  useful for paragraph columns ... see TabularColsFmt
-      \\RequirePackage{booktabs}%  useful for professional line bars and looks
-      \\RequirePackage{tabularx}%  useful for auto sizing columns
-      \\RequirePackage{ctable}%  useful for ...
-      \\RequirePackage{makecell}%  useful for formatting table cell e.g. \\thead
+      \\RequirePackage{array}  useful for paragraph columns ... see TabularColsFmt
+      \\RequirePackage{booktabs}  useful for professional line bars and looks
+      \\RequirePackage{tabularx}  useful for auto sizing columns
+      \\RequirePackage{ctable}  useful for ...
+      \\RequirePackage{makecell}  useful for formatting table cell e.g. \\thead
 
     Also make sure you set this globally .. for vertical centering text in X column
     This is because the default is bottom ..
     # todo: find better ways later ... this doesn't seem to work though
-    \\renewcommand\\tabularxcolumn[1]{m{#1}}%
+    \\renewcommand\\tabularxcolumn[1]{m{#1}}
 
     type:
       'normal'
@@ -458,6 +458,10 @@ class Table(LaTeX):
     t_width: Scalar = None
     t_cols_def: TableColsDef = None
 
+    # https://tex.stackexchange.com/questions/10863/is-there-a-way-to-slightly-shrink-a-table-including-font-size-to-fit-within-th
+    # alternates adjustbox
+    scale: t.Tuple[float, float] = None
+
     @property
     def is_auto_stretchable(self) -> bool:
         return self.type in ['*', 'X']
@@ -494,37 +498,42 @@ class Table(LaTeX):
 
         # add alignment
         if self.alignment is not None:
-            _ret.append(f"{self.alignment}%")
+            _ret.append(f"{self.alignment}")
 
         # add caption and label ... on top for table
         if self.caption is not None:
-            _ret.append(f"\\caption{{{self.caption}}}%")
+            _ret.append(f"\\caption{{{self.caption}}}")
         if self.label is not None:
-            _ret.append(f"\\label{{{self.label}}}%")
+            _ret.append(f"\\label{{{self.label}}}")
 
         # make width
         _width = ""
         if self.t_width is not None:
             _width = f"{{{self.t_width}}}"
 
+        # add scalebox
+        if self.scale is not None:
+            _ret.append(f"\\scalebox{{{self.scale[0]}}}[{self.scale[1]}]\n{{")
+
         # add main table str
         _ret.append(
             f"\\begin{{{self.latex_type}}}"
             f"{_width}"
             f"[{self.t_pos}]"
-            f"{self.t_cols_def}%")
+            f"{self.t_cols_def}")
 
         return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
         _ret = [
-            f"% >> end {self.latex_type}", f"\\end{{{self.latex_type}}}%",
+            f"\\end{{{self.latex_type}}}",
         ]
+        if self.scale is not None:
+            _ret.append("}")
         if self.type != 'array':
             _ret += [
-                f"% >> end table `{'...' if self.label is None else self.label}`",
-                "\\end{table}%"
+                "\\end{table}"
             ]
         return "\n".join(_ret)
 
@@ -593,7 +602,7 @@ class Table(LaTeX):
         self.add_item(item=row)
 
     def add_hline(self):
-        self.add_item(item="\\hline%")
+        self.add_item(item="\\hline")
 
     def add_cline(self, n: int, m: int):
         """
@@ -607,7 +616,7 @@ class Table(LaTeX):
                     "Found", dict(n=n, m=m),
                 ]
             )
-        self.add_item(item=f"\\cline{{{n}-{m}}}%")
+        self.add_item(item=f"\\cline{{{n}-{m}}}")
 
     def add_toprule(self, thickness: Scalar = None):
         """
@@ -618,7 +627,7 @@ class Table(LaTeX):
         _thickness = ""
         if thickness is not None:
             _thickness = f"[{thickness}]"
-        self.add_item(item=f"\\toprule{_thickness}%")
+        self.add_item(item=f"\\toprule{_thickness}")
 
     def add_midrule(self, thickness: Scalar = None):
         """
@@ -628,7 +637,7 @@ class Table(LaTeX):
         _thickness = ""
         if thickness is not None:
             _thickness = f"[{thickness}]"
-        self.add_item(item=f"\\midrule{_thickness}%")
+        self.add_item(item=f"\\midrule{_thickness}")
 
     def add_cmidrule(self, n: int, m: int, thickness: Scalar = None):
         """
@@ -645,7 +654,7 @@ class Table(LaTeX):
         _thickness = ""
         if thickness is not None:
             _thickness = f"[{thickness}]"
-        self.add_item(item=f"\\cmidrule{{{n}-{m}}}{_thickness}%")
+        self.add_item(item=f"\\cmidrule{{{n}-{m}}}{_thickness}")
 
     def add_bottomrule(self, thickness: Scalar = None):
         """
@@ -656,6 +665,6 @@ class Table(LaTeX):
         _thickness = ""
         if thickness is not None:
             _thickness = f"[{thickness}]"
-        self.add_item(item=f"\\bottomrule{_thickness}%")
+        self.add_item(item=f"\\bottomrule{_thickness}")
 
 

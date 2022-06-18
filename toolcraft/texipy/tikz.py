@@ -2390,6 +2390,12 @@ class TikZ(LaTeX):
     alignment: FloatObjAlignment = None
     caption: str = None
 
+    # To scale tikz graphics ...
+    # https://tex.stackexchange.com/questions/13460/scalebox-knowing-how-much-it-scales
+    # https://tex.stackexchange.com/questions/4338/correctly-scaling-a-tikzpicture
+    # Other options adjustbox, resizebox
+    scale: t.Tuple[float, float] = None
+
     @property
     @util.CacheResult
     def paths(self) -> t.List[Path]:
@@ -2412,12 +2418,17 @@ class TikZ(LaTeX):
             _ret.append(
                 f"\\tikzstyle{{{_k}}}=[{_s}]"
             )
+        # add scalebox
+        if self.scale is not None:
+            _ret.append(f"\\scalebox{{{self.scale[0]}}}[{self.scale[1]}]\n{{")
         _ret.append("\\begin{tikzpicture}")
         return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
         _ret = ["\\end{tikzpicture}"]
+        if self.scale is not None:
+            _ret.append("}")
         if self.caption is not None:
             _ret.append(f"\\caption{{{self.caption}}}")
         if self.label is not None:

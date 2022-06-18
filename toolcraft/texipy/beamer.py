@@ -83,10 +83,21 @@ class TableOfContents(LaTeX):
 class Frame(LaTeX):
 
     title: str = None
+    allow_frame_breaks: bool = False
 
     @property
     def open_clause(self) -> str:
-        _ret = "\\begin{frame}\n"
+        # frame options
+        _options = []
+        if self.allow_frame_breaks:
+            _options.append("allowframebreaks")
+        if bool(_options):
+            _options = "[" + ",".join(_options) + "]"
+        else:
+            _options = ""
+
+        # frame
+        _ret = f"\\begin{{frame}}{_options}\n"
         if self.label is not None:
             _ret += f"\\label{{{self.label}}}\n"
         if self.title is not None:

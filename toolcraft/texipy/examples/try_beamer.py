@@ -11,6 +11,10 @@ from toolcraft.texipy import tikz, beamer
 import try_table, try_tikz, try_document
 
 
+def _outline(current_section):
+    return beamer.TableOfContents(
+        title="Outline", hide_all_subsections=False, current_section=current_section,
+    )
 if __name__ == '__main__':
 
     _ppt = beamer.Beamer(
@@ -27,43 +31,60 @@ if __name__ == '__main__':
                   "\\inst{2}Organization Two \n",
         symbols_file="symbols.tex",
         usepackage_file="usepackage.sty",
+        bib_file="zotero.bib",
     )
-
-    _ppt.add_item(
-        item=beamer.TableOfContents(
-            title="Outline", hide_all_subsections=False,
-        )
-    )
-
-    # _ppt.add_item(
-    #     item=beamer.TableOfContents(
-    #         title="Outline", hide_all_subsections=False, current_section=True,
-    #     )
-    # )
 
     # ------------------------------------------------ add all sections
     _section_1 = Section(
-        label="sec1", name="Section One ..."
+        label="sec:list", name="Lists ..."
     )
     _section_2 = Section(
-        label="sec2", name="Section Two ..."
+        label="sec:tikztable", name="TikZ and Table ..."
     )
-    _ppt.add_item(_section_1).add_item(_section_2)
+    _section_ref = Section(
+        label="sec:ref", name="References ..."
+    )
+    _ppt.add_item(
+        _outline(current_section=False)
+    ).add_item(
+        _outline(current_section=True)
+    ).add_item(
+        _section_1
+    ).add_item(
+        _outline(current_section=True)
+    ).add_item(
+        _section_2
+    ).add_item(
+        _outline(current_section=True)
+    ).add_item(
+        _section_ref
+    )
 
     # ------------------------------------------------ add all section 1
-    _frame_1 = beamer.Frame(
-        title="List1", label="list"
+    _frame_list1 = beamer.Frame(
+        title="List 1", label="list1",
     ).add_item(
         item=List(
             type='itemize',
             items=[
                 "Apple", "Mango", ("$\\blacksquare$", "Papaya"),
-                # List(type='enumerate', items=["Apple", "Mango", "Orange"]),
                 "Orange"
             ]
         )
     )
-    _section_1.add_item(item=_frame_1)
+    _frame_list2 = beamer.Frame(
+        title="List 2", label="list2",
+    ).add_item(
+        item=List(
+            type='itemize',
+            items=[
+                "Apple", "Mango", ("$\\blacksquare$", "Papaya"),
+                List(type='itemize', items=["Apple", "Mango", "Orange"]),
+                "Orange"
+            ]
+        )
+    )
+    _section_1.add_item(_frame_list1).add_item(_frame_list2)
 
     # ------------------------------------------------ add all section 2
     _section_2_1 = SubSection(label="sec2:tikz", name="Section Two ... TikZ")
@@ -73,16 +94,27 @@ if __name__ == '__main__':
         beamer.Frame(
             title="TikZ figure", label="tikz"
         ).add_item(
-            item=try_tikz.make_complicated_figure()
+            item=try_tikz.make_complicated_figure(scale=(0.8, 0.61))
         )
     )
     _section_2_2.add_item(
         beamer.Frame(
             title="Table", label="table"
         ).add_item(
-            item=try_table.make_table()
+            item=try_table.make_table(scale=(0.8, 0.61))
         )
     )
+
+    # ------------------------------------------------ add section ref
+    # _section_ref.add_item(
+    #     beamer.Frame(
+    #         title="References", label="ref", allow_frame_breaks=True,
+    #     ).add_item(
+    #         item="\\addbibresource{zotero.bib}"
+    #     ).add_item(
+    #         item="\\bibliographystyle{amsalpha}"
+    #     )
+    # )
 
     # ------------------------------------------------ write
     _ppt.write(save_to_file="try.tex", make_pdf=True)
