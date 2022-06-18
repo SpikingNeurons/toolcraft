@@ -34,9 +34,9 @@ class TableOfContents(LaTeX):
         # add \AtBeginSubsection[]
         if self.current_section or self.current_sub_section:
             _ret = "\\AtBeginSubsection[]{\n" \
-                   "\\begin{frame}\n"
+                   "\\begin{frame}[noframenumbering]\n"
         else:
-            _ret = "\\begin{frame}\n"
+            _ret = "\\begin{frame}[noframenumbering]\n"
 
         # add other frame settings
         if self.label is not None:
@@ -84,6 +84,7 @@ class Frame(LaTeX):
 
     title: str = None
     allow_frame_breaks: bool = False
+    no_frame_numbering: bool = False
 
     @property
     def open_clause(self) -> str:
@@ -91,6 +92,8 @@ class Frame(LaTeX):
         _options = []
         if self.allow_frame_breaks:
             _options.append("allowframebreaks")
+        if self.no_frame_numbering:
+            _options.append("noframenumbering")
         if bool(_options):
             _options = "[" + ",".join(_options) + "]"
         else:

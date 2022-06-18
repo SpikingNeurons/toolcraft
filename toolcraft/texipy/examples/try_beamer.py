@@ -13,7 +13,7 @@ import try_table, try_tikz, try_document
 
 def _outline(current_section):
     return beamer.TableOfContents(
-        title="Outline", hide_all_subsections=False, current_section=current_section,
+        title="Outline", hide_all_subsections=True, current_section=current_section,
     )
 if __name__ == '__main__':
 
@@ -32,30 +32,22 @@ if __name__ == '__main__':
         symbols_file="symbols.tex",
         usepackage_file="usepackage.sty",
         # bib_file="zotero.bib",
-    )
+    ).add_item(_outline(current_section=False))
 
     # ------------------------------------------------ add all sections
     _section_1 = Section(
         label="sec:list", name="Lists ..."
-    )
+    ).add_item(_outline(current_section=True))
     _section_2 = Section(
         label="sec:tikztable", name="TikZ and Table ..."
-    )
+    ).add_item(_outline(current_section=True))
     _section_ref = Section(
         label="sec:ref", name="References ..."
-    )
+    ).add_item(_outline(current_section=True))
     _ppt.add_item(
-        _outline(current_section=False)
-    ).add_item(
-        _outline(current_section=True)
-    ).add_item(
         _section_1
     ).add_item(
-        _outline(current_section=True)
-    ).add_item(
         _section_2
-    ).add_item(
-        _outline(current_section=True)
     ).add_item(
         _section_ref
     )
