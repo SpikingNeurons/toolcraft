@@ -31,21 +31,21 @@ def make_pdf_with_pdflatex(
         _check_output_kwargs = {'cwd': pdf_file.parent.as_posix()}
 
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
-        _output = subprocess.check_output(
+        _output = subprocess.run(
             ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
-        print(_output)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running bibtex")
-        _output = subprocess.check_output(
+        _output = subprocess.run(
             ["bibtex", tex_file.as_posix().replace("tex", "aux")], stderr=subprocess.STDOUT, **_check_output_kwargs)
-        print(_output)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
-        _output = subprocess.check_output(
+        _output = subprocess.run(
             ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
-        print(_output)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
-        _output = subprocess.check_output(
+        _output = subprocess.run(
             ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
-        print(_output)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
 
         if clean:
             for _ext in [

@@ -313,6 +313,7 @@ class Positioning:
 @dataclasses.dataclass
 class LaTeX(abc.ABC):
     label: str = None
+    no_comments: bool = False
 
     @property
     @util.CacheResult
@@ -379,17 +380,17 @@ class LaTeX(abc.ABC):
                     self.doc.labels.append(_.label)
 
         # create str
-        _sta = f"% {'>>' * self.depth} {self.__class__.__name__} .. START \n"
-        _end = f"% {'<<' * self.depth} {self.__class__.__name__} .. END"
+        if self.no_comments:
+            _sta, _end = "", ""
+        else:
+            _sta = f"% {'>>' * self.depth} {self.__class__.__name__} .. START \n"
+            _end = f"\n% {'<<' * self.depth} {self.__class__.__name__} .. END"
         if self.allow_add_items:
-            _close_clause = self.close_clause
-            if _close_clause != "":
-                _close_clause += "\n"
             if self.use_single_line_repr:
                 return _sta + \
                        self.open_clause + \
                        self.generate() + \
-                       _close_clause + \
+                       self.close_clause + \
                        _end
             else:
                 return _sta + \
@@ -397,7 +398,7 @@ class LaTeX(abc.ABC):
                        f"\n% {'--' * self.depth} \n" + \
                        self.generate() + \
                        f"\n% {'--' * self.depth} \n" + \
-                       _close_clause + \
+                       self.close_clause + \
                        _end
         else:
             # if not self.use_single_line_repr:
@@ -407,7 +408,7 @@ class LaTeX(abc.ABC):
             return _sta + \
                    self.open_clause + \
                    self.generate() + \
-                   self.close_clause + "\n" + \
+                   self.close_clause + \
                    _end
 
     def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":

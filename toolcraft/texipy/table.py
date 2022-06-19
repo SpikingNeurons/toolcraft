@@ -190,6 +190,7 @@ class MultiRowCell(LaTeX):
     num_rows: int = None
     width: Scalar = None
     value: t.Union[LaTeX, str] = None
+    no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
     def allow_add_items(self) -> bool:
@@ -201,7 +202,11 @@ class MultiRowCell(LaTeX):
 
     @property
     def close_clause(self) -> str:
-        return ""
+        # to avoid but when adding multi-row cell in a row
+        if self.no_comments:
+            return ""
+        else:
+            return "\n"
 
     def init_validate(self):
         # call super
