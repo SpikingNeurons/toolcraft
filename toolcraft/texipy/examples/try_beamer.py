@@ -4,7 +4,7 @@ https://ctan.org/pkg/beamer?lang=en
 https://ftp.agdsn.de/pub/mirrors/latex/dante/macros/latex/contrib/beamer/doc/beameruserguide.pdf
 https://latex-beamer.com/quick-start/
 """
-
+import pathlib
 
 from toolcraft.texipy import Section, Color, SubSection, List
 from toolcraft.texipy import tikz, beamer
@@ -107,13 +107,7 @@ if __name__ == '__main__':
 
     # ------------------------------------------------ add section ref
     _section_ref.add_item(
-        beamer.Frame(
-            title="References", label="ref", allow_frame_breaks=True,
-        ).add_item(
-            item="\\bibliographystyle{plain}"
-        ).add_item(
-            item="\\bibliography{zotero}"
-        )
+        beamer.Bibliography(style="plain", file=pathlib.Path("zotero.bib"))
     )
 
     # ------------------------------------------------ write

@@ -116,49 +116,6 @@ class SubSubSection(_Sec):
 
 
 @dataclasses.dataclass
-class _SecPage(LaTeX, abc.ABC):
-    """
-    Check 10.2 Adding Sections and Subsections
-
-    todo: dont know how to use below things
-        The following commands are useful for this template:
-        • \insertsection inserts the title of the current section.
-        • \insertsectionnumber inserts the current section number.
-    """
-
-    @property
-    def command(self) -> str:
-        return self.__class__.__name__.lower()
-
-    @property
-    def allow_add_items(self) -> bool:
-        """
-        This is specialized frame to display section page
-        todo: maybe you can allow more items here .. do when you need
-        """
-        return False
-
-    @property
-    def open_clause(self) -> str:
-        _ret = f"\\begin{{frame}}\n\\{self.command}\n\\end{{frame}}"
-        return _ret
-
-    @property
-    def close_clause(self) -> str:
-        return ""
-
-
-@dataclasses.dataclass
-class SectionPage(_SecPage):
-    ...
-
-
-@dataclasses.dataclass
-class SubSectionPage(_SecPage):
-    ...
-
-
-@dataclasses.dataclass
 class Beamer(LaTeX):
 
     # refer: https://latex-beamer.com/tutorials/beamer-themes/
@@ -347,119 +304,6 @@ class Beamer(LaTeX):
 
 
 @dataclasses.dataclass
-class TableOfContents(LaTeX):
-    """
-    TableOfContents geared for Beamer ... for normal TableOfContents implement separately
-    """
-    # frame related
-    title: str = "Outline"
-    no_frame_numbering: bool = True
-
-    # _toc_options check section 10.5 Adding a Table of Contents
-    current_section: bool = False  # shorthand for sectionstyle=show/shaded,subsectionstyle=show/show/shaded
-    current_subsection: bool = False  # shorthand for subsectionstyle=show/shaded
-    first_section: int = None  # specifies which section should be numbered as section “1.”
-    hide_all_subsections: bool = False  # shorthand for subsectionstyle=hide .. causes all subsections to be hidden
-    hide_other_subsections: bool = False  # shorthand for subsectionstyle=show/show/hide .. causes the subsections of sections other than the current one to be hidden
-    last_section: int = None  # specifies which section should be last
-    # pasrt={}  todo: do this later
-    pause_sections: bool = False  # This is useful if you wish to show the table of contents in an incremental way.
-    pause_subsections: bool = False
-    # sections={⟨overlay specification⟩} causes only the sections mentioned in the ⟨overlay specification⟩
-    # to be shown. For example, sections={<2-4| handout:0>} causes only the second, third, and fourth section
-    # to be shown in the normal version, todo: later
-    # "show/hide" sectionstyle=
-    # ⟨style for current section⟩/
-    # ⟨style for other sections⟩
-    section_style: str = None
-    # "shaded/show/hide" subsectionstyle=
-    # ⟨style for current subsection⟩/
-    # ⟨style for other subsections in current section⟩/
-    # ⟨style for subsections in other sections⟩
-    subsection_style: str = None
-    # "shaded/shaded/show/hide" subsubsectionstyle=
-    # ⟨style for current subsubsection⟩/
-    # ⟨style for other subsubsections in current subsection⟩/
-    # ⟨style for subsubsections in other subsections in current section⟩/
-    # ⟨style for subsubsections in other subsections in other sections⟩
-    subsubsection_style: str = None
-
-
-    @property
-    def allow_add_items(self) -> bool:
-        """
-        This is specialized frame to hold table of content so we do not allow to add items
-        """
-        return False
-
-    @property
-    def open_clause(self) -> str:
-        _ret = ""
-
-        # add beamer frame
-        _ret += "\\begin{frame}"
-
-        # frame options
-        _frame_options = []
-        if self.no_frame_numbering:
-            _frame_options.append("noframenumbering")
-        if bool(_frame_options):
-            _ret += "[" + ",".join(_frame_options) + "]"
-
-        # add new line
-        _ret += "\n"
-
-        # add other frame settings
-        if self.label is not None:
-            _ret += f"\\label{{{self.label}}}\n"
-        if self.title is not None:
-            _ret += f"\\frametitle{{{self.title}}}\n"
-
-        # tableofcontents with options ...
-        _toc = "\\tableofcontents"
-        _toc_options = []
-        if self.current_section:
-            _toc_options.append("currentsection")
-        if self.current_subsection:
-            _toc_options.append("currentsubsection")
-        if self.first_section is not None:
-            _toc_options.append(f"firstsection={self.first_section}")
-        if self.hide_all_subsections:
-            _toc_options.append("hideallsubsections")
-        if self.hide_other_subsections:
-            _toc_options.append("hideothersubsections")
-        if self.last_section is not None:
-            _toc_options.append(f"lastsection={self.first_section}")
-        # part=⟨part number⟩ todo later
-        if self.pause_sections:
-            _toc_options.append("pausesections")
-        if self.pause_subsections:
-            _toc_options.append("pausesubsections")
-        # sections={⟨overlay specification⟩} ... todo later
-        if self.section_style is not None:
-            _toc_options.append(f"sectionstyle={self.section_style}")
-        if self.subsection_style is not None:
-            _toc_options.append(f"subsectionstyle={self.subsection_style}")
-        if self.subsubsection_style is not None:
-            _toc_options.append(f"subsubsectionstyle={self.subsubsection_style}")
-        if bool(_toc_options):
-            _toc += "[" + ",".join(_toc_options) + "]"
-        else:
-            _toc += "[]"
-        _ret += _toc + "\n"
-
-        # close frame
-        _ret += "\\end{frame}"
-
-        # return
-        return _ret
-
-    @property
-    def close_clause(self) -> str:
-        return ""
-
-
-@dataclasses.dataclass
 class Frame(LaTeX):
 
     """
@@ -499,4 +343,176 @@ class Frame(LaTeX):
     @property
     def close_clause(self) -> str:
         return "\\end{frame}"
+
+
+@dataclasses.dataclass
+class TableOfContents(Frame):
+    """
+    TableOfContents geared for Beamer ... for normal TableOfContents implement separately
+    """
+    # frame related
+    title: str = "Outline"
+    no_frame_numbering: bool = True
+
+    # _toc_options check section 10.5 Adding a Table of Contents
+    current_section: bool = False  # shorthand for sectionstyle=show/shaded,subsectionstyle=show/show/shaded
+    current_subsection: bool = False  # shorthand for subsectionstyle=show/shaded
+    first_section: int = None  # specifies which section should be numbered as section “1.”
+    hide_all_subsections: bool = False  # shorthand for subsectionstyle=hide .. causes all subsections to be hidden
+    hide_other_subsections: bool = False  # shorthand for subsectionstyle=show/show/hide .. causes the subsections of sections other than the current one to be hidden
+    last_section: int = None  # specifies which section should be last
+    # pasrt={}  todo: do this later
+    pause_sections: bool = False  # This is useful if you wish to show the table of contents in an incremental way.
+    pause_subsections: bool = False
+    # sections={⟨overlay specification⟩} causes only the sections mentioned in the ⟨overlay specification⟩
+    # to be shown. For example, sections={<2-4| handout:0>} causes only the second, third, and fourth section
+    # to be shown in the normal version, todo: later
+    # "show/hide" sectionstyle=
+    # ⟨style for current section⟩/
+    # ⟨style for other sections⟩
+    section_style: str = None
+    # "shaded/show/hide" subsectionstyle=
+    # ⟨style for current subsection⟩/
+    # ⟨style for other subsections in current section⟩/
+    # ⟨style for subsections in other sections⟩
+    subsection_style: str = None
+    # "shaded/shaded/show/hide" subsubsectionstyle=
+    # ⟨style for current subsubsection⟩/
+    # ⟨style for other subsubsections in current subsection⟩/
+    # ⟨style for subsubsections in other subsections in current section⟩/
+    # ⟨style for subsubsections in other subsections in other sections⟩
+    subsubsection_style: str = None
+
+    @property
+    def allow_add_items(self) -> bool:
+        """
+        This is specialized frame to hold table of content so we do not allow to add items
+        """
+        return False
+
+    @property
+    def open_clause(self) -> str:
+
+        # get from super
+        _ret = super().open_clause
+
+        # tableofcontents with options ...
+        _toc = "\\tableofcontents"
+        _toc_options = []
+        if self.current_section:
+            _toc_options.append("currentsection")
+        if self.current_subsection:
+            _toc_options.append("currentsubsection")
+        if self.first_section is not None:
+            _toc_options.append(f"firstsection={self.first_section}")
+        if self.hide_all_subsections:
+            _toc_options.append("hideallsubsections")
+        if self.hide_other_subsections:
+            _toc_options.append("hideothersubsections")
+        if self.last_section is not None:
+            _toc_options.append(f"lastsection={self.first_section}")
+        # part=⟨part number⟩ todo later
+        if self.pause_sections:
+            _toc_options.append("pausesections")
+        if self.pause_subsections:
+            _toc_options.append("pausesubsections")
+        # sections={⟨overlay specification⟩} ... todo later
+        if self.section_style is not None:
+            _toc_options.append(f"sectionstyle={self.section_style}")
+        if self.subsection_style is not None:
+            _toc_options.append(f"subsectionstyle={self.subsection_style}")
+        if self.subsubsection_style is not None:
+            _toc_options.append(f"subsubsectionstyle={self.subsubsection_style}")
+        if bool(_toc_options):
+            _toc += "[" + ",".join(_toc_options) + "]"
+        else:
+            _toc += "[]"
+        _ret += _toc + "\n"
+
+        # return
+        return _ret
+
+
+@dataclasses.dataclass
+class _SecPage(Frame):
+    """
+    Check 10.2 Adding Sections and Subsections
+
+    todo: dont know how to use below things
+        The following commands are useful for this template:
+        • \insertsection inserts the title of the current section.
+        • \insertsectionnumber inserts the current section number.
+
+    todo: hangs up pdflatex .... but text files gets generated
+    """
+
+    @property
+    def command(self) -> str:
+        return self.__class__.__name__.lower()
+
+    @property
+    def allow_add_items(self) -> bool:
+        """
+        This is specialized frame to display section page
+        todo: maybe you can allow more items here .. do when you need
+        """
+        return False
+
+    @property
+    def open_clause(self) -> str:
+        # get from super
+        _ret = super().open_clause
+
+        # add the respective command
+        _ret += f"\\{self.command}"
+
+        # return
+        return _ret
+
+
+@dataclasses.dataclass
+class SectionPage(_SecPage):
+    ...
+
+
+@dataclasses.dataclass
+class SubSectionPage(_SecPage):
+    ...
+
+
+@dataclasses.dataclass
+class Bibliography(Frame):
+
+    style: str = "plain"
+    file: pathlib.Path = None
+
+    @property
+    def allow_add_items(self) -> bool:
+        return False
+
+    def generate(self) -> str:
+
+        # add the respective command
+        _ret = f"\\bibliographystyle{{{self.style}}}\n"
+
+        # file
+        _ret += f"\\bibliography{{{self.file.as_posix()}}}"
+
+        # return
+        return _ret
+
+    def init_validate(self):
+
+        # call super
+        super().init_validate()
+
+        # test file
+        if self.file is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please set mandatory field `file`"]
+            )
+        if not self.file.exists():
+            raise e.validation.NotAllowed(
+                msgs=[f"Cannot find `bib` file {self.file} on the disk ..."]
+            )
 
