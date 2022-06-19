@@ -570,7 +570,7 @@ class Document(LaTeX):
         # ----------------------------------------------- 03
         # make pdf if requested
         if make_pdf:
-            helper.make_pdf(
+            helper.make_pdf_with_pdflatex(
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
                          (_save_to_file.name.split(".")[0] + ".pdf"),
