@@ -241,6 +241,7 @@ class MultiColumnCell(LaTeX):
     num_cols: int = None
     t_col_fmt: t.Union[ColumnFmt, str] = None
     value: t.Union[LaTeX, str] = None
+    no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
     def allow_add_items(self) -> bool:
@@ -262,6 +263,10 @@ class MultiColumnCell(LaTeX):
         if self.num_cols is None:
             raise e.validation.NotAllowed(
                 msgs=[f"please provide mandatory field num_cols"]
+            )
+        if self.t_col_fmt is None:
+            raise e.validation.NotAllowed(
+                msgs=[f"please provide mandatory field t_col_fmt"]
             )
 
         # validate t_col_fmt
@@ -525,7 +530,7 @@ class Table(LaTeX):
             f"\\begin{{{self.latex_type}}}"
             f"{_width}"
             f"[{self.t_pos}]"
-            f"{self.t_cols_def}")
+            f"\n{self.t_cols_def}")
 
         return "\n".join(_ret)
 
