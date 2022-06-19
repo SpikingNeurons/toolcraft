@@ -380,7 +380,7 @@ class LaTeX(abc.ABC):
 
         # create str
         _sta = f"% {'>>' * self.depth} {self.__class__.__name__} .. START \n"
-        _end = f"% {'<<' * self.depth} {self.__class__.__name__} .. END \n"
+        _end = f"% {'<<' * self.depth} {self.__class__.__name__} .. END"
         if self.allow_add_items:
             _close_clause = self.close_clause
             if _close_clause != "":

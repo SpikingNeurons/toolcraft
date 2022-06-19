@@ -143,7 +143,6 @@ class Beamer(LaTeX):
     # figure out how to have options to modify template
     add_to_beamer_template: str = "\n".join(
         [
-            "",
             # "\\usepackage[english]{babel}",
             # "\\usepackage[utf8]{inputenc}",
             # "\\setbeamercolor{structure}{fg=blue}",
