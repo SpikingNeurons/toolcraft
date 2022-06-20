@@ -145,7 +145,7 @@ class Beamer(LaTeX):
         [
             # "\\usepackage[english]{babel}",
             # "\\usepackage[utf8]{inputenc}",
-            # "\\setbeamercolor{structure}{fg=blue}",
+            # "\\setbeamercolor{structure}{fg=teal}",
             "\\usetheme[left]{Goettingen}",
             # "\\setbeamercolor{navigation symbols}{fg=green, bg=blue!50}",
             # "\\setbeamercolor{palette sidebar secondary}{fg=yellow,bg=blue}",
@@ -153,6 +153,10 @@ class Beamer(LaTeX):
             # "\\setbeamercolor{footline}{fg=teal}",
             # "\\setbeamertemplate{itemize items}[square]",
             # "\\setbeamertemplate{enumerate items}[square]",
+            "\\setbeamercolor{background canvas}{bg=blue!5!white}",
+            # "\\setbeamercolor{palette sidebar primary}{bg=green!25!blue,fg=white}",
+            # "\\setbeamercolor{section in sidebar shaded}{fg=green!20!black,bg=blue!20}",
+            # "\\setbeamercolor{structure canvas}{bg=green}"
             "\\setbeamerfont{footline}{series=\\bfseries}",
             "\\addtobeamertemplate{navigation symbols}{}{",
             "\\usebeamerfont{footline}",
@@ -484,6 +488,8 @@ class Bibliography(Frame):
 
     style: str = "plain"
     file: pathlib.Path = None
+    allow_frame_breaks: bool = True
+    no_frame_numbering: bool = True
 
     @property
     def allow_add_items(self) -> bool:

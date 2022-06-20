@@ -121,6 +121,7 @@ class Fa(enum.Enum):
     times_circle = "\\faTimesCircle"
     thumbs_down = "\\faThumbsDown"
     thumbs_up = "\\faThumbsUp"
+    meh = "\\faMeh"
 
     # not part of fontawesome but still makes sense here
     ldots = "\\ldots"  # for horizontal dots on the line
@@ -384,7 +385,10 @@ class LaTeX(abc.ABC):
             _sta, _end = "", ""
         else:
             _sta = f"% {'>>' * self.depth} {self.__class__.__name__} .. START \n"
-            _end = f"\n% {'<<' * self.depth} {self.__class__.__name__} .. END"
+            if self.close_clause == "":
+                _end = f"% {'<<' * self.depth} {self.__class__.__name__} .. END"
+            else:
+                _end = f"\n% {'<<' * self.depth} {self.__class__.__name__} .. END"
         if self.allow_add_items:
             if self.use_single_line_repr:
                 return _sta + \
@@ -393,11 +397,13 @@ class LaTeX(abc.ABC):
                        self.close_clause + \
                        _end
             else:
-                return _sta + \
-                       self.open_clause + \
+                _gen = self.generate()
+                if _gen != "":
+                    _gen += "\n"
+                return _sta + self.open_clause + \
                        f"\n% {'--' * self.depth} \n" + \
-                       self.generate() + \
-                       f"\n% {'--' * self.depth} \n" + \
+                       _gen + \
+                       f"% {'--' * self.depth} \n" + \
                        self.close_clause + \
                        _end
         else:
