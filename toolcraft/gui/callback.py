@@ -64,9 +64,14 @@ class CloseWidgetCallback(Callback):
     @classmethod
     def get_button_widget(
         cls, widget_to_delete: widget.Widget, label="Close [X]",
-    ) -> widget.ColorButton:
-        return widget.ColorButton(
-            default_value=EnColor.RED.value,
+    ) -> widget.Button:
+        # return widget.ColorButton(
+        #     default_value=EnColor.RED.value,
+        #     label=label,
+        #     callback=cls(),
+        #     user_data={'widget_to_delete': widget_to_delete},
+        # )
+        return widget.Button(
             label=label,
             callback=cls(),
             user_data={'widget_to_delete': widget_to_delete},
