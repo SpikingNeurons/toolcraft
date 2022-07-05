@@ -584,7 +584,7 @@ class Progress(Widget):
         if task_name in self.tasks.keys():
             raise e.validation.NotAllowed(
                 msgs=[
-                    f"There already exists a task named {task_name}"
+                    f"There already exists a task named {task_name!r}", "Try giving new task name while iterating",
                 ]
             )
         # if # in task name then add counter
