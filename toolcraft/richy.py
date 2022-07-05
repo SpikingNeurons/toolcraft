@@ -584,14 +584,14 @@ class Progress(Widget):
         if task_name in self.tasks.keys():
             raise e.validation.NotAllowed(
                 msgs=[
-                    f"There already exists a task named {task_name!r}", "Try giving new task name while iterating",
+                    f"There already exists a task named {task_name!r}",
+                    "Try giving new task name while iterating or else add '#' token at end to make name reusable.",
                 ]
             )
-        # if # in task name then add counter
+        # if # at end task name then add counter
         # note adding # will make task name reusable by adding counter
-        _ = task_name.split("#")
-        if len(_) == 2:
-            task_name += str(len([k for k in self.tasks.keys() if k.startswith(_[0])]))
+        if task_name.endswith("#"):
+            task_name += str(len([k for k in self.tasks.keys() if k.startswith(task_name)]))
 
         # ------------------------------------------------------------ 03
         # add task
