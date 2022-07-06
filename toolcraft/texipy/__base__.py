@@ -122,6 +122,9 @@ class Fa(enum.Enum):
     thumbs_down = "\\faThumbsDown"
     thumbs_up = "\\faThumbsUp"
     meh = "\\faMeh"
+    pen = "\\faPen"
+    seedling = "\\faSeedling"
+    arrow_alt_circle_down = "\\faArrowAltCircleDown"
 
     # not part of fontawesome but still makes sense here
     ldots = "\\ldots"  # for horizontal dots on the line
