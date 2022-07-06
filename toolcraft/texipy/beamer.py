@@ -303,6 +303,7 @@ class Beamer(LaTeX):
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
                          (_save_to_file.name.split(".")[0] + ".pdf"),
+                clean=True,
             )
 
 
