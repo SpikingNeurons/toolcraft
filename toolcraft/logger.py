@@ -29,26 +29,19 @@ Main aim of new logger lib
     + scavange code in
       >>> __emoji_mapping()
 """
-import pathlib
 import dataclasses
-import typing as t
-import types
 import inspect
-import sys
-import yaml
 import logging
 import logging.handlers
+import pathlib
+import sys
+import types
+import typing as t
+
+import yaml
 from rich.logging import RichHandler
 
-MESSAGES_TYPE = t.List[
-    t.Union[
-        str,
-        t.List,
-        t.Tuple,
-        t.Dict,
-        Exception,
-    ]
-]
+MESSAGES_TYPE = t.List[t.Union[str, t.List, t.Tuple, t.Dict, Exception, ]]
 
 
 class CustomLogger(logging.Logger):
@@ -106,8 +99,12 @@ class CustomLogger(logging.Logger):
 
     # noinspection PyMethodOverriding
     def exception(
-        self, msg: str, *args, msgs: MESSAGES_TYPE = None,
-        exc_info: bool = True, **kwargs
+        self,
+        msg: str,
+        *args,
+        msgs: MESSAGES_TYPE = None,
+        exc_info: bool = True,
+        **kwargs,
     ):
         """
         >>> logging.Logger.exception
@@ -133,6 +130,7 @@ class LoggingMeta:
         + todo check main docstring above and discussion here
             https://stackoverflow.com/questions/31949760/how-to-limit-python-traceback-to-specific-files
     """
+
     short_name: str
     suppress_logs: bool = False
     bypass_traceback: bool = False
@@ -173,7 +171,6 @@ class AddLoggingMetaFilter(logging.Filter):
 #         f'%(message)s'
 #     )
 
-
 # def get_formatter_for_rich_handler() -> logging.Formatter:
 #     return logging.Formatter(
 #         # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
@@ -186,8 +183,7 @@ def get_formatter_for_file_handler() -> logging.Formatter:
     return logging.Formatter(
         # f'%(short_name)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
         # f'%(message)s'
-        f'\n%(asctime)s %(short_name)s:\n>>>\n%(message)s'
-    )
+        f"\n%(asctime)s %(short_name)s:\n>>>\n%(message)s")
 
 
 # def get_stream_handler() -> logging.StreamHandler:
@@ -222,7 +218,8 @@ def get_rich_handler() -> RichHandler:
     + set formatter
     + add filters specific to handler
     """
-    from rich import print, emoji
+    from rich import emoji, print
+
     # -------------------------------------------------------- 01
     # get handler
     _h = RichHandler(
@@ -272,7 +269,9 @@ def get_file_handler(log_file: pathlib.Path) -> logging.FileHandler:
     # this can make multiple log files for now stick up with simple things
     # _h = logging.handlers.RotatingFileHandler()
     _h = logging.FileHandler(
-        filename=log_file, mode='a', encoding='utf8',
+        filename=log_file,
+        mode="a",
+        encoding="utf8",
     )
 
     # -------------------------------------------------------- 02
@@ -421,8 +420,7 @@ def __emoji_mapping():
         default = logging.Formatter(
             # f'%(emoji_level)s {Emoji.EMOJI_TIME} %(asctime)s %(name)s: '
             # f'%(message)s'
-            f'%(emoji_level)s %(name)s: %(message)s'
-        )
+            f"%(emoji_level)s %(name)s: %(message)s")
 
     class EmojiMapperFilter(logging.Filter):
         # todo is this efficient way
@@ -448,9 +446,7 @@ def __emoji_mapping():
 
 
 def get_logger(
-    module: t.Optional[
-        t.Union[types.ModuleType, str]
-    ] = None,
+    module: t.Optional[t.Union[types.ModuleType, str]] = None,
     meta: LoggingMeta = None,
 ) -> CustomLogger:
     """

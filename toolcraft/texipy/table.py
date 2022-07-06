@@ -1,14 +1,13 @@
-
-
-import dataclasses
-import typing as t
 import abc
+import dataclasses
 import enum
+import typing as t
+
 import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Font, Scalar, Positioning, FloatObjAlignment
+from .__base__ import Color, FloatObjAlignment, Font, LaTeX, Positioning, Scalar
 
 
 class ColumnFmt(enum.Enum):
@@ -21,6 +20,7 @@ class ColumnFmt(enum.Enum):
 
     Deals with cols which defines the alignment and the borders of each column
     """
+
     # left-justified column
     left_justified = "l"
     # centred column
@@ -83,39 +83,42 @@ class ColumnFmt(enum.Enum):
     @property
     def is_legit_column(self) -> bool:
         return self in [
-            self.left_justified, self.centered, self.right_justified,
-            self.para_top, self.para_middle, self.para_bottom,
+            self.left_justified,
+            self.centered,
+            self.right_justified,
+            self.para_top,
+            self.para_middle,
+            self.para_bottom,
             self.stretched,
         ]
 
     def __call__(self, width: Scalar = None, insert: str = None):
         # if vertical line's no kwargs will be used
-        if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
+        if self in [
+                self.vertical_line, self.double_vertical_line, self.stretched
+        ]:
             if width is not None or insert is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"no use for pass kwargs while using `ColumnFmt.{self.name}` "
-                        f"as we need not parametrize it"
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"no use for pass kwargs while using `ColumnFmt.{self.name}` "
+                    f"as we need not parametrize it"
+                ])
 
         # for inserts ...
         if self in [self.insert, self.insert_before, self.insert_after]:
             if insert is None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply value for kwarg `text` while using {self}"]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please supply value for kwarg `text` while using {self}"
+                ])
             if width is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please do not supply kwarg `width` while using {self}"]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please do not supply kwarg `width` while using {self}"
+                ])
             return f"{self.value}{{{insert}}}"
 
         # since self is not for `self.insert` we expect `insert` kwarg to be None
         if insert is not None:
             raise e.validation.NotAllowed(
-                msgs=[f"insert kwarg is usable only for insert related stuff"]
-            )
+                msgs=[f"insert kwarg is usable only for insert related stuff"])
 
         # for width ...
         if width is None:
@@ -125,17 +128,14 @@ class ColumnFmt(enum.Enum):
                 return f"{self.value}{{{width}}}"
             else:
                 raise e.validation.NotAllowed(
-                    msgs=[
-                        f"The width kwarg cannot be used with {self}"
-                    ]
-                )
+                    msgs=[f"The width kwarg cannot be used with {self}"])
 
     def __str__(self) -> str:
         if self in [self.insert, self.insert_after, self.insert_before]:
-            raise e.validation.NotAllowed(
-                msgs=[f"When using tabular column {self} please specify `insert` kwarg "
-                      f"by using __call__"]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"When using tabular column {self} please specify `insert` kwarg "
+                f"by using __call__"
+            ])
         return self.__call__()
 
     @classmethod
@@ -143,13 +143,11 @@ class ColumnFmt(enum.Enum):
         for _ in cls:
             if _.value == _str[0:1]:
                 return _
-        raise e.validation.NotAllowed(
-            msgs=[
-                f"Cannot recognize string `{_str}`",
-                "Should be one of:",
-                [_.value for _ in cls]
-            ]
-        )
+        raise e.validation.NotAllowed(msgs=[
+            f"Cannot recognize string `{_str}`",
+            "Should be one of:",
+            [_.value for _ in cls],
+        ])
 
 
 class TablePos(enum.Enum):
@@ -162,6 +160,7 @@ class TablePos(enum.Enum):
 
     Deals with pos which handles Vertical position od table
     """
+
     # the line at the top is aligned with the text baseline
     top = "t"
     # the line at the bottom is aligned with the text baseline
@@ -215,16 +214,12 @@ class MultiRowCell(LaTeX):
         # validate
         if self.num_rows is None:
             raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field num_rows"]
-            )
+                msgs=[f"please provide mandatory field num_rows"])
 
     def generate(self) -> str:
         if bool(self._items):
             raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting this to be empty ..."
-                ]
-            )
+                msgs=[f"Was expecting this to be empty ..."])
 
         _width = ""
         if self.width is not None:
@@ -262,28 +257,23 @@ class MultiColumnCell(LaTeX):
         # validate
         if self.num_cols is None:
             raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field num_cols"]
-            )
+                msgs=[f"please provide mandatory field num_cols"])
         if self.t_col_fmt is None:
             raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field t_col_fmt"]
-            )
+                msgs=[f"please provide mandatory field t_col_fmt"])
 
         # validate t_col_fmt
         if isinstance(self.t_col_fmt, ColumnFmt):
             if not self.t_col_fmt.is_legit_column:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Only legit column format can be specified ... "
-                          f"found {self.t_col_fmt}"]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Only legit column format can be specified ... "
+                    f"found {self.t_col_fmt}"
+                ])
 
     def generate(self) -> str:
         if bool(self._items):
             raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting this to be empty ..."
-                ]
-            )
+                msgs=[f"Was expecting this to be empty ..."])
 
         _ret = f"\\multicolumn{{{self.num_cols}}}{{{self.t_col_fmt}}}{{{self.value}}}"
 
@@ -315,13 +305,13 @@ class Row(LaTeX):
         _ret = len(self._items)
         for _ in self._items:
             if isinstance(_, MultiColumnCell):
-                _ret += (_.num_cols - 1)
+                _ret += _.num_cols - 1
         return _ret
 
     @classmethod
-    def from_list(
-        cls, items: t.List[t.Union[str, LaTeX]], height: Scalar = None
-    ) -> "Row":
+    def from_list(cls,
+                  items: t.List[t.Union[str, LaTeX]],
+                  height: Scalar = None) -> "Row":
         _ret = Row(height=height)
         for _ in items:
             _ret.add_item(_)
@@ -369,20 +359,16 @@ class TableColsDef(LaTeX):
         if bool(self._items):
             if self._previous_fmt is ColumnFmt.insert_before:
                 if not _current_fmt.is_legit_column:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Previous item added was for {ColumnFmt.insert_before}",
-                            f"So we expect it to follow with legit column"
-                        ]
-                    )
+                    raise e.validation.NotAllowed(msgs=[
+                        f"Previous item added was for {ColumnFmt.insert_before}",
+                        f"So we expect it to follow with legit column",
+                    ])
             if _current_fmt is ColumnFmt.insert_after:
                 if not self._previous_fmt.is_legit_column:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Current item is for {ColumnFmt.insert_after} so we "
-                            f"expect the previous item to be legit column",
-                        ]
-                    )
+                    raise e.validation.NotAllowed(msgs=[
+                        f"Current item is for {ColumnFmt.insert_after} so we "
+                        f"expect the previous item to be legit column",
+                    ])
 
         # assign internal vars
         # noinspection PyAttributeOutsideInit
@@ -401,7 +387,8 @@ class TableColsDef(LaTeX):
         return super().add_item(str(item))
 
     @classmethod
-    def from_list(cls, items: t.List[t.Union[str, ColumnFmt]]) -> "TableColsDef":
+    def from_list(cls, items: t.List[t.Union[str,
+                                             ColumnFmt]]) -> "TableColsDef":
         _ret = TableColsDef()
         for _ in items:
             _ret.add_item(_)
@@ -463,7 +450,7 @@ class Table(LaTeX):
     positioning: Positioning = None
     alignment: FloatObjAlignment = None
     caption: str = None
-    type: t.Literal['normal', 'array', '*', 'X'] = 'X'
+    type: t.Literal["normal", "array", "*", "X"] = "X"
     t_pos: TablePos = TablePos.centered
     t_width: Scalar = None
     t_cols_def: TableColsDef = None
@@ -474,23 +461,24 @@ class Table(LaTeX):
 
     @property
     def is_auto_stretchable(self) -> bool:
-        return self.type in ['*', 'X']
+        return self.type in ["*", "X"]
 
     @property
     def latex_type(self) -> str:
 
         # make table type
         _type = self.type
-        if _type == 'normal':
-            _type = 'tabular'
-        elif _type == 'array':
-            _type = 'array'
-        elif _type == '*':
-            _type = 'tabular*'
-        elif _type == 'X':
-            _type = 'tabularx'
+        if _type == "normal":
+            _type = "tabular"
+        elif _type == "array":
+            _type = "array"
+        elif _type == "*":
+            _type = "tabular*"
+        elif _type == "X":
+            _type = "tabularx"
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"type {_type} is not supported"])
+            raise e.code.ShouldNeverHappen(
+                msgs=[f"type {_type} is not supported"])
 
         # return
         return _type
@@ -498,7 +486,7 @@ class Table(LaTeX):
     @property
     def open_clause(self) -> str:
         # make _ret container
-        if self.type == 'array':
+        if self.type == "array":
             _ret = []
         else:
             _ret = [
@@ -526,11 +514,10 @@ class Table(LaTeX):
             _ret.append(f"\\scalebox{{{self.scale[0]}}}[{self.scale[1]}]\n{{")
 
         # add main table str
-        _ret.append(
-            f"\\begin{{{self.latex_type}}}"
-            f"{_width}"
-            f"[{self.t_pos}]"
-            f"\n{self.t_cols_def}")
+        _ret.append(f"\\begin{{{self.latex_type}}}"
+                    f"{_width}"
+                    f"[{self.t_pos}]"
+                    f"\n{self.t_cols_def}")
 
         return "\n".join(_ret)
 
@@ -541,10 +528,8 @@ class Table(LaTeX):
         ]
         if self.scale is not None:
             _ret.append("}")
-        if self.type != 'array':
-            _ret += [
-                "\\end{table}"
-            ]
+        if self.type != "array":
+            _ret += ["\\end{table}"]
         return "\n".join(_ret)
 
     def init(self):
@@ -553,12 +538,10 @@ class Table(LaTeX):
 
         # there should be minimum one col present
         if self.t_cols_def.num_cols < 1:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "Please specify at-least one legit column in `self.t_cols_def` ...",
-                    "Did you miss to add items to it ???"
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                "Please specify at-least one legit column in `self.t_cols_def` ...",
+                "Did you miss to add items to it ???",
+            ])
 
     def init_validate(self):
         # call super
@@ -567,48 +550,45 @@ class Table(LaTeX):
         # should not be None
         if self.t_cols_def is None:
             raise e.validation.NotAllowed(
-                msgs=[f"Please supply value for field `t_cols_fmt`"]
-            )
+                msgs=[f"Please supply value for field `t_cols_fmt`"])
 
         # will support later
         # todo: support when needed
         e.validation.ShouldNotBeEqual(
-            value1=self.type, value2='array',
-            msgs=["We will support this type later ..."]
+            value1=self.type,
+            value2="array",
+            msgs=["We will support this type later ..."],
         ).raise_if_failed()
 
         # width must be None for certain types
         if self.t_width is not None:
             e.validation.ShouldBeOneOf(
-                value=self.type, values=['*', 'X'],
-                msgs=["width is not supported for this type ... keep it None"]
+                value=self.type,
+                values=["*", "X"],
+                msgs=["width is not supported for this type ... keep it None"],
             ).raise_if_failed()
 
         # allow column format stretched i.e. X for type=='X'
         if self.t_cols_def.uses_stretched_fmt:
-            if self.type != 'X':
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"YThe t_cols_def uses one or more {ColumnFmt.stretched}",
-                        f"This is only allowed when table type is 'X' i.e. tabularx",
-                    ]
-                )
+            if self.type != "X":
+                raise e.validation.NotAllowed(msgs=[
+                    f"YThe t_cols_def uses one or more {ColumnFmt.stretched}",
+                    f"This is only allowed when table type is 'X' i.e. tabularx",
+                ])
 
         # specify t_width when table is stretchable
         if self.is_auto_stretchable:
             if self.t_width is None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Please specify `t_width` as table is auto stretchable ..."
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please specify `t_width` as table is auto stretchable ..."
+                ])
 
     def add_row(self, row: Row):
         if len(row) != self.t_cols_def.num_cols:
-            raise e.validation.NotAllowed(
-                msgs=[f"We only expect to have {self.t_cols_def.num_cols} items in "
-                      f"row but instead we found {len(row)}"]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"We only expect to have {self.t_cols_def.num_cols} items in "
+                f"row but instead we found {len(row)}"
+            ])
         self.add_item(item=row)
 
     def add_hline(self):
@@ -620,12 +600,11 @@ class Table(LaTeX):
         right of the column m
         """
         if m < n or n <= 0:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "Select n and m to be positive non-zero numbers and n<=m",
-                    "Found", dict(n=n, m=m),
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                "Select n and m to be positive non-zero numbers and n<=m",
+                "Found",
+                dict(n=n, m=m),
+            ])
         self.add_item(item=f"\\cline{{{n}-{m}}}")
 
     def add_toprule(self, thickness: Scalar = None):
@@ -655,12 +634,11 @@ class Table(LaTeX):
         To be used instead of `add_cline`
         """
         if m < n or n <= 0:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "Select n and m to be positive non-zero numbers and n<=m",
-                    "Found", dict(n=n, m=m),
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                "Select n and m to be positive non-zero numbers and n<=m",
+                "Found",
+                dict(n=n, m=m),
+            ])
         _thickness = ""
         if thickness is not None:
             _thickness = f"[{thickness}]"
@@ -676,5 +654,3 @@ class Table(LaTeX):
         if thickness is not None:
             _thickness = f"[{thickness}]"
         self.add_item(item=f"\\bottomrule{_thickness}")
-
-

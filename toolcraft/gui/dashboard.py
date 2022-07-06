@@ -1,31 +1,26 @@
-import dataclasses
 import abc
 import asyncio
+import dataclasses
 import typing as t
-import dearpygui.dearpygui as dpg
+
 # noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
+from .. import dapr
+from .. import error as e
+from .. import logger
 from .. import marshalling as m
 from .. import util
-from .. import dapr
-from .. import logger
-from .. import error as e
-from . import window
-from . import asset
-from . import widget
-from . import callback
-from . import form
+from . import asset, callback, form, widget, window
 from .__base__ import Dashboard
-
 
 _LOGGER = logger.get_logger()
 
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_to_be_cached=['primary_window'],
-)
+    things_to_be_cached=["primary_window"], )
 class BasicDashboard(Dashboard):
     """
     A dashboard with one primary window ... and can layout all fields inside it
@@ -35,8 +30,11 @@ class BasicDashboard(Dashboard):
     @util.CacheResult
     def primary_window(self) -> "window.Window":
         from .window import Window
+
         return Window(
-            label=self.title, width=self.width, height=self.height,
+            label=self.title,
+            width=self.width,
+            height=self.height,
         )
 
     def setup(self):
@@ -58,13 +56,13 @@ class BasicDashboard(Dashboard):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
+        dpg.bind_item_theme(item=_primary_window_dpg_id,
+                            theme=asset.Theme.DARK.get())
 
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_to_be_cached=['split_form', 'console_form'],
-)
+    things_to_be_cached=["split_form", "console_form"], )
 class DaprClientDashboard(Dashboard):
 
     subtitle: str = None
@@ -74,8 +72,11 @@ class DaprClientDashboard(Dashboard):
     @util.CacheResult
     def primary_window(self) -> "window.Window":
         from .window import Window
+
         return Window(
-            label=self.title, width=self.width, height=self.height,
+            label=self.title,
+            width=self.width,
+            height=self.height,
         )
 
     @property
@@ -92,7 +93,8 @@ class DaprClientDashboard(Dashboard):
     @util.CacheResult
     def console_form(self) -> widget.CollapsingHeader:
 
-        _console_ch = widget.CollapsingHeader(default_open=False, label="Console")
+        _console_ch = widget.CollapsingHeader(default_open=False,
+                                              label="Console")
         _receiver = widget.Text(default_value="...")
         # note only available for `dapr.DaprMode.client`
         _server = dapr.DAPR.server
@@ -102,25 +104,21 @@ class DaprClientDashboard(Dashboard):
             # noinspection PyMethodParameters
             def fn(_self, sender: widget.Widget):
                 # noinspection PyTypeChecker
-                _dapr_mode: str = sender.get_user_data()['dapr_mode']
+                _dapr_mode: str = sender.get_user_data()["dapr_mode"]
                 _receiver.default_value = _server.read_logs(
                     num_bytes=2048, dapr_mode=_dapr_mode)
 
         _button_bar = widget.Group(horizontal=True)
-        _button_bar(
-            widget=widget.Button(
-                label="Launch Log",
-                callback=__Callback(),
-                user_data={"dapr_mode": dapr.DaprMode.launch.name},
-            )
-        )
-        _button_bar(
-            widget=widget.Button(
-                label="Server Log",
-                callback=__Callback(),
-                user_data={"dapr_mode": dapr.DaprMode.server.name},
-            )
-        )
+        _button_bar(widget=widget.Button(
+            label="Launch Log",
+            callback=__Callback(),
+            user_data={"dapr_mode": dapr.DaprMode.launch.name},
+        ))
+        _button_bar(widget=widget.Button(
+            label="Server Log",
+            callback=__Callback(),
+            user_data={"dapr_mode": dapr.DaprMode.server.name},
+        ))
 
         _console_ch(widget=_button_bar)
         _console_ch(widget=_receiver)
@@ -135,14 +133,10 @@ class DaprClientDashboard(Dashboard):
         _primary_window = self.primary_window
 
         # add theme selector
-        _primary_window(
-            widget=callback.SetThemeCallback.get_combo_widget()
-        )
+        _primary_window(widget=callback.SetThemeCallback.get_combo_widget())
 
         # add subtitle
-        _primary_window(
-            widget=widget.Text(default_value=self.subtitle,)
-        )
+        _primary_window(widget=widget.Text(default_value=self.subtitle, ))
 
         # add split form
         _primary_window(widget=self.split_form)
@@ -159,11 +153,15 @@ class DaprClientDashboard(Dashboard):
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
+        dpg.bind_item_theme(item=_primary_window_dpg_id,
+                            theme=asset.Theme.DARK.get())
 
-    def add_hashable(self, hashable: m.HashableClass, group_key: str = None,):
+    def add_hashable(
+        self,
+        hashable: m.HashableClass,
+        group_key: str = None,
+    ):
         self.split_form.add(
-            hashable=hashable, group_key=group_key,
+            hashable=hashable,
+            group_key=group_key,
         )
-
-

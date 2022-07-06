@@ -1,14 +1,13 @@
 import dataclasses
 import typing as t
-import dearpygui.dearpygui as dpg
+
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
-from . import __base__
-from . import COLOR_TYPE
-from . import _auto
 from .. import error as e
 from .. import util
+from . import COLOR_TYPE, __base__, _auto
 
 
 @dataclasses.dataclass
@@ -56,33 +55,27 @@ class Row(_auto.TableRow):
         # noinspection PyUnresolvedReferences
         _num_columns = len(self.parent.columns)
         if bool(self.children):
-            raise e.code.CodingError(
-                msgs=[
-                    "must be empty when being called for first time",
-                    "you cannot call this for multiple times as cells "
-                    "will be added only once"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "must be empty when being called for first time",
+                "you cannot call this for multiple times as cells "
+                "will be added only once",
+            ])
         for _ in range(_num_columns):
             super().__call__(widget=Cell())
 
     def on_enter(self):
-        raise e.code.CodingError(
-            msgs=[
-                f"Although {Row} is ContainerWidget we block using with context as "
-                f"the cells will be already created for and hence instead use "
-                f"indexing i.e., use __getitem__"
-            ]
-        )
+        raise e.code.CodingError(msgs=[
+            f"Although {Row} is ContainerWidget we block using with context as "
+            f"the cells will be already created for and hence instead use "
+            f"indexing i.e., use __getitem__"
+        ])
 
     def on_exit(self, exc_type, exc_val, exc_tb):
-        raise e.code.CodingError(
-            msgs=[
-                f"Although {Row} is ContainerWidget we block using with context as "
-                f"the cells will be already created for and hence instead use "
-                f"indexing i.e., use __getitem__"
-            ]
-        )
+        raise e.code.CodingError(msgs=[
+            f"Although {Row} is ContainerWidget we block using with context as "
+            f"the cells will be already created for and hence instead use "
+            f"indexing i.e., use __getitem__"
+        ])
 
     @classmethod
     def yaml_tag(cls) -> str:
@@ -115,8 +108,9 @@ class Table(_auto.Table):
         return _ret
 
     def __getitem__(
-        self, item: t.Union[int, t.Tuple[int, int]]
-    ) -> t.Union[Row, Column, Cell]:
+            self, item: t.Union[int,
+                                t.Tuple[int,
+                                        int]]) -> t.Union[Row, Column, Cell]:
         """
         When:
           + item is int
@@ -143,10 +137,7 @@ class Table(_auto.Table):
         # make sure that column is supplied
         if self.columns is None:
             raise e.code.CodingError(
-                msgs=[
-                    f"Please supply mandatory field `columns` ..."
-                ]
-            )
+                msgs=[f"Please supply mandatory field `columns` ..."])
 
     def init(self):
         # -------------------------------------------------- 01
@@ -161,10 +152,7 @@ class Table(_auto.Table):
             # should not be built
             if _c.is_built:
                 raise e.code.NotAllowed(
-                    msgs=[
-                        "The column should not be built ..."
-                    ]
-                )
+                    msgs=["The column should not be built ..."])
             # ---------------------------------------------- 02.02
             # set internals
             _c.internal.parent = self
@@ -180,23 +168,21 @@ class Table(_auto.Table):
         # rows are managed by children so we hack this to remove reference to Rows
         # todo: instead of using hack have block access via __getattr__ and raise warning ... for now this will suffice
         #   ... also pycharm stops type hinting when __getattr__ is overridden :(
-        self.__dict__['rows'] = None
+        self.__dict__["rows"] = None
 
     @classmethod
     def yaml_tag(cls) -> str:
         return f"gui.table.{cls.__name__}"
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
         # call super
         # Note ancestry
         #   > MovableContainerWidget > (ContainerWidget, MovableWidget) > Widget > Dpg
         # We want to bypass `ContainerWidget.build_post_runner` to account for adding
         #   `Column` as they are not treated as `children`
-        super(
-            __base__.Widget, self
-        ).build_post_runner(hooked_method_return_value=hooked_method_return_value)
+        super(__base__.Widget, self).build_post_runner(
+            hooked_method_return_value=hooked_method_return_value)
 
         # the columns will not be handled by children mechanism as it is fixed so
         # we build it here
@@ -210,7 +196,9 @@ class Table(_auto.Table):
 
     @classmethod
     def table_from_literals(
-        cls, rows: int, cols: t.Union[int, t.List[str]],
+        cls,
+        rows: int,
+        cols: t.Union[int, t.List[str]],
     ) -> "Table":
 
         # make cols
@@ -236,24 +224,24 @@ class Table(_auto.Table):
 
     @classmethod
     def table_from_dict(
-        cls, input_dict: t.Dict,
+        cls,
+        input_dict: t.Dict,
     ) -> "Table":
         from .. import gui
+
         _rows = list(input_dict.keys())
         _columns = ["\\"] + list(input_dict[_rows[0]].keys())
         _table = cls.table_from_literals(
-            rows=len(_rows), cols=_columns,
+            rows=len(_rows),
+            cols=_columns,
         )
         for _rid, _r in enumerate(_rows):
             for _cid, _c in enumerate(_columns):
                 if _c == "\\":
-                    _table[_rid, _cid](
-                        gui.widget.Text(default_value=f"{_r}")
-                    )
+                    _table[_rid, _cid](gui.widget.Text(default_value=f"{_r}"))
                 else:
                     _table[_rid, _cid](
-                        gui.widget.Text(default_value=f"{input_dict[_r][_c]}")
-                    )
+                        gui.widget.Text(default_value=f"{input_dict[_r][_c]}"))
         return _table
 
     def set_row_color(self, row: int, color: COLOR_TYPE):

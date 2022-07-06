@@ -12,16 +12,17 @@ Some things to do based on this
 """
 import datetime
 import enum
-import pickle
-import zlib
-import typing as t
-from dapr.ext.grpc import InvokeMethodRequest, InvokeMethodResponse
 import json
+import pickle
+import typing as t
+import zlib
 
-from . import DaprMode
+from dapr.ext.grpc import InvokeMethodRequest, InvokeMethodResponse
+
 from .. import error as e
-from .. import marshalling as m
 from .. import logger
+from .. import marshalling as m
+from . import DaprMode
 
 _LOGGER = logger.get_logger()
 
@@ -62,48 +63,50 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
 
     # check if CWD set
     if DAPR.cwd is None:
-        raise e.code.CodingError(
-            msgs=["Dapr.CWD should be set by now ..."]
-        )
+        raise e.code.CodingError(msgs=["Dapr.CWD should be set by now ..."])
 
     # confirm if server knows about requested hashable
-    _hex_hash = _data['hex_hash']
+    _hex_hash = _data["hex_hash"]
     _hashable_yaml = DAPR.cwd / _hex_hash / ".yaml"
     if not _hashable_yaml.exists():
-        if 'hashable_yaml' in _data.keys():
+        if "hashable_yaml" in _data.keys():
             _hashable_yaml.parent.mkdir(parents=True, exist_ok=True)
             _hashable_yaml.touch(exist_ok=False)
-            _hashable_yaml.write_text(_data['hashable_yaml'])
+            _hashable_yaml.write_text(_data["hashable_yaml"])
         else:
             return Response(
                 status=Status.NEEDS_HASHABLE_YAML,
-                message="Please send hashable yaml ..."
+                message="Please send hashable yaml ...",
             ).get_bytes()
 
     # load hashable
     print(_hashable_yaml)
-    return Response(
-        status=Status.STARTED, message="Just started"
-    ).get_bytes()
+    return Response(status=Status.STARTED, message="Just started").get_bytes()
 
 
 def invoke_for_hashable_on_client(request: "Request") -> t.Any:
     _start = datetime.datetime.now()
     print("...................................11111111111111111111111111111")
     with DAPR.client as _client:
-        print("...................................222222222222222222222", (datetime.datetime.now() - _start).total_seconds())
+        print(
+            "...................................222222222222222222222",
+            (datetime.datetime.now() - _start).total_seconds(),
+        )
         # noinspection PyTypeChecker
         _response = _client.invoke_method(
             app_id=DAPR.APP_ID,
             method_name="invoke_for_hashable_on_server",
             data=request.get_bytes(),
-            content_type='text/plain',
-            http_verb='GET',
+            content_type="text/plain",
+            http_verb="GET",
             # http_querystring=(
             #     ('key1', 'value1')
             # ),
         )
-        print("...................................33333333333333333", (datetime.datetime.now() - _start).total_seconds())
+        print(
+            "...................................33333333333333333",
+            (datetime.datetime.now() - _start).total_seconds(),
+        )
 
         print(_response)
 
@@ -139,6 +142,7 @@ class Response(t.NamedTuple):
           'data': <protobuf>,
        }
     """
+
     status: Status
     message: str
     # Any serializable python object
@@ -174,6 +178,7 @@ class Request(t.NamedTuple):
     Note that we don't want to add more fields to this tuple and might not be needed as
       simple design is best ...
     """
+
     yaml: str
     fn_name: str
     kwargs: t.Dict
@@ -214,21 +219,17 @@ class Invoke:
         def _fn(_self: m.HashableClass, **kwargs):
             print(_self.yaml(), kwargs)
             if DAPR.MODE is DaprMode.client:
-                return invoke_for_hashable_on_client(
-                    request=Request(
-                        yaml=_self.yaml(),
-                        fn_name=fn.__name__,
-                        kwargs=kwargs,
-                    )
-                )
+                return invoke_for_hashable_on_client(request=Request(
+                    yaml=_self.yaml(),
+                    fn_name=fn.__name__,
+                    kwargs=kwargs,
+                ))
             elif DAPR.MODE is DaprMode.server:
                 return fn(_self, **kwargs)
             else:
-                e.code.NotAllowed(
-                    msgs=[
-                        f"DaprMode {DAPR.MODE} is not supported by decorator "
-                        f"{self.__class__}"
-                    ]
-                )
+                e.code.NotAllowed(msgs=[
+                    f"DaprMode {DAPR.MODE} is not supported by decorator "
+                    f"{self.__class__}"
+                ])
 
         return _fn

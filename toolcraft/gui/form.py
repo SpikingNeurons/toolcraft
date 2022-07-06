@@ -1,15 +1,13 @@
+import asyncio
 import dataclasses
 import typing as t
-import asyncio
 
-from .. import util
 from .. import error as e
-from .. import marshalling as m
-from .__base__ import Form
 from .. import gui
-from . import widget
-from . import table
-from . import callback
+from .. import marshalling as m
+from .. import util
+from . import callback, table, widget
+from .__base__ import Form
 
 
 @dataclasses.dataclass
@@ -51,22 +49,30 @@ class ButtonBarForm(Form):
     def mapper(self) -> t.Dict[str, t.Callable]:
         return {}
 
-    def register(self, key: str, fn: t.Optional[t.Callable], gui_name: str = None, ):
+    def register(
+        self,
+        key: str,
+        fn: t.Optional[t.Callable],
+        gui_name: str = None,
+    ):
         # just set default
         if gui_name is None:
             gui_name = key
 
         # check if already mapped
         e.validation.ShouldNotBeOneOf(
-            value=key, values=list(self.mapper.keys()),
-            msgs=["Looks like you have already registered gui function for this key"]
+            value=key,
+            values=list(self.mapper.keys()),
+            msgs=[
+                "Looks like you have already registered gui function for this key"
+            ],
         ).raise_if_failed()
 
         # test if in with context
         if self.is_in_gui_with_mode:
-            raise e.code.CodingError(
-                msgs=["Register new buttons and their gui methods outside gui related with context"]
-            )
+            raise e.code.CodingError(msgs=[
+                "Register new buttons and their gui methods outside gui related with context"
+            ])
 
         # add
         self.mapper[key] = fn
@@ -74,7 +80,9 @@ class ButtonBarForm(Form):
         # make button and add it to container
         with self.button_bar:
             gui.widget.Button(
-                label=gui_name, callback=self.callback, user_data={"key": key},
+                label=gui_name,
+                callback=self.callback,
+                user_data={"key": key},
             )
 
 
@@ -123,10 +131,8 @@ class HashableMethodsRunnerForm(Form):
 
         # add close button
         if self.close_button:
-            _buttons_bar(
-                widget=callback.CloseWidgetCallback.get_button_widget(
-                    widget_to_delete=self),
-            )
+            _buttons_bar(widget=callback.CloseWidgetCallback.get_button_widget(
+                widget_to_delete=self), )
 
         # add info button
         if self.info_button:
@@ -136,8 +142,7 @@ class HashableMethodsRunnerForm(Form):
         for _callable_name in _callable_names:
             # get UseMethodInForm
             _use_method_in_form_obj = m.UseMethodInForm.get_from_hashable_fn(
-                hashable=_hashable, fn_name=_callable_name
-            )
+                hashable=_hashable, fn_name=_callable_name)
             # create button widget
             _button = _use_method_in_form_obj.get_button_widget(
                 hashable=_hashable,
@@ -156,6 +161,7 @@ class DoubleSplitForm(Form):
     + Buttons in left panel (can be grouped with group_key)
     + And responses are added to right receiver panel
     """
+
     callable_name: str
     allow_refresh: bool
 
@@ -202,17 +208,14 @@ class DoubleSplitForm(Form):
         # ----------------------------------------------------- 01
         # check if using with mode for gui
         if self.is_in_gui_with_mode:
-            raise e.code.CodingError(
-                msgs=[
-                    f"To add elements to {self.__class__.__name__!r} exist from gui with mode ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"To add elements to {self.__class__.__name__!r} exist from gui with mode ..."
+            ])
 
         # ----------------------------------------------------- 02
         # get UseMethodInForm
         _use_method_in_form_obj = m.UseMethodInForm.get_from_hashable_fn(
-            hashable=hashable, fn_name=self.callable_name
-        )
+            hashable=hashable, fn_name=self.callable_name)
 
         # ----------------------------------------------------- 03
         # get container
@@ -223,8 +226,10 @@ class DoubleSplitForm(Form):
                 _container = self.button_panel_group[group_key]
             else:
                 with self.button_panel:
-                    self.button_panel_group[group_key] = gui.widget.CollapsingHeader(
-                        label=group_key, default_open=False,
+                    self.button_panel_group[
+                        group_key] = gui.widget.CollapsingHeader(
+                            label=group_key,
+                            default_open=False,
                     )
                     _container = self.button_panel_group[group_key]
 

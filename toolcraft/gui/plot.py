@@ -1,47 +1,51 @@
+import abc
 import dataclasses
 import typing as t
-import abc
-import dearpygui.dearpygui as dpg
+
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 
-from .__base__ import PlotSeries, PlotItem, PlotItemInternal
-from . import _auto
 from .. import error as e
-from .. import util
 from .. import marshalling as m
+from .. import util
+from . import _auto
+from .__base__ import PlotItem, PlotItemInternal, PlotSeries
 
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
+# noinspection PyUnresolvedReferences
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries2D
-# noinspection PyUnresolvedReferences
-from ._auto import AreaSeries
-# noinspection PyUnresolvedReferences
-from ._auto import BarSeries
-# noinspection PyUnresolvedReferences
-from ._auto import CandleSeries
-# noinspection PyUnresolvedReferences
-from ._auto import ErrorSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HeatSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HistogramSeries
-# noinspection PyUnresolvedReferences
-from ._auto import HLineSeries
-# noinspection PyUnresolvedReferences
-from ._auto import LineSeries
-# noinspection PyUnresolvedReferences
-from ._auto import PieSeries
-# noinspection PyUnresolvedReferences
-from ._auto import ScatterSeries
-# noinspection PyUnresolvedReferences
-from ._auto import ShadeSeries
-# noinspection PyUnresolvedReferences
-from ._auto import StairSeries
-# noinspection PyUnresolvedReferences
-from ._auto import StemSeries
-# noinspection PyUnresolvedReferences
-from ._auto import VLineSeries
+from ._auto import (
+    AreaSeries,
+    BarSeries,
+    CandleSeries,
+    ErrorSeries,
+    HeatSeries,
+    HistogramSeries,
+    HistogramSeries2D,
+    HLineSeries,
+    LineSeries,
+    PieSeries,
+    ScatterSeries,
+    ShadeSeries,
+    StairSeries,
+    StemSeries,
+    VLineSeries,
+)
+
 # auto pk; end <<<
 
 
@@ -160,23 +164,22 @@ class YAxis(_auto.PlotYAxis):
             if _.label == item:
                 return _
         e.validation.ShouldBeOneOf(
-            value=item, values=[_.label for _ in self.children.values()],
-            msgs=["There is no plot_series with this label name"]
+            value=item,
+            values=[_.label for _ in self.children.values()],
+            msgs=["There is no plot_series with this label name"],
         ).raise_if_failed()
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: PlotSeries):
         if isinstance(widget, PlotSeries):
             if widget.label in [_.label for _ in self.children.values()]:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"There already exists a plot_series with label "
-                        f"`{widget.label}`",
-                        f"Note that if you want to share label across multiple series "
-                        f"then append `#<some unique name>` to label to make it unique "
-                        f"per plot series",
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"There already exists a plot_series with label "
+                    f"`{widget.label}`",
+                    f"Note that if you want to share label across multiple series "
+                    f"then append `#<some unique name>` to label to make it unique "
+                    f"per plot series",
+                ])
         super().__call__(widget=widget, before=None)
 
     @classmethod
@@ -240,7 +243,7 @@ class DragPoint(_auto.PlotDragPoint):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_to_be_cached=['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
+    things_to_be_cached=["legend", "x_axis", "y1_axis", "y2_axis", "y3_axis"],
 )
 class Plot(_auto.Plot):
     """
@@ -312,12 +315,10 @@ class Plot(_auto.Plot):
     @util.CacheResult
     def y2_axis(self) -> YAxis:
         if self.num_of_y_axis not in [2, 3]:
-            raise e.code.CodingError(
-                msgs=[
-                    f"You cannot access this property. "
-                    f"Please set the field `num_of_y_axis` to be one of [2, 3]"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"You cannot access this property. "
+                f"Please set the field `num_of_y_axis` to be one of [2, 3]"
+            ])
         with self:
             _ret = YAxis()
             _ret.internal.parent = self
@@ -327,12 +328,10 @@ class Plot(_auto.Plot):
     @util.CacheResult
     def y3_axis(self) -> YAxis:
         if self.num_of_y_axis != 3:
-            raise e.code.CodingError(
-                msgs=[
-                    f"You cannot access this property. "
-                    f"Please set the field `num_of_y_axis` to be 3 to use this property"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"You cannot access this property. "
+                f"Please set the field `num_of_y_axis` to be 3 to use this property"
+            ])
         with self:
             _ret = YAxis()
             _ret.internal.parent = self
@@ -358,10 +357,9 @@ class Plot(_auto.Plot):
         super().init_validate()
         # check num_of_y_axis
         e.validation.ShouldBeOneOf(
-            value=self.num_of_y_axis, values=[1, 2, 3],
-            msgs=[
-                "Please crosscheck the value for field num_of_y_axis"
-            ]
+            value=self.num_of_y_axis,
+            values=[1, 2, 3],
+            msgs=["Please crosscheck the value for field num_of_y_axis"],
         ).raise_if_failed()
 
     @classmethod
@@ -424,9 +422,8 @@ class Plot(_auto.Plot):
             if isinstance(_c, DragPoint) and drag_points:
                 _c.delete()
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
         # now it is time to render children
         # call super
         super().build_post_runner(

@@ -1,16 +1,14 @@
 """
 https://www.overleaf.com/learn/latex/Beamer
 """
-import dataclasses
 import abc
-import typing as t
+import dataclasses
 import pathlib
+import typing as t
 
-from . import LaTeX
 from .. import error as e
-from .. import logger
-from .. import util
-from . import helper
+from .. import logger, util
+from . import LaTeX, helper
 
 _LOGGER = logger.get_logger()
 
@@ -61,6 +59,7 @@ class _Sec(LaTeX, abc.ABC):
       useful to generate slides for printing or lecturing ...
 
     """
+
     name: str = None
     short_name: str = None
     starred: bool = False
@@ -96,8 +95,7 @@ class _Sec(LaTeX, abc.ABC):
         if self.starred:
             if self.short_name is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["In starred mode you cannot use short name "]
-                )
+                    msgs=["In starred mode you cannot use short name "])
 
 
 @dataclasses.dataclass
@@ -119,11 +117,13 @@ class SubSubSection(_Sec):
 class Beamer(LaTeX):
 
     # refer: https://latex-beamer.com/tutorials/beamer-themes/
-    theme: t.Literal[
-        'default', 'Darmstadt', 'Malmoe', 'AnnArbor', 'Dresden', 'Marburg', 'Antibes', 'Frankfurt', 'Montpellier',
-        'Bergen', 'Goettingen', 'PaloAlto', 'Berkeley', 'Hannover', 'Pittsburgh', 'Berlin', 'Ilmenau', 'Rochester',
-        'Boadilla', 'JuanLesPins', 'Singapore', 'CambridgeUS', 'Luebeck', 'Szeged', 'Copenhagen', 'Madrid', 'Warsaw',
-    ] = "Berkeley"
+    theme: t.Literal["default", "Darmstadt", "Malmoe", "AnnArbor", "Dresden",
+                     "Marburg", "Antibes", "Frankfurt", "Montpellier",
+                     "Bergen", "Goettingen", "PaloAlto", "Berkeley",
+                     "Hannover", "Pittsburgh", "Berlin", "Ilmenau",
+                     "Rochester", "Boadilla", "JuanLesPins", "Singapore",
+                     "CambridgeUS", "Luebeck", "Szeged", "Copenhagen",
+                     "Madrid", "Warsaw", ] = "Berkeley"
 
     # refer:
     aspect_ratio: t.Literal[1610, 169, 149, 54, 43, 32] = 169
@@ -141,32 +141,30 @@ class Beamer(LaTeX):
 
     # https://tex.stackexchange.com/questions/137022/how-to-insert-page-number-in-beamer-navigation-symbols
     # figure out how to have options to modify template
-    add_to_beamer_template: str = "\n".join(
-        [
-            # "\\usepackage[english]{babel}",
-            # "\\usepackage[utf8]{inputenc}",
-            # "\\setbeamercolor{structure}{fg=teal}",
-            "\\usetheme[left]{Goettingen}",
-            # "\\setbeamercolor{navigation symbols}{fg=green, bg=blue!50}",
-            # "\\setbeamercolor{palette sidebar secondary}{fg=yellow,bg=blue}",
-            # "\\setbeamercolor{section in sidebar shaded}{fg=red,bg=black}",
-            # "\\setbeamercolor{footline}{fg=teal}",
-            # "\\setbeamertemplate{itemize items}[square]",
-            # "\\setbeamertemplate{enumerate items}[square]",
-            "\\setbeamercolor{background canvas}{bg=blue!5!white}",
-            # "\\setbeamercolor{palette sidebar primary}{bg=green!25!blue,fg=white}",
-            # "\\setbeamercolor{section in sidebar shaded}{fg=green!20!black,bg=blue!20}",
-            # "\\setbeamercolor{structure canvas}{bg=green}"
-            "\\setbeamerfont{footline}{series=\\bfseries}",
-            "\\addtobeamertemplate{navigation symbols}{}{",
-            "\\usebeamerfont{footline}",
-            "\\usebeamercolor[fg]{footline}",
-            "\\hspace{1em}",
-            "\\raisebox{1.5pt}[0pt][0pt]{\\insertframenumber/\\inserttotalframenumber}",
-            "}",
-            # "\\setbeamercolor{structure}{fg=red}\n",
-        ]
-    )
+    add_to_beamer_template: str = "\n".join([
+        # "\\usepackage[english]{babel}",
+        # "\\usepackage[utf8]{inputenc}",
+        # "\\setbeamercolor{structure}{fg=teal}",
+        "\\usetheme[left]{Goettingen}",
+        # "\\setbeamercolor{navigation symbols}{fg=green, bg=blue!50}",
+        # "\\setbeamercolor{palette sidebar secondary}{fg=yellow,bg=blue}",
+        # "\\setbeamercolor{section in sidebar shaded}{fg=red,bg=black}",
+        # "\\setbeamercolor{footline}{fg=teal}",
+        # "\\setbeamertemplate{itemize items}[square]",
+        # "\\setbeamertemplate{enumerate items}[square]",
+        "\\setbeamercolor{background canvas}{bg=blue!5!white}",
+        # "\\setbeamercolor{palette sidebar primary}{bg=green!25!blue,fg=white}",
+        # "\\setbeamercolor{section in sidebar shaded}{fg=green!20!black,bg=blue!20}",
+        # "\\setbeamercolor{structure canvas}{bg=green}"
+        "\\setbeamerfont{footline}{series=\\bfseries}",
+        "\\addtobeamertemplate{navigation symbols}{}{",
+        "\\usebeamerfont{footline}",
+        "\\usebeamercolor[fg]{footline}",
+        "\\hspace{1em}",
+        "\\raisebox{1.5pt}[0pt][0pt]{\\insertframenumber/\\inserttotalframenumber}",
+        "}",
+        # "\\setbeamercolor{structure}{fg=red}\n",
+    ])
 
     symbols_file: str = "symbols.tex"
     usepackage_file: str = "usepackage.sty"
@@ -185,9 +183,7 @@ class Beamer(LaTeX):
         _ret = []
 
         if self.add_to_beamer_template is not None:
-            _ret.append(
-                self.add_to_beamer_template
-            )
+            _ret.append(self.add_to_beamer_template)
 
         # if self.bib_file is not None:
         #     # https://github.com/FedericoTartarini/youtube-beamer-tutorial/blob/%234-bibliography/main.tex
@@ -248,15 +244,13 @@ class Beamer(LaTeX):
         super().init_validate()
         if self.label is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set label for {self.__class__}"]
-            )
+                msgs=[f"No need to set label for {self.__class__}"])
 
     def init(self):
         super().init()
         if self._parent is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set _parent for {self.__class__}"]
-            )
+                msgs=[f"No need to set _parent for {self.__class__}"])
         # noinspection PyAttributeOutsideInit
         self._parent = self
 
@@ -264,15 +258,14 @@ class Beamer(LaTeX):
         if not pathlib.Path(self.symbols_file).exists():
             _LOGGER.warning(
                 msg=f"The configured symbols file {self.symbols_file} is "
-                    f"not on disk so using creating default file ...")
+                f"not on disk so using creating default file ...")
             pathlib.Path(self.symbols_file).touch()
 
         # handle usepackage_file ... we always overwrite with our default file
         if pathlib.Path(self.usepackage_file).exists():
             pathlib.Path(self.usepackage_file).unlink()
         pathlib.Path(self.usepackage_file).write_text(
-            (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
-        )
+            (pathlib.Path(__file__).parent / "usepackage.sty").read_text())
 
     def write(
         self,
@@ -302,14 +295,13 @@ class Beamer(LaTeX):
             helper.make_pdf_with_pdflatex(
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
-                         (_save_to_file.name.split(".")[0] + ".pdf"),
+                (_save_to_file.name.split(".")[0] + ".pdf"),
                 # clean=True,
             )
 
 
 @dataclasses.dataclass
 class Frame(LaTeX):
-
     """
     todo: read section 8.4 Restricting the Slides of a Frame ....
       useful to generate slides for printing or lecturing ...
@@ -354,19 +346,27 @@ class TableOfContents(Frame):
     """
     TableOfContents geared for Beamer ... for normal TableOfContents implement separately
     """
+
     # frame related
     title: str = "Outline"
     no_frame_numbering: bool = True
 
     # _toc_options check section 10.5 Adding a Table of Contents
-    current_section: bool = False  # shorthand for sectionstyle=show/shaded,subsectionstyle=show/show/shaded
+    current_section: bool = (
+        False  # shorthand for sectionstyle=show/shaded,subsectionstyle=show/show/shaded
+    )
     current_subsection: bool = False  # shorthand for subsectionstyle=show/shaded
-    first_section: int = None  # specifies which section should be numbered as section “1.”
-    hide_all_subsections: bool = False  # shorthand for subsectionstyle=hide .. causes all subsections to be hidden
-    hide_other_subsections: bool = False  # shorthand for subsectionstyle=show/show/hide .. causes the subsections of sections other than the current one to be hidden
+    first_section: int = (
+        None  # specifies which section should be numbered as section “1.”
+    )
+    # shorthand for subsectionstyle=hide .. causes all subsections to be hidden
+    hide_all_subsections: bool = False
+    # shorthand for subsectionstyle=show/show/hide .. causes the subsections of sections other than the current one to be hidden
+    hide_other_subsections: bool = False
     last_section: int = None  # specifies which section should be last
     # pasrt={}  todo: do this later
-    pause_sections: bool = False  # This is useful if you wish to show the table of contents in an incremental way.
+    # This is useful if you wish to show the table of contents in an incremental way.
+    pause_sections: bool = False
     pause_subsections: bool = False
     # sections={⟨overlay specification⟩} causes only the sections mentioned in the ⟨overlay specification⟩
     # to be shown. For example, sections={<2-4| handout:0>} causes only the second, third, and fourth section
@@ -426,7 +426,8 @@ class TableOfContents(Frame):
         if self.subsection_style is not None:
             _toc_options.append(f"subsectionstyle={self.subsection_style}")
         if self.subsubsection_style is not None:
-            _toc_options.append(f"subsubsectionstyle={self.subsubsection_style}")
+            _toc_options.append(
+                f"subsubsectionstyle={self.subsubsection_style}")
         if bool(_toc_options):
             _toc += "[" + ",".join(_toc_options) + "]"
         else:
@@ -515,10 +516,7 @@ class Bibliography(Frame):
         # test file
         if self.file is None:
             raise e.validation.NotAllowed(
-                msgs=["Please set mandatory field `file`"]
-            )
+                msgs=["Please set mandatory field `file`"])
         if not self.file.exists():
             raise e.validation.NotAllowed(
-                msgs=[f"Cannot find `bib` file {self.file} on the disk ..."]
-            )
-
+                msgs=[f"Cannot find `bib` file {self.file} on the disk ..."])
