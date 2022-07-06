@@ -1,5 +1,8 @@
 import inspect
 import re
+import yaml
+from rich.console import Console
+from rich.traceback import Traceback, Trace
 
 from .. import logger
 
@@ -46,11 +49,22 @@ class _CustomException(Exception):
         _header = " ".join(camel_case_split(self.__class__.__name__)).upper()
         _header = _EXCEPTION_HEADER.format(header=_header)
         # call super to set the header as short message
-        super().__init__(_header)
+        _msg = _header + "\n" + "\n--- ".join([str(_) for _ in msgs])
+        super().__init__(f"{_msg}")
 
         # -----------------------------------------------------------------03
         # log
         _logger.error(msg=_header, msgs=msgs)
+        # log with rich
+        # todo: doing this here as the error does not appear on console
+        #   need to investigate how to use RichHandler to log to file as well as console
+        _console = Console()
+        # this can be done only in try catch block as traceback is not available
+        # _console.print_exception(show_locals=False, width=None)
+        _rich_print = "\n" + _header
+        if msgs is not None:
+            _rich_print += "\n" + yaml.dump(msgs)
+        _console.print(_rich_print)
 
         # -----------------------------------------------------------------04
         # if the parent i.e. this __init__ was called from child that means the

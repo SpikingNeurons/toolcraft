@@ -7,6 +7,7 @@ Visual tikz tutorials: http://tug.ctan.org/info/visualtikz/VisualTikZ.pdf
 
 from toolcraft.texipy import Document, Section, Color, SubSection
 from toolcraft.texipy import tikz
+import try_table, try_tikz, try_document
 
 
 def part_1_tut_0() -> tikz.TikZ:
@@ -79,19 +80,7 @@ def part_1_tut_1():
     return _tikz
 
 
-def part_1_tut_2():
-    ...
-
-
-if __name__ == '__main__':
-
-    _doc = Document(
-        title="Till Tantau tutorials in TeXiPy",
-        author="Praveen Kulkarni",
-        date="\\today",
-        main_tex_file="../main.tex",
-    )
-
+def make_section_1(_doc):
     _section_1 = Section(
         name="Tutorials by Till Tantau", label="sec1"
     )
@@ -105,9 +94,50 @@ if __name__ == '__main__':
         name="A Picture for Karl's Students", label="sec1:karls_student"
     ).add_item(item=part_1_tut_1())
 
-
     _doc.add_item(_section_1.add_item(_section_1_tut_0).add_item(_section_1_tut_1))
 
 
+def make_section_2(_doc):
+    _section_2 = Section(
+        name="Tutorials by Praveen Kulkarni", label="sec2"
+    )
 
+    # _section_2_tut_0 = SubSection(
+    #     name="Using Table", label="sec2:table"
+    # ).add_item(item=try_table.make_table())
+    # _section_2.add_item(_section_2_tut_0)
+    #
+    # _section_2_tut_1 = SubSection(
+    #     name="Using TikZ", label="sec2:tikz"
+    # ).add_item(item=try_tikz.make_complicated_figure())
+    # _section_2.add_item(_section_2_tut_1)
+
+    _section_2_tut_2 = SubSection(
+        name="Using List", label="sec2:list"
+    )
+    try_document.make_lists(_section_2_tut_2)
+    _section_2.add_item(_section_2_tut_2)
+
+    _doc.add_item(_section_2)
+
+
+if __name__ == '__main__':
+
+    # -------------------------------------------------------------------------
+    _doc = Document(
+        title="Till Tantau tutorials in TeXiPy",
+        author="Praveen Kulkarni",
+        date="\\today",
+        main_tex_file="../main.tex",
+        symbols_file="symbols.tex",
+        usepackage_file="usepackage.sty",
+    )
+
+    # -------------------------------------------------------------------------
+    # make_section_1(_doc)
+
+    # -------------------------------------------------------------------------
+    make_section_2(_doc)
+
+    # -------------------------------------------------------------------------
     _doc.write(save_to_file="try.tex", make_pdf=True)

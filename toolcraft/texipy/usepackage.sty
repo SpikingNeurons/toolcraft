@@ -1,0 +1,61 @@
+% >> preambles
+\RequirePackage{subfiles}%
+\RequirePackage{cite}%
+\RequirePackage{float}%
+\RequirePackage{enumitem}%
+\RequirePackage[acronym]{glossaries}%
+\RequirePackage{fontawesome5}%
+\RequirePackage{xcolor}%
+\RequirePackage{url} % for "\url" and "\urlstyle" macros
+\RequirePackage{hyperref} % for "\href" macro
+\RequirePackage{enumitem}  % for lists with differnt numbering https://latex-tutorial.com/tutorials/lists/
+
+% reguired for mathbb
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+
+\RequirePackage{tikz}%
+\usetikzlibrary{topaths}%
+\usetikzlibrary{shapes}%
+\usetikzlibrary{shapes.geometric}%
+\usetikzlibrary{shapes.symbols}%
+\usetikzlibrary{shapes.multipart}%
+\usetikzlibrary{shapes.misc}%
+
+% Used to size table columns
+\RequirePackage{multirow}%
+\RequirePackage{array}%
+\RequirePackage{booktabs}%
+% \RequirePackage{ctable}%
+\RequirePackage{tabularx}%
+\RequirePackage{makecell}%
+%\RequirePackage[table]{xcolor}% ... lead to option clas error as xcolor alrady used above
+% For vertical centering text in X column
+% This is because the default is bottom ..
+% todo: find better ways later ... this doesen't seem to work though
+%\renewcommand\tabularxcolumn[1]{m{#1}}%
+
+% pgfplots
+\RequirePackage{pgfplots}%
+\pgfplotsset{compat=1.18}% this sets version to 1.18.1
+
+%todo: replace with decorations.pathmorphing library
+%\usetikzlibrary{snakes}%
+\usetikzlibrary{arrows}%
+\usetikzlibrary{patterns}%
+\usetikzlibrary{positioning}%
+\usetikzlibrary{calc}%
+%%todo: support this tikz_externalize_folder for caching images/tabels/plots generated
+%\usetikzlibrary{external}%
+
+%% >> preamble configs
+%%todo: support this tikz_externalize_folder for caching images/tabels/plots generated
+%\tikzexternalize[prefix=_tikz_cache/] % activate and define _tikz_cache/ as cache folder
+% \makeglossaries
+
+% https://tex.stackexchange.com/questions/50747/options-for-appearance-of-links-in-hyperref?newreg=a3fe6e89ccee48339d2f96b49092b123
+% for hyperref
+\hypersetup{
+    colorlinks = false,
+    linkbordercolor = {white},
+}

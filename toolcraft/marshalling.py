@@ -7,6 +7,7 @@ import inspect
 import time
 import types
 import pathlib
+import contextvars
 import enum
 import traceback
 import typing as t
@@ -68,15 +69,72 @@ class UseMethodInForm:
     """
 
     def __init__(
-        self, label_fmt: str = None,
+        self, label_fmt: str = None, call_as_async: bool = False
     ):
         """
 
         Args:
             label_fmt: label for button ... if str is property we will
               call it to get label
+            call_as_async: can call method in async task ...
         """
         self.label_fmt = label_fmt
+        self.call_as_async = call_as_async
+
+    @staticmethod
+    async def async_call(_fn: t.Callable):
+
+        try:
+
+            # loop infinitely
+            while widget.does_exist:
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not widget.is_visible:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # update widget
+                widget.set_value(f"{int(widget.get_value())+1:03d}")
+
+                # change update rate based on some value
+                if self.some_value == "first hashable ...":
+                    await asyncio.sleep(1)
+                    if int(widget.get_value()) == 10:
+                        break
+                else:
+                    await asyncio.sleep(0.1)
+                    if int(widget.get_value()) == 50:
+                        break
+
+        except Exception as _e:
+            if widget.does_exist:
+                raise _e
+            else:
+                ...
+
+    @staticmethod
+    def make_async_caller_fn(_fn: t.Callable) -> t.Callable:
+
+        async def _async_fn(_self, grp_widget: gui.widget.Group):
+
+            # todo: remove later just for sanity check
+            # noinspection PyUnresolvedReferences
+            assert id(_self) == id(_fn.__self__), "was expecting this to be same"
+
+
+
+
+        def _new_fn(_self):
+            _grp = gui.widget.Group(horizontal=True)
+            with _grp:
+                gui.widget.Text(default_value="count")
+                _txt = gui.widget.Text(default_value="000")
+                gui.Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
+            return _grp
+
+        return _new_fn
 
     def __call__(self, fn: t.Callable):
         """
@@ -86,8 +144,14 @@ class UseMethodInForm:
           build a form do that parametrized widget running is possible ...
           a bit complex but possible
         """
+        # make new fn
+        if self.call_as_async:
+            _new_fn = self.make_async_caller_fn(fn)
+        else:
+            _new_fn = fn
+
         # set vars
-        self.fn = fn
+        self.fn = _new_fn
 
         # store self inside fn
         # also check `cls.get_from_hashable_fn` which will help get access
@@ -992,6 +1056,22 @@ class Tracker:
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
 
+    @property
+    def iterable_length(self) -> int:
+        """
+        return -1 to indicate it is yielding infinitely ...
+        """
+        raise e.code.NotSupported(
+            msgs=[
+                f"Class {self.__class__} does not support `iterable_length` ... ",
+                f"Please override if you want to iterate on this class instance also remember "
+                f"to override on_iter  ..."
+            ]
+        )
+
+    def __len__(self) -> int:
+        return self.iterable_length
+
     @classmethod
     def __init_subclass__(cls, **kwargs):
         # declare
@@ -1019,7 +1099,8 @@ class Tracker:
 
     def __call__(
         self,
-        status_panel: t.Optional[richy.ProgressStatusPanel],
+        status_panel: t.Optional[richy.ProgressStatusPanel] = None,
+        status_panel_progress_task_name: t.Optional[str] = None,
         **kwargs,
     ) -> "Tracker":
         """
@@ -1041,7 +1122,8 @@ class Tracker:
             ])
         else:
             # add status_panel if supplied
-            _on_call_kwargs = {"status_panel": status_panel}
+            _on_call_kwargs = {"status_panel": status_panel,
+                               "status_panel_progress_task_name": status_panel_progress_task_name}
 
             # add remaining kwargs
             _on_call_kwargs.update(kwargs)
@@ -1081,32 +1163,46 @@ class Tracker:
         self.on_exit(exc_type, exc_val, exc_tb)
 
     def __iter__(self) -> t.Iterable:
-        # the with statement here helps users to directly iterate over
-        # hashable class without using with statement ... but nonetheless we
-        # expect you to call __call__ while looping over
-        with self:
-            # get some vars
-            _status_panel = self.internal.on_call_kwargs[
-                "status_panel"]  # type: richy.ProgressStatusPanel
+        # get some vars
+        _status_panel = self.internal.on_call_kwargs[
+            "status_panel"]  # type: richy.ProgressStatusPanel
+        _status_panel_progress_task_name = self.internal.on_call_kwargs[
+            "status_panel_progress_task_name"]  # type: str
+        if _status_panel_progress_task_name is None:
+            _status_panel_progress_task_name = "iterating"
 
-            # iterate
-            if _status_panel is None:
+        # iterate
+        if _status_panel is None:
+            if self.in_with_context:
                 for _ in self.on_iter():
                     yield _
             else:
-                if self.iterates_infinitely:
-                    raise e.code.NotAllowed(
-                        msgs=[
-                            "We cannot consume status_panel as this class iterates "
-                            "infinitely ... ",
-                            "you need to pass `status_panel=None` and handle it "
-                            "on your own",
-                        ]
-                    )
+                with self:
+                    for _ in self.on_iter():
+                        yield _
+        else:
+            if self.iterable_length == -1:
+                raise e.code.NotAllowed(
+                    msgs=[
+                        "We cannot consume status_panel as this class iterates "
+                        "infinitely ... ",
+                        "you might need to pass `status_panel=None` and handle it "
+                        "on your own",
+                    ]
+                )
+            if self.in_with_context:
+                _status_panel.status.update("-- " + _status_panel_progress_task_name)
                 for _ in _status_panel.progress.track(
-                    self.on_iter(), total=self.iterable_length, task_name="iterating"
+                    self.on_iter(), total=self.iterable_length, task_name=_status_panel_progress_task_name
                 ):
                     yield _
+            else:
+                with self:
+                    _status_panel.status.update("-- " + _status_panel_progress_task_name)
+                    for _ in _status_panel.progress.track(
+                        self.on_iter(), total=self.iterable_length, task_name=_status_panel_progress_task_name
+                    ):
+                        yield _
 
     def __del__(self):
         self.on_del()
@@ -1156,7 +1252,7 @@ class Tracker:
         """
         ...
 
-    def prefetch_stuff_before_first_call(self):
+    def prefetch_stuff_before_first_call(self, call_only_once: bool = True):
         """
         Handle expensive things that can reduce load on consecutive calls
         on same instance.
@@ -1174,9 +1270,10 @@ class Tracker:
 
         """
         if self.internal.has("prefetched_on_first_call"):
-            raise e.code.CodingError(msgs=[
-                f"The method `prefetch_stuff` can be called only once ..."
-            ])
+            if call_only_once:
+                raise e.code.CodingError(msgs=[
+                    f"The method `prefetch_stuff` can be called only once ..."
+                ])
         else:
             # set var
             self.internal.prefetched_on_first_call = True
@@ -1385,6 +1482,8 @@ class YamlRepr(Tracker):
 
     NOTE: do nat make this class abstract as FrozenEnum like classes will not
     work
+
+    todo: read about Yaml syntax here https://www.redhat.com/sysadmin/yaml-beginners
     """
 
     @classmethod
@@ -1879,6 +1978,12 @@ class HashableClass(YamlRepr, abc.ABC):
         return rich.console.Group()
 
     @property
+    def mini_hex_hash(self) -> str:
+        _hex_hash = self.hex_hash
+        _hex_hash = _hex_hash[len(_hex_hash)-12:]
+        return _hex_hash
+
+    @property
     @util.CacheResult
     def hex_hash(self) -> str:
         """
@@ -1940,12 +2045,16 @@ class HashableClass(YamlRepr, abc.ABC):
         # Note that this happens only once as we always keep on cleaning the dict
         if settings.DO_RULE_CHECK:
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
+            _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
             if bool(_rc_keys):
                 _LOGGER.info(
                     msg=f"Detected {len(_rc_keys)} new classes so "
-                        f"performing rule checks ...")
+                        f"performing rule checks ...",
+                    # msgs=[_modules],
+                )
                 for _rc_k in richy.Progress.simple_track(
-                    _rc_keys, description=f"Rule Checking ..."
+                    _rc_keys,
+                    description=f"Rule Check ({len(_rc_keys)} classes) ..."
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
                     del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]
@@ -2082,13 +2191,18 @@ class HashableClass(YamlRepr, abc.ABC):
     def check_for_storage_hashable(self, field_key: str = ""):
         """
         raises error if instance of StorageHashable or any of its fields is
-        instance of StorageHashable
+        instance of StorageHashable.
+
+        This will avoid any accidental file/folder creations and IO tracking
         """
         from . import storage
         e.validation.ShouldNotBeInstanceOf(
             value=self, value_types=(storage.StorageHashable, ),
             msgs=[
-                f"Do not use {storage.StorageHashable} for field_key `{field_key}`"
+                f"Do not use {storage.StorageHashable} for field_key `{field_key}`",
+                f"This check indicates that the hashable class is not supposed for storage on network/disk "
+                f"and we want to use it as pure HashableClass ...",
+                f"This will avoid any accidental file/folder creations and IO tracking ..."
             ]
         ).raise_if_failed()
         for _f in self.dataclass_field_names:

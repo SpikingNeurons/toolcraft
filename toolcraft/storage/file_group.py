@@ -706,20 +706,14 @@ class FileGroup(StorageHashable, abc.ABC):
                     # compute
                     for _chunk in iter(lambda: fb.read(_chunk_size), b''):
                         _hash_module.update(_chunk)
-                        _hash_check_panel.update(
-                            task_name=fk,
-                            advance=len(_chunk)
-                        )
+                        _hash_check_panel.tasks[fk].update(advance=len(_chunk),)
                     fb.close()
                     _computed_hash = _hash_module.hexdigest()
                 # make dicts to return
                 _computed_hashes[fk] = _computed_hash
                 if not compute:
                     if _computed_hash != _correct_hashes[fk]:
-                        _hash_check_panel.update(
-                            task_name=fk,
-                            state="failed",
-                        )
+                        _hash_check_panel.tasks[fk].failed()
                         _failed_hashes[fk] = {
                             'correct  ': _correct_hashes[fk],
                             'computed ': _computed_hash,
@@ -1657,13 +1651,15 @@ class NpyFileGroup(FileGroup, abc.ABC):
     # noinspection PyMethodOverriding
     def __call__(
         self, *,
-        status_panel: t.Optional[richy.ProgressStatusPanel],
         shuffle_seed: SHUFFLE_SEED_TYPE,
+        status_panel: t.Optional[richy.ProgressStatusPanel] = None,
+        status_panel_progress_task_name: t.Optional[str] = None,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
         return super().__call__(
             status_panel=status_panel,
+            status_panel_progress_task_name=status_panel_progress_task_name,
             shuffle_seed=shuffle_seed,
         )
 
@@ -1712,7 +1708,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             v.__exit__(exc_type, exc_val, exc_tb)
 
         # call super
-        super().on_exit()
+        super().on_exit(exc_type, exc_val, exc_tb)
 
     def get_files(
         self, *, file_keys: t.List[str]
@@ -2046,21 +2042,11 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             for fk in self.file_keys:
                 # if already present just move forward
                 if _file_paths[fk].exists():
-                    _download_panel.update(
-                        task_name=fk,
-                        advance=_lengths[fk]
-                    )
-                    _download_panel.update(
-                        task_name=fk,
-                        state="already_finished",
-                    )
+                    _download_panel.tasks[fk].already_finished()
                     continue
                 # if there was error earlier update task ...
                 if fk in _errors.keys():
-                    _download_panel.update(
-                        task_name=fk,
-                        state="failed",
-                    )
+                    _download_panel.tasks[fk].failed()
                     _raise_error = True
                     continue
                 try:
@@ -2071,10 +2057,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                         ):
                             if _chunk:  # filter out keep-alive new chunks
                                 _f.write(_chunk)
-                                _download_panel.update(
-                                    task_name=fk,
-                                    advance=len(_chunk)
-                                )
+                                _download_panel.tasks[fk].update(advance=len(_chunk),)
                 except Exception as _exp:
                     _errors[fk] = str(_exp)
                     _raise_error = True

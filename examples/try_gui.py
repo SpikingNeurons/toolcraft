@@ -1,6 +1,9 @@
+import asyncio
 import dataclasses
+import itertools
 import typing as t
 import sys
+import time
 
 sys.path.append("..")
 
@@ -62,80 +65,59 @@ class Plotting(gui.form.Form):
     def plot_some_examples(self):
         # ------------------------------------------------------- 01
         # _simple_plot
+        # todo: add the simple plot form dpg
         ...
 
         # ------------------------------------------------------- 02
         # _line_plot
-        self.line_plot.legend.show = False
-        _line_plot_y1_axis = self.line_plot.y1_axis
-        for _i in range(4):
-            _line_plot_y1_axis(
-                gui.plot.LineSeries(
-                    label=f"line {_i}",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
+        _ = self.line_plot.x_axis
+        _ = self.line_plot.legend
+        with self.line_plot.y1_axis:
+            gui.plot.LineSeries(
+                label="line 1",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
             )
-        for _i in range(4):
-            _line_plot_y1_axis(
-                gui.plot.LineSeries(
-                    label=f"grouped_lines#{_i}",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
+            gui.plot.LineSeries(
+                label="line 2",
+                x=np.arange(100),
+                y=np.random.normal(0.0, scale=2.0, size=100),
             )
-        _line_plot_y1_axis(
             gui.plot.VLineSeries(x=[1.0, 2.0], label="vline 1")
-        )
-        _line_plot_y1_axis(
             gui.plot.VLineSeries(x=[10.0, 11.0], label="vline 2")
-        )
-        _line_plot_y1_axis(
             gui.plot.HLineSeries(x=[1.0, 2.0], label="hline 1")
-        )
-        _line_plot_y1_axis(
             gui.plot.HLineSeries(x=[10.0, 11.0], label="hline 2")
-        )
 
         # ------------------------------------------------------- 03
         # scatter plot
-        _scatter_plot_y1_axis = self.scatter_plot.y1_axis
-        _scatter_plot_y1_axis(
+        with self.scatter_plot.y1_axis:
             gui.plot.ScatterSeries(
                 label="scatter 1",
                 x=np.random.normal(1.0, scale=2.0, size=100),
                 y=np.random.normal(0.0, scale=2.0, size=100),
             )
-        )
-        _scatter_plot_y1_axis(
             gui.plot.ScatterSeries(
                 label="scatter 2",
                 x=np.random.normal(0.0, scale=2.0, size=100),
                 y=np.random.normal(1.0, scale=2.0, size=100),
             )
-        )
 
         # ------------------------------------------------------- 04
         # sub plots
-        _subplot = self.subplot
-        for i in range(4):
-            _plot = gui.plot.Plot(height=200)
-            _subplot(widget=_plot)
-            _plot_y1_axis = _plot.y1_axis
-            _plot_y1_axis(
-                gui.plot.LineSeries(
-                    label="line 1",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
-            )
-            _plot_y1_axis(
-                gui.plot.LineSeries(
-                    label="line 2",
-                    x=np.arange(100),
-                    y=np.random.normal(0.0, scale=2.0, size=100),
-                )
-            )
+        with self.subplot:
+            for i in range(4):
+                _plot = gui.plot.Plot(height=200)
+                with _plot.y1_axis:
+                    gui.plot.LineSeries(
+                        label="line 1",
+                        x=np.arange(100),
+                        y=np.random.normal(0.0, scale=2.0, size=100),
+                    )
+                    gui.plot.LineSeries(
+                        label="line 2",
+                        x=np.arange(100),
+                        y=np.random.normal(0.0, scale=2.0, size=100),
+                    )
 
 
 @dataclasses.dataclass
@@ -178,7 +160,7 @@ class PlottingWithUpdates(gui.form.Form):
                 )
                 _y1_axis = _form.line_plot.y1_axis
                 _y1_axis(_ls)
-                _ls_ks = list(_y1_axis.all_plot_series.keys())
+                _ls_ks = [_.label for _ in _y1_axis.children.values()]
                 _form.combo_select.items = _ls_ks
                 _form.combo_select.default_value = _ls_ks[-1]
 
@@ -228,7 +210,7 @@ class PlottingWithUpdates(gui.form.Form):
                 _combo_select_value = _form.combo_select.get_value()
                 if _combo_select_value == '':
                     return
-                _plot_series = _y1_axis.all_plot_series[_combo_select_value]
+                _plot_series = _y1_axis[_combo_select_value]
                 _plot_series.x = np.arange(100)
                 _plot_series.y = np.random.normal(0.0, scale=2.0, size=100)
 
@@ -252,8 +234,8 @@ class PlottingWithUpdates(gui.form.Form):
                 _combo_select_value = _form.combo_select.get_value()
                 if _combo_select_value == '':
                     return
-                _y1_axis.all_plot_series[_combo_select_value].delete()
-                _ls_ks = list(_y1_axis.all_plot_series.keys())
+                _y1_axis[_combo_select_value].delete()
+                _ls_ks = [_.label for _ in _y1_axis.children.values()]
                 _form.combo_select.items = _ls_ks
                 try:
                     _form.combo_select.default_value = _ls_ks[-1]
@@ -279,65 +261,145 @@ class PlottingWithUpdates(gui.form.Form):
 
         return _button_bar
 
-    def plot_some_examples(self):
-        # ------------------------------------------------------- 01
-        # _simple_plot
-        ...
-
-        # ------------------------------------------------------- 02
-        # _line_plot
-        _line_plot_y1_axis = self.line_plot.y1_axis
-        _line_plot_y1_axis(
-            gui.plot.LineSeries(
-                label="line 1",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
-            )
-        )
-        _line_plot_y1_axis(
-            gui.plot.LineSeries(
-                label="line 2",
-                x=np.arange(100),
-                y=np.random.normal(0.0, scale=2.0, size=100),
-            )
-        )
-        _line_plot_y1_axis(
-            gui.plot.VLineSeries(x=[1.0, 2.0], label="vline 1")
-        )
-        _line_plot_y1_axis(
-            gui.plot.VLineSeries(x=[10.0, 11.0], label="vline 2")
-        )
-        _line_plot_y1_axis(
-            gui.plot.HLineSeries(x=[1.0, 2.0], label="hline 1")
-        )
-        _line_plot_y1_axis(
-            gui.plot.HLineSeries(x=[10.0, 11.0], label="hline 2")
-        )
-
 
 @dataclasses.dataclass(frozen=True)
 class SimpleHashableClass(m.HashableClass):
 
     some_value: str
+    click_count_for_blocking_fn: int = 0
 
     @property
     def all_plots_gui_label(self) -> str:
-        return f"{self.__class__.__name__}.{self.hex_hash} (all_plots)\n" \
+        return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
-    @m.UseMethodInForm(
-        label_fmt="all_plots_gui_label"
-    )
-    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
-        return gui.form.HashableMethodsRunnerForm(
-            title=self.all_plots_gui_label,
-            group_tag="simple",
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=["some_line_plot",  "some_scatter_plot"],
-            collapsing_header_open=True,
-        )
+    async def some_awaitable_fn(self, txt_widget: gui.widget.Text):
+
+        try:
+
+            # loop infinitely
+            while txt_widget.does_exist:
+
+                # if not build continue
+                if not txt_widget.is_built:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not txt_widget.is_visible:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # update widget
+                txt_widget.set_value(f"{int(txt_widget.get_value())+1:03d}")
+
+                # change update rate based on some value
+                if self.some_value == "first hashable ...":
+                    await asyncio.sleep(1)
+                    if int(txt_widget.get_value()) == 10:
+                        break
+                else:
+                    await asyncio.sleep(0.1)
+                    if int(txt_widget.get_value()) == 50:
+                        break
+
+        except Exception as _e:
+            if txt_widget.does_exist:
+                raise _e
+            else:
+                ...
+
+    @m.UseMethodInForm(label_fmt="awaitable_task")
+    def awaitable_task(self) -> gui.widget.Group:
+        _grp = gui.widget.Group(horizontal=True)
+        with _grp:
+            gui.widget.Text(default_value="count")
+            _txt = gui.widget.Text(default_value="000")
+            gui.AwaitableTask(
+                fn=self.some_awaitable_fn, fn_kwargs=dict(txt_widget=_txt)
+            ).add_to_task_queue()
+        return _grp
+
+    def some_blocking_fn(self) -> gui.widget.Text:
+        # self.click_count_for_blocking_fn += 1
+        _cnt = self.click_count_for_blocking_fn
+        print("sleeping ...", self.some_value, _cnt)
+        time.sleep(10)
+        print("finished sleeping ...", self.some_value, _cnt)
+        return gui.widget.Text(default_value="done sleeping for 5 seconds")
+
+    async def some_awaitable_fn_with_blocking_task(
+        self, receiver_grp: gui.widget.Group
+    ):
+        # get reference
+        _blinker = itertools.cycle(["..", "....", "......"])
+
+        try:
+
+            # schedule blocking task to run in queue
+            _blocking_task = gui.BlockingTask(
+                fn=self.some_blocking_fn, concurrent=False
+            )
+            _blocking_task.add_to_task_queue()
+            _future = None
+            while _future is None:
+                await asyncio.sleep(0.4)
+                _future = _blocking_task.future
+
+            # loop infinitely
+            while receiver_grp.does_exist:
+
+                # if not build continue
+                if not receiver_grp.is_built:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not receiver_grp.is_visible:
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # clear group
+                receiver_grp.clear()
+
+                # if running
+                if _future.running():
+                    with receiver_grp:
+                        gui.widget.Text(default_value=next(_blinker))
+                    await asyncio.sleep(0.4)
+                    continue
+
+                # if done
+                if _future.done():
+                    _exp = _future.exception()
+                    if _exp is None:
+                        receiver_grp(widget=_future.result())
+                        break
+                    else:
+                        with receiver_grp:
+                            gui.widget.Text(default_value="Failed ...")
+                            raise _exp
+
+        except Exception as _e:
+            if receiver_grp.does_exist:
+                raise _e
+            else:
+                ...
+
+    @m.UseMethodInForm(label_fmt="blocking_task")
+    def blocking_task(self) -> gui.widget.Group:
+        _grp = gui.widget.Group(horizontal=True)
+        gui.AwaitableTask(
+            fn=self.some_awaitable_fn_with_blocking_task, fn_kwargs=dict(receiver_grp=_grp)
+        ).add_to_task_queue()
+        return _grp
+
+    # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
+    # def async_update(self) -> gui.widget.Widget:
+    #     time.sleep(5)
+    #     return gui.widget.Text(default_value="I am done in 5 seconds ...")
 
     @m.UseMethodInForm(label_fmt="line")
     def some_line_plot(self) -> gui.plot.Plot:
@@ -385,6 +447,20 @@ class SimpleHashableClass(m.HashableClass):
         )
         return _plot
 
+    @m.UseMethodInForm(
+        label_fmt="all_plots_gui_label"
+    )
+    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
+        return gui.form.HashableMethodsRunnerForm(
+            title=self.all_plots_gui_label,
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task", ],
+            collapsing_header_open=True,
+        )
+
 
 @dataclasses.dataclass
 class MyDoubleSplitForm(gui.form.DoubleSplitForm):
@@ -412,8 +488,7 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
-    # topic5: gui.form.HashableMethodsRunnerForm = SimpleHashableClass(
-    #     some_value="hashable.all_plots ...").all_plots()
+    topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
 
 
 def basic_dashboard():
@@ -439,15 +514,11 @@ def basic_dashboard():
         hashable=SimpleHashableClass(some_value="fourth hashable ..."),
         group_key="Group 2 ..."
     )
-    # # noinspection PyTypeChecker
-    # _dash.topic5.add(
-    #     hashable=SimpleHashableClass(some_value="first hashable ...")
-    # )
-    # # noinspection PyTypeChecker
-    # _dash.topic5.add(
-    #     hashable=SimpleHashableClass(some_value="second hashable ...")
-    # )
-    _dash.run()
+    _dash.topic5.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
+    _dash.topic5.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
+    _dash.topic5.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
+
+    gui.Engine.run(_dash)
 
 
 def demo():

@@ -7,12 +7,15 @@ import enum
 import inspect
 import typing as t
 import dataclasses
-import os
+import subprocess
+import itertools
 import yaml
 import sys
 import pickle
+import asyncio
 import hashlib
 import types
+import time
 
 from . import logger
 from . import error as e
@@ -20,18 +23,65 @@ from . import marshalling as m
 from . import util
 from . import storage as s
 from . import richy
+from . import settings
+
+try:
+    import tensorflow as tf
+    from tensorflow.python.training.tracking import util as tf_util
+except ImportError:
+    tf = None
+    tf_util = None
+
+
+# noinspection PyUnreachableCode
+if False:
+    from . import gui
 
 
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
-_EXPERIMENT_KWARG = "experiment"
 
 
-@dataclasses.dataclass
-class Viewer:
-    runner: "Runner"
-    fn: t.Callable
-    fn_kwargs: t.Dict
+class ArtifactViewer:
+    """
+    Just add static methods to the subclasses ... and make sure that they have only one arg named `data`
+
+    Note that this class has no static methods
+
+    Then any artifact-file that is saved in artifacts folder and whose name matches one of static method of this
+    class is supported ...
+
+    Unknown file names will get a Text widget stating that it is `unknown artifact`
+
+    For supporting more artifacts simple extend this class and any static methods in child class will be registered
+
+    todo: this pattern seems good for register-plugins kind of things ... see if it can be added elsewhere
+    """
+
+    _fn_mapper = {}
+
+    def __init_subclass__(cls, **kwargs):
+        # validation
+        # todo: add validation to test if only static methods are defined the subclasses
+
+        # detect fn's and register
+        for _ in dir(cls):
+            if _.startswith("_"):
+                continue
+            if _ in ArtifactViewer._fn_mapper.keys():
+                raise e.code.CodingError(
+                    msgs=[f"You have already registered artifact-viewer for "
+                          f"key `{_}` with function "
+                          f"{ArtifactViewer._fn_mapper[_]}"]
+                )
+            ArtifactViewer._fn_mapper[_] = getattr(cls, _)
+
+    @staticmethod
+    def call(artifact: str, experiment: "Experiment", data: dict) -> "gui.widget.Widget":
+        from . import gui
+        if artifact not in ArtifactViewer._fn_mapper.keys():
+            return gui.widget.Text(f"view not provided for artifact name {artifact!r} ... cannot render ...")
+        return ArtifactViewer._fn_mapper[artifact](experiment=experiment, data=data)
 
 
 class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
@@ -40,7 +90,6 @@ class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     """
     ibm_lsf = enum.auto()
     local = enum.auto()
-    local_on_same_thread = enum.auto()
 
 
 class JobFlowId(t.NamedTuple):
@@ -125,7 +174,7 @@ class Tag:
 @dataclasses.dataclass
 class TagManager:
     """
-    todo: we might want these tags to be save state on some state server ...
+    todo: we might want these tags to save state on some state server ...
       so that we can check states there ...
     todo: can we route all tags to simple database file ...
       To support dynamic tags we might need some document storage database instead of
@@ -166,6 +215,409 @@ class TagManager:
     def description(self) -> Tag:
         return Tag(name="description", manager=self)
 
+    def gui(self) -> "gui.widget.Text":
+        from . import gui
+        _ret = ""
+        if self.finished.exists():
+            _ret += "--- FINISHED JOB ---\n\n"
+        if self.failed.exists():
+            _ret += "XXX--- FAILED JOB ---XXX\n\n"
+        if self.started.exists():
+            _ret += f"started at: {self.started.read()}\n"
+        if self.running.exists():
+            _ret += f"running from: {self.running.read()}\n"
+        if self.failed.exists():
+            _ret += f"failed at: {self.failed.read()}\n"
+        if self.finished.exists():
+            _ret += f"finished at: {self.finished.read()}\n"
+        if self.description.exists():
+            _ret += f"\n-- description --\n {self.description.read()}\n"
+        return gui.widget.Text(default_value=_ret)
+
+
+class JobViewerInternal(m.Internal):
+    job: "Job"
+
+
+@dataclasses.dataclass(frozen=True)
+class JobViewer(m.HashableClass):
+
+    method_name: str
+    experiment: t.Optional["Experiment"]
+
+    @property
+    @util.CacheResult
+    def internal(self) -> JobViewerInternal:
+        return JobViewerInternal(owner=self)
+
+    @property
+    @util.CacheResult
+    def job(self) -> "Job":
+        _ret = self.internal.job
+        if _ret.experiment != self.experiment:
+            raise e.code.CodingError(
+                msgs=["Job set to this JobViewer is not correct ..."]
+            )
+        if _ret.method.__name__ != self.method_name:
+            raise e.code.CodingError(
+                msgs=[f"The method name set is not correct"]
+            )
+        return _ret
+
+    @property
+    @util.CacheResult
+    def button_label(self) -> str:
+        if self.experiment is None:
+            return self.method_name
+        _title, _args = self.experiment.gui_label
+        return "\n".join([_title, *_args])
+
+    @m.UseMethodInForm(label_fmt="button_label")
+    def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
+        # import
+        from . import gui
+
+        # if finished return
+        _job = self.job
+        if _job.is_finished or _job.is_failed:
+            return self.job_gui()
+
+        _ret = gui.form.HashableMethodsRunnerForm(
+            title=self.button_label.split("\n")[0],
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=["tags_gui", "artifacts_gui", "run_gui"],
+            collapsing_header_open=True,
+        )
+
+        with _ret.button_bar:
+            _txt = gui.widget.Text(default_value="<-- please run")
+            _txt.move_up()
+
+        return _ret
+
+    @m.UseMethodInForm(label_fmt="button_label")
+    def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
+        from . import gui
+
+        _ret = gui.form.HashableMethodsRunnerForm(
+            title=self.button_label.split("\n")[0] + f" : {self.method_name}",
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=["tags_gui", "artifacts_gui", ],
+            collapsing_header_open=True,
+        )
+
+        _job = self.job
+        with _ret.button_bar:
+            if _job.is_failed:
+                gui.widget.Text(default_value="--- FAILED ---")
+            elif _job.is_finished:
+                gui.widget.Text(default_value="--- FINISHED ---")
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[])
+
+        return _ret
+
+    @m.UseMethodInForm(label_fmt="Info")
+    def info_widget(self) -> "gui.widget.Text":
+        """
+        We override as we are interested in field `experiment` and not `self` ...
+        """
+        # import
+        from . import gui
+        # make
+        _experiment = self.experiment
+        _text = f"job-id: {self.job.job_id}\n" \
+                f"flow-id: {self.job.flow_id}\n" \
+                f"method: {self.method_name}\n\n"
+        if _experiment is not None:
+            _text += f"hex-hash: {_experiment.hex_hash}\n" \
+                    f"{_experiment.yaml()}"
+        # noinspection PyUnresolvedReferences
+        _ret_widget = gui.widget.Text(default_value=_text)
+        # return
+        return _ret_widget
+
+    @m.UseMethodInForm(label_fmt="tags")
+    def tags_gui(self) -> "gui.widget.Text":
+        return self.job.tag_manager.gui()
+
+    @m.UseMethodInForm(label_fmt="artifacts")
+    def artifacts_gui(self) -> "gui.form.ButtonBarForm":
+        return self.job.artifact_manager.gui()
+
+    @m.UseMethodInForm(label_fmt="run")
+    def run_gui(self) -> "gui.widget.Group":
+        return self.job.sub_process_manager.gui()
+
+
+@dataclasses.dataclass
+class ArtifactManager:
+    job: "Job"
+
+    @property
+    @util.CacheResult
+    def path(self) -> s.Path:
+        _ret = self.job.path / "artifacts"
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    def save(self, name: str, data: t.Any):
+        """
+        todo: make this compatible for all type of path
+        """
+        _file = self.path / name
+        if _file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Artifact {name} already exists ... cannot write"
+                ]
+            )
+
+        with open(_file.local_path.as_posix(), 'wb') as _file:
+            pickle.dump(data, _file)
+
+    def load(self, name: str) -> t.Any:
+        """
+        todo: make this compatible for all type of path
+        """
+
+        _file = self.path / name
+
+        if not _file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"Artifact {name} does not exists ... cannot load"
+                ]
+            )
+
+        with open(_file.local_path.as_posix(), 'rb') as _file:
+            return pickle.load(_file)
+
+    def available_artifacts(self) -> t.List[str]:
+        return [_.name for _ in self.path.ls()]
+
+    def gui(self) -> "gui.form.ButtonBarForm":
+        # import
+        from . import gui
+
+        # class for ButtonBarForm that supports loading artifacts
+        @dataclasses.dataclass
+        class __ButtonBarForm(gui.form.ButtonBarForm):
+
+            @property
+            @util.CacheResult
+            def callback(self_1) -> gui.callback.Callback:
+
+                # make class for callback handling
+                @dataclasses.dataclass(frozen=True)
+                class __Callback(gui.callback.Callback):
+                    # noinspection PyMethodParameters
+                    def fn(self_2, sender: gui.widget.Widget):
+                        _key = sender.get_user_data()["key"]
+                        self_1.receiver.clear()
+                        _w = ArtifactViewer.call(
+                                artifact=_key, experiment=self.job.experiment, data=self.load(name=_key))
+                        self_1.receiver(_w)
+
+                return __Callback()
+
+        _form = __ButtonBarForm(title=None, collapsing_header_open=False)
+
+        for _ in self.available_artifacts():
+            _form.register(key=_, fn=None)
+
+        return _form
+
+
+@dataclasses.dataclass
+class SubProcessManager:
+
+    job: "Job"
+
+    @property
+    @util.CacheResult
+    def stdout_stream(self) -> t.List[str]:
+        return []
+
+    @property
+    @util.CacheResult
+    def stderr_stream(self) -> t.List[str]:
+        return []
+
+    @property
+    @util.CacheResult
+    def blocking_task(self) -> "gui.BlockingTask":
+        """
+        Note we cache and also queue this task on first call as we do not want to get this task
+        launched multiple times
+        """
+        from . import gui
+        _bt = gui.BlockingTask(
+            fn=self.blocking_fn,
+            # todo: making this false raises pickling error as the blocking task is run in different thread
+            #    we need to investigate if we want to fix this
+            concurrent=True
+        )
+        _bt.add_to_task_queue()
+        return _bt
+
+    async def awaitable_fn(self, receiver_grp: "gui.widget.Group"):
+        from .gui.widget import Text
+        _blinker = itertools.cycle(["..", "....", "......"])
+
+        try:
+
+            # calling property will schedule blocking task to run in queue only once
+            # so consecutive calls will safely bypass calling blocking_fn
+            _blocking_task = self.blocking_task
+
+            # try to get future ... for first call to property the future might not be available, so we await
+            _future = None
+            while _future is None:
+                await asyncio.sleep(0.4)
+                _future = _blocking_task.future
+
+            # loop infinitely
+            while receiver_grp.does_exist:
+
+                # small sleep
+                await asyncio.sleep(0.6)
+
+                # if not build continue
+                if not receiver_grp.is_built:
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not receiver_grp.is_visible:
+                    continue
+
+                # clear group
+                receiver_grp.clear()
+
+                # add streams
+                with receiver_grp:
+                    Text(default_value="="*15 + " STDOUT " + "="*15)
+                    Text(default_value="\n".join(self.stdout_stream))
+                    Text(default_value="="*15 + " ====== " + "="*15)
+                    Text(default_value="="*15 + " STDERR " + "="*15)
+                    Text(default_value="\n".join(self.stderr_stream))
+                    Text(default_value="="*15 + " ====== " + "="*15)
+
+                # if running
+                if _future.running():
+                    with receiver_grp:
+                        Text(default_value=next(_blinker))
+                    continue
+
+                # if done
+                if _future.done():
+                    _exp = _future.exception()
+                    if _exp is None:
+                        with receiver_grp:
+                            Text(default_value="="*15 + " ======= " + "="*14)
+                            Text(default_value="="*15 + " SUCCESS " + "="*14)
+                            Text(default_value="="*15 + " ======= " + "="*14)
+                        break
+                    else:
+                        with receiver_grp:
+                            Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
+                            Text(default_value="X"*15 + " FAILURE " + "X"*14)
+                            Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
+                        raise _exp
+
+        except Exception as _e:
+            if receiver_grp.does_exist:
+                raise _e
+            else:
+                ...
+
+    def blocking_fn(self):
+        """
+        todo: need to see why streams updated here do not show up in awaitable fn ...
+        """
+
+        _stdout_stream, _stderr_stream = self.stdout_stream, self.stderr_stream
+        _process = subprocess.Popen(
+            self.job.cli_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
+        )
+        for _line in _process.stdout:
+            _stdout_stream.append(_line)
+        for _line in _process.stderr:
+            _stderr_stream.append(_line)
+
+        _stdout_stream.append("... waiting for process to finish ...")
+        _stderr_stream.append("... waiting for process to finish ...")
+        _process.wait()
+
+        _ret_code = _process.returncode
+        if _ret_code == 0:
+            _final_lines = ["=" * 30, f"Finished with return code {_ret_code}", "=" * 30]
+            _stdout_stream.extend(_final_lines)
+        else:
+            _final_lines = ["=" * 30, f"Failed with return code {_ret_code}", "=" * 30]
+            _stderr_stream.extend(_final_lines)
+        if _ret_code != 0:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Below cli command failed with error code {_ret_code}:",
+                    self.job.cli_command,
+                    f"The stderr from subprocess is as below:", _stderr_stream,
+                ]
+            )
+
+    def gui(self) -> "gui.widget.Group":
+        # import
+        from . import gui
+
+        # test that the there is no residual job running failed started or completed
+        # todo: only is_started check should suffice ...
+        if self.job.is_started:
+            raise e.code.CodingError(
+                msgs=[
+                    "You might not need to call this multiple times!!!",
+                    "Job has already started for cli command: ", self.job.cli_command,
+                ]
+            )
+        if self.job.is_running:
+            raise e.code.CodingError(
+                msgs=[
+                    "Multiple calls detected for cli command: ", self.job.cli_command,
+                ]
+            )
+        if self.job.is_failed:
+            raise e.code.CodingError(
+                msgs=[
+                    "You might not need to call this multiple times!!!",
+                    "Previous call to below cli command has failed: ", self.job.cli_command,
+                ]
+            )
+        if self.job.is_finished:
+            raise e.code.CodingError(
+                msgs=[
+                    "You might not need to call this multiple times!!!",
+                    "Previous call to below cli command has finished: ", self.job.cli_command,
+                ]
+            )
+
+        # return widget
+        _grp = gui.widget.Group()
+
+        # make awaitable task and run that can read process streams
+        gui.AwaitableTask(
+            fn=self.awaitable_fn, fn_kwargs=dict(receiver_grp=_grp)
+        ).add_to_task_queue()
+
+        # return
+        return _grp
+
 
 class Job:
     """
@@ -177,8 +629,25 @@ class Job:
 
     @property
     @util.CacheResult
+    def viewer(self) -> JobViewer:
+        _ret = JobViewer(experiment=self.experiment, method_name=self.method.__name__)
+        _ret.internal.job = self
+        return _ret
+
+    @property
+    @util.CacheResult
     def tag_manager(self) -> TagManager:
         return TagManager(job=self)
+
+    @property
+    @util.CacheResult
+    def artifact_manager(self) -> ArtifactManager:
+        return ArtifactManager(job=self)
+
+    @property
+    @util.CacheResult
+    def sub_process_manager(self) -> SubProcessManager:
+        return SubProcessManager(job=self)
 
     @property
     def is_started(self) -> bool:
@@ -197,34 +666,33 @@ class Job:
         return self.tag_manager.failed.exists()
 
     @property
-    def flow_id(self) -> JobFlowId:
+    def flow_id(self) -> str:
         if self._flow_id is None:
             raise e.code.CodingError(
                 msgs=[
-                    f"This must be set by {Flow} using its items field ..."
+                    f"This must be automatically set by code ..."
                 ]
             )
         return self._flow_id
 
     @flow_id.setter
-    def flow_id(self, value: JobFlowId):
-        if self._flow_id is None:
-            self._flow_id = value
-        else:
-            raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
-            )
-
-    @property
-    @util.CacheResult
-    def id(self) -> str:
+    def flow_id(self, value: str):
         """
         This takes in account
         + fn_name
         + fn_kwargs if present
         + experiment hex_hash if present
         """
-        return f"x{self.path.suffix_path.replace('/', 'x')}xJ"
+        if self._flow_id is None:
+            self._flow_id = value + f"|{self.path.suffix_path.replace('/', '|')}"
+        else:
+            raise e.code.CodingError(
+                msgs=[f"This property is already set you cannot set it again ..."]
+            )
+
+    @property
+    def job_id(self) -> str:
+        return f"x{hashlib.sha256(self.flow_id.encode('utf-8')).hexdigest()[:16]}"
 
     @property
     def is_on_main_machine(self) -> bool:
@@ -232,29 +700,49 @@ class Job:
 
     @property
     @util.CacheResult
-    def artifacts_path(self) -> s.Path:
-        _ret = self.path / "artifacts"
+    def tf_chkpts_path(self) -> s.Path:
+        _ret = self.path / "tf_chkpts"
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
 
     @property
+    def wait_on_jobs(self) -> t.List["Job"]:
+        _wait_on_jobs = []
+        for _j in self.wait_on:
+            if isinstance(_j, Job):
+                _wait_on_jobs += [_j]
+            else:
+                _wait_on_jobs += _j.bottom_jobs
+        return _wait_on_jobs
+
+    @property
+    def cli_command(self) -> t.List[str]:
+        _command = [
+            "python", self.runner.py_script, self.method.__func__.__name__,
+        ]
+        if self.experiment is not None:
+            _command += [self.experiment.hex_hash]
+        return _command
+
+    @property
     @util.CacheResult
     def path(self) -> s.Path:
         """
-        Note that folder nesting is dependent on `self.fn` signature ...
+        Note that if group_by is defined in Experiment then the nested folders are created and `hashable.hex_hash`
+        is created inside it.
 
-        todo: integrate this with storage with partition_columns ...
-          note that first pivot will then be experiment name ...
+        As an advantage we can have different instances made up of different Experiment classes store in same nested
+        folders. This can be easily achieved by having group_by of those Experiment classes return similar things ;)
+
+        todo: integrate this with storage with partition_columns ... (not important do only if necessary)
         """
         _ret = self.runner.cwd
         _ret /= self.method.__func__.__name__
-        for _key in inspect.signature(self.method).parameters.keys():
-            _value = self.method_kwargs[_key]
-            if _key == _EXPERIMENT_KWARG:
-                _ret /= _value.hex_hash
-            else:
-                _ret /= str(_value)
+        if self.experiment is not None:
+            for _ in self.experiment.group_by:
+                _ret /= _
+            _ret /= self.experiment.hex_hash
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -263,17 +751,17 @@ class Job:
         self,
         runner: "Runner",
         method: t.Callable,
-        method_kwargs: t.Dict[str, t.Union["Experiment", int, float, str]] = None,
-        wait_on: t.List["JobGroup"] = None,
+        experiment: t.Optional["Experiment"] = None,
+        wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
     ):
         # assign some vars
         self.runner = runner
         # noinspection PyTypeChecker
         self.method = method  # type: types.MethodType
-        self.method_kwargs = method_kwargs or {}
-        self.wait_on = wait_on or []
+        self.experiment = experiment
+        self.wait_on = wait_on or []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
         # noinspection PyTypeChecker
-        self._flow_id = None  # type: JobFlowId
+        self._flow_id = None  # type: str
 
         # make sure that method is from same runner instance
         try:
@@ -289,45 +777,224 @@ class Job:
                 ]
             )
 
-        # make sure that all kwargs are supplied
-        _required_keys = list(inspect.signature(self.method).parameters.keys())
-        _required_keys.sort()
-        _provided_keys = list(self.method_kwargs.keys())
-        _provided_keys.sort()
-        if _required_keys != _provided_keys:
+        # if experiment provided
+        if self.experiment is not None:
+            # make sure that it is not s.StorageHashable or any of its fields are
+            # not s.StorageHashable
+            # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
+            # use with storage ... this will avoid creating files/folders and doing any IO
+            self.experiment.check_for_storage_hashable(
+                field_key=f"{self.experiment.__class__.__name__}"
+            )
+            # make <hex_hash>.info if not present
+            self.runner.monitor.make_experiment_info_file(experiment=self.experiment)
+
+    def __call__(self, cluster_type: JobRunnerClusterType):
+        # check health
+        self.check_health()
+
+        # if finished or failed earlier return
+        # Note that we already log error or info if lob is finished or failed in
+        # above call to check_health
+        if self.is_finished or self.is_failed:
+            return
+
+        # launch
+        if self.is_on_main_machine:
+            self._launch_on_main_machine(cluster_type)
+        else:
+            self._launch_on_worker_machine()
+
+    def _launch_on_worker_machine(self):
+        """
+        The jobs are run on cluster ... this piece of code will execute on the
+        worker machines that will execute those scheduled jobs
+        """
+
+        # reconfig logger to change log file for job
+        import logging
+        _log = self.path / "toolcraft.log"
+        logger.setup_logging(
+            propagate=False,
+            level=logging.NOTSET,
+            # todo: here we can config that on server where things will be logged
+            handlers=[
+                # logger.get_rich_handler(),
+                # logger.get_stream_handler(),
+                logger.get_file_handler(_log.local_path),
+            ],
+        )
+        _start = datetime.datetime.now()
+        _LOGGER.info(
+            msg=f"Starting job on worker machine ...",
+            msgs=[
+                {
+                    "flow-id": self.flow_id,
+                    "job-id": self.job_id,
+                    "started": _start.ctime(),
+                }
+            ]
+        )
+        self.tag_manager.started.create()
+        self.tag_manager.running.create()
+        _failed = False
+        try:
+            for _wj in self.wait_on_jobs:
+                if not _wj.is_finished:
+                    raise e.code.CodingError(
+                        msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
+                              f"{_wj.job_id} is supposed to be finished ..."]
+                    )
+            if self.experiment is None:
+                self.method()
+            else:
+                self.method(experiment=self.experiment)
+            self.tag_manager.running.delete()
+            self.tag_manager.finished.create()
+            _end = datetime.datetime.now()
+            _LOGGER.info(
+                msg=f"Successfully finished job on worker machine ...",
+                msgs=[
+                    {
+                        "flow-id": self.flow_id,
+                        "job-id": self.job_id,
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds()),
+                    }
+                ]
+            )
+        except Exception as _ex:
+            _failed = True
+            self.tag_manager.failed.create(
+                data={
+                    "exception": str(_ex)
+                }
+            )
+            _end = datetime.datetime.now()
+            _LOGGER.info(
+                msg=f"Failed job on worker machine ...",
+                msgs=[
+                    {
+                        "flow-id": self.flow_id,
+                        "job-id": self.job_id,
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds()),
+                        "exception": str(_ex),
+                    }
+                ]
+            )
+            self.tag_manager.running.delete()
+            # above thing will tell toolcraft that things failed gracefully
+            # while below raise will tell cluster systems like bsub that job has failed
+            # todo for `JobRunnerClusterType.local_on_same_thread` this will not allow
+            #  future jobs to run ... but this is expected as we want to debug in
+            #  this mode mostly
+            raise _ex
+
+    def _launch_on_main_machine(self, cluster_type: JobRunnerClusterType):
+        """
+        This runs on your main machine so that jobs are launched on cluster
+        todo: make this run on client and run jobs over ssh connection ...
+        """
+        # ------------------------------------------------------------- 01
+        # make command to run on cli
+        _command = self.cli_command
+
+        # ------------------------------------------------------------- 02
+        # launch
+        # todo: might be feasible only with `local` not sure about `ibm_lsf`
+        #   + figure out how `subprocess.run` kwargs can be used to pull the console rendered by subprocess i.e.
+        #     things like rich ui can be grabbed and streamed
+        #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
+        # ------------------------------------------------------------- 02.01
+        if cluster_type is JobRunnerClusterType.local:
+            subprocess.run(_command)
+        # ------------------------------------------------------------- 02.03
+        elif cluster_type is JobRunnerClusterType.ibm_lsf:
+            # todo: when self.path is not local we need to see how to log files ...
+            #   should we stream or dump locally ?? ... or maybe figure out
+            #   dapr telemetry
+            _log = self.path / "bsub.log"
+            _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), "-J", self.job_id]
+            _wait_on_jobs = self.wait_on_jobs
+            if bool(_wait_on_jobs):
+                _wait_on = \
+                    " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
+                _nxdi_prefix += ["-w", f"{_wait_on}"]
+            _command = _nxdi_prefix + _command
+            subprocess.run(_command)
+
+        # ------------------------------------------------------------- 02.04
+        else:
+            raise e.code.ShouldNeverHappen(
+                msgs=[f"Unsupported cluster_type {cluster_type}"]
+            )
+
+        # ------------------------------------------------------------- 03
+        # log
+        _LOGGER.info(
+            msg=f"Launching jobs from main machine with below command...",
+            msgs=[_command]
+        )
+
+    @classmethod
+    def from_cli(
+        cls,
+        runner: "Runner",
+    ) -> "Job":
+        # test if running on machines that execute jobs ...
+        if runner.is_on_main_machine:
             raise e.code.CodingError(
                 msgs=[
-                    f"We expect method_kwargs has all keys required by method "
-                    f"{self.method} ",
-                    f"Also so not supply any extra kwargs ...",
-                    dict(
-                        _required_keys=_required_keys, _provided_keys=_provided_keys
-                    ),
+                    "This call is available only for jobs submitted to server ... "
+                    "it cannot be accessed by instance which launches jobs ..."
                 ]
             )
 
-        # some special methods cannot be used for job
-        # noinspection PyUnresolvedReferences
-        e.validation.ShouldNotBeOneOf(
-            value=method.__func__, values=runner.methods_that_cannot_be_a_job(),
-            msgs=["Some special methods cannot be used as job ..."]
-        ).raise_if_failed()
+        # fetch method
+        _method_name = sys.argv[1]
+        _method = getattr(runner, _method_name)
 
-        # if _EXPERIMENT_KWARG present
-        if _EXPERIMENT_KWARG in self.method_kwargs.keys():
-            # get
-            _experiment = self.method_kwargs[_EXPERIMENT_KWARG]
-            # make sure that it is not s.StorageHashable or any of its fields are
-            # not s.StorageHashable
-            _experiment.check_for_storage_hashable(
-                field_key=f"{_experiment.__class__.__name__}"
+        # fetch experiment
+        if len(sys.argv) == 2:
+            _experiment = None
+        elif len(sys.argv) == 3:
+            _experiment = runner.monitor.get_experiment_from_hex_hash(hex_hash=sys.argv[2])
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "there can be only two or three sys arguments ... found",
+                    sys.argv,
+                ]
             )
-            # make <hex_hash>.info if not present
-            self.runner.monitor.make_experiment_info_file(experiment=_experiment)
+
+        # search job from `runner.flow.stages` and `runner.flow.other_jobs`
+        _search_job = None
+        for _j in itertools.chain.from_iterable(
+            [_stage.all_jobs for _stage in runner.flow.stages] + [runner.flow.other_jobs]):
+            if _j.method == _method and _j.experiment == _experiment and _j.runner == runner:
+                if _search_job is not None:
+                    raise e.code.CodingError(
+                        msgs=[
+                            "Multiple jobs match for the given cli kwargs"
+                        ]
+                    )
+                _search_job = _j
+
+        # if no job found raise
+        if _search_job is None:
+            raise e.code.ShouldNeverHappen(
+                msgs=["We expect to find a matching job ..."]
+            )
+
+        # return
+        return _search_job
 
     def check_health(self):
         # if job has already started
-        _job_info = {"job_id": self.id, "path": self.path.full_path}
+        _job_info = {"flow-id": self.flow_id, "job-id": self.job_id, "path": self.path.full_path}
         if self.is_started:
             # if job was finished then skip
             if self.is_finished:
@@ -382,278 +1049,238 @@ class Job:
                     ]
                 )
 
-    def __call__(self, cluster_type: JobRunnerClusterType):
-        # check health
-        self.check_health()
-
-        # if finished or failed earlier return
-        # Note that we already log error or info if lob is finished or failed in
-        # above call to check_health
-        if self.is_finished or self.is_failed:
-            return
-
-        # launch
-        if self.is_on_main_machine:
-            self._launch_on_main_machine(cluster_type)
-        else:
-            self._launch_on_worker_machine()
-
-    def _launch_on_worker_machine(self):
+    # noinspection PyUnresolvedReferences
+    def save_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
         """
-        The jobs are run on cluster ... this piece of code will execute on the
-        worker machines that will execute those scheduled jobs
+        todo: make this compatible for all type of path
         """
-
-        # reconfig logger to change log file for job
-        import logging
-        _log = self.path / "toolcraft.log"
-        logger.setup_logging(
-            propagate=False,
-            level=logging.NOTSET,
-            # todo: here we can config that on server where things will be logged
-            handlers=[
-                # logger.get_rich_handler(),
-                # logger.get_stream_handler(),
-                logger.get_file_handler(_log.local_path),
-            ],
-        )
-        _start = datetime.datetime.now()
-        _LOGGER.info(msg=f"Starting job {self.id} at {_start.ctime()}")
-        self.tag_manager.started.create()
-        self.tag_manager.running.create()
-        _failed = False
-        try:
-            self.method(**self.method_kwargs)
-            self.tag_manager.running.delete()
-            self.tag_manager.finished.create()
-            _end = datetime.datetime.now()
-            _LOGGER.info(
-                msg=f"Successfully finished job {self.id} at {_start.ctime()}",
-                msgs=[
-                    {
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                    }
-                ]
-            )
-        except Exception as _ex:
-            _failed = True
-            self.tag_manager.failed.create(
-                data={
-                    "exception": str(_ex)
-                }
-            )
-            _end = datetime.datetime.now()
-            _LOGGER.info(
-                msg=f"Failed job {self.id} at {_start.ctime()}",
-                msgs=[
-                    {
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                        "exception": str(_ex),
-                    }
-                ]
-            )
-            self.tag_manager.running.delete()
-            # above thing will tell toolcraft that things failed gracefully
-            # while below raise will tell cluster systems like bsub that job has failed
-            # todo for `JobRunnerClusterType.local_on_same_thread` this will not allow
-            #  future jobs to run ... but this is expected as we want to debug in
-            #  this mode mostly
-            raise _ex
-
-    def _launch_on_main_machine(self, cluster_type: JobRunnerClusterType):
-        """
-        This runs on your main machine so that jobs are launched on cluster
-        todo: make this run on client and run jobs over ssh connection ...
-        """
-        # ------------------------------------------------------------- 01
-        # make command to run on cli
-        _kwargs_as_cli_strs = []
-        for _k, _v in self.method_kwargs.items():
-            if _k == _EXPERIMENT_KWARG:
-                _v = _v.hex_hash
-            _kwargs_as_cli_strs.append(
-                f"{_k}={_v}"
-            )
-        _command = f"python {self.runner.py_script} " \
-                   f"{self.method.__func__.__name__} " \
-                   f"{' '.join(_kwargs_as_cli_strs)}"
-
-        # ------------------------------------------------------------- 02
-        if cluster_type is JobRunnerClusterType.local:
-            os.system(_command)
-        elif cluster_type is JobRunnerClusterType.local_on_same_thread:
-            _backup_argv = sys.argv
-            sys.argv = \
-                _backup_argv + [str(self.method.__func__.__name__)] + \
-                _kwargs_as_cli_strs
-            self.runner.clone().run(cluster_type=cluster_type)
-            sys.argv = _backup_argv
-        elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            # todo: when self.path is not local we need to see how to log files ...
-            #   should we stream or dump locally ?? ... or maybe figure out
-            #   dapr telemetry
-            _log = self.path / "bsub.log"
-            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
-            if bool(self.wait_on):
-                _wait_on = \
-                    " && ".join([f"done({_.id})" for _ in self.wait_on])
-                _nxdi_prefix += f'-w "{_wait_on}" '
-            os.system(_nxdi_prefix + _command)
-        else:
-            raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {cluster_type}"]
+        # check if tensorflow available
+        if tf is None:
+            raise e.code.CodingError(
+                msgs=["Tensorflow is not available so cannot call dont use this method"]
             )
 
-    @classmethod
-    def from_cli(
-        cls,
-        runner: "Runner",
-    ) -> "Job":
-        # test if running on machines that execute jobs ...
-        if runner.is_on_main_machine:
+        # if name has . do not allow
+        if name.find(".") != -1:
+            raise e.validation.NotAllowed(
+                msgs=[f"Tensorflow checkpoint saving mechanism does not allow `.` in checkpoint names ... "
+                      f"Correct the value `{name}`"]
+            )
+
+        # check if files present
+        _file = self.tf_chkpts_path / name
+        _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
+        _index_file = self.tf_chkpts_path / f"{name}.index"
+        if _file.exists() or _data_file.exists() or _index_file.exists():
             raise e.code.CodingError(
                 msgs=[
-                    "This call is available only for jobs submitted to server ... "
-                    "it cannot be accessed by instance which launches jobs ..."
+                    f"looks like there is already a checkpoint artifact or simple artifact for name '{name}' present"
                 ]
             )
 
-        # fetch from args
-        _method_name = sys.argv[1]
-        _method = getattr(runner, _method_name)
-        _method_signature = inspect.signature(_method)
-        _method_kwargs = {}
-        for _arg in sys.argv[2:]:
-            _key, _str_val = _arg.split("=")
-            if _key == _EXPERIMENT_KWARG:
-                _val = runner.monitor.get_experiment_from_hex_hash(hex_hash=_str_val)
-            else:
-                _val = _method_signature.parameters[_key].annotation(_str_val)
-            _method_kwargs[_key] = _val
+        # write
+        # options have type tf.train.CheckpointOptions
+        tf_chkpt.write(file_prefix=_file.local_path.as_posix(), options=None)
 
-        # return
-        return Job(
-            runner=runner,
-            method=_method, method_kwargs=_method_kwargs,
-        )
+    def restore_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
+        """
+        todo: make this compatible for all type of path
+        """
+        # check if tensorflow available
+        if tf is None:
+            raise e.code.CodingError(
+                msgs=["Tensorflow is not available so cannot call dont use this method"]
+            )
 
-    def save_artifact(self, name: str, data: t.Any):
-        _file = self.artifacts_path / name
+        # check if respective files present
+        _file = self.tf_chkpts_path / name
+        _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
+        _index_file = self.tf_chkpts_path / f"{name}.index"
+        if not _data_file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"was expecting {_data_file.name} to be present on the disk ..."
+                ]
+            )
+        if not _index_file.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"was expecting {_index_file.name} to be present on the disk ..."
+                ]
+            )
         if _file.exists():
             raise e.code.CodingError(
                 msgs=[
-                    f"Artifact {name} already exists ... cannot write"
+                    f"This should not happen as tensorflow saves things as data and index file ..."
                 ]
             )
-        # todo: make this compatible for all type of path
-        with open(_file.local_path.as_posix(), 'wb') as _file:
-            pickle.dump(data, _file)
 
-    def load_artifact(self, name: str) -> t.Any:
-        _file = self.artifacts_path / name
-        if not _file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} does not exists ... cannot load"
-                ]
-            )
-        # todo: make this compatible for all type of path
-        with open(_file.local_path.as_posix(), 'rb') as _file:
-            return pickle.load(_file)
+        # options have type tf.train.CheckpointOptions
+        _status = tf_chkpt.read(
+            save_path=_file.local_path.as_posix(), options=None)  # type: tf_util.CheckpointLoadStatus
+        _status.assert_existing_objects_matched()
+        _status.assert_nontrivial_match()
+        _status.expect_partial()
+        _status.assert_consumed()
 
 
-class JobGroup:
+class JobGroup(abc.ABC):
     """
-    Job's in this JobGroup will run in parallel and other JobGroup's can
-      wait on previous JobGroup's
     We can have multiple JobGroup within
       stages so that we can move ahead with next stages if we only depend on one of
       JobGroup from previous stage
     """
 
     @property
-    def flow_id(self) -> JobGroupFlowId:
+    def flow_id(self) -> str:
         if self._flow_id is None:
             raise e.code.CodingError(
                 msgs=[
-                    f"This must be set by {Flow} using its items field ..."
+                    f"This must be automatically set by code ..."
                 ]
             )
         return self._flow_id
 
     @flow_id.setter
-    def flow_id(self, value: JobGroupFlowId):
+    def flow_id(self, value: str):
         if self._flow_id is None:
             self._flow_id = value
+            _len = len(self.jobs)
+            for _i, _j in enumerate(self.jobs):
+                if isinstance(_j, Job):
+                    _j.flow_id = f"{value}.j{_i:0{_len}d}"
+                elif isinstance(_j, SequentialJobGroup):
+                    _j.flow_id = f"{value}.s{_i:0{_len}d}"
+                elif isinstance(_j, ParallelJobGroup):
+                    _j.flow_id = f"{value}.p{_i:0{_len}d}"
+                else:
+                    raise e.code.CodingError(
+                        msgs=[f"unsupported type {type(_j)}"]
+                    )
         else:
             raise e.code.CodingError(
                 msgs=[f"This property is already set you cannot set it again ..."]
             )
 
     @property
-    @util.CacheResult
-    def id(self) -> str:
-        """
-        A unique id for job group ...
-        """
-        _job_ids = "-".join([_.id for _ in self.jobs])
-        return f"x{hashlib.sha256(_job_ids.encode('utf-8')).hexdigest()}xJG"
-
-    @property
     def is_on_main_machine(self) -> bool:
         return self.runner.is_on_main_machine
+
+    @property
+    @util.CacheResult
+    def all_jobs(self) -> t.List[Job]:
+        _ret = []
+        for _j in self.jobs:
+            if isinstance(_j, Job):
+                _ret += [_j]
+            else:
+                _ret += _j.all_jobs
+        return _ret
+
+    @property
+    @abc.abstractmethod
+    def bottom_jobs(self) -> t.List[Job]:
+        ...
+
+    @property
+    @abc.abstractmethod
+    def top_jobs(self) -> t.List[Job]:
+        ...
 
     def __init__(
         self,
         runner: "Runner",
-        jobs: t.List[Job],
+        jobs: t.List[t.Union["ParallelJobGroup", "SequentialJobGroup", Job]],
     ):
         # save vars
         self.runner = runner
         self.jobs = jobs
         # noinspection PyTypeChecker
-        self._flow_id = None  # type: JobGroupFlowId
+        self._flow_id = None  # type: str
 
-    def __call__(self, cluster_type: JobRunnerClusterType):
-        if self.is_on_main_machine:
-            self._launch_on_cluster(cluster_type)
+        # call init
+        self.init()
+
+    def init(self):
+        ...
+
+
+class SequentialJobGroup(JobGroup):
+    """
+    The jobs here will run in sequential
+    """
+
+    @property
+    @util.CacheResult
+    def bottom_jobs(self) -> t.List[Job]:
+        """
+        What do we wait on
+        """
+        _last = self.jobs[-1]
+        if isinstance(_last, Job):
+            return [_last]
         else:
-            raise e.code.CodingError(
-                msgs=["We assume that this will never get called on cluster ",
-                      "JobGroup should only get called on main machine ..."]
-            )
+            return _last.bottom_jobs
 
-    def _launch_on_cluster(self, cluster_type: JobRunnerClusterType):
-        # todo: also print jobs that were grouped for this job group ...
-        #   both for JobRunnerClusterType.local and JobRunnerClusterType.ibm_lsf
-
-        # ------------------------------------------------------------- 01
-        # make command to run on cli
-        # there is nothing to do here as this is just a blank job that waits ...
-        _command = "python -c 'import time; time.sleep(1)'"
-
-        # ------------------------------------------------------------- 02
-        if cluster_type in [
-            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
-        ]:
-            ...
-        elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            # needed to add -oo so that we do not get any emails ;)
-            _log = self.runner.cwd / "job_group.log"
-            _nxdi_prefix = f'bsub -oo {_log.local_path.as_posix()} -J {self.id} '
-            if bool(self.jobs):
-                _wait_on = \
-                    " && ".join([f"done({_.id})" for _ in self.jobs])
-                _nxdi_prefix += f'-w "{_wait_on}" '
-            os.system(_nxdi_prefix + _command)
+    @property
+    @util.CacheResult
+    def top_jobs(self) -> t.List[Job]:
+        """
+        What do we start with
+        """
+        _first = self.jobs[0]
+        if isinstance(_first, Job):
+            return [_first]
         else:
-            raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {self.runner.cluster_type}"]
-            )
+            return _first.top_jobs
+
+    def init(self):
+        # call super
+        super().init()
+
+        # this ties up all jobs in list to execute one after other
+        for _ in range(1, len(self.jobs)):
+            _j = self.jobs[_]
+            _pj = self.jobs[_-1]
+            if isinstance(_j, Job):
+                _j.wait_on.append(_pj)
+            else:
+                for __j in _j.top_jobs:
+                    __j.wait_on.append(_pj)
+
+
+class ParallelJobGroup(JobGroup):
+    """
+    The jobs here will run in parallel
+    """
+
+    @property
+    @util.CacheResult
+    def bottom_jobs(self) -> t.List[Job]:
+        """
+        What do we wait on
+        """
+        _ret = []
+        for _j in self.jobs:
+            if isinstance(_j, Job):
+                _ret += [_j]
+            else:
+                _ret += _j.bottom_jobs
+        return _ret
+
+    @property
+    @util.CacheResult
+    def top_jobs(self) -> t.List[Job]:
+        """
+        What do we start with
+        """
+        _ret = []
+        for _j in self.jobs:
+            if isinstance(_j, Job):
+                _ret += [_j]
+            else:
+                _ret += _j.top_jobs
+        return _ret
 
 
 class Flow:
@@ -661,44 +1288,34 @@ class Flow:
     This will decide how jobs will be executed on cluster
     Gets called when script is called without arguments
 
-    Elements within list are run in parallel
-    A sequence of lists is run sequentially
-    First element of every list waits for last element of element in previous list
-      >> Easy way to thing is UI layouts div mechanism
+    Note that stages are made up of list of ParallelJobGroup, while within each ParallelJobGroup we can have
+    ParallelJobGroup or SequentialJobGroup ... note that if you want to wait JobGroup within stage to wait over
+    previous JobGroup then you need to define that with wait_on
+
+    Note that `other_jobs` are related to methods with `experiment` kwarg. It is mostly jobs that are run on client
+    to debug or get some info from job runs that were run on server ... the data will be generated on client where
+    viewer is used ... and jobs will be run only when interacted with viewer ...
+    example:
+    + debug model to find out learning rate
     """
 
     def __init__(
         self,
-        stages: t.List[t.List[JobGroup]],
+        stages: t.List[ParallelJobGroup],
         runner: "Runner",
+        other_jobs: t.List[Job],
     ):
-        # test if running on main machine which launches jobs
-        # there will be only one arg
-        if not runner.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This property `JobRunner.flow` should make instance of Flow.",
-                    "This instance can be create only on main machine from where the "
-                    "script is launched",
-                    "While when jobs are running on cluster they need not use this "
-                    "instance .. instead they will be using Job instance",
-                ]
-            )
-
         # save reference
         self.stages = stages
         self.runner = runner
+        self.other_jobs = other_jobs
 
         # set flow ids
+        _len = len(self.stages)
         for _stage_id, _stage in enumerate(self.stages):
-            for _job_group_id, _job_group in enumerate(_stage):
-                _job_group.flow_id = JobGroupFlowId(
-                    stage=_stage_id, job_group=_job_group_id,
-                )
-                for _job_id, _job in enumerate(_job_group.jobs):
-                    _job.flow_id = JobFlowId(
-                        stage=_stage_id, job_group=_job_group_id, job=_job_id
-                    )
+            _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
+        for _j in other_jobs:
+            _j.flow_id = f"#[other]"
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
@@ -715,29 +1332,48 @@ class Flow:
             _s = _sp.status
             _s.update(spinner_speed=1.0, spinner=None, status="started ...")
             _jobs = []
-            for _stage_id, _stage in enumerate(self.stages):
-                for _job_group in _stage:
-                    _jobs += _job_group.jobs
+            for _stage in self.stages:
+                _jobs += _stage.all_jobs
             _job: Job
             for _job in _p.track(
                 sequence=_jobs, task_name=f"check health"
             ):
-                _s.update(
-                    spinner_speed=1.0,
-                    spinner=None, status=f"check health for {_job.flow_id} ..."
-                )
+                _s.update(status=f"check health for {_job.flow_id} ...")
                 _job.check_health()
-            _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
 
         # call jobs ...
-        if cluster_type in [
-            JobRunnerClusterType.local, JobRunnerClusterType.local_on_same_thread
-        ]:
+        if cluster_type is JobRunnerClusterType.local:
+            # tracker containers
+            _completed_jobs = []
+            _all_jobs = []
             for _stage in self.stages:
-                for _job_group in _stage:
-                    for _job in _job_group.jobs:
-                        _job(cluster_type)
-                    _job_group(cluster_type)
+                _all_jobs += _stage.all_jobs
+
+            # loop over all jobs in flow
+            for _j in _all_jobs:
+                # extract wait on jobs that need to finished before calling _j
+                _wait_jobs = []
+                for _wo in _j.wait_on:
+                    if isinstance(_wo, Job):
+                        _wait_jobs += [_wo]
+                    else:
+                        _wait_jobs += _wo.bottom_jobs
+                for _wj in _wait_jobs:
+                    if _wj not in _completed_jobs:
+                        raise e.code.CodingError(
+                            msgs=[
+                                "When not on server we expect that property `all_jobs` should resolve in such "
+                                "a way that all `wait_on` jobs must be already done ..",
+                                f"Check {_wj.flow_id} which should be completed by now ..."
+                            ]
+                        )
+
+                # call _j
+                _j(cluster_type)
+
+                # append to list as job is completed
+                _completed_jobs.append(_j)
+
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             _sp = richy.ProgressStatusPanel(
                 title=f"Launch stages on `{cluster_type.name}`", tc_log=_LOGGER
@@ -747,11 +1383,8 @@ class Flow:
                 _s = _sp.status
                 _s.update(spinner_speed=1.0, spinner=None, status="started ...")
                 for _stage_id, _stage in enumerate(self.stages):
-                    _jobs = []
-                    for _job_group in _stage:
-                        _jobs += _job_group.jobs
-                        _jobs += [_job_group]
-                    _job: t.Union[Job, JobGroup]
+                    _jobs = _stage.all_jobs
+                    _job: t.Union[Job, ParallelJobGroup]
                     for _job in _p.track(
                         sequence=_jobs, task_name=f"stage {_stage_id:03d}"
                     ):
@@ -760,7 +1393,6 @@ class Flow:
                             spinner=None, status=f"launching {_job.flow_id} ..."
                         )
                         _job(cluster_type)
-                _s.update(spinner_speed=1.0, spinner=None, status="finished ...")
         else:
             raise e.code.NotSupported(
                 msgs=[f"Not supported {cluster_type}"]
@@ -778,6 +1410,81 @@ class Flow:
         #    - dapr telemetry
         #  IMP: see docstring we can even have dearpygui client if we can submit jobs
         #    and track jobs via ssh
+
+    def view(self):
+        # ------------------------------------------------------------------- 01
+        # import
+        from . import gui
+
+        # ------------------------------------------------------------------- 02
+        # define dashboard class
+        @dataclasses.dataclass
+        class FlowDashboard(gui.dashboard.BasicDashboard):
+            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
+
+            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.runner.py_script}")
+
+            hr1: gui.widget.Separator = gui.widget.Separator()
+            hr2: gui.widget.Separator = gui.widget.Separator()
+            hr3: gui.widget.Separator = gui.widget.Separator()
+
+            container: gui.widget.Group = gui.widget.Group()
+
+            hr4: gui.widget.Separator = gui.widget.Separator()
+            hr5: gui.widget.Separator = gui.widget.Separator()
+            hr6: gui.widget.Separator = gui.widget.Separator()
+
+        # ------------------------------------------------------------------- 03
+        # make dashboard
+        _dashboard = FlowDashboard(title="Flow Dashboard")
+
+        # ------------------------------------------------------------------- 04
+        # make gui
+        _forms = {}
+        _other_jobs_form = None
+        with _dashboard.container:
+            # --------------------------------------------------------------- 04.01
+            # for stages
+            for _i, _stage in enumerate(self.stages):
+                gui.widget.Separator()
+                gui.widget.Separator()
+                _forms[_i] = gui.form.DoubleSplitForm(
+                    title=f"*** [[ STAGE {_i:03d} ]] ***",
+                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
+                )
+            # --------------------------------------------------------------- 04.02
+            # for other jobs that will be run on client with gui
+            if bool(self.other_jobs):
+                gui.widget.Separator()
+                gui.widget.Separator()
+                _other_jobs_form = gui.form.DoubleSplitForm(
+                    title=f"*** [[ OTHER JOBS ]] ***",
+                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=False,
+                )
+
+        # ------------------------------------------------------------------- 05
+        # add jobs to forms
+        # ------------------------------------------------------------------- 05.01
+        # for stages
+        for _i, _stage in enumerate(self.stages):
+            # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
+            #  + currently we will get all jobs in stage and render them
+            #  + we can have window pop-up for any JobGroup and then again have any JobGroup or jobs
+            #    rendered inside it
+            #  + may-be we need not differentiate between Sequential and Parallel JobGroup's ... we can
+            #    just have spinners if job is running or status icons indicating job status ... may be the
+            #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
+            for _job in _stage.all_jobs:
+                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
+        # ------------------------------------------------------------------- 05.02
+        # for other jobs that will be run on client with gui
+        if bool(self.other_jobs):
+            for _job in self.other_jobs:
+                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
+
+        # ------------------------------------------------------------------- 06
+        # run
+        gui.Engine.run(_dashboard)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -824,7 +1531,7 @@ class Monitor:
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments'],
-    things_not_to_be_overridden=['cwd', 'job', 'monitor'],
+    things_not_to_be_overridden=['cwd', 'job', 'monitor', 'get_another_job'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -917,8 +1624,7 @@ class Runner(m.HashableClass, abc.ABC):
     @property
     @util.CacheResult
     def job(self) -> Job:
-
-        if len(sys.argv) == 1:
+        if self.is_on_main_machine:
             raise e.code.CodingError(
                 msgs=[
                     "This job is available only for jobs submitted to server ... "
@@ -942,22 +1648,24 @@ class Runner(m.HashableClass, abc.ABC):
 
     @classmethod
     def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
-        return [cls.run, cls.init]
+        return [cls.run, cls.init, cls.clone, cls.get_another_job]
 
-    def clone(self) -> "Runner":
-        # get clone
-        # noinspection PyTypeChecker
-        _clone = super().clone()  # type: Runner
-
-        # todo: not elegant but improve if needed later ...
-        #   this leads to tedious cloning ... as we need to always examine runner for
-        #   single thread and multiple threads
-        # we need to update property ...
-        # useful for JobRunnerClusterType.local_on_same_thread
-        _clone.registered_experiments.extend(self.registered_experiments)
-
-        # return
-        return _clone
+    def get_another_job(
+        self, method: t.Callable, experiment: t.Optional["Experiment"]
+    ):
+        """
+        In some cases you might want to access results from other job so this is the method for it.
+        The only restriction is that the requested job must be completed ...
+        """
+        _job = Job(runner=self, method=method, experiment=experiment)
+        if not _job.is_finished:
+            raise e.code.CodingError(
+                msgs=[
+                    "The job you are requesting is not finished",
+                    "Please check the `flow` as jobs that are completed can only be accessed",
+                ]
+            )
+        return _job
 
     def init(self):
         # call super
@@ -981,6 +1689,7 @@ class Runner(m.HashableClass, abc.ABC):
 
     @classmethod
     def class_init(cls):
+
         # ------------------------------------------------------- 01
         # call super
         super().class_init()
@@ -995,7 +1704,7 @@ class Runner(m.HashableClass, abc.ABC):
 
             # --------------------------------------------------- 02.02
             # ignore some special methods
-            for _val in cls.methods_that_cannot_be_a_job():
+            if _val in cls.methods_that_cannot_be_a_job():
                 continue
 
             # --------------------------------------------------- 02.03
@@ -1009,43 +1718,39 @@ class Runner(m.HashableClass, abc.ABC):
             _parameter_keys = list(_signature.parameters.keys())
 
             # --------------------------------------------------- 02.05
-            # loop over parameters
-            for _parameter_key in _parameter_keys:
-                # ----------------------------------------------- 02.05.01
-                # if _EXPERIMENT_KWARG parameter
-                if _parameter_key == _EXPERIMENT_KWARG:
-                    # _EXPERIMENT_KWARG must be first
-                    if _EXPERIMENT_KWARG != _parameter_keys[1]:
-                        raise e.validation.NotAllowed(
-                            msgs=[
-                                f"If using `{_EXPERIMENT_KWARG}` kwarg in function "
-                                f"{_val} make sure that it is first kwarg i.e. it "
-                                f"immediately follows after self"
-                            ]
-                        )
-                    # _EXPERIMENT_KWARG annotation must be subclass of Experiment
-                    e.validation.ShouldBeSubclassOf(
-                        value=_signature.parameters[_EXPERIMENT_KWARG].annotation,
-                        value_types=(Experiment, ),
-                        msgs=[f"Was expecting annotation for kwarg "
-                              f"`{_EXPERIMENT_KWARG}` to be proper subclass"]
-                    ).raise_if_failed()
-                # ----------------------------------------------- 02.05.02
-                # if self continue
-                elif _parameter_key == "self":
-                    continue
-                # ----------------------------------------------- 02.05.03
-                # else make sure that annotation is int, float or str ...
-                else:
-                    e.validation.ShouldBeSubclassOf(
-                        value=_signature.parameters[_parameter_key].annotation,
-                        value_types=(int, float, str),
-                        msgs=["We restrict annotation types for proper "
-                              "kwarg serialization so that they can be passed over "
-                              "cli ... and can also determine path for storage",
-                              f"Check kwarg `{_parameter_key}` defined in function "
-                              f"`{cls.__name__}.{_val.__name__}`"]
-                    ).raise_if_failed()
+            # you must have self
+            if "self" not in _parameter_keys:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Any method defined in class {cls} can be used for job ... ",
+                        f"So we expect it to have `self` i.e., it should be instance method",
+                        f"If you are using anything special either make it private with `_` or define it in "
+                        f"{cls.methods_that_cannot_be_a_job}"
+                    ]
+                )
+
+            # --------------------------------------------------- 02.06
+            # if no other kwarg it's okay
+            if len(_parameter_keys) == 1:
+                ...
+            # if two keys then second kwarg must be "experiment"
+            elif len(_parameter_keys) == 2:
+                if _parameter_keys[1] != "experiment":
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"Any method defined in class {cls} can be used for job ... ",
+                            f"So if you are specifying any kwarg then it can only be `experiment` of type {Experiment}",
+                            f"Found {_parameter_keys[1]}"
+                        ]
+                    )
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Any method defined in class {cls} can be used for job ... ",
+                        "We only restrict you to have one or no kwarg ... and if one kwarg is supplied "
+                        "then it can be only named `experiment`"
+                    ]
+                )
 
     def run(self, cluster_type: JobRunnerClusterType):
         if self.is_on_main_machine:
@@ -1053,9 +1758,22 @@ class Runner(m.HashableClass, abc.ABC):
         else:
             self.job(cluster_type)
 
+    def view(self):
+        """
+        if command line args are present then we will call job ... as maybe you want to run job from viewer ...
+        """
+        if self.is_on_main_machine:
+            self.flow.view()
+        else:
+            self.job(JobRunnerClusterType.local)
+
 
 @dataclasses.dataclass(frozen=True)
-class Experiment(m.HashableClass):
+class Experiment(m.HashableClass, abc.ABC):
+    """
+    Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
+    be stored in same folder hierarchy if some portion of first strs of group_by matches...
+    """
 
     # runner
     runner: Runner
@@ -1069,3 +1787,8 @@ class Experiment(m.HashableClass):
 
     def setup(self):
         _LOGGER.info(f" >> Setup experiment: {self.hex_hash}")
+
+    @property
+    @abc.abstractmethod
+    def gui_label(self) -> t.Tuple[str, t.List[str]]:
+        ...

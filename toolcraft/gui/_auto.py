@@ -2,8 +2,8 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.4.0
->> Time: 2022-03-20 04:35
+>> DearPyGui: 1.6.2
+>> Time: 2022-05-07 22:24
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -36,6 +36,18 @@ class EnDir(Enum, enum.Enum):
     Down = dpg.mvDir_Down  # 3
     Right = dpg.mvDir_Right  # 1
     NONE = dpg.mvDir_None  # -1
+
+
+class EnTimeUnit(Enum, enum.Enum):
+
+    Day = dpg.mvTimeUnit_Day  # 5
+    Hr = dpg.mvTimeUnit_Hr  # 4
+    Min = dpg.mvTimeUnit_Min  # 3
+    Mo = dpg.mvTimeUnit_Mo  # 6
+    Ms = dpg.mvTimeUnit_Ms  # 1
+    S = dpg.mvTimeUnit_S  # 2
+    Us = dpg.mvTimeUnit_Us  # 0
+    Yr = dpg.mvTimeUnit_Yr  # 7
 
 
 class EnPlotColormap(Enum, enum.Enum):
@@ -115,6 +127,13 @@ class EnMouseButton(Enum, enum.Enum):
     Right = dpg.mvMouseButton_Right  # 1
     X1 = dpg.mvMouseButton_X1  # 3
     X2 = dpg.mvMouseButton_X2  # 4
+
+
+class EnPlatform(Enum, enum.Enum):
+
+    Apple = dpg.mvPlatform_Apple  # 1
+    Linux = dpg.mvPlatform_Linux  # 2
+    Windows = dpg.mvPlatform_Windows  # 0
 
 
 @dataclasses.dataclass
@@ -672,11 +691,14 @@ class CandleSeries(PlotSeries):
     # bear_color (Union[List[int], Tuple[int, ...]], optional): ...
     bear_color: COLOR_TYPE = (218, 13, 79, 255)
 
-    # weight (int, optional): ...
-    weight: int = 0.25
+    # weight (float, optional): ...
+    weight: float = 0.25
 
     # tooltip (bool, optional): ...
     tooltip: bool = True
+
+    # time_unit (int, optional): mvTimeUnit_* constants. Default mvTimeUnit_Day.
+    time_unit: EnTimeUnit = EnTimeUnit.Day
 
     def build(self) -> t.Union[int, str]:
 
@@ -699,6 +721,7 @@ class CandleSeries(PlotSeries):
             bear_color=self.bear_color,
             weight=self.weight,
             tooltip=self.tooltip,
+            time_unit=self.time_unit.value,
         )
         
         return _ret
@@ -1700,6 +1723,304 @@ class DoubleValue(Widget):
 
 
 @dataclasses.dataclass
+class DragDouble(MovableWidget):
+    """
+    Refer:
+    >>> dpg.add_drag_double
+
+     Adds drag for a single double value. Useful when drag float is not accurate enough. Directly entry can be done with double click or CTRL+Click. Min and Max alone are a soft limit for the drag. Use clamped keyword to also apply limits to the direct entry modes.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # default_value (float, optional): ...
+    default_value: float = 0.0
+
+    # format (str, optional): Determines the format the float will be displayed as use python string formatting.
+    format: str = '%0.3f'
+
+    # speed (float, optional): Sets the sensitivity the float will be modified while dragging.
+    speed: float = 1.0
+
+    # min_value (float, optional): Applies a limit only to draging entry only.
+    min_value: float = 0.0
+
+    # max_value (float, optional): Applies a limit only to draging entry only.
+    max_value: float = 100.0
+
+    # no_input (bool, optional): Disable direct entry methods or Enter key allowing to input text directly into the widget.
+    no_input: bool = False
+
+    # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
+    clamped: bool = False
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
+        _ret = internal_dpg.add_drag_double(
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            source=_source_dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            default_value=self.default_value,
+            format=self.format,
+            speed=self.speed,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            no_input=self.no_input,
+            clamped=self.clamped,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
+
+    def drag_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(sender=self)
+
+    def drop_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(sender=self)
+
+
+@dataclasses.dataclass
+class DragDoublex(MovableWidget):
+    """
+    Refer:
+    >>> dpg.add_drag_doublex
+
+     Adds drag input for a set of double values up to 4. Useful when drag float is not accurate enough. Directly entry can be done with double click or CTRL+Click. Min and Max alone are a soft limit for the drag. Use clamped keyword to also apply limits to the direct entry modes.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # default_value (Any, optional): ...
+    default_value: t.Any = (0.0, 0.0, 0.0, 0.0)
+
+    # size (int, optional): Number of doubles to be displayed.
+    size: int = 4
+
+    # format (str, optional): Determines the format the float will be displayed as use python string formatting.
+    format: str = '%0.3f'
+
+    # speed (float, optional): Sets the sensitivity the float will be modified while dragging.
+    speed: float = 1.0
+
+    # min_value (float, optional): Applies a limit only to draging entry only.
+    min_value: float = 0.0
+
+    # max_value (float, optional): Applies a limit only to draging entry only.
+    max_value: float = 100.0
+
+    # no_input (bool, optional): Disable direct entry methods or Enter key allowing to input text directly into the widget.
+    no_input: bool = False
+
+    # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
+    clamped: bool = False
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
+        _ret = internal_dpg.add_drag_doublex(
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            source=_source_dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            default_value=self.default_value,
+            size=self.size,
+            format=self.format,
+            speed=self.speed,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            no_input=self.no_input,
+            clamped=self.clamped,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
+
+    def drag_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(sender=self)
+
+    def drop_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(sender=self)
+
+
+@dataclasses.dataclass
 class DragFloat(MovableWidget):
     """
     Refer:
@@ -2296,7 +2617,7 @@ class DragIntX(MovableWidget):
 
 
 @dataclasses.dataclass
-class DragLine(PlotItem):
+class PlotDragLine(PlotItem):
     """
     Refer:
     >>> dpg.add_drag_line
@@ -2370,7 +2691,7 @@ class DragLine(PlotItem):
 
 
 @dataclasses.dataclass
-class DragPoint(PlotItem):
+class PlotDragPoint(PlotItem):
     """
     Refer:
     >>> dpg.add_drag_point
@@ -3032,6 +3353,320 @@ class HLineSeries(PlotSeries):
         )
         
         return _ret
+
+
+@dataclasses.dataclass
+class InputDouble(MovableWidget):
+    """
+    Refer:
+    >>> dpg.add_input_double
+
+     Adds input for an double. Useful when input float is not accurate enough.+/- buttons can be activated by setting the value of step.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # default_value (float, optional): ...
+    default_value: float = 0.0
+
+    # format (str, optional): Determines the format the float will be displayed as use python string formatting.
+    format: str = '%.3f'
+
+    # min_value (float, optional): Value for lower limit of input. By default this limits the step buttons. Use min_clamped to limit manual input.
+    min_value: float = 0.0
+
+    # max_value (float, optional): Value for upper limit of input. By default this limits the step buttons. Use max_clamped to limit manual input.
+    max_value: float = 100.0
+
+    # step (float, optional): Increment to change value by when the step buttons are pressed. Setting this to a value of 0 or smaller will turn off step buttons.
+    step: float = 0.1
+
+    # step_fast (float, optional): After holding the step buttons for extended time the increments will switch to this value.
+    step_fast: float = 1.0
+
+    # min_clamped (bool, optional): Activates and deactivates the enforcment of min_value.
+    min_clamped: bool = False
+
+    # max_clamped (bool, optional): Activates and deactivates the enforcment of max_value.
+    max_clamped: bool = False
+
+    # on_enter (bool, optional): Only runs callback on enter key press.
+    if_entered: bool = False
+
+    # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
+    readonly: bool = False
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
+        _ret = internal_dpg.add_input_double(
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            source=_source_dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            default_value=self.default_value,
+            format=self.format,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            step=self.step,
+            step_fast=self.step_fast,
+            min_clamped=self.min_clamped,
+            max_clamped=self.max_clamped,
+            on_enter=self.if_entered,
+            readonly=self.readonly,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
+
+    def drag_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(sender=self)
+
+    def drop_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(sender=self)
+
+
+@dataclasses.dataclass
+class InputDoublex(MovableWidget):
+    """
+    Refer:
+    >>> dpg.add_input_doublex
+
+     Adds multi double input for up to 4 double values. Useful when input float mulit is not accurate enough.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # default_value (Any, optional): ...
+    default_value: t.Any = (0.0, 0.0, 0.0, 0.0)
+
+    # format (str, optional): Determines the format the float will be displayed as use python string formatting.
+    format: str = '%.3f'
+
+    # min_value (float, optional): Value for lower limit of input for each cell. Use min_clamped to turn on.
+    min_value: float = 0.0
+
+    # max_value (float, optional): Value for upper limit of input for each cell. Use max_clamped to turn on.
+    max_value: float = 100.0
+
+    # size (int, optional): Number of components displayed for input.
+    size: int = 4
+
+    # min_clamped (bool, optional): Activates and deactivates the enforcment of min_value.
+    min_clamped: bool = False
+
+    # max_clamped (bool, optional): Activates and deactivates the enforcment of max_value.
+    max_clamped: bool = False
+
+    # on_enter (bool, optional): Only runs callback on enter key press.
+    if_entered: bool = False
+
+    # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
+    readonly: bool = False
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
+        _ret = internal_dpg.add_input_doublex(
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            source=_source_dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            default_value=self.default_value,
+            format=self.format,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            size=self.size,
+            min_clamped=self.min_clamped,
+            max_clamped=self.max_clamped,
+            on_enter=self.if_entered,
+            readonly=self.readonly,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
+
+    def drag_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(sender=self)
+
+    def drop_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(sender=self)
 
 
 @dataclasses.dataclass
@@ -5629,7 +6264,7 @@ class PieSeries(PlotSeries):
 
 
 @dataclasses.dataclass
-class Annotation(PlotItem):
+class PlotAnnotation(PlotItem):
     """
     Refer:
     >>> dpg.add_plot_annotation
@@ -5699,9 +6334,6 @@ class PlotLegend(Widget):
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
 
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
-
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
 
@@ -5726,9 +6358,9 @@ class PlotLegend(Widget):
 
         _ret = internal_dpg.add_plot_legend(
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,
@@ -6455,6 +7087,304 @@ class SimplePlot(MovableWidget):
         )
         
         return _ret
+
+    def drag_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(sender=self)
+
+    def drop_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(sender=self)
+
+
+@dataclasses.dataclass
+class SliderDouble(MovableWidget):
+    """
+    Refer:
+    >>> dpg.add_slider_double
+
+     Adds slider for a single double value. Useful when slider float is not accurate enough. Directly entry can be done with double click or CTRL+Click. Min and Max alone are a soft limit for the slider. Use clamped keyword to also apply limits to the direct entry modes.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # height (int, optional): Height of the item.
+    height: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # default_value (float, optional): ...
+    default_value: float = 0.0
+
+    # vertical (bool, optional): Sets orientation of the slidebar and slider to vertical.
+    vertical: bool = False
+
+    # no_input (bool, optional): Disable direct entry methods double-click or ctrl+click or Enter key allowing to input text directly into the item.
+    no_input: bool = False
+
+    # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
+    clamped: bool = False
+
+    # min_value (float, optional): Applies a limit only to sliding entry only.
+    min_value: float = 0.0
+
+    # max_value (float, optional): Applies a limit only to sliding entry only.
+    max_value: float = 100.0
+
+    # format (str, optional): Determines the format the float will be displayed as use python string formatting.
+    format: str = '%.3f'
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
+        _ret = internal_dpg.add_slider_double(
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            height=self.height,
+            indent=self.indent,
+            source=_source_dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            default_value=self.default_value,
+            vertical=self.vertical,
+            no_input=self.no_input,
+            clamped=self.clamped,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            format=self.format,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
+
+    def drag_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drag_callback is None:
+            return None
+        else:
+            return self.drag_callback.fn(sender=self)
+
+    def drop_callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.drop_callback is None:
+            return None
+        else:
+            return self.drop_callback.fn(sender=self)
+
+
+@dataclasses.dataclass
+class SliderDoublex(MovableWidget):
+    """
+    Refer:
+    >>> dpg.add_slider_doublex
+
+     Adds multi slider for up to 4 double values. Usueful for when multi slide float is not accurate enough. Directly entry can be done with double click or CTRL+Click. Min and Max alone are a soft limit for the slider. Use clamped keyword to also apply limits to the direct entry modes.
+
+    """
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # width (int, optional): Width of the item.
+    width: int = 0
+
+    # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
+    indent: int = -1
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
+    payload_type: str = '$$DPG_PAYLOAD'
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
+    drag_callback: Callback = None
+
+    # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
+    drop_callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # enabled (bool, optional): Turns off functionality of widget and applies the disabled theme.
+    enabled: bool = True
+
+    # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
+    pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
+
+    # filter_key (str, optional): Used by filter widget.
+    filter_key: str = ''
+
+    # tracked (bool, optional): Scroll tracking
+    tracked: bool = False
+
+    # track_offset (float, optional): 0.0f
+    track_offset: float = 0.5
+
+    # default_value (Any, optional): ...
+    default_value: t.Any = (0.0, 0.0, 0.0, 0.0)
+
+    # size (int, optional): Number of doubles to be displayed.
+    size: int = 4
+
+    # no_input (bool, optional): Disable direct entry methods double-click or ctrl+click or Enter key allowing to input text directly into the item.
+    no_input: bool = False
+
+    # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
+    clamped: bool = False
+
+    # min_value (float, optional): Applies a limit only to sliding entry only.
+    min_value: float = 0.0
+
+    # max_value (float, optional): Applies a limit only to sliding entry only.
+    max_value: float = 100.0
+
+    # format (str, optional): Determines the format the int will be displayed as use python string formatting.
+    format: str = '%.3f'
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
+        _ret = internal_dpg.add_slider_doublex(
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            width=self.width,
+            indent=self.indent,
+            source=_source_dpg_id,
+            payload_type=self.payload_type,
+            callback=self.callback_fn,
+            drag_callback=self.drag_callback_fn,
+            drop_callback=self.drop_callback_fn,
+            show=self.show,
+            enabled=self.enabled,
+            pos=self.pos,
+            filter_key=self.filter_key,
+            tracked=self.tracked,
+            track_offset=self.track_offset,
+            default_value=self.default_value,
+            size=self.size,
+            no_input=self.no_input,
+            clamped=self.clamped,
+            min_value=self.min_value,
+            max_value=self.max_value,
+            format=self.format,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
 
     def drag_callback_fn(self, sender_dpg_id: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8288,6 +9218,91 @@ class ColormapRegistry(Registry):
 
 
 @dataclasses.dataclass
+class CustomSeries(MovableContainerWidget):
+    """
+    Refer:
+    >>> dpg.custom_series
+
+     Adds a custom series to a plot. New in 1.6.
+
+    """
+
+    # x (Any): ...
+    x: PLOT_DATA_TYPE
+
+    # y (Any): ...
+    y: PLOT_DATA_TYPE
+
+    # channel_count (int): ...
+    channel_count: int
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # source (Union[int, str], optional): Overrides 'id' as value storage key.
+    source: t.Optional[Widget] = None
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    # y1 (Any, optional): ...
+    y1: t.Any = dataclasses.field(default_factory=lambda: [])
+
+    # y2 (Any, optional): ...
+    y2: t.Any = dataclasses.field(default_factory=lambda: [])
+
+    # y3 (Any, optional): ...
+    y3: t.Any = dataclasses.field(default_factory=lambda: [])
+
+    # tooltip (bool, optional): Show tooltip when plot is hovered.
+    tooltip: bool = True
+
+    def build(self) -> t.Union[int, str]:
+
+        _parent_dpg_id = self.internal.parent.dpg_id
+        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+
+        _ret = internal_dpg.add_custom_series(
+            self.x,
+            self.y,
+            self.channel_count,
+            parent=_parent_dpg_id,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            source=_source_dpg_id,
+            callback=self.callback_fn,
+            show=self.show,
+            y1=self.y1,
+            y2=self.y2,
+            y3=self.y3,
+            tooltip=self.tooltip,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_dpg_id: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_dpg_id == self.dpg_id, \
+            'was expecting the dpg_id to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
+
+
+@dataclasses.dataclass
 class DragPayload(ContainerWidget):
     """
     Refer:
@@ -9900,7 +10915,7 @@ class NodeAttribute(MovableContainerWidget):
 
 
 @dataclasses.dataclass
-class Plot(MovableWidget):
+class Plot(MovableContainerWidget):
     """
     Refer:
     >>> dpg.plot
@@ -10106,7 +11121,7 @@ class Plot(MovableWidget):
 
 
 @dataclasses.dataclass
-class XAxis(Widget):
+class PlotXAxis(Widget):
     """
     Refer:
     >>> dpg.plot_axis
@@ -10120,9 +11135,6 @@ class XAxis(Widget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
@@ -10164,9 +11176,9 @@ class XAxis(Widget):
         _ret = internal_dpg.add_plot_axis(
             dpg.mvXAxis,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,
@@ -10195,7 +11207,7 @@ class XAxis(Widget):
 
 
 @dataclasses.dataclass
-class YAxis(Widget):
+class PlotYAxis(ContainerWidget):
     """
     Refer:
     >>> dpg.plot_axis
@@ -10209,9 +11221,6 @@ class YAxis(Widget):
 
     # user_data (Any, optional): User data for callbacks
     user_data: USER_DATA = None
-
-    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
-    use_internal_label: bool = True
 
     # payload_type (str, optional): Sender string type must be the same as the target for the target to run the payload_callback.
     payload_type: str = '$$DPG_PAYLOAD'
@@ -10253,9 +11262,9 @@ class YAxis(Widget):
         _ret = internal_dpg.add_plot_axis(
             dpg.mvYAxis,
             parent=_parent_dpg_id,
-            label=self.label,
+            use_internal_label=False,
+            label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            use_internal_label=self.use_internal_label,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,

@@ -9,11 +9,66 @@ from .. import error as e
 _LOGGER = logger.get_logger()
 
 
+def make_pdf_with_pdflatex(
+    tex_file: pathlib.Path,
+    pdf_file: pathlib.Path,
+    clean: bool = False,
+):
+    """
+    https://tex.stackexchange.com/questions/43325/citations-not-showing-up-in-text-and-bibliography
+
+    To get toc and bibliography working we need below sequence ...
+    For your compilation to work properly, you should compile in the following manner:
+       pdflatex file.tex && bibtex file.aux && pdflatex file.tex && pdflatex file.tex
+
+    Currently, only doing for pdflatex and for generic things need to rely on
+    Refer:
+    >>> import pylatex
+    >>> pylatex.Document.generate_pdf
+    """
+
+    try:
+        _check_output_kwargs = {'cwd': pdf_file.parent.as_posix()}
+
+        print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
+        _output = subprocess.run(
+            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
+        print(">>>>>>>>>>>>>>>>>>>>>>>> Running bibtex")
+        _output = subprocess.run(
+            ["bibtex", tex_file.as_posix().replace("tex", "aux")], stderr=subprocess.STDOUT, **_check_output_kwargs)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
+        print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
+        _output = subprocess.run(
+            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
+        print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
+        _output = subprocess.run(
+            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+        print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
+
+        if clean:
+            for _ext in [
+                'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
+                'auxlock', 'acn', 'glo', 'ist',
+                # beamer related ...
+                'snm', 'nav',
+            ]:
+                (
+                    pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
+                ).unlink(missing_ok=True)
+
+    except (IOError, OSError) as ex_:
+        raise ex_
+
+
 def make_pdf(
-    tex_file: pathlib.Path, pdf_file: pathlib.Path,
+    tex_file: pathlib.Path,
+    pdf_file: pathlib.Path,
     compiler: str = None,
     compiler_args: t.List = None,
     silent: bool = True,
+    _second_run: bool = False,
 ):
     """
     Refer:
@@ -73,13 +128,23 @@ def make_pdf(
             if not silent:
                 _LOGGER.info(msg=output.decode())
 
-        for _ext in [
-            'aux', 'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
-            'auxlock', 'acn', 'glo', 'ist',
-        ]:
-            (
-                pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
-            ).unlink(missing_ok=True)
+        if _second_run:
+            ...
+            # for _ext in [
+            #     'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
+            #     'auxlock', 'acn', 'glo', 'ist',
+            #     # beamer related ...
+            #     'snm', 'nav',
+            # ]:
+            #     (
+            #         pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
+            #     ).unlink(missing_ok=True)
+        else:
+            # so that toc is handled
+            make_pdf(
+                tex_file=tex_file, pdf_file=pdf_file, compiler=compiler, compiler_args=compiler_args,
+                silent=silent, _second_run=True,
+            )
 
         # Compilation has finished, so no further compilers have to be
         # tried

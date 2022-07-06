@@ -12,6 +12,10 @@ from .. import error as e
 
 _LOGGER = logger.get_logger()
 
+# noinspection PyUnreachableCode
+if False:
+    from . import beamer
+
 
 class Font(enum.Enum):
     """
@@ -107,17 +111,28 @@ class Fa(enum.Enum):
     """
     Options supported by \\usepackage{fontawesome5}
     All fonts: http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
+
+    Section 5: Dingbats: Useful for making bullets in itemized list
+    https://math.uoregon.edu/wp-content/uploads/2014/12/compsymb-1qyb3zd.pdf
     """
     check = "\\faCheck"
     times = "\\faTimes"
     check_circle = "\\faCheckCircle"
     times_circle = "\\faTimesCircle"
+    thumbs_down = "\\faThumbsDown"
+    thumbs_up = "\\faThumbsUp"
+    meh = "\\faMeh"
+    pen = "\\faPen"
+    seedling = "\\faSeedling"
+    arrow_alt_circle_down = "\\faArrowAltCircleDown"
 
     # not part of fontawesome but still makes sense here
     ldots = "\\ldots"  # for horizontal dots on the line
     cdots = "\\cdots"  # for horizontal dots above the line
     vdots = "\\vdots"  # for vertical dots
     ddots = "\\ddots"  # for diagonal dots
+
+    # Dingbats
 
     def __str__(self):
         return self.value
@@ -302,15 +317,12 @@ class Positioning:
 @dataclasses.dataclass
 class LaTeX(abc.ABC):
     label: str = None
+    no_comments: bool = False
 
     @property
     @util.CacheResult
     def _items(self) -> t.List[t.Union["LaTeX", str]]:
         return []
-
-    @property
-    def use_new_lines(self) -> bool:
-        return True
 
     @property
     def allow_add_items(self) -> bool:
@@ -326,6 +338,30 @@ class LaTeX(abc.ABC):
     def close_clause(self) -> str:
         ...
 
+    @property
+    def depth(self) -> int:
+        if id(self) == id(self._parent):
+            return 1
+        else:
+            return self._parent.depth + 1
+
+    @property
+    def use_single_line_repr(self) -> bool:
+        return False
+
+    @property
+    def doc(self) -> t.Union["Document", "beamer.Beamer"]:
+        from . import beamer
+        if id(self) == id(self._parent):
+            if isinstance(self, (Document, beamer.Beamer)):
+                return self
+            else:
+                raise e.code.CodingError(
+                    msgs=[f"Dis you set parent with wrong class {self.__class__} ???"]
+                )
+        else:
+            return self._parent.doc
+
     def __post_init__(self):
 
         # if self.items is None:
@@ -338,30 +374,51 @@ class LaTeX(abc.ABC):
         # assign _doc to any items first ...
         for _ in self._items:
             if not isinstance(_, str):
-                if _._doc is None:
-                    _._doc = self._doc
-                else:
-                    if id(_._doc) != id(self._doc):
-                        raise e.code.CodingError(
-                            msgs=["Different instances of _doc found ... "
-                                  "there must be only one"]
-                        )
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
-                        value=_.label, values=self._doc.labels,
+                        value=_.label, values=self.doc.labels,
                         msgs=[
                             f"Please use a unique label ..."
                         ]
                     ).raise_if_failed()
-                    self._doc.labels.append(_.label)
+                    self.doc.labels.append(_.label)
 
         # create str
-        if self.use_new_lines:
-            return self.open_clause + "%\n\n" + \
-                   self.generate() + "\n\n" + \
-                   self.close_clause + "%"
+        if self.no_comments:
+            _sta, _end = "", ""
         else:
-            return self.open_clause + self.generate() + self.close_clause
+            _sta = f"% {'>>' * self.depth} {self.__class__.__name__} .. START \n"
+            if self.close_clause == "":
+                _end = f"% {'<<' * self.depth} {self.__class__.__name__} .. END"
+            else:
+                _end = f"\n% {'<<' * self.depth} {self.__class__.__name__} .. END"
+        if self.allow_add_items:
+            if self.use_single_line_repr:
+                return _sta + \
+                       self.open_clause + \
+                       self.generate() + \
+                       self.close_clause + \
+                       _end
+            else:
+                _gen = self.generate()
+                if _gen != "":
+                    _gen += "\n"
+                return _sta + self.open_clause + \
+                       f"\n% {'--' * self.depth} \n" + \
+                       _gen + \
+                       f"% {'--' * self.depth} \n" + \
+                       self.close_clause + \
+                       _end
+        else:
+            # if not self.use_single_line_repr:
+            #     raise e.code.CodingError(
+            #         msgs=["was expecting to repr to be single line ... implement if you want this"]
+            #     )
+            return _sta + \
+                   self.open_clause + \
+                   self.generate() + \
+                   self.close_clause + \
+                   _end
 
     def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
         if not self.allow_add_items:
@@ -369,8 +426,13 @@ class LaTeX(abc.ABC):
                 msgs=[f"You are not allowed to use `add_items` method for class "
                       f"{self.__class__}"]
             )
-        if self._doc is not None:
-            item._doc = self._doc
+        if isinstance(item, LaTeX):
+            if item._parent is None:
+                item._parent = self
+            else:
+                raise e.code.CodingError(
+                    msgs=["We expect _parent of item not to be set ..."]
+                )
         self._items.append(item)
         return self
 
@@ -379,14 +441,18 @@ class LaTeX(abc.ABC):
 
     def init(self):
         # noinspection PyTypeChecker,PyAttributeOutsideInit
-        self._doc = None  # type: Document
+        self._parent = None  # type: LaTeX
 
         # if any dataclass field is instance of subclass of LaTeX then assign self._doc
         for f in dataclasses.fields(self):
             _v = getattr(self, f.name)
             if isinstance(_v, LaTeX):
-                if _v._doc is None:
-                    _v._doc = self._doc
+                if _v._parent is None:
+                    _v._parent = self
+                else:
+                    raise e.code.CodingError(
+                        msgs=["mst be set by add_item or init method ..."]
+                    )
 
     def generate(self) -> str:
         return "\n".join([str(_) for _ in self._items])
@@ -395,9 +461,13 @@ class LaTeX(abc.ABC):
 @dataclasses.dataclass
 class Document(LaTeX):
 
-    title: t.Union[str, None] = None
-    author: t.Union[str, None] = None
-    date: t.Union[str, None] = None
+    title: str = None
+    short_title: str = None
+    author: str = None
+    short_author: str = None
+    institute: str = None
+    short_institute: str = None
+    date: str = None
 
     main_tex_file: t.Union[None, str] = "../main.tex"
     symbols_file: str = "symbols.tex"
@@ -416,21 +486,33 @@ class Document(LaTeX):
     def open_clause(self) -> str:
         _tt = []
         if self.title is not None:
-            _tt.append(f"\\title{{{self.title}}}%")
+            _title = "\\title"
+            if self.short_title is not None:
+                _title += f"[{self.short_title}]"
+            _title += f"{{{self.title}}}"
+            _tt.append(_title)
         if self.author is not None:
-            _tt.append(f"\\author{{{self.author}}}%")
+            _auth = "\\author"
+            if self.short_author is not None:
+                _auth += f"[{self.short_author}]"
+            _auth += f"{{{self.author}}}"
+            _tt.append(_auth)
+        if self.institute is not None:
+            _inst = "\\institute"
+            if self.short_institute is not None:
+                _inst += f"[{self.short_institute}]"
+            _inst += f"{{{self.institute}}}"
+            _tt.append(_inst)
         if self.date is not None:
-            _tt.append(f"\\date{{{self.date}}}%")
-        if bool(_tt):
-            _tt = ["% >> title related"] + _tt + [""]
-        _ret = _tt + ["% >> begin document", "\\begin{document}%", ]
+            _tt.append(f"\\date{{{self.date}}}")
+        _ret = _tt + ["\\begin{document}"]
         if bool(_tt):
             _ret += ["\\maketitle"]
         return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
-        return "% >> end document\n\\end{document}"
+        return "\\end{document}"
 
     def init_validate(self):
         super().init_validate()
@@ -441,12 +523,12 @@ class Document(LaTeX):
 
     def init(self):
         super().init()
-        if self._doc is not None:
+        if self._parent is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set doc for {self.__class__}"]
+                msgs=[f"No need to set _parent for {self.__class__}"]
             )
         # noinspection PyAttributeOutsideInit
-        self._doc = self  # as this is Document class
+        self._parent = self
 
         # if main tex file not on disk automatically reset to None
         if self.main_tex_file is not None:
@@ -456,6 +538,19 @@ class Document(LaTeX):
                         f"not on disk so using default setting")
                 self.main_tex_file = None
 
+        # handle symbols_file
+        if not pathlib.Path(self.symbols_file).exists():
+            _LOGGER.warning(
+                msg=f"The configured symbols file {self.symbols_file} is "
+                    f"not on disk so using creating default file ...")
+            pathlib.Path(self.symbols_file).touch()
+
+        # handle usepackage_file ... we always overwrite with our default file
+        pathlib.Path(self.usepackage_file).unlink()
+        pathlib.Path(self.usepackage_file).write_text(
+            (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
+        )
+
     def write(
         self,
         save_to_file: str,
@@ -464,9 +559,8 @@ class Document(LaTeX):
         # ----------------------------------------------- 01
         # make document
         _all_lines = [
-            f"% >> generated on {datetime.datetime.now().ctime()}",
+            # f"% Generated on {datetime.datetime.now().ctime()}",
             "",
-            "% >> init",
             "\\documentclass{article}"
             if self.main_tex_file is None else
             f"\\documentclass[{self.main_tex_file}]{{subfiles}}",
@@ -486,7 +580,7 @@ class Document(LaTeX):
         # ----------------------------------------------- 03
         # make pdf if requested
         if make_pdf:
-            helper.make_pdf(
+            helper.make_pdf_with_pdflatex(
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
                          (_save_to_file.name.split(".")[0] + ".pdf"),
@@ -494,7 +588,61 @@ class Document(LaTeX):
 
 
 @dataclasses.dataclass
-class ChAndSec(LaTeX, abc.ABC):
+class List(LaTeX):
+    """
+    https://latex-tutorial.com/tutorials/lists/
+
+    todo: Add bullet styles support https://latex-tutorial.com/bullet-styles/
+          Currently using str's
+    """
+    type: t.Literal['itemize', 'enumerate', 'description'] = 'itemize'
+    items: t.Union[
+        t.List[t.Union[str, "List"]],
+        t.List[t.Tuple[str, str]]
+    ] = None
+
+    @property
+    def allow_add_items(self) -> bool:
+        return False
+
+    @property
+    def open_clause(self) -> str:
+        _ret = f"\\begin{{{self.type}}}\n"
+        return _ret
+
+    def generate(self) -> str:
+        _ret = ""
+        for _item in self.items:
+            if isinstance(_item, str):
+                _ret += f"\\item {_item}\n"
+            elif isinstance(_item, List):
+                if _item._parent is not None:
+                    raise e.code.CodingError(
+                        msgs=["Was expecting lis to not have parent"]
+                    )
+                _item._parent = self
+                _ret += str(_item)
+            elif isinstance(_item, tuple):
+                # refer for styles https://latex-tutorial.com/bullet-styles/
+                _bullet_style, _value = _item
+                _ret += f"\\item[{_bullet_style}] {_value}\n"
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[])
+        return _ret
+
+    @property
+    def close_clause(self) -> str:
+        return f"\\end{{{self.type}}}"
+
+    def init_validate(self):
+        if self.items is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please supply mandatory field items"]
+            )
+
+
+@dataclasses.dataclass
+class _ChAndSec(LaTeX, abc.ABC):
     name: str = None
 
     @property
@@ -503,44 +651,43 @@ class ChAndSec(LaTeX, abc.ABC):
 
     @property
     def open_clause(self) -> str:
-        _ret = f"% >> {self.command}: `{self.name}` start " \
-               f"\n\\{self.command}{{{self.name}}}"
+        _ret = f"\\{self.command}{{{self.name}}}"
         if self.label is not None:
             _ret += f"\\label{{{self.label}}}"
         return _ret
 
     @property
     def close_clause(self) -> str:
-        return f"% >> {self.command}: `{self.name}` end ..."
+        return ""
 
 
 @dataclasses.dataclass
-class Section(ChAndSec):
+class Section(_ChAndSec):
     ...
 
 
 @dataclasses.dataclass
-class SubSection(ChAndSec):
+class SubSection(_ChAndSec):
     ...
 
 
 @dataclasses.dataclass
-class SubSubSection(ChAndSec):
+class SubSubSection(_ChAndSec):
     ...
 
 
 @dataclasses.dataclass
-class Paragraph(ChAndSec):
+class Paragraph(_ChAndSec):
     ...
 
 
 @dataclasses.dataclass
-class SubParagraph(ChAndSec):
+class SubParagraph(_ChAndSec):
     ...
 
 
 @dataclasses.dataclass
-class Part(ChAndSec):
+class Part(_ChAndSec):
     """
     Note that \\part and \\chapter are only available in report and
     book document classes.
@@ -549,7 +696,7 @@ class Part(ChAndSec):
 
 
 @dataclasses.dataclass
-class Chapter(ChAndSec):
+class Chapter(_ChAndSec):
     """
     Note that \\part and \\chapter are only available in report and
     book document classes.

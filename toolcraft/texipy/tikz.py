@@ -1793,7 +1793,7 @@ class Path:
             _ret += str(_item) + " "
 
         # ---------------------------------------------------------- 04
-        return _ret + ";%"
+        return _ret + ";"
 
     def add_node(self, node: Node) -> "Path":
         self.connectome += [node]
@@ -2390,6 +2390,12 @@ class TikZ(LaTeX):
     alignment: FloatObjAlignment = None
     caption: str = None
 
+    # To scale tikz graphics ...
+    # https://tex.stackexchange.com/questions/13460/scalebox-knowing-how-much-it-scales
+    # https://tex.stackexchange.com/questions/4338/correctly-scaling-a-tikzpicture
+    # Other options adjustbox, resizebox
+    scale: t.Tuple[float, float] = None
+
     @property
     @util.CacheResult
     def paths(self) -> t.List[Path]:
@@ -2404,29 +2410,31 @@ class TikZ(LaTeX):
     @property
     def open_clause(self) -> str:
         _ret = [
-            f"% >> start figure {'...' if self.label is None else self.label}",
-            f"\\begin{{figure}}{'' if self.positioning is None else self.positioning}%",
+            f"\\begin{{figure}}{'' if self.positioning is None else self.positioning}",
         ]
         if self.alignment is not None:
-            _ret.append(f"{self.alignment}%")
-        _ret.append("% >> start tikz picture")
+            _ret.append(f"{self.alignment}")
         for _k, _s in self.styles.items():
             _ret.append(
                 f"\\tikzstyle{{{_k}}}=[{_s}]"
             )
-        _ret.append("\\begin{tikzpicture}%")
+        # add scalebox
+        if self.scale is not None:
+            _ret.append(f"\\scalebox{{{self.scale[0]}}}[{self.scale[1]}]\n{{")
+        _ret.append("\\begin{tikzpicture}")
         return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
-        _ret = ["% >> end tikz picture", "\\end{tikzpicture}%"]
+        _ret = ["\\end{tikzpicture}"]
+        if self.scale is not None:
+            _ret.append("}")
         if self.caption is not None:
-            _ret.append(f"\\caption{{{self.caption}}}%")
+            _ret.append(f"\\caption{{{self.caption}}}")
         if self.label is not None:
-            _ret.append(f"\\label{{{self.label}}}%")
+            _ret.append(f"\\label{{{self.label}}}")
         _ret += [
-            f"% >> end figure {'...' if self.label is None else self.label}",
-            "\\end{figure}%"
+            "\\end{figure}"
         ]
         return "\n".join(_ret)
 

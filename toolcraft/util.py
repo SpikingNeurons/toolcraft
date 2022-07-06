@@ -150,7 +150,7 @@ class _SmartListDict:
     def __init__(
         self,
         allow_nested_dict_or_list: bool,
-        supplied_items: t.Optional[t.Union[list, dict]],
+        supplied_items: t.Optional[t.Union[list, dict]] = None,
         use_specific_class: t.Type = None,
         allowed_types: t.Tuple[t.Type] = t.Any,
     ):
@@ -197,7 +197,7 @@ class _SmartListDict:
                     )
                 # populate
                 for k, v in supplied_items.items():
-                    if isinstance(k, str):
+                    if not isinstance(k, str):
                         raise e.code.NotAllowed(
                             msgs=[
                                 f"We expect dict key to be str but found type "
@@ -207,7 +207,6 @@ class _SmartListDict:
                     _items[k] = self._make_it_smart(v)
         else:
             raise e.code.ShouldNeverHappen(msgs=[f"Unsupported type {type(self)}"])
-            raise
         # store it
         self._items = _items  # type: t.Union[list, dict]
 
@@ -302,14 +301,14 @@ class SmartDict(_SmartListDict):
     todo: refer addict and see if we can support it here
     """
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: t.Union[int, str], value):
 
         # ---------------------------------------------------------- 01
         # check if key is str
         e.validation.ShouldBeInstanceOf(
-            value=key, value_types=(str,),
+            value=key, value_types=(int, str, ),
             msgs=[
-                f"We expect key to be always a str.",
+                f"We expect key to be always a str or int.",
                 f"Found unsupported type {type(key)}"
             ]
         ).raise_if_failed()
@@ -330,16 +329,20 @@ class SmartDict(_SmartListDict):
         # set item
         self._items[key] = self._make_it_smart(value)
 
+    def __iter__(self):
+        raise e.code.CodingError(
+            msgs=[
+                "We so not allow to iterate over smart dict ..."
+            ]
+        )
+
     def __getitem__(self, item):
 
         # does key exist
-        e.validation.ShouldBeOneOf(
-            value=item, values=list(self._items.keys()),
-            msgs=[
-                f"We cannot find the requested item {item!r} in the "
-                f"SmartDict."
-            ]
-        ).raise_if_failed()
+        if item not in self._items.keys():
+            raise e.code.CodingError(
+                msgs=[f"We cannot find the requested item {item!r} in the SmartDict."]
+            )
 
         # return
         return self._items[item]
@@ -359,17 +362,133 @@ class SmartDict(_SmartListDict):
         # can manage __del__ of what is contained
         del self._items[key]
 
-    def keys(self) -> t.List[str]:
-        # return
-        return list(self._items.keys())
+    def get(self, index: int) -> t.Any:
+        if index >= len(self._items):
+            raise e.validation.NotAllowed(
+                msgs=["The index exceeds the number of items availbale in smart dict"]
+            )
+        if index < 0:
+            index = len(self._items) + index
+        for _i, _ in enumerate(self._items.keys()):
+            if _i == index:
+                return self._items[_]
 
-    def values(self) -> t.List[t.Any]:
-        # return
-        return list(self._items.values())
+    def keys(self) -> t.Generator[t.Union[int, str], None, None]:
+        """
+        yield so that it remains fast
+        """
+        for _ in self._items.keys():
+            yield _
 
-    def items(self) -> t.List[t.Tuple[str, t.Any]]:
+    def values(self) -> t.Generator[t.Any, None, None]:
+        """
+        yield so that it remains fast
+        """
+        for _ in self._items.values():
+            yield _
+
+    def items(self) -> t.Generator[t.Tuple[t.Union[int, str], t.Any], None, None]:
+        """
+        yield so that it remains fast
+        """
+        for _k, _v in self._items.items():
+            yield _k, _v
+
+    def insert_before(self, key: t.Union[int, str], key_values: t.Dict[t.Union[int, str], t.Any]):
+        # backup
+        _items = self._items
+
+        # validate if key present
+        if key not in _items.keys():
+            raise e.validation.NotAllowed(
+                msgs=[f"we cannot find key {key} in the smart dict"]
+            )
+
+        # wipe internal container
+        self._items = {}
+
+        # add the items back
+        for _k, _v in _items.items():
+            # if key matches
+            if _k == key:
+                for __k, __v in key_values.items():
+                    # this will also validate what you add before
+                    self[__k] = __v
+            # we use fast add to dict as this was already validated
+            self._items[_k] = _v
+
+    def insert_after(self, key: t.Union[int, str], key_values: t.Dict[t.Union[int, str], t.Any]):
+        # backup
+        _items = self._items
+
+        # validate if key present
+        if key not in _items.keys():
+            raise e.validation.NotAllowed(
+                msgs=[f"we cannot find key {key} in the smart dict"]
+            )
+
+        # wipe internal container
+        self._items = {}
+
+        # add the items back
+        for _k, _v in _items.items():
+            # we use fast add to dict as this was already validated
+            self._items[_k] = _v
+            # if key matches
+            if _k == key:
+                for __k, __v in key_values.items():
+                    # this will also validate what you add before
+                    self[__k] = __v
+
+    def before(self, key: t.Union[int, str]) -> t.Optional[t.Tuple[t.Union[int, str], t.Any]]:
+        """
+        Returns key and value for before if found else returns None
+        """
+        # before
+        _before = None
+
+        # validate if key present
+        if key not in self._items.keys():
+            raise e.validation.NotAllowed(
+                msgs=[f"we cannot find key {key} in the smart dict"]
+            )
+
+        # search
+        for _k, _v in self._items.items():
+            # if match break
+            if key == _k:
+                break
+            # set _before
+            _before = _k, _v
+
         # return
-        return list(self._items.items())
+        return _before
+
+    def after(self, key: t.Union[int, str]) -> t.Optional[t.Tuple[t.Union[int, str], t.Any]]:
+        """
+        Returns key and value for after if found else returns None
+        """
+        # before
+        _after = None
+
+        # validate if key present
+        if key not in self._items.keys():
+            raise e.validation.NotAllowed(
+                msgs=[f"we cannot find key {key} in the smart dict"]
+            )
+
+        # search
+        _matched = False
+        for _k, _v in self._items.items():
+            # set _after if wwas matched
+            if _matched:
+                _after = _k, _v
+                break
+            # if matched
+            _matched = key == _k
+
+        # return
+        return _after
 
 
 class WatchDogTimer:
@@ -652,8 +771,10 @@ def CacheResult(*dec_args, **dec_kwargs):
             ]
         )
     # ---------------------------------------------------------------- 01.05
-    # the dec function should not be local
-    if dec_args[0].__qualname__.find('<locals>') != -1:
+    # the dec function should not be local function
+    # but note that it is okay if it is method of local class ...
+    #   as in that case it will be "<...>.<locals>.SomeClassName.method"
+    if dec_args[0].__qualname__.split(".")[-2] == "<locals>":
         raise e.validation.NotAllowed(
             msgs=[
                 f"We do not allow to use CacheResult decorator to be used "

@@ -1,13 +1,81 @@
 import dataclasses
 import typing as t
+import asyncio
 
 from .. import util
+from .. import error as e
 from .. import marshalling as m
 from .__base__ import Form
 from .. import gui
 from . import widget
 from . import table
 from . import callback
+
+
+@dataclasses.dataclass
+class ButtonBarForm(Form):
+
+    @property
+    @util.CacheResult
+    def button_bar(self) -> widget.Group:
+        with self.form_fields_container:
+            return widget.Group(horizontal=True)
+
+    @property
+    @util.CacheResult
+    def receiver(self) -> widget.Group:
+        # just call so that button bar is always on top ;)
+        _ = self.button_bar
+        # create receiver
+        with self.form_fields_container:
+            return widget.Group()
+
+    @property
+    @util.CacheResult
+    def callback(self) -> gui.callback.Callback:
+
+        # make class for callback handling
+        @dataclasses.dataclass(frozen=True)
+        class __Callback(gui.callback.Callback):
+            # noinspection PyMethodParameters
+            def fn(_self, sender: gui.widget.Widget):
+                _key = sender.get_user_data()["key"]
+                self.receiver.clear()
+                with self.receiver:
+                    self.mapper[_key]()
+
+        return __Callback()
+
+    @property
+    @util.CacheResult
+    def mapper(self) -> t.Dict[str, t.Callable]:
+        return {}
+
+    def register(self, key: str, fn: t.Optional[t.Callable], gui_name: str = None, ):
+        # just set default
+        if gui_name is None:
+            gui_name = key
+
+        # check if already mapped
+        e.validation.ShouldNotBeOneOf(
+            value=key, values=list(self.mapper.keys()),
+            msgs=["Looks like you have already registered gui function for this key"]
+        ).raise_if_failed()
+
+        # test if in with context
+        if self.is_in_gui_with_mode:
+            raise e.code.CodingError(
+                msgs=["Register new buttons and their gui methods outside gui related with context"]
+            )
+
+        # add
+        self.mapper[key] = fn
+
+        # make button and add it to container
+        with self.button_bar:
+            gui.widget.Button(
+                label=gui_name, callback=self.callback, user_data={"key": key},
+            )
 
 
 @dataclasses.dataclass
@@ -33,22 +101,15 @@ class HashableMethodsRunnerForm(Form):
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> widget.Group:
-        _ret = widget.Group()
-        _gp = _ret
-        _gp(widget=self.button_bar)
-        _gp(widget=self.receiver)
-        return _ret
-
-    @property
-    @util.CacheResult
     def button_bar(self) -> widget.Group:
-        return widget.Group(horizontal=True)
+        with self.form_fields_container:
+            return widget.Group(horizontal=True)
 
     @property
     @util.CacheResult
     def receiver(self) -> widget.Group:
-        return widget.Group()
+        with self.form_fields_container:
+            return widget.Group()
 
     def init(self):
         # call super
@@ -100,7 +161,7 @@ class DoubleSplitForm(Form):
 
     @property
     @util.CacheResult
-    def _table(self) -> table.Table:
+    def form_fields_container(self) -> table.Table:
         # create table
         _table = table.Table.table_from_literals(
             rows=1,
@@ -113,35 +174,24 @@ class DoubleSplitForm(Form):
         _table.borders_outerH = True
         _table.borders_innerV = True
         _table.borders_outerV = True
-
-        # return
         return _table
 
     @property
     @util.CacheResult
-    def form_fields_container(self) -> widget.Group:
-        _grp = widget.Group(horizontal=False)
-        _grp(widget=self._table)
-        return _grp
+    def button_panel(self) -> widget.Group:
+        with self.form_fields_container[0, 0]:
+            return widget.Group(horizontal=False)
 
     @property
     @util.CacheResult
-    def button_panel(self) -> widget.Group:
-        _grp = widget.Group(horizontal=False)
-        self._table[0, 0](_grp)
-        return _grp
+    def receiver_panel(self) -> widget.Group:
+        with self.form_fields_container[0, 1]:
+            return widget.Group(horizontal=False)
 
     @property
     @util.CacheResult
     def button_panel_group(self) -> t.Dict[str, gui.widget.CollapsingHeader]:
         return {}
-
-    @property
-    @util.CacheResult
-    def receiver_panel(self) -> widget.Group:
-        _grp = widget.Group(horizontal=False)
-        self._table[0, 1](_grp)
-        return _grp
 
     def add(
         self,
@@ -150,23 +200,21 @@ class DoubleSplitForm(Form):
     ):
 
         # ----------------------------------------------------- 01
+        # check if using with mode for gui
+        if self.is_in_gui_with_mode:
+            raise e.code.CodingError(
+                msgs=[
+                    f"To add elements to {self.__class__.__name__!r} exist from gui with mode ..."
+                ]
+            )
+
+        # ----------------------------------------------------- 02
         # get UseMethodInForm
         _use_method_in_form_obj = m.UseMethodInForm.get_from_hashable_fn(
             hashable=hashable, fn_name=self.callable_name
         )
 
-        # ----------------------------------------------------- 01
-        # create button widget
-        _button = _use_method_in_form_obj.get_button_widget(
-            hashable=hashable,
-            receiver=self.receiver_panel,
-            allow_refresh=self.allow_refresh,
-            # we can maintain this as we will be using single `callable_name` and hence
-            # no use for this kwarg
-            group_tag=None,
-        )
-
-        # ----------------------------------------------------- 02
+        # ----------------------------------------------------- 03
         # get container
         if group_key is None:
             _container = self.button_panel
@@ -174,12 +222,21 @@ class DoubleSplitForm(Form):
             if group_key in self.button_panel_group.keys():
                 _container = self.button_panel_group[group_key]
             else:
-                self.button_panel_group[group_key] = gui.widget.CollapsingHeader(
-                    label=group_key, default_open=False,
-                )
-                _container = self.button_panel_group[group_key]
-                self.button_panel(widget=_container)
+                with self.button_panel:
+                    self.button_panel_group[group_key] = gui.widget.CollapsingHeader(
+                        label=group_key, default_open=False,
+                    )
+                    _container = self.button_panel_group[group_key]
 
-        # ----------------------------------------------------- 03
-        # add button widget
-        _container(widget=_button)
+        # ----------------------------------------------------- 04
+        # create button widget ... note use of with context so that it can also work when
+        # `add` is called inside `with` context
+        with _container:
+            _use_method_in_form_obj.get_button_widget(
+                hashable=hashable,
+                receiver=self.receiver_panel,
+                allow_refresh=self.allow_refresh,
+                # we can maintain this as we will be using single `callable_name` and hence
+                # no use for this kwarg
+                group_tag=None,
+            )

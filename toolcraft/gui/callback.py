@@ -6,7 +6,7 @@ from .. import util
 from .. import marshalling as m
 from .. import error as e
 from . import widget, asset
-from .__base__ import Callback, Tag
+from .__base__ import Callback, EnColor, Engine
 
 
 @dataclasses.dataclass(frozen=True)
@@ -65,6 +65,12 @@ class CloseWidgetCallback(Callback):
     def get_button_widget(
         cls, widget_to_delete: widget.Widget, label="Close [X]",
     ) -> widget.Button:
+        # return widget.ColorButton(
+        #     default_value=EnColor.RED.value,
+        #     label=label,
+        #     callback=cls(),
+        #     user_data={'widget_to_delete': widget_to_delete},
+        # )
         return widget.Button(
             label=label,
             callback=cls(),
@@ -133,11 +139,15 @@ class HashableMethodRunnerCallback(Callback):
                    f"{_hashable.hex_hash[-10:]}.{self.group_tag}"
 
         # get widget for given tag if present
-        if Tag.exists(tag_or_widget=_tag):
-            _widget = Tag.get_widget(tag=_tag)
-        else:
-            _widget = None
-        _before_widget = None
+        # .... doesn't matter if you use sender or _receiver as there is one dashboard for all
+        #      This might change if we have multiple dashboard instances
+        # todo: we are using Engine we do not need this
+        _dash_board = _receiver.dash_board
+        # todo: precaution check ... remove later
+        assert id(_dash_board) == id(sender.dash_board), "must be same ..."
+        # noinspection PyTypeChecker
+        _widget = Engine.tags.get(_tag, None)
+        _after_widget = None
 
         # if allow refresh then delete widget and set it to None so that it
         # can be created again
@@ -147,13 +157,12 @@ class HashableMethodRunnerCallback(Callback):
                 # fetch _before_widget
                 # we are assuming this will be MovableWidget ... Note that we want to
                 # keep this way and if possible modify other code ... this is possible
-                # for container widgets and we do not see that this callback will be
-                # used non movable Widgets
+                # for container widgets, and we do not see that this callback will be
+                # used for non-movable Widgets
                 try:
-                    _before_widget = _widget.parent.children[
-                        _widget.index_in_parent_children + 1
-                    ]
-                except IndexError:
+                    _widget: widget.MovableWidget
+                    _after_widget = _widget.after()
+                except AttributeError:
                     ...
                 # this will delete itself
                 # this will also remove itself from `parent.children`
@@ -171,11 +180,11 @@ class HashableMethodRunnerCallback(Callback):
                 _hashable, self.callable_name)()  # type: widget.MovableWidget
 
             # tag it as it was newly created
-            _new_widget.tag_it(tag=_tag)
+            Engine.tag_widget(tag=_tag, widget=_new_widget)
 
             # add to receiver children
             _receiver(_new_widget)
 
             # move widget
-            if _before_widget is not None:
-                _new_widget.move(before=_before_widget)
+            if _after_widget is not None:
+                _new_widget.move(before=_after_widget)
