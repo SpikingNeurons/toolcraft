@@ -829,8 +829,8 @@ class FitProgressStatusPanel(Widget):
                 "percentage": r_progress.TextColumn(
                     "[progress.percentage]{task.percentage:>3.0f}%"),
                 # "time_remaining": r_progress.TimeRemainingColumn(),
-                "acc": r_progress.TextColumn("[green]{task.fields[acc]:.2f}"),
-                "loss": r_progress.TextColumn("[yellow]{task.fields[loss]:.3f}"),
+                "acc": r_progress.TextColumn("[green]{task.fields[acc]:.4f}"),
+                "loss": r_progress.TextColumn("[yellow]{task.fields[loss]:.4f}"),
                 "status": SpinnerColumn(),
             },
             console=self.console,
