@@ -386,6 +386,17 @@ class Path:
     HOME = pathlib.Path.home()
 
     @property
+    def parent(self) -> "Path":
+        _sep = self.sep
+        _new_suffix_path = _sep.join(self.suffix_path.split(_sep)[:-1])
+        if _new_suffix_path == "":
+            raise e.code.CodingError(
+                msgs=["The parent happens to be file system root ... so refrain from using it",
+                      f"Instead directly use file system {self.fs_name}"])
+        # noinspection PyArgumentList
+        return self.__class__(suffix_path=_new_suffix_path, fs_name=self.fs_name)
+
+    @property
     def local_path(self) -> pathlib.Path:
         if not isinstance(self.fs, fsspec.implementations.local.LocalFileSystem):
             raise e.code.CodingError(
