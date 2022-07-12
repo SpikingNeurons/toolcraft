@@ -583,12 +583,16 @@ class SubProcessManager:
 
         _stdout_stream, _stderr_stream = self.stdout_stream, self.stderr_stream
         _process = subprocess.Popen(
-            self.job.cli_command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
+            self.job.cli_command,
+            # stderr=subprocess.PIPE, stdout=subprocess.PIPE, universal_newlines=True,
         )
-        for _line in _process.stdout:
-            _stdout_stream.append(_line)
-        for _line in _process.stderr:
-            _stderr_stream.append(_line)
+        # todo: make it work with command line
+        # through command line this causes issue ...
+        # but works with pycharm (note that the sting color and special unicode characters are lost)
+        # for _line in _process.stdout:
+        #     _stdout_stream.append(_line)
+        # for _line in _process.stderr:
+        #     _stderr_stream.append(_line)
 
         _stdout_stream.append("... waiting for process to finish ...")
         _stderr_stream.append("... waiting for process to finish ...")
