@@ -68,6 +68,7 @@ class EnColor(Enum, enum.Enum):
 
 class _WidgetDpgInternal(m.Internal):
     dpg_id: t.Union[int, str]
+    post_build_fns: t.List[t.Callable] = list
 
 
 @dataclasses.dataclass
@@ -276,6 +277,12 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
         # set flag to indicate build is done
         self.internal.is_build_done = True
 
+        # call post_build_fns
+        if bool(self.internal.post_build_fns):
+            for _fn in self.internal.post_build_fns:
+                _fn()
+            self.internal.post_build_fns.clear()
+
     def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
         for f_name in self.dataclass_field_names:
@@ -415,10 +422,9 @@ class WidgetInternal(_WidgetDpgInternal):
     parent: "ContainerWidget"
     is_build_done: bool
     tag: str = None
-    post_build_fns: t.List[t.Callable] = None
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["tag", "parent", "post_build_fns", ]
+        return super().vars_that_can_be_overwritten() + ["tag", "parent", ]
 
     def test_if_others_set(self):
         if not self.has("parent"):
@@ -1084,18 +1090,6 @@ class Widget(_WidgetDpg, abc.ABC):
         raise e.validation.NotAllowed(
             msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
         )
-
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
-        # call super
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
-
-        # call post_build_fns
-        if bool(self.internal.post_build_fns):
-            for _fn in self.internal.post_build_fns:
-                _fn()
-            self.internal.post_build_fns = None
 
     def tag_it(self, tag: str):
         Engine.tag_widget(tag=tag, widget=self)

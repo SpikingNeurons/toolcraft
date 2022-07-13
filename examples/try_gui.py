@@ -101,6 +101,9 @@ class Plotting(gui.form.Form):
                 x=np.random.normal(0.0, scale=2.0, size=100),
                 y=np.random.normal(1.0, scale=2.0, size=100),
             )
+        self.scatter_plot.x_axis.set_ticks(
+            (("A", -1), ("B", 0), ("C", 1))
+        )
 
         # ------------------------------------------------------- 04
         # sub plots

@@ -1,4 +1,5 @@
 import dataclasses
+import functools
 import typing as t
 import abc
 import dearpygui.dearpygui as dpg
@@ -96,43 +97,69 @@ class XAxis(_auto.PlotXAxis):
         # ci -> movable item
         return f"gui.plot.{cls.__name__}"
 
-    def fit_data(self):
-        """
-        Refer:
-        >>> dpg.fit_axis_data
-        """
-        internal_dpg.fit_axis_data(axis=self.dpg_id)
-
     def get_limits(self) -> t.List[float]:
         """
         Refer:
         >>> dpg.get_axis_limits
         """
-        return internal_dpg.get_axis_limits(self.dpg_id)
+        if self.is_built:
+            return internal_dpg.get_axis_limits(self.dpg_id)
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "Can get limits only when things are built ..."
+                ]
+            )
+
+    def fit_data(self):
+        """
+        Refer:
+        >>> dpg.fit_axis_data
+        """
+        if self.is_built:
+            internal_dpg.fit_axis_data(axis=self.dpg_id)
+        else:
+            self.internal.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
-        internal_dpg.reset_axis_ticks(self.dpg_id)
+        if self.is_built:
+            internal_dpg.reset_axis_ticks(self.dpg_id)
+        else:
+            self.internal.post_build_fns.append(self.reset_ticks)
 
     def set_limits(self, ymin: float, ymax: float):
         """
         Refer:
         >>> dpg.set_axis_limits
         """
-        internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+        if self.is_built:
+            internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+        else:
+            self.internal.post_build_fns.append(
+                functools.partial(self.set_limits, ymin, ymax)
+            )
 
     def set_limits_auto(self):
         """
         Refer:
         >>> dpg.set_axis_limits_auto
         """
-        internal_dpg.set_axis_limits_auto(self.dpg_id)
+        if self.is_built:
+            internal_dpg.set_axis_limits_auto(self.dpg_id)
+        else:
+            self.internal.post_build_fns.append(self.set_limits_auto)
 
     def set_ticks(self, label_pairs: t.Any):
         """
         Refer:
         >>> dpg.set_axis_ticks
         """
-        internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+        if self.is_built:
+            internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+        else:
+            self.internal.post_build_fns.append(
+                functools.partial(self.set_ticks, label_pairs)
+            )
 
 
 @dataclasses.dataclass
@@ -184,43 +211,69 @@ class YAxis(_auto.PlotYAxis):
         # ci -> movable item
         return f"gui.plot.{cls.__name__}"
 
-    def fit_data(self):
-        """
-        Refer:
-        >>> dpg.fit_axis_data
-        """
-        internal_dpg.fit_axis_data(axis=self.dpg_id)
-
     def get_limits(self) -> t.List[float]:
         """
         Refer:
         >>> dpg.get_axis_limits
         """
-        return internal_dpg.get_axis_limits(self.dpg_id)
+        if self.is_built:
+            return internal_dpg.get_axis_limits(self.dpg_id)
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "Can get limits only when things are built ..."
+                ]
+            )
+
+    def fit_data(self):
+        """
+        Refer:
+        >>> dpg.fit_axis_data
+        """
+        if self.is_built:
+            internal_dpg.fit_axis_data(axis=self.dpg_id)
+        else:
+            self.internal.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
-        internal_dpg.reset_axis_ticks(self.dpg_id)
+        if self.is_built:
+            internal_dpg.reset_axis_ticks(self.dpg_id)
+        else:
+            self.internal.post_build_fns.append(self.reset_ticks)
 
     def set_limits(self, ymin: float, ymax: float):
         """
         Refer:
         >>> dpg.set_axis_limits
         """
-        internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+        if self.is_built:
+            internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+        else:
+            self.internal.post_build_fns.append(
+                functools.partial(self.set_limits, ymin, ymax)
+            )
 
     def set_limits_auto(self):
         """
         Refer:
         >>> dpg.set_axis_limits_auto
         """
-        internal_dpg.set_axis_limits_auto(self.dpg_id)
+        if self.is_built:
+            internal_dpg.set_axis_limits_auto(self.dpg_id)
+        else:
+            self.internal.post_build_fns.append(self.set_limits_auto)
 
     def set_ticks(self, label_pairs: t.Any):
         """
         Refer:
         >>> dpg.set_axis_ticks
         """
-        internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+        if self.is_built:
+            internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+        else:
+            self.internal.post_build_fns.append(
+                functools.partial(self.set_ticks, label_pairs)
+            )
 
 
 @dataclasses.dataclass

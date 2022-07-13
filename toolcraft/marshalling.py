@@ -286,9 +286,22 @@ class Internal:
 
         # if annotations have default values then make them available in
         # container
-        for _vn in self.__field_names__:
+        for _n in self.__field_names__:
             try:
-                setattr(self, _vn, getattr(self.__class__, _vn))
+                _v = getattr(self.__class__, _n)
+                # if list or dict then acts like factory to make new object per instance
+                if _v == list:
+                    _v = list()
+                    self.__dict__[_n] = _v
+                    continue
+                if _v == dict:
+                    _v = dict()
+                    self.__dict__[_n] = _v
+                    continue
+                # todo test _v for immutability ... the same _v across multiple internals can cause issues
+                #    right now we are setting as it is without testing for immutability
+                #    except for list and dict which we are making immutable by small hack
+                setattr(self, _n, _v)
             except AttributeError:
                 ...
 
