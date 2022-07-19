@@ -113,20 +113,27 @@ def try_fit_progress_status_panel():
         _validate_progress = _panel.validate_progress
         _train_samples = 200000
         _validate_samples = 100000
+        _msg_fmt = "[green]A {acc:.4f} [yellow]L {loss:.4f}"
         for _epoch in _status_panel:
             _status_panel.update(status=f"Fitting epoch {_epoch} ...")
             _train_task = _train_progress.add_task(
                 task_name=f"ep {_epoch:03d}", total=_train_samples,
-                acc=float("nan"), loss=float("inf")
+                msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")),
             )
             for _ in range(_train_samples):
-                _train_task.update(advance=1, acc=_*0.1, loss=_*0.01)
+                _train_task.update(
+                    advance=1,
+                    msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
+                )
             _validate_task = _validate_progress.add_task(
                 task_name=f"ep {_epoch:03d}", total=_validate_samples,
-                acc=float("nan"), loss=float("inf")
+                msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")),
             )
             for _ in range(_validate_samples):
-                _validate_task.update(advance=1, acc=_*0.1, loss=_*0.01)
+                _validate_task.update(
+                    advance=1,
+                    msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
+                )
         _status_panel.set_final_message(
             message=f"Found best epoch at {2} for val loss {0.004}"
                     f"\n+ train   : acc: {1.0} | loss: {4.33}"
