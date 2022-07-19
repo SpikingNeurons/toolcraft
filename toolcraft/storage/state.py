@@ -119,7 +119,6 @@ class StateFile(m.YamlRepr, abc.ABC):
                 f"For state files we refrain using as_dict and from_dict"
             ]
         )
-        raise
 
     # noinspection PyTypeChecker
     def as_dict(
@@ -130,7 +129,6 @@ class StateFile(m.YamlRepr, abc.ABC):
                 f"For state files we refrain using as_dict and from_dict"
             ]
         )
-        raise
 
 
 @dataclasses.dataclass

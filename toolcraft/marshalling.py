@@ -409,8 +409,7 @@ class Internal:
 class RuleChecker:
 
     """
-    Note that this decorator must be the first one to be applied on class then apply
-    @dataclasses.dataclass ...
+    Note that this decorator must be applied on class after @dataclasses.dataclass ...
 
     todo: do not be tempted to do load time analysis of dataclass as it is tough from
       our experience
@@ -1622,9 +1621,9 @@ class YamlRepr(Tracker):
         ])
 
     @classmethod
-    def from_dict(cls, yaml_state: t.Dict[str,
-                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-                  **kwargs) -> "YamlRepr":
+    def from_dict(
+        cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
+    ) -> "YamlRepr":
         # noinspection PyArgumentList
         return cls(**yaml_state)
 
@@ -1874,13 +1873,16 @@ class FrozenEnum(YamlRepr):
       for builtins
     """
 
+    def __init__(self, *args):
+        # as enum will pass some args we avoid them to propagate to Tracker ...
+        super().__init__()
+
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         # noinspection PyUnresolvedReferences
         return {"name": self.name}
 
     @classmethod
-    def from_dict(cls, yaml_state: t.Dict[str,
-                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+    def from_dict(cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
                   **kwargs) -> "FrozenEnum":
         return getattr(cls, yaml_state["name"])
 
@@ -2056,6 +2058,12 @@ class HashableClass(YamlRepr, abc.ABC):
         # but as of now we cannot have __init__ method there as many classes that are
         # subclassed are dataclasses
         # Note that this happens only once as we always keep on cleaning the dict
+        # todo: note that rule check will not trigger when instance of YamlRepr are created ...
+        #    only when first instance of HashableClass is created will the rule check happen ...
+        #    We can move this logic to Tracker.__init__ but that also will not solve problem as any subclass of it
+        #    when converted to dataclass cannot clall __init__ you need to override __post_init__ to call
+        #    Tracker.__init__ ...
+        #    Temporary workaround is to create fake HashableClass instance once all modules are loaded in your library
         if settings.DO_RULE_CHECK:
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
             _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
@@ -2143,12 +2151,9 @@ class HashableClass(YamlRepr, abc.ABC):
         global SUPPORTED_HASHABLE_OBJECTS
 
         # --------------------------------------------------------------01
-        # loop over field values to validate them
-        for f_name in self.dataclass_field_names:
+        # loop over serialized version of field values to validate them
+        for f_name, v in self.as_dict().items():
             # ----------------------------------------------------------01.01
-            # get value for the field
-            v = getattr(self, f_name)
-            # ----------------------------------------------------------01.02
             # raise error to inform to use FrozenDict
             if isinstance(v, dict):
                 self.can_be_frozen(
@@ -2156,17 +2161,7 @@ class HashableClass(YamlRepr, abc.ABC):
                     key_or_index=f"{f_name}::",
                     allowed_types=SUPPORTED_HASHABLE_OBJECTS,
                 )
-            # ----------------------------------------------------------01.03
-            # raise error to inform to use FrozenKeras
-            # elif isinstance(v, FrozenKeras.LITERAL.SUPPORTED_KERAS_OBJECTS):
-            #     raise e.validation.NotAllowed(
-            #         msgs=[
-            #             f"Please set the field `{f_name}` where the `keras` "
-            #             f"object is wrapped with `{FrozenKeras.__name__}`  "
-            #             f"check class {self.__class__}"
-            #         ]
-            #     )
-            # ----------------------------------------------------------01.04
+            # ----------------------------------------------------------01.02
             # if list check if values inside are hashable
             elif isinstance(v, list):
                 self.can_be_frozen(
@@ -2174,7 +2169,7 @@ class HashableClass(YamlRepr, abc.ABC):
                     key_or_index=f"{f_name}::",
                     allowed_types=SUPPORTED_HASHABLE_OBJECTS,
                 )
-            # ----------------------------------------------------------01.05
+            # ----------------------------------------------------------01.03
             # else should be one of supported type
             else:
                 e.validation.ShouldBeInstanceOf(
@@ -2224,10 +2219,19 @@ class HashableClass(YamlRepr, abc.ABC):
                 _v.check_for_storage_hashable(field_key=f"{field_key}.{_f}")
 
 
-SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict,
-                                          np.float32, np.int64, np.int32,
-                                          datetime.datetime, None, FrozenEnum,
-                                          # FrozenKeras,
-                                          HashableClass, pa.Schema, ]
+if settings.TF_KERAS_WORKS:
+    from keras.api._v2 import keras as tk
+    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
+        int, float, str, slice, list, dict,
+        np.float32, np.int64, np.int32,
+        datetime.datetime, None, FrozenEnum,
+        HashableClass, pa.Schema,
+        tk.losses.Loss, tk.layers.Layer, tk.optimizers.Optimizer,
+    ]
+else:
+    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict,
+                                              np.float32, np.int64, np.int32,
+                                              datetime.datetime, None, FrozenEnum,
+                                              HashableClass, pa.Schema, ]
 # noinspection PyUnresolvedReferences
 SUPPORTED_HASHABLE_OBJECTS = SUPPORTED_HASHABLE_OBJECTS_TYPE.__args__

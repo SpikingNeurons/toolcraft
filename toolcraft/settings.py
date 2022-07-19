@@ -32,6 +32,13 @@ try:
 except ImportError:
     DPG_WORKS = False
 
+try:
+    from keras.api._v2 import keras as tk
+    import tensorflow as tf
+    TF_KERAS_WORKS = True
+except ImportError:
+    TF_KERAS_WORKS = False
+
 
 # make config
 TC_HOME = pathlib.Path.home() / ".toolcraft"
