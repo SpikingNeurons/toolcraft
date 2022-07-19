@@ -113,7 +113,7 @@ def try_fit_progress_status_panel():
         _validate_progress = _panel.validate_progress
         _train_samples = 200000
         _validate_samples = 100000
-        _msg_fmt = "[green]A {acc:.4f} [yellow]L {loss:.4f}"
+        _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
         for _epoch in _status_panel:
             _status_panel.update(status=f"Fitting epoch {_epoch} ...")
             _train_task = _train_progress.add_task(
