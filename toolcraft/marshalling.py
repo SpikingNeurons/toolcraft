@@ -1873,10 +1873,6 @@ class FrozenEnum(YamlRepr):
       for builtins
     """
 
-    def __init__(self, *args):
-        # as enum will pass some args we avoid them to propagate to Tracker ...
-        super().__init__()
-
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         # noinspection PyUnresolvedReferences
         return {"name": self.name}
@@ -2139,9 +2135,45 @@ class HashableClass(YamlRepr, abc.ABC):
 
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
-        for f_name in self.dataclass_field_names:
-            _ret[f_name] = getattr(self, f_name)
+        _field_names = self.dataclass_field_names
+        if settings.TF_KERAS_WORKS:
+            # Handle serialization for keras loss, optimizer and layer
+            from keras.api._v2 import keras as tk
+            for f_name in _field_names:
+                _v = getattr(self, f_name)
+                if isinstance(
+                    _v, (
+                        tk.losses.Loss,
+                        tk.layers.Layer,
+                        tk.optimizers.Optimizer,
+                        # this need not be handled as it is part of optimizer
+                        # tk.optimizers.schedules.LearningRateSchedule,
+                    )
+                ):
+                    _v = tk.utils.serialize_keras_object(_v)
+                _ret[f_name] = _v
+        else:
+            for f_name in _field_names:
+                _ret[f_name] = getattr(self, f_name)
+
         return _ret
+
+    @classmethod
+    def from_dict(
+        cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
+    ) -> "HashableClass":
+        if settings.TF_KERAS_WORKS:
+            # Handle deserialization for keras loss, optimizer and layer
+            from keras.api._v2 import keras as tk
+            for _n in yaml_state.keys():
+                if issubclass(cls.__annotations__[_n], tk.losses.Loss):
+                    yaml_state[_n] = tk.losses.deserialize(yaml_state[_n])
+                if issubclass(cls.__annotations__[_n], tk.layers.Layer):
+                    yaml_state[_n] = tk.layers.deserialize(yaml_state[_n])
+                if issubclass(cls.__annotations__[_n], tk.optimizers.Optimizer):
+                    yaml_state[_n] = tk.optimizers.deserialize(yaml_state[_n])
+        # noinspection PyTypeChecker
+        return super().from_dict(yaml_state=yaml_state, **kwargs)
 
     def init_validate(self):
         """

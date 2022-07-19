@@ -328,9 +328,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     @classmethod
     def from_dict(
-        cls,
-        yaml_state: t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"],
-        **kwargs
+        cls, yaml_state: t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
     ) -> "StorageHashable":
         if "parent_folder" in yaml_state.keys():
             # update .. to parent_folder supplied from kwargs
