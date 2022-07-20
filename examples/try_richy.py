@@ -105,40 +105,35 @@ def try_status_panel():
 
 
 def try_fit_progress_status_panel():
-    with richy.FitProgressStatusPanel(
+
+    _fit_panel = richy.FitProgressStatusPanel(
         title="Fitting ...", tc_log=_LOGGER, epochs=5,
-    ) as _panel:
-        _status_panel = _panel.status
-        _train_progress = _panel.train_progress
-        _validate_progress = _panel.validate_progress
-        _train_samples = 200000
-        _validate_samples = 100000
-        _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
-        for _epoch in _status_panel:
-            _status_panel.update(status=f"Fitting epoch {_epoch} ...")
-            _train_task = _train_progress.add_task(
-                task_name=f"ep {_epoch:03d}", total=_train_samples,
-                msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")),
+    )
+    _train_samples = 200000
+    _validate_samples = 100000
+    _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
+
+    for _epoch in _fit_panel:
+        _train_task = _fit_panel.train_task(
+            total=_train_samples, msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")), )
+        for _ in range(_train_samples):
+            _train_task.update(
+                advance=1,
+                msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
             )
-            for _ in range(_train_samples):
-                _train_task.update(
-                    advance=1,
-                    msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
-                )
-            _validate_task = _validate_progress.add_task(
-                task_name=f"ep {_epoch:03d}", total=_validate_samples,
-                msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")),
+        _validate_task = _fit_panel.validate_task(
+            total=_validate_samples, msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")), )
+        for _ in range(_validate_samples):
+            _validate_task.update(
+                advance=1,
+                msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
             )
-            for _ in range(_validate_samples):
-                _validate_task.update(
-                    advance=1,
-                    msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
-                )
-        _status_panel.set_final_message(
-            message=f"Found best epoch at {2} for val loss {0.004}"
-                    f"\n+ train   : acc: {1.0} | loss: {4.33}"
-                    f"\n+ validate: acc: {1.0} | loss: {4.33}"
-        )
+
+    _fit_panel.set_final_message(
+        msg=f"Found best epoch at {2} for val loss {0.004}"
+            f"\n+ train   : acc: {1.0} | loss: {4.33}"
+            f"\n+ validate: acc: {1.0} | loss: {4.33}"
+    )
 
 
 def main():

@@ -187,7 +187,7 @@ class Widget(abc.ABC):
     title: t.Optional[r_console.RenderableType] = None
     tc_log: logger.CustomLogger = None
     refresh_per_second: int = 10
-    console: r_console.Console = r_console.Console(record=True)
+    console: r_console.Console = None
 
     @property
     @abc.abstractmethod
@@ -195,6 +195,8 @@ class Widget(abc.ABC):
         ...
 
     def __post_init__(self):
+        if self.console is None:
+            self.console = r_console.Console(record=True)
         self._live = r_live.Live(
             self.renderable,
             console=self.console,
@@ -365,12 +367,12 @@ class Status(Widget):
                 ]
             )
 
-    def set_final_message(self, message: str):
+    def set_final_message(self, msg: str):
         # noinspection PyAttributeOutsideInit
-        self._final_message = r_markdown.Markdown("\n---\n" + message)
+        self._final_message = r_markdown.Markdown("\n---\n" + msg)
         self.refresh(update_renderable=True)
         if self.tc_log is not None:
-            self.tc_log.info(msg=message)
+            self.tc_log.info(msg=msg)
 
     def update(
         self,
@@ -501,6 +503,19 @@ class Progress(Widget):
     def add_task(
         self, task_name: str, total: float, description: str = None, **fields
     ) -> ProgressTask:
+        # process task_name
+        if task_name in self.tasks.keys():
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"There already exists a task named {task_name!r}",
+                    "Try giving new task name while iterating or else add '#' token at end to make name reusable.",
+                ]
+            )
+        # if # at end task name then add counter
+        # note adding # will make task name reusable by adding counter
+        if task_name.endswith("#"):
+            task_name += str(len([k for k in self.tasks.keys() if k.startswith(task_name)]))
+
         # test if fields are defined in columns for progress bar
         for _k in fields.keys():
             e.validation.ShouldBeOneOf(
@@ -580,24 +595,10 @@ class Progress(Widget):
             task_total = total
 
         # ------------------------------------------------------------ 02
-        # process task_name
-        if task_name in self.tasks.keys():
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"There already exists a task named {task_name!r}",
-                    "Try giving new task name while iterating or else add '#' token at end to make name reusable.",
-                ]
-            )
-        # if # at end task name then add counter
-        # note adding # will make task name reusable by adding counter
-        if task_name.endswith("#"):
-            task_name += str(len([k for k in self.tasks.keys() if k.startswith(task_name)]))
-
-        # ------------------------------------------------------------ 03
         # add task
         _task = self.add_task(task_name=task_name, total=task_total, description=description)
 
-        # ------------------------------------------------------------ 04
+        # ------------------------------------------------------------ 03
         # yield and hence auto track
         # todo: explore --- self.rich_progress.live.auto_refresh
         task_id = _task.rich_task.id
@@ -760,37 +761,30 @@ class FitProgressStatusPanel(Widget):
 
     epochs: int = None
 
-    @property
-    @util.CacheResult
-    def train_progress(self) -> Progress:
-        return self.make_richy_progress()
-
-    @property
-    @util.CacheResult
-    def validate_progress(self) -> Progress:
-        return self.make_richy_progress()
-
-    @property
-    @util.CacheResult
-    def status(self) -> Status:
-        return Status(
+    def __post_init__(self):
+        self._train_progress = self._make_richy_progress()
+        self._validate_progress = self._make_richy_progress()
+        self._status = Status(
             tc_log=self.tc_log,
             title=None,
             console=self.console, refresh_per_second=self.refresh_per_second,
             overall_progress_iterable=range(1, self.epochs + 1),
         )
+        super().__post_init__()
+        if self.epochs is None:
+            raise e.validation.NotAllowed(msgs=["Please specify epochs ... it is mandatory"])
 
     @property
     def renderable(self) -> r_console.RenderableType:
-        _train_progress = self.train_progress.renderable
-        _validate_progress = self.validate_progress.renderable
-        _status_renderable = self.status.renderable
+        _train_progress = self._train_progress.renderable
+        _validate_progress = self._validate_progress.renderable
+        _status_renderable = self._status.renderable
         _table = r_table.Table.grid()
         _table.add_row(
             r_panel.Panel.fit(_train_progress, title="Train", box=r_box.HORIZONTALS),
             r_panel.Panel.fit(_validate_progress, title="Validate", box=r_box.HORIZONTALS),
         )
-        _status = r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+        _status = r_panel.Panel(self._status.renderable, box=r_box.HORIZONTALS)
         _group = r_console.Group(
             _table, _status
         )
@@ -808,19 +802,26 @@ class FitProgressStatusPanel(Widget):
 
     def __enter__(self) -> "FitProgressStatusPanel":
         super().__enter__()
-        self.status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
+        self._status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
         self.refresh(update_renderable=True)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
-        self.status._spinner = r_text.Text.from_markup(
+        self._status._spinner = r_text.Text.from_markup(
             f"{EMOJI['white_heavy_check_mark']} "
             f"Finished in {_elapsed_secs} seconds ...")
         self.refresh(update_renderable=True)
         super().__exit__(exc_type, exc_val, exc_tb)
 
-    def make_richy_progress(self) -> Progress:
+    def __iter__(self):
+        with self:
+            for _epoch in self._status:
+                self.update(status=f"Fitting epoch {_epoch} ...")
+                self._task_name = f"ep {_epoch:03d}"
+                yield _epoch
+
+    def _make_richy_progress(self) -> Progress:
         return Progress(
             columns={
                 "text": r_progress.TextColumn(
@@ -838,4 +839,31 @@ class FitProgressStatusPanel(Widget):
             refresh_per_second=self.refresh_per_second,
             tc_log=self.tc_log,
         )
+
+    def update(
+        self,
+        status: t.Optional[r_console.RenderableType] = None,
+        spinner: SpinnerType = None,
+        # spinner_style: Optional[StyleType] = None
+        spinner_speed: t.Optional[float] = None,
+    ):
+        self._status.update(status=status, spinner=spinner, spinner_speed=spinner_speed)
+
+    def train_task(
+        self, total: float, msg: str,
+    ) -> ProgressTask:
+        return self._train_progress.add_task(
+            task_name=self._task_name, total=float(total), msg=msg,
+        )
+
+    def validate_task(
+        self, total: float, msg: str,
+    ) -> ProgressTask:
+        return self._validate_progress.add_task(
+            task_name=self._task_name, total=float(total), msg=msg,
+        )
+
+    def set_final_message(self, msg: str):
+        with self:
+            self._status.set_final_message(msg=msg)
 
