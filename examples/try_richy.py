@@ -4,6 +4,7 @@ import time
 sys.path.append("..")
 
 from toolcraft import richy, logger
+from toolcraft import marshalling as m
 
 _LOGGER = logger.get_logger()
 
@@ -51,6 +52,13 @@ def try_status():
             _s.update(spinner_speed=1.0, spinner=_spinner, status=_status)
             _s.console.log(f"phase {_status}")
             time.sleep(1)
+
+
+def try_hashable_status_panel():
+    class Tracker(m.Tracker):
+        ...
+
+    Tracker()
 
 
 def try_status_panel():
@@ -114,14 +122,14 @@ def try_fit_progress_status_panel():
     _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
 
     for _epoch in _fit_panel:
-        _train_task = _fit_panel.train_task(
+        _train_task = _fit_panel.add_train_task(
             total=_train_samples, msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")), )
         for _ in range(_train_samples):
             _train_task.update(
                 advance=1,
                 msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
             )
-        _validate_task = _fit_panel.validate_task(
+        _validate_task = _fit_panel.add_validate_task(
             total=_validate_samples, msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")), )
         for _ in range(_validate_samples):
             _validate_task.update(
@@ -129,11 +137,12 @@ def try_fit_progress_status_panel():
                 msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
             )
 
-    _fit_panel.set_final_message(
-        msg=f"Found best epoch at {2} for val loss {0.004}"
-            f"\n+ train   : acc: {1.0} | loss: {4.33}"
-            f"\n+ validate: acc: {1.0} | loss: {4.33}"
-    )
+        if _epoch == 4:
+            _fit_panel.set_final_message(
+                msg=f"Found best epoch at {2} for val loss {0.004}"
+                    f"\n+ train   : acc: {1.0} | loss: {4.33}"
+                    f"\n+ validate: acc: {1.0} | loss: {4.33}"
+            )
 
 
 def main():
@@ -141,6 +150,7 @@ def main():
     # try_status()
     # try_status_panel()
     try_fit_progress_status_panel()
+    # try_hashable_status_panel()
 
 
 if __name__ == '__main__':

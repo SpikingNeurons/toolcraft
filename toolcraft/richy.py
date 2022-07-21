@@ -537,6 +537,7 @@ class Progress(Widget):
 
     def update(
         self,
+        task_name: str = None,
         advance: float = None,
         total: float = None, description: str = None, **fields,
     ):
@@ -545,13 +546,20 @@ class Progress(Widget):
         It will just look for last added task and update it.
         """
         if bool(self.tasks):
-            next(reversed(self.tasks.values())).update(
+            if task_name is None:
+                task_name = next(reversed(self.tasks.keys()))
+            else:
+                if task_name not in self.tasks.keys():
+                    raise e.code.CodingError(
+                        msgs=[f"There is no task with name {task_name} available ..."]
+                    )
+            self.tasks[task_name].update(
                 advance=advance, total=total, description=description, **fields
             )
         else:
             raise e.code.CodingError(
                 msgs=[
-                    f"There are no tasks added yet ..."
+                    f"There are no tasks added yet ... so nothing to update"
                 ]
             )
 
@@ -565,6 +573,7 @@ class Progress(Widget):
         total: t.Optional[float] = None,
         description: str = None,
         update_period: float = 0.1,
+        **fields,
     ) -> t.Generator[r_progress.ProgressType, None, None]:
         """
         This can be better shortcut for add_task ...
@@ -596,7 +605,7 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 02
         # add task
-        _task = self.add_task(task_name=task_name, total=task_total, description=description)
+        _task = self.add_task(task_name=task_name, total=task_total, description=description, **fields)
 
         # ------------------------------------------------------------ 03
         # yield and hence auto track
@@ -699,33 +708,12 @@ class ProgressStatusPanel(Widget):
       May de have method `self.log(...)` for this SimpleStatusPanel
     """
 
-    overall_progress_iterable: t.Union[
-        t.Sequence[r_progress.ProgressType],
-        t.Iterable[r_progress.ProgressType]
-    ] = None
-
-    @property
-    @util.CacheResult
-    def progress(self) -> Progress:
-        return Progress.simple_progress(
-            tc_log=self.tc_log,
-            title=None, console=self.console,
-            refresh_per_second=self.refresh_per_second)
-
-    @property
-    @util.CacheResult
-    def status(self) -> Status:
-        return Status(
-            tc_log=self.tc_log,
-            title=None,
-            console=self.console, refresh_per_second=self.refresh_per_second,
-            overall_progress_iterable=self.overall_progress_iterable,
-        )
+    stages: t.Optional[t.List[str]] = None
 
     @property
     def renderable(self) -> r_console.RenderableType:
-        _progress = self.progress.renderable
-        _status = r_panel.Panel(self.status.renderable, box=r_box.HORIZONTALS)
+        _progress = self._progress.renderable
+        _status = r_panel.Panel(self._status.renderable, box=r_box.HORIZONTALS)
         _group = r_console.Group(
             _progress, _status
         )
@@ -741,38 +729,93 @@ class ProgressStatusPanel(Widget):
                 box=r_box.ASCII,
             )
 
+    def __post_init__(self):
+        self.current_stage = None
+        self._progress = self._make_richy_progress()
+        self._status = Status(
+            tc_log=self.tc_log,
+            title=None,
+            console=self.console, refresh_per_second=self.refresh_per_second,
+            overall_progress_iterable=self.stages,
+        )
+        super().__post_init__()
+
     def __enter__(self) -> "ProgressStatusPanel":
         super().__enter__()
-        self.status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
+        self._status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
         self.refresh(update_renderable=True)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
-        self.status._spinner = r_text.Text.from_markup(
+        self._status._spinner = r_text.Text.from_markup(
             f"{EMOJI['white_heavy_check_mark']} "
             f"Finished in {_elapsed_secs} seconds ...")
         self.refresh(update_renderable=True)
         super().__exit__(exc_type, exc_val, exc_tb)
+
+    def __iter__(self):
+        if self.stages is None:
+            raise e.code.CodingError(
+                msgs=["Could not iterate over this panel as stages are not provided ..."]
+            )
+        with self:
+            for _stage in self._status:
+                self.update(status=f"Executing stage {_stage!r} ...")
+                self.current_stage = _stage
+                yield _stage
+
+    def _make_richy_progress(self) -> Progress:
+        return Progress(
+            columns={
+                "text": r_progress.TextColumn(
+                    "[progress.description]{task.description}"),
+                "progress": r_progress.BarColumn(),
+                "percentage": r_progress.TextColumn(
+                    "[progress.percentage]{task.percentage:>3.0f}%"),
+                # "time_remaining": r_progress.TimeRemainingColumn(),
+                # "acc": r_progress.TextColumn("[green]{task.fields[acc]:.4f}"),
+                # "loss": r_progress.TextColumn("[yellow]{task.fields[loss]:.4f}"),
+                "msg": r_progress.TextColumn("{task.fields[msg]}"),
+                "status": SpinnerColumn(),
+            },
+            console=self.console,
+            refresh_per_second=self.refresh_per_second,
+            tc_log=self.tc_log,
+            title=None,
+        )
+
+    def update(
+        self,
+        status: t.Optional[r_console.RenderableType] = None,
+        spinner: SpinnerType = None,
+        # spinner_style: Optional[StyleType] = None
+        spinner_speed: t.Optional[float] = None,
+    ):
+        self._status.update(status=status, spinner=spinner, spinner_speed=spinner_speed)
+
+    def add_task(
+        self, task_name: str, total: float, msg: str, prefix_current_stage: bool = True,
+    ) -> ProgressTask:
+        if prefix_current_stage:
+            if self.current_stage is None:
+                raise e.code.CodingError(
+                    msgs=["You are not using `stages` field or you are not iterating on `ProgressStatusPanel`",
+                          "Please iterate over this instance to loop on stages ..."]
+                )
+            task_name = f"{self.current_stage}:{task_name}"
+        return self._progress.add_task(
+            task_name=task_name, total=float(total), msg=msg,
+        )
+
+    def set_final_message(self, msg: str):
+        self._status.set_final_message(msg=msg)
 
 
 @dataclasses.dataclass
 class FitProgressStatusPanel(Widget):
 
     epochs: int = None
-
-    def __post_init__(self):
-        self._train_progress = self._make_richy_progress()
-        self._validate_progress = self._make_richy_progress()
-        self._status = Status(
-            tc_log=self.tc_log,
-            title=None,
-            console=self.console, refresh_per_second=self.refresh_per_second,
-            overall_progress_iterable=range(1, self.epochs + 1),
-        )
-        super().__post_init__()
-        if self.epochs is None:
-            raise e.validation.NotAllowed(msgs=["Please specify epochs ... it is mandatory"])
 
     @property
     def renderable(self) -> r_console.RenderableType:
@@ -799,6 +842,19 @@ class FitProgressStatusPanel(Widget):
                 expand=True,
                 box=r_box.ASCII,
             )
+
+    def __post_init__(self):
+        if self.epochs is None:
+            raise e.validation.NotAllowed(msgs=["Please specify epochs ... it is mandatory"])
+        self._train_progress = self._make_richy_progress()
+        self._validate_progress = self._make_richy_progress()
+        self._status = Status(
+            tc_log=self.tc_log,
+            title=None,
+            console=self.console, refresh_per_second=self.refresh_per_second,
+            overall_progress_iterable=range(1, self.epochs + 1),
+        )
+        super().__post_init__()
 
     def __enter__(self) -> "FitProgressStatusPanel":
         super().__enter__()
@@ -838,6 +894,7 @@ class FitProgressStatusPanel(Widget):
             console=self.console,
             refresh_per_second=self.refresh_per_second,
             tc_log=self.tc_log,
+            title=None,
         )
 
     def update(
@@ -849,14 +906,14 @@ class FitProgressStatusPanel(Widget):
     ):
         self._status.update(status=status, spinner=spinner, spinner_speed=spinner_speed)
 
-    def train_task(
+    def add_train_task(
         self, total: float, msg: str,
     ) -> ProgressTask:
         return self._train_progress.add_task(
             task_name=self._task_name, total=float(total), msg=msg,
         )
 
-    def validate_task(
+    def add_validate_task(
         self, total: float, msg: str,
     ) -> ProgressTask:
         return self._validate_progress.add_task(
@@ -864,6 +921,5 @@ class FitProgressStatusPanel(Widget):
         )
 
     def set_final_message(self, msg: str):
-        with self:
-            self._status.set_final_message(msg=msg)
+        self._status.set_final_message(msg=msg)
 

@@ -12,6 +12,7 @@ import enum
 import traceback
 import typing as t
 import rich
+import asyncio
 from rich import progress
 from rich import spinner
 from rich import columns
@@ -83,6 +84,7 @@ class UseMethodInForm:
 
     @staticmethod
     async def async_call(_fn: t.Callable):
+        from .gui import widget
 
         try:
 
@@ -122,9 +124,6 @@ class UseMethodInForm:
             # todo: remove later just for sanity check
             # noinspection PyUnresolvedReferences
             assert id(_self) == id(_fn.__self__), "was expecting this to be same"
-
-
-
 
         def _new_fn(_self):
             _grp = gui.widget.Group(horizontal=True)
@@ -1024,9 +1023,10 @@ class RuleChecker:
 @RuleChecker(
     things_to_be_cached=['internal'],
     things_not_to_be_cached=[
-        'is_called', 'on_iter', 'on_call', 'on_enter', 'on_exit'
+        'is_called', 'on_iter', 'on_call', 'on_enter', 'on_exit', 'richy_panel',
+        'iterable_length', 'iterable_task_name',
     ],
-    things_not_to_be_overridden=['is_called', ]
+    things_not_to_be_overridden=['is_called', 'richy_panel', ]
 )
 class Tracker:
     """
@@ -1068,18 +1068,55 @@ class Tracker:
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
 
+    # noinspection PyTypeChecker
     @property
     def iterable_length(self) -> int:
         """
         return -1 to indicate it is yielding infinitely ...
         """
-        raise e.code.NotSupported(
-            msgs=[
-                f"Class {self.__class__} does not support `iterable_length` ... ",
-                f"Please override if you want to iterate on this class instance also remember "
-                f"to override on_iter  ..."
-            ]
-        )
+        if self.__class__.on_iter == Tracker.on_iter:
+            raise e.code.NotSupported(
+                msgs=[
+                    f"Class {self.__class__} does not support `iterable_length` ... ",
+                    f"Please override if you want to iterate on this class instance also remember "
+                    f"to override on_iter  ..."
+                ]
+            )
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "looks like you have overridden on_iter so also override property "
+                    "`iterable_length` and property `iterable_task_name`"
+                ]
+            )
+
+    # noinspection PyTypeChecker
+    @property
+    def iterable_task_name(self) -> str:
+        if self.__class__.on_iter == Tracker.on_iter:
+            raise e.code.NotSupported(
+                msgs=[
+                    f"Class {self.__class__} does not support `iterable_task_name` ... ",
+                    f"Please override if you want to iterate on this class instance also remember "
+                    f"to override on_iter  ..."
+                ]
+            )
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "looks like you have overridden on_iter so also override property "
+                    "`iterable_length` and property `iterable_task_name`"
+                ]
+            )
+
+    @property
+    def richy_panel(self) -> t.Optional[richy.ProgressStatusPanel]:
+        """
+        should be made available only when is_called and in_with_context
+        """
+        if self.is_called and self.in_with_context:
+            return self.internal.on_call_kwargs["richy_panel"]
+        return None
 
     def __len__(self) -> int:
         return self.iterable_length
@@ -1111,9 +1148,7 @@ class Tracker:
 
     def __call__(
         self,
-        status_panel: t.Optional[richy.ProgressStatusPanel] = None,
-        status_panel_progress_task_name: t.Optional[str] = None,
-        **kwargs,
+        richy_panel: t.Optional[richy.ProgressStatusPanel] = None, **kwargs,
     ) -> "Tracker":
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
@@ -1134,8 +1169,7 @@ class Tracker:
             ])
         else:
             # add status_panel if supplied
-            _on_call_kwargs = {"status_panel": status_panel,
-                               "status_panel_progress_task_name": status_panel_progress_task_name}
+            _on_call_kwargs = {"richy_panel": richy_panel}
 
             # add remaining kwargs
             _on_call_kwargs.update(kwargs)
@@ -1156,7 +1190,16 @@ class Tracker:
         return self
 
     def __enter__(self) -> "Tracker":
+        # handle _richy_panel
+        if self.is_called:
+            _richy_panel = self.internal.on_call_kwargs['richy_panel']
+            if _richy_panel is not None:
+                _richy_panel.__enter__()
+
+        # call on_enter
         self.on_enter()
+
+        # return
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1174,17 +1217,18 @@ class Tracker:
         # call on exit
         self.on_exit(exc_type, exc_val, exc_tb)
 
+        # handle _richy_panel
+        if self.is_called:
+            _richy_panel = self.internal.on_call_kwargs['richy_panel']
+            if _richy_panel is not None:
+                _richy_panel.__exit__(exc_type, exc_val, exc_tb)
+
     def __iter__(self) -> t.Iterable:
         # get some vars
-        _status_panel = self.internal.on_call_kwargs[
-            "status_panel"]  # type: richy.ProgressStatusPanel
-        _status_panel_progress_task_name = self.internal.on_call_kwargs[
-            "status_panel_progress_task_name"]  # type: str
-        if _status_panel_progress_task_name is None:
-            _status_panel_progress_task_name = "iterating"
+        _richy_panel = self.internal.on_call_kwargs["richy_panel"]  # type: richy.ProgressStatusPanel
 
         # iterate
-        if _status_panel is None:
+        if _richy_panel is None:
             if self.in_with_context:
                 for _ in self.on_iter():
                     yield _
@@ -1196,25 +1240,35 @@ class Tracker:
             if self.iterable_length == -1:
                 raise e.code.NotAllowed(
                     msgs=[
-                        "We cannot consume status_panel as this class iterates "
+                        "We cannot consume `richy_panel` as this class iterates "
                         "infinitely ... ",
-                        "you might need to pass `status_panel=None` and handle it "
+                        "you might need to pass `richy_panel=None` and handle it "
                         "on your own",
                     ]
                 )
             if self.in_with_context:
-                _status_panel.status.update("-- " + _status_panel_progress_task_name)
-                for _ in _status_panel.progress.track(
-                    self.on_iter(), total=self.iterable_length, task_name=_status_panel_progress_task_name
-                ):
+                _richy_panel.update("-- " + self.iterable_task_name)
+                _task = _richy_panel.add_task(
+                    task_name=self.iterable_task_name, total=self.iterable_length,
+                    prefix_current_stage=_richy_panel.current_stage is not None,
+                    msg="started",
+                )
+                for _ in self.on_iter():
+                    _task.update(advance=1)
                     yield _
+                _task.update(msg="completed")
             else:
                 with self:
-                    _status_panel.status.update("-- " + _status_panel_progress_task_name)
-                    for _ in _status_panel.progress.track(
-                        self.on_iter(), total=self.iterable_length, task_name=_status_panel_progress_task_name
-                    ):
+                    _richy_panel.update("-- " + self.iterable_task_name)
+                    _task = _richy_panel.add_task(
+                        task_name=self.iterable_task_name, total=self.iterable_length,
+                        prefix_current_stage=_richy_panel.current_stage is not None,
+                        msg="started",
+                    )
+                    for _ in self.on_iter():
+                        _task.update(advance=1)
                         yield _
+                    _task.update(msg="completed")
 
     def __del__(self):
         self.on_del()
@@ -2164,6 +2218,7 @@ class HashableClass(YamlRepr, abc.ABC):
     ) -> "HashableClass":
         if settings.TF_KERAS_WORKS:
             # Handle deserialization for keras loss, optimizer and layer
+            # noinspection PyUnresolvedReferences,PyProtectedMember
             from keras.api._v2 import keras as tk
             for _n in yaml_state.keys():
                 if issubclass(cls.__annotations__[_n], tk.losses.Loss):
@@ -2252,6 +2307,7 @@ class HashableClass(YamlRepr, abc.ABC):
 
 
 if settings.TF_KERAS_WORKS:
+    # noinspection PyUnresolvedReferences,PyProtectedMember
     from keras.api._v2 import keras as tk
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
         int, float, str, slice, list, dict,

@@ -1652,15 +1652,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
     def __call__(
         self, *,
         shuffle_seed: SHUFFLE_SEED_TYPE,
-        status_panel: t.Optional[richy.ProgressStatusPanel] = None,
-        status_panel_progress_task_name: t.Optional[str] = None,
+        richy_panel: t.Optional[richy.ProgressStatusPanel] = None,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
         return super().__call__(
-            status_panel=status_panel,
-            status_panel_progress_task_name=status_panel_progress_task_name,
-            shuffle_seed=shuffle_seed,
+            richy_panel=richy_panel, shuffle_seed=shuffle_seed,
         )
 
     def on_enter(self):
