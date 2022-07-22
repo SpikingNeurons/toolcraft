@@ -239,6 +239,44 @@ class Widget(abc.ABC):
                 # + _ct
             )
 
+    def log(
+        self,
+        *objects: t.Any,
+        sep: str = " ",
+        end: str = "\n",
+        style: t.Optional[t.Union[str, r_style.Style]] = None,
+        justify: t.Optional[r_console.JustifyMethod] = None,
+        emoji: t.Optional[bool] = None,
+        markup: t.Optional[bool] = None,
+        highlight: t.Optional[bool] = None,
+        log_locals: bool = False,
+        _stack_offset: int = 1,
+    ):
+        """
+        todo: improve this to use toolcraft.logger so that terminal based
+          richy loging plays well with file logging of toolcraft
+        Args:
+            *objects:
+            sep:
+            end:
+            style:
+            justify:
+            emoji:
+            markup:
+            highlight:
+            log_locals:
+            _stack_offset:
+
+        Returns:
+
+        """
+        self.console.log(
+            *objects, sep=sep, end=end, style=style,
+            justify=justify, emoji=emoji, markup=markup,
+            highlight=highlight, log_locals=log_locals,
+            _stack_offset=_stack_offset,
+        )
+
     def refresh(self, update_renderable: bool = False):
         """
 
@@ -605,7 +643,9 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 02
         # add task
-        _task = self.add_task(task_name=task_name, total=task_total, description=description, **fields)
+        _task = self.add_task(
+            task_name=task_name, total=task_total,
+            description=description, **fields)
 
         # ------------------------------------------------------------ 03
         # yield and hence auto track
@@ -795,7 +835,8 @@ class ProgressStatusPanel(Widget):
         self._status.update(status=status, spinner=spinner, spinner_speed=spinner_speed)
 
     def add_task(
-        self, task_name: str, total: float, msg: str, prefix_current_stage: bool = True,
+        self, task_name: str, total: float, msg: str,
+        prefix_current_stage: bool = True,
     ) -> ProgressTask:
         if prefix_current_stage:
             if self.current_stage is None:
@@ -807,6 +848,9 @@ class ProgressStatusPanel(Widget):
         return self._progress.add_task(
             task_name=task_name, total=float(total), msg=msg,
         )
+
+    def track(self):
+        ...
 
     def set_final_message(self, msg: str):
         self._status.set_final_message(msg=msg)

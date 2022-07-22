@@ -92,7 +92,7 @@ def try_status_panel():
 
     _sp = richy.ProgressStatusPanel(
         title="Test Status Panel with overall progress", tc_log=_LOGGER,
-        overall_progress_iterable=[
+        stages=[
             ([1, 2, 3, 4], "task 1", "start"),
             ([1, 2, 3, 4], "task 2", "next"),
             ([1, 2, 3, 4], "task 3", "done"),
@@ -146,9 +146,9 @@ def try_fit_progress_status_panel():
 
 
 def main():
-    # try_progress()
-    # try_status()
-    # try_status_panel()
+    try_progress()
+    try_status()
+    try_status_panel()
     try_fit_progress_status_panel()
     # try_hashable_status_panel()
 
