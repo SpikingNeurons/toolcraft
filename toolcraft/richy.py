@@ -616,7 +616,9 @@ class Progress(Widget):
         """
         This can be better shortcut for add_task ...
         Specifically to be used directly on iterables ...
-        Can add_task and also track it
+
+        You can add_task and also track it ... but only benefit here is you
+        need not write code to handle task instance ... also this one yields
 
         total: supply it when length of sequence cannot be guessed
                useful for infinite generators
@@ -749,6 +751,7 @@ class ProgressStatusPanel(Widget):
     """
 
     stages: t.Optional[t.List[str]] = None
+    stages_meta: t.Optional[t.Dict[str, t.Any]] = None
 
     @property
     def renderable(self) -> r_console.RenderableType:
@@ -770,6 +773,11 @@ class ProgressStatusPanel(Widget):
             )
 
     def __post_init__(self):
+        if bool(self.stages) and bool(self.stages_meta):
+            e.validation.ShouldBeEqual(
+                value1=len(self.stages), value2=len(self.stages_meta),
+                msgs=["Was expecting both collection to have same length"]
+            ).raise_if_failed()
         self.current_stage = None
         self._progress = self._make_richy_progress()
         self._status = Status(
@@ -813,10 +821,9 @@ class ProgressStatusPanel(Widget):
                 "progress": r_progress.BarColumn(),
                 "percentage": r_progress.TextColumn(
                     "[progress.percentage]{task.percentage:>3.0f}%"),
-                # "time_remaining": r_progress.TimeRemainingColumn(),
-                # "acc": r_progress.TextColumn("[green]{task.fields[acc]:.4f}"),
-                # "loss": r_progress.TextColumn("[yellow]{task.fields[loss]:.4f}"),
-                "msg": r_progress.TextColumn("{task.fields[msg]}"),
+                # "msg": r_progress.TextColumn("{task.fields[msg]}"),
+                "time_elapsed": r_progress.TimeElapsedColumn(),
+                "time_remaining": r_progress.TimeRemainingColumn(),
                 "status": SpinnerColumn(),
             },
             console=self.console,
@@ -849,8 +856,23 @@ class ProgressStatusPanel(Widget):
             task_name=task_name, total=float(total), msg=msg,
         )
 
-    def track(self):
-        ...
+    def track(
+        self,
+        sequence: t.Union[
+            t.Sequence[r_progress.ProgressType],
+            t.Iterable[r_progress.ProgressType]
+        ],
+        task_name: str,
+        total: t.Optional[float] = None,
+        description: str = None,
+        update_period: float = 0.1,
+        **fields,
+    ) -> t.Generator[r_progress.ProgressType, None, None]:
+        return self._progress.track(
+            sequence=sequence, task_name=task_name, total=total,
+            description=description, update_period=update_period,
+            **fields,
+        )
 
     def set_final_message(self, msg: str):
         self._status.set_final_message(msg=msg)

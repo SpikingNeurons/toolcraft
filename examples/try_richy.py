@@ -66,28 +66,26 @@ def try_status_panel():
         title="Test Status Panel", tc_log=_LOGGER
     )
     with _sp:
-        _p = _sp.progress
-        _s = _sp.status
         _time = 0.2
 
-        for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 1"):
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 1"):
             time.sleep(_time)
-        _s.update(spinner_speed=1.0, spinner=None, status="start")
+        _sp.update(spinner_speed=1.0, spinner=None, status="start")
         time.sleep(_time)
 
-        for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 2"):
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 2"):
             time.sleep(_time)
-        _s.update(spinner_speed=1.0, spinner=None, status="next")
+        _sp.update(spinner_speed=1.0, spinner=None, status="next")
         time.sleep(_time)
 
-        for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 3"):
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 3"):
             time.sleep(_time)
-        _s.update(spinner_speed=1.0, spinner=None, status="done")
+        _sp.update(spinner_speed=1.0, spinner=None, status="done")
         time.sleep(_time)
 
-        for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 4"):
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 4"):
             time.sleep(_time)
-        _s.update(spinner_speed=1.0, spinner=None, status="close")
+        _sp.update(spinner_speed=1.0, spinner=None, status="close")
         time.sleep(_time)
 
     _sp = richy.ProgressStatusPanel(
@@ -97,19 +95,20 @@ def try_status_panel():
             ([1, 2, 3, 4], "task 2", "next"),
             ([1, 2, 3, 4], "task 3", "done"),
             ([1, 2, 3, 4], "task 4", "close"),
-        ]
-    )
-    with _sp:
-        _p = _sp.progress
-        _s = _sp.status
-        _time = 0.2
+        ],
+        stages_meta={
 
-        for _sequence, _task_name, _status in _s:
-            for _ in _p.track(sequence=_sequence, task_name=_task_name):
-                time.sleep(_time)
-            _s.update(spinner_speed=1.0, spinner=None, status=_status)
+        }
+    )
+
+    _time = 0.2
+
+    for _sequence, _task_name, _status in _sp:
+        for _ in _sp.track(sequence=_sequence, task_name=_task_name):
             time.sleep(_time)
-            _LOGGER.info("jjjjj")
+        _sp.update(spinner_speed=1.0, spinner=None, status=_status)
+        time.sleep(_time)
+        _LOGGER.info("jjjjj")
 
 
 def try_fit_progress_status_panel():
@@ -146,10 +145,10 @@ def try_fit_progress_status_panel():
 
 
 def main():
-    try_progress()
-    try_status()
+    # try_progress()
+    # try_status()
     try_status_panel()
-    try_fit_progress_status_panel()
+    # try_fit_progress_status_panel()
     # try_hashable_status_panel()
 
 
