@@ -822,10 +822,14 @@ class FitProgressStatusPanel(Widget):
         _train_progress = self._train_progress.renderable
         _validate_progress = self._validate_progress.renderable
         _status_renderable = self._status.renderable
-        _table = r_table.Table.grid()
+        _table = r_table.Table.grid(expand=True)
         _table.add_row(
-            r_panel.Panel.fit(_train_progress, title="Train", box=r_box.HORIZONTALS),
-            r_panel.Panel.fit(_validate_progress, title="Validate", box=r_box.HORIZONTALS),
+            r_panel.Panel(
+                _train_progress,
+                title="Train", box=r_box.HORIZONTALS, expand=True),
+            r_panel.Panel(
+                _validate_progress,
+                title="Validate", box=r_box.HORIZONTALS, expand=True),
         )
         _status = r_panel.Panel(self._status.renderable, box=r_box.HORIZONTALS)
         _group = r_console.Group(
