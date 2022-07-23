@@ -22,13 +22,14 @@ import yaml
 
 from . import error as e
 from . import logger, settings, util
-from . import richy
+
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
 if False:
     # noinspection PyUnresolvedReferences
     from . import gui, storage
+    from . import richy
 
 _LOGGER = logger.get_logger()
 _LITERAL_CLASS_NAME = 'LITERAL'
@@ -451,7 +452,7 @@ class RuleChecker:
         self.decorated_class = None  # type: t.Type[Tracker]
 
     def __call__(
-        self, tracker,
+        self, checker,
         # todo: returning this causes issue with Typing as it starts thinking
         #  everything is Tracker ... find a way to figure out typing protocol that
         #  understand in context to class on which we decorated this
@@ -475,7 +476,7 @@ class RuleChecker:
                 ]
             )
         # set it now here
-        self.decorated_class = tracker
+        self.decorated_class = checker
         # ---------------------------------------------------------------- 02
         # if super parent then there will be no call to __init_subclass__ so
         # we have to handle things i.e. add fake RuleChecker so that anyway
@@ -484,7 +485,7 @@ class RuleChecker:
             # A way to detect if Tracker is not fully loaded it will raise NameError
             # By any chance if it matches then also we raise NameError so that
             # exception handling takes over
-            if tracker == Tracker:
+            if checker == Checker:
                 raise NameError
         except NameError:
             setattr(self.decorated_class, _RULE_CHECKER, self)
@@ -529,12 +530,12 @@ class RuleChecker:
                         f"So we expect that {_RULE_CHECKER} will be set by now as we "
                         f"will delete it first and then add this RuleChecker on "
                         f"top of it",
-                        f"Check class {tracker}"
+                        f"Check class {checker}"
                     ]
                 )
         # ---------------------------------------------------------------- 05
         # return
-        return tracker
+        return checker
 
     def check(self):
         """
@@ -550,8 +551,9 @@ class RuleChecker:
                 ]
             )
         # set parent rule checker ... expect for super parent Tracker
-        if self.decorated_class != Tracker:
-            self.parent = getattr(self.decorated_class.__mro__[1], _RULE_CHECKER)
+        if self.decorated_class not in [Checker, Tracker]:
+            if self.decorated_class.__mro__[1] != Checker:
+                self.parent = getattr(self.decorated_class.__mro__[1], _RULE_CHECKER)
 
         # ---------------------------------------------------------- 02
         # test if current decorator settings agree with parent
@@ -1020,6 +1022,48 @@ class RuleChecker:
         self.things_not_to_be_overridden += self.parent.things_not_to_be_overridden
 
 
+class Checker:
+
+    class LITERAL(metaclass=_ReadOnlyClass):
+        def __new__(cls, *args, **kwargs):
+            raise e.code.NotAllowed(msgs=[
+                f"This class is meant to be used to hold class "
+                f"variables only",
+                f"Do not try to create instance of {cls} ...",
+            ])
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        # declare
+        global ALL_TRACKERS
+
+        # if None set it with SmartList
+        if ALL_TRACKERS is None:
+            ALL_TRACKERS = []
+
+        # add to list
+        ALL_TRACKERS.append(cls)
+
+        # call super
+        super().__init_subclass__(**kwargs)
+
+        # call class_init
+        cls.class_init()
+
+        # add rule checker
+        # note that this makes sure that decorator is applied to all classes that
+        # do not have it ... while if you have used actual decorator then we will
+        # remove this decorator and add true decorator as it might have new rules
+        # to check
+        RuleChecker()(checker=cls, rule_checker_set_from_init_subclass=True)
+
+    @classmethod
+    def class_init(cls):
+        raise e.code.NotSupported(
+            msgs=[f"Please override this class method in class {cls} ..."]
+        )
+
+
 @RuleChecker(
     things_to_be_cached=['internal'],
     things_not_to_be_cached=[
@@ -1028,7 +1072,7 @@ class RuleChecker:
     ],
     things_not_to_be_overridden=['is_called', 'richy_panel', ]
 )
-class Tracker:
+class Tracker(Checker):
     """
     Tracker that can track all classes in this system
 
@@ -1037,13 +1081,6 @@ class Tracker:
       + this library is builtin and hence justifies usage for same
       + it also has async context support so check it out
     """
-    class LITERAL(metaclass=_ReadOnlyClass):
-        def __new__(cls, *args, **kwargs):
-            raise e.code.NotAllowed(msgs=[
-                f"This class is meant to be used to hold class "
-                f"variables only",
-                f"Do not try to create instance of {cls} ...",
-            ])
 
     @property
     @util.CacheResult
@@ -1110,7 +1147,7 @@ class Tracker:
             )
 
     @property
-    def richy_panel(self) -> t.Optional[richy.ProgressStatusPanel]:
+    def richy_panel(self) -> t.Optional["richy.StatusPanel"]:
         """
         should be made available only when is_called and in_with_context
         """
@@ -1121,34 +1158,9 @@ class Tracker:
     def __len__(self) -> int:
         return self.iterable_length
 
-    @classmethod
-    def __init_subclass__(cls, **kwargs):
-        # declare
-        global ALL_TRACKERS
-
-        # if None set it with SmartList
-        if ALL_TRACKERS is None:
-            ALL_TRACKERS = []
-
-        # add to list
-        ALL_TRACKERS.append(cls)
-
-        # call super
-        super().__init_subclass__(**kwargs)
-
-        # call class_init
-        cls.class_init()
-
-        # add rule checker
-        # note that this makes sure that decorator is applied to all classes that
-        # do not have it ... while if you have used actual decorator then we will
-        # remove this decorator and add true decorator as it might have new rules
-        # to check
-        RuleChecker()(tracker=cls, rule_checker_set_from_init_subclass=True)
-
     def __call__(
         self,
-        richy_panel: t.Optional[richy.ProgressStatusPanel] = None, **kwargs,
+        richy_panel: t.Optional["richy.StatusPanel"] = None, **kwargs,
     ) -> "Tracker":
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
@@ -2115,6 +2127,7 @@ class HashableClass(YamlRepr, abc.ABC):
         #    Tracker.__init__ ...
         #    Temporary workaround is to create fake HashableClass instance once all modules are loaded in your library
         if settings.DO_RULE_CHECK:
+            from . import richy
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
             _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
             if bool(_rc_keys):
@@ -2125,7 +2138,8 @@ class HashableClass(YamlRepr, abc.ABC):
                 )
                 for _rc_k in richy.Progress.simple_track(
                     _rc_keys,
-                    description=f"Rule Check ({len(_rc_keys)} classes) ..."
+                    description=f"Rule Check ({len(_rc_keys)} classes) ...",
+                    title="Rule Check",
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
                     del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]

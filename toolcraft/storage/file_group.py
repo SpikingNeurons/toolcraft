@@ -1053,7 +1053,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
     @abc.abstractmethod
     def create_file(
-        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
+        self, *, file_key: str, status_panel: richy.StatusPanel = None
     ) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
@@ -1652,7 +1652,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
     def __call__(
         self, *,
         shuffle_seed: SHUFFLE_SEED_TYPE,
-        richy_panel: t.Optional[richy.ProgressStatusPanel] = None,
+        richy_panel: t.Optional[richy.StatusPanel] = None,
     ) -> "NpyFileGroup":
         # call super
         # noinspection PyTypeChecker
@@ -2076,7 +2076,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
+        self, *, file_key: str, status_panel: richy.StatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[
@@ -2164,7 +2164,7 @@ class FileGroupFromPaths(FileGroup):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.ProgressStatusPanel = None
+        self, *, file_key: str, status_panel: richy.StatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[

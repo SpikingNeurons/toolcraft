@@ -37,6 +37,7 @@ from rich import prompt as r_prompt
 from . import logger
 from . import util
 from . import error as e
+from . import marshalling as m
 
 # noinspection PyUnreachableCode
 if False:
@@ -183,22 +184,16 @@ class SpinnerColumn(r_progress.SpinnerColumn):
 
 
 @dataclasses.dataclass
-class Widget(abc.ABC):
-    title: t.Optional[r_console.RenderableType] = None
-    tc_log: logger.CustomLogger = None
+@m.RuleChecker(
+    things_not_to_be_cached=['get_renderable']
+)
+class Widget(m.Checker, abc.ABC):
     refresh_per_second: int = 10
-    console: r_console.Console = None
-
-    @property
-    @abc.abstractmethod
-    def renderable(self) -> r_console.RenderableType:
-        ...
+    console: r_console.Console = dataclasses.field(default_factory=lambda: r_console.Console(record=True))
 
     def __post_init__(self):
-        if self.console is None:
-            self.console = r_console.Console(record=True)
         self._live = r_live.Live(
-            self.renderable,
+            self.get_renderable(),
             console=self.console,
             refresh_per_second=self.refresh_per_second,
             transient=True,
@@ -206,38 +201,421 @@ class Widget(abc.ABC):
 
     def __enter__(self) -> "Widget":
 
-        self._start_time = datetime.datetime.now()
-
-        if self.tc_log is not None:
-            _title = (self.title + ' ') if bool(self.title) else ''
-            self.tc_log.info(msg=_title + "started ...")
-
         self._live = r_live.Live(
-            self.renderable, refresh_per_second=self.refresh_per_second,
+            self.get_renderable(),
+            refresh_per_second=self.refresh_per_second,
             console=self.console
         )
 
         self._live.start(refresh=False)
 
+        self._start_time = datetime.datetime.now()
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
+        self._elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
+
         self._live.stop()
 
+        # todo: remove this only needed for pycharm terminal as new line is not added when printing on console
+        #    but works fine on terminal
         self.console.print("")
+
+    @classmethod
+    def class_init(cls):
+        # as of nothing to do at class level ... like rule checking etc.
+        ...
+
+    @abc.abstractmethod
+    def get_renderable(self) -> r_console.RenderableType:
+        ...
+
+    def refresh(self, update_renderable: bool = False):
+        """
+        Args:
+            update_renderable: In case you want to update any renderable components on the fly
+        """
+        if update_renderable:
+            self._live.update(renderable=self.get_renderable(), refresh=True)
+        else:
+            self._live.refresh()
+
+
+@dataclasses.dataclass
+class ProgressTask:
+    rich_progress: r_progress.Progress
+    rich_task: r_progress.Task
+    total: float
+
+    def __post_init__(self):
+        self._failed = False
+        self._already_finished = False
+
+    def update(
+        self,
+        advance: float = None,
+        total: float = None, description: str = None, **fields,
+    ):
+        """
+        When you pass special `**fields`
+        + `spinner_state` it will be consumed by ProgressColumn
+        >>> SpinnerColumn
+        """
+        if self._failed:
+            raise e.code.CodingError(
+                msgs=["Cannot update anything as the task has failed ..."]
+            )
+        if self._already_finished:
+            raise e.code.CodingError(
+                msgs=["The task is already finished ... so there should be no call for update ..."]
+            )
+        self.rich_progress.update(
+            task_id=self.rich_task.id,
+            advance=advance, total=total,
+            description=description, **fields,
+        )
+
+    def failed(self):
+        # update
+        self.update(spinner_state=EMOJI["cross_mark"])
+        # set as failed so that update is unusable ...
+        # noinspection PyAttributeOutsideInit
+        self._failed = True
+
+    def already_finished(self):
+        # update ... note we set full length so that any progress bar is fully filled
+        self.update(
+            advance=self.total,
+            spinner_state=EMOJI["heavy_check_mark"],
+        )
+        # set as already_finished so that update is unusable ...
+        # noinspection PyAttributeOutsideInit
+        self._already_finished = True
+
+
+@dataclasses.dataclass
+class Progress(Widget):
+    """
+    Note that this is not ProgressBar nor Progress
+    ... we use Progress as attribute
+    ... aim is to get task from it so that we can update the columns in Progress
+        that represent multiple tasks
+
+    todo: build a asyncio api (with io overhead) or multithreading
+      api (with compute overhead) while exploiting `rich.progress.Task` api
+    """
+    title: t.Optional[r_console.RenderableType] = ""
+    columns: t.Dict[str, r_progress.ProgressColumn] = None
+    tc_log: logger.CustomLogger = None
+
+    def __post_init__(self):
+        # ------------------------------------------------------------ 01
+        # make rich progress
+        if self.columns is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please supply mandatory columns field"]
+            )
+        self._progress = r_progress.Progress(
+            *list(self.columns.values()),
+            console=self.console,
+            expand=True,
+        )
+
+        # ------------------------------------------------------------ 02
+        # empty container for added tasks
+        self.tasks = {}  # type: t.Dict[str, ProgressTask]
+        # noinspection PyTypeChecker
+        self.current_task = None  # type: ProgressTask
+
+        # ------------------------------------------------------------ 03
+        super().__post_init__()
+
+    def __enter__(self) -> "Widget":
+
+        if self.tc_log is not None:
+            self.tc_log.info(msg=self.title + " progress started ...")
+
+        return super().__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+
+        super().__exit__(exc_type, exc_val, exc_tb)
 
         if self.tc_log is not None:
             # todo: use `self.console.extract_*` methods to get console frame and log it
             #   via self.tc_log .... need to do this because the RichHandler is not able
             #   to write things to file like FileHandler ... explore later
-            _secs = (datetime.datetime.now() - self._start_time).total_seconds()
-            _title = (self.title + ' ') if bool(self.title) else ''
-            _ct = self.console.export_text()
+            # _ct = self.console.export_text()
             self.tc_log.info(
-                msg=_title + f"finished in {_secs} seconds ..."
+                msg=self.title + f" progress finished in {self._elapsed_seconds} seconds ..."
                 # + _ct
             )
+
+    def get_renderable(self) -> r_console.RenderableType:
+        if self.title == "":
+            return self._progress
+        else:
+            return r_panel.Panel(
+                self._progress, title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=r_box.ASCII,
+            )
+
+    def add_task(
+        self, task_name: str, total: float, description: str = None, **fields
+    ) -> ProgressTask:
+        # process task_name
+        if task_name in self.tasks.keys():
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"There already exists a task named {task_name!r}",
+                    "Try giving new task name while iterating or else add '#' token at end to make name reusable.",
+                ]
+            )
+        # if # at end task name then add counter
+        # note adding # will make task name reusable by adding counter
+        if task_name.endswith("#"):
+            task_name += str(len([k for k in self.tasks.keys() if k.startswith(task_name)]))
+
+        # test if fields are defined in columns for progress bar
+        for _k in fields.keys():
+            e.validation.ShouldBeOneOf(
+                value=_k, values=list(self.columns.keys()),
+                msgs=[f"You have not specified how to render extra field {_k} in `Progress.columns`"]
+            ).raise_if_failed()
+
+        # add task
+        _tid = self._progress.add_task(
+            description=description or task_name, total=total, **fields,
+        )
+        for _rt in self._progress.tasks:
+            if _rt.id == _tid:
+                self.tasks[task_name] = ProgressTask(rich_progress=self._progress, rich_task=_rt, total=total)
+                break
+
+        # return
+        return self.tasks[task_name]
+
+    def update(
+        self,
+        task_name: str = None, advance: float = None,
+        total: float = None, description: str = None, **fields,
+    ):
+        """
+        This is just for convenience.
+        It will just look for last added task and update it.
+        """
+        if bool(self.tasks):
+            if task_name is None:
+                task_name = next(reversed(self.tasks.keys()))
+            else:
+                if task_name not in self.tasks.keys():
+                    raise e.code.CodingError(
+                        msgs=[f"There is no task with name {task_name} available ..."]
+                    )
+            self.tasks[task_name].update(
+                advance=advance, total=total, description=description, **fields
+            )
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    f"There are no tasks added yet ... so nothing to update"
+                ]
+            )
+
+    def track(
+        self,
+        sequence: t.Union[
+            t.Sequence[r_progress.ProgressType],
+            t.Iterable[r_progress.ProgressType]
+        ],
+        task_name: str,
+        total: t.Optional[float] = None,
+        description: str = None,
+        update_period: float = 0.1,
+        **fields,
+    ) -> t.Generator[r_progress.ProgressType, None, None]:
+        """
+        This can be better shortcut for add_task ...
+        Specifically to be used directly on iterables ...
+
+        You can add_task and also track it ... but only benefit here is you
+        need not write code to handle task instance ... also this one yields, so it can be fast
+
+        Current task added by this method can eb accessed via self.current_task
+
+        total: supply it when length of sequence cannot be guessed
+               useful for infinite generators
+
+        task_name:
+          use # at end of task_task_name to support auto counter and hence
+          reuse of task_name
+
+        Refer:
+        >>> r_progress.Progress.track
+        >>> r_progress.track
+        """
+        # ------------------------------------------------------------ 01
+        # estimate length
+        if total is None:
+            if isinstance(sequence, Sized):
+                task_total = float(len(sequence))
+            else:
+                raise ValueError(
+                    f"unable to get size of {sequence!r}, please specify 'total'"
+                )
+        else:
+            task_total = total
+
+        # ------------------------------------------------------------ 02
+        # add task
+        _task = self.add_task(
+            task_name=task_name, total=task_total,
+            description=description, **fields)
+        if self.current_task is not None:
+            raise e.code.CodingError(
+                msgs=["We expect current_task to be set to None",
+                      "Please avoid using `self.current_task` if there are more than one task running concurrently",
+                      f"Note that when using `track()` we expect that you want to run tasks for "
+                      f"this {Progress} to run one after another",
+                      "Or else you have choice to use `add_task()` method instead to have concurrent "
+                      "tasks in progrss..."]
+            )
+        self.current_task = _task
+
+        # ------------------------------------------------------------ 03
+        # yield and hence auto track
+        # todo: explore --- self.rich_progress.live.auto_refresh
+        task_id = _task.rich_task.id
+        if self._progress.live.auto_refresh:
+            # noinspection PyProtectedMember
+            with r_progress._TrackThread(
+                    self._progress, task_id, update_period) as track_thread:
+                for value in sequence:
+                    yield value
+                    track_thread.completed += 1
+        else:
+            advance = self._progress.advance
+            refresh = self._progress.refresh
+            for value in sequence:
+                yield value
+                advance(task_id, 1)
+                refresh()
+
+        # ------------------------------------------------------------ 04
+        # set back to None
+        self.current_task = None
+
+    @staticmethod
+    def simple_progress(
+        title: t.Optional[str] = "",
+        refresh_per_second: int = 10,
+        console: r_console.Console = r_console.Console(record=True),
+        tc_log: logger.CustomLogger = None,
+    ) -> "Progress":
+        return Progress(
+            title=title,  # setting this to str will add panel
+            columns={
+                "text": r_progress.TextColumn(
+                    "[progress.description]{task.description}"),
+                "progress": r_progress.BarColumn(),
+                "percentage": r_progress.TextColumn(
+                    "[progress.percentage]{task.percentage:>3.0f}%"),
+                "time_elapsed": r_progress.TimeElapsedColumn(),
+                "time_remaining": r_progress.TimeRemainingColumn(),
+                "status": SpinnerColumn(),
+            },
+            console=console,
+            refresh_per_second=refresh_per_second,
+            tc_log=tc_log,
+        )
+
+    @classmethod
+    def simple_track(
+        cls,
+        sequence: t.Union[
+            t.Sequence[r_progress.ProgressType],
+            t.Iterable[r_progress.ProgressType]
+        ],
+        title: t.Optional[str] = "",
+        description: str = "Working...",
+        total: float = None,
+        tc_log: logger.CustomLogger = None,
+    ) -> t.Generator[r_progress.ProgressType, None, None]:
+        """
+        Simple progress bar for single task which iterates over sequence
+
+        """
+        with cls.simple_progress(title=title, tc_log=tc_log) as _progress:
+            yield from _progress.track(
+                sequence=sequence, task_name="single_task",
+                description=description, total=total,
+            )
+
+    @classmethod
+    def for_download_and_hashcheck(
+        cls, title: str,
+        tc_log: logger.CustomLogger = None,
+    ) -> "Progress":
+        """
+        todo: ass hashcheck progress panel ... currently only download shown .... similar to FitProgressPanel
+        """
+        _progress = Progress(
+            title=title,
+            columns={
+                "file_key": r_progress.TextColumn(
+                    "[progress.description]{task.description}"),
+                "progress": r_progress.BarColumn(),
+                "percentage": r_progress.TextColumn(
+                    "[progress.percentage]{task.percentage:>3.0f}%"),
+                # todo: combine hash checking here ...
+                #  especially better if we are building hash as we progress download
+                # "hash_progress": progress.BarColumn(),
+                # "hash_percentage": progress.TextColumn(
+                #     "[progress.percentage]{task.percentage:>3.0f}%"),
+                "download": r_progress.DownloadColumn(),
+                "time_elapsed": r_progress.TimeElapsedColumn(),
+                "status": SpinnerColumn(),
+            },
+            tc_log=tc_log,
+        )
+
+        return _progress
+
+
+@dataclasses.dataclass
+class StatusPanel(Widget):
+
+    title: t.Optional[r_console.RenderableType] = ""
+    tc_log: logger.CustomLogger = None
+
+    def __enter__(self) -> "Widget":
+
+        if self.tc_log is not None:
+            self.tc_log.info(msg=self.title + " started ...")
+
+        return super().__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+
+        super().__exit__(exc_type, exc_val, exc_tb)
+
+        if self.tc_log is not None:
+            # todo: use `self.console.extract_*` methods to get console frame and log it
+            #   via self.tc_log .... need to do this because the RichHandler is not able
+            #   to write things to file like FileHandler ... explore later
+            # _ct = self.console.export_text()
+            self.tc_log.info(
+                msg=self.title + f" finished in {self._elapsed_seconds} seconds ..."
+                # + _ct
+            )
+
+    def get_renderable(self) -> r_console.RenderableType:
+        pass
 
     def log(
         self,
@@ -252,24 +630,6 @@ class Widget(abc.ABC):
         log_locals: bool = False,
         _stack_offset: int = 1,
     ):
-        """
-        todo: improve this to use toolcraft.logger so that terminal based
-          richy loging plays well with file logging of toolcraft
-        Args:
-            *objects:
-            sep:
-            end:
-            style:
-            justify:
-            emoji:
-            markup:
-            highlight:
-            log_locals:
-            _stack_offset:
-
-        Returns:
-
-        """
         self.console.log(
             *objects, sep=sep, end=end, style=style,
             justify=justify, emoji=emoji, markup=markup,
@@ -277,28 +637,14 @@ class Widget(abc.ABC):
             _stack_offset=_stack_offset,
         )
 
-    def refresh(self, update_renderable: bool = False):
-        """
-
-        Args:
-            update_renderable: In case you have updates any renderable
-              components on the fly
-
-        Returns:
-
-        """
-        print("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
-        if self._live is not None:
-            if update_renderable:
-                self._live.update(
-                    renderable=self.renderable, refresh=True
-                )
-            else:
-                self._live.refresh()
+        # todo: improve this to use self.tc_log so that terminal based
+        #   richy loging plays well with file logging of toolcraft
+        if self.tc_log is not None:
+            ...
 
 
 @dataclasses.dataclass
-class Status(Widget):
+class _Status(Widget):
     """
     Refer:
     >>> r_status.Status
@@ -315,14 +661,13 @@ class Status(Widget):
         t.Iterable[r_progress.ProgressType]
     ] = None
 
-    @property
-    def renderable(self) -> r_console.RenderableType:
+    def get_renderable(self) -> r_console.RenderableType:
         # grp container
         _grp = []
 
         # overall progress
         if self.overall_progress_iterable is not None:
-            _grp.append(self._overall_progress.renderable)
+            _grp.append(self._overall_progress.get_renderable)
             _grp.append(r_markdown.Markdown("\n---\n"))
 
         # get spinner
@@ -443,309 +788,7 @@ class Status(Widget):
 
 
 @dataclasses.dataclass
-class ProgressTask:
-    rich_progress: r_progress.Progress
-    rich_task: r_progress.Task
-    total: float
-
-    def __post_init__(self):
-        self._failed = False
-        self._already_finished = False
-
-    def update(
-        self,
-        advance: float = None,
-        total: float = None, description: str = None, **fields,
-    ):
-        """
-        When you pass special `**fields`
-        + `spinner_state` it will be consumed by ProgressColumn
-        >>> SpinnerColumn
-        """
-        if self._failed:
-            raise e.code.CodingError(
-                msgs=["Cannot update anything as the task has failed ..."]
-            )
-        if self._already_finished:
-            raise e.code.CodingError(
-                msgs=["The task is already finished ... so there should be no call for update ..."]
-            )
-        self.rich_progress.update(
-            task_id=self.rich_task.id,
-            advance=advance, total=total,
-            description=description, **fields,
-        )
-
-    def failed(self):
-        # update
-        self.update(spinner_state=EMOJI["cross_mark"])
-        # set as failed so that update is unusable ...
-        # noinspection PyAttributeOutsideInit
-        self._failed = True
-
-    def already_finished(self):
-        # update ... note we set full length so that any progress bar is fully filled
-        self.update(
-            advance=self.total,
-            spinner_state=EMOJI["heavy_check_mark"],
-        )
-        # set as already_finished so that update is unusable ...
-        # noinspection PyAttributeOutsideInit
-        self._already_finished = True
-
-
-@dataclasses.dataclass
-class Progress(Widget):
-    """
-    Note that this is not ProgressBar nor Progress
-    ... we use Progress as attribute
-    ... aim is to get task from it so that we can update the columns in Progress
-        that represent multiple tasks
-
-    todo: build a asyncio api (with io overhead) or multithreading
-      api (with compute overhead) while exploiting `rich.progress.Task` api
-    """
-    columns: t.Dict[str, r_progress.ProgressColumn] = None
-    title: t.Optional[r_console.RenderableType] = None
-
-    @property
-    def renderable(self) -> r_console.RenderableType:
-        if self.title is None:
-            return self._progress
-        else:
-            return r_panel.Panel(
-                self._progress, title=self.title,
-                border_style="green",
-                # padding=(2, 2),
-                expand=True,
-                box=r_box.ASCII,
-            )
-
-    def __post_init__(self):
-        # ------------------------------------------------------------ 01
-        # make rich progress
-        if self.columns is None:
-            raise e.validation.NotAllowed(
-                msgs=["Please supply mandatory columns field"]
-            )
-        self._progress = r_progress.Progress(
-            *list(self.columns.values()),
-            console=self.console,
-            expand=True,
-        )
-
-        # ------------------------------------------------------------ 02
-        # empty container for added tasks
-        self.tasks = {}  # type: t.Dict[str, ProgressTask]
-
-        # ------------------------------------------------------------ 03
-        super().__post_init__()
-
-    def add_task(
-        self, task_name: str, total: float, description: str = None, **fields
-    ) -> ProgressTask:
-        # process task_name
-        if task_name in self.tasks.keys():
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"There already exists a task named {task_name!r}",
-                    "Try giving new task name while iterating or else add '#' token at end to make name reusable.",
-                ]
-            )
-        # if # at end task name then add counter
-        # note adding # will make task name reusable by adding counter
-        if task_name.endswith("#"):
-            task_name += str(len([k for k in self.tasks.keys() if k.startswith(task_name)]))
-
-        # test if fields are defined in columns for progress bar
-        for _k in fields.keys():
-            e.validation.ShouldBeOneOf(
-                value=_k, values=list(self.columns.keys()),
-                msgs=[f"You have not specified how to render extra field {_k} in `Progress.columns`"]
-            ).raise_if_failed()
-
-        # add task
-        _tid = self._progress.add_task(
-            description=description or task_name, total=total, **fields,
-        )
-        for _rt in self._progress.tasks:
-            if _rt.id == _tid:
-                self.tasks[task_name] = ProgressTask(rich_progress=self._progress, rich_task=_rt, total=total)
-                break
-
-        # return
-        return self.tasks[task_name]
-
-    def update(
-        self,
-        task_name: str = None,
-        advance: float = None,
-        total: float = None, description: str = None, **fields,
-    ):
-        """
-        This is just for convenience.
-        It will just look for last added task and update it.
-        """
-        if bool(self.tasks):
-            if task_name is None:
-                task_name = next(reversed(self.tasks.keys()))
-            else:
-                if task_name not in self.tasks.keys():
-                    raise e.code.CodingError(
-                        msgs=[f"There is no task with name {task_name} available ..."]
-                    )
-            self.tasks[task_name].update(
-                advance=advance, total=total, description=description, **fields
-            )
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"There are no tasks added yet ... so nothing to update"
-                ]
-            )
-
-    def track(
-        self,
-        sequence: t.Union[
-            t.Sequence[r_progress.ProgressType],
-            t.Iterable[r_progress.ProgressType]
-        ],
-        task_name: str,
-        total: t.Optional[float] = None,
-        description: str = None,
-        update_period: float = 0.1,
-        **fields,
-    ) -> t.Generator[r_progress.ProgressType, None, None]:
-        """
-        This can be better shortcut for add_task ...
-        Specifically to be used directly on iterables ...
-
-        You can add_task and also track it ... but only benefit here is you
-        need not write code to handle task instance ... also this one yields
-
-        total: supply it when length of sequence cannot be guessed
-               useful for infinite generators
-
-        task_name:
-          use # at end of task_task_name to support auto counter and hence
-          reuse of task_name
-
-        Refer:
-        >>> r_progress.Progress.track
-        >>> r_progress.track
-        """
-        # ------------------------------------------------------------ 01
-        # estimate length
-        if total is None:
-            if isinstance(sequence, Sized):
-                task_total = float(len(sequence))
-            else:
-                raise ValueError(
-                    f"unable to get size of {sequence!r}, please specify 'total'"
-                )
-        else:
-            task_total = total
-
-        # ------------------------------------------------------------ 02
-        # add task
-        _task = self.add_task(
-            task_name=task_name, total=task_total,
-            description=description, **fields)
-
-        # ------------------------------------------------------------ 03
-        # yield and hence auto track
-        # todo: explore --- self.rich_progress.live.auto_refresh
-        task_id = _task.rich_task.id
-        if self._progress.live.auto_refresh:
-            # noinspection PyProtectedMember
-            with r_progress._TrackThread(
-                    self._progress, task_id, update_period) as track_thread:
-                for value in sequence:
-                    yield value
-                    track_thread.completed += 1
-        else:
-            advance = self._progress.advance
-            refresh = self._progress.refresh
-            for value in sequence:
-                yield value
-                advance(task_id, 1)
-                refresh()
-
-    @staticmethod
-    def simple_progress(
-        title: t.Optional[str] = None,
-        refresh_per_second: int = 10,
-        console: r_console.Console = r_console.Console(record=True),
-        tc_log: logger.CustomLogger = None,
-    ) -> "Progress":
-        return Progress(
-            title=title,  # setting this to str will add panel
-            columns={
-                "text": r_progress.TextColumn(
-                    "[progress.description]{task.description}"),
-                "progress": r_progress.BarColumn(),
-                "percentage": r_progress.TextColumn(
-                    "[progress.percentage]{task.percentage:>3.0f}%"),
-                "time_elapsed": r_progress.TimeElapsedColumn(),
-                "time_remaining": r_progress.TimeRemainingColumn(),
-                "status": SpinnerColumn(),
-            },
-            console=console,
-            refresh_per_second=refresh_per_second,
-            tc_log=tc_log,
-        )
-
-    @classmethod
-    def simple_track(
-        cls,
-        sequence: t.Union[
-            t.Sequence[r_progress.ProgressType],
-            t.Iterable[r_progress.ProgressType]
-        ],
-        description: str = "Working...",
-        total: float = None,
-        tc_log: logger.CustomLogger = None,
-    ) -> t.Generator[r_progress.ProgressType, None, None]:
-        """
-        Simple progress bar for single task which iterates over sequence
-
-        """
-        with cls.simple_progress(title="", tc_log=tc_log) as _progress:
-            yield from _progress.track(
-                sequence=sequence, task_name="single_task",
-                description=description, total=total,
-            )
-
-    @classmethod
-    def for_download_and_hashcheck(
-        cls, title: str,
-        tc_log: logger.CustomLogger = None,
-    ) -> "Progress":
-        _progress = Progress(
-            title=title,
-            columns={
-                "file_key": r_progress.TextColumn(
-                    "[progress.description]{task.description}"),
-                "progress": r_progress.BarColumn(),
-                "percentage": r_progress.TextColumn(
-                    "[progress.percentage]{task.percentage:>3.0f}%"),
-                # todo: combine hash checking here ...
-                #  especially better if we are building hash as we progress download
-                # "hash_progress": progress.BarColumn(),
-                # "hash_percentage": progress.TextColumn(
-                #     "[progress.percentage]{task.percentage:>3.0f}%"),
-                "download": r_progress.DownloadColumn(),
-                "time_elapsed": r_progress.TimeElapsedColumn(),
-                "status": SpinnerColumn(),
-            },
-            tc_log=tc_log,
-        )
-
-        return _progress
-
-
-@dataclasses.dataclass
-class ProgressStatusPanel(Widget):
+class _ProgressStatusPanel(Widget):
     """
 
     todo: Add one more row that dumps logs using Text so that it stays inside Panel
@@ -757,9 +800,9 @@ class ProgressStatusPanel(Widget):
     stages_meta: t.Optional[t.Dict[str, t.Any]] = None
 
     @property
-    def renderable(self) -> r_console.RenderableType:
-        _progress = self._progress.renderable
-        _status = r_panel.Panel(self._status.renderable, box=r_box.HORIZONTALS)
+    def get_renderable(self) -> r_console.RenderableType:
+        _progress = self._progress.get_renderable
+        _status = r_panel.Panel(self._status.get_renderable, box=r_box.HORIZONTALS)
         _group = r_console.Group(
             _progress, _status
         )
@@ -882,15 +925,15 @@ class ProgressStatusPanel(Widget):
 
 
 @dataclasses.dataclass
-class FitProgressStatusPanel(Widget):
+class _FitProgressStatusPanel(Widget):
 
     epochs: int = None
 
     @property
-    def renderable(self) -> r_console.RenderableType:
-        _train_progress = self._train_progress.renderable
-        _validate_progress = self._validate_progress.renderable
-        _status_renderable = self._status.renderable
+    def get_renderable(self) -> r_console.RenderableType:
+        _train_progress = self._train_progress.get_renderable
+        _validate_progress = self._validate_progress.get_renderable
+        _status_renderable = self._status.get_renderable
         _table = r_table.Table.grid(expand=True)
         _table.add_row(
             r_panel.Panel(
@@ -900,7 +943,7 @@ class FitProgressStatusPanel(Widget):
                 _validate_progress,
                 title="Validate", box=r_box.HORIZONTALS, expand=True),
         )
-        _status = r_panel.Panel(self._status.renderable, box=r_box.HORIZONTALS)
+        _status = r_panel.Panel(self._status.get_renderable, box=r_box.HORIZONTALS)
         _group = r_console.Group(
             _table, _status
         )
