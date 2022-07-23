@@ -287,6 +287,7 @@ class Widget(abc.ABC):
         Returns:
 
         """
+        print("rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
         if self._live is not None:
             if update_renderable:
                 self._live.update(
@@ -322,12 +323,14 @@ class Status(Widget):
         # overall progress
         if self.overall_progress_iterable is not None:
             _grp.append(self._overall_progress.renderable)
+            _grp.append(r_markdown.Markdown("\n---\n"))
 
         # get spinner
         _grp.append(self._spinner)
 
         # if message there
         if self._final_message is not None:
+            _grp.append(r_markdown.Markdown("\n---\n"))
             _grp.append(self._final_message)
 
         # make actual group
@@ -407,7 +410,7 @@ class Status(Widget):
 
     def set_final_message(self, msg: str):
         # noinspection PyAttributeOutsideInit
-        self._final_message = r_markdown.Markdown("\n---\n" + msg)
+        self._final_message = r_markdown.Markdown(msg)
         self.refresh(update_renderable=True)
         if self.tc_log is not None:
             self.tc_log.info(msg=msg)
