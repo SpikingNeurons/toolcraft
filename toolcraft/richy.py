@@ -188,8 +188,11 @@ class SpinnerColumn(r_progress.SpinnerColumn):
     things_not_to_be_cached=['get_renderable']
 )
 class Widget(m.Checker, abc.ABC):
+
+    title: t.Optional[r_console.RenderableType] = ""
     refresh_per_second: int = 10
     console: r_console.Console = dataclasses.field(default_factory=lambda: r_console.Console(record=True))
+    tc_log: logger.CustomLogger = None
 
     def __post_init__(self):
         self._live = r_live.Live(
@@ -200,6 +203,9 @@ class Widget(m.Checker, abc.ABC):
         )
 
     def __enter__(self) -> "Widget":
+
+        if self.tc_log is not None:
+            self.tc_log.info(msg=self.title + " started ...")
 
         self._live = r_live.Live(
             self.get_renderable(),
@@ -223,10 +229,45 @@ class Widget(m.Checker, abc.ABC):
         #    but works fine on terminal
         self.console.print("")
 
+        if self.tc_log is not None:
+            # todo: use `self.console.extract_*` methods to get console frame and log it
+            #   via self.tc_log .... need to do this because the RichHandler is not able
+            #   to write things to file like FileHandler ... explore later
+            # _ct = self.console.export_text()
+            self.tc_log.info(
+                msg=self.title + f" finished in {self._elapsed_seconds} seconds ..."
+                # + _ct
+            )
+
     @classmethod
     def class_init(cls):
         # as of nothing to do at class level ... like rule checking etc.
         ...
+
+    def log(
+        self,
+        objects: t.List,
+        sep: str = " ",
+        end: str = "\n",
+        style: t.Optional[t.Union[str, r_style.Style]] = None,
+        justify: t.Optional[r_console.JustifyMethod] = None,
+        emoji: t.Optional[bool] = None,
+        markup: t.Optional[bool] = None,
+        highlight: t.Optional[bool] = None,
+        log_locals: bool = False,
+        _stack_offset: int = 1,
+    ):
+        self.console.log(
+            *objects, sep=sep, end=end, style=style,
+            justify=justify, emoji=emoji, markup=markup,
+            highlight=highlight, log_locals=log_locals,
+            _stack_offset=_stack_offset,
+        )
+
+        # todo: improve this to use self.tc_log so that terminal based
+        #   richy loging plays well with file logging of toolcraft
+        if self.tc_log is not None:
+            self.tc_log.info(msg=self.title, msgs=objects)
 
     @abc.abstractmethod
     def get_renderable(self) -> r_console.RenderableType:
@@ -306,9 +347,7 @@ class Progress(Widget):
     todo: build a asyncio api (with io overhead) or multithreading
       api (with compute overhead) while exploiting `rich.progress.Task` api
     """
-    title: t.Optional[r_console.RenderableType] = ""
     columns: t.Dict[str, r_progress.ProgressColumn] = None
-    tc_log: logger.CustomLogger = None
 
     def __post_init__(self):
         # ------------------------------------------------------------ 01
@@ -331,27 +370,6 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 03
         super().__post_init__()
-
-    def __enter__(self) -> "Widget":
-
-        if self.tc_log is not None:
-            self.tc_log.info(msg=self.title + " progress started ...")
-
-        return super().__enter__()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-
-        super().__exit__(exc_type, exc_val, exc_tb)
-
-        if self.tc_log is not None:
-            # todo: use `self.console.extract_*` methods to get console frame and log it
-            #   via self.tc_log .... need to do this because the RichHandler is not able
-            #   to write things to file like FileHandler ... explore later
-            # _ct = self.console.export_text()
-            self.tc_log.info(
-                msg=self.title + f" progress finished in {self._elapsed_seconds} seconds ..."
-                # + _ct
-            )
 
     def get_renderable(self) -> r_console.RenderableType:
         if self.title == "":
@@ -590,57 +608,8 @@ class Progress(Widget):
 @dataclasses.dataclass
 class StatusPanel(Widget):
 
-    title: t.Optional[r_console.RenderableType] = ""
-    tc_log: logger.CustomLogger = None
-
-    def __enter__(self) -> "Widget":
-
-        if self.tc_log is not None:
-            self.tc_log.info(msg=self.title + " started ...")
-
-        return super().__enter__()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-
-        super().__exit__(exc_type, exc_val, exc_tb)
-
-        if self.tc_log is not None:
-            # todo: use `self.console.extract_*` methods to get console frame and log it
-            #   via self.tc_log .... need to do this because the RichHandler is not able
-            #   to write things to file like FileHandler ... explore later
-            # _ct = self.console.export_text()
-            self.tc_log.info(
-                msg=self.title + f" finished in {self._elapsed_seconds} seconds ..."
-                # + _ct
-            )
-
     def get_renderable(self) -> r_console.RenderableType:
         pass
-
-    def log(
-        self,
-        *objects: t.Any,
-        sep: str = " ",
-        end: str = "\n",
-        style: t.Optional[t.Union[str, r_style.Style]] = None,
-        justify: t.Optional[r_console.JustifyMethod] = None,
-        emoji: t.Optional[bool] = None,
-        markup: t.Optional[bool] = None,
-        highlight: t.Optional[bool] = None,
-        log_locals: bool = False,
-        _stack_offset: int = 1,
-    ):
-        self.console.log(
-            *objects, sep=sep, end=end, style=style,
-            justify=justify, emoji=emoji, markup=markup,
-            highlight=highlight, log_locals=log_locals,
-            _stack_offset=_stack_offset,
-        )
-
-        # todo: improve this to use self.tc_log so that terminal based
-        #   richy loging plays well with file logging of toolcraft
-        if self.tc_log is not None:
-            ...
 
 
 @dataclasses.dataclass

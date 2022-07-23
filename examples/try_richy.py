@@ -18,6 +18,7 @@ def try_progress():
     ) as _p:
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 1"):
             time.sleep(0.2)
+        _p.log(["aaaa", "bbbb", "ccccc"])
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 2"):
             time.sleep(0.2)
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 3"):
