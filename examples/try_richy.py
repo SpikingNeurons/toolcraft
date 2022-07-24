@@ -26,9 +26,9 @@ def try_progress():
 
 
 def try_status():
-    with richy.Status(
+    with richy.StatusPanel(
         tc_log=_LOGGER,
-        title="Test Status"
+        title="Test Only Status"
     ) as _s:
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.dots, status="start")
         time.sleep(1)
@@ -39,20 +39,20 @@ def try_status():
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
         time.sleep(1)
 
-    with richy.Status(
-        tc_log=_LOGGER,
-        title="Test Status with overall progress",
-        overall_progress_iterable=[
-            (richy.SpinnerType.dots, "start"),
-            (richy.SpinnerType.arrow, "next"),
-            (richy.SpinnerType.balloon, "done"),
-            (richy.SpinnerType.star, "close"),
-        ]
-    ) as _s:
-        for _spinner, _status in _s:
-            _s.update(spinner_speed=1.0, spinner=_spinner, status=_status)
-            _s.console.log(f"phase {_status}")
-            time.sleep(1)
+    # with richy.Status(
+    #     tc_log=_LOGGER,
+    #     title="Test Status with overall progress",
+    #     overall_progress_iterable=[
+    #         (richy.SpinnerType.dots, "start"),
+    #         (richy.SpinnerType.arrow, "next"),
+    #         (richy.SpinnerType.balloon, "done"),
+    #         (richy.SpinnerType.star, "close"),
+    #     ]
+    # ) as _s:
+    #     for _spinner, _status in _s:
+    #         _s.update(spinner_speed=1.0, spinner=_spinner, status=_status)
+    #         _s.console.log(f"phase {_status}")
+    #         time.sleep(1)
 
 
 def try_hashable_status_panel():
@@ -146,8 +146,8 @@ def try_fit_progress_status_panel():
 
 
 def main():
-    try_progress()
-    # try_status()
+    # try_progress()
+    try_status()
     # try_status_panel()
     # try_fit_progress_status_panel()
     # try_hashable_status_panel()

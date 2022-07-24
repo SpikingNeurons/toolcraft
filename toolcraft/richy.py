@@ -205,7 +205,7 @@ class Widget(m.Checker, abc.ABC):
     def __enter__(self) -> "Widget":
 
         if self.tc_log is not None:
-            self.tc_log.info(msg=self.title + " started ...")
+            self.tc_log.info(msg=f"[{self.title}] started ...")
 
         self._live = r_live.Live(
             self.get_renderable(),
@@ -235,7 +235,7 @@ class Widget(m.Checker, abc.ABC):
             #   to write things to file like FileHandler ... explore later
             # _ct = self.console.export_text()
             self.tc_log.info(
-                msg=self.title + f" finished in {self._elapsed_seconds} seconds ..."
+                msg=f"[{self.title}] finished in {self._elapsed_seconds} seconds ..."
                 # + _ct
             )
 
@@ -267,7 +267,7 @@ class Widget(m.Checker, abc.ABC):
         # todo: improve this to use self.tc_log so that terminal based
         #   richy loging plays well with file logging of toolcraft
         if self.tc_log is not None:
-            self.tc_log.info(msg=self.title, msgs=objects)
+            self.tc_log.info(msg=f"[{self.title}] log ...", msgs=objects)
 
     @abc.abstractmethod
     def get_renderable(self) -> r_console.RenderableType:
@@ -414,6 +414,10 @@ class Progress(Widget):
             if _rt.id == _tid:
                 self.tasks[task_name] = ProgressTask(rich_progress=self._progress, rich_task=_rt, total=total)
                 break
+
+        # log
+        if self.tc_log is not None:
+            self.tc_log.info(msg=f"[{self.title}] add task {task_name!r}")
 
         # return
         return self.tasks[task_name]
@@ -608,8 +612,101 @@ class Progress(Widget):
 @dataclasses.dataclass
 class StatusPanel(Widget):
 
+    box_type: r_box.Box = r_box.ASCII
+    stages: t.Optional[t.List[str]] = None
+    stages_meta: t.Optional[t.Dict[str, t.Any]] = None
+
+    def __post_init__(self):
+
+        # layout dict
+        self._layout = {
+            'spinner': SpinnerType.star.get_spinner(),
+        }
+
+        # call super
+        super().__post_init__()
+
     def get_renderable(self) -> r_console.RenderableType:
-        pass
+        # ------------------------------------------------------------- 01
+        # grp container
+        _grp = []
+
+        # ------------------------------------------------------------- 02
+        # get spinner
+        _grp.append(self._layout['spinner'])
+
+        # ------------------------------------------------------------- xx
+        # make actual group
+        _grp = r_console.Group(*_grp)
+
+        # add title
+        if self.title is None:
+            return _grp
+        else:
+            return r_panel.Panel(
+                _grp, title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=self.box_type,
+            )
+
+    def _get_renderable(self) -> r_console.RenderableType:
+        # grp container
+        _grp = []
+
+        # get spinner
+        _grp.append(self._spinner)
+
+        # overall progress
+        if self.overall_progress_iterable is not None:
+            _grp.append(self._overall_progress.get_renderable)
+            _grp.append(r_markdown.Markdown("\n---\n"))
+
+        # get spinner
+        _grp.append(self._spinner)
+
+        # if message there
+        if self._final_message is not None:
+            _grp.append(r_markdown.Markdown("\n---\n"))
+            _grp.append(self._final_message)
+
+        # make actual group
+        _grp = r_console.Group(*_grp)
+
+        # add title
+        if self.title is None:
+            return _grp
+        else:
+            return r_panel.Panel(
+                _grp, title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=self.box_type,
+            )
+
+    def update(
+        self,
+        status: t.Optional[r_console.RenderableType] = None,
+        spinner: t.Optional[SpinnerType] = None,
+        # spinner_style: Optional[StyleType] = None
+        spinner_speed: t.Optional[float] = None,
+    ):
+        if spinner is None:
+            self._layout['spinner'].update(text=status, speed=spinner_speed)
+        else:
+            # todo:
+            #   figure this out currently only text update is happening
+            #   dont know how spinner can be changed with our API ....
+            #   Works with `python -m rich.status` example ...
+            #   Note that console which is not widget might be key to solve this
+            self._layout['spinner'] = spinner.get_spinner(text=status, speed=spinner_speed)
+            self.refresh(update_renderable=True)
+
+        # only log is status is supplied ...
+        if status is not None and self.tc_log is not None:
+            self.tc_log.info(msg=f"[{self.title}] status updated to {status!r}")
 
 
 @dataclasses.dataclass
@@ -764,9 +861,6 @@ class _ProgressStatusPanel(Widget):
       This will help us have some information while Panel is still live
       May de have method `self.log(...)` for this SimpleStatusPanel
     """
-
-    stages: t.Optional[t.List[str]] = None
-    stages_meta: t.Optional[t.Dict[str, t.Any]] = None
 
     @property
     def get_renderable(self) -> r_console.RenderableType:
