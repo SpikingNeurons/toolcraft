@@ -223,6 +223,8 @@ class Widget(m.Checker, abc.ABC):
 
         self._elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
 
+        self.refresh(update_renderable=True)
+
         self._live.stop()
 
         # todo: remove this only needed for pycharm terminal as new line is not added when printing on console
@@ -620,16 +622,58 @@ class StatusPanel(Widget):
 
         # layout dict
         self._layout = {
-            'spinner': SpinnerType.star.get_spinner(),
+            'spinner': SpinnerType.dots.get_spinner(text="Waiting ..."),
         }
+
+        if self.stages is not None:
+            self._layout['stages_progress_bar'] = self._make_richy_progress()
 
         # call super
         super().__post_init__()
+
+    def __enter__(self) -> "StatusPanel":
+        self._layout['spinner'] = SpinnerType.dots.get_spinner(text="Waiting ...")
+        super().__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
+        # noinspection PyTypedDict
+        self._layout['spinner'] = r_text.Text.from_markup(
+                f"{EMOJI['white_heavy_check_mark']} "
+                f"Finished in {self._elapsed_seconds} seconds ...")
+        super().__exit__(exc_type, exc_val, exc_tb)
+
+    def __iter__(self):
+        if self.stages is None:
+            raise e.code.CodingError(
+                msgs=["Could not iterate over this panel as stages are not provided ..."]
+            )
+        _len = len(self.stages) + 1
+        _str_len = len(str(_len))
+        if self.stages_meta is None:
+            _stages_meta = {_k: None for _k in self.stages}
+        else:
+            _stages_meta = self.stages_meta
+        with self:
+            _i = 0
+            for _stage in self._layout['stages_progress_bar'].track(
+                sequence=self.stages, task_name="overall progress",
+                update_period=1./self.refresh_per_second,
+            ):
+                _i += 1
+                self.update(status=f"[{_i:0{_str_len}d}/{_len}] Executing Stage {_stage!r} ...")
+                yield _stage, _stages_meta[_stage]
 
     def get_renderable(self) -> r_console.RenderableType:
         # ------------------------------------------------------------- 01
         # grp container
         _grp = []
+
+        # ------------------------------------------------------------- 03
+        # make progress bar for stages
+        if self.stages is not None:
+            _grp.append(self._layout['stages_progress_bar'].get_renderable())
 
         # ------------------------------------------------------------- 02
         # get spinner
@@ -650,6 +694,26 @@ class StatusPanel(Widget):
                 expand=True,
                 box=self.box_type,
             )
+
+    def _make_richy_progress(self) -> Progress:
+        return Progress(
+            tc_log=self.tc_log,
+            columns={
+                "text": r_progress.TextColumn(
+                    "[progress.description]{task.description}"),
+                "progress": r_progress.BarColumn(),
+                "percentage": r_progress.TextColumn(
+                    "[progress.percentage]{task.percentage:>3.0f}%"),
+                "time_elapsed": r_progress.TimeElapsedColumn(),
+                "time_remaining": r_progress.TimeRemainingColumn(),
+                "status": SpinnerColumn(
+                    start_state=SpinnerType.dots,
+                    finished_state=EMOJI["white_heavy_check_mark"],
+                ),
+            },
+            console=self.console,
+            refresh_per_second=self.refresh_per_second,
+        )
 
     def _get_renderable(self) -> r_console.RenderableType:
         # grp container
@@ -695,6 +759,7 @@ class StatusPanel(Widget):
     ):
         if spinner is None:
             self._layout['spinner'].update(text=status, speed=spinner_speed)
+            self.refresh(update_renderable=False)
         else:
             # todo:
             #   figure this out currently only text update is happening
@@ -706,7 +771,7 @@ class StatusPanel(Widget):
 
         # only log is status is supplied ...
         if status is not None and self.tc_log is not None:
-            self.tc_log.info(msg=f"[{self.title}] status updated to {status!r}")
+            self.tc_log.info(msg=f"[{self.title}] status changed ...", msgs=[status])
 
 
 @dataclasses.dataclass
