@@ -26,6 +26,7 @@ def try_progress():
 
 
 def try_status():
+    # ------------------------------------------------------------------- 01
     with richy.StatusPanel(
         tc_log=_LOGGER,
         title="Test Only Status"
@@ -39,21 +40,50 @@ def try_status():
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
         time.sleep(1)
 
-    # for _stage, _stage_meta in richy.StatusPanel(
-    #     tc_log=_LOGGER,
-    #     title="Test Status with overall progress",
-    #     stages=['start', 'next', 'done', 'close'],
+    # ------------------------------------------------------------------- 02
+    _stages_meta = {
+        'start': richy.SpinnerType.dots,
+        'next': richy.SpinnerType.arrow,
+        'done': richy.SpinnerType.balloon,
+        'close': richy.SpinnerType.star,
+    }
+    _sp = richy.StatusPanel(
+        tc_log=_LOGGER,
+        title="Test Status with overall progress",
+        stages=['start', 'next', 'done', 'close'],
+    )
+
+    for _stage in _sp:
+        _sp.update(spinner_speed=1.0, spinner=_stages_meta[_stage], status=_stage)
+        _sp.log([f"phase {_stage}"])
+        time.sleep(1)
+
+    # ------------------------------------------------------------------- 03
+    # _sp = richy.StatusPanel(
+    #     title="Test Status Panel with multiple progress bars", tc_log=_LOGGER
+    # )
+    # with _sp:
+    #     _time = 0.2
     #
-    #     # overall_progress_iterable=[
-    #     #     (richy.SpinnerType.dots, "start"),
-    #     #     (richy.SpinnerType.arrow, "next"),
-    #     #     (richy.SpinnerType.balloon, "done"),
-    #     #     (richy.SpinnerType.star, "close"),
-    #     # ]
-    # ):
-    #     _s.update(spinner_speed=1.0, spinner=None, status=_stage)
-    #     _s.console.log(f"phase {_stage}")
-    #     time.sleep(1)
+    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 1"):
+    #         time.sleep(_time)
+    #     _sp.update(spinner_speed=1.0, spinner=None, status="start")
+    #     time.sleep(_time)
+    #
+    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 2"):
+    #         time.sleep(_time)
+    #     _sp.update(spinner_speed=1.0, spinner=None, status="next")
+    #     time.sleep(_time)
+    #
+    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 3"):
+    #         time.sleep(_time)
+    #     _sp.update(spinner_speed=1.0, spinner=None, status="done")
+    #     time.sleep(_time)
+    #
+    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 4"):
+    #         time.sleep(_time)
+    #     _sp.update(spinner_speed=1.0, spinner=None, status="close")
+    #     time.sleep(_time)
 
 
 def try_hashable_status_panel():
