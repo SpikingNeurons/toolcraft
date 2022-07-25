@@ -27,6 +27,7 @@ from rich import spinner as r_spinner
 from rich import style as r_style
 from rich import table as r_table
 from rich import text as r_text
+from rich import layout as r_layout
 from rich import progress as r_progress
 from rich import status as r_status
 from rich import panel as r_panel
@@ -194,11 +195,15 @@ class Widget(m.Checker, abc.ABC):
     refresh_per_second: int = 10
     console: r_console.Console = dataclasses.field(default_factory=lambda: r_console.Console(record=True))
     tc_log: logger.CustomLogger = None
+    box_type: r_box.Box = r_box.ASCII
 
     @property
-    @util.CacheResult
-    def layout(self) -> t.Dict:
-        return {}
+    @abc.abstractmethod
+    def layout(self) -> t.Union[t.Dict, r_layout.Layout]:
+        """
+        Returns t.Dict if simple widget and Layout if complex application
+        """
+        ...
 
     def __post_init__(self):
         self._live = r_live.Live(
@@ -227,7 +232,7 @@ class Widget(m.Checker, abc.ABC):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
-        self._elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
+        _elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
 
         self.refresh(update_renderable=True)
 
@@ -243,7 +248,7 @@ class Widget(m.Checker, abc.ABC):
             #   to write things to file like FileHandler ... explore later
             # _ct = self.console.export_text()
             self.tc_log.info(
-                msg=f"[{self.title}] finished in {self._elapsed_seconds} seconds ..."
+                msg=f"[{self.title}] finished in {_elapsed_seconds} seconds ..."
                 # + _ct
             )
 
@@ -277,9 +282,37 @@ class Widget(m.Checker, abc.ABC):
         if self.tc_log is not None:
             self.tc_log.info(msg=f"[{self.title}] log ...", msgs=objects)
 
-    @abc.abstractmethod
     def get_renderable(self) -> r_console.RenderableType:
-        ...
+        # ------------------------------------------------------------- 01
+        # grp layout
+        _layout = self.layout
+        if not isinstance(_layout, dict):
+            return _layout
+
+        # ------------------------------------------------------------- 02
+        # make container for renderables
+        _grp = []
+        for _k, _v in _layout.items():
+            if isinstance(_v, Widget):
+                _v = _v.get_renderable()
+            _grp.append(_v)
+
+        # ------------------------------------------------------------- 03
+        # make actual group
+        _grp = r_console.Group(*_grp)
+
+        # ------------------------------------------------------------- 04
+        # add title
+        if self.title == "":
+            return _grp
+        else:
+            return r_panel.Panel(
+                _grp, title=self.title,
+                border_style="green",
+                # padding=(2, 2),
+                expand=True,
+                box=self.box_type,
+            )
 
     def refresh(self, update_renderable: bool = False):
         """
@@ -385,18 +418,6 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 03
         super().__post_init__()
-
-    def get_renderable(self) -> r_console.RenderableType:
-        if self.title == "":
-            return self.layout['progress']
-        else:
-            return r_panel.Panel(
-                self.layout['progress'], title=self.title,
-                border_style="green",
-                # padding=(2, 2),
-                expand=True,
-                box=r_box.ASCII,
-            )
 
     def add_task(
         self, task_name: str, total: float, description: str = None, **fields
@@ -629,7 +650,6 @@ class Progress(Widget):
 @dataclasses.dataclass
 class StatusPanel(Widget):
 
-    box_type: r_box.Box = r_box.ASCII
     stages: t.Optional[t.List[str]] = None
 
     @property
@@ -638,7 +658,7 @@ class StatusPanel(Widget):
             raise e.code.CodingError(
                 msgs=["You are not using stages ... so you cannot use this property ..."]
             )
-        _tasks = self._layout['stages_progress_bar'].tasks
+        _tasks = self.layout['stages_progress_bar'].tasks
         if bool(_tasks):
             return _tasks['stages progress']
         else:
@@ -650,11 +670,15 @@ class StatusPanel(Widget):
     @property
     @util.CacheResult
     def layout(self) -> t.Dict:
-        _ret = {
-            'spinner': SpinnerType.dots.get_spinner(text="Waiting ..."),
-        }
+        """
+        refer
+        >>> from rich import layout
+        Also check example `toolcraft/examples/layout.py`
+        """
+        _ret = dict()
         if self.stages is not None:
             _ret['stages_progress_bar'] = self._make_richy_progress()
+        _ret['spinner'] = SpinnerType.dots.get_spinner(text="Waiting ...")
         return _ret
 
     def __enter__(self) -> "StatusPanel":
@@ -663,11 +687,11 @@ class StatusPanel(Widget):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
+        _elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
         # noinspection PyTypedDict
         self.layout['spinner'] = r_text.Text.from_markup(
                 f"{EMOJI['white_heavy_check_mark']} "
-                f"Finished in {self._elapsed_seconds} seconds ...")
+                f"Finished in {_elapsed_seconds} seconds ...")
         super().__exit__(exc_type, exc_val, exc_tb)
 
     def __iter__(self):
@@ -705,44 +729,15 @@ class StatusPanel(Widget):
             },
             console=self.console,
             refresh_per_second=self.refresh_per_second,
+            title="***",
+            box_type=r_box.HORIZONTALS,
         )
 
-    def get_renderable(self) -> r_console.RenderableType:
-        # ------------------------------------------------------------- 01
-        # grp container
-        _grp = []
-
-        # ------------------------------------------------------------- 03
-        # make progress bar for stages
-        if self.stages is not None:
-            _grp.append(self.layout['stages_progress_bar'].get_renderable())
-
-        # ------------------------------------------------------------- 02
-        # get spinner
-        _grp.append(self.layout['spinner'])
-
-        # ------------------------------------------------------------- xx
-        # make actual group
-        _grp = r_console.Group(*_grp)
-
-        # add title
-        if self.title is None:
-            return _grp
-        else:
-            return r_panel.Panel(
-                _grp, title=self.title,
-                border_style="green",
-                # padding=(2, 2),
-                expand=True,
-                box=self.box_type,
-            )
-
     def set_final_message(self, msg: str):
-        # noinspection PyAttributeOutsideInit
-        self._final_message = r_markdown.Markdown(msg)
+        self.layout['final_message'] = r_markdown.Markdown(msg)
         self.refresh(update_renderable=True)
         if self.tc_log is not None:
-            self.tc_log.info(msg=msg)
+            self.tc_log.info(msg="Final message: ", msgs=[msg])
 
     def update(
         self,

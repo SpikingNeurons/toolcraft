@@ -991,7 +991,7 @@ class RuleChecker:
             if _t in self.parent.things_to_be_cached:
                 raise e.code.CodingError(
                     msgs=[
-                        f"You have already configured `{_t}` in parent class "
+                        f"You have already configured `{_t}` in RuleChecker of parent class "
                         f"{self.parent.decorated_class} ..."
                     ]
                 )

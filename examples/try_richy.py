@@ -27,18 +27,18 @@ def try_progress():
 
 def try_status():
     # ------------------------------------------------------------------- 01
-    with richy.StatusPanel(
-        tc_log=_LOGGER,
-        title="Test Only Status"
-    ) as _s:
-        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.dots, status="start")
-        time.sleep(1)
-        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.arrow, status="next")
-        time.sleep(1)
-        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.balloon, status="done")
-        time.sleep(1)
-        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
-        time.sleep(1)
+    # with richy.StatusPanel(
+    #     tc_log=_LOGGER,
+    #     title="Test Only Status"
+    # ) as _s:
+    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.dots, status="start")
+    #     time.sleep(1)
+    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.arrow, status="next")
+    #     time.sleep(1)
+    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.balloon, status="done")
+    #     time.sleep(1)
+    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
+    #     time.sleep(1)
 
     # ------------------------------------------------------------------- 02
     _stages_meta = {
@@ -52,11 +52,14 @@ def try_status():
         title="Test Status with overall progress",
         stages=['start', 'next', 'done', 'close'],
     )
-
     for _stage in _sp:
         _sp.update(spinner_speed=1.0, spinner=_stages_meta[_stage], status=_stage)
         _sp.log([f"phase {_stage}"])
         time.sleep(1)
+        # on last stage end
+        if _stage == 'close':
+            # _sp.set_final_message(msg="\n---\n + I am done ... \n + See you soon ...")
+            _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
 
     # ------------------------------------------------------------------- 03
     # _sp = richy.StatusPanel(
