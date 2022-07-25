@@ -670,7 +670,9 @@ class Progress(Widget):
 @dataclasses.dataclass
 class StatusPanel(Widget):
 
-    stages: t.Optional[t.List[str]] = None
+    stages: t.Optional[
+        t.Union[t.Sequence[str], t.Iterable[str]]
+    ] = None
 
     @property
     def stages_progressed_task(self) -> ProgressTask:
@@ -718,6 +720,9 @@ class StatusPanel(Widget):
                 refresh_per_second=self.refresh_per_second,
                 box_type=r_box.HORIZONTALS,
                 tc_log=self.tc_log,
+                show_time_elapsed=True,
+                show_time_remaining=True,
+                use_msg_field=True,
             )
         _ret['spinner'] = SpinnerType.dots.get_spinner(text="Waiting ...")
         return _ret
@@ -760,6 +765,12 @@ class StatusPanel(Widget):
         ).raise_if_failed()
         return self.layout[item]
 
+    def __delitem__(self, key: str):
+        if key not in self.layout.keys():
+            return
+        del self.layout[key]
+        self.refresh(update_renderable=True)
+
     def __enter__(self) -> "StatusPanel":
         if self.current_stage is not None:
             raise e.code.CodingError(
@@ -789,13 +800,21 @@ class StatusPanel(Widget):
         with self:
             _i = 0
             for _stage in self.layout['stages_progress'].track(
-                sequence=self.stages, task_name="stages progress",
-                update_period=1./self.refresh_per_second,
+                sequence=self.stages, task_name="progress",
+                update_period=1./self.refresh_per_second, msg="..."
             ):
-                self.current_stage = _stage
+                self.on_iter_next_start(current_stage=_stage)
                 _i += 1
-                self.update(status=f"[{_i:0{_str_len}d}/{_len}] Executing Stage `{_stage}` ...")
                 yield _stage
+                self.on_iter_next_end(current_stage=_stage)
+
+    def on_iter_next_start(self, current_stage: str):
+        # noinspection PyAttributeOutsideInit
+        self.current_stage = current_stage
+        self.update(status=f"Executing Stage `{current_stage}` ...")
+
+    def on_iter_next_end(self, current_stage: str):
+        ...
 
     def add_task(
         self, task_name: str, total: float, msg: str = "", prefix_current_stage: bool = False,
@@ -871,6 +890,57 @@ class StatusPanel(Widget):
         # only log is status is supplied ...
         if status is not None and self.tc_log is not None:
             self.tc_log.info(msg=f"[{self.title}] status changed ...", msgs=[status])
+
+
+@dataclasses.dataclass
+class FitStatusPanel(StatusPanel):
+    title: str = "Fitting ..."
+    epochs: int = None
+    train_steps: int = None
+    validate_steps: int = None
+
+    @property
+    def train_task(self) -> ProgressTask:
+        return self['fit_progress'].tasks["train"]
+
+    @property
+    def validate_task(self) -> ProgressTask:
+        return self['fit_progress'].tasks["validate"]
+
+    def __post_init__(self):
+        if self.epochs is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please supply mandatory field `epochs`"]
+            )
+        if self.train_steps is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please supply mandatory field `train_steps`"]
+            )
+        if self.validate_steps is None:
+            raise e.validation.NotAllowed(
+                msgs=["Please supply mandatory field `validate_steps`"]
+            )
+        if self.stages is not None:
+            raise e.code.CodingError(
+                msgs=["Please do not supply field `stages` as we will infer that from `epochs`"]
+            )
+        self.stages = [f"epoch {_+1}" for _ in range(self.epochs)]
+        super().__post_init__()
+
+    def on_iter_next_start(self, current_stage: str):
+        # noinspection PyAttributeOutsideInit
+        self.current_stage = current_stage
+        self.update(status=f"Fitting for `{current_stage}` ...")
+        _fit_progress = Progress.simple_progress(
+            title=f"Train & Validate: {current_stage}", box_type=r_box.HORIZONTALS,
+            use_msg_field=True,
+        )
+        _fit_progress.add_task(task_name="train", total=self.train_steps, msg="")
+        _fit_progress.add_task(task_name="validate", total=self.validate_steps, msg="")
+        self['fit_progress'] = _fit_progress
+
+    def on_iter_next_end(self, current_stage: str):
+        del self['fit_progress']
 
 
 @dataclasses.dataclass

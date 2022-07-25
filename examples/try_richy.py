@@ -114,34 +114,37 @@ def try_status_panel():
 
 def try_fit_progress_status_panel():
 
-    _fit_panel = richy.FitProgressStatusPanel(
-        title="Fitting ...", tc_log=_LOGGER, epochs=5,
+    _train_samples = 20
+    _validate_samples = 10
+    _fit_panel = richy.FitStatusPanel(
+        tc_log=_LOGGER, epochs=3,
+        train_steps=_train_samples, validate_steps=_validate_samples,
     )
-    _train_samples = 200000
-    _validate_samples = 100000
     _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
 
     for _epoch in _fit_panel:
-        _train_task = _fit_panel.add_train_task(
-            total=_train_samples, msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")), )
+        _train_task = _fit_panel.train_task
+        _validate_task = _fit_panel.validate_task
         for _ in range(_train_samples):
+            time.sleep(0.1)
             _train_task.update(
                 advance=1,
                 msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
             )
-        _validate_task = _fit_panel.add_validate_task(
-            total=_validate_samples, msg=_msg_fmt.format(acc=float("nan"), loss=float("inf")), )
         for _ in range(_validate_samples):
+            time.sleep(0.1)
             _validate_task.update(
                 advance=1,
                 msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
             )
-
-        if _epoch == 4:
+        if _epoch == "epoch 3":
             _fit_panel.set_final_message(
-                msg=f"Found best epoch at {2} for val loss {0.004}"
-                    f"\n+ train   : acc: {1.0} | loss: {4.33}"
-                    f"\n+ validate: acc: {1.0} | loss: {4.33}"
+                msg=f"---\n"
+                    f"Currently at {_epoch}. \n"
+                    f"Found best epoch at {2} for val loss {0.004}. \n"
+                    f"+ train   : acc: {1.0} | loss: {4.33} \n"
+                    f"+ validate: acc: {1.0} | loss: {4.33} \n"
+                    f"---"
             )
 
 
@@ -153,9 +156,9 @@ def try_hashable_status_panel():
 
 
 def main():
-    try_progress()
-    try_status_panel()
-    # try_fit_progress_status_panel()
+    # try_progress()
+    # try_status_panel()
+    try_fit_progress_status_panel()
     # try_hashable_status_panel()
 
 
