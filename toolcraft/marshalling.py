@@ -1562,6 +1562,11 @@ class YamlRepr(Tracker):
     work
 
     todo: read about Yaml syntax here https://www.redhat.com/sysadmin/yaml-beginners
+
+    todo: add support for https://rich.readthedocs.io/en/stable/protocol.html
+      + __rich_console__
+      + __rich__
+      + __rich_measure__
     """
 
     @classmethod

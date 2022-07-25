@@ -25,20 +25,20 @@ def try_progress():
             time.sleep(0.2)
 
 
-def try_status():
+def try_status_panel():
     # ------------------------------------------------------------------- 01
-    # with richy.StatusPanel(
-    #     tc_log=_LOGGER,
-    #     title="Test Only Status"
-    # ) as _s:
-    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.dots, status="start")
-    #     time.sleep(1)
-    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.arrow, status="next")
-    #     time.sleep(1)
-    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.balloon, status="done")
-    #     time.sleep(1)
-    #     _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
-    #     time.sleep(1)
+    with richy.StatusPanel(
+        tc_log=_LOGGER,
+        title="Test Only Status"
+    ) as _s:
+        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.dots, status="start")
+        time.sleep(1)
+        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.arrow, status="next")
+        time.sleep(1)
+        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.balloon, status="done")
+        time.sleep(1)
+        _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
+        time.sleep(1)
 
     # ------------------------------------------------------------------- 02
     _stages_meta = {
@@ -62,88 +62,54 @@ def try_status():
             _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
 
     # ------------------------------------------------------------------- 03
-    # _sp = richy.StatusPanel(
-    #     title="Test Status Panel with multiple progress bars", tc_log=_LOGGER
-    # )
-    # with _sp:
-    #     _time = 0.2
-    #
-    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 1"):
-    #         time.sleep(_time)
-    #     _sp.update(spinner_speed=1.0, spinner=None, status="start")
-    #     time.sleep(_time)
-    #
-    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 2"):
-    #         time.sleep(_time)
-    #     _sp.update(spinner_speed=1.0, spinner=None, status="next")
-    #     time.sleep(_time)
-    #
-    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 3"):
-    #         time.sleep(_time)
-    #     _sp.update(spinner_speed=1.0, spinner=None, status="done")
-    #     time.sleep(_time)
-    #
-    #     for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 4"):
-    #         time.sleep(_time)
-    #     _sp.update(spinner_speed=1.0, spinner=None, status="close")
-    #     time.sleep(_time)
-
-
-def try_hashable_status_panel():
-    class Tracker(m.Tracker):
-        ...
-
-    Tracker()
-
-
-def try_status_panel():
-    _sp = richy.ProgressStatusPanel(
-        title="Test Status Panel", tc_log=_LOGGER
+    _sp = richy.StatusPanel(
+        title="Test Status Panel with generic progress bar", tc_log=_LOGGER
     )
     with _sp:
         _time = 0.2
 
         for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 1"):
             time.sleep(_time)
-        _sp.update(spinner_speed=1.0, spinner=None, status="start")
+        _sp.update(status="executing task 1 ...")
         time.sleep(_time)
 
         for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 2"):
             time.sleep(_time)
-        _sp.update(spinner_speed=1.0, spinner=None, status="next")
+        _sp.update(status="executing task 2 ...")
         time.sleep(_time)
 
-        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 3"):
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 3", msg=":)"):
             time.sleep(_time)
-        _sp.update(spinner_speed=1.0, spinner=None, status="done")
+        _sp.update(status="executing task 3 ...")
         time.sleep(_time)
 
-        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 4"):
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="task 4", msg=":("):
             time.sleep(_time)
-        _sp.update(spinner_speed=1.0, spinner=None, status="close")
+        _sp.update(status="executing task 4 ...")
         time.sleep(_time)
 
-    _sp = richy.ProgressStatusPanel(
-        title="Test Status Panel with overall progress", tc_log=_LOGGER,
-        stages=[
-            ([1, 2, 3, 4], "task 1", "start"),
-            ([1, 2, 3, 4], "task 2", "next"),
-            ([1, 2, 3, 4], "task 3", "done"),
-            ([1, 2, 3, 4], "task 4", "close"),
-        ],
-        stages_meta={
+        # _sp.set_final_message(msg="\n---\n + I am done ... \n + See you soon ...")
+        _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
 
-        }
+    # ------------------------------------------------------------------- 04
+    _sp = richy.StatusPanel(
+        title="Test Status Panel with generic and stages progress bar", tc_log=_LOGGER,
+        stages=['start', 'next ', 'done ', 'close'],
     )
-
-    _time = 0.2
-
-    for _sequence, _task_name, _status in _sp:
-        for _ in _sp.track(sequence=_sequence, task_name=_task_name):
-            time.sleep(_time)
-        _sp.update(spinner_speed=1.0, spinner=None, status=_status)
+    _time = 0.1
+    for _i, _stage in enumerate(_sp):
         time.sleep(_time)
-        _LOGGER.info("jjjjj")
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name=f"task_0 {_i}", prefix_current_stage=True):
+            time.sleep(_time)
+        _task = _sp.add_task(
+            task_name=f"task_1 {_i}", prefix_current_stage=True, total=4
+        )
+        for _ in [0, 1, 2, 3]:
+            _task.update(advance=1, msg=f">> {[':(', ':|', ':o', ':)'][_]} <<")
+            time.sleep(_time)
+        if _stage == 'close':
+            # _sp.set_final_message(msg="\n---\n + I am done ... \n + See you soon ...")
+            _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
 
 
 def try_fit_progress_status_panel():
@@ -179,10 +145,16 @@ def try_fit_progress_status_panel():
             )
 
 
+def try_hashable_status_panel():
+    class Tracker(m.Tracker):
+        ...
+
+    Tracker()
+
+
 def main():
-    # try_progress()
-    try_status()
-    # try_status_panel()
+    try_progress()
+    try_status_panel()
     # try_fit_progress_status_panel()
     # try_hashable_status_panel()
 

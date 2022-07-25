@@ -17,6 +17,8 @@ import typing as t
 import enum
 import datetime
 import abc
+
+import rich.jupyter
 from rich.emoji import EMOJI
 from rich import logging as r_logging
 from rich import console as r_console
@@ -199,7 +201,7 @@ class Widget(m.Checker, abc.ABC):
 
     @property
     @abc.abstractmethod
-    def layout(self) -> t.Union[t.Dict, r_layout.Layout]:
+    def layout(self) -> t.Union[t.Dict[str, t.Union["Widget", rich.jupyter.JupyterMixin]], r_layout.Layout]:
         """
         Returns t.Dict if simple widget and Layout if complex application
         """
@@ -576,22 +578,32 @@ class Progress(Widget):
         refresh_per_second: int = 10,
         console: r_console.Console = r_console.Console(record=True),
         tc_log: logger.CustomLogger = None,
+        box_type: r_box.Box = r_box.ASCII,
+        show_time_elapsed: bool = True,
+        show_time_remaining: bool = False,
+        use_msg_field: bool = False,
     ) -> "Progress":
+        _cols = {
+            "text": r_progress.TextColumn(
+                "[progress.description]{task.description}"),
+            "progress": r_progress.BarColumn(),
+            "percentage": r_progress.TextColumn(
+                "[progress.percentage]{task.percentage:>3.0f}%"),
+        }
+        if use_msg_field:
+            _cols['msg'] = r_progress.TextColumn("{task.fields[msg]}")
+        if show_time_elapsed:
+            _cols['time_elapsed'] = r_progress.TimeElapsedColumn()
+        if show_time_remaining:
+            _cols['time_remaining'] = r_progress.TimeRemainingColumn()
+        _cols['status'] = SpinnerColumn()
         return Progress(
             title=title,  # setting this to str will add panel
-            columns={
-                "text": r_progress.TextColumn(
-                    "[progress.description]{task.description}"),
-                "progress": r_progress.BarColumn(),
-                "percentage": r_progress.TextColumn(
-                    "[progress.percentage]{task.percentage:>3.0f}%"),
-                "time_elapsed": r_progress.TimeElapsedColumn(),
-                "time_remaining": r_progress.TimeRemainingColumn(),
-                "status": SpinnerColumn(),
-            },
+            columns=_cols,
             console=console,
             refresh_per_second=refresh_per_second,
             tc_log=tc_log,
+            box_type=box_type,
         )
 
     @classmethod
@@ -605,12 +617,20 @@ class Progress(Widget):
         description: str = "Working...",
         total: float = None,
         tc_log: logger.CustomLogger = None,
+        box_type: r_box.Box = r_box.ASCII,
+        show_time_elapsed: bool = True,
+        show_time_remaining: bool = False,
+        use_msg_field: bool = False,
     ) -> t.Generator[r_progress.ProgressType, None, None]:
         """
         Simple progress bar for single task which iterates over sequence
-
         """
-        with cls.simple_progress(title=title, tc_log=tc_log) as _progress:
+        with cls.simple_progress(
+            title=title, tc_log=tc_log, box_type=box_type,
+            show_time_elapsed=show_time_elapsed,
+            show_time_remaining=show_time_remaining,
+            use_msg_field=use_msg_field,
+        ) as _progress:
             yield from _progress.track(
                 sequence=sequence, task_name="single_task",
                 description=description, total=total,
@@ -658,7 +678,7 @@ class StatusPanel(Widget):
             raise e.code.CodingError(
                 msgs=["You are not using stages ... so you cannot use this property ..."]
             )
-        _tasks = self.layout['stages_progress_bar'].tasks
+        _tasks = self.layout['stages_progress'].tasks
         if bool(_tasks):
             return _tasks['stages progress']
         else:
@@ -666,6 +686,21 @@ class StatusPanel(Widget):
                 msgs=["The stages progress task is not yet available as you have not "
                       "yet iterated on this instance"]
             )
+
+    @property
+    @util.CacheResult
+    def generic_progress(self) -> Progress:
+        if 'generic_progress' not in self.layout.keys():
+            self['generic_progress'] = Progress.simple_progress(
+                title="tasks",
+                console=self.console,
+                refresh_per_second=self.refresh_per_second,
+                box_type=r_box.HORIZONTALS,
+                tc_log=self.tc_log,
+                use_msg_field=True,
+            )
+        # noinspection PyTypeChecker
+        return self['generic_progress']
 
     @property
     @util.CacheResult
@@ -677,11 +712,60 @@ class StatusPanel(Widget):
         """
         _ret = dict()
         if self.stages is not None:
-            _ret['stages_progress_bar'] = self._make_richy_progress()
+            _ret['stages_progress'] = Progress.simple_progress(
+                title="***",
+                console=self.console,
+                refresh_per_second=self.refresh_per_second,
+                box_type=r_box.HORIZONTALS,
+                tc_log=self.tc_log,
+            )
         _ret['spinner'] = SpinnerType.dots.get_spinner(text="Waiting ...")
         return _ret
 
+    def __post_init__(self):
+        # noinspection PyTypeChecker
+        self.current_stage = None  # type: str
+        super().__post_init__()
+
+    def __setitem__(self, key: str, value: t.Union[rich.jupyter.JupyterMixin, Widget]):
+        """
+        This will add renderable items except for reserved items
+          (as they will be added by this class based on usage)
+        Note that for now reserved items are at end ...
+        """
+        _reserved_keys = ['final_message', 'stages_progress', 'spinner']
+        e.validation.ShouldNotBeOneOf(
+            value=key, values=_reserved_keys,
+            msgs=["Cannot add items with reserved names ..."]
+        ).raise_if_failed()
+        e.validation.ShouldNotBeOneOf(
+            value=key, values=list(self.layout.keys()),
+            msgs=["There already exists a item with that name"]
+        ).raise_if_failed()
+        _new_dict = dict()
+        _reserved_dict = dict()
+        for _k in self.layout.keys():
+            if _k in _reserved_keys:
+                _reserved_dict[_k] = self.layout[_k]
+            else:
+                _new_dict[_k] = self.layout[_k]
+        _new_dict[key] = value
+        self.layout.clear()
+        self.layout.update(**_new_dict, **_reserved_dict)
+        self.refresh(update_renderable=True)
+
+    def __getitem__(self, item: str) -> t.Union[rich.jupyter.JupyterMixin, Widget]:
+        e.validation.ShouldBeOneOf(
+            value=item, values=list(self.layout.keys()), msgs=["There is no item with that name"]
+        ).raise_if_failed()
+        return self.layout[item]
+
     def __enter__(self) -> "StatusPanel":
+        if self.current_stage is not None:
+            raise e.code.CodingError(
+                msgs=["Looks like the previous with context did not exit properly",
+                      f"We expect this to be None, but found {self.current_stage}"]
+            )
         self.layout['spinner'] = SpinnerType.dots.get_spinner(text="Waiting ...")
         super().__enter__()
         return self
@@ -692,6 +776,7 @@ class StatusPanel(Widget):
         self.layout['spinner'] = r_text.Text.from_markup(
                 f"{EMOJI['white_heavy_check_mark']} "
                 f"Finished in {_elapsed_seconds} seconds ...")
+        self.current_stage = None
         super().__exit__(exc_type, exc_val, exc_tb)
 
     def __iter__(self):
@@ -703,34 +788,59 @@ class StatusPanel(Widget):
         _str_len = len(str(_len))
         with self:
             _i = 0
-            for _stage in self.layout['stages_progress_bar'].track(
+            for _stage in self.layout['stages_progress'].track(
                 sequence=self.stages, task_name="stages progress",
                 update_period=1./self.refresh_per_second,
             ):
+                self.current_stage = _stage
                 _i += 1
                 self.update(status=f"[{_i:0{_str_len}d}/{_len}] Executing Stage `{_stage}` ...")
                 yield _stage
 
-    def _make_richy_progress(self) -> Progress:
-        return Progress(
-            tc_log=self.tc_log,
-            columns={
-                "text": r_progress.TextColumn(
-                    "[progress.description]{task.description}"),
-                "progress": r_progress.BarColumn(),
-                "percentage": r_progress.TextColumn(
-                    "[progress.percentage]{task.percentage:>3.0f}%"),
-                "time_elapsed": r_progress.TimeElapsedColumn(),
-                "time_remaining": r_progress.TimeRemainingColumn(),
-                "status": SpinnerColumn(
-                    start_state=SpinnerType.dots,
-                    finished_state=EMOJI["white_heavy_check_mark"],
-                ),
-            },
-            console=self.console,
-            refresh_per_second=self.refresh_per_second,
-            title="***",
-            box_type=r_box.HORIZONTALS,
+    def add_task(
+        self, task_name: str, total: float, msg: str = "", prefix_current_stage: bool = False,
+    ) -> ProgressTask:
+        """
+        Uses reserved generic_progress_bar
+        """
+        if prefix_current_stage:
+            if self.current_stage is None:
+                raise e.code.CodingError(
+                    msgs=["To prefix current_stage must be using `stages` field and you "
+                          "must be iterating on this instance."]
+                )
+            task_name = f"{self.current_stage}:{task_name}"
+        return self.generic_progress.add_task(
+            task_name=task_name, total=float(total), msg=msg,
+        )
+
+    def track(
+        self,
+        sequence: t.Union[
+            t.Sequence[r_progress.ProgressType],
+            t.Iterable[r_progress.ProgressType]
+        ],
+        task_name: str,
+        total: t.Optional[float] = None,
+        description: str = None,
+        update_period: float = 0.1,
+        msg: str = "",
+        prefix_current_stage: bool = False,
+    ) -> t.Generator[r_progress.ProgressType, None, None]:
+        """
+        Uses reserved generic_progress_bar
+        """
+        if prefix_current_stage:
+            if self.current_stage is None:
+                raise e.code.CodingError(
+                    msgs=["To prefix current_stage must be using `stages` field and you "
+                          "must be iterating on this instance."]
+                )
+            task_name = f"{self.current_stage}:{task_name}"
+        return self.generic_progress.track(
+            sequence=sequence, task_name=task_name, total=total,
+            description=description, update_period=update_period,
+            msg=msg,
         )
 
     def set_final_message(self, msg: str):
@@ -761,284 +871,6 @@ class StatusPanel(Widget):
         # only log is status is supplied ...
         if status is not None and self.tc_log is not None:
             self.tc_log.info(msg=f"[{self.title}] status changed ...", msgs=[status])
-
-
-@dataclasses.dataclass
-class _Status(Widget):
-    """
-    Refer:
-    >>> r_status.Status
-    >>> r_spinner.Spinner
-    """
-    title: t.Optional[r_console.RenderableType] = None
-    status: r_console.RenderableType = ""
-    spinner: SpinnerType = SpinnerType.star
-    # spinner_style: Optional[StyleType] = None
-    spinner_speed: float = 1.0
-    box_type: r_box.Box = r_box.ASCII
-    overall_progress_iterable: t.Union[
-        t.Sequence[r_progress.ProgressType],
-        t.Iterable[r_progress.ProgressType]
-    ] = None
-
-    def get_renderable(self) -> r_console.RenderableType:
-        # grp container
-        _grp = []
-
-        # overall progress
-        if self.overall_progress_iterable is not None:
-            _grp.append(self._overall_progress.get_renderable)
-            _grp.append(r_markdown.Markdown("\n---\n"))
-
-        # get spinner
-        _grp.append(self._spinner)
-
-        # if message there
-        if self._final_message is not None:
-            _grp.append(r_markdown.Markdown("\n---\n"))
-            _grp.append(self._final_message)
-
-        # make actual group
-        _grp = r_console.Group(*_grp)
-
-        # add title
-        if self.title is None:
-            return _grp
-        else:
-            return r_panel.Panel(
-                _grp, title=self.title,
-                border_style="green",
-                # padding=(2, 2),
-                expand=True,
-                box=self.box_type,
-            )
-
-    def __post_init__(self):
-        # make spinner
-        self._spinner = self.spinner.get_spinner(
-            text=self.status, speed=self.spinner_speed
-        )
-
-        # make message
-        self._final_message = None
-
-        # make overall progress
-        if self.overall_progress_iterable is not None:
-            self._overall_progress = Progress(
-                tc_log=self.tc_log,
-                columns={
-                    "text": r_progress.TextColumn(
-                        "[progress.description]{task.description}"),
-                    "progress": r_progress.BarColumn(),
-                    "percentage": r_progress.TextColumn(
-                        "[progress.percentage]{task.percentage:>3.0f}%"),
-                    "time_elapsed": r_progress.TimeElapsedColumn(),
-                    "time_remaining": r_progress.TimeRemainingColumn(),
-                    "status": SpinnerColumn(
-                        start_state=SpinnerType.dots,
-                        finished_state=EMOJI["white_heavy_check_mark"],
-                    ),
-                },
-                console=self.console,
-                refresh_per_second=self.refresh_per_second,
-            )
-
-        # call super
-        super().__post_init__()
-
-    def __enter__(self) -> "Status":
-        super().__enter__()
-        self._spinner = SpinnerType.dots.get_spinner(text="Started ...")
-        self.refresh(update_renderable=True)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
-        self._spinner = r_text.Text.from_markup(
-            f"{EMOJI['white_heavy_check_mark']} "
-            f"Finished in {_elapsed_secs} seconds ...")
-        self.refresh(update_renderable=True)
-        super().__exit__(exc_type, exc_val, exc_tb)
-
-    def __iter__(self) -> t.Generator[r_progress.ProgressType, None, None]:
-        if self.overall_progress_iterable is not None:
-            return self._overall_progress.track(
-                self.overall_progress_iterable, task_name="overall progress",
-                update_period=1./self.refresh_per_second,
-            )
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"To iterate please set field `overall_progress_iterable`"
-                ]
-            )
-
-    def set_final_message(self, msg: str):
-        # noinspection PyAttributeOutsideInit
-        self._final_message = r_markdown.Markdown(msg)
-        self.refresh(update_renderable=True)
-        if self.tc_log is not None:
-            self.tc_log.info(msg=msg)
-
-    def update(
-        self,
-        status: t.Optional[r_console.RenderableType] = None,
-        spinner: SpinnerType = None,
-        # spinner_style: Optional[StyleType] = None
-        spinner_speed: t.Optional[float] = None,
-    ):
-        if status is not None:
-            self.status = status
-        if spinner_speed is not None:
-            self.spinner_speed = spinner_speed
-
-        if spinner is None:
-            self._spinner.update(
-                text=status, speed=spinner_speed
-            )
-        else:
-            # todo: When used with StatusPanel
-            #   figure this out currently only text update is happening
-            #   dont know how spinner can be changed with our API ....
-            #   Works with `python -m rich.status` example ...
-            #   Note that console which is not widget might be key to solve this
-            # noinspection PyAttributeOutsideInit
-            self._spinner = spinner.get_spinner(text=status, speed=spinner_speed)
-            self.refresh(update_renderable=True)
-
-
-@dataclasses.dataclass
-class _ProgressStatusPanel(Widget):
-    """
-
-    todo: Add one more row that dumps logs using Text so that it stays inside Panel
-      This will help us have some information while Panel is still live
-      May de have method `self.log(...)` for this SimpleStatusPanel
-    """
-
-    @property
-    def get_renderable(self) -> r_console.RenderableType:
-        _progress = self._progress.get_renderable
-        _status = r_panel.Panel(self._status.get_renderable, box=r_box.HORIZONTALS)
-        _group = r_console.Group(
-            _progress, _status
-        )
-        if self.title is None:
-            return _group
-        else:
-            return r_panel.Panel(
-                _group,
-                title=self.title,
-                border_style="green",
-                # padding=(2, 2),
-                expand=True,
-                box=r_box.ASCII,
-            )
-
-    def __post_init__(self):
-        if bool(self.stages) and bool(self.stages_meta):
-            e.validation.ShouldBeEqual(
-                value1=len(self.stages), value2=len(self.stages_meta),
-                msgs=["Was expecting both collection to have same length"]
-            ).raise_if_failed()
-        self.current_stage = None
-        self._progress = self._make_richy_progress()
-        self._status = Status(
-            tc_log=self.tc_log,
-            title=None,
-            console=self.console, refresh_per_second=self.refresh_per_second,
-            overall_progress_iterable=self.stages,
-        )
-        super().__post_init__()
-
-    def __enter__(self) -> "ProgressStatusPanel":
-        super().__enter__()
-        self._status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
-        self.refresh(update_renderable=True)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
-        self._status._spinner = r_text.Text.from_markup(
-            f"{EMOJI['white_heavy_check_mark']} "
-            f"Finished in {_elapsed_secs} seconds ...")
-        self.refresh(update_renderable=True)
-        super().__exit__(exc_type, exc_val, exc_tb)
-
-    def __iter__(self):
-        if self.stages is None:
-            raise e.code.CodingError(
-                msgs=["Could not iterate over this panel as stages are not provided ..."]
-            )
-        with self:
-            for _stage in self._status:
-                self.update(status=f"Executing stage {_stage!r} ...")
-                self.current_stage = _stage
-                yield _stage
-
-    def _make_richy_progress(self) -> Progress:
-        return Progress(
-            columns={
-                "text": r_progress.TextColumn(
-                    "[progress.description]{task.description}"),
-                "progress": r_progress.BarColumn(),
-                "percentage": r_progress.TextColumn(
-                    "[progress.percentage]{task.percentage:>3.0f}%"),
-                # "msg": r_progress.TextColumn("{task.fields[msg]}"),
-                "time_elapsed": r_progress.TimeElapsedColumn(),
-                "time_remaining": r_progress.TimeRemainingColumn(),
-                "status": SpinnerColumn(),
-            },
-            console=self.console,
-            refresh_per_second=self.refresh_per_second,
-            tc_log=self.tc_log,
-            title=None,
-        )
-
-    def update(
-        self,
-        status: t.Optional[r_console.RenderableType] = None,
-        spinner: SpinnerType = None,
-        # spinner_style: Optional[StyleType] = None
-        spinner_speed: t.Optional[float] = None,
-    ):
-        self._status.update(status=status, spinner=spinner, spinner_speed=spinner_speed)
-
-    def add_task(
-        self, task_name: str, total: float, msg: str,
-        prefix_current_stage: bool = True,
-    ) -> ProgressTask:
-        if prefix_current_stage:
-            if self.current_stage is None:
-                raise e.code.CodingError(
-                    msgs=["You are not using `stages` field or you are not iterating on `ProgressStatusPanel`",
-                          "Please iterate over this instance to loop on stages ..."]
-                )
-            task_name = f"{self.current_stage}:{task_name}"
-        return self._progress.add_task(
-            task_name=task_name, total=float(total), msg=msg,
-        )
-
-    def track(
-        self,
-        sequence: t.Union[
-            t.Sequence[r_progress.ProgressType],
-            t.Iterable[r_progress.ProgressType]
-        ],
-        task_name: str,
-        total: t.Optional[float] = None,
-        description: str = None,
-        update_period: float = 0.1,
-        **fields,
-    ) -> t.Generator[r_progress.ProgressType, None, None]:
-        return self._progress.track(
-            sequence=sequence, task_name=task_name, total=total,
-            description=description, update_period=update_period,
-            **fields,
-        )
-
-    def set_final_message(self, msg: str):
-        self._status.set_final_message(msg=msg)
 
 
 @dataclasses.dataclass
