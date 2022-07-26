@@ -1,6 +1,7 @@
 
 import sys
 import time
+import typing as t
 sys.path.append("..")
 
 from toolcraft import richy, logger
@@ -152,7 +153,17 @@ def try_fit_progress_status_panel():
 
 def try_hashable_status_panel():
     class Tracker(m.Tracker):
-        ...
+
+        @property
+        def iterable_length(self) -> int:
+            return 6
+
+        @property
+        def iterable_task_name(self) -> str:
+            return "Tracker.iter#"
+
+        def on_iter(self) -> t.Iterable[t.Any]:
+            return [1, 2, 3, 4, 5, 6, ]
 
     _tracker = Tracker()
 
@@ -185,6 +196,19 @@ def try_hashable_status_panel():
                 [1, 2, 3, 4], task_name="loop", msg="fff", prefix_current_stage=True
             ):
                 time.sleep(0.2)
+
+        # loop over tracker
+        _tracker.richy_panel.update(status="iterating over Tracker ...")
+        for _ in _tracker:
+            time.sleep(0.2)
+        for _ in _tracker:
+            time.sleep(0.2)
+
+        # adding widget on the fly
+        _tracker.richy_panel.update(status="adding widget on the fly ...")
+        time.sleep(1)
+        _tracker.richy_panel["on the fly 1"] = richy.r_markdown.Markdown("# on the fly \n+ one")
+        _tracker.richy_panel["on the fly 2"] = richy.r_markdown.Markdown("# on the fly \n+ two")
 
         # setting final message
         _tracker.richy_panel.update(status="setting final message ...")

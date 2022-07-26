@@ -834,7 +834,8 @@ class StatusPanel(Widget):
         self.update(status=f"Executing Stage `{current_stage}` ...")
 
     def on_iter_next_end(self, current_stage: str):
-        ...
+        # noinspection PyAttributeOutsideInit
+        self.current_stage = None
 
     def add_task(
         self, task_name: str, total: float, msg: str = "", prefix_current_stage: bool = False,
@@ -873,7 +874,7 @@ class StatusPanel(Widget):
             if self.current_stage is None:
                 raise e.code.CodingError(
                     msgs=["To prefix current_stage must be using `stages` field and you "
-                          "must be iterating on this instance."]
+                          "must be iterating on the `StatusPanel` richy instance."]
                 )
             task_name = f"{self.current_stage}:{task_name}"
         return self.generic_progress.track(
@@ -957,8 +958,7 @@ class FitStatusPanel(StatusPanel):
         super().__post_init__()
 
     def on_iter_next_start(self, current_stage: str):
-        # noinspection PyAttributeOutsideInit
-        self.current_stage = current_stage
+        super().on_iter_next_start(current_stage)
         self.update(status=f"Fitting for `{current_stage}` ...")
         _fit_progress = Progress.simple_progress(
             title=f"Train & Validate: {current_stage}", box_type=r_box.HORIZONTALS,
@@ -970,6 +970,7 @@ class FitStatusPanel(StatusPanel):
 
     def on_iter_next_end(self, current_stage: str):
         del self['fit_progress']
+        super().on_iter_next_end(current_stage)
 
     def append_to_summary(self, line: str):
         self.summary.append(line)
