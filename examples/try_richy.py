@@ -156,7 +156,12 @@ def try_hashable_status_panel():
 
     _tracker = Tracker()
 
-    with _tracker(richy_panel=richy.StatusPanel(tc_log=_LOGGER, title="Tracker(...).richy_panel")):
+    with _tracker(
+        richy_panel=richy.StatusPanel(
+            tc_log=_LOGGER, title="Tracker(...).richy_panel",
+            stages=["start", "download", "hashcheck", "finish"],
+        )
+    ):
         # update status message
         _tracker.richy_panel.update(status="updating status message ...")
         time.sleep(1)
@@ -173,13 +178,18 @@ def try_hashable_status_panel():
             _task.update(advance=1, msg=f"Doing {_}")
             time.sleep(0.2)
 
+        # testing stages
+        _tracker.richy_panel.update(status="testing stages ...")
+        for _stage in _tracker.richy_panel:
+            for _ in _tracker.richy_panel.track(
+                [1, 2, 3, 4], task_name="loop", msg="fff", prefix_current_stage=True
+            ):
+                time.sleep(0.2)
+
         # setting final message
         _tracker.richy_panel.update(status="setting final message ...")
         time.sleep(1)
         _tracker.richy_panel.set_final_message("+ i am done \n+ see you again")
-
-        for _ in _tracker:
-            ...
 
 
 def main():

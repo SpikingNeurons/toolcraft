@@ -214,6 +214,7 @@ class Widget(m.Checker, abc.ABC):
             refresh_per_second=self.refresh_per_second,
             transient=True,
         )
+        self._is_in_with_context = False
 
     def __enter__(self) -> "Widget":
 
@@ -230,9 +231,17 @@ class Widget(m.Checker, abc.ABC):
 
         self._start_time = datetime.datetime.now()
 
+        if self._is_in_with_context:
+            raise e.code.CodingError(
+                msgs=["We do not expect this to be set already ..."]
+            )
+        self._is_in_with_context = True
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+
+        self._is_in_with_context = False
 
         _elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
 
@@ -797,7 +806,7 @@ class StatusPanel(Widget):
             )
         _len = len(self.stages)
         _str_len = len(str(_len))
-        with self:
+        if self._is_in_with_context:
             _i = 0
             for _stage in self.layout['stages_progress'].track(
                 sequence=self.stages, task_name="progress",
@@ -807,6 +816,17 @@ class StatusPanel(Widget):
                 _i += 1
                 yield _stage
                 self.on_iter_next_end(current_stage=_stage)
+        else:
+            with self:
+                _i = 0
+                for _stage in self.layout['stages_progress'].track(
+                    sequence=self.stages, task_name="progress",
+                    update_period=1./self.refresh_per_second, msg="..."
+                ):
+                    self.on_iter_next_start(current_stage=_stage)
+                    _i += 1
+                    yield _stage
+                    self.on_iter_next_end(current_stage=_stage)
 
     def on_iter_next_start(self, current_stage: str):
         # noinspection PyAttributeOutsideInit
