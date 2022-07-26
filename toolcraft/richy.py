@@ -954,7 +954,8 @@ class FitStatusPanel(StatusPanel):
     def append_to_summary(self, line: str):
         self.summary.append(line)
         del self['summary']
-        _msg = f"# Fitting summary \n" + "\n".join(self.summary)
+        # _msg = f"# Fitting summary \n" + "\n".join(self.summary)
+        _msg = "\n".join(self.summary)
         self['summary'] = r_markdown.Markdown(_msg)
         if self.tc_log is not None:
             self.tc_log.info(msg="Summary: ", msgs=[line])
