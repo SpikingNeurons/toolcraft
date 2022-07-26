@@ -213,6 +213,11 @@ class Widget(m.Checker, abc.ABC):
         ...
 
     def __post_init__(self):
+        _h = self.sub_title
+        if isinstance(self.sub_title, m.HashableClass):
+            self.sub_title = [
+                f"{_h.__module__}.{_h.__class__.__name__}", f"{_h.group_by}", f"{_h.name}"
+            ]
         self._live = r_live.Live(
             self.get_renderable(),
             console=self.console,
@@ -224,7 +229,7 @@ class Widget(m.Checker, abc.ABC):
     def __enter__(self) -> "Widget":
 
         if self.tc_log is not None:
-            self.tc_log.info(msg=f"[{self.title}] started ...")
+            self.tc_log.info(msg=f"[{self.title}] started ...", msgs=self.sub_title)
 
         self._live = r_live.Live(
             self.get_renderable(),
@@ -264,7 +269,7 @@ class Widget(m.Checker, abc.ABC):
             #   to write things to file like FileHandler ... explore later
             # _ct = self.console.export_text()
             self.tc_log.info(
-                msg=f"[{self.title}] finished in {_elapsed_seconds} seconds ..."
+                msg=f"[{self.title}] finished in {_elapsed_seconds} seconds ...", msgs=self.sub_title,
                 # + _ct
             )
 
@@ -317,14 +322,6 @@ class Widget(m.Checker, abc.ABC):
             _grp = [
                 r_text.Text(_, justify='center') for _ in self.sub_title
             ] + [r_markdown.Markdown("---")]
-        elif isinstance(self.sub_title, m.HashableClass):
-            _h = self.sub_title  # type: m.HashableClass
-            _grp = [
-                r_text.Text(f"{_h.__module__}.{_h.__class__.__name__}", justify='center'),
-                r_text.Text(f"{_h.group_by}", justify='center'),
-                r_text.Text(f"{_h.name}", justify='center'),
-                r_markdown.Markdown("---")
-            ]
         else:
             _grp = []
         for _k, _v in _layout.items():
