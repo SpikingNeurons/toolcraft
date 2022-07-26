@@ -214,7 +214,7 @@ class Widget(m.Checker, abc.ABC):
             refresh_per_second=self.refresh_per_second,
             transient=True,
         )
-        self._is_in_with_context = False
+        self.is_in_with_context = False
 
     def __enter__(self) -> "Widget":
 
@@ -231,17 +231,17 @@ class Widget(m.Checker, abc.ABC):
 
         self._start_time = datetime.datetime.now()
 
-        if self._is_in_with_context:
+        if self.is_in_with_context:
             raise e.code.CodingError(
                 msgs=["We do not expect this to be set already ..."]
             )
-        self._is_in_with_context = True
+        self.is_in_with_context = True
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
-        self._is_in_with_context = False
+        self.is_in_with_context = False
 
         _elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
 
@@ -424,8 +424,6 @@ class Progress(Widget):
         # empty container for added tasks
         # noinspection PyTypeChecker
         self.tasks = dict()  # type: t.Dict[str, ProgressTask]
-        # noinspection PyTypeChecker
-        self.current_task = None  # type: ProgressTask
 
         # ------------------------------------------------------------ 03
         super().__post_init__()
@@ -546,16 +544,6 @@ class Progress(Widget):
         _task = self.add_task(
             task_name=task_name, total=task_total,
             description=description, **fields)
-        if self.current_task is not None:
-            raise e.code.CodingError(
-                msgs=["We expect current_task to be set to None",
-                      "Please avoid using `self.current_task` if there are more than one task running concurrently",
-                      f"Note that when using `track()` we expect that you want to run tasks for "
-                      f"this {Progress} to run one after another",
-                      "Or else you have choice to use `add_task()` method instead to have concurrent "
-                      "tasks in progrss..."]
-            )
-        self.current_task = _task
 
         # ------------------------------------------------------------ 03
         # yield and hence auto track
@@ -576,10 +564,6 @@ class Progress(Widget):
                 yield value
                 advance(task_id, 1)
                 refresh()
-
-        # ------------------------------------------------------------ 04
-        # set back to None
-        self.current_task = None
 
     @staticmethod
     def simple_progress(
@@ -806,7 +790,7 @@ class StatusPanel(Widget):
             )
         _len = len(self.stages)
         _str_len = len(str(_len))
-        if self._is_in_with_context:
+        if self.is_in_with_context:
             _i = 0
             for _stage in self.layout['stages_progress'].track(
                 sequence=self.stages, task_name="progress",

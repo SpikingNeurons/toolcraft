@@ -899,11 +899,13 @@ class FileGroup(StorageHashable, abc.ABC):
 
         _start_time = datetime.datetime.now()
 
-        with richy.ProgressStatusPanel(
+        with richy.StatusPanel(
             title=_title,
-        ) as _status:
+        ) as _rp:
 
-            for k in _status.progress.track(self.file_keys, task_name="create"):
+            for k in _rp.track(self.file_keys, task_name="create"):
+
+                _rp.update(f"creating file - {k}")
 
                 # get expected file from key
                 _expected_file = self.path / k
@@ -915,7 +917,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
                 # if expected file not present then create
                 _created_file = _expected_file if _expected_file.exists() else \
-                    self.create_file(file_key=k, status_panel=_status)
+                    self.create_file(file_key=k, richy_panel=_rp)
 
                 # if check if created and expected file is same
                 if _expected_file != _created_file:
@@ -1053,7 +1055,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
     @abc.abstractmethod
     def create_file(
-        self, *, file_key: str, status_panel: richy.StatusPanel = None
+        self, *, file_key: str, richy_panel: richy.StatusPanel = None
     ) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
@@ -1635,7 +1637,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         if self.internal.on_call_kwargs is not None:
             status_panel = self.internal.on_call_kwargs.get(
                 'status_panel', None
-            )  # type: richy.ProgressStatusPanel
+            )  # type: richy.StatusPanel
             if status_panel is not None:
                 status_panel.status.update(
                     f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
@@ -1665,14 +1667,11 @@ class NpyFileGroup(FileGroup, abc.ABC):
         super().on_enter()
 
         # get kwargs passed in call
-        shuffle_seed = \
+        _shuffle_seed = \
             self.internal.on_call_kwargs[
                 'shuffle_seed'
             ]  # type: SHUFFLE_SEED_TYPE
-        status_panel = \
-            self.internal.on_call_kwargs[
-                'status_panel'
-            ]  # type: richy.ProgressStatusPanel
+        _rp = self.richy_panel
 
         # log
         _total = len(self.file_keys)
@@ -1682,23 +1681,20 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # make NpyMemmaps aware of seed
         for i, k in enumerate(self.file_keys):
-            if status_panel is not None:
-                status_panel.status.update(
+            if _rp is not None:
+                _rp.update(
                     f"Opening {i+1}/{_total} "
-                    f"NpyMemMap for `{k}` with seed `{shuffle_seed}`")
+                    f"NpyMemMap for `{k}` with seed `{_shuffle_seed}`")
             v = _all_npy_mem_maps_cache[k]
-            v(shuffle_seed=shuffle_seed)
+            v(shuffle_seed=_shuffle_seed)
             v.__enter__()
 
     def on_exit(self, exc_type, exc_val, exc_tb):
-        status_panel = \
-            self.internal.on_call_kwargs[
-                'status_panel'
-            ]  # type: richy.StatusPanel
+        _rp = self.richy_panel
         _total = len(self.file_keys)
         for i, k in enumerate(self.file_keys):
-            if status_panel is not None:
-                status_panel.status.update(
+            if _rp is not None:
+                _rp.update(
                     f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
             v = self.all_npy_mem_maps_cache[k]
             # noinspection PyUnresolvedReferences
@@ -2076,7 +2072,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.StatusPanel = None
+        self, *, file_key: str, richy_panel: richy.StatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[
@@ -2164,7 +2160,7 @@ class FileGroupFromPaths(FileGroup):
 
     # noinspection PyTypeChecker
     def create_file(
-        self, *, file_key: str, status_panel: richy.StatusPanel = None
+        self, *, file_key: str, richy_panel: richy.StatusPanel = None
     ) -> Path:
         raise e.code.CodingError(
             msgs=[

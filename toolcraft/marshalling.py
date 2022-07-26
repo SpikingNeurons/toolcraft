@@ -1003,8 +1003,9 @@ class RuleChecker:
             if _t in self.parent.things_not_to_be_cached:
                 raise e.code.CodingError(
                     msgs=[
-                        f"You have already configured `{_t}` in parent class "
-                        f"{self.parent.decorated_class} ..."
+                        f"You have already `{_t}` in parent class "
+                        f"{self.parent.decorated_class} as well as this class "
+                        f"{self.decorated_class} ..."
                     ]
                 )
         self.things_not_to_be_cached += self.parent.things_not_to_be_cached
@@ -1227,10 +1228,10 @@ class Tracker(Checker):
 
     def __iter__(self) -> t.Iterable:
         # get some vars
-        _richy_panel = self.internal.on_call_kwargs["richy_panel"]  # type: richy.StatusPanel
+        _rp = self.internal.on_call_kwargs["richy_panel"]  # type: richy.StatusPanel
 
         # iterate
-        if _richy_panel is None:
+        if _rp is None:
             if self.in_with_context:
                 for _ in self.on_iter():
                     yield _
@@ -1249,10 +1250,10 @@ class Tracker(Checker):
                     ]
                 )
             if self.in_with_context:
-                _richy_panel.update("-- " + self.iterable_task_name)
-                _task = _richy_panel.add_task(
+                _rp.update("-- " + self.iterable_task_name)
+                _task = _rp.add_task(
                     task_name=self.iterable_task_name, total=self.iterable_length,
-                    prefix_current_stage=_richy_panel.current_stage is not None,
+                    prefix_current_stage=_rp.current_stage is not None,
                     msg="started",
                 )
                 for _ in self.on_iter():
@@ -1261,10 +1262,10 @@ class Tracker(Checker):
                 _task.update(msg="completed")
             else:
                 with self:
-                    _richy_panel.update("-- " + self.iterable_task_name)
-                    _task = _richy_panel.add_task(
+                    _rp.update("-- " + self.iterable_task_name)
+                    _task = _rp.add_task(
                         task_name=self.iterable_task_name, total=self.iterable_length,
-                        prefix_current_stage=_richy_panel.current_stage is not None,
+                        prefix_current_stage=_rp.current_stage is not None,
                         msg="started",
                     )
                     for _ in self.on_iter():
@@ -1376,10 +1377,10 @@ class Tracker(Checker):
             ])
         self.internal.in_with_context = True
 
-        # handle _richy_panel
-        _richy_panel = self.internal.on_call_kwargs['richy_panel']
-        if _richy_panel is not None:
-            _richy_panel.__enter__()
+        # handle _rp
+        _rp = self.internal.on_call_kwargs['richy_panel']  # type: richy.StatusPanel
+        if _rp is not None and not _rp.is_in_with_context:
+            _rp.__enter__()
 
     def on_exit(self, exc_type, exc_val, exc_tb):
         """
@@ -1395,10 +1396,10 @@ class Tracker(Checker):
                 f"iteration or anything else",
             ])
 
-        # handle _richy_panel
-        _richy_panel = self.internal.on_call_kwargs['richy_panel']
-        if _richy_panel is not None:
-            _richy_panel.__exit__(exc_type, exc_val, exc_tb)
+        # handle _rp
+        _rp = self.internal.on_call_kwargs['richy_panel']
+        if _rp is not None and not _rp.is_in_with_context:
+            _rp.__exit__(exc_type, exc_val, exc_tb)
 
         # reset on_call_kwargs
         self.internal.on_call_kwargs = None

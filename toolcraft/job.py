@@ -1365,7 +1365,7 @@ class Flow:
           This will also help to have gui in dearpygui
         """
         # just check health of all jobs
-        _sp = richy.ProgressStatusPanel(
+        _sp = richy.StatusPanel(
             title=f"Checking health of all jobs first ...", tc_log=_LOGGER
         )
         with _sp:
@@ -1416,7 +1416,7 @@ class Flow:
                 _completed_jobs.append(_j)
 
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            _sp = richy.ProgressStatusPanel(
+            _sp = richy.StatusPanel(
                 title=f"Launch stages on `{cluster_type.name}`", tc_log=_LOGGER
             )
             with _sp:
