@@ -158,8 +158,8 @@ def try_hashable_status_panel():
 
 
 def main():
-    # try_progress()
-    # try_status_panel()
+    try_progress()
+    try_status_panel()
     try_fit_progress_status_panel()
     # try_hashable_status_panel()
 
