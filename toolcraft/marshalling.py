@@ -1250,7 +1250,7 @@ class Tracker(Checker):
                     ]
                 )
             if self.in_with_context:
-                _rp.update("-- " + self.iterable_task_name)
+                _rp.update("doing iterable task - " + self.iterable_task_name)
                 _task = _rp.add_task(
                     task_name=self.iterable_task_name, total=self.iterable_length,
                     prefix_current_stage=_rp.current_stage is not None,
@@ -1397,8 +1397,8 @@ class Tracker(Checker):
             ])
 
         # handle _rp
-        _rp = self.internal.on_call_kwargs['richy_panel']
-        if _rp is not None and not _rp.is_in_with_context:
+        _rp = self.richy_panel
+        if _rp is not None and _rp.is_in_with_context:
             _rp.__exit__(exc_type, exc_val, exc_tb)
 
         # reset on_call_kwargs

@@ -12,6 +12,7 @@ import abc
 from .. import util, logger, settings
 from .. import marshalling as m
 from .. import error as e
+from .. import richy
 from . import file_system as _fs
 
 # noinspection PyUnreachableCode
@@ -382,7 +383,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # return
         return _dict
 
-    def create_pre_runner(self):
+    def create_pre_runner(self, *, richy_panel: richy.StatusPanel = None):
         # check if already created
         if self.is_created:
             raise e.code.NotAllowed(
@@ -392,7 +393,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                 ]
             )
 
-    def create(self) -> t.Union[_fs.Path, t.List[_fs.Path]]:
+    def create(self, *, richy_panel: richy.StatusPanel = None) -> t.Union[_fs.Path, t.List[_fs.Path]]:
         raise e.code.CodingError(
             msgs=[
                 f"There is nothing to create for class {self.__class__}",
@@ -457,7 +458,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             )
 
     # noinspection PyUnusedLocal
-    def delete_pre_runner(self, *, force: bool = False):
+    def delete_pre_runner(self, *, force: bool = False, richy_panel: richy.StatusPanel = None):
         # check if already created
         if not self.is_created:
             raise e.code.NotAllowed(
@@ -467,7 +468,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                 ]
             )
 
-    def delete(self, *, force: bool = False) -> t.Any:
+    def delete(self, *, force: bool = False, richy_panel: richy.StatusPanel = None) -> t.Any:
         raise e.code.CodingError(
             msgs=[
                 f"There is nothing to delete for class {self.__class__}",

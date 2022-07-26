@@ -151,69 +151,71 @@ def try_fit_progress_status_panel():
             )
 
 
+class HashableCLass(m.HashableClass):
+
+    @property
+    def iterable_length(self) -> int:
+        return 6
+
+    @property
+    def iterable_task_name(self) -> str:
+        return "Tracker.iter#"
+
+    def on_iter(self) -> t.Iterable[t.Any]:
+        return [1, 2, 3, 4, 5, 6, ]
+
+
 def try_hashable_status_panel():
-    class Tracker(m.Tracker):
 
-        @property
-        def iterable_length(self) -> int:
-            return 6
+    _hashable = HashableCLass()
 
-        @property
-        def iterable_task_name(self) -> str:
-            return "Tracker.iter#"
-
-        def on_iter(self) -> t.Iterable[t.Any]:
-            return [1, 2, 3, 4, 5, 6, ]
-
-    _tracker = Tracker()
-
-    with _tracker(
+    with _hashable(
         richy_panel=richy.StatusPanel(
-            tc_log=_LOGGER, title="Tracker(...).richy_panel",
+            tc_log=_LOGGER, title="Tracker(...).richy_panel", sub_title=_hashable,
             stages=["start", "download", "hashcheck", "finish"],
         )
     ):
         # update status message
-        _tracker.richy_panel.update(status="updating status message ...")
+        _hashable.richy_panel.update(status="updating status message ...")
         time.sleep(1)
 
         # adding task via `track()`
-        _tracker.richy_panel.update(status="adding task via `track()` ...")
-        for _ in _tracker.richy_panel.track([1, 2, 3, 4], task_name="task 1", msg="fff"):
+        _hashable.richy_panel.update(status="adding task via `track()` ...")
+        for _ in _hashable.richy_panel.track([1, 2, 3, 4], task_name="task 1", msg="fff"):
             time.sleep(0.2)
 
         # adding task via `add_task()`
-        _tracker.richy_panel.update(status="adding task via `add_task()` ...")
-        _task = _tracker.richy_panel.add_task(task_name="task 2", total=5, msg="rrr")
+        _hashable.richy_panel.update(status="adding task via `add_task()` ...")
+        _task = _hashable.richy_panel.add_task(task_name="task 2", total=5, msg="rrr")
         for _ in range(5):
             _task.update(advance=1, msg=f"Doing {_}")
             time.sleep(0.2)
 
         # testing stages
-        _tracker.richy_panel.update(status="testing stages ...")
-        for _stage in _tracker.richy_panel:
-            for _ in _tracker.richy_panel.track(
+        _hashable.richy_panel.update(status="testing stages ...")
+        for _stage in _hashable.richy_panel:
+            for _ in _hashable.richy_panel.track(
                 [1, 2, 3, 4], task_name="loop", msg="fff", prefix_current_stage=True
             ):
                 time.sleep(0.2)
 
         # loop over tracker
-        _tracker.richy_panel.update(status="iterating over Tracker ...")
-        for _ in _tracker:
+        _hashable.richy_panel.update(status="iterating over Tracker ...")
+        for _ in _hashable:
             time.sleep(0.2)
-        for _ in _tracker:
+        for _ in _hashable:
             time.sleep(0.2)
 
         # adding widget on the fly
-        _tracker.richy_panel.update(status="adding widget on the fly ...")
+        _hashable.richy_panel.update(status="adding widget on the fly ...")
         time.sleep(1)
-        _tracker.richy_panel["on the fly 1"] = richy.r_markdown.Markdown("# on the fly \n+ one")
-        _tracker.richy_panel["on the fly 2"] = richy.r_markdown.Markdown("# on the fly \n+ two")
+        _hashable.richy_panel["on the fly 1"] = richy.r_markdown.Markdown("# on the fly \n+ one")
+        _hashable.richy_panel["on the fly 2"] = richy.r_markdown.Markdown("# on the fly \n+ two")
 
         # setting final message
-        _tracker.richy_panel.update(status="setting final message ...")
+        _hashable.richy_panel.update(status="setting final message ...")
         time.sleep(1)
-        _tracker.richy_panel.set_final_message("+ i am done \n+ see you again")
+        _hashable.richy_panel.set_final_message("+ i am done \n+ see you again")
 
 
 def main():

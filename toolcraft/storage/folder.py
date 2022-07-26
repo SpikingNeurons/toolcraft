@@ -140,7 +140,7 @@ class Folder(StorageHashable):
             return []
         return self.for_hashable.group_by
 
-    def create(self) -> Path:
+    def create(self, *, richy_panel: richy.StatusPanel = None) -> Path:
         """
         If there is no Folder we create an empty folder.
         """
@@ -150,7 +150,7 @@ class Folder(StorageHashable):
         # return
         return self.path
 
-    def delete(self, *, force: bool = False):
+    def delete(self, *, force: bool = False, richy_panel: richy.StatusPanel = None):
         # delete
         # We ask for user response as most of the files/folders are important
         # and programmatically deletes will cost download or generation of

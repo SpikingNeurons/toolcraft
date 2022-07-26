@@ -194,6 +194,11 @@ class SpinnerColumn(r_progress.SpinnerColumn):
 class Widget(m.Checker, abc.ABC):
 
     title: t.Optional[r_console.RenderableType] = ""
+    sub_title: t.Optional[
+        t.Union[
+            t.List[r_console.RenderableType], m.HashableClass,
+        ]
+    ] = None
     refresh_per_second: int = 10
     console: r_console.Console = dataclasses.field(default_factory=lambda: r_console.Console(record=True))
     tc_log: logger.CustomLogger = None
@@ -297,12 +302,31 @@ class Widget(m.Checker, abc.ABC):
         # ------------------------------------------------------------- 01
         # grp layout
         _layout = self.layout
-        if not isinstance(_layout, dict):
-            return _layout
+        # return quickly when `r_layout.Layout`
+        if isinstance(_layout, r_layout.Layout):
+            # todo: still need to handle title and sub_title for rich.layout.Layout
+            raise e.code.NotSupported(
+                msgs=["still need to handle title and sub_title for rich.layout.Layout"]
+            )
+            # return _layout
 
         # ------------------------------------------------------------- 02
         # make container for renderables
-        _grp = []
+        if isinstance(self.sub_title, list):
+            # noinspection PyTypeChecker
+            _grp = [
+                r_text.Text(_, justify='center') for _ in self.sub_title
+            ] + [r_markdown.Markdown("---")]
+        elif isinstance(self.sub_title, m.HashableClass):
+            _h = self.sub_title  # type: m.HashableClass
+            _grp = [
+                r_text.Text(f"{_h.__module__}.{_h.__class__.__name__}", justify='center'),
+                r_text.Text(f"{_h.group_by}", justify='center'),
+                r_text.Text(f"{_h.name}", justify='center'),
+                r_markdown.Markdown("---")
+            ]
+        else:
+            _grp = []
         for _k, _v in _layout.items():
             if isinstance(_v, Widget):
                 _v = _v.get_renderable()
@@ -815,7 +839,7 @@ class StatusPanel(Widget):
     def on_iter_next_start(self, current_stage: str):
         # noinspection PyAttributeOutsideInit
         self.current_stage = current_stage
-        self.update(status=f"Executing Stage `{current_stage}` ...")
+        self.update(status=f"executing stage `{current_stage}` ...")
 
     def on_iter_next_end(self, current_stage: str):
         # noinspection PyAttributeOutsideInit

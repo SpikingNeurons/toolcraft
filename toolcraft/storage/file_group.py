@@ -731,7 +731,7 @@ class FileGroup(StorageHashable, abc.ABC):
             return _failed_hashes
 
     # noinspection PyUnusedLocal
-    def check(self, *, force: bool = False):
+    def check(self, *, force: bool = False, richy_panel: richy.StatusPanel = None):
         """
 
         todo: we can make this with asyncio with aiohttps and aiofiles
@@ -847,14 +847,14 @@ class FileGroup(StorageHashable, abc.ABC):
         self.config.append_last_accessed_on()
 
     # noinspection PyUnusedLocal
-    def create_pre_runner(self):
+    def create_pre_runner(self, *, richy_panel: richy.StatusPanel = None):
         """
         User has to take care to keep files on disk ... or provide mechanism
         to create all the files by overriding create() method
         """
         # --------------------------------------------------------------01
         # call super ... checks if created
-        super().create_pre_runner()
+        super().create_pre_runner(richy_panel=richy_panel)
 
         # --------------------------------------------------------------02
         # create path dir if it does not exist
@@ -876,36 +876,27 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-    def create(self) -> t.List[Path]:
-        """
-        todo: Refer below and make simlar but in single row status panel for
-          file creations ... where for each file we will have spinner and a text widget
-          beside it showing time remianing ... right now we use simple progress
-            >>> richy.Progress.for_download_and_hashcheck
-
-        Also refer for main point at
-        >>> richy.r_console
-        """
-        _ret = []
-
-        # some variables to indicate progress
-        # todo: make it like progress bar
+    def create(self, *, richy_panel: richy.StatusPanel = None) -> t.List[Path]:
+        # if no richy panel then create and call again
+        _rp = self.richy_panel
         _total_files = len(self.file_keys)
-        _s_fmt = len(str(_total_files))
-        _max_key_str_len = max([len(_) for _ in self.file_keys]) + 1
+        if _rp is None:
+            _rp = richy.StatusPanel(
+                title=f"Creating {_total_files} Files",
+                tc_log=_LOGGER,
+            )
+            _rp['heading'] = richy.r_text.Text(
+                text=f"{self.__class__.__module__}.{self.__class__.__name__}"
+                     f"\n{self.group_by}"
+                     f"\n{self.name}",
+                justify='center'
+            )
 
-        _title = f"Creating {_total_files} files for fg: {self.group_by}>>{self.name}"
-        _LOGGER.info(_title)
-
-        _start_time = datetime.datetime.now()
-
-        with richy.StatusPanel(
-            title=_title,
-        ) as _rp:
-
-            for k in _rp.track(self.file_keys, task_name="create"):
-
-                _rp.update(f"creating file - {k}")
+        # create
+        _ret = []
+        with _rp:
+            _rp.update(f"creating {_total_files} files")
+            for k in _rp.track(self.file_keys, task_name="create files"):
 
                 # get expected file from key
                 _expected_file = self.path / k
@@ -942,14 +933,11 @@ class FileGroup(StorageHashable, abc.ABC):
                 # append
                 _ret.append(_expected_file)
 
-        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
-        _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
-
         # return list of created files
         return _ret
 
     def create_post_runner(
-            self, *, hooked_method_return_value: t.List[Path]
+        self, *, hooked_method_return_value: t.List[Path]
     ):
         """
         The files are now created let us now do post handling
@@ -1066,7 +1054,7 @@ class FileGroup(StorageHashable, abc.ABC):
         """
         ...
 
-    def delete(self, *, force: bool = False):
+    def delete(self, *, force: bool = False, richy_panel: richy.StatusPanel = None):
         """
         Deletes FileGroup
 
@@ -1789,7 +1777,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # return
         return _file
 
-    def create_pre_runner(self):
+    def create_pre_runner(self, *, richy_panel: richy.StatusPanel = None):
 
         # make sure that shape and dtype are properly overridden
         _shape_keys = list(self.shape.keys())
@@ -1824,7 +1812,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             )
 
         # call super and return
-        return super().create_pre_runner()
+        return super().create_pre_runner(richy_panel=richy_panel)
 
     def create_post_runner(
         self, *, hooked_method_return_value: t.List[Path]
@@ -1973,7 +1961,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     def get_urls(self) -> t.Dict[str, str]:
         ...
 
-    def create(self) -> t.List[Path]:
+    def create(self, *, richy_panel: richy.StatusPanel = None) -> t.List[Path]:
         """
         todo: we can make this with asyncio with aiohttps and aiofiles
           https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
@@ -2142,7 +2130,7 @@ class FileGroupFromPaths(FileGroup):
             for file_key in file_keys
         }
 
-    def create(self) -> t.List[Path]:
+    def create(self, *, richy_panel: richy.StatusPanel = None) -> t.List[Path]:
 
         _ret = []
 
