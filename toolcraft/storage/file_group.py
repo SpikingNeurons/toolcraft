@@ -879,59 +879,50 @@ class FileGroup(StorageHashable, abc.ABC):
     def create(self, *, richy_panel: richy.StatusPanel = None) -> t.List[Path]:
         # if no richy panel then create and call again
         _rp = self.richy_panel
-        _total_files = len(self.file_keys)
-        if _rp is None:
-            _rp = richy.StatusPanel(
-                title=f"Creating {_total_files} Files",
-                tc_log=_LOGGER,
-            )
-            _rp['heading'] = richy.r_text.Text(
-                text=f"{self.__class__.__module__}.{self.__class__.__name__}"
-                     f"\n{self.group_by}"
-                     f"\n{self.name}",
-                justify='center'
-            )
+        _iterable = self.file_keys
+        _total_files = len(_iterable)
+        if _rp is not None:
+            _rp.update(f"creating {_total_files} files")
+            _iterable = _rp.track(self.file_keys, task_name="create files")
 
         # create
         _ret = []
-        with _rp:
-            _rp.update(f"creating {_total_files} files")
-            for k in _rp.track(self.file_keys, task_name="create files"):
+        for k in _iterable:
 
-                # get expected file from key
-                _expected_file = self.path / k
+            # get expected file from key
+            _expected_file = self.path / k
 
-                # if found on disk bypass creation for efficiency
-                if _expected_file.isfile():
-                    _ret.append(_expected_file)
-                    continue
+            # if found on disk bypass creation for efficiency
+            if _expected_file.isfile():
+                _ret.append(_expected_file)
+                continue
 
-                # if expected file not present then create
-                _created_file = _expected_file if _expected_file.exists() else \
-                    self.create_file(file_key=k, richy_panel=_rp)
+            # if expected file not present then create
+            _created_file = _expected_file if _expected_file.exists() else \
+                self.create_file(file_key=k, richy_panel=_rp)
 
-                # if check if created and expected file is same
-                if _expected_file != _created_file:
-                    if not isinstance(_created_file, Path):
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"You are supported to return instance of {Path} ... "
-                                f"instead found {type(_created_file)}"
-                            ]
-                        )
+            # if check if created and expected file is same
+            if _expected_file != _created_file:
+                if not isinstance(_created_file, Path):
                     raise e.code.CodingError(
                         msgs=[
-                            f"The {self.__class__}.create() returns file path "
-                            f"which is not expected for key {k!r}",
-                            {
-                                "Expected": _expected_file,
-                                "Found": _created_file,
-                            },
+                            f"You are supported to return instance of {Path} ... "
+                            f"instead found {type(_created_file)}"
                         ]
                     )
+                raise e.code.CodingError(
+                    msgs=[
+                        f"The {self.__class__}.create() returns file path "
+                        f"which is not expected for key {k!r}",
+                        {
+                            "Expected": _expected_file,
+                            "Found": _created_file,
+                        },
+                    ]
+                )
 
-                # append
-                _ret.append(_expected_file)
+            # append
+            _ret.append(_expected_file)
 
         # return list of created files
         return _ret
