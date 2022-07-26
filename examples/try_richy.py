@@ -137,6 +137,8 @@ def try_fit_progress_status_panel():
                 advance=1,
                 msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
             )
+        _fit_panel.append_to_summary(
+            f"+ {_epoch}: [train] acc {0.23:.03f} loss {0.23:.03f} | [validation] acc {0.23:.03f} loss {0.23:.03f}")
         if _epoch == "epoch 3":
             _fit_panel.set_final_message(
                 msg=f"---\n"

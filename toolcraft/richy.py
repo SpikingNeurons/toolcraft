@@ -893,6 +893,10 @@ class StatusPanel(Widget):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_not_to_be_cached=['train_task', 'validate_task'],
+    things_to_be_cached=['summary'],
+)
 class FitStatusPanel(StatusPanel):
     title: str = "Fitting ..."
     epochs: int = None
@@ -906,6 +910,11 @@ class FitStatusPanel(StatusPanel):
     @property
     def validate_task(self) -> ProgressTask:
         return self['fit_progress'].tasks["validate"]
+
+    @property
+    @util.CacheResult
+    def summary(self) -> t.List[str]:
+        return []
 
     def __post_init__(self):
         if self.epochs is None:
@@ -942,119 +951,12 @@ class FitStatusPanel(StatusPanel):
     def on_iter_next_end(self, current_stage: str):
         del self['fit_progress']
 
+    def append_to_summary(self, line: str):
+        self.summary.append(line)
+        del self['summary']
+        _msg = f"# Fitting summary \n" + "\n".join(self.summary)
+        self['summary'] = r_markdown.Markdown(_msg)
+        if self.tc_log is not None:
+            self.tc_log.info(msg="Summary: ", msgs=[line])
 
-@dataclasses.dataclass
-class _FitProgressStatusPanel(Widget):
-
-    epochs: int = None
-
-    @property
-    def get_renderable(self) -> r_console.RenderableType:
-        _train_progress = self._train_progress.get_renderable
-        _validate_progress = self._validate_progress.get_renderable
-        _status_renderable = self._status.get_renderable
-        _table = r_table.Table.grid(expand=True)
-        _table.add_row(
-            r_panel.Panel(
-                _train_progress,
-                title="Train", box=r_box.HORIZONTALS, expand=True),
-            r_panel.Panel(
-                _validate_progress,
-                title="Validate", box=r_box.HORIZONTALS, expand=True),
-        )
-        _status = r_panel.Panel(self._status.get_renderable, box=r_box.HORIZONTALS)
-        _group = r_console.Group(
-            _table, _status
-        )
-        if self.title is None:
-            return _group
-        else:
-            return r_panel.Panel(
-                _group,
-                title=self.title,
-                border_style="green",
-                # padding=(2, 2),
-                expand=True,
-                box=r_box.ASCII,
-            )
-
-    def __post_init__(self):
-        if self.epochs is None:
-            raise e.validation.NotAllowed(msgs=["Please specify epochs ... it is mandatory"])
-        self._train_progress = self._make_richy_progress()
-        self._validate_progress = self._make_richy_progress()
-        self._status = Status(
-            tc_log=self.tc_log,
-            title=None,
-            console=self.console, refresh_per_second=self.refresh_per_second,
-            overall_progress_iterable=range(1, self.epochs + 1),
-        )
-        super().__post_init__()
-
-    def __enter__(self) -> "FitProgressStatusPanel":
-        super().__enter__()
-        self._status._spinner = SpinnerType.dots.get_spinner(text="Started ...")
-        self.refresh(update_renderable=True)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        _elapsed_secs = (datetime.datetime.now() - self._start_time).total_seconds()
-        self._status._spinner = r_text.Text.from_markup(
-            f"{EMOJI['white_heavy_check_mark']} "
-            f"Finished in {_elapsed_secs} seconds ...")
-        self.refresh(update_renderable=True)
-        super().__exit__(exc_type, exc_val, exc_tb)
-
-    def __iter__(self):
-        with self:
-            for _epoch in self._status:
-                self.update(status=f"Fitting epoch {_epoch} ...")
-                self._task_name = f"ep {_epoch:03d}"
-                yield _epoch
-
-    def _make_richy_progress(self) -> Progress:
-        return Progress(
-            columns={
-                "text": r_progress.TextColumn(
-                    "[progress.description]{task.description}"),
-                "progress": r_progress.BarColumn(),
-                "percentage": r_progress.TextColumn(
-                    "[progress.percentage]{task.percentage:>3.0f}%"),
-                # "time_remaining": r_progress.TimeRemainingColumn(),
-                # "acc": r_progress.TextColumn("[green]{task.fields[acc]:.4f}"),
-                # "loss": r_progress.TextColumn("[yellow]{task.fields[loss]:.4f}"),
-                "msg": r_progress.TextColumn("{task.fields[msg]}"),
-                "status": SpinnerColumn(),
-            },
-            console=self.console,
-            refresh_per_second=self.refresh_per_second,
-            tc_log=self.tc_log,
-            title=None,
-        )
-
-    def update(
-        self,
-        status: t.Optional[r_console.RenderableType] = None,
-        spinner: SpinnerType = None,
-        # spinner_style: Optional[StyleType] = None
-        spinner_speed: t.Optional[float] = None,
-    ):
-        self._status.update(status=status, spinner=spinner, spinner_speed=spinner_speed)
-
-    def add_train_task(
-        self, total: float, msg: str,
-    ) -> ProgressTask:
-        return self._train_progress.add_task(
-            task_name=self._task_name, total=float(total), msg=msg,
-        )
-
-    def add_validate_task(
-        self, total: float, msg: str,
-    ) -> ProgressTask:
-        return self._validate_progress.add_task(
-            task_name=self._task_name, total=float(total), msg=msg,
-        )
-
-    def set_final_message(self, msg: str):
-        self._status.set_final_message(msg=msg)
 
