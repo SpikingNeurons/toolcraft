@@ -154,14 +154,17 @@ def try_hashable_status_panel():
     class Tracker(m.Tracker):
         ...
 
-    Tracker()
+    _tracker = Tracker()
+
+    with _tracker(richy_panel=richy.StatusPanel(tc_log=_LOGGER, title="ggg")):
+        time.sleep(1)
 
 
 def main():
     # try_progress()
     # try_status_panel()
-    try_fit_progress_status_panel()
-    # try_hashable_status_panel()
+    # try_fit_progress_status_panel()
+    try_hashable_status_panel()
 
 
 if __name__ == '__main__':

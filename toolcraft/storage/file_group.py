@@ -1694,7 +1694,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         status_panel = \
             self.internal.on_call_kwargs[
                 'status_panel'
-            ]  # type: richy.ProgressStatusPanel
+            ]  # type: richy.StatusPanel
         _total = len(self.file_keys)
         for i, k in enumerate(self.file_keys):
             if status_panel is not None:

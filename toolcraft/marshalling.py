@@ -1202,11 +1202,6 @@ class Tracker(Checker):
         return self
 
     def __enter__(self) -> "Tracker":
-        # handle _richy_panel
-        if self.is_called:
-            _richy_panel = self.internal.on_call_kwargs['richy_panel']
-            if _richy_panel is not None:
-                _richy_panel.__enter__()
 
         # call on_enter
         self.on_enter()
@@ -1226,18 +1221,13 @@ class Tracker(Checker):
         Returns:
 
         """
+
         # call on exit
         self.on_exit(exc_type, exc_val, exc_tb)
 
-        # handle _richy_panel
-        if self.is_called:
-            _richy_panel = self.internal.on_call_kwargs['richy_panel']
-            if _richy_panel is not None:
-                _richy_panel.__exit__(exc_type, exc_val, exc_tb)
-
     def __iter__(self) -> t.Iterable:
         # get some vars
-        _richy_panel = self.internal.on_call_kwargs["richy_panel"]  # type: richy.ProgressStatusPanel
+        _richy_panel = self.internal.on_call_kwargs["richy_panel"]  # type: richy.StatusPanel
 
         # iterate
         if _richy_panel is None:
@@ -1386,6 +1376,11 @@ class Tracker(Checker):
             ])
         self.internal.in_with_context = True
 
+        # handle _richy_panel
+        _richy_panel = self.internal.on_call_kwargs['richy_panel']
+        if _richy_panel is not None:
+            _richy_panel.__enter__()
+
     def on_exit(self, exc_type, exc_val, exc_tb):
         """
         Override this in case you want to do something when __exit__ is called
@@ -1399,6 +1394,11 @@ class Tracker(Checker):
                 f"__call__ is called which sets kwargs related to "
                 f"iteration or anything else",
             ])
+
+        # handle _richy_panel
+        _richy_panel = self.internal.on_call_kwargs['richy_panel']
+        if _richy_panel is not None:
+            _richy_panel.__exit__(exc_type, exc_val, exc_tb)
 
         # reset on_call_kwargs
         self.internal.on_call_kwargs = None
