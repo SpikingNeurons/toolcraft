@@ -199,7 +199,6 @@ class Widget(m.Checker, abc.ABC):
             t.List[r_console.RenderableType], m.HashableClass,
         ]
     ] = None
-    refresh_per_second: int = 10
     console: r_console.Console = dataclasses.field(default_factory=lambda: r_console.Console(record=True))
     tc_log: logger.CustomLogger = None
     box_type: r_box.Box = r_box.ASCII
@@ -213,17 +212,22 @@ class Widget(m.Checker, abc.ABC):
         ...
 
     def __post_init__(self):
+        # temp mandatory
+        if self.tc_log is None:
+            raise e.validation.NotAllowed(
+                msgs=["For now we want to keep tc_log field mandatory ..."]
+            )
+
+        # modify sub_title
         _h = self.sub_title
         if isinstance(self.sub_title, m.HashableClass):
             self.sub_title = [
                 f"{_h.__module__}.{_h.__class__.__name__}", f"{_h.group_by}", f"{_h.name}"
             ]
-        self._live = r_live.Live(
-            self.get_renderable(),
-            console=self.console,
-            refresh_per_second=self.refresh_per_second,
-            transient=True,
-        )
+
+        # some vars
+        # noinspection PyTypeChecker
+        self._live = None  # type: r_live.Live
         self.is_in_with_context = False
 
     def __enter__(self) -> "Widget":
@@ -233,11 +237,11 @@ class Widget(m.Checker, abc.ABC):
 
         self._live = r_live.Live(
             self.get_renderable(),
-            refresh_per_second=self.refresh_per_second,
-            console=self.console
+            console=self.console,
+            refresh_per_second=4.,
         )
 
-        self._live.start(refresh=False)
+        self._live.start()
 
         self._start_time = datetime.datetime.now()
 
@@ -317,13 +321,13 @@ class Widget(m.Checker, abc.ABC):
 
         # ------------------------------------------------------------- 02
         # make container for renderables
-        if isinstance(self.sub_title, list):
+        if self.sub_title is None:
+            _grp = []
+        else:
             # noinspection PyTypeChecker
             _grp = [
                 r_text.Text(_, justify='center') for _ in self.sub_title
             ] + [r_markdown.Markdown("---")]
-        else:
-            _grp = []
         for _k, _v in _layout.items():
             if isinstance(_v, Widget):
                 _v = _v.get_renderable()
@@ -589,7 +593,6 @@ class Progress(Widget):
     @staticmethod
     def simple_progress(
         title: t.Optional[str] = "",
-        refresh_per_second: int = 10,
         console: r_console.Console = r_console.Console(record=True),
         tc_log: logger.CustomLogger = None,
         box_type: r_box.Box = r_box.ASCII,
@@ -615,7 +618,6 @@ class Progress(Widget):
             title=title,  # setting this to str will add panel
             columns=_cols,
             console=console,
-            refresh_per_second=refresh_per_second,
             tc_log=tc_log,
             box_type=box_type,
         )
@@ -654,6 +656,7 @@ class Progress(Widget):
     def for_download_and_hashcheck(
         cls, title: str,
         tc_log: logger.CustomLogger = None,
+        box_type: r_box.Box = r_box.ASCII
     ) -> "Progress":
         """
         todo: ass hashcheck progress panel ... currently only download shown .... similar to FitProgressPanel
@@ -676,6 +679,7 @@ class Progress(Widget):
                 "status": SpinnerColumn(),
             },
             tc_log=tc_log,
+            box_type=box_type,
         )
 
         return _progress
@@ -710,7 +714,6 @@ class StatusPanel(Widget):
             self['generic_progress'] = Progress.simple_progress(
                 title="tasks",
                 console=self.console,
-                refresh_per_second=self.refresh_per_second,
                 box_type=r_box.HORIZONTALS,
                 tc_log=self.tc_log,
                 use_msg_field=True,
@@ -731,7 +734,6 @@ class StatusPanel(Widget):
             _ret['stages_progress'] = Progress.simple_progress(
                 title="***",
                 console=self.console,
-                refresh_per_second=self.refresh_per_second,
                 box_type=r_box.HORIZONTALS,
                 tc_log=self.tc_log,
                 show_time_elapsed=True,
@@ -814,8 +816,7 @@ class StatusPanel(Widget):
         if self.is_in_with_context:
             _i = 0
             for _stage in self.layout['stages_progress'].track(
-                sequence=self.stages, task_name="progress",
-                update_period=1./self.refresh_per_second, msg="..."
+                sequence=self.stages, task_name="progress", msg="..."
             ):
                 self.on_iter_next_start(current_stage=_stage)
                 _i += 1
@@ -825,8 +826,7 @@ class StatusPanel(Widget):
             with self:
                 _i = 0
                 for _stage in self.layout['stages_progress'].track(
-                    sequence=self.stages, task_name="progress",
-                    update_period=1./self.refresh_per_second, msg="..."
+                    sequence=self.stages, task_name="progress", msg="..."
                 ):
                     self.on_iter_next_start(current_stage=_stage)
                     _i += 1

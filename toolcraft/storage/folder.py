@@ -140,7 +140,7 @@ class Folder(StorageHashable):
             return []
         return self.for_hashable.group_by
 
-    def create(self, *, richy_panel: richy.StatusPanel = None) -> Path:
+    def create(self, *, richy_panel: richy.StatusPanel) -> Path:
         """
         If there is no Folder we create an empty folder.
         """
@@ -150,7 +150,7 @@ class Folder(StorageHashable):
         # return
         return self.path
 
-    def delete(self, *, force: bool = False, richy_panel: richy.StatusPanel = None):
+    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
         # delete
         # We ask for user response as most of the files/folders are important
         # and programmatically deletes will cost download or generation of
@@ -159,15 +159,18 @@ class Folder(StorageHashable):
         if force:
             response = "y"
         else:
-            response = richy.r_prompt.Confirm.ask(
-                f"Do you want to delete files for Folder `{self.path}`?",
-                default=True,
-            )
+            # todo: need to implement the ask dialog inside richy_panel
+            raise e.code.NotYetImplemented(msgs=["todo: need to implement the ask dialog inside richy_panel"])
+            # response = richy.r_prompt.Confirm.ask(
+            #     f"Do you want to delete files for Folder `{self.path}`?",
+            #     default=True,
+            # )
 
         # perform action
         if response == "y":
+            richy_panel.update("deleting folder ...")
             for _sh in self.walk(only_names=False):
-                _sh.delete(force=force)
+                _sh.delete(force=force, richy_panel=richy_panel)
 
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it

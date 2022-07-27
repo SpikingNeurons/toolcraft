@@ -212,6 +212,13 @@ def try_hashable_status_panel():
         _hashable.richy_panel["on the fly 1"] = richy.r_markdown.Markdown("# on the fly \n+ one")
         _hashable.richy_panel["on the fly 2"] = richy.r_markdown.Markdown("# on the fly \n+ two")
 
+        # ask question
+        # todo: support this ...
+        # response = richy.r_prompt.Confirm.ask(
+        #     f"Do you want to delete files for Folder?",
+        #     default=True, console=_hashable.richy_panel.console
+        # )
+
         # setting final message
         _hashable.richy_panel.update(status="setting final message ...")
         time.sleep(1)

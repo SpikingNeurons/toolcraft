@@ -1445,6 +1445,13 @@ class HookUp:
                     f"hook up ..."
                 ]
             )
+        # get default kwargs if not supplied ...
+        # so that pre- and post-method gets the default kwargs
+        for _k, _p in inspect.signature(self.method).parameters.items():
+            if _k not in kwargs.keys():
+                # noinspection PyUnresolvedReferences,PyProtectedMember
+                if _p.default != inspect._empty:
+                    kwargs[_k] = _p.default
 
         # -----------------------------------------------------------02
         # bake title
@@ -1499,7 +1506,7 @@ class HookUp:
             # spinner.info(msg=f"{method}")
             # spinner.info(msg=f"post: {post_method}")
             _post_ret = self.post_method(
-                self.method_self, hooked_method_return_value=_ret)
+                self.method_self, hooked_method_return_value=_ret, **kwargs)
             # post_method should not return anything
             if _post_ret is not None:
                 raise e.code.CodingError(

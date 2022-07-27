@@ -2135,17 +2135,12 @@ class HashableClass(YamlRepr, abc.ABC):
         if settings.DO_RULE_CHECK:
             from . import richy
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
-            _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
+            # _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
             if bool(_rc_keys):
-                _LOGGER.info(
-                    msg=f"Detected {len(_rc_keys)} new classes so "
-                        f"performing rule checks ...",
-                    # msgs=[_modules],
-                )
                 for _rc_k in richy.Progress.simple_track(
                     _rc_keys,
                     description=f"Rule Check ({len(_rc_keys)} classes) ...",
-                    title="Rule Check",
+                    title="Rule Check", tc_log=_LOGGER,
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
                     del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]

@@ -322,7 +322,7 @@ class FileGroup0(s.FileGroup):
         return [self.start_str + _ for _ in ["a", "b", "c", "d"]]
 
     def create_file(
-        self, *, file_key: str, richy_panel: richy.StatusPanel = None
+        self, *, file_key: str, richy_panel: richy.StatusPanel
     ) -> Path:
         _ret = self.path / file_key
         _ret.touch()
