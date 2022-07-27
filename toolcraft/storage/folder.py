@@ -8,6 +8,9 @@ from .. import marshalling as m
 from . import Suffix
 from . import Path
 from .. import richy
+from .. import logger
+
+_LOGGER = logger.get_logger()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -140,6 +143,16 @@ class Folder(StorageHashable):
             return []
         return self.for_hashable.group_by
 
+    def init(self):
+        # call super
+        super().init()
+
+        # create
+        if not self.is_created:
+            _rp = richy.StatusPanel(title="Create Folder", sub_title=self, tc_log=_LOGGER)
+            with _rp:
+                self.create(richy_panel=_rp)
+
     def create(self, *, richy_panel: richy.StatusPanel) -> Path:
         """
         If there is no Folder we create an empty folder.
@@ -150,7 +163,7 @@ class Folder(StorageHashable):
         # return
         return self.path
 
-    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
+    def delete(self, *, richy_panel: t.Optional[richy.StatusPanel], force: bool = False) -> t.Any:
         # delete
         # We ask for user response as most of the files/folders are important
         # and programmatically deletes will cost download or generation of
@@ -168,7 +181,8 @@ class Folder(StorageHashable):
 
         # perform action
         if response == "y":
-            richy_panel.update("deleting folder ...")
+            if richy_panel is not None:
+                richy_panel.update("deleting folder ...")
             for _sh in self.walk(only_names=False):
                 _sh.delete(force=force, richy_panel=richy_panel)
 

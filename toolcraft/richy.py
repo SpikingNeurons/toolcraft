@@ -654,8 +654,8 @@ class Progress(Widget):
 
     @classmethod
     def for_download_and_hashcheck(
-        cls, title: str,
-        tc_log: logger.CustomLogger = None,
+        cls, title: str, console: r_console.Console,
+        tc_log: logger.CustomLogger,
         box_type: r_box.Box = r_box.ASCII
     ) -> "Progress":
         """
@@ -680,6 +680,7 @@ class Progress(Widget):
             },
             tc_log=tc_log,
             box_type=box_type,
+            console=console,
         )
 
         return _progress
@@ -754,6 +755,12 @@ class StatusPanel(Widget):
           (as they will be added by this class based on usage)
         Note that for now reserved items are at end ...
         """
+        if isinstance(value, Widget):
+            if self.console != value.console:
+                raise e.code.CodingError(
+                    msgs=["Please make sure that you share the console of the widget "
+                          "you want to add to this StatusPanel"]
+                )
         _reserved_keys = ['final_message', 'stages_progress', 'spinner']
         e.validation.ShouldNotBeOneOf(
             value=key, values=_reserved_keys,

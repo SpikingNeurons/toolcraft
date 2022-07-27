@@ -453,7 +453,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             )
 
     # noinspection PyUnusedLocal
-    def delete_pre_runner(self, *, richy_panel: richy.StatusPanel, force: bool):
+    def delete_pre_runner(self, *, richy_panel: t.Optional[richy.StatusPanel], force: bool):
         # check if already created
         if not self.is_created:
             raise e.code.NotAllowed(
@@ -463,7 +463,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                 ]
             )
 
-    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
+    def delete(self, *, richy_panel: t.Optional[richy.StatusPanel], force: bool = False) -> t.Any:
         raise e.code.CodingError(
             msgs=[
                 f"There is nothing to delete for class {self.__class__}",
@@ -475,7 +475,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     # noinspection PyUnusedLocal
     def delete_post_runner(
-        self, *, hooked_method_return_value: t.Any, richy_panel: richy.StatusPanel, force: bool
+        self, *, hooked_method_return_value: t.Any, richy_panel: t.Optional[richy.StatusPanel], force: bool
     ):
         # delete state files as they were created along with the
         # files for this StorageHashable in create_post_runner

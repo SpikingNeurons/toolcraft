@@ -689,41 +689,40 @@ class FileGroup(StorageHashable, abc.ABC):
         else:
             _title = f"Check Hash"
             _rp_key = "hash_check_progress"
-        _hash_check_panel = richy.Progress.for_download_and_hashcheck(
-            title=_title, tc_log=_LOGGER, box_type=richy.r_box.HORIZONTALS)
-        richy_panel[_rp_key] = _hash_check_panel
+        _progress = richy.Progress.for_download_and_hashcheck(
+            title=_title, tc_log=_LOGGER, box_type=richy.r_box.HORIZONTALS, console=richy_panel.console)
+        richy_panel[_rp_key] = _progress
 
         # ------------------------------------------------------ 02
         # now add tasks
         for fk in self.file_keys:
             _lengths[fk] = _file_paths[fk].stat()['size']
-            _hash_check_panel.add_task(
+            _progress.add_task(
                 task_name=fk, total=_lengths[fk]
             )
 
         # ------------------------------------------------------ 03
-        # now download files
-        with _hash_check_panel:
-            for fk in self.file_keys:
-                _hash_module = hashlib.sha256()
-                # get task id
-                with _file_paths[fk].open(mode='rb') as fb:
-                    _new_chunk_size = min(_lengths[fk] // 10, _chunk_size)
-                    # compute
-                    for _chunk in iter(lambda: fb.read(_chunk_size), b''):
-                        _hash_module.update(_chunk)
-                        _hash_check_panel.tasks[fk].update(advance=len(_chunk),)
-                    fb.close()
-                    _computed_hash = _hash_module.hexdigest()
-                # make dicts to return
-                _computed_hashes[fk] = _computed_hash
-                if not compute:
-                    if _computed_hash != _correct_hashes[fk]:
-                        _hash_check_panel.tasks[fk].failed()
-                        _failed_hashes[fk] = {
-                            'correct  ': _correct_hashes[fk],
-                            'computed ': _computed_hash,
-                        }
+        # now check/compute hash
+        for fk in self.file_keys:
+            _hash_module = hashlib.sha256()
+            # get task id
+            with _file_paths[fk].open(mode='rb') as fb:
+                _new_chunk_size = min(_lengths[fk] // 10, _chunk_size)
+                # compute
+                for _chunk in iter(lambda: fb.read(_chunk_size), b''):
+                    _hash_module.update(_chunk)
+                    _progress.tasks[fk].update(advance=len(_chunk),)
+                fb.close()
+                _computed_hash = _hash_module.hexdigest()
+            # make dicts to return
+            _computed_hashes[fk] = _computed_hash
+            if not compute:
+                if _computed_hash != _correct_hashes[fk]:
+                    _progress.tasks[fk].failed()
+                    _failed_hashes[fk] = {
+                        'correct  ': _correct_hashes[fk],
+                        'computed ': _computed_hash,
+                    }
 
         # ------------------------------------------------------ 03
         # return
@@ -878,7 +877,7 @@ class FileGroup(StorageHashable, abc.ABC):
             )
 
     def create(self, *, richy_panel: richy.StatusPanel) -> t.List[Path]:
-        # if no richy panel then create and call again
+        # some vars
         _iterable = self.file_keys
         _total_files = len(_iterable)
         richy_panel.update(f"creating {_total_files} files")
@@ -1044,7 +1043,7 @@ class FileGroup(StorageHashable, abc.ABC):
         """
         ...
 
-    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
+    def delete(self, *, richy_panel: t.Optional[richy.StatusPanel], force: bool = False) -> t.Any:
         """
         Deletes FileGroup
 
@@ -1063,9 +1062,10 @@ class FileGroup(StorageHashable, abc.ABC):
             # are debugging and there will be one time programmatically delete
             # so set the response automatically for FileGroup
             force = True
-            richy_panel.update(
-                "Deleting files automatically for file group [DEBUG_HASHABLE_STATE is True]"
-            )
+            if richy_panel is not None:
+                richy_panel.update(
+                    "Deleting files automatically for file group [DEBUG_HASHABLE_STATE is True]"
+                )
             # just let us warn user
             _LOGGER.warning(
                 msg=f"Deleting files automatically for file group "
@@ -1106,7 +1106,8 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # -----------------------------------------------------------03.02
             # delete all files for the group
-            richy_panel.update("deleting files ...")
+            if richy_panel is not None:
+                richy_panel.update("deleting files ...")
             for fk in self.file_keys:
                 _key_path = self.path / fk
                 if _key_path.exists():
@@ -1684,57 +1685,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # call super
         super().on_exit(exc_type, exc_val, exc_tb)
 
-    def get_files(
-        self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, NpyMemMap]:
-        # get spinner
-        _spinner = logger.Spinner.get_last_spinner()
-
-        # if spinner is None
-        if _spinner is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We recently added spinner support so we expect that "
-                    f"get_files method is called from with with context of "
-                    f"active Spinner ..."
-                ]
-            )
-
-        # container
-        _ret = {}
-
-        # loop over all files
-        _num_files = len(file_keys)
-        for i, file_key in enumerate(file_keys):
-            # log
-            _spinner.text = f"{(i+1):03d}/{_num_files:03d} fetching file" \
-                            f" {file_key}"
-
-            # get data
-            _data = NpyMemMap(file_path=self.path / file_key,)
-
-            # redundant check ... this was anyways checked while file creation
-            # exists here for extra safety
-            if len(_data) != self.shape[file_key][0]:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"This must be same and should be already checked in "
-                        f"{self.__class__.create_post_runner}",
-                        {
-                            "file_key": file_key,
-                            "found_shape": _data.shape,
-                            "expected_shape": self.shape[file_key],
-                        },
-                        f"Check class {self.__class__}"
-                    ]
-                )
-
-            # store data in container
-            _ret[file_key] = _data
-
-        # return
-        return _ret
-
     def save_npy_data(
         self,
         file_key: str,
@@ -1961,6 +1911,8 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         """
         # ------------------------------------------------------ 01
         # get details
+        _total_files = len(self.file_keys)
+        richy_panel.update(f"get content length for {_total_files} files")
         _chunk_size = 1024 * 50
         _file_paths = {
             fk: self.path/fk for fk in self.file_keys
@@ -1970,7 +1922,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         _errors = {}
         _responses = {}
         _lengths = {}
-        for fk in self.file_keys:
+        for fk in richy_panel.track(self.file_keys, task_name="get content length"):
             if _file_paths[fk].exists():
                 _lengths[fk] = _file_paths[fk].stat()['size']
                 continue
@@ -1986,68 +1938,63 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
         # ------------------------------------------------------ 02
         # get panels
-        _title = f"Download for fg: {self.group_by}>>{self.name}"
-        _LOGGER.info(_title)
-        _download_panel = richy.Progress.for_download_and_hashcheck(title=_title)
-        # todo: make hash panel and add it to table and then render with live display
-        #   see https://github.com/Textualize/rich/blob/master/examples/live_progress.py
-        # _hash_check_panel = ...
+        richy_panel.update(f"download {_total_files} files")
+        _download_progress = richy.Progress.for_download_and_hashcheck(
+            title="Download Files", tc_log=_LOGGER, box_type=richy.r_box.HORIZONTALS,
+            console=richy_panel.console,
+        )
+        richy_panel['download_progress'] = _download_progress
 
         # ------------------------------------------------------ 03
         # now add tasks
         for fk in self.file_keys:
             if _file_paths[fk].exists():
-                _download_panel.add_task(
+                _download_progress.add_task(
                     task_name=fk, total=_lengths[fk]
                 )
             elif fk in _errors.keys():
-                _download_panel.add_task(
+                _download_progress.add_task(
                     task_name=fk, total=-1
                 )
             else:
-                _download_panel.add_task(
+                _download_progress.add_task(
                     task_name=fk, total=_lengths[fk]
                 )
 
         # ------------------------------------------------------ 04
         # now download files
-        with _download_panel:
-            _start_time = datetime.datetime.now()
-            for fk in self.file_keys:
-                # if already present just move forward
-                if _file_paths[fk].exists():
-                    _download_panel.tasks[fk].already_finished()
-                    continue
-                # if there was error earlier update task ...
-                if fk in _errors.keys():
-                    _download_panel.tasks[fk].failed()
-                    _raise_error = True
-                    continue
-                try:
-                    with _file_paths[fk].open('wb') as _f:
-                        _response = requests.get(_urls[fk], stream=True)
-                        for _chunk in _response.iter_content(
-                            chunk_size=min(_lengths[fk] // 10, _chunk_size)
-                        ):
-                            if _chunk:  # filter out keep-alive new chunks
-                                _f.write(_chunk)
-                                _download_panel.tasks[fk].update(advance=len(_chunk),)
-                except Exception as _exp:
-                    _errors[fk] = str(_exp)
-                    _raise_error = True
+        # todo: can we do hash check while downloading is undergoing ???
+        for fk in self.file_keys:
+            # if already present just move forward
+            if _file_paths[fk].exists():
+                _download_progress.tasks[fk].already_finished()
+                continue
+            # if there was error earlier update task ...
+            if fk in _errors.keys():
+                _download_progress.tasks[fk].failed()
+                _raise_error = True
+                continue
+            try:
+                with _file_paths[fk].open('wb') as _f:
+                    _response = requests.get(_urls[fk], stream=True)
+                    for _chunk in _response.iter_content(
+                        chunk_size=min(_lengths[fk] // 10, _chunk_size)
+                    ):
+                        if _chunk:  # filter out keep-alive new chunks
+                            _f.write(_chunk)
+                            _download_progress.tasks[fk].update(advance=len(_chunk),)
+            except Exception as _exp:
+                _errors[fk] = str(_exp)
+                _raise_error = True
 
         # ------------------------------------------------------ 05
-        _total_seconds = (datetime.datetime.now() - _start_time).total_seconds()
-        _LOGGER.info(msg=f"Finished in {_total_seconds} seconds")
-
-        # ------------------------------------------------------ 06
         # raise error if _raise_error
         if _raise_error:
             raise e.validation.NotAllowed(
                 msgs=["Check errors ...", _errors]
             )
 
-        # ------------------------------------------------------ 07
+        # ------------------------------------------------------ 06
         # return
         return list(_file_paths.values())
 

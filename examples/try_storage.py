@@ -113,17 +113,17 @@ def try_download_file():
 
     # noinspection SpellCheckingInspection
     df = DnTestFile()
-    if df.is_created:
-        df.delete(force=True)
 
-    df = DnTestFile()
+    with richy.StatusPanel(title="Test Download File", tc_log=_LOGGER) as _rp:
+        if df.is_created:
+            df.delete(force=True, richy_panel=_rp)
 
-    if not df.is_created:
-        df.create()
-        df.check()
+        if not df.is_created:
+            df.create(richy_panel=_rp)
+            df.check(richy_panel=_rp)
 
-    df.get_file(file_key="file1")
-    df.delete(force=True)
+        df.get_file(file_key="file1")
+        df.delete(force=True, richy_panel=_rp)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -151,30 +151,30 @@ class DnTestFileAutoHashed(s.DownloadFileGroup):
 
 
 def try_auto_hashed_download_file():
+
     # noinspection SpellCheckingInspection
     df = DnTestFileAutoHashed()
-    if not df.is_created:
-        df.create()
-    df.get_file(file_key="file1")
-
     df0 = DnTestFile()
 
-    assert df0.get_hashes() == df.config.auto_hashes
-
-    df0.delete(force=True)
-    df.delete(force=True)
+    with richy.StatusPanel(title="Test Auto Hashed Download File", tc_log=_LOGGER) as _rp:
+        df.get_file(file_key="file1")
+        df0.get_file(file_key="file1")
+        assert df0.get_hashes() == df.config.auto_hashes
+        df0.delete(force=True, richy_panel=_rp)
+        df.delete(force=True, richy_panel=_rp)
 
 
 def try_metainfo_file():
     # noinspection SpellCheckingInspection
     df = DnTestFile()
-    # note that creating instance above creates file
-    df.delete(force=True)
-    df = DnTestFile()
-    if not df.is_created:
-        df.create()
-    if df.periodic_check_needed:
-        df.check()
+
+    with richy.StatusPanel(title="Test MetaInfo of Download File", tc_log=_LOGGER) as _rp:
+        # note that creating instance above creates file
+        df.delete(force=True, richy_panel=_rp)
+        if not df.is_created:
+            df.create(richy_panel=_rp)
+        if df.periodic_check_needed:
+            df.check(richy_panel=_rp)
 
     for _ in range(5):
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _)
@@ -185,7 +185,7 @@ def try_metainfo_file():
         print(df.config)
         time.sleep(1)
 
-    df.delete(force=True)
+    df.delete(force=True, richy_panel=None)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -228,7 +228,7 @@ def try_creating_folders():
     print([_.full_path for _ in folder0.path.ls()])
 
     # or else just delete the super parent and things will chain
-    folder0.delete(force=True)
+    folder0.delete(force=True, richy_panel=None)
     # note that after this any access to all four instances should get
     # blocked but we still can access them ... check below
     # todo: need to figure out what to do with folders that are deleted ...
@@ -334,6 +334,8 @@ def try_arrow_storage(gcs: bool):
         ts = TestStorageGcs(1, 2.0)
     else:
         ts = TestStorage(1, 2.0)
+    _ = ts.store
+    _ = ts.store_with_partition_cols
 
     # ---------------------------------------------------------01
     print("---------------------------------------------------------01")
@@ -649,33 +651,31 @@ def try_arrow_storage(gcs: bool):
     print("---------------------------------------------------------05")
     # finally, delete folder for hashable that has StoreFields
     print("ts.store.delete(force=True)")
-    ts.store.delete(force=True)
+    ts.store.delete(force=True, richy_panel=None)
     print("ts.store_with_partition_cols.delete(force=True)")
-    ts.store_with_partition_cols.delete(force=True)
+    ts.store_with_partition_cols.delete(force=True, richy_panel=None)
     print("ts.results_folder.delete(force=True)")
-    ts.results_folder.delete(force=True)
+    ts.results_folder.delete(force=True, richy_panel=None)
 
 
 def try_file_storage(gcs: bool):
     # create simple file group inside folder
-    print("---------------------------------------------------------01")
-    print("Create folder0=Folder0(...)")
     folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0", file_system="CWD")
-    print("Create fg0=FileGroup0(...)")
     fg0 = FileGroup0(start_str="f1", parent_folder=folder0)
-    print("Create fg1=FileGroup0(...)")
     fg1 = FileGroup0(start_str="f2", parent_folder=folder0)
+
+    print("---------------------------------------------------------01")
     print("Delete fg0")
-    fg0.delete(force=True)
+    fg0.delete(force=True, richy_panel=None)
     print("Delete fg1")
-    fg1.delete(force=True)
+    fg1.delete(force=True, richy_panel=None)
     print("Delete folder0")
-    folder0.delete(force=True)
+    folder0.delete(force=True, richy_panel=None)
 
     # create file group from path
+    folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0", file_system="CWD")
     print("---------------------------------------------------------02")
     print("Create folder0=Folder0(...)")
-    folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0", file_system="CWD")
     print("Create some folders and files inside it with folder0 as parent")
     _fgs = []
     for _dir, _files in {
@@ -693,9 +693,9 @@ def try_file_storage(gcs: bool):
         )
     print("Delete file groups")
     for _fg in _fgs:
-        _fg.delete(force=True)
+        _fg.delete(force=True, richy_panel=None)
     print("Delete folder0")
-    folder0.delete(force=True)
+    folder0.delete(force=True, richy_panel=None)
 
 
 def try_main():
