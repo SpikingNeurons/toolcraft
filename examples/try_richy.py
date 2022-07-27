@@ -17,6 +17,16 @@ def try_progress():
     ):
         time.sleep(1)
 
+    _sp = richy.Progress.simple_progress(
+        title="Try Progress inside Progress",
+        tc_log=_LOGGER,
+        console=None,
+    )
+    with _sp:
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="main"):
+            for __ in _sp.track(sequence=[3, 3, 3, 3], task_name=f"child {_}"):
+                time.sleep(0.25)
+
     with richy.Progress.for_download_and_hashcheck(
         title="Try Progress Download HashCheck", tc_log=_LOGGER,
         console=None,
@@ -92,6 +102,10 @@ def try_status_panel():
             time.sleep(_time)
         _sp.update(status="executing task 4 ...")
         time.sleep(_time)
+
+        for _ in _sp.track(sequence=[1, 2, 3, 4], task_name="main"):
+            for __ in _sp.track(sequence=[3, 3, 3, 3], task_name=f"child {_}"):
+                time.sleep(_time)
 
         # _sp.set_final_message(msg="\n---\n + I am done ... \n + See you soon ...")
         _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
@@ -230,10 +244,10 @@ def try_hashable_status_panel():
 
 
 def main():
-    try_progress()
+    # try_progress()
     try_status_panel()
-    try_fit_progress_status_panel()
-    try_hashable_status_panel()
+    # try_fit_progress_status_panel()
+    # try_hashable_status_panel()
 
 
 if __name__ == '__main__':

@@ -884,7 +884,8 @@ class FileGroup(StorageHashable, abc.ABC):
         _iterable = self.file_keys
         _total_files = len(_iterable)
         richy_panel.update(f"creating {_total_files} files")
-        _iterable = richy_panel.track(self.file_keys, task_name="create files")
+        _iterable = richy_panel.track(
+            self.file_keys, task_name=f"create {_total_files} files")
 
         # create
         _ret = []

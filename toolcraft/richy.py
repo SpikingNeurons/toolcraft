@@ -530,7 +530,6 @@ class Progress(Widget):
         task_name: str,
         total: t.Optional[float] = None,
         description: str = None,
-        update_period: float = 0.1,
         **fields,
     ) -> t.Generator[r_progress.ProgressType, None, None]:
         """
@@ -573,23 +572,29 @@ class Progress(Widget):
 
         # ------------------------------------------------------------ 03
         # yield and hence auto track
+        for value in sequence:
+            yield value
+            _task.update(advance=1)
+
+        # ------------------------------------------------------------ xx
+        # check r_progress.Progress.track
         # todo: explore --- self.rich_progress.live.auto_refresh
-        task_id = _task.rich_task.id
-        _p = self.layout['progress']
-        if _p.live.auto_refresh:
-            # noinspection PyProtectedMember
-            with r_progress._TrackThread(
-                    _p, task_id, update_period) as track_thread:
-                for value in sequence:
-                    yield value
-                    track_thread.completed += 1
-        else:
-            advance = _p.advance
-            refresh = _p.refresh
-            for value in sequence:
-                yield value
-                advance(task_id, 1)
-                refresh()
+        # if _p.live.auto_refresh:
+        #     # noinspection PyProtectedMember
+        #     with r_progress._TrackThread(
+        #             _p, task_id, update_period) as track_thread:
+        #         for value in sequence:
+        #             print("xxxxx", task_id, task_name, value)
+        #             yield value
+        #             track_thread.completed += 1
+        # else:
+        #     advance = _p.advance
+        #     refresh = _p.refresh
+        #     for value in sequence:
+        #         print("xxxxx", task_id, task_name, value)
+        #         yield value
+        #         advance(task_id, 1)
+        #         refresh()
 
     @staticmethod
     def simple_progress(
@@ -703,6 +708,9 @@ class Progress(Widget):
 
 
 @dataclasses.dataclass
+@m.RuleChecker(
+    things_to_be_cached=['generic_progress']
+)
 class StatusPanel(Widget):
 
     stages: t.Optional[
@@ -893,7 +901,6 @@ class StatusPanel(Widget):
         task_name: str,
         total: t.Optional[float] = None,
         description: str = None,
-        update_period: float = 0.1,
         msg: str = "",
         prefix_current_stage: bool = False,
     ) -> t.Generator[r_progress.ProgressType, None, None]:
@@ -909,8 +916,7 @@ class StatusPanel(Widget):
             task_name = f"{self.current_stage}:{task_name}"
         return self.generic_progress.track(
             sequence=sequence, task_name=task_name, total=total,
-            description=description, update_period=update_period,
-            msg=msg,
+            description=description, msg=msg,
         )
 
     def set_final_message(self, msg: str):

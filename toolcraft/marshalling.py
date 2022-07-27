@@ -1377,11 +1377,6 @@ class Tracker(Checker):
             ])
         self.internal.in_with_context = True
 
-        # handle _rp
-        _rp = self.internal.on_call_kwargs['richy_panel']  # type: richy.StatusPanel
-        if _rp is not None and not _rp.is_in_with_context:
-            _rp.__enter__()
-
     def on_exit(self, exc_type, exc_val, exc_tb):
         """
         Override this in case you want to do something when __exit__ is called
@@ -1395,11 +1390,6 @@ class Tracker(Checker):
                 f"__call__ is called which sets kwargs related to "
                 f"iteration or anything else",
             ])
-
-        # handle _rp
-        _rp = self.richy_panel
-        if _rp is not None and _rp.is_in_with_context:
-            _rp.__exit__(exc_type, exc_val, exc_tb)
 
         # reset on_call_kwargs
         self.internal.on_call_kwargs = None
