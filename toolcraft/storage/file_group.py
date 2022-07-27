@@ -690,7 +690,10 @@ class FileGroup(StorageHashable, abc.ABC):
             _title = f"Check Hash"
             _rp_key = "hash_check_progress"
         _progress = richy.Progress.for_download_and_hashcheck(
-            title=_title, tc_log=_LOGGER, box_type=richy.r_box.HORIZONTALS, console=richy_panel.console)
+            title=_title, tc_log=_LOGGER,
+            box_type=richy.r_box.HORIZONTALS,
+            border_style=richy.r_style.Style(color="cyan"),
+            console=richy_panel.console)
         richy_panel[_rp_key] = _progress
 
         # ------------------------------------------------------ 02
@@ -1940,7 +1943,9 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         # get panels
         richy_panel.update(f"download {_total_files} files")
         _download_progress = richy.Progress.for_download_and_hashcheck(
-            title="Download Files", tc_log=_LOGGER, box_type=richy.r_box.HORIZONTALS,
+            title="Download Files", tc_log=_LOGGER,
+            box_type=richy.r_box.HORIZONTALS,
+            border_style=richy.r_style.Style(color="cyan"),
             console=richy_panel.console,
         )
         richy_panel['download_progress'] = _download_progress

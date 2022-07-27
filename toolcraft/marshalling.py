@@ -2140,7 +2140,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 for _rc_k in richy.Progress.simple_track(
                     _rc_keys,
                     description=f"Rule Check ({len(_rc_keys)} classes) ...",
-                    title="Rule Check", tc_log=_LOGGER,
+                    title="Rule Check", tc_log=_LOGGER, console=None,
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
                     del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]

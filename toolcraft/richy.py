@@ -201,6 +201,7 @@ class Widget(m.Checker, abc.ABC):
     ] = None
     console: r_console.Console = dataclasses.field(default_factory=lambda: r_console.Console(record=True))
     tc_log: logger.CustomLogger = None
+    border_style: r_style.StyleType = "green"
     box_type: r_box.Box = r_box.ASCII
 
     @property
@@ -344,7 +345,7 @@ class Widget(m.Checker, abc.ABC):
         else:
             return r_panel.Panel(
                 _grp, title=self.title,
-                border_style="green",
+                border_style=self.border_style,
                 # padding=(2, 2),
                 expand=True,
                 box=self.box_type,
@@ -592,14 +593,17 @@ class Progress(Widget):
 
     @staticmethod
     def simple_progress(
+        console: t.Optional[r_console.Console],
         title: t.Optional[str] = "",
-        console: r_console.Console = r_console.Console(record=True),
         tc_log: logger.CustomLogger = None,
         box_type: r_box.Box = r_box.ASCII,
+        border_style: r_style.Style = "green",
         show_time_elapsed: bool = True,
         show_time_remaining: bool = False,
         use_msg_field: bool = False,
     ) -> "Progress":
+        if console is None:
+            console = r_console.Console(record=True)
         _cols = {
             "text": r_progress.TextColumn(
                 "[progress.description]{task.description}"),
@@ -620,6 +624,7 @@ class Progress(Widget):
             console=console,
             tc_log=tc_log,
             box_type=box_type,
+            border_style=border_style,
         )
 
     @classmethod
@@ -629,11 +634,13 @@ class Progress(Widget):
             t.Sequence[r_progress.ProgressType],
             t.Iterable[r_progress.ProgressType]
         ],
+        console: t.Optional[r_console.Console],
         title: t.Optional[str] = "",
         description: str = "Working...",
         total: float = None,
         tc_log: logger.CustomLogger = None,
         box_type: r_box.Box = r_box.ASCII,
+        border_style: r_style.Style = "green",
         show_time_elapsed: bool = True,
         show_time_remaining: bool = False,
         use_msg_field: bool = False,
@@ -641,8 +648,12 @@ class Progress(Widget):
         """
         Simple progress bar for single task which iterates over sequence
         """
+        if console is None:
+            console = r_console.Console(record=True)
         with cls.simple_progress(
             title=title, tc_log=tc_log, box_type=box_type,
+            console=console,
+            border_style=border_style,
             show_time_elapsed=show_time_elapsed,
             show_time_remaining=show_time_remaining,
             use_msg_field=use_msg_field,
@@ -654,13 +665,17 @@ class Progress(Widget):
 
     @classmethod
     def for_download_and_hashcheck(
-        cls, title: str, console: r_console.Console,
+        cls, title: str,
         tc_log: logger.CustomLogger,
-        box_type: r_box.Box = r_box.ASCII
+        console: t.Optional[r_console.Console],
+        box_type: r_box.Box = r_box.ASCII,
+        border_style: r_style.Style = "green",
     ) -> "Progress":
         """
         todo: ass hashcheck progress panel ... currently only download shown .... similar to FitProgressPanel
         """
+        if console is None:
+            console = r_console.Console(record=True)
         _progress = Progress(
             title=title,
             columns={
@@ -680,6 +695,7 @@ class Progress(Widget):
             },
             tc_log=tc_log,
             box_type=box_type,
+            border_style=border_style,
             console=console,
         )
 
@@ -716,6 +732,7 @@ class StatusPanel(Widget):
                 title="tasks",
                 console=self.console,
                 box_type=r_box.HORIZONTALS,
+                border_style=r_style.Style(color="cyan"),
                 tc_log=self.tc_log,
                 use_msg_field=True,
             )
@@ -736,6 +753,7 @@ class StatusPanel(Widget):
                 title="***",
                 console=self.console,
                 box_type=r_box.HORIZONTALS,
+                border_style=r_style.Style(color="cyan"),
                 tc_log=self.tc_log,
                 show_time_elapsed=True,
                 show_time_remaining=True,
@@ -973,8 +991,10 @@ class FitStatusPanel(StatusPanel):
         super().on_iter_next_start(current_stage)
         self.update(status=f"Fitting for `{current_stage}` ...")
         _fit_progress = Progress.simple_progress(
-            title=f"Train & Validate: {current_stage}", box_type=r_box.HORIZONTALS,
-            use_msg_field=True,
+            title=f"Train & Validate: {current_stage}",
+            box_type=r_box.HORIZONTALS,
+            border_style=r_style.Style(color="cyan"),
+            use_msg_field=True, console=self.console, tc_log=self.tc_log,
         )
         _fit_progress.add_task(task_name="train", total=self.train_steps, msg="")
         _fit_progress.add_task(task_name="validate", total=self.validate_steps, msg="")

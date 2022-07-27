@@ -11,11 +11,15 @@ _LOGGER = logger.get_logger()
 
 
 def try_progress():
-    for _ in richy.Progress.simple_track(title="Try Progress", sequence=[1, 2, 3, 4], tc_log=_LOGGER):
+    for _ in richy.Progress.simple_track(
+        title="Try Progress", sequence=[1, 2, 3, 4], tc_log=_LOGGER,
+        console=None,
+    ):
         time.sleep(1)
 
     with richy.Progress.for_download_and_hashcheck(
         title="Try Progress Download HashCheck", tc_log=_LOGGER,
+        console=None,
     ) as _p:
         for _ in _p.track(sequence=[1, 2, 3, 4], task_name="task 1"):
             time.sleep(0.2)
@@ -226,9 +230,9 @@ def try_hashable_status_panel():
 
 
 def main():
-    # try_progress()
-    # try_status_panel()
-    # try_fit_progress_status_panel()
+    try_progress()
+    try_status_panel()
+    try_fit_progress_status_panel()
     try_hashable_status_panel()
 
 
