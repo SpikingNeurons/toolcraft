@@ -714,7 +714,7 @@ class Progress(Widget):
 class StatusPanel(Widget):
 
     stages: t.Optional[
-        t.Union[t.Sequence[str], t.Iterable[str]]
+        t.Union[t.Sequence[t.Any], t.Iterable[t.Any]]
     ] = None
 
     @property
@@ -866,12 +866,12 @@ class StatusPanel(Widget):
                     yield _stage
                     self.on_iter_next_end(current_stage=_stage)
 
-    def on_iter_next_start(self, current_stage: str):
+    def on_iter_next_start(self, current_stage: t.Any):
         # noinspection PyAttributeOutsideInit
         self.current_stage = current_stage
         self.update(status=f"executing stage `{current_stage}` ...")
 
-    def on_iter_next_end(self, current_stage: str):
+    def on_iter_next_end(self, current_stage: t.Any):
         # noinspection PyAttributeOutsideInit
         self.current_stage = None
 

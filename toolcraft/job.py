@@ -17,6 +17,7 @@ import asyncio
 import hashlib
 import types
 import blosc
+from tensorflow.lite.toco.logging import toco_conversion_log_pb2
 
 from . import logger
 from . import error as e
@@ -1242,6 +1243,9 @@ class JobGroup(abc.ABC):
         # call init
         self.init()
 
+    def __str__(self) -> str:
+        return self.flow_id
+
     def init(self):
         ...
 
@@ -1364,31 +1368,28 @@ class Flow:
           ssh ... rather than using instance on cluster to launch jobs
           This will also help to have gui in dearpygui
         """
-        # just check health of all jobs
-        _sp = richy.StatusPanel(
-            title=f"Checking health of all jobs first ...", tc_log=_LOGGER
-        )
-        with _sp:
-            _p = _sp.progress
-            _s = _sp.status
-            _s.update(spinner_speed=1.0, spinner=None, status="started ...")
-            _jobs = []
-            for _stage in self.stages:
-                _jobs += _stage.all_jobs
+        # --------------------------------------------------------- 01
+        # gather all jobs
+        _all_jobs = []
+        for _stage in self.stages:
+            _all_jobs += _stage.all_jobs
+
+        # --------------------------------------------------------- 02
+        # check health of all jobs
+        with richy.StatusPanel(
+            title="Running the flow for runner ...",
+            sub_title=self.runner, tc_log=_LOGGER,
+        ) as _rp:
+            _rp.update("Checking health of all jobs ...")
             _job: Job
-            for _job in _p.track(
-                sequence=_jobs, task_name=f"check health"
-            ):
-                _s.update(status=f"check health for {_job.flow_id} ...")
+            for _job in _rp.track(sequence=_all_jobs, task_name="check health"):
                 _job.check_health()
 
+        # --------------------------------------------------------- 03
         # call jobs ...
         if cluster_type is JobRunnerClusterType.local:
             # tracker containers
             _completed_jobs = []
-            _all_jobs = []
-            for _stage in self.stages:
-                _all_jobs += _stage.all_jobs
 
             # loop over all jobs in flow
             for _j in _all_jobs:
@@ -1416,24 +1417,19 @@ class Flow:
                 _completed_jobs.append(_j)
 
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            _sp = richy.StatusPanel(
-                title=f"Launch stages on `{cluster_type.name}`", tc_log=_LOGGER
+            _rp = richy.StatusPanel(
+                title=f"Launch stages on `{cluster_type.name}` for runner",
+                sub_title=self.runner, tc_log=_LOGGER,
+                stages=self.stages
             )
-            with _sp:
-                _p = _sp.progress
-                _s = _sp.status
-                _s.update(spinner_speed=1.0, spinner=None, status="started ...")
-                for _stage_id, _stage in enumerate(self.stages):
-                    _jobs = _stage.all_jobs
-                    _job: t.Union[Job, ParallelJobGroup]
-                    for _job in _p.track(
-                        sequence=_jobs, task_name=f"stage {_stage_id:03d}"
-                    ):
-                        _s.update(
-                            spinner_speed=1.0,
-                            spinner=None, status=f"launching {_job.flow_id} ..."
-                        )
-                        _job(cluster_type)
+            for _stage in _rp:
+                _rp.update(f"launching jobs for stage: {_stage}...")
+                _jobs = _stage.all_jobs
+                _job: t.Union[Job, ParallelJobGroup]
+                for _job in _rp.track(
+                    sequence=_jobs, task_name=f"stage {_stage}"
+                ):
+                    _job(cluster_type)
         else:
             raise e.code.NotSupported(
                 msgs=[f"Not supported {cluster_type}"]
