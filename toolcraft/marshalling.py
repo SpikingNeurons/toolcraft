@@ -2200,16 +2200,19 @@ class HashableClass(YamlRepr, abc.ABC):
             from keras.api._v2 import keras as tk
             for f_name in _field_names:
                 _v = getattr(self, f_name)
-                if isinstance(
-                    _v, (
-                        tk.losses.Loss,
-                        tk.layers.Layer,
-                        tk.optimizers.Optimizer,
-                        # this need not be handled as it is part of optimizer
-                        # tk.optimizers.schedules.LearningRateSchedule,
-                    )
-                ):
-                    _v = tk.utils.serialize_keras_object(_v)
+                if isinstance(_v, tk.losses.Loss):
+                    _v = tk.losses.serialize(_v)
+                    _v['__keras_instance__'] = "loss"
+                if isinstance(_v, tk.layers.Layer):
+                    _v = tk.layers.serialize(_v)
+                    _v['__keras_instance__'] = "layer"
+                if isinstance(_v, tk.optimizers.Optimizer):
+                    _v = tk.optimizers.serialize(_v)
+                    _v['__keras_instance__'] = "optimizer"
+                # this need not be handled as it is automatically handled by optimizer
+                # if isinstance(_v, tk.optimizers.schedules.LearningRateSchedule):
+                #     _v = tk.optimizers.schedules.serialize(_v)
+                #     _v['__keras_instance__'] = "learning_rate_schedule"
                 _ret[f_name] = _v
         else:
             for f_name in _field_names:
@@ -2226,12 +2229,22 @@ class HashableClass(YamlRepr, abc.ABC):
             # noinspection PyUnresolvedReferences,PyProtectedMember
             from keras.api._v2 import keras as tk
             for _n in yaml_state.keys():
-                if issubclass(cls.__annotations__[_n], tk.losses.Loss):
-                    yaml_state[_n] = tk.losses.deserialize(yaml_state[_n])
-                if issubclass(cls.__annotations__[_n], tk.layers.Layer):
-                    yaml_state[_n] = tk.layers.deserialize(yaml_state[_n])
-                if issubclass(cls.__annotations__[_n], tk.optimizers.Optimizer):
-                    yaml_state[_n] = tk.optimizers.deserialize(yaml_state[_n])
+                _v = yaml_state[_n]
+                if isinstance(_v, dict) and '__keras_instance__' in _v.keys():
+                    _keras_instance_type = _v['__keras_instance__']
+                    del _v['__keras_instance__']
+                    if _keras_instance_type == "loss":
+                        yaml_state[_n] = tk.losses.deserialize(_v)
+                    elif _keras_instance_type == "layer":
+                        yaml_state[_n] = tk.layers.deserialize(_v)
+                    elif _keras_instance_type == "optimizer":
+                        yaml_state[_n] = tk.optimizers.deserialize(_v)
+                    else:
+                        raise e.code.CodingError(
+                            msgs=[
+                                f"Unknown keras instance type {_keras_instance_type!r}"
+                            ]
+                        )
         # noinspection PyTypeChecker
         return super().from_dict(yaml_state=yaml_state, **kwargs)
 
