@@ -971,25 +971,10 @@ class FitStatusPanel(StatusPanel):
     def summary(self) -> t.List[str]:
         return []
 
-    def __call__(
-        self,
-        train_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]],
-        validate_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]]
-    ):
-        ...
-
     def __post_init__(self):
         if self.epochs is None:
             raise e.validation.NotAllowed(
                 msgs=["Please supply mandatory field `epochs`"]
-            )
-        if self.train_dataset is None:
-            raise e.validation.NotAllowed(
-                msgs=["Please supply mandatory field `train_steps`"]
-            )
-        if self.validate_dataset is None:
-            raise e.validation.NotAllowed(
-                msgs=["Please supply mandatory field `validate_steps`"]
             )
         if self.stages is not None:
             raise e.code.CodingError(
@@ -998,22 +983,32 @@ class FitStatusPanel(StatusPanel):
         self.stages = [f"epoch {_+1}" for _ in range(self.epochs)]
         super().__post_init__()
 
-    def on_iter_next_start(self, current_stage: str):
-        super().on_iter_next_start(current_stage)
-        self.update(status=f"Fitting for `{current_stage}` ...")
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # delete if exists
+        del self['fit_progress']
+        super().__exit__(exc_type, exc_val, exc_tb)
+
+    def make_fit_progress_panel(
+        self, train_steps: int, validate_steps: int,
+    ) -> t.Tuple[ProgressTask, ProgressTask]:
+        # delete if exists
+        del self['fit_progress']
+
+        # make _fit_progress and add task
         _fit_progress = Progress.simple_progress(
-            title=f"Train & Validate: {current_stage}",
+            title=f"Train & Validate: {self.current_stage}",
             box_type=r_box.HORIZONTALS,
             border_style=r_style.Style(color="cyan"),
             use_msg_field=True, console=self.console, tc_log=self.tc_log,
         )
-        _fit_progress.add_task(task_name="train", total=len(self.train_dataset), msg="")
-        _fit_progress.add_task(task_name="validate", total=len(self.validate_dataset), msg="")
+        _train_task = _fit_progress.add_task(task_name="train", total=train_steps, msg="")
+        _validate_task = _fit_progress.add_task(task_name="validate", total=validate_steps, msg="")
+
+        # add to self
         self['fit_progress'] = _fit_progress
 
-    def on_iter_next_end(self, current_stage: str):
-        del self['fit_progress']
-        super().on_iter_next_end(current_stage)
+        # return
+        return _train_task, _validate_task
 
     def append_to_summary(self, line: str):
         self.summary.append(line)
