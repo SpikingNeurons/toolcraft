@@ -957,8 +957,6 @@ class StatusPanel(Widget):
 class FitStatusPanel(StatusPanel):
     title: str = "Fitting ..."
     epochs: int = None
-    train_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]] = None
-    validate_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]] = None
 
     @property
     def train_task(self) -> ProgressTask:
@@ -972,6 +970,13 @@ class FitStatusPanel(StatusPanel):
     @util.CacheResult
     def summary(self) -> t.List[str]:
         return []
+
+    def __call__(
+        self,
+        train_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]],
+        validate_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]]
+    ):
+        ...
 
     def __post_init__(self):
         if self.epochs is None:
