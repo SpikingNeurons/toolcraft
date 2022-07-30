@@ -375,6 +375,7 @@ class ProgressTask:
     def update(
         self,
         advance: float = None,
+        completed: float = None,
         total: float = None, description: str = None, **fields,
     ):
         """
@@ -392,7 +393,7 @@ class ProgressTask:
             )
         self.rich_progress.update(
             task_id=self.rich_task.id,
-            advance=advance, total=total,
+            advance=advance, total=total, completed=completed,
             description=description, **fields,
         )
 
