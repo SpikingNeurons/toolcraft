@@ -326,6 +326,7 @@ class FileGroup0(s.FileGroup):
     ) -> Path:
         _ret = self.path / file_key
         _ret.touch()
+        _ret.write_text("Hi I am toolcraft ...")
         return _ret
 
 
@@ -686,6 +687,7 @@ def try_file_storage(gcs: bool):
         (folder0.path / _dir).mkdir()
         for _file in _files:
             (folder0.path / _dir / _file).touch()
+            (folder0.path / _dir / _file).write_text("Hi I am toolcraft ...")
         _fgs.append(
             s.FileGroupFromPaths(
                 parent_folder=folder0, folder_name=_dir, keys=_files,

@@ -711,7 +711,6 @@ class FileGroup(StorageHashable, abc.ABC):
             _hash_module = hashlib.sha256()
             # get task id
             with _file_paths[fk].open(mode='rb') as fb:
-                _new_chunk_size = min(_lengths[fk] // 10, _chunk_size)
                 # compute
                 for _chunk in iter(lambda: fb.read(_chunk_size), b''):
                     _hash_module.update(_chunk)
