@@ -1016,7 +1016,23 @@ class Job:
         _search_job = None
         for _j in itertools.chain.from_iterable(
             [_stage.all_jobs for _stage in runner.flow.stages] + [runner.flow.other_jobs]):
-            if _j.method == _method and _j.experiment == _experiment and _j.runner == runner:
+
+            # detect if same
+            # note that __eq__ does not work as dataclass overrides its behaviour
+            # https://stackoverflow.com/questions/61430552/dataclass-not-inheriting-eq-method-from-its-parent
+            # todo: test dataclass(eq=False) behaviour to make direct comparison work until then we use code below
+            _is_same_method = _j.method == _method
+            if _j.experiment is None or _experiment is None:
+                _is_experiment_same = _j.experiment == _experiment
+            else:
+                _is_experiment_same = _j.experiment.hex_hash == _experiment.hex_hash
+            if _j.runner is None or runner is None:
+                _is_runner_same = _j.runner == runner
+            else:
+                _is_runner_same = _j.runner.hex_hash == runner.hex_hash
+
+            # check if match
+            if _is_same_method and _is_experiment_same and _is_runner_same:
                 if _search_job is not None:
                     raise e.code.CodingError(
                         msgs=[

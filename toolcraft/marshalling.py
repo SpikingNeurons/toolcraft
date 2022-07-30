@@ -2186,11 +2186,18 @@ class HashableClass(YamlRepr, abc.ABC):
             f"Instead use `.yaml()` method.",
         ])
 
-    def __eq__(self, other):
-        # todo: find better ways with marshalling class and when full
-        #  serialization is supported
-        # Note this helps to ignore `init=True` fields in equality check
-        return self.hex_hash == other.hex_hash
+    # todo: avoid these dunder methods as dataclass adds its own __eq__ and then you need to
+    #   add eq=False in all child class dataclass decorators
+    #   https://stackoverflow.com/questions/61430552/dataclass-not-inheriting-eq-method-from-its-parent
+    # todo: explore dunder method override options of dataclass.dataclass constructor and how it plays
+    #   with frozen and other option's
+    # def __ne__(self, other):
+    #     print(self.hex_hash, other.hex_hash, "ne ...........................")
+    #     return not self.__eq__(other)
+    # def __eq__(self, other):
+    #     # Note this helps to ignore `init=True` fields in equality check
+    #     print(self.hex_hash, other.hex_hash, "eq ...........................")
+    #     return self.hex_hash == other.hex_hash
 
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
