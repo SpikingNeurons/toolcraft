@@ -137,7 +137,7 @@ def try_fit_progress_status_panel():
     _validate_samples = 10
     _fit_panel = richy.FitStatusPanel(
         tc_log=_LOGGER, epochs=3,
-        train_steps=_train_samples, validate_steps=_validate_samples,
+        train_dataset=range(_train_samples), validate_dataset=range(_validate_samples),
     )
     _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
 
@@ -245,8 +245,8 @@ def try_hashable_status_panel():
 
 def main():
     # try_progress()
-    try_status_panel()
-    # try_fit_progress_status_panel()
+    # try_status_panel()
+    try_fit_progress_status_panel()
     # try_hashable_status_panel()
 
 

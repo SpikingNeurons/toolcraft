@@ -957,8 +957,8 @@ class StatusPanel(Widget):
 class FitStatusPanel(StatusPanel):
     title: str = "Fitting ..."
     epochs: int = None
-    train_steps: int = None
-    validate_steps: int = None
+    train_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]] = None
+    validate_dataset: t.Union[t.Sequence[t.Any], t.Iterable[t.Any]] = None
 
     @property
     def train_task(self) -> ProgressTask:
@@ -978,11 +978,11 @@ class FitStatusPanel(StatusPanel):
             raise e.validation.NotAllowed(
                 msgs=["Please supply mandatory field `epochs`"]
             )
-        if self.train_steps is None:
+        if self.train_dataset is None:
             raise e.validation.NotAllowed(
                 msgs=["Please supply mandatory field `train_steps`"]
             )
-        if self.validate_steps is None:
+        if self.validate_dataset is None:
             raise e.validation.NotAllowed(
                 msgs=["Please supply mandatory field `validate_steps`"]
             )
@@ -1002,8 +1002,8 @@ class FitStatusPanel(StatusPanel):
             border_style=r_style.Style(color="cyan"),
             use_msg_field=True, console=self.console, tc_log=self.tc_log,
         )
-        _fit_progress.add_task(task_name="train", total=self.train_steps, msg="")
-        _fit_progress.add_task(task_name="validate", total=self.validate_steps, msg="")
+        _fit_progress.add_task(task_name="train", total=len(self.train_dataset), msg="")
+        _fit_progress.add_task(task_name="validate", total=len(self.validate_dataset), msg="")
         self['fit_progress'] = _fit_progress
 
     def on_iter_next_end(self, current_stage: str):

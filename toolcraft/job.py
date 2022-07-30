@@ -17,7 +17,6 @@ import asyncio
 import hashlib
 import types
 import blosc
-from tensorflow.lite.toco.logging import toco_conversion_log_pb2
 
 from . import logger
 from . import error as e
@@ -25,7 +24,6 @@ from . import marshalling as m
 from . import util
 from . import storage as s
 from . import richy
-from . import settings
 
 try:
     import tensorflow as tf
