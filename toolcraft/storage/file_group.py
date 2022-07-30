@@ -13,6 +13,7 @@ todo: Lets figure out cloud hash mechanisms to confirm uploads or check download
 todo: in context to mlflow this will also be used as log_artifact ... where
   we store arbitrary files
 """
+import time
 
 import requests
 import typing as t
@@ -1925,20 +1926,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         _raise_error = False
         _errors = {}
         _responses = {}
-        _lengths = {}
-        for fk in richy_panel.track(self.file_keys, task_name="get content length"):
-            if _file_paths[fk].exists():
-                _lengths[fk] = _file_paths[fk].stat()['size']
-                continue
-            try:
-                _response = requests.get(_urls[fk], stream=True)
-                try:
-                    _length = int(_response.headers['content-length'])
-                    _lengths[fk] = _length
-                except Exception as _ee:
-                    raise Exception("error getting content length: " + str(_ee))
-            except Exception as _exp:
-                raise _exp
 
         # ------------------------------------------------------ 02
         # get panels
@@ -1956,39 +1943,37 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         for fk in self.file_keys:
             if _file_paths[fk].exists():
                 _download_progress.add_task(
-                    task_name=fk, total=_lengths[fk]
-                )
-            elif fk in _errors.keys():
-                _download_progress.add_task(
-                    task_name=fk, total=-1
+                    task_name=fk, total=_file_paths[fk].stat()['size']
                 )
             else:
                 _download_progress.add_task(
-                    task_name=fk, total=_lengths[fk]
+                    task_name=fk, total=None
                 )
 
         # ------------------------------------------------------ 04
         # now download files
         # todo: can we do hash check while downloading is undergoing ???
         for fk in self.file_keys:
+            # get the task
+            _task = _download_progress.tasks[fk]
             # if already present just move forward
             if _file_paths[fk].exists():
-                _download_progress.tasks[fk].already_finished()
-                continue
-            # if there was error earlier update task ...
-            if fk in _errors.keys():
-                _download_progress.tasks[fk].failed()
-                _raise_error = True
+                _task.already_finished()
                 continue
             try:
                 with _file_paths[fk].open('wb') as _f:
                     _response = requests.get(_urls[fk], stream=True)
+                    try:
+                        _length = int(_response.headers['content-length'])
+                        _task.update(total=_length)
+                    except Exception as _ee:
+                        raise Exception("error getting content length: " + str(_ee))
                     for _chunk in _response.iter_content(
-                        chunk_size=min(_lengths[fk] // 10, _chunk_size)
+                        chunk_size=min(_length // 10, _chunk_size)
                     ):
                         if _chunk:  # filter out keep-alive new chunks
                             _f.write(_chunk)
-                            _download_progress.tasks[fk].update(advance=len(_chunk),)
+                            _task.update(advance=len(_chunk),)
             except Exception as _exp:
                 _errors[fk] = str(_exp)
                 _raise_error = True
