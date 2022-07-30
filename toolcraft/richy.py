@@ -455,7 +455,7 @@ class Progress(Widget):
         super().__post_init__()
 
     def add_task(
-        self, task_name: str, total: float, description: str = None, **fields
+        self, task_name: str, total: t.Optional[float], description: str = None, **fields
     ) -> ProgressTask:
         # process task_name
         if task_name in self.tasks.keys():
@@ -957,6 +957,8 @@ class StatusPanel(Widget):
 class FitStatusPanel(StatusPanel):
     title: str = "Fitting ..."
     epochs: int = None
+    train_steps: int = None
+    validate_steps: int = None
 
     @property
     def train_task(self) -> ProgressTask:
@@ -983,32 +985,22 @@ class FitStatusPanel(StatusPanel):
         self.stages = [f"epoch {_+1}" for _ in range(self.epochs)]
         super().__post_init__()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # delete if exists
-        del self['fit_progress']
-        super().__exit__(exc_type, exc_val, exc_tb)
-
-    def make_fit_progress_panel(
-        self, train_steps: int, validate_steps: int,
-    ) -> t.Tuple[ProgressTask, ProgressTask]:
-        # delete if exists
-        del self['fit_progress']
-
-        # make _fit_progress and add task
+    def on_iter_next_start(self, current_stage: str):
+        super().on_iter_next_start(current_stage)
+        self.update(status=f"Fitting for `{current_stage}` ...")
         _fit_progress = Progress.simple_progress(
-            title=f"Train & Validate: {self.current_stage}",
+            title=f"Train & Validate: {current_stage}",
             box_type=r_box.HORIZONTALS,
             border_style=r_style.Style(color="cyan"),
             use_msg_field=True, console=self.console, tc_log=self.tc_log,
         )
-        _train_task = _fit_progress.add_task(task_name="train", total=train_steps, msg="")
-        _validate_task = _fit_progress.add_task(task_name="validate", total=validate_steps, msg="")
-
-        # add to self
+        _fit_progress.add_task(task_name="train", total=None, msg="...")
+        _fit_progress.add_task(task_name="validate", total=None, msg="...")
         self['fit_progress'] = _fit_progress
 
-        # return
-        return _train_task, _validate_task
+    def on_iter_next_end(self, current_stage: str):
+        del self['fit_progress']
+        super().on_iter_next_end(current_stage)
 
     def append_to_summary(self, line: str):
         self.summary.append(line)

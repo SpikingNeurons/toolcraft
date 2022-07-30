@@ -141,8 +141,12 @@ def try_fit_progress_status_panel():
     _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
 
     for _epoch in _fit_panel:
-        _train_task, _validate_task = _fit_panel.make_fit_progress_panel(
-            train_steps=_train_samples, validate_steps=_validate_samples)
+        _train_task = _fit_panel.train_task
+        _validate_task = _fit_panel.validate_task
+        _fit_panel.update("estimating total ;) ...")
+        time.sleep(2)
+        _train_task.update(total=_train_samples)
+        _validate_task.update(total=_validate_samples)
         for _ in range(_train_samples):
             time.sleep(0.1)
             _train_task.update(
