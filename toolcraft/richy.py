@@ -777,7 +777,7 @@ class StatusPanel(Widget):
         self.current_stage = None  # type: str
         super().__post_init__()
 
-    def __setitem__(self, key: str, value: t.Union[rich.jupyter.JupyterMixin, Widget]):
+    def __setitem__(self, key: str, value: t.Union[rich.jupyter.JupyterMixin, Widget, r_console.Group]):
         """
         This will add renderable items except for reserved items
           (as they will be added by this class based on usage)
@@ -810,7 +810,7 @@ class StatusPanel(Widget):
         self.layout.update(**_new_dict, **_reserved_dict)
         self.refresh(update_renderable=True)
 
-    def __getitem__(self, item: str) -> t.Union[rich.jupyter.JupyterMixin, Widget]:
+    def __getitem__(self, item: str) -> t.Union[rich.jupyter.JupyterMixin, Widget, r_console.Group]:
         e.validation.ShouldBeOneOf(
             value=item, values=list(self.layout.keys()), msgs=["There is no item with that name"]
         ).raise_if_failed()
@@ -1008,8 +1008,9 @@ class FitStatusPanel(StatusPanel):
         self.summary.append(line)
         del self['summary']
         # _msg = f"# Fitting summary \n" + "\n".join(self.summary)
-        _msg = "\n".join(self.summary)
-        self['summary'] = r_markdown.Markdown(_msg)
+        self['summary'] = r_console.Group(
+            *[r_text.Text.from_markup(_, justify='center') for _ in self.summary]
+        )
         if self.tc_log is not None:
             self.tc_log.info(msg="Summary: ", msgs=[line])
 
