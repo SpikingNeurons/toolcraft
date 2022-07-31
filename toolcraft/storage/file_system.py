@@ -35,7 +35,10 @@ todo: note that we can safely use this module for
 """
 import dataclasses
 import pathlib
+import pickle
 import typing as t
+
+import blosc
 import fsspec
 import os
 import toml
@@ -489,6 +492,30 @@ class Path:
             block_size=block_size,
             cache_options=cache_options,
             compression=compression)
+
+    def save_compressed_pickle(self, data: t.Any):
+        if self.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"file {self.name} already exists ... cannot over write"
+                ]
+            )
+        _pickled_data = pickle.dumps(data)
+        _compressed_pickled_data = blosc.compress(_pickled_data)
+        with self.open('wb') as _file:
+            _file.write(_compressed_pickled_data)
+
+    def load_compressed_pickle(self) -> t.Any:
+        if not self.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    f"file {self.name} does not exist ... cannot load"
+                ]
+            )
+        with self.open('rb') as _file:
+            _compressed_pickled_data = _file.read()
+        _pickled_data = blosc.decompress(_compressed_pickled_data)
+        return pickle.loads(_pickled_data)
 
     def write_text(self, text: str):
         with self.fs.open(path=self.full_path, mode='w') as _f:

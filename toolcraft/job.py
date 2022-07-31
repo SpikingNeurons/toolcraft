@@ -78,36 +78,42 @@ class ArtifactViewer:
             ArtifactViewer._fn_mapper[_] = getattr(cls, _)
 
     @staticmethod
-    def call(artifact: str, experiment: "Experiment", data: t.Any) -> "gui.widget.Widget":
+    def call(artifact: str, experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
 
+        # if file does not exist
+        if not file_path.exists():
+            return gui.widget.Text(
+                f"Cannot find artifact for {file_path.name!r} on the disk ...\n{file_path}"
+            )
+        # if directly supported then return
+        elif artifact in ArtifactViewer._fn_mapper.keys():
+            return ArtifactViewer._fn_mapper[artifact](experiment=experiment, file_path=file_path)
         # if artifact has dot then we need to call extension methods
-        if artifact.find(".") != -1:
+        elif artifact.find(".") != -1:
             artifact_m = "dot_" + artifact.split(".")[1]
-            if artifact_m not in ArtifactViewer._fn_mapper.keys():
+            if artifact_m in ArtifactViewer._fn_mapper.keys():
+                return ArtifactViewer._fn_mapper[artifact_m](experiment=experiment, file_path=file_path)
+            else:
                 return gui.widget.Text(f"View not provided for file extension {'*.'+artifact.split('.')[1]!r} \n"
                                        f"... cannot render ... \n"
                                        f"Please support method {artifact_m!r}")
         else:
-            artifact_m = artifact
-            if artifact_m not in ArtifactViewer._fn_mapper.keys():
-                return gui.widget.Text(f"View not provided for artifact {artifact!r} \n"
-                                       f"... cannot render ... \n"
-                                       f"Please support method {artifact_m!r}")
-
-        # return
-        return ArtifactViewer._fn_mapper[artifact_m](experiment=experiment, data=data)
+            return gui.widget.Text(
+                f"View not provided for artifact {artifact!r} \n"
+                f"... cannot render ... \n"
+                f"Please support method {artifact!r}")
 
     @staticmethod
-    def dot_png(experiment: "Experiment", data: s.Path) -> "gui.widget.Widget":
+    def dot_png(experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
-        subprocess.call(["start", data.local_path.as_posix()], shell=True)
-        return gui.widget.Text(f"Image will be opened in external window\n{data}")
+        subprocess.call(["start", file_path.local_path.as_posix()], shell=True)
+        return gui.widget.Text(f"Image will be opened in external window\n{file_path}")
 
     @staticmethod
-    def dot_txt(experiment: "Experiment", data: s.Path) -> "gui.widget.Widget":
+    def dot_txt(experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
-        return gui.widget.Text(data.read_text())
+        return gui.widget.Text(file_path.read_text())
 
 
 class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
@@ -394,48 +400,9 @@ class ArtifactManager:
             _ret.mkdir(create_parents=True)
         return _ret
 
-    def save(self, name: str, data: t.Any):
-        """
-        todo: make this compatible for all type of path
-        """
+    def save_compressed_pickle(self, name: str, data: t.Any):
         _file = self.path / name
-        if _file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} already exists ... cannot write"
-                ]
-            )
-
-        _pickled_data = pickle.dumps(data)
-        _compressed_pickled_data = blosc.compress(_pickled_data)
-
-        with open(_file.local_path.as_posix(), 'wb') as _file:
-            _file.write(_compressed_pickled_data)
-
-    def load(self, name: str) -> t.Any:
-        """
-        todo: make this compatible for all type of path
-        """
-        # the file on disk
-        _file = self.path / name
-
-        # if not exists raise error
-        if not _file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Artifact {name} does not exists ... cannot load"
-                ]
-            )
-
-        # if name has . in it then it is file which should be handled with dot_* methods so return path
-        if name.find(".") != -1:
-            return _file
-
-        # or else assume it to be pickle which is blosc compressed
-        with open(_file.local_path.as_posix(), 'rb') as _file:
-            _compressed_pickled_data = _file.read()
-        _pickled_data = blosc.decompress(_compressed_pickled_data)
-        return pickle.loads(_pickled_data)
+        _file.save_compressed_pickle(data)
 
     def available_artifacts(self) -> t.List[str]:
         return [_.name for _ in self.path.ls()]
@@ -458,9 +425,14 @@ class ArtifactManager:
                     # noinspection PyMethodParameters
                     def fn(self_2, sender: gui.widget.Widget):
                         _key = sender.get_user_data()["key"]
+
+                        # the file on disk
+                        _file = self.path / _key
+
+                        # add ui
                         self_1.receiver.clear()
                         _w = ArtifactViewer.call(
-                                artifact=_key, experiment=self.job.experiment, data=self.load(name=_key))
+                                artifact=_key, experiment=self.job.experiment, file_path=_file)
                         self_1.receiver(_w)
 
                 return __Callback()

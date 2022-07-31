@@ -1275,7 +1275,7 @@ class ContainerWidget(Widget, abc.ABC):
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: Widget, before: MovableWidget = None):
-        self._add_child(widget=widget)
+        self._add_child(_widget=widget)
         if before is not None:
             if isinstance(widget, MovableWidget):
                 widget.move(before=before)
@@ -1286,12 +1286,12 @@ class ContainerWidget(Widget, abc.ABC):
                     ]
                 )
 
-    def _add_child(self, widget: Widget):
+    def _add_child(self, _widget: Widget):
 
         # -------------------------------------------------- 01
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
-        if widget.is_built:
+        if _widget.is_built:
             raise e.code.NotAllowed(
                 msgs=[
                     "The widget you are trying to add is already built",
@@ -1301,18 +1301,18 @@ class ContainerWidget(Widget, abc.ABC):
 
         # -------------------------------------------------- 02
         # set internals
-        widget.internal.parent = self
+        _widget.internal.parent = self
 
         # -------------------------------------------------- 03
         # we can now store widget inside children list
         # noinspection PyTypeChecker
-        self.children[id(widget)] = widget
+        self.children[id(_widget)] = _widget
 
         # -------------------------------------------------- 04
         # if thw parent widget is already built we need to build this widget here
         # else it will be built when build() on super parent is called
         if self.is_built:
-            widget.build()
+            _widget.build()
 
     @classmethod
     def yaml_tag(cls) -> str:
