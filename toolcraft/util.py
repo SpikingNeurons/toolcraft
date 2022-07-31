@@ -27,6 +27,7 @@ import multiprocessing as mp
 import socket
 import sys
 import contextlib
+_now = datetime.datetime.now
 
 
 from . import logger
@@ -500,16 +501,16 @@ class WatchDogTimer:
         self.wait_for = datetime.timedelta(
             seconds=watch_for_minutes * 60 + watch_for_seconds
         )
-        self.start = datetime.datetime.now()
-        self.last_refresh = datetime.datetime.now()
+        self.start = _now()
+        self.last_refresh = _now()
 
     def time_out(self) -> t.Tuple[bool, int, int]:
-        _time_delta = datetime.datetime.now() - self.last_refresh
-        _time_elapsed = datetime.datetime.now() - self.start
+        _time_delta = _now() - self.last_refresh
+        _time_elapsed = _now() - self.start
         _minutes = _time_elapsed.seconds // 60
         _seconds = _time_elapsed.seconds % 60
         if _time_delta > self.wait_for:
-            self.last_refresh = datetime.datetime.now()
+            self.last_refresh = _now()
             return True, _minutes, _seconds
         return False, _minutes, _seconds
 
@@ -1752,6 +1753,30 @@ def notifying_list_dict_class_factory(cls, callback):
     return type("proxy_" + cls.__name__, (cls,), new_dct)
 
 
+class WaitAndUpdate:
+    """
+    Simple class to wait and update
+    todo: figure out use of threading.Event
+      https://stackoverflow.com/questions/29082268/python-time-sleep-vs-event-wait
+      Also check an implementation from tich library for Progress
+      >>> import rich.progress
+      >>> rich.progress.Progress.track
+      >>> rich.progress._TrackThread
+    """
+    def __init__(self, period: float):
+        self.period = period
+        self._time = _now()
+
+    def can_update(self) -> bool:
+        _current_time = _now()
+        _elapsed_secs = (_current_time - self._time).total_seconds()
+        if _elapsed_secs > self.period:
+            self._time = _current_time
+            return True
+        else:
+            return False
+
+
 # noinspection PyProtectedMember
 @dataclasses.dataclass
 class Process:
@@ -1983,7 +2008,7 @@ class Process:
                             f.write(
                                 f" . Received signal [{i:04d}]: "
                                 f" {_recv_signal_1!r} "
-                                f"at time {datetime.datetime.now()}\n"
+                                f"at time {_now()}\n"
                             )
 
                 # final break as we received proper ack from main thread

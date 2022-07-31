@@ -11,6 +11,7 @@ import pathlib
 import typing as t
 import datetime
 import abc
+_now = datetime.datetime.now
 
 from .. import error as e
 from .. import util, settings
@@ -410,7 +411,7 @@ class Config(StateFile):
                 self.LITERAL.accessed_on_list_limit:
             self.accessed_on = self.accessed_on[1:]
         # append time
-        self.accessed_on.append(datetime.datetime.now())
+        self.accessed_on.append(_now())
 
     def check_if_backup_matches(self):
         # noinspection DuplicatedCode

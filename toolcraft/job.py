@@ -17,6 +17,7 @@ import asyncio
 import hashlib
 import types
 import blosc
+_now = datetime.datetime.now
 
 from . import logger
 from . import error as e
@@ -165,7 +166,7 @@ class Tag:
                     f"Do not supply key time in data dict we will add it ..."
                 ]
             )
-        data["time"] = datetime.datetime.now()
+        data["time"] = _now()
         _LOGGER.info(msg=f"Creating tag {self.path}")
         self.path.write_text(text=yaml.safe_dump(data))
 
@@ -864,7 +865,7 @@ class Job:
                 logger.get_file_handler(_log.local_path),
             ],
         )
-        _start = datetime.datetime.now()
+        _start = _now()
         _LOGGER.info(
             msg=f"Starting job on worker machine ...",
             msgs=[
@@ -891,7 +892,7 @@ class Job:
                 self.method(experiment=self.experiment)
             self.tag_manager.running.delete()
             self.tag_manager.finished.create()
-            _end = datetime.datetime.now()
+            _end = _now()
             _LOGGER.info(
                 msg=f"Successfully finished job on worker machine ...",
                 msgs=[
@@ -911,7 +912,7 @@ class Job:
                     "exception": str(_ex)
                 }
             )
-            _end = datetime.datetime.now()
+            _end = _now()
             _LOGGER.info(
                 msg=f"Failed job on worker machine ...",
                 msgs=[

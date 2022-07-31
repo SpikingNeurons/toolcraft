@@ -36,6 +36,7 @@ from rich import panel as r_panel
 from rich import box as r_box
 from rich import markdown as r_markdown
 from rich import prompt as r_prompt
+_now = datetime.datetime.now
 
 from . import logger
 from . import util
@@ -244,7 +245,7 @@ class Widget(m.Checker, abc.ABC):
 
         self._live.start()
 
-        self._start_time = datetime.datetime.now()
+        self._start_time = _now()
 
         if self.is_in_with_context:
             raise e.code.CodingError(
@@ -258,7 +259,7 @@ class Widget(m.Checker, abc.ABC):
 
         self.is_in_with_context = False
 
-        _elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
+        _elapsed_seconds = (_now() - self._start_time).total_seconds()
 
         self.refresh(update_renderable=True)
 
@@ -832,7 +833,7 @@ class StatusPanel(Widget):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        _elapsed_seconds = (datetime.datetime.now() - self._start_time).total_seconds()
+        _elapsed_seconds = (_now() - self._start_time).total_seconds()
         # noinspection PyTypedDict
         self.layout['spinner'] = r_text.Text.from_markup(
                 f"{EMOJI['white_heavy_check_mark']} "

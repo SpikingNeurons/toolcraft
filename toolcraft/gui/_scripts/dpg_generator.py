@@ -6,6 +6,7 @@ from typing import NamedTuple
 import typing as t
 import re
 import datetime
+_now = datetime.datetime.now
 
 _WRAP_TEXT_WIDTH = 70
 _NEEDED_ENUMS = {}  # type: t.Dict[str, 'EnumDef']
@@ -862,7 +863,7 @@ class CodeMaker:
 This code is auto-generated:
 >> Script: {_script_file}
 >> DearPyGui: {dearpygui.__version__}
->> Time: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}
+>> Time: {_now().strftime("%Y-%m-%d %H:%M")}
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """

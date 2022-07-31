@@ -8,6 +8,7 @@ import pathlib
 import datetime
 import dataclasses
 import abc
+_now = datetime.datetime.now
 
 from .. import util, logger, settings
 from .. import marshalling as m
@@ -438,7 +439,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # ----------------------------------------------------------- 03
         # also sync the created on ... note that config can auto sync on
         # update to its fields
-        self.config.created_on = datetime.datetime.now()
+        self.config.created_on = _now()
 
         # ----------------------------------------------------------- 04
         # check if property updated

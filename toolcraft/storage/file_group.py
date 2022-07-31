@@ -29,6 +29,7 @@ import zipfile
 import gcsfs
 import platform
 import random
+_now = datetime.datetime.now
 
 from .. import util, logger, settings
 from .. import storage as s
@@ -122,7 +123,7 @@ class FileGroupConfig(s.Config):
             return True
         else:
             _last_check_time = self.checked_on[-1]
-            _delta_time = datetime.datetime.now() - _last_check_time
+            _delta_time = _now() - _last_check_time
             return int(_delta_time.total_seconds()) > \
                 self.check_interval_choice
 
@@ -140,7 +141,7 @@ class FileGroupConfig(s.Config):
         if len(self.checked_on) == self.LITERAL.checked_on_list_limit:
             self.checked_on = self.checked_on[1:]
         # append time
-        self.checked_on.append(datetime.datetime.now())
+        self.checked_on.append(_now())
 
 
 @dataclasses.dataclass(frozen=True)
