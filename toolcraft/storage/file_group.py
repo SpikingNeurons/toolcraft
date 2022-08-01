@@ -1611,12 +1611,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
         again.
         """
 
-        # We always log to main log file on first access ...
-        # If this breaks richy rendering then log only when not __call__ i.e.,
-        # uncomment code below ...
-        # If self.internal.on_call_kwargs is None:
-        _LOGGER.info(f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
-
         # Sometimes this can be called without using with context and no status
         # panel might be available ...
         # But note that this is just loading files which will not need on_call_kwargs,
@@ -1626,7 +1620,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 'status_panel', None
             )  # type: richy.StatusPanel
             if status_panel is not None:
-                status_panel.status.update(
+                status_panel.update(
                     f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
 
         # load memmaps
