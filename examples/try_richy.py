@@ -136,7 +136,7 @@ def try_fit_progress_status_panel():
     _train_samples = 20
     _validate_samples = 10
     _fit_panel = richy.FitStatusPanel(
-        tc_log=_LOGGER, epochs=3,
+        tc_log=_LOGGER, epochs=3, sub_title=["aaa", "bbb", "ccc"]
     )
     _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
 
