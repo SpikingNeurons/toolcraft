@@ -1006,10 +1006,13 @@ class FitStatusPanel(StatusPanel):
 
     def append_to_summary(self, line: str):
         self.summary.append(line)
+        _summary = self.summary
+        # this will show maximum 16 lines and minimum 8 lines
+        _summary = _summary[::-((len(_summary)//8)+1)][::-1]
         del self['summary']
         # _msg = f"# Fitting summary \n" + "\n".join(self.summary)
         self['summary'] = r_console.Group(
-            *[r_text.Text.from_markup(_, justify='center') for _ in self.summary]
+            *[r_text.Text.from_markup(_, justify='center') for _ in _summary]
         )
         if self.tc_log is not None:
             self.tc_log.info(msg="Summary: ", msgs=[line])
