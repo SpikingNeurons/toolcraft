@@ -361,16 +361,18 @@ class FileGroup(StorageHashable, abc.ABC):
         Explore metadata option in `_fs.open()` for storing `self.info` and `self.config` states
         https://github.com/fsspec/gcsfs/issues/119
         """
-        self.richy_panel
         # get some vars
+        _rp = self.richy_panel
         _fs = self.get_gcp_file_system()
         _file_to_make = f"{bucket_name}/{folder_name}/{file_name}"
 
         # check if already exists
         if _fs.exists(_file_to_make):
-            _LOGGER.warning(
-                msg=f"The file `{_file_to_make}` already exists on GCS "
+            e.code.NotAllowed(
+                msgs=[
+                    f"The file `{_file_to_make}` already exists on GCS ",
                     f"Use different name/location ..."
+                ]
             )
             return
 
@@ -379,24 +381,25 @@ class FileGroup(StorageHashable, abc.ABC):
         # _fs.buckets
 
         # Zip in memory
-        _LOGGER.info(msg=f"Make in memory zip file for {file_name}")
+        _rp.update(f"Make in memory zip file for {file_name}")
         _zip_buffer = io.BytesIO()
         with zipfile.ZipFile(
             file=_zip_buffer, mode='a', compression=zipfile.ZIP_DEFLATED
         ) as _zf:
-            for _f in logger.ProgressBar(
-                iterable=[
+            for _f in _rp.track(
+                sequence=[
                     self.info.path, self.config.path
                 ] + [self.path / _fk for _fk in self.file_keys],
-                desc="Zipping files", unit=" file"
+                task_name="Zipping files",
             ):
+                # noinspection PyTypeChecker
                 _zf.write(_f, arcname=_f.name)
             _zf.close()
 
         # write to cloud
         # todo: make progressbar for streamed write
         # with _fs.transaction:  # todo: some issues with transaction
-        _LOGGER.info(msg=f"Uploading `{file_name}` to cloud")
+        _rp.update(f"Uploading `{file_name}` to cloud")
         with _fs.open(_file_to_make, 'wb') as _zf_on_gc:
             _zf_on_gc.write(_zip_buffer.getvalue())
 
@@ -1159,12 +1162,13 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 continue
         return False
 
-    def load_completely_in_mem_as_dict(
-        self, memory_limit_in_gbytes: int = None, fix_all_lengths_same: bool = True
+    def load_as_dict(
+        self, memory_limit_in_gbytes: int = None, fix_all_lengths_same: bool = False, memmap: bool = True
     ) -> t.Dict[str, t.Union[np.ndarray, t.Dict[str, np.ndarray]]]:
         """
         Full load in memory for fast access
         """
+        self.richy_panel.update("loading NpyFileGroup as dict")
         # -------------------------------------------------- 01
         # validate
         # todo: test memory limit
@@ -1182,7 +1186,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # -------------------------------------------------- 02
         # get all in memory ... note we load via get_files so access info is saved to config files ...
         _ret = {
-            _k: self.load_npy_data(file_key=_k, memmap=False)
+            _k: self.load_npy_data(file_key=_k, memmap=memmap)
             for _k, _ in self.get_files(file_keys=self.file_keys).items()
         }
 

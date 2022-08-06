@@ -1155,6 +1155,7 @@ class Tracker(Checker):
         if self.is_called and self.in_with_context:
             return self.internal.on_call_kwargs["richy_panel"]
         else:
+            from . import richy
             return richy.StatusPanel(
                 title=f"{self.__module__}.{self.__class__.__name__}",
                 sub_title=self if isinstance(self, HashableClass) else None,
