@@ -361,6 +361,7 @@ class FileGroup(StorageHashable, abc.ABC):
         Explore metadata option in `_fs.open()` for storing `self.info` and `self.config` states
         https://github.com/fsspec/gcsfs/issues/119
         """
+        self.richy_panel
         # get some vars
         _fs = self.get_gcp_file_system()
         _file_to_make = f"{bucket_name}/{folder_name}/{file_name}"
@@ -1033,7 +1034,7 @@ class FileGroup(StorageHashable, abc.ABC):
         """
         ...
 
-    def delete(self, *, richy_panel: t.Optional[richy.StatusPanel], force: bool = False) -> t.Any:
+    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
         """
         Deletes FileGroup
 
@@ -1052,10 +1053,9 @@ class FileGroup(StorageHashable, abc.ABC):
             # are debugging and there will be one time programmatically delete
             # so set the response automatically for FileGroup
             force = True
-            if richy_panel is not None:
-                richy_panel.update(
-                    "Deleting files automatically for file group [DEBUG_HASHABLE_STATE is True]"
-                )
+            richy_panel.update(
+                "Deleting files automatically for file group [DEBUG_HASHABLE_STATE is True]"
+            )
             # just let us warn user
             _LOGGER.warning(
                 msg=f"Deleting files automatically for file group "
@@ -1096,8 +1096,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # -----------------------------------------------------------03.02
             # delete all files for the group
-            if richy_panel is not None:
-                richy_panel.update("deleting files ...")
+            richy_panel.update("deleting files ...")
             for fk in self.file_keys:
                 _key_path = self.path / fk
                 if _key_path.exists():

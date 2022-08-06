@@ -1154,7 +1154,12 @@ class Tracker(Checker):
         """
         if self.is_called and self.in_with_context:
             return self.internal.on_call_kwargs["richy_panel"]
-        return None
+        else:
+            return richy.StatusPanel(
+                title=f"{self.__module__}.{self.__class__.__name__}",
+                sub_title=self if isinstance(self, HashableClass) else None,
+                tc_log=logger.get_logger(self.__module__)
+            )
 
     def __len__(self) -> int:
         return self.iterable_length

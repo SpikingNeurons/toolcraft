@@ -163,7 +163,7 @@ class Folder(StorageHashable):
         # return
         return self.path
 
-    def delete(self, *, richy_panel: t.Optional[richy.StatusPanel], force: bool = False) -> t.Any:
+    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
         # delete
         # We ask for user response as most of the files/folders are important
         # and programmatically deletes will cost download or generation of
@@ -181,8 +181,7 @@ class Folder(StorageHashable):
 
         # perform action
         if response == "y":
-            if richy_panel is not None:
-                richy_panel.update("deleting folder ...")
+            richy_panel.update("deleting folder ...")
             for _sh in self.walk(only_names=False):
                 _sh.delete(force=force, richy_panel=richy_panel)
 
