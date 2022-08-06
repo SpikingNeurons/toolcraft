@@ -45,24 +45,6 @@ if False:
 
 _LOGGER = logger.get_logger()
 
-SHUFFLE_SEED_TYPE = t.Union[
-    t.Literal[
-        'DETERMINISTIC_SHUFFLE',
-        'NO_SHUFFLE',
-        'DO_NOT_USE',
-        'NON_DETERMINISTIC_SHUFFLE',
-    ],
-    np.ndarray,
-]
-# noinspection PyUnresolvedReferences
-DETERMINISTIC_SHUFFLE = SHUFFLE_SEED_TYPE.__args__[0].__args__[0]
-# noinspection PyUnresolvedReferences
-NO_SHUFFLE = SHUFFLE_SEED_TYPE.__args__[0].__args__[1]
-# noinspection PyUnresolvedReferences
-DO_NOT_USE = SHUFFLE_SEED_TYPE.__args__[0].__args__[2]
-# noinspection PyUnresolvedReferences
-NON_DETERMINISTIC_SHUFFLE = SHUFFLE_SEED_TYPE.__args__[0].__args__[3]
-
 # noinspection PyUnresolvedReferences
 USE_ALL = slice(None, None, None)
 
@@ -816,7 +798,7 @@ class FileGroup(StorageHashable, abc.ABC):
         if self.periodic_check_needed:
             raise e.validation.NotAllowed(
                 msgs=[
-                    f"Make sure to perform check before using `get_file()` "
+                    f"Make sure to perform check before using `get_files()` "
                     f"for class {self.__class__}"
                 ]
             )
@@ -833,7 +815,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
     def get_files(
         self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, t.Union[Path, "NpyMemMap"]]:
+    ) -> t.Dict[str, Path]:
         """
         Default is to return Path
         """
@@ -849,6 +831,9 @@ class FileGroup(StorageHashable, abc.ABC):
         # --------------------------------------------------------------01
         # we are getting data so update the access info
         self.config.append_last_accessed_on()
+
+    def get_file(self, file_key: str) -> s.Path:
+        return self.get_files(file_keys=[file_key])[file_key]
 
     # noinspection PyUnusedLocal
     def create_pre_runner(self, *, richy_panel: richy.StatusPanel):
@@ -1135,435 +1120,7 @@ class FileGroup(StorageHashable, abc.ABC):
             )
 
 
-# noinspection PyArgumentList
-class NpyMemMap:
-    """
-    Wrapper class used to add features on top on memmap we read from disk.
-
-    We provide features like:
-    + Shuffle
-        When shuffle is True the entire data on disk is accessed in random
-        way with fixed SEED so that you can fetch data partially or completely.
-        Note that you can always access data that will not be shuffled via
-        self.memmap ... in case you want to read huge memmap's for debugging
-        and do not want shuffling behaviour
-
-    todo: we can support in future support multiple NpyMemMap files with
-      shuffle where multiple NpyMemMap's can be accessed randomly with with
-      the elements internal to them are again accessed randomly
-    """
-
-    def __init__(self, file_path: Path):
-        """
-
-        Args:
-            file_path: The numpy file path
-        """
-        # ------------------------------------------------------------ 01
-        # save args passed
-        # todo: currently only allows local file system ... expand the usage for
-        #  NpyMemMap later if needed
-        file_path = file_path.local_path
-        self.file_path = file_path
-        # check if file_path exists
-        if not file_path.is_file():
-            e.io.FileMustBeOnDiskOrNetwork(
-                path=file_path,
-                msgs=[]
-            ).raise_if_failed()
-
-        # ------------------------------------------------------------ 02
-        # load memmap temporarily here to set some useful vars
-        # noinspection PyTypeChecker
-        memmap = np.load(file_path, mmap_mode="r")
-        # ------------------------------------------------------------ 02.01
-        # shape
-        self.shape = memmap.shape
-        # ------------------------------------------------------------ 02.02
-        # dtype
-        self.dtype = memmap.dtype
-        # ------------------------------------------------------------ 02.03
-        # ndim
-        self.ndim = memmap.ndim
-
-        # ------------------------------------------------------------ 03
-        # delete memmap so that there are no open references that cause
-        # windows permission error
-        del memmap
-        # also garbage collect as del alone does not work
-        # https://stackoverflow.com/questions/39953501/i-cant-remove-file\-created-by-memmap
-        gc.collect()
-
-    def __len__(self) -> int:
-        return self.shape[0]
-
-    def __iter__(self) -> np.ndarray:
-        return self[:]
-
-    def __getitem__(
-        self,
-        item: t.Union[
-            SELECT_TYPE,
-            t.Tuple[
-                SELECT_TYPE, ...
-            ]
-        ]
-    ) -> np.ndarray:
-        """
-
-        todo: Performance analysis of randomly accessing numpy mem maps
-          this cab be slow on linux .... also check if it is fast for
-          windows ...
-          refer issue here https://github.com/numpy/numpy/issues/13172
-
-        todo: if slow make async fetch so that next batch is ready in advance
-          or else make a buffer where a parallel thread will fill up batches
-
-        """
-        # ---------------------------------------------------------- 01
-        # if call_helper attribute not there raise error
-        try:
-            _call_helper = self.call_helper
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"When using with statement make sure to call __call__ "
-                    f"method so that call_helper attribute is available."
-                ]
-            )
-
-        # ---------------------------------------------------------- 02
-        # if do_not_use raise error
-        if _call_helper.do_not_use:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"You opted do_not_use=True hence you cannot use "
-                    f"__getitem__ method",
-                ]
-            )
-
-        # ---------------------------------------------------------- 03
-        # if single valued memmap then make sure that item is USE_ALL and
-        # return ... no need to check for shuffle indices
-        if len(_call_helper.memmap) == 1:
-            if item != USE_ALL:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"For sanity we force you to use `:` while indexing "
-                        f"NpyMemMap's with single value",
-                        f"This allows to make sure that things are as "
-                        f"intended while accessing with shuffled indices"
-                    ]
-                )
-            return _call_helper.memmap[USE_ALL]
-
-        # ---------------------------------------------------------- 03
-        # adapt item if is_shuffled
-        if _call_helper.is_shuffled:
-            if isinstance(item, (int, slice, list, np.ndarray)):
-                # get shuffled indices
-                item = _call_helper.shuffle_indices[item]
-            elif isinstance(item, tuple):
-                # get shuffled indices
-                if isinstance(item[0], (int, slice, list, np.ndarray)):
-                    item = (_call_helper.shuffle_indices[item[0]], *item[1:])
-                else:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"First element of tuple is not a int or slice "
-                            f"instead found type {type(item[0])}"
-                        ]
-                    )
-            else:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The item can be int, slice or tuple instead found "
-                        f"type {type(item)}"
-                    ]
-                )
-
-        # ---------------------------------------------------------- 04
-        # return
-        # ---------------------------------------------------------- 04.01
-        # return memmap if all samples selected and there was no shuffling
-        # if None slice i.e. all elements accessed why not return memmap as
-        # it is ... note that in case if there is shuffle
-        # i.e. _call_helper.is_shuffled=True the code at comment 03 will have
-        # anyways converted it to ndarray so we can safely return memmap here
-        if item is USE_ALL:
-            # todo: remove this assert statement once you are sure
-            e.code.AssertError(
-                value1=_call_helper.is_shuffled,
-                value2=False,
-                msgs=[
-                    f"Some coding error we are sure that the NpyMemMap is "
-                    f"opened with `shuffle_seed=NO_SHUFFLE`"
-                ]
-            ).raise_if_failed()
-            return _call_helper.memmap
-        # ---------------------------------------------------------- 04.02
-        # if anything else then we need to read memmap
-        # todo: see if more optimization can be done so that memmaps are not
-        #  loaded in memory ... like may be try caching what is read etc.
-        elif isinstance(item, tuple):
-            # this surprising code is needed if you end up using list of ints
-            # example ...
-            # noinspection PyTypeChecker
-            return _call_helper.memmap[
-                # this one is first dimension and works on memmap mostly used
-                # for shuffling
-                item[0]
-            ][
-                # remaining items ... note that slice(None, None, None) is
-                # used to select all elements after applying index item[0]
-                (USE_ALL, *item[1:])
-            ]
-        else:
-            return _call_helper.memmap[item]
-
-    def __call__(
-        self,
-        shuffle_seed: SHUFFLE_SEED_TYPE,
-    ):
-
-        # check if already called
-        try:
-            # noinspection PyUnresolvedReferences
-            _ = self.call_helper
-            # we do not expect attribute call_helper here
-            raise e.code.CodingError(
-                msgs=[
-                    f"Call was already called on the NpyMemmap instance.",
-                    f"To avoid this you need to call __call__ with "
-                    f"help of `with` statement.",
-                    f"Also please check if the iterator opened using __call__ "
-                    f"is properly exhausted"
-                ]
-            )
-        except AttributeError:
-            # pass that's what we want
-            ...
-
-        # make instance of call_helper
-        self.call_helper = NpyMemMapCallHelper(
-            npy_memmap=self,
-            shuffle_seed=shuffle_seed,
-        )
-
-        # return self
-        return self
-
-    def __enter__(self):
-        # if call_helper attribute not there raise error
-        try:
-            _ = self.call_helper
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"When using with statement make sure to call __call__ "
-                    f"method so that call_helper attribute is available."
-                ]
-            )
-
-        # return self
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        todo handle exc_type, exc_val, exc_tb args for exception
-
-        We implement this method as when memmap is done over files
-        they are not released and numpy can only release those files after
-        garbage collection. Check the discussion at
-        https://stackoverflow.com/questions/39953501/i-cant-remove-file-created-by-memmap
-
-        So what we do here is when the instance of this class is deleted we
-        delete memmap and do garbage collection
-        """
-        # if call_helper attribute not there raise error
-        try:
-            _ = self.call_helper
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"When using with statement make sure to call __call__ "
-                    f"method so that call_helper attribute is available."
-                ]
-            )
-        # reset
-        del self.call_helper
-        gc.collect()
-
-    def __del__(self):
-        # the call_helper attribute must not be present
-        try:
-            _ = self.call_helper
-            # we do not expect attribute call_helper here
-            raise e.code.CodingError(
-                msgs=[
-                    f"May be you have not exited properly from within with "
-                    f"statement.",
-                    f"We expect call_helper attribute to be deleted by now",
-                    f"To avoid this you need to call __call__ with "
-                    f"help of `with` statement."
-                ]
-            )
-        except AttributeError:
-            # pass that's what we want
-            ...
-
-    def min(self) -> t.Union[int, float]:
-        # noinspection PyTypeChecker
-        return np.load(self.file_path, mmap_mode="r").min()
-
-    def max(self) -> t.Union[int, float]:
-        # noinspection PyTypeChecker
-        return np.load(self.file_path, mmap_mode="r").max()
-
-    def get_raw_memmap(self) -> np.ndarray:
-        # call_helper attribute must be present
-        try:
-            call_helper = self.call_helper
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect you to use `with` statement and make sure to "
-                    f"call __call__ method on it"
-                ]
-            )
-
-        # make sure that do_not_use is set
-        if not call_helper.do_not_use:
-            raise e.code.CodingError(
-                msgs=[
-                    f"You are using method {self.get_raw_memmap} and we "
-                    f"expect you to set `shuffle_seed=s.DO_NOT_USE` as you "
-                    f"want to use underlying memmap directly"
-                ]
-            )
-
-        # return
-        return self.call_helper.memmap
-
-    def random_examples(
-        self,
-        num_examples: int,
-    ) -> np.ndarray:
-        """
-
-        Note we do not use __getitem__ as it considers is_shuffled and will
-        use shuffled indices
-
-        Role of this method is to just extract arbitrary samples
-
-        """
-        # call_helper attribute must be present
-        try:
-            call_helper = self.call_helper
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect you to use `with` statement and make sure to "
-                    f"call __call__ method on it"
-                ]
-            )
-
-        # make sure that do_not_use is set
-        if not call_helper.do_not_use:
-            raise e.code.CodingError(
-                msgs=[
-                    f"You are using method {self.random_examples} and we "
-                    f"expect you to set `shuffle_seed=s.DO_NOT_USE` as we will "
-                    f"access underlying memmap directly"
-                ]
-            )
-
-        # get sample indices
-        np.random.seed(None)  # resets seed ... makes it non deterministic
-        _sample_indices = np.random.randint(0, len(self), num_examples)
-
-        # return
-        return call_helper.memmap[_sample_indices]
-
-
-class NpyMemMapCallHelper:
-
-    @property
-    def is_shuffled(self) -> bool:
-        return hasattr(self, 'shuffle_indices')
-
-    def __init__(
-        self,
-        npy_memmap: NpyMemMap,
-        shuffle_seed: SHUFFLE_SEED_TYPE,
-    ):
-        # get memmap and length
-        # noinspection PyTypeChecker
-        self.memmap = np.load(npy_memmap.file_path, mmap_mode="r")
-        self.do_not_use = (str(shuffle_seed) == DO_NOT_USE)
-
-        # if length is 1 we cannot do any shuffle as the file may for single
-        # element and as such we need not do anything
-        _len = len(npy_memmap)
-        if _len == 1:
-            return
-
-        # if DO_NOT_USE then return ... as no shuffle indices will be used
-        if self.do_not_use:
-            return
-
-        # if NO_SHUFFLE return and there will be no shuffle indices
-        if str(shuffle_seed) == NO_SHUFFLE:
-            return
-
-        # if np.ndarray then check shape
-        if isinstance(shuffle_seed, np.ndarray):
-            if not np.array_equal(
-                np.unique(shuffle_seed),
-                np.arange(_len, dtype=shuffle_seed.dtype)
-            ):
-                raise e.code.CodingError(
-                    msgs=[
-                        f"While supplying shuffle seed as shuffle indices "
-                        f"make sure that it has all values from 0 to {_len}",
-                        f"That is it must be a valid indices array that can "
-                        f"index entire underlying numpy memmap"
-                    ]
-                )
-            self.shuffle_indices = shuffle_seed
-            return
-
-        # if DETERMINISTIC_SHUFFLE reassign it with deterministic seed
-        if str(shuffle_seed) in [
-            DETERMINISTIC_SHUFFLE, NON_DETERMINISTIC_SHUFFLE
-        ]:
-            if str(shuffle_seed) == NON_DETERMINISTIC_SHUFFLE:
-                shuffle_seed = None
-            if str(shuffle_seed) == DETERMINISTIC_SHUFFLE:
-                shuffle_seed = 259746  # some arbitrary number
-            np.random.seed(shuffle_seed)
-            self.shuffle_indices = np.random.permutation(_len)
-            np.random.seed(None)
-            return
-
-        # should not happen as above cases should handle everything
-        raise e.code.CodingError(
-            msgs=[
-                f"Not able to process shuffle_seed {shuffle_seed}"
-            ]
-        )
-
-    def __del__(self):
-        del self.memmap
-        if not self.do_not_use:
-            if self.is_shuffled:
-                del self.shuffle_indices
-
-
 @dataclasses.dataclass(frozen=True)
-@m.RuleChecker(
-    things_not_to_be_overridden=['get_files']
-)
 class NpyFileGroup(FileGroup, abc.ABC):
     """
     Rationale: In all subclasses do not cache the properties that return
@@ -1585,7 +1142,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
     @util.CacheResult
     def lengths(self) -> t.Dict[str, int]:
         return {
-            k: len(v) for k, v in self.all_npy_mem_maps_cache.items()
+            k: len(util.npy_load(p, memmap=True)) for k, p in self.get_files(file_keys=self.file_keys).items()
         }
 
     @property
@@ -1603,86 +1160,57 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 continue
         return False
 
-    @property
-    @util.CacheResult
-    def all_npy_mem_maps_cache(self) -> t.Dict[str, NpyMemMap]:
+    def load_completely_in_mem_as_dict(
+        self, memory_limit_in_gbytes: int = None, fix_all_lengths_same: bool = True
+    ) -> t.Dict[str, t.Union[np.ndarray, t.Dict[str, np.ndarray]]]:
         """
-        Used to cache NpyMemMap instances to avoid creating them again and
-        again.
+        Full load in memory for fast access
         """
+        # -------------------------------------------------- 01
+        # validate
+        # todo: test memory limit
+        if memory_limit_in_gbytes is not None:
+            raise e.code.NotYetImplemented(
+                msgs=["This feature is not yet implemented"]
+            )
+        if fix_all_lengths_same:
+            if self.has_arbitrary_lengths:
+                raise e.code.NotAllowed(
+                    msgs=[f"This {self.__class__} has files with arbitrary lengths "
+                          f"so we cannot make all lengths fixed "]
+                )
 
-        # Sometimes this can be called without using with context and no status
-        # panel might be available ...
-        # But note that this is just loading files which will not need on_call_kwargs,
-        # so we allow users to access without with context ...
-        if self.internal.on_call_kwargs is not None:
-            status_panel = self.internal.on_call_kwargs.get(
-                'status_panel', None
-            )  # type: richy.StatusPanel
-            if status_panel is not None:
-                status_panel.update(
-                    f"Loading {len(self.file_keys)} NpyMemMap's for Fg {self.name}")
+        # -------------------------------------------------- 02
+        # get all in memory ... note we load via get_files so access info is saved to config files ...
+        _ret = {
+            _k: self.load_npy_data(file_key=_k, memmap=False)
+            for _k, _ in self.get_files(file_keys=self.file_keys).items()
+        }
 
-        # load memmaps
-        _ret = {}
-        for fk in self.file_keys:
-            _ret[fk] = NpyMemMap(file_path=self.path / fk, )
+        # -------------------------------------------------- 03
+        # augment singular elements
+        if fix_all_lengths_same:
+            _len = None
+            for _k in self.file_keys:
+                if len(_ret[_k]) != 1:
+                    _len = len(_ret[_k])
+                    break
+            if _len is None:
+                raise e.code.ShouldNeverHappen(msgs=[])
+            for _k in self.file_keys:
+                if len(_ret[_k]) == 1:
+                    _ret[_k] = np.repeat(_ret[_k], _len, axis=0)
 
+        # -------------------------------------------------- 04
         # return
         return _ret
 
-    # noinspection PyMethodOverriding
-    def __call__(
-        self, *,
-        shuffle_seed: SHUFFLE_SEED_TYPE,
-        richy_panel: t.Optional[richy.StatusPanel] = None,
-    ) -> "NpyFileGroup":
-        # call super
-        # noinspection PyTypeChecker
-        return super().__call__(
-            richy_panel=richy_panel, shuffle_seed=shuffle_seed,
-        )
-
-    def on_enter(self):
-        # call super
-        super().on_enter()
-
-        # get kwargs passed in call
-        _shuffle_seed = \
-            self.internal.on_call_kwargs[
-                'shuffle_seed'
-            ]  # type: SHUFFLE_SEED_TYPE
-        _rp = self.richy_panel
-
-        # log
-        _total = len(self.file_keys)
-
-        # get property
-        _all_npy_mem_maps_cache = self.all_npy_mem_maps_cache
-
-        # make NpyMemmaps aware of seed
-        for i, k in enumerate(self.file_keys):
-            if _rp is not None:
-                _rp.update(
-                    f"Opening {i+1}/{_total} "
-                    f"NpyMemMap for `{k}` with seed `{_shuffle_seed}`")
-            v = _all_npy_mem_maps_cache[k]
-            v(shuffle_seed=_shuffle_seed)
-            v.__enter__()
-
-    def on_exit(self, exc_type, exc_val, exc_tb):
-        _rp = self.richy_panel
-        _total = len(self.file_keys)
-        for i, k in enumerate(self.file_keys):
-            if _rp is not None:
-                _rp.update(
-                    f"Closing {i+1}/{_total} NpyMemMap for `{k}`")
-            v = self.all_npy_mem_maps_cache[k]
-            # noinspection PyUnresolvedReferences
-            v.__exit__(exc_type, exc_val, exc_tb)
-
-        # call super
-        super().on_exit(exc_type, exc_val, exc_tb)
+    def load_npy_data(self, file_key: str, memmap: bool) -> t.Union[np.ndarray, t.Dict[str, np.ndarray]]:
+        """
+        Note that for npy record the type is t.Dict[str, np.ndarray]
+        As we can treat it as dict of numpy arrays
+        """
+        return util.npy_load(self.path / file_key, memmap=memmap)
 
     def save_npy_data(
         self,
@@ -1766,10 +1294,9 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # load memmaps
             # Note that files should be created on the disk if everything is
             # fine but state_manager files will be not on the disk and hence
-            # we cannot use `self.get_file()`. Hence we rely on `s.NpyMemMap`.
-            _npy_memmaps[file_key] = NpyMemMap(
-                file_path=self.path / file_key,
-            )
+            # we cannot use `self.get_files()`.
+            # Note we read in memmap mode as we need only meta info
+            _npy_memmaps[file_key] = util.npy_load(self.path / file_key, memmap=True)
 
         # ----------------------------------------------------------------02
         # check shape, dtype
@@ -1829,22 +1356,6 @@ class TempFileGroup(FileGroup, abc.ABC):
     todo: if you do not want for file to get deleted then have some option ....
       keep_file=True
     """
-
-    @property
-    @util.CacheResult
-    def _root_dir(self) -> Path:
-        return settings.Dir.TEMPORARY
-
-    def get_files(
-            self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
-        return {
-            file_key: self.path / file_key
-            for file_key in file_keys
-        }
-
-    def get_file(self, file_key: str) -> Path:
-        return self.get_files(file_keys=[file_key])[file_key]
 
     # we should not override dunders
     # def __del__(self):
@@ -1994,17 +1505,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             ]
         )
 
-    def get_files(
-        self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
-        return {
-            file_key: self.path / file_key
-            for file_key in file_keys
-        }
-
-    def get_file(self, file_key: str) -> Path:
-        return self.get_files(file_keys=[file_key])[file_key]
-
 
 @dataclasses.dataclass(frozen=True)
 class FileGroupFromPaths(FileGroup):
@@ -2046,14 +1546,6 @@ class FileGroupFromPaths(FileGroup):
             _f for _f in super().unknown_paths_on_disk
             if _f.name not in self.file_keys
         ]
-
-    def get_files(
-        self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
-        return {
-            file_key: self.path / file_key
-            for file_key in file_keys
-        }
 
     def create(self, *, richy_panel: richy.StatusPanel) -> t.List[Path]:
 

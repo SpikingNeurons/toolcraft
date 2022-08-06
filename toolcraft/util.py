@@ -33,6 +33,10 @@ _now = datetime.datetime.now
 from . import logger
 from . import error as e
 
+# noinspection PyUnreachableCode
+if False:
+    from . import storage as s
+
 _LOGGER = logger.get_logger()
 
 # to see what this octave values do try below code
@@ -1208,7 +1212,19 @@ def find_free_port():
         return _socket.getsockname()[1]
 
 
-def npy_array_save(file: pathlib.Path, npy_array: np.ndarray):
+def npy_load(file: "s.Path", memmap: bool = False) -> np.ndarray:
+    # save numpy record file
+    with file.open(mode='wb') as f:
+        if memmap:
+            _ret = np.load(f, mmap_mode="r")
+        else:
+            _ret = np.load(f)
+        # close handler
+        f.close()
+    return _ret
+
+
+def npy_array_save(file: "s.Path", npy_array: np.ndarray):
     # only supported type is np.ndarray
     e.validation.ShouldBeInstanceOf(
         value=npy_array,
@@ -1232,13 +1248,12 @@ def npy_array_save(file: pathlib.Path, npy_array: np.ndarray):
     with file.open(mode='wb') as f:
         # noinspection PyTypeChecker
         np.save(f, npy_array)
-
         # close handler
         f.close()
 
 
 def npy_record_save(
-    file: pathlib.Path, npy_record_dict: t.Dict[str, np.ndarray]
+    file: "s.Path", npy_record_dict: t.Dict[str, np.ndarray]
 ):
     """
     todo: migrate to `np.core.records.fromarrays` if needed
@@ -1322,7 +1337,6 @@ def npy_record_save(
     with file.open(mode='wb') as f:
         # noinspection PyTypeChecker
         np.save(f, npy_record)
-
         # close handler
         f.close()
 

@@ -715,6 +715,9 @@ def try_main():
     try_arrow_storage(gcs=False)
     try_file_storage(gcs=False)
 
+    # todo: add tests for NpyFileGroup especially with nupy records load and save
+    # try_npy_file_group(gcs=False)
+
     # todo: support gcs ...
     #   Note: tests cannot work behind firewall for GCS, only use local machine
     #   loading fs and credentials for gcs is done ... only other things like adding
