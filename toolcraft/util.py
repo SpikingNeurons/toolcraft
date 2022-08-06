@@ -1213,14 +1213,15 @@ def find_free_port():
 
 
 def npy_load(file: "s.Path", memmap: bool = False) -> np.ndarray:
-    # save numpy record file
-    with file.open(mode='wb') as f:
-        if memmap:
-            _ret = np.load(f, mmap_mode="r")
-        else:
-            _ret = np.load(f)
-        # close handler
-        f.close()
+    if memmap:
+        # todo: doesn't support s.Path make it compatible and also see if npy_save methods
+        #  also work although they allow s.Path
+        # noinspection PyTypeChecker
+        _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
+    else:
+        with file.open(mode='rb') as f:
+            _ret = np.load(f, allow_pickle=False, fix_imports=False)
+            f.close()
     return _ret
 
 
@@ -1246,9 +1247,7 @@ def npy_array_save(file: "s.Path", npy_array: np.ndarray):
 
     # save numpy record file
     with file.open(mode='wb') as f:
-        # noinspection PyTypeChecker
-        np.save(f, npy_array)
-        # close handler
+        np.save(f, npy_array, allow_pickle=False, fix_imports=False)
         f.close()
 
 
@@ -1335,9 +1334,7 @@ def npy_record_save(
     # ---------------------------------------------------------------04
     # save numpy record file
     with file.open(mode='wb') as f:
-        # noinspection PyTypeChecker
-        np.save(f, npy_record)
-        # close handler
+        np.save(f, npy_record, allow_pickle=False, fix_imports=False)
         f.close()
 
 
