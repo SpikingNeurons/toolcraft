@@ -31,6 +31,7 @@ if False:
     from . import gui, storage
     from . import richy
 
+T = t.TypeVar('T', bound='Tracker')
 _LOGGER = logger.get_logger()
 _LITERAL_CLASS_NAME = 'LITERAL'
 _RULE_CHECKER = "__rule_checker__"
@@ -240,14 +241,10 @@ class Internal:
       variables that can be updated and not part of serialization process
     """
 
-    # we set this in __call__ so that with context has access to kwargs
-    # passes in __call__ method
-    # todo: make this a class so that strings are not used to get members. We
-    #  know that typing support is difficult to achieve. But we can override
-    #  __getitem__ to throw custom error indicating on call kwargs have changed
-    on_call_kwargs: t.Union[t.Dict[str, t.Any]] = None
     prefetched_on_first_call: bool
     in_with_context: bool = False
+    is_called: bool = False
+    richy_panel: "richy.StatusPanel" = None
 
     class LITERAL:
         store_key = "INTERNAL"
@@ -367,8 +364,7 @@ class Internal:
 
     # noinspection PyMethodMayBeStatic
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return ["on_call_kwargs", "progress_bar", "part_iterator_state",
-                "in_with_context"]
+        return ["in_with_context", "is_called", "richy_panel"]
 
     def has(self, item: str) -> bool:
         if item not in self.__field_names__:
@@ -1068,8 +1064,7 @@ class Checker:
 @RuleChecker(
     things_to_be_cached=['internal'],
     things_not_to_be_cached=[
-        'is_called', 'on_iter', 'on_call', 'on_enter', 'on_exit', 'richy_panel',
-        'iterable_length', 'iterable_task_name',
+        'is_called', 'on_call', 'on_enter', 'on_exit', 'richy_panel',
     ],
     things_not_to_be_overridden=['is_called', 'richy_panel', ]
 )
@@ -1098,7 +1093,7 @@ class Tracker(Checker):
         Detects is hashable is called ... and hence can be used in with
         context or while iterating
         """
-        return self.internal.on_call_kwargs is not None
+        return self.internal.is_called
 
     @property
     @util.CacheResult
@@ -1106,54 +1101,13 @@ class Tracker(Checker):
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
 
-    # noinspection PyTypeChecker
-    @property
-    def iterable_length(self) -> int:
-        """
-        return -1 to indicate it is yielding infinitely ...
-        """
-        if self.__class__.on_iter == Tracker.on_iter:
-            raise e.code.NotSupported(
-                msgs=[
-                    f"Class {self.__class__} does not support `iterable_length` ... ",
-                    f"Please override if you want to iterate on this class instance also remember "
-                    f"to override on_iter  ..."
-                ]
-            )
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    "looks like you have overridden on_iter so also override property "
-                    "`iterable_length` and property `iterable_task_name`"
-                ]
-            )
-
-    # noinspection PyTypeChecker
-    @property
-    def iterable_task_name(self) -> str:
-        if self.__class__.on_iter == Tracker.on_iter:
-            raise e.code.NotSupported(
-                msgs=[
-                    f"Class {self.__class__} does not support `iterable_task_name` ... ",
-                    f"Please override if you want to iterate on this class instance also remember "
-                    f"to override on_iter  ..."
-                ]
-            )
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    "looks like you have overridden on_iter so also override property "
-                    "`iterable_length` and property `iterable_task_name`"
-                ]
-            )
-
     @property
     def richy_panel(self) -> t.Optional["richy.StatusPanel"]:
         """
         should be made available only when is_called and in_with_context
         """
-        if self.is_called and self.in_with_context:
-            return self.internal.on_call_kwargs["richy_panel"]
+        if self.is_called:
+            return self.internal.richy_panel
         else:
             from . import richy
             return richy.StatusPanel(
@@ -1165,10 +1119,7 @@ class Tracker(Checker):
     def __len__(self) -> int:
         return self.iterable_length
 
-    def __call__(
-        self,
-        richy_panel: t.Optional["richy.StatusPanel"] = None, **kwargs,
-    ) -> "Tracker":
+    def __call__(self: T, richy_panel: "richy.StatusPanel") -> T:
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
 
@@ -1186,15 +1137,12 @@ class Tracker(Checker):
                 f"and forgot to exit properly in previous runs??",
                 f"Or else try to call this with for statement ...",
             ])
-        else:
-            # add status_panel if supplied
-            _on_call_kwargs = {"richy_panel": richy_panel}
 
-            # add remaining kwargs
-            _on_call_kwargs.update(kwargs)
+        # set to indicate that this is called
+        self.internal.is_called = True
 
-            # set internal on_call_kwargs
-            self.internal.on_call_kwargs = _on_call_kwargs
+        # set internal richy_panel
+        self.internal.richy_panel = richy_panel
 
         # prefetch if not done
         # handle expensive things that can reduce load on consecutive calls
@@ -1208,7 +1156,7 @@ class Tracker(Checker):
         # return
         return self
 
-    def __enter__(self) -> "Tracker":
+    def __enter__(self: T) -> T:
 
         # call on_enter
         self.on_enter()
@@ -1231,53 +1179,6 @@ class Tracker(Checker):
 
         # call on exit
         self.on_exit(exc_type, exc_val, exc_tb)
-
-    def __iter__(self) -> t.Iterable:
-        # get some vars
-        _rp = self.internal.on_call_kwargs["richy_panel"]  # type: richy.StatusPanel
-
-        # iterate
-        if _rp is None:
-            if self.in_with_context:
-                for _ in self.on_iter():
-                    yield _
-            else:
-                with self:
-                    for _ in self.on_iter():
-                        yield _
-        else:
-            if self.iterable_length == -1:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        "We cannot consume `richy_panel` as this class iterates "
-                        "infinitely ... ",
-                        "you might need to pass `richy_panel=None` and handle it "
-                        "on your own",
-                    ]
-                )
-            if self.in_with_context:
-                _rp.update("doing iterable task - " + self.iterable_task_name)
-                _task = _rp.add_task(
-                    task_name=self.iterable_task_name, total=self.iterable_length,
-                    prefix_current_stage=_rp.current_stage is not None,
-                    msg="started",
-                )
-                for _ in self.on_iter():
-                    _task.update(advance=1)
-                    yield _
-                _task.update(msg="completed")
-            else:
-                with self:
-                    _rp.update("-- " + self.iterable_task_name)
-                    _task = _rp.add_task(
-                        task_name=self.iterable_task_name, total=self.iterable_length,
-                        prefix_current_stage=_rp.current_stage is not None,
-                        msg="started",
-                    )
-                    for _ in self.on_iter():
-                        _task.update(advance=1)
-                        yield _
-                    _task.update(msg="completed")
 
     def __del__(self):
         self.on_del()
@@ -1387,31 +1288,10 @@ class Tracker(Checker):
         """
         Override this in case you want to do something when __exit__ is called
         """
-        if not self.is_called:
-            raise e.code.CodingError(msgs=[
-                f"Internal variable `on_call_kwargs` is not yet set",
-                f"Did you miss to call your code from within with context",
-                f"Also did you miss to use __call__",
-                f"If iterating over Hashable class make sure that "
-                f"__call__ is called which sets kwargs related to "
-                f"iteration or anything else",
-            ])
-
-        # reset on_call_kwargs
-        self.internal.on_call_kwargs = None
+        # reset
+        self.internal.is_called = False
         self.internal.in_with_context = False
-
-    # noinspection PyTypeChecker
-    def on_iter(self) -> t.Iterable[t.Any]:
-        """
-        Override this in case you want to do something when __iter__ is called
-        """
-        raise e.code.CodingError(msgs=[
-            f"Looks like you do not support iterating over "
-            f"hashable class {self.__class__}",
-            f"Considering overriding `on_iter` in class {self.__class__} "
-            f"to return an iterator",
-        ])
+        self.internal.richy_panel = None
 
     def on_del(self):
         ...

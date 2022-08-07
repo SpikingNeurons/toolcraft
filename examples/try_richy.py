@@ -173,17 +173,7 @@ def try_fit_progress_status_panel():
 
 
 class HashableCLass(m.HashableClass):
-
-    @property
-    def iterable_length(self) -> int:
-        return 6
-
-    @property
-    def iterable_task_name(self) -> str:
-        return "Tracker.iter#"
-
-    def on_iter(self) -> t.Iterable[t.Any]:
-        return [1, 2, 3, 4, 5, 6, ]
+    ...
 
 
 def try_hashable_status_panel():
@@ -218,13 +208,6 @@ def try_hashable_status_panel():
                 [1, 2, 3, 4], task_name="loop", msg="fff", prefix_current_stage=True
             ):
                 time.sleep(0.2)
-
-        # loop over tracker
-        _hashable.richy_panel.update(status="iterating over Hashable ...")
-        for _ in _hashable:
-            time.sleep(0.2)
-        for _ in _hashable:
-            time.sleep(0.2)
 
         # adding widget on the fly
         _hashable.richy_panel.update(status="adding widget on the fly ...")

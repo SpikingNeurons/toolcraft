@@ -32,7 +32,7 @@ from . import asset
 # noinspection PyUnreachableCode
 if False:
     from . import EnPlatform
-    from . import widget, BlockingTask
+    from . import BlockingTask
 
 _LOGGER = logger.get_logger()
 COLOR_TYPE = t.Tuple[int, int, int, int]
