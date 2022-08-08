@@ -42,6 +42,7 @@ from .file_system import Path
 # noinspection PyUnreachableCode
 if False:
     from . import folder
+    import tensorflow as tf
 
 _LOGGER = logger.get_logger()
 
@@ -1162,6 +1163,38 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 continue
         return False
 
+    def get_tf_dataset(
+        self, batch_size: int, memmap: bool,
+        expected_element_spec: t.Dict[str, "tf.TensorSpec"]
+    ) -> "tf.data.Dataset":
+        try:
+            # import
+            import tensorflow as tf
+
+            # get data
+            _data = self.load_as_dict(fix_all_lengths_same=True, memmap=memmap)
+
+            # skip some elements that are not needed
+            _elements_to_skip = [_ for _ in _data.keys() if _ not in expected_element_spec.keys()]
+            for _ in _elements_to_skip:
+                del _data[_]
+
+            # make dataset
+            _ds = tf.data.Dataset.from_tensor_slices(_data).batch(batch_size)
+
+            # validate element spec
+            e.validation.ShouldBeEqual(
+                value1=expected_element_spec, value2=_ds.element_spec,
+                msgs=["Was expecting the element spec to be identical"]
+            ).raise_if_failed()
+
+            # return
+            return _ds
+        except ImportError as _e:
+            raise e.code.CodingError(
+                msgs=["Cannot create tensorflow dataset as tensorflow is not available ..."]
+            )
+
     def load_as_dict(
         self, memory_limit_in_gbytes: int = None, fix_all_lengths_same: bool = False, memmap: bool = True
     ) -> t.Dict[str, t.Union[np.ndarray, t.Dict[str, np.ndarray]]]:
@@ -1202,7 +1235,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 raise e.code.ShouldNeverHappen(msgs=[])
             for _k in self.file_keys:
                 if len(_ret[_k]) == 1:
-                    _ret[_k] = np.repeat(_ret[_k], _len, axis=0)
+                    _ret[_k] = np.repeat(_ret[_k][:], _len, axis=0)
 
         # -------------------------------------------------- 04
         # return

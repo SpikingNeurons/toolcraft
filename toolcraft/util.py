@@ -891,6 +891,8 @@ def is_cached(property_or_fn) -> bool:
         return hasattr(property_or_fn, '_pk_cached')
     elif isinstance(property_or_fn, property):
         return hasattr(property_or_fn.fget, '_pk_cached')
+    elif isinstance(property_or_fn, HookUp):
+        return hasattr(property_or_fn.method, '_pk_cached')
     else:
         raise e.code.ShouldNeverHappen(
             msgs=[

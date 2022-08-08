@@ -1102,19 +1102,23 @@ class Tracker(Checker):
         return list(self.__dataclass_fields__.keys())
 
     @property
-    def richy_panel(self) -> t.Optional["richy.StatusPanel"]:
+    def richy_panel(self) -> "richy.StatusPanel":
         """
         should be made available only when is_called and in_with_context
         """
-        if self.is_called:
+        if self.is_called and self.in_with_context:
             return self.internal.richy_panel
         else:
-            from . import richy
-            return richy.StatusPanel(
-                title=f"{self.__module__}.{self.__class__.__name__}",
-                sub_title=self if isinstance(self, HashableClass) else None,
-                tc_log=logger.get_logger(self.__module__)
+            raise e.code.CodingError(
+                msgs=[f"The self of type {self.__class__} is not in with context and is not called ...",
+                      "So we do not have access to richy_panel ..."]
             )
+            # from . import richy
+            # return richy.StatusPanel(
+            #     title=f"{self.__module__}.{self.__class__.__name__}",
+            #     sub_title=self if isinstance(self, HashableClass) else None,
+            #     tc_log=logger.get_logger(self.__module__)
+            # )
 
     def __len__(self) -> int:
         return self.iterable_length
@@ -1132,7 +1136,7 @@ class Tracker(Checker):
         # set call
         if self.is_called:
             raise e.code.CodingError(msgs=[
-                f"Internal variable on_call_kwargs is already set.",
+                f"This instance is already called ...",
                 f"Did you miss to call your code from within with context "
                 f"and forgot to exit properly in previous runs??",
                 f"Or else try to call this with for statement ...",
