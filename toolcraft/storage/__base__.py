@@ -423,11 +423,3 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"things are now deleted."
                 ]
             )
-
-        # now we have removed strong reference to self in parent_folder.items
-        # dict ... let us make this instance useless as files are deleted
-        # hence we want to make sure any other references will fail to use
-        # this instance ...
-        # To achieve this we just clear out the internal __dict__
-        if not settings.FileHash.DEBUG_HASHABLE_STATE:
-            self.__dict__.clear()

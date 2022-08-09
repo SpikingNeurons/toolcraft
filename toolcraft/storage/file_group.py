@@ -893,7 +893,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # if expected file not present then create
             _created_file = _expected_file if _expected_file.exists() else \
-                self.create_file(file_key=k, richy_panel=_rp)
+                self.create_file(file_key=k)
 
             # if check if created and expected file is same
             if _expected_file != _created_file:
@@ -1517,6 +1517,11 @@ class DownloadFileGroup(FileGroup, abc.ABC):
             )
 
         # ------------------------------------------------------ 06
+        # clean for richy
+        _rp.update("finished downloading files")
+        del _rp['download_progress']
+
+        # ------------------------------------------------------ 07
         # return
         return list(_file_paths.values())
 

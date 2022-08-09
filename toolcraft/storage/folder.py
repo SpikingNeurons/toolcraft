@@ -183,7 +183,8 @@ class Folder(StorageHashable):
         if response == "y":
             _rp.update("deleting folder ...")
             for _sh in self.walk(only_names=False):
-                _sh.delete(force=force)
+                with _sh(richy_panel=_rp):
+                    _sh.delete(force=force)
 
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it
