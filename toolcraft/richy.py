@@ -332,6 +332,8 @@ class Widget(m.Checker, abc.ABC):
                 r_text.Text(_, justify='center') for _ in self.sub_title
             ] + [r_markdown.Markdown("---")]
         for _k, _v in _layout.items():
+            if _v is None:
+                continue
             if isinstance(_v, Widget):
                 _v = _v.get_renderable()
             _grp.append(_v)
@@ -712,7 +714,7 @@ class Progress(Widget):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_to_be_cached=['generic_progress']
+    things_to_be_cached=['generic_progress', 'summary', 'iter_next_start_callbacks', 'iter_next_end_callbacks']
 )
 class StatusPanel(Widget):
     """
@@ -726,21 +728,6 @@ class StatusPanel(Widget):
     stages: t.Optional[
         t.Union[t.Sequence[t.Any], t.Iterable[t.Any]]
     ] = None
-
-    @property
-    def stages_progressed_task(self) -> ProgressTask:
-        if self.stages is None:
-            raise e.code.CodingError(
-                msgs=["You are not using stages ... so you cannot use this property ..."]
-            )
-        _tasks = self.layout['stages_progress'].tasks
-        if bool(_tasks):
-            return _tasks['stages progress']
-        else:
-            raise e.code.CodingError(
-                msgs=["The stages progress task is not yet available as you have not "
-                      "yet iterated on this instance"]
-            )
 
     @property
     @util.CacheResult
@@ -759,6 +746,21 @@ class StatusPanel(Widget):
 
     @property
     @util.CacheResult
+    def summary(self) -> t.List[str]:
+        return []
+
+    @property
+    @util.CacheResult
+    def iter_next_start_callbacks(self) -> t.List[t.Callable]:
+        return []
+
+    @property
+    @util.CacheResult
+    def iter_next_end_callbacks(self) -> t.List[t.Callable]:
+        return []
+
+    @property
+    @util.CacheResult
     def layout(self) -> t.Dict:
         """
         refer
@@ -766,17 +768,10 @@ class StatusPanel(Widget):
         Also check example `toolcraft/examples/layout.py`
         """
         _ret = dict()
-        if self.stages is not None:
-            _ret['stages_progress'] = Progress.simple_progress(
-                title="***",
-                console=self.console,
-                box_type=r_box.HORIZONTALS,
-                border_style=r_style.Style(color="cyan"),
-                tc_log=self.tc_log,
-                show_time_elapsed=True,
-                show_time_remaining=True,
-                use_msg_field=True,
-            )
+        if self.stages is None:
+            _ret['stages_progress'] = None
+        else:
+            _ret['stages_progress'] = self._make_stages_progress()
         _ret['spinner'] = SpinnerType.dots.get_spinner(text="Waiting ...")
         return _ret
 
@@ -876,14 +871,30 @@ class StatusPanel(Widget):
                     yield _stage
                     self.on_iter_next_end(current_stage=_stage)
 
+    def _make_stages_progress(self) -> Progress:
+        return Progress.simple_progress(
+            title="***",
+            console=self.console,
+            box_type=r_box.HORIZONTALS,
+            border_style=r_style.Style(color="cyan"),
+            tc_log=self.tc_log,
+            show_time_elapsed=True,
+            show_time_remaining=True,
+            use_msg_field=True,
+        )
+
     def on_iter_next_start(self, current_stage: t.Any):
         # noinspection PyAttributeOutsideInit
         self.current_stage = current_stage
         self.update(status=f"executing stage `{current_stage}` ...")
+        for _fn in self.iter_next_start_callbacks:
+            _fn(current_stage=current_stage)
 
     def on_iter_next_end(self, current_stage: t.Any):
         # noinspection PyAttributeOutsideInit
         self.current_stage = None
+        for _fn in self.iter_next_end_callbacks:
+            _fn(current_stage=current_stage)
 
     def add_task(
         self, task_name: str, total: float, msg: str = "", prefix_current_stage: bool = False,
@@ -929,6 +940,19 @@ class StatusPanel(Widget):
             description=description, msg=msg,
         )
 
+    def append_to_summary(self, line: str):
+        self.summary.append(line)
+        _summary = self.summary
+        # this will show maximum 16 lines and minimum 8 lines
+        _summary = _summary[::-((len(_summary)//8)+1)][::-1]
+        del self['summary']
+        # _msg = f"# Fitting summary \n" + "\n".join(self.summary)
+        self['summary'] = r_console.Group(
+            *[r_text.Text.from_markup(_, justify='center') for _ in _summary]
+        )
+        if self.tc_log is not None:
+            self.tc_log.info(msg="Summary: ", msgs=[line])
+
     def set_final_message(self, msg: str):
         self.layout['final_message'] = r_markdown.Markdown(msg)
         self.refresh(update_renderable=True)
@@ -958,11 +982,63 @@ class StatusPanel(Widget):
         if status is not None and self.tc_log is not None:
             self.tc_log.info(msg=f"[{self.title}] status changed ...", msgs=[status])
 
+    def convert_to_fit_status_panel(
+        self, epochs: int,
+    ) -> t.Tuple[t.Callable, t.Callable]:
+        # set stages
+        if self.stages is None:
+            self.stages = [f"epoch {_+1}" for _ in range(epochs)]
+        else:
+            raise e.code.CodingError(
+                msgs=["Was expecting `self.stages` this to be None"]
+            )
+
+        # set stages_progress
+        if self.layout['stages_progress'] is None:
+            self.layout['stages_progress'] = self._make_stages_progress()
+        else:
+            raise e.code.CodingError(
+                msgs=["Was expecting `self.layout['stages_progress']` this to be None"]
+            )
+
+        # refresh renderable
+        self.refresh(update_renderable=True)
+
+        # add iter next start callback
+        def _iter_next_start(current_stage: str):
+            self.update(status=f"Fitting for `{current_stage}` ...")
+            _fit_progress = Progress.simple_progress(
+                title=f"Train & Validate: {current_stage}",
+                box_type=r_box.HORIZONTALS,
+                border_style=r_style.Style(color="cyan"),
+                use_msg_field=True, console=self.console, tc_log=self.tc_log,
+            )
+            _fit_progress.add_task(task_name="train", total=None, msg="...")
+            _fit_progress.add_task(task_name="validate", total=None, msg="...")
+            self['fit_progress'] = _fit_progress
+        self.iter_next_start_callbacks.append(_iter_next_start)
+
+        # add iter next start callback
+        def _iter_next_end(current_stage: str):
+            del self['fit_progress']
+        self.iter_next_end_callbacks.append(_iter_next_end)
+
+        # make tran and validate task fetchers
+        def _train_task_fetcher():
+            return self['fit_progress'].tasks["train"]
+
+        def _validate_task_fetcher():
+            return self['fit_progress'].tasks["validate"]
+
+        # return fetchers
+        return _train_task_fetcher, _validate_task_fetcher
+
+
 
 @dataclasses.dataclass
 @m.RuleChecker(
     things_not_to_be_cached=['train_task', 'validate_task'],
-    things_to_be_cached=['summary'],
+    things_to_be_cached=[],
 )
 class FitStatusPanel(StatusPanel):
     title: str = "Fitting ..."

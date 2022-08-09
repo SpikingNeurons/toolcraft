@@ -54,6 +54,9 @@ def try_status_panel():
         time.sleep(1)
         _s.update(spinner_speed=1.0, spinner=richy.SpinnerType.star, status="close")
         time.sleep(1)
+        _s.append_to_summary("Hi I am A")
+        _s.append_to_summary("Hi I am B")
+        _s.append_to_summary("Hi I am C")
 
     # ------------------------------------------------------------------- 02
     _stages_meta = {
@@ -75,6 +78,9 @@ def try_status_panel():
         if _stage == 'close':
             # _sp.set_final_message(msg="\n---\n + I am done ... \n + See you soon ...")
             _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
+            _sp.append_to_summary("Hi I am A")
+            _sp.append_to_summary("Hi I am B")
+            _sp.append_to_summary("Hi I am C")
 
     # ------------------------------------------------------------------- 03
     _sp = richy.StatusPanel(
@@ -109,6 +115,9 @@ def try_status_panel():
 
         # _sp.set_final_message(msg="\n---\n + I am done ... \n + See you soon ...")
         _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
+        _sp.append_to_summary("Hi I am A")
+        _sp.append_to_summary("Hi I am B")
+        _sp.append_to_summary("Hi I am C")
 
     # ------------------------------------------------------------------- 04
     _sp = richy.StatusPanel(
@@ -129,6 +138,9 @@ def try_status_panel():
         if _stage == 'close':
             # _sp.set_final_message(msg="\n---\n + I am done ... \n + See you soon ...")
             _sp.set_final_message(msg=" + I am done ... \n + See you soon ...")
+            _sp.append_to_summary("Hi I am A")
+            _sp.append_to_summary("Hi I am B")
+            _sp.append_to_summary("Hi I am C")
 
 
 def try_fit_progress_status_panel():
@@ -229,10 +241,10 @@ def try_hashable_status_panel():
 
 
 def main():
-    try_progress()
+    # try_progress()
     try_status_panel()
-    try_fit_progress_status_panel()
-    try_hashable_status_panel()
+    # try_fit_progress_status_panel()
+    # try_hashable_status_panel()
 
 
 if __name__ == '__main__':
