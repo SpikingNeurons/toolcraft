@@ -858,10 +858,27 @@ class Job:
                         msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
                               f"{_wj.job_id} is supposed to be finished ..."]
                     )
-            if self.experiment is None:
-                self.method()
-            else:
-                self.method(experiment=self.experiment)
+            _sub_title = [
+                f"flow-id: {self.flow_id}", f"job-id: {self.job_id}",
+            ]
+            if self.experiment is not None:
+                _sub_title.extend(
+                    [
+                        f"{self.experiment.__module__}.{self.experiment.__class__.__name__}",
+                        f"{self.experiment.name}",
+                    ]
+                )
+            _job_display_name = f"{self.runner.__module__}.{self.runner.__class__.__name__}.{self.method.__name__}"
+            with richy.StatusPanel(
+                title=f"Running job {_job_display_name}",
+                sub_title=_sub_title, tc_log=logger.get_logger(self.runner.__module__)
+            ) as _rp:
+                if self.experiment is None:
+                    with self.runner(richy_panel=_rp):
+                        self.method()
+                else:
+                    with (self.runner(richy_panel=_rp), self.experiment(richy_panel=_rp)):
+                        self.method(experiment=self.experiment)
             self.tag_manager.running.delete()
             self.tag_manager.finished.create()
             _end = _now()
@@ -1665,10 +1682,10 @@ class Runner(m.HashableClass, abc.ABC):
 
     def setup(self):
         _exps = self.registered_experiments
-        _LOGGER.info(
-            f"Setting up {len(_exps)} experiments registered for this runner ...")
-        for _exp in _exps:
-            _exp.setup()
+        _rp = self.richy_panel
+        for _exp in _rp.track(sequence=_exps, task_name=f"setup {len(_exps)} experiments"):
+            with _exp(richy_panel=_rp):
+                ...
 
     @classmethod
     def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
@@ -1808,9 +1825,6 @@ class Experiment(m.HashableClass, abc.ABC):
 
         # register self to runner
         self.runner.registered_experiments.append(self)
-
-    def setup(self):
-        _LOGGER.info(f" >> Setup experiment: {self.hex_hash}")
 
     @property
     @abc.abstractmethod

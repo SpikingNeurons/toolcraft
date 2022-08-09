@@ -1145,6 +1145,20 @@ class Tracker(Checker):
         # set to indicate that this is called
         self.internal.is_called = True
 
+        # richy panel should be in with context
+        # note that we cannot enter exits with __enter__ and __exit__ here as we dont knwo when to exit
+        # so the user must enter in with context of richy panel and pass it here
+        if not richy_panel.is_in_with_context:
+            raise e.code.CodingError(
+                msgs=["Please make sure to pass richy panel from with context"]
+            )
+
+        # previous richy_panel should not exist
+        if self.internal.richy_panel is not None:
+            raise e.code.CodingError(
+                msgs=["Previous richy_panel still exists ... did you miss to __exit__ properly"]
+            )
+
         # set internal richy_panel
         self.internal.richy_panel = richy_panel
 

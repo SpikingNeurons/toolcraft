@@ -566,12 +566,10 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-    def init(self):
-        # ----------------------------------------------------------- 01
+    def on_enter(self):
         # call super
-        super().init()
+        super().on_enter()
 
-        # ----------------------------------------------------------- 02
         # NOTE: we only do this for file group and not for folders
         # if config.DEBUG_HASHABLE_STATE we will create files two times
         # to confirm if states are consistent and hence it will help us to
@@ -589,43 +587,38 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             if not _info_backup_exists:
-                _rp = richy.StatusPanel(title="Create FileGroup [DEBUG]", sub_title=self, tc_log=_LOGGER)
-                with _rp:
-                    # create backup
-                    self.info.backup()
-                    self.config.backup()
-                    # delete things that were created in 03
-                    self.delete(richy_panel=_rp)
-                    # now let's create again
-                    self.create(richy_panel=_rp)
-                    # test info backup
-                    self.info.check_if_backup_matches()
-                    # test config backup
-                    self.config.check_if_backup_matches()
+                # create backup
+                self.info.backup()
+                self.config.backup()
+                # delete things that were created in 03
+                self.delete()
+                # now let's create again
+                self.create()
+                # test info backup
+                self.info.check_if_backup_matches()
+                # test config backup
+                self.config.check_if_backup_matches()
 
-        # ----------------------------------------------------------- 03
         # if created and outdated then delete and create them
         # if created and periodic check needed then perform periodic check
         # if files are not created create them
         # Note that this will make sure that if auto hashing the hashes are
         # generated
-        _rp = richy.StatusPanel(title="Create FileGroup", sub_title=self, tc_log=_LOGGER)
-        with _rp:
-            if self.is_created:
-                if self.is_outdated:
-                    # todo: dont try to `force=True` as it does not work ...
-                    #   It currently asks permission but that does not work ...
-                    #   hence just try to delete physically
-                    self.delete(richy_panel=_rp)
-                    self.create(richy_panel=_rp)
-                    self.check(richy_panel=_rp)
-                if self.periodic_check_needed:
-                    self.check(richy_panel=_rp)
-            else:
-                self.create(richy_panel=_rp)
-                self.check(richy_panel=_rp)
+        if self.is_created:
+            if self.is_outdated:
+                # todo: dont try to `force=True` as it does not work ...
+                #   It currently asks permission but that does not work ...
+                #   hence just try to delete physically
+                self.delete()
+                self.create()
+                self.check()
+            if self.periodic_check_needed:
+                self.check()
+        else:
+            self.create()
+            self.check()
 
-    def check_pre_runner(self, *, richy_panel: richy.StatusPanel, force: bool):
+    def check_pre_runner(self, *, force: bool):
         # ~~~~~~~~~~~~ special check ~~~~~~~~~ to avoid coding bugs
         # Although redundant it helps avoid unnecessary calls to check ...
         # Example in case of FileGroup we can avoid long time consuming checks.
@@ -652,7 +645,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
 
-    def do_hash_check(self, compute: bool, richy_panel: richy.StatusPanel) -> t.Dict:
+    def do_hash_check(self, compute: bool) -> t.Dict:
         """
         When compute returns computed hashes else returns failed hashes if any ...
 
@@ -662,6 +655,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ------------------------------------------------------ 01
         # some vars
+        _rp = self.richy_panel
         _chunk_size = 1024 * 50
         _correct_hashes = {} if compute else self.get_hashes()
         _failed_hashes = {}
@@ -675,15 +669,17 @@ class FileGroup(StorageHashable, abc.ABC):
         if compute:
             _title = f"Compute Hash"
             _rp_key = "hash_compute_progress"
+            _rp.update("computing hash ...")
         else:
             _title = f"Check Hash"
             _rp_key = "hash_check_progress"
+            _rp.update("checking hash ...")
         _progress = richy.Progress.for_download_and_hashcheck(
             title=_title, tc_log=_LOGGER,
             box_type=richy.r_box.HORIZONTALS,
             border_style=richy.r_style.Style(color="cyan"),
-            console=richy_panel.console)
-        richy_panel[_rp_key] = _progress
+            console=_rp.console)
+        _rp[_rp_key] = _progress
 
         # ------------------------------------------------------ 02
         # now add tasks
@@ -715,7 +711,11 @@ class FileGroup(StorageHashable, abc.ABC):
                         'computed ': _computed_hash,
                     }
 
-        # ------------------------------------------------------ 03
+        # ------------------------------------------------------ 04
+        # now remove progress indicator to save some spaces in render panel
+        del _rp[_rp_key]
+
+        # ------------------------------------------------------ 05
         # return
         if compute:
             return _computed_hashes
@@ -723,7 +723,7 @@ class FileGroup(StorageHashable, abc.ABC):
             return _failed_hashes
 
     # noinspection PyUnusedLocal
-    def check(self, *, richy_panel: richy.StatusPanel, force: bool = False):
+    def check(self, *, force: bool = False):
         """
 
         todo: we can make this with asyncio with aiohttps and aiofiles
@@ -731,7 +731,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         """
         # get failed hashes
-        _failed_hashes = self.do_hash_check(compute=False, richy_panel=richy_panel)
+        _failed_hashes = self.do_hash_check(compute=False)
 
         # delete state files and print failed hashes
         if bool(_failed_hashes):
@@ -751,7 +751,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
     # noinspection PyUnusedLocal
     def check_post_runner(
-        self, *, hooked_method_return_value: t.Any, richy_panel: richy.StatusPanel, force: bool
+        self, *, hooked_method_return_value: t.Any, force: bool
     ):
 
         # since things are now checked write to disk but before that make
@@ -841,14 +841,14 @@ class FileGroup(StorageHashable, abc.ABC):
         return self.get_files(file_keys=[file_key])[file_key]
 
     # noinspection PyUnusedLocal
-    def create_pre_runner(self, *, richy_panel: richy.StatusPanel):
+    def create_pre_runner(self):
         """
         User has to take care to keep files on disk ... or provide mechanism
         to create all the files by overriding create() method
         """
         # --------------------------------------------------------------01
         # call super ... checks if created
-        super().create_pre_runner(richy_panel=richy_panel)
+        super().create_pre_runner()
 
         # --------------------------------------------------------------02
         # create path dir if it does not exist
@@ -870,13 +870,14 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-    def create(self, *, richy_panel: richy.StatusPanel) -> t.List[Path]:
+    def create(self) -> t.List[Path]:
         # some vars
+        _rp = self.richy_panel
         _iterable = self.file_keys
         _total_files = len(_iterable)
-        richy_panel.update(f"creating {_total_files} files")
-        _iterable = richy_panel.track(
-            self.file_keys, task_name=f"create {_total_files} files")
+        _rp.update(f"creating {_total_files} files")
+        _iterable = _rp.track(
+            self.file_keys, task_name=f"create {_total_files} files #")
 
         # create
         _ret = []
@@ -892,7 +893,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # if expected file not present then create
             _created_file = _expected_file if _expected_file.exists() else \
-                self.create_file(file_key=k, richy_panel=richy_panel)
+                self.create_file(file_key=k, richy_panel=_rp)
 
             # if check if created and expected file is same
             if _expected_file != _created_file:
@@ -921,7 +922,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     def create_post_runner(
-        self, *, hooked_method_return_value: t.List[Path], richy_panel: richy.StatusPanel
+        self, *, hooked_method_return_value: t.List[Path]
     ):
         """
         The files are now created let us now do post handling
@@ -1002,7 +1003,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------04
         # call super and return .... so that state is created
         _ret = super().create_post_runner(
-            hooked_method_return_value=hooked_method_return_value, richy_panel=richy_panel)
+            hooked_method_return_value=hooked_method_return_value)
 
         # ----------------------------------------------------------------05
         # in case of auto hashing we need to generate hashes and save it in
@@ -1018,7 +1019,7 @@ class FileGroup(StorageHashable, abc.ABC):
                         f"hashes to be present in the config"
                     ]
                 )
-            _auto_hashes = self.do_hash_check(compute=True, richy_panel=richy_panel)
+            _auto_hashes = self.do_hash_check(compute=True)
             self.config.auto_hashes = _auto_hashes
 
         # ----------------------------------------------------------------06
@@ -1038,7 +1039,7 @@ class FileGroup(StorageHashable, abc.ABC):
         """
         ...
 
-    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
+    def delete(self, *, force: bool = False) -> t.Any:
         """
         Deletes FileGroup
 
@@ -1052,24 +1053,14 @@ class FileGroup(StorageHashable, abc.ABC):
         #  grabbed to delete files
 
         # ---------------------------------------------------------------01
+        _rp = self.richy_panel
         if settings.FileHash.DEBUG_HASHABLE_STATE:
             # if config.DEBUG_HASHABLE_STATE we know what we are doing ... we
             # are debugging and there will be one time programmatically delete
             # so set the response automatically for FileGroup
             force = True
-            richy_panel.update(
+            _rp.update(
                 "Deleting files automatically for file group [DEBUG_HASHABLE_STATE is True]"
-            )
-            # just let us warn user
-            _LOGGER.warning(
-                msg=f"Deleting files automatically for file group "
-                    f"{self.__class__.__name__!r}",
-                msgs=[
-                    f"name: {self.name!r}",
-                    f"path: {self.path}",
-                    f"This is intentional as you have set "
-                    f"`config.DEBUG_HASHABLE_STATE = True`"
-                ]
             )
 
         # ---------------------------------------------------------------02
@@ -1100,7 +1091,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # -----------------------------------------------------------03.02
             # delete all files for the group
-            richy_panel.update("deleting files ...")
+            _rp.update("deleting files ...")
             for fk in self.file_keys:
                 _key_path = self.path / fk
                 if _key_path.exists():
@@ -1283,7 +1274,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # return
         return _file
 
-    def create_pre_runner(self, *, richy_panel: richy.StatusPanel):
+    def create_pre_runner(self):
 
         # make sure that shape and dtype are properly overridden
         _shape_keys = list(self.shape.keys())
@@ -1318,10 +1309,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
             )
 
         # call super and return
-        return super().create_pre_runner(richy_panel=richy_panel)
+        return super().create_pre_runner()
 
     def create_post_runner(
-        self, *, hooked_method_return_value: t.List[Path], richy_panel: richy.StatusPanel
+        self, *, hooked_method_return_value: t.List[Path]
     ):
         # ----------------------------------------------------------------01
         # load as memmaps
@@ -1381,7 +1372,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # ----------------------------------------------------------------04
         # call super and return
         return super().create_post_runner(
-            hooked_method_return_value=hooked_method_return_value, richy_panel=richy_panel)
+            hooked_method_return_value=hooked_method_return_value)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1450,15 +1441,16 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     def get_urls(self) -> t.Dict[str, str]:
         ...
 
-    def create(self, *, richy_panel: richy.StatusPanel) -> t.List[Path]:
+    def create(self) -> t.List[Path]:
         """
         todo: we can make this with asyncio with aiohttps and aiofiles
           https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
         """
         # ------------------------------------------------------ 01
         # get details
+        _rp = self.richy_panel
         _total_files = len(self.file_keys)
-        richy_panel.update(f"get content length for {_total_files} files")
+        _rp.update(f"get content length for {_total_files} files")
         _chunk_size = 1024 * 50
         _file_paths = {
             fk: self.path/fk for fk in self.file_keys
@@ -1470,14 +1462,14 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
         # ------------------------------------------------------ 02
         # get panels
-        richy_panel.update(f"download {_total_files} files")
+        _rp.update(f"download {_total_files} files")
         _download_progress = richy.Progress.for_download_and_hashcheck(
             title="Download Files", tc_log=_LOGGER,
             box_type=richy.r_box.HORIZONTALS,
             border_style=richy.r_style.Style(color="cyan"),
-            console=richy_panel.console,
+            console=_rp.console,
         )
-        richy_panel['download_progress'] = _download_progress
+        _rp['download_progress'] = _download_progress
 
         # ------------------------------------------------------ 03
         # now add tasks
@@ -1583,9 +1575,11 @@ class FileGroupFromPaths(FileGroup):
             if _f.name not in self.file_keys
         ]
 
-    def create(self, *, richy_panel: richy.StatusPanel) -> t.List[Path]:
+    def create(self) -> t.List[Path]:
 
         _ret = []
+        _rp = self.richy_panel
+        _rp.update("creating file group from file paths")
 
         for fk in self.file_keys:
             _f = self.path / fk

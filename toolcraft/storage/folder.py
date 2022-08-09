@@ -143,27 +143,27 @@ class Folder(StorageHashable):
             return []
         return self.for_hashable.group_by
 
-    def init(self):
+    def on_enter(self):
         # call super
-        super().init()
+        super().on_enter()
 
         # create
         if not self.is_created:
-            _rp = richy.StatusPanel(title="Create Folder", sub_title=self, tc_log=_LOGGER)
-            with _rp:
-                self.create(richy_panel=_rp)
+            self.create()
 
-    def create(self, *, richy_panel: richy.StatusPanel) -> Path:
+    def create(self) -> Path:
         """
         If there is no Folder we create an empty folder.
         """
         if not self.path.isdir():
+            self.richy_panel.update(f"creating folder {self.name}")
             self.path.mkdir()
 
         # return
         return self.path
 
-    def delete(self, *, richy_panel: richy.StatusPanel, force: bool = False) -> t.Any:
+    def delete(self, *, force: bool = False) -> t.Any:
+        _rp = self.richy_panel
         # delete
         # We ask for user response as most of the files/folders are important
         # and programmatically deletes will cost download or generation of
@@ -181,9 +181,9 @@ class Folder(StorageHashable):
 
         # perform action
         if response == "y":
-            richy_panel.update("deleting folder ...")
+            _rp.update("deleting folder ...")
             for _sh in self.walk(only_names=False):
-                _sh.delete(force=force, richy_panel=richy_panel)
+                _sh.delete(force=force)
 
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it
