@@ -1027,9 +1027,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     @abc.abstractmethod
-    def create_file(
-        self, *, file_key: str, richy_panel: richy.StatusPanel
-    ) -> Path:
+    def create_file(self, *, file_key: str) -> Path:
         """
         If for efficiency you want to create multiple files ... hack it to
         create files on first call and subsequent file_keys will just fake
@@ -1523,9 +1521,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         return list(_file_paths.values())
 
     # noinspection PyTypeChecker
-    def create_file(
-        self, *, file_key: str, richy_panel: richy.StatusPanel
-    ) -> Path:
+    def create_file(self, *, file_key: str) -> Path:
         raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "
@@ -1594,9 +1590,7 @@ class FileGroupFromPaths(FileGroup):
         return _ret
 
     # noinspection PyTypeChecker
-    def create_file(
-        self, *, file_key: str, richy_panel: richy.StatusPanel
-    ) -> Path:
+    def create_file(self, *, file_key: str) -> Path:
         raise e.code.CodingError(
             msgs=[
                 f"This method need not be called as create method is "
