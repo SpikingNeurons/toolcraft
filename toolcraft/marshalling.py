@@ -1120,9 +1120,6 @@ class Tracker(Checker):
             #     tc_log=logger.get_logger(self.__module__)
             # )
 
-    def __len__(self) -> int:
-        return self.iterable_length
-
     def __call__(self: T, richy_panel: "richy.StatusPanel") -> T:
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
