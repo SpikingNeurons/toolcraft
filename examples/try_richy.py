@@ -175,7 +175,7 @@ def try_fit_progress_status_panel():
                 )
             _fit_panel.append_to_summary(
                 f"+ {_epoch}: [train] acc {0.23:.03f} loss {0.23:.03f} | [validation] acc {0.23:.03f} loss {0.23:.03f}",
-                highlight_line=_i if _i < 15 else 15,
+                highlight_line=_i+1 if _i < 15 else 15,
             )
             if _epoch == "epoch 30":
                 _fit_panel.set_final_message(

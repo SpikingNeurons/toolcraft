@@ -10,7 +10,7 @@ todo: add terminal plotting support
     this is possible as terminals can display raster images
     Extend StatusPanel for this
 """
-
+import time
 from collections.abc import Sized
 import dataclasses
 import typing as t
@@ -963,9 +963,8 @@ class StatusPanel(Widget):
             _text_str = _summary[_i]
             if highlight_line == _i:
                 _text_str = f">>> {_text_str} <<<"
-            _text = r_text.Text.from_markup(_text_str, justify='center')
-            if _i == 0 or _i == _len - 1 or highlight_line == _i or _len <= 8:
-                _text_lines.append(_text)
+            if (_i == 0) or (_i == (_len - 1)) or (highlight_line == _i) or ((_i % ((_len//8) + 1)) == 0):
+                _text_lines.append(r_text.Text.from_markup(_text_str, justify='center'))
 
         # add for rendering
         del self['summary']
