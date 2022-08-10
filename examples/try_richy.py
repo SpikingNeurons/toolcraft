@@ -145,45 +145,47 @@ def try_status_panel():
 
 def try_fit_progress_status_panel():
 
-    _train_samples = 20
-    _validate_samples = 10
+    _train_samples = 5
+    _validate_samples = 5
     _fit_panel = richy.StatusPanel(
         tc_log=_LOGGER, sub_title=["aaa", "bbb", "ccc"]
     )
-    _train_task_fetcher, _validate_task_fetcher = \
-        _fit_panel.convert_to_fit_status_panel(epochs=3)
-    _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
 
-    for _epoch in _fit_panel:
-        _train_task = _train_task_fetcher()
-        _validate_task = _validate_task_fetcher()
-        _fit_panel.update("estimating total ;) ...")
-        time.sleep(2)
-        _train_task.update(total=_train_samples)
-        _validate_task.update(total=_validate_samples)
-        for _ in range(_train_samples):
-            time.sleep(0.1)
-            _train_task.update(
-                advance=1,
-                msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
+    with _fit_panel:
+
+        _train_task_fetcher, _validate_task_fetcher = \
+            _fit_panel.convert_to_fit_status_panel(epochs=30)
+        _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
+
+        for _i, _epoch in enumerate(_fit_panel):
+            _train_task = _train_task_fetcher()
+            _validate_task = _validate_task_fetcher()
+            _fit_panel.update("estimating total ;) ...")
+            _train_task.update(total=_train_samples)
+            _validate_task.update(total=_validate_samples)
+            for _ in range(_train_samples):
+                _train_task.update(
+                    advance=1,
+                    msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
+                )
+            for _ in range(_validate_samples):
+                _validate_task.update(
+                    advance=1,
+                    msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
+                )
+            _fit_panel.append_to_summary(
+                f"+ {_epoch}: [train] acc {0.23:.03f} loss {0.23:.03f} | [validation] acc {0.23:.03f} loss {0.23:.03f}",
+                highlight_line=_i if _i < 15 else 15,
             )
-        for _ in range(_validate_samples):
-            time.sleep(0.1)
-            _validate_task.update(
-                advance=1,
-                msg=_msg_fmt.format(acc=_*0.1, loss=_*0.01),
-            )
-        _fit_panel.append_to_summary(
-            f"+ {_epoch}: [train] acc {0.23:.03f} loss {0.23:.03f} | [validation] acc {0.23:.03f} loss {0.23:.03f}")
-        if _epoch == "epoch 3":
-            _fit_panel.set_final_message(
-                msg=f"---\n"
-                    f"Currently at {_epoch}. \n"
-                    f"Found best epoch at {2} for val loss {0.004}. \n"
-                    f"+ train   : acc: {1.0} | loss: {4.33} \n"
-                    f"+ validate: acc: {1.0} | loss: {4.33} \n"
-                    f"---"
-            )
+            if _epoch == "epoch 30":
+                _fit_panel.set_final_message(
+                    msg=f"---\n"
+                        f"Currently at {_epoch}. \n"
+                        f"Found best epoch at {2} for val loss {0.004}. \n"
+                        f"+ train   : acc: {1.0} | loss: {4.33} \n"
+                        f"+ validate: acc: {1.0} | loss: {4.33} \n"
+                        f"---"
+                )
 
 
 class HashableCLass(m.HashableClass):

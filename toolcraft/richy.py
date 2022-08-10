@@ -360,6 +360,10 @@ class Widget(m.Checker, abc.ABC):
         Args:
             update_renderable: In case you want to update any renderable components on the fly
         """
+        if self._live is None:
+            raise e.code.CodingError(
+                msgs=["Did you miss to call from with context ..."]
+            )
         if update_renderable:
             self._live.update(renderable=self.get_renderable(), refresh=True)
         else:
@@ -940,16 +944,33 @@ class StatusPanel(Widget):
             description=description, msg=msg,
         )
 
-    def append_to_summary(self, line: str):
+    def append_to_summary(self, line: str, highlight_line: int = None):
+
+        # add to summary
         self.summary.append(line)
+
+        # some vars
         _summary = self.summary
+        _len = len(_summary)
+        _text_lines = []
+
+        # since highlight_line is one indexed
+        if highlight_line is not None:
+            highlight_line -= 1
+
         # this will show maximum 16 lines and minimum 8 lines
-        _summary = _summary[::-((len(_summary)//8)+1)][::-1]
+        for _i in range(_len):
+            _text_str = _summary[_i]
+            if highlight_line == _i:
+                _text_str = f">>> {_text_str} <<<"
+            _text = r_text.Text.from_markup(_text_str, justify='center')
+            if _i == 0 or _i == _len - 1 or highlight_line == _i or _len <= 8:
+                _text_lines.append(_text)
+
+        # add for rendering
         del self['summary']
         # _msg = f"# Fitting summary \n" + "\n".join(self.summary)
-        self['summary'] = r_console.Group(
-            *[r_text.Text.from_markup(_, justify='center') for _ in _summary]
-        )
+        self['summary'] = r_console.Group(*_text_lines)
         if self.tc_log is not None:
             self.tc_log.info(msg="Summary: ", msgs=[line])
 
@@ -985,16 +1006,6 @@ class StatusPanel(Widget):
     def convert_to_fit_status_panel(
         self, epochs: int,
     ) -> t.Tuple[t.Callable, t.Callable]:
-        print(self.layout['stages_progress'], "xxxxxxxxxxxxxxxxxxxxxxx")
-        # set stages
-        if self.stages is None:
-            self.stages = [f"epoch {_+1}" for _ in range(epochs)]
-        else:
-            raise e.code.CodingError(
-                msgs=["Was expecting `self.stages` this to be None"]
-            )
-
-        print(self.layout['stages_progress'], "gggggggggggggggggg")
 
         # set stages_progress
         if self.layout['stages_progress'] is None:
@@ -1002,6 +1013,14 @@ class StatusPanel(Widget):
         else:
             raise e.code.CodingError(
                 msgs=["Was expecting `self.layout['stages_progress']` to be None"]
+            )
+
+        # set stages
+        if self.stages is None:
+            self.stages = [f"epoch {_+1:0{len(str(epochs))}d}" for _ in range(epochs)]
+        else:
+            raise e.code.CodingError(
+                msgs=["Was expecting `self.stages` this to be None"]
             )
 
         # refresh renderable
