@@ -147,14 +147,16 @@ def try_fit_progress_status_panel():
 
     _train_samples = 20
     _validate_samples = 10
-    _fit_panel = richy.FitStatusPanel(
-        tc_log=_LOGGER, epochs=3, sub_title=["aaa", "bbb", "ccc"]
+    _fit_panel = richy.StatusPanel(
+        tc_log=_LOGGER, sub_title=["aaa", "bbb", "ccc"]
     )
+    _train_task_fetcher, _validate_task_fetcher = \
+        _fit_panel.convert_to_fit_status_panel(epochs=3)
     _msg_fmt = "[green]A {acc:.2f} [yellow]L {loss:.2f}"
 
     for _epoch in _fit_panel:
-        _train_task = _fit_panel.train_task
-        _validate_task = _fit_panel.validate_task
+        _train_task = _train_task_fetcher()
+        _validate_task = _validate_task_fetcher()
         _fit_panel.update("estimating total ;) ...")
         time.sleep(2)
         _train_task.update(total=_train_samples)
@@ -242,8 +244,8 @@ def try_hashable_status_panel():
 
 def main():
     # try_progress()
-    try_status_panel()
-    # try_fit_progress_status_panel()
+    # try_status_panel()
+    try_fit_progress_status_panel()
     # try_hashable_status_panel()
 
 

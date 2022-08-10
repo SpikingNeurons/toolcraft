@@ -985,6 +985,7 @@ class StatusPanel(Widget):
     def convert_to_fit_status_panel(
         self, epochs: int,
     ) -> t.Tuple[t.Callable, t.Callable]:
+        print(self.layout['stages_progress'], "xxxxxxxxxxxxxxxxxxxxxxx")
         # set stages
         if self.stages is None:
             self.stages = [f"epoch {_+1}" for _ in range(epochs)]
@@ -993,12 +994,14 @@ class StatusPanel(Widget):
                 msgs=["Was expecting `self.stages` this to be None"]
             )
 
+        print(self.layout['stages_progress'], "gggggggggggggggggg")
+
         # set stages_progress
         if self.layout['stages_progress'] is None:
             self.layout['stages_progress'] = self._make_stages_progress()
         else:
             raise e.code.CodingError(
-                msgs=["Was expecting `self.layout['stages_progress']` this to be None"]
+                msgs=["Was expecting `self.layout['stages_progress']` to be None"]
             )
 
         # refresh renderable
@@ -1024,10 +1027,10 @@ class StatusPanel(Widget):
         self.iter_next_end_callbacks.append(_iter_next_end)
 
         # make tran and validate task fetchers
-        def _train_task_fetcher():
+        def _train_task_fetcher() -> ProgressTask:
             return self['fit_progress'].tasks["train"]
 
-        def _validate_task_fetcher():
+        def _validate_task_fetcher() -> ProgressTask:
             return self['fit_progress'].tasks["validate"]
 
         # return fetchers
