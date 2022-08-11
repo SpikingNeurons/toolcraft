@@ -954,10 +954,6 @@ class StatusPanel(Widget):
         _len = len(_summary)
         _text_lines = []
 
-        # since highlight_line is one indexed
-        if highlight_line is not None:
-            highlight_line -= 1
-
         # this will show maximum 16 lines and minimum 8 lines
         for _i in range(_len):
             _text_str = _summary[_i]
@@ -1016,7 +1012,7 @@ class StatusPanel(Widget):
 
         # set stages
         if self.stages is None:
-            self.stages = [f"epoch {_+1:0{len(str(epochs))}d}" for _ in range(epochs)]
+            self.stages = [f"epoch {_:0{len(str(epochs))}d}" for _ in range(epochs)]
         else:
             raise e.code.CodingError(
                 msgs=["Was expecting `self.stages` this to be None"]
