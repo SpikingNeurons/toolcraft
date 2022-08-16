@@ -404,6 +404,10 @@ class ArtifactManager:
         _file = self.path / name
         _file.save_compressed_pickle(data)
 
+    def load_compressed_pickle(self, name: str) -> t.Any:
+        _file = self.path / name
+        return _file.load_compressed_pickle()
+
     def available_artifacts(self) -> t.List[str]:
         return [_.name for _ in self.path.ls()]
 
@@ -1693,7 +1697,7 @@ class Runner(m.HashableClass, abc.ABC):
 
     def get_another_job(
         self, method: t.Callable, experiment: t.Optional["Experiment"]
-    ):
+    ) -> Job:
         """
         In some cases you might want to access results from other job so this is the method for it.
         The only restriction is that the requested job must be completed ...

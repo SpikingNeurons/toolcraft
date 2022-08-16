@@ -38,6 +38,11 @@ _RULE_CHECKER = "__rule_checker__"
 
 _RULE_CHECKERS_TO_BE_CHECKED = {}  # type: t.Dict[int, RuleChecker]
 
+
+CUSTOM_KERAS_CLASSES_MAP = {
+    "loss": dict()
+}
+
 # Class to keep track of all concrete HashableClass class's used in the
 # entire application
 # noinspection PyTypeChecker
@@ -2142,7 +2147,7 @@ class HashableClass(YamlRepr, abc.ABC):
                     _keras_instance_type = _v['__keras_instance__']
                     del _v['__keras_instance__']
                     if _keras_instance_type == "loss":
-                        yaml_state[_n] = tk.losses.deserialize(_v)
+                        yaml_state[_n] = tk.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
                     elif _keras_instance_type == "layer":
                         yaml_state[_n] = tk.layers.deserialize(_v)
                     elif _keras_instance_type == "optimizer":

@@ -52,6 +52,11 @@ class StorageHashable(m.HashableClass, abc.ABC):
         return state.Info(hashable=self)
 
     @property
+    @abc.abstractmethod
+    def file_system(self) -> str:
+        ...
+
+    @property
     @util.CacheResult
     def path(self) -> _fs.Path:
         """
