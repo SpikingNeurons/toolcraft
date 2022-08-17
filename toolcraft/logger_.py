@@ -42,19 +42,21 @@ todo: never use typer
   + maybe handle this all with rich prompt and let that dependency go
 """
 
-import logging
-from tqdm.auto import tqdm
-import typing as t
 import inspect
-import types
+import io
+import logging
 import pathlib
+import sys
+import textwrap
+import types
+import typing as t
+from datetime import datetime
 from logging import config as lc
 from logging import handlers
-import textwrap
-from datetime import datetime
-import sys
-import io
+
+from tqdm.auto import tqdm
 from yaspin.core import Yaspin
+
 from . import settings
 
 if settings.DPG_WORKS:
@@ -65,14 +67,7 @@ _LOGGER_STREAM = sys.stdout
 WRAP_WIDTH = 150
 SPINNER_TITLE_WIDTH = WRAP_WIDTH
 
-MESSAGES_TYPE = t.List[
-    t.Union[
-        str,
-        t.List,
-        t.Tuple,
-        t.Dict,
-    ]
-]
+MESSAGES_TYPE = t.List[t.Union[str, t.List, t.Tuple, t.Dict, ]]
 
 
 class ProgressBar(tqdm):
@@ -82,7 +77,8 @@ class ProgressBar(tqdm):
 
     # noinspection PyShadowingBuiltins
     def __init__(
-        self, *,
+        self,
+        *,
         iterable: t.Iterable = None,
         desc: str = None,
         total: t.Union[int, float] = None,
@@ -93,7 +89,7 @@ class ProgressBar(tqdm):
         maxinterval: float = 10.0,
         miniters: t.Union[int, float] = None,
         ascii: t.Union[str, bool] = None,
-        unit: str = ' it',
+        unit: str = " it",
         unit_scale: t.Union[bool, int, float] = False,
         dynamic_ncols: bool = True,
         smoothing: float = 0.3,
@@ -229,14 +225,32 @@ class ProgressBar(tqdm):
         """
         # call super
         super().__init__(
-            iterable=iterable, desc=desc, total=total, leave=leave, file=file,
-            ncols=ncols, mininterval=mininterval, maxinterval=maxinterval,
-            miniters=miniters, ascii=ascii, disable=settings.DISABLE_PROGRESS_BAR,
-            unit=unit, unit_scale=unit_scale, dynamic_ncols=dynamic_ncols,
-            smoothing=smoothing, bar_format=bar_format, initial=initial,
-            position=position, postfix=postfix, unit_divisor=unit_divisor,
-            write_bytes=write_bytes, lock_args=lock_args, nrows=nrows,
-            colour=colour, delay=delay, gui=gui,
+            iterable=iterable,
+            desc=desc,
+            total=total,
+            leave=leave,
+            file=file,
+            ncols=ncols,
+            mininterval=mininterval,
+            maxinterval=maxinterval,
+            miniters=miniters,
+            ascii=ascii,
+            disable=settings.DISABLE_PROGRESS_BAR,
+            unit=unit,
+            unit_scale=unit_scale,
+            dynamic_ncols=dynamic_ncols,
+            smoothing=smoothing,
+            bar_format=bar_format,
+            initial=initial,
+            position=position,
+            postfix=postfix,
+            unit_divisor=unit_divisor,
+            write_bytes=write_bytes,
+            lock_args=lock_args,
+            nrows=nrows,
+            colour=colour,
+            delay=delay,
+            gui=gui,
         )
 
     def __enter__(self) -> "ProgressBar":
@@ -295,8 +309,9 @@ class Spinner(Yaspin):
         ...
         # break  # uncomment this to see side effects
     """
+
     COLOR = "yellow"
-    SPINNER_WRAP_WIDTH = int(WRAP_WIDTH*1.5)
+    SPINNER_WRAP_WIDTH = int(WRAP_WIDTH * 1.5)
     TILDA_PREFIX = "~ "
     NESTED_SPINNERS_STORE = []  # type: t.List[Spinner]
 
@@ -311,7 +326,8 @@ class Spinner(Yaspin):
         return True
 
     def __init__(
-        self, *,
+        self,
+        *,
         title: str,
         logger: "Logger",
         timeout_seconds: int = None,
@@ -362,8 +378,8 @@ class Spinner(Yaspin):
         self.aborted = False
 
         # create prefix based on nesting level
-        self.prefix = "  " + \
-                      self.TILDA_PREFIX * (len(self.NESTED_SPINNERS_STORE) + 1)
+        self.prefix = "  " + self.TILDA_PREFIX * (
+            len(self.NESTED_SPINNERS_STORE) + 1)
 
         # skip time related
         self.skip_time_for_current_step = 0
@@ -418,8 +434,9 @@ class Spinner(Yaspin):
         _prefix = Emoji.PROCESS_START_PREFIX
         if self.log_to_file:
             self.logger.info(msg=_msg, prefix=_prefix)
-        self.log_on_spinner_console(
-            msg=_msg, prefix=_prefix, annotate_with_time_elapsed=False)
+        self.log_on_spinner_console(msg=_msg,
+                                    prefix=_prefix,
+                                    annotate_with_time_elapsed=False)
 
         # call super
         return super().__enter__()
@@ -444,8 +461,9 @@ class Spinner(Yaspin):
         _delta = datetime.now() - self.started_at
         _msg = f"{self.title} finished in {_delta.total_seconds():.2f} sec ..."
         _prefix = Emoji.SUCCESS_PREFIX if self.success else Emoji.FAIL_PREFIX
-        self.log_on_spinner_console(
-            msg=_msg, prefix=_prefix, annotate_with_time_elapsed=False)
+        self.log_on_spinner_console(msg=_msg,
+                                    prefix=_prefix,
+                                    annotate_with_time_elapsed=False)
         if self.log_to_file:
             self.logger.info(msg=_msg, prefix=_prefix)
 
@@ -455,8 +473,7 @@ class Spinner(Yaspin):
             self.NESTED_SPINNERS_STORE.pop()
         except IndexError:
             raise IndexError(
-                f"This is some coding bug ... SHOULD NEVER HAPPEN"
-            )
+                f"This is some coding bug ... SHOULD NEVER HAPPEN")
         if bool(self.NESTED_SPINNERS_STORE):
             self.NESTED_SPINNERS_STORE[-1].show()
 
@@ -467,17 +484,17 @@ class Spinner(Yaspin):
 
         # check message lengths if provided as we will not wrap them
         if len(self.title) > SPINNER_TITLE_WIDTH:
-            raise Exception(
-                f"Spinner title is too long {len(self.title)} > "
-                f"{SPINNER_TITLE_WIDTH}"
-            )
+            raise Exception(f"Spinner title is too long {len(self.title)} > "
+                            f"{SPINNER_TITLE_WIDTH}")
 
     def annotate_with_time_elapsed(self, *, msg: str) -> str:
         _delta = datetime.now() - self.started_at
         return f"{_delta.total_seconds(): 4.0f} sec | {msg}"
 
     def log_on_spinner_console(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         prefix: str,
         msgs: MESSAGES_TYPE = None,
         annotate_with_time_elapsed: bool = True,
@@ -491,7 +508,9 @@ class Spinner(Yaspin):
             msg = self.annotate_with_time_elapsed(msg=msg)
 
         wrap_msgs = parse_msgs(
-            msg=msg, msgs=msgs, prefix=f"{self.prefix}{prefix}",
+            msg=msg,
+            msgs=msgs,
+            prefix=f"{self.prefix}{prefix}",
             wrap_width=self.SPINNER_WRAP_WIDTH,
         )
         # logs to console only
@@ -499,13 +518,17 @@ class Spinner(Yaspin):
             self.write(_msg)
 
     def info(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
         annotate_with_time_elapsed: bool = True,
     ):
         self.log_on_spinner_console(
-            msg=msg, msgs=msgs, prefix=Emoji.SPINNER_INFO_PREFIX,
-            annotate_with_time_elapsed=annotate_with_time_elapsed
+            msg=msg,
+            msgs=msgs,
+            prefix=Emoji.SPINNER_INFO_PREFIX,
+            annotate_with_time_elapsed=annotate_with_time_elapsed,
         )
 
     def abort(self):
@@ -533,8 +556,8 @@ class Spinner(Yaspin):
         _delta = datetime.now() - self.last_timeout_at
 
         # check if timed out
-        if _delta.total_seconds() < self.timeout_seconds + \
-                self.skip_time_for_current_step:
+        if (_delta.total_seconds() <
+                self.timeout_seconds + self.skip_time_for_current_step):
             return False
         else:
             # note we reset timeout so you can reuse it ... if you intend to
@@ -550,8 +573,8 @@ class Spinner(Yaspin):
         _delta = datetime.now() - self.last_track_timeout_at
 
         # check if timed out
-        if _delta.total_seconds() < self.track_timeout_seconds + \
-                self.skip_time_for_current_step:
+        if (_delta.total_seconds() <
+                self.track_timeout_seconds + self.skip_time_for_current_step):
             return False
         else:
             self.last_track_timeout_at = datetime.now()
@@ -563,8 +586,8 @@ class Spinner(Yaspin):
         _delta = datetime.now() - self.started_at
 
         # return
-        return _delta.total_seconds() >= self.hard_timeout_seconds + \
-            self.skip_time_from_start
+        return (_delta.total_seconds() >=
+                self.hard_timeout_seconds + self.skip_time_from_start)
 
     def time_elapsed_in_sec(self) -> int:
         return int((datetime.now() - self.started_at).total_seconds())
@@ -615,9 +638,9 @@ class Logger:
 
         # if running from external python script add the python file name
         if self.module.__name__ == "__main__":
-            _emoji_logger_name = \
-                f"{_emoji_logger_name} " \
-                f"({pathlib.Path(self.module.__file__).name})"
+            _emoji_logger_name = (
+                f"{_emoji_logger_name} "
+                f"({pathlib.Path(self.module.__file__).name})")
 
         # return
         return _emoji_logger_name
@@ -646,8 +669,7 @@ class Logger:
                 f"Logger for module {module.__name__} was already "
                 f"registered in _LOGGERS dict ... Make sure you are "
                 f"using `get_logger()` method instead of creating instances "
-                f"on your own."
-            )
+                f"on your own.")
 
         # ---------------------------------------------------- 02
         # save references
@@ -672,16 +694,16 @@ class Logger:
         #       creating Logger for this (i.e. logger.py) module. Then in
         #       that case we need to use `self`.
         if "_LOGGER" not in globals().keys():
-            assert self.module.__name__ == __name__, \
-                f"Note that the first logger to get created is for the " \
-                f"module same as this file i.e. {__name__}. Also in that " \
-                f"case the global var _LOGGER should not be set in that case."
+            assert self.module.__name__ == __name__, (
+                f"Note that the first logger to get created is for the "
+                f"module same as this file i.e. {__name__}. Also in that "
+                f"case the global var _LOGGER should not be set in that case.")
             _LOGGER = self
         else:
-            assert self.module.__name__ != __name__, \
-                f"This should not happen as if global var _LOGGER is " \
-                f"available then then no other module can have name " \
-                f"{__name__}"
+            assert self.module.__name__ != __name__, (
+                f"This should not happen as if global var _LOGGER is "
+                f"available then then no other module can have name "
+                f"{__name__}")
 
         # ---------------------------------------------------- xx
         # Send message using the LOGGER for `logger.py`
@@ -748,16 +770,17 @@ class Logger:
             # check if log dir provided
             if log_dir is None:
                 raise Exception(
-                    "Please provide log dir if you are using file handler ..."
-                )
+                    "Please provide log dir if you are using file handler ...")
             # create dir
             log_dir.mkdir(parents=True, exist_ok=True)
             # log file
-            _log_file_name = f"{self.module.__name__}.logs" \
-                if use_segregated_logging else "common.logs"
+            _log_file_name = (f"{self.module.__name__}.logs"
+                              if use_segregated_logging else "common.logs")
             # make handler
             _fh = handlers.RotatingFileHandler(
-                log_dir / _log_file_name, encoding="utf-8", maxBytes=max_log_file_size,
+                log_dir / _log_file_name,
+                encoding="utf-8",
+                maxBytes=max_log_file_size,
                 backupCount=max_log_file_backups,
             )
             # set fh
@@ -772,63 +795,64 @@ class Logger:
             raise Exception("remote handler is not yet supported ...")
 
     # level: 10
-    def debug(
-        self, *, msg: str,
-        msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
-    ):
+    def debug(self,
+              *,
+              msg: str,
+              msgs: MESSAGES_TYPE = None,
+              prefix=Emoji.DEFAULT_PREFIX):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.debug(_msg)
 
     # level: 20
-    def info(
-        self, *, msg: str,
-        msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
-    ):
+    def info(self,
+             *,
+             msg: str,
+             msgs: MESSAGES_TYPE = None,
+             prefix=Emoji.DEFAULT_PREFIX):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.info(_msg)
 
     # level: 30
-    def warning(
-        self, *, msg: str,
-        msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
-    ):
+    def warning(self,
+                *,
+                msg: str,
+                msgs: MESSAGES_TYPE = None,
+                prefix=Emoji.DEFAULT_PREFIX):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.warning(_msg)
 
     # level: 40
     def error(
-        self, *, msg: str,
+        self,
+        *,
+        msg: str,
         msgs: MESSAGES_TYPE = None,
         prefix=Emoji.DEFAULT_PREFIX,
         no_wrap: bool = False,
     ):
-        wrap_msgs = parse_msgs(
-            msg=msg, msgs=msgs, prefix=prefix, no_wrap=no_wrap)
+        wrap_msgs = parse_msgs(msg=msg,
+                               msgs=msgs,
+                               prefix=prefix,
+                               no_wrap=no_wrap)
         for _msg in wrap_msgs:
             self.log.error(_msg)
 
     # level: 50
-    def critical(
-        self, *, msg: str,
-        msgs: MESSAGES_TYPE = None,
-        prefix=Emoji.DEFAULT_PREFIX
-    ):
+    def critical(self,
+                 *,
+                 msg: str,
+                 msgs: MESSAGES_TYPE = None,
+                 prefix=Emoji.DEFAULT_PREFIX):
         wrap_msgs = parse_msgs(msg=msg, msgs=msgs, prefix=prefix)
         for _msg in wrap_msgs:
             self.log.critical(_msg)
 
 
 def get_logger(
-    module: t.Optional[
-        t.Union[types.ModuleType, str]
-    ] = None
-) -> Logger:
+        module: t.Optional[t.Union[types.ModuleType, str]] = None) -> Logger:
     # global dict to store _LOGGERS
     global _LOGGERS
 
@@ -882,8 +906,8 @@ if not __ONE_TIME:
         ...
 
     LOGGING_CONFIG = {
-        'version': 1,
-        'disable_existing_loggers': False,
+        "version": 1,
+        "disable_existing_loggers": False,
         # 'formatters': {
         #     'standard': {
         #       'format': '%(asctime)s [%(levelname).4s] %(name)s: %(message)s'
@@ -931,9 +955,9 @@ def try_spinner_logger_from_class():
         # noinspection PyMethodMayBeStatic
         def long_running_function(self):
             with Spinner(
-                logger=ll,
-                title="Downloading",
-                timeout_seconds=1,
+                    logger=ll,
+                    title="Downloading",
+                    timeout_seconds=1,
             ) as spinner:
                 for i in range(3):
                     spinner.text = f"Downloading {i} ..."
@@ -942,13 +966,13 @@ def try_spinner_logger_from_class():
                     time.sleep(2)  # time consuming code
 
                     with Spinner(
-                        title="BlaBlaBla",
-                        logger=ll,
+                            title="BlaBlaBla",
+                            logger=ll,
                     ) as spinner1:
                         for i1 in range(3):
                             spinner1.text = f"BlaBlaBla {i1} ..."
                             spinner1.info(msg=f"BlaBlaBla Some information"
-                                              f" {i1}")
+                                          f" {i1}")
                             time.sleep(2)  # time consuming code
 
                         success = randint(0, 1)

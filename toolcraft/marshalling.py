@@ -1,47 +1,41 @@
 import abc
+import asyncio
+import contextvars
 import dataclasses
 import datetime
-import hashlib
-import sys
-import inspect
-import time
-import types
-import pathlib
-import contextvars
 import enum
+import hashlib
+import inspect
+import pathlib
+import sys
+import time
 import traceback
+import types
 import typing as t
-import rich
-import asyncio
-from rich import progress
-from rich import spinner
-from rich import columns
+
 import numpy as np
 import pyarrow as pa
+import rich
 import yaml
+from rich import columns, progress, spinner
 
 from . import error as e
 from . import logger, settings, util
-
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
 if False:
     # noinspection PyUnresolvedReferences
-    from . import gui, storage
-    from . import richy
+    from . import gui, richy, storage
 
-T = t.TypeVar('T', bound='Tracker')
+T = t.TypeVar("T", bound="Tracker")
 _LOGGER = logger.get_logger()
-_LITERAL_CLASS_NAME = 'LITERAL'
+_LITERAL_CLASS_NAME = "LITERAL"
 _RULE_CHECKER = "__rule_checker__"
 
 _RULE_CHECKERS_TO_BE_CHECKED = {}  # type: t.Dict[int, RuleChecker]
 
-
-CUSTOM_KERAS_CLASSES_MAP = {
-    "loss": dict()
-}
+CUSTOM_KERAS_CLASSES_MAP = {"loss": dict()}
 
 # Class to keep track of all concrete HashableClass class's used in the
 # entire application
@@ -62,6 +56,7 @@ NOT_PROVIDED = "__NOT_PROVIDED__"
 
 
 class _ReadOnlyClass(type):
+
     def __setattr__(self, key, value):
         raise e.code.NotAllowed(msgs=[
             f"Class {self} is read only.",
@@ -76,9 +71,7 @@ class UseMethodInForm:
     HashableMethodsRunnerForm and DoubleSplitForm
     """
 
-    def __init__(
-        self, label_fmt: str = None, call_as_async: bool = False
-    ):
+    def __init__(self, label_fmt: str = None, call_as_async: bool = False):
         """
 
         Args:
@@ -130,14 +123,16 @@ class UseMethodInForm:
 
             # todo: remove later just for sanity check
             # noinspection PyUnresolvedReferences
-            assert id(_self) == id(_fn.__self__), "was expecting this to be same"
+            assert id(_self) == id(
+                _fn.__self__), "was expecting this to be same"
 
         def _new_fn(_self):
             _grp = gui.widget.Group(horizontal=True)
             with _grp:
                 gui.widget.Text(default_value="count")
                 _txt = gui.widget.Text(default_value="000")
-                gui.Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
+                gui.Engine.gui_task_add(fn=self.txt_update_fn,
+                                        fn_kwargs=dict(widget=_txt))
             return _grp
 
         return _new_fn
@@ -168,26 +163,21 @@ class UseMethodInForm:
         return self.fn
 
     @classmethod
-    def get_from_hashable_fn(
-        cls, hashable: "HashableClass", fn_name: str
-    ) -> "UseMethodInForm":
+    def get_from_hashable_fn(cls, hashable: "HashableClass",
+                             fn_name: str) -> "UseMethodInForm":
         try:
             _fn = getattr(hashable.__class__, fn_name)
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Function with name {fn_name} is not present in class "
-                    f"{hashable.__class__}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Function with name {fn_name} is not present in class "
+                f"{hashable.__class__}"
+            ])
         try:
             return getattr(_fn, f"_{cls.__name__}")
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"The function {_fn} was not decorated with {UseMethodInForm}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"The function {_fn} was not decorated with {UseMethodInForm}"
+            ])
 
     def get_button_widget(
         self,
@@ -209,17 +199,18 @@ class UseMethodInForm:
 
         # ---------------------------------------------------- 02
         # make label for button
-        if isinstance(getattr(hashable.__class__, self.label_fmt, None), property):
+        if isinstance(getattr(hashable.__class__, self.label_fmt, None),
+                      property):
             _button_label = getattr(hashable, self.label_fmt)
         elif self.label_fmt is None:
-            _button_label = f"{hashable.__class__.__name__}.{hashable.hex_hash} " \
-                            f"({_callable_name})"
+            _button_label = (
+                f"{hashable.__class__.__name__}.{hashable.hex_hash} "
+                f"({_callable_name})")
         elif isinstance(self.label_fmt, str):
             _button_label = self.label_fmt
         else:
             raise e.code.CodingError(
-                msgs=[f"unknown type {type(self.label_fmt)}"]
-            )
+                msgs=[f"unknown type {type(self.label_fmt)}"])
 
         # ---------------------------------------------------- 03
         # create callback
@@ -343,9 +334,9 @@ class Internal:
 
         # if item is locked do not allow to overwrite it
         if key in self.__locked_fields__:
-            raise e.code.CodingError(
-                msgs=[f"Internal field `{key}` is locked so you cannot update it"]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Internal field `{key}` is locked so you cannot update it"
+            ])
 
         # set attribute
         return super().__setattr__(key, value)
@@ -388,9 +379,7 @@ class Internal:
                 f"{self.__field_names__}",
             ])
         if item in self.__locked_fields__:
-            raise e.code.NotAllowed(
-                msgs=[f"Field `{item}` is already locked"]
-            )
+            raise e.code.NotAllowed(msgs=[f"Field `{item}` is already locked"])
         self.__locked_fields__.append(item)
 
     def unlock_field(self, item: str):
@@ -402,13 +391,11 @@ class Internal:
             ])
         if item not in self.__locked_fields__:
             raise e.code.NotAllowed(
-                msgs=[f"Field `{item}` was not locked to unlock"]
-            )
+                msgs=[f"Field `{item}` was not locked to unlock"])
         self.__locked_fields__.remove(item)
 
 
 class RuleChecker:
-
     """
     Note that this decorator must be applied on class after @dataclasses.dataclass ...
 
@@ -428,7 +415,8 @@ class RuleChecker:
     """
 
     def __init__(
-        self, *,
+        self,
+        *,
         class_can_be_overridden: bool = True,
         things_to_be_cached: t.List[str] = None,
         things_not_to_be_cached: t.List[str] = None,
@@ -436,12 +424,13 @@ class RuleChecker:
         restrict_dataclass_fields_to: t.List[str] = None,
     ):
         self.class_can_be_overridden = class_can_be_overridden
-        self.things_to_be_cached = \
-            [] if things_to_be_cached is None else things_to_be_cached
-        self.things_not_to_be_cached = \
-            [] if things_not_to_be_cached is None else things_not_to_be_cached
-        self.things_not_to_be_overridden = \
-            [] if things_not_to_be_overridden is None else things_not_to_be_overridden
+        self.things_to_be_cached = ([] if things_to_be_cached is None else
+                                    things_to_be_cached)
+        self.things_not_to_be_cached = ([] if things_not_to_be_cached is None
+                                        else things_not_to_be_cached)
+        self.things_not_to_be_overridden = ([] if
+                                            things_not_to_be_overridden is None
+                                            else things_not_to_be_overridden)
         # todo: the child classes do not get this setting from parent class
         #   test with job.Runner ... child classes of Runner do not obey this
         #   restriction ... also test other init kwargs above even they might not
@@ -453,7 +442,8 @@ class RuleChecker:
         self.decorated_class = None  # type: t.Type[Tracker]
 
     def __call__(
-        self, checker,
+        self,
+        checker,
         # todo: returning this causes issue with Typing as it starts thinking
         #  everything is Tracker ... find a way to figure out typing protocol that
         #  understand in context to class on which we decorated this
@@ -470,12 +460,10 @@ class RuleChecker:
         # ---------------------------------------------------------------- 01
         # there will never be a decorated class
         if self.decorated_class is not None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"This is suppose to be None as __call__ will be called only "
-                    f"once per instance of RuleChecker ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"This is suppose to be None as __call__ will be called only "
+                f"once per instance of RuleChecker ..."
+            ])
         # set it now here
         self.decorated_class = checker
         # ---------------------------------------------------------------- 02
@@ -504,36 +492,32 @@ class RuleChecker:
                 setattr(self.decorated_class, _RULE_CHECKER, self)
                 _RULE_CHECKERS_TO_BE_CHECKED[id(self)] = self
             else:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We assume you are calling from __init_subclass__ "
-                        f"so we expect that {_RULE_CHECKER} will not be setup yet as "
-                        f"you will be creating fresh RuleChecker instance"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"We assume you are calling from __init_subclass__ "
+                    f"so we expect that {_RULE_CHECKER} will not be setup yet as "
+                    f"you will be creating fresh RuleChecker instance"
+                ])
         # ---------------------------------------------------------------- 04
         # if this is true decorator used on top of class
         else:
             # remove the rule checker added by __init_subclass__ and instead have self
             if _RULE_CHECKER in self.decorated_class.__dict__.keys():
                 # do for rule checkers
-                del _RULE_CHECKERS_TO_BE_CHECKED[
-                    id(self.decorated_class.__dict__[_RULE_CHECKER])]
+                del _RULE_CHECKERS_TO_BE_CHECKED[id(
+                    self.decorated_class.__dict__[_RULE_CHECKER])]
                 _RULE_CHECKERS_TO_BE_CHECKED[id(self)] = self
                 # note this is mapping proxy, so we use delattr and setattr
                 delattr(self.decorated_class, _RULE_CHECKER)
                 setattr(self.decorated_class, _RULE_CHECKER, self)
             else:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"You are not calling this code from __init_subclass__ and we "
-                        f"assume this is actual decorator applied on class",
-                        f"So we expect that {_RULE_CHECKER} will be set by now as we "
-                        f"will delete it first and then add this RuleChecker on "
-                        f"top of it",
-                        f"Check class {checker}"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"You are not calling this code from __init_subclass__ and we "
+                    f"assume this is actual decorator applied on class",
+                    f"So we expect that {_RULE_CHECKER} will be set by now as we "
+                    f"will delete it first and then add this RuleChecker on "
+                    f"top of it",
+                    f"Check class {checker}",
+                ])
         # ---------------------------------------------------------------- 05
         # return
         return checker
@@ -545,16 +529,15 @@ class RuleChecker:
         # ---------------------------------------------------------- 01
         # expect parent to be None as this is called only once per RuleCHecker
         if self.parent is not None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect this parent to None as this is called only once "
-                    f"per RuleChecker"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect this parent to None as this is called only once "
+                f"per RuleChecker"
+            ])
         # set parent rule checker ... expect for super parent Tracker
         if self.decorated_class not in [Checker, Tracker]:
             if self.decorated_class.__mro__[1] != Checker:
-                self.parent = getattr(self.decorated_class.__mro__[1], _RULE_CHECKER)
+                self.parent = getattr(self.decorated_class.__mro__[1],
+                                      _RULE_CHECKER)
 
         # ---------------------------------------------------------- 02
         # test if current decorator settings agree with parent
@@ -635,19 +618,17 @@ class RuleChecker:
         # it later while this class should be treated as subclass ...
         # We do this as we cannot declare it as abstract class as the behaviour does
         # not work when we want enums ...
-        if not bool(getattr(self.decorated_class, '__annotations__', {})):
+        if not bool(getattr(self.decorated_class, "__annotations__", {})):
             return
 
         # ---------------------------------------------------------- 02
         # check if the subclassing class also extends enum.Enum
         if not issubclass(self.decorated_class, enum.Enum):
-            raise e.code.CodingError(
-                msgs=[
-                    f"While subclassing `FrozenEnum` make sure "
-                    f"that it also extends `enum.Enum`",
-                    f"Check class {self.decorated_class}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"While subclassing `FrozenEnum` make sure "
+                f"that it also extends `enum.Enum`",
+                f"Check class {self.decorated_class}",
+            ])
 
     # noinspection PyPep8Naming
     def check_related_to_class_HashableClass(self):
@@ -665,24 +646,23 @@ class RuleChecker:
         #   does not know that it is dataclass
         _annotated_attr_keys = []
         for _c in _hashable_cls.__mro__:
-            if hasattr(_c, '__annotations__'):
+            if hasattr(_c, "__annotations__"):
                 _annotated_attr_keys += list(_c.__annotations__.keys())
 
         # ---------------------------------------------------------- 02
         # class should not be local
         if str(_hashable_cls).find("<locals>") > -1:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Hashable classes can only be first class classes.",
-                    f"Do not define classes locally, declare them at module "
-                    f"level.",
-                    f"Check class {_hashable_cls}"
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"Hashable classes can only be first class classes.",
+                f"Do not define classes locally, declare them at module "
+                f"level.",
+                f"Check class {_hashable_cls}",
+            ])
 
         # ---------------------------------------------------------- 03
         # check all non dunder attributes
-        for _attr_k, _attr_v in util.fetch_non_dunder_attributes(_hashable_cls):
+        for _attr_k, _attr_v in util.fetch_non_dunder_attributes(
+                _hashable_cls):
 
             # ------------------------------------------------------ 03.01
             # if _attr_v is property, function or a method ... no need to check
@@ -699,19 +679,17 @@ class RuleChecker:
 
             # ------------------------------------------------------ 03.02
             # no attribute should start with _
-            if _attr_k.startswith('_'):
+            if _attr_k.startswith("_"):
                 # if abstract class used this will be present
                 # the only field that starts with _ which we allow
-                if _attr_k == '_abc_impl':
+                if _attr_k == "_abc_impl":
                     continue
                 # anything else raise error
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Attribute {_attr_k} is not one of {_allowed_types} "
-                        f"and it starts with `_`",
-                        f"Please check attribute {_attr_k} of class {_hashable_cls}"
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Attribute {_attr_k} is not one of {_allowed_types} "
+                    f"and it starts with `_`",
+                    f"Please check attribute {_attr_k} of class {_hashable_cls}",
+                ])
 
             # ------------------------------------------------------ 03.03
             # if special helper classes that stores all LITERALS
@@ -725,23 +703,19 @@ class RuleChecker:
             if _attr_k in _annotated_attr_keys:
                 # _attr_v is a typing.ClassVar raise error
                 # simple way to see if typing was used as annotation value
-                if hasattr(_attr_v, '__origin__'):
+                if hasattr(_attr_v, "__origin__"):
                     if _attr_v.__origin__ == t.ClassVar:
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"We do not allow class variable {_attr_k} "
-                                f"... check class {_hashable_cls}"
-                            ]
-                        )
+                        raise e.code.CodingError(msgs=[
+                            f"We do not allow class variable {_attr_k} "
+                            f"... check class {_hashable_cls}"
+                        ])
                 # if `dataclasses.InitVar` raise error
                 if isinstance(_attr_v, dataclasses.InitVar):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"We co not allow using dataclass.InitVar.",
-                            f"Please check annotated field {_attr_k} in "
-                            f"class {_hashable_cls}"
-                        ]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"We co not allow using dataclass.InitVar.",
+                        f"Please check annotated field {_attr_k} in "
+                        f"class {_hashable_cls}",
+                    ])
                 # if a valid dataclass field continue
                 continue
 
@@ -749,23 +723,21 @@ class RuleChecker:
             # if we reached here we do not understand the class attribute so
             # raise error
             # print(cls.__annotations__.keys(), "::::::::::::::::::", cls)
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"Found an attribute `{_attr_k}` with: ",
-                    dict(
-                        type=f"{type(_attr_v)}",
-                        value=f"{_attr_v}",
-                    ),
-                    f"Problem with attribute {_attr_k} of class {_hashable_cls}",
-                    f"It is neither one of {_allowed_types}, nor is it "
-                    f"defined as dataclass field.",
-                    f"Note that if you are directly assigning the annotated "
-                    f"field it will not return dataclass field so please "
-                    f"assign it with "
-                    f"`dataclass.field(default=...)` or "
-                    f"`dataclass.field(default_factory=...)`",
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"Found an attribute `{_attr_k}` with: ",
+                dict(
+                    type=f"{type(_attr_v)}",
+                    value=f"{_attr_v}",
+                ),
+                f"Problem with attribute {_attr_k} of class {_hashable_cls}",
+                f"It is neither one of {_allowed_types}, nor is it "
+                f"defined as dataclass field.",
+                f"Note that if you are directly assigning the annotated "
+                f"field it will not return dataclass field so please "
+                f"assign it with "
+                f"`dataclass.field(default=...)` or "
+                f"`dataclass.field(default_factory=...)`",
+            ])
 
         # ---------------------------------------------------------- 05
         # if not None then that means we want to restrict dataclass fields
@@ -774,42 +746,47 @@ class RuleChecker:
             if bool(_restrict_dataclass_fields_to):
                 for _attr_k in _annotated_attr_keys:
                     e.validation.ShouldBeOneOf(
-                        value=_attr_k, values=_restrict_dataclass_fields_to,
+                        value=_attr_k,
+                        values=_restrict_dataclass_fields_to,
                         msgs=[
                             f"Please use only allowed dataclass fields for class "
                             f"{_hashable_cls}..."
-                        ]
+                        ],
                     ).raise_if_failed()
             else:
                 # empty list was supplied that means you dont want to use any fields
                 if bool(_annotated_attr_keys):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Please do not specify ant dataclass fields for class "
-                            f"{_hashable_cls}",
-                            f"We found below fields defined",
-                            _annotated_attr_keys,
-                        ]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"Please do not specify ant dataclass fields for class "
+                        f"{_hashable_cls}",
+                        f"We found below fields defined",
+                        _annotated_attr_keys,
+                    ])
 
         # ---------------------------------------------------------- 05
         # do not override dunder methods
         _general_dunders_to_ignore = [
             # python adds it
-            '__module__', '__dict__', '__weakref__', '__doc__', '__match_args__',
-
+            "__module__",
+            "__dict__",
+            "__weakref__",
+            "__doc__",
+            "__match_args__",
             # dataclass related
-            '__annotations__', '__abstractmethods__', '__dataclass_params__',
-            '__dataclass_fields__',
-
+            "__annotations__",
+            "__abstractmethods__",
+            "__dataclass_params__",
+            "__dataclass_fields__",
             # dataclass adds this default dunders to all dataclasses ... we have
             # no control over this ;(
-            '__init__', '__repr__', '__eq__', '__setattr__',
-            '__delattr__', '__hash__',
-
+            "__init__",
+            "__repr__",
+            "__eq__",
+            "__setattr__",
+            "__delattr__",
+            "__hash__",
             # we allow this
-            '__call__',
-
+            "__call__",
             # this is used by RuleChecker
             _RULE_CHECKER,
         ]
@@ -817,14 +794,12 @@ class RuleChecker:
             for k in _hashable_cls.__dict__.keys():
                 if k.startswith("__") and k.endswith("__"):
                     if k not in _general_dunders_to_ignore:
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"You are not allowed to override dunder "
-                                f"methods in any subclass of {HashableClass}",
-                                f"Please check class {_hashable_cls} and avoid defining "
-                                f"dunder method `{k}` inside it"
-                            ]
-                        )
+                        raise e.code.CodingError(msgs=[
+                            f"You are not allowed to override dunder "
+                            f"methods in any subclass of {HashableClass}",
+                            f"Please check class {_hashable_cls} and avoid defining "
+                            f"dunder method `{k}` inside it",
+                        ])
 
     # noinspection PyPep8Naming
     def check_related_to_class_Tracker(self):
@@ -837,12 +812,13 @@ class RuleChecker:
         # test if LITERAL is extended properly
         _parent_literal_class = self.parent.decorated_class.LITERAL
         e.validation.ShouldBeSubclassOf(
-            value=self.decorated_class.LITERAL, value_types=(_parent_literal_class, ),
+            value=self.decorated_class.LITERAL,
+            value_types=(_parent_literal_class, ),
             msgs=[
                 f"We expect a nested class of class {self.decorated_class} with name "
                 f"`{_LITERAL_CLASS_NAME}` to "
                 f"extend the class {_parent_literal_class}"
-            ]
+            ],
         ).raise_if_failed()
 
     def check_things_not_to_be_overridden(self):
@@ -854,22 +830,18 @@ class RuleChecker:
         # ---------------------------------------------------------- 02
         for _t in self.parent.things_not_to_be_overridden:
             try:
-                if getattr(self.decorated_class, _t) != \
-                        getattr(self.parent.decorated_class, _t):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Please do not override method/property "
-                            f"`{_t}` in class {self.decorated_class}"
-                        ]
-                    )
+                if getattr(self.decorated_class, _t) != getattr(
+                        self.parent.decorated_class, _t):
+                    raise e.code.CodingError(msgs=[
+                        f"Please do not override method/property "
+                        f"`{_t}` in class {self.decorated_class}"
+                    ])
             except AttributeError:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Property/method with name `{_t}` does not belong to class "
-                        f"{self.decorated_class} or any of its parent class",
-                        f"Please check if you provided wrong string ..."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"Property/method with name `{_t}` does not belong to class "
+                    f"{self.decorated_class} or any of its parent class",
+                    f"Please check if you provided wrong string ...",
+                ])
 
     def check_things_not_to_be_cached(self):
         for _t in self.things_not_to_be_cached:
@@ -877,26 +849,22 @@ class RuleChecker:
             try:
                 _method_or_prop = getattr(self.decorated_class, _t)
             except AttributeError:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Property/method with name `{_t}` does not belong to class "
-                        f"{self.decorated_class} or any of its parent class",
-                        f"Please check if you provided wrong string ..."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"Property/method with name `{_t}` does not belong to class "
+                    f"{self.decorated_class} or any of its parent class",
+                    f"Please check if you provided wrong string ...",
+                ])
             # if abstract no sense in checking if cached
-            if getattr(_method_or_prop, '__isabstractmethod__', False):
+            if getattr(_method_or_prop, "__isabstractmethod__", False):
                 continue
             # check if cached
             if util.is_cached(_method_or_prop):
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We expect you not to cache property/method "
-                        f"`{_t}`. Do not use  decorator "
-                        f"`@util.CacheResult` in "
-                        f"class {self.decorated_class} for `{_t}`"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"We expect you not to cache property/method "
+                    f"`{_t}`. Do not use  decorator "
+                    f"`@util.CacheResult` in "
+                    f"class {self.decorated_class} for `{_t}`"
+                ])
 
     def check_things_to_be_cached(self):
         for _t in self.things_to_be_cached:
@@ -904,25 +872,21 @@ class RuleChecker:
             try:
                 _method_or_prop = getattr(self.decorated_class, _t)
             except AttributeError:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Property/method with name `{_t}` does not belong to class "
-                        f"{self.decorated_class} or any of its parent class",
-                        f"Please check if you provided wrong string ..."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"Property/method with name `{_t}` does not belong to class "
+                    f"{self.decorated_class} or any of its parent class",
+                    f"Please check if you provided wrong string ...",
+                ])
             # if abstract no sense in checking if cached
-            if getattr(_method_or_prop, '__isabstractmethod__', False):
+            if getattr(_method_or_prop, "__isabstractmethod__", False):
                 continue
             # check if cached
             if not util.is_cached(_method_or_prop):
-                raise e.code.CodingError(
-                    msgs=[
-                        f"If defined we expect you to cache property/method `{_t}` "
-                        f"using decorator `@util.CacheResult` in "
-                        f"class {self.decorated_class}"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"If defined we expect you to cache property/method `{_t}` "
+                    f"using decorator `@util.CacheResult` in "
+                    f"class {self.decorated_class}"
+                ])
 
     def check_if_decorated_with_dataclass(self):
         """
@@ -947,8 +911,8 @@ class RuleChecker:
         # if there is dataclass decorator no need to investigate more
         _current_class = self.decorated_class
         # noinspection PyProtectedMember,PyUnresolvedReferences
-        if dataclasses._FIELDS in _current_class.__dict__.keys() and \
-                dataclasses._PARAMS in _current_class.__dict__.keys():
+        if (dataclasses._FIELDS in _current_class.__dict__.keys()
+                and dataclasses._PARAMS in _current_class.__dict__.keys()):
             return
 
         # ---------------------------------------------------------- 03
@@ -957,14 +921,12 @@ class RuleChecker:
         # immediate parent class
         _parent_class = _current_class.__mro__[1]
         # noinspection PyProtectedMember,PyUnresolvedReferences
-        if dataclasses._FIELDS in _current_class.__dict__.keys() and \
-                dataclasses._PARAMS in _current_class.__dict__.keys():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Parent class {_parent_class} of class {_current_class} is a "
-                    f"dataclass ... so please make sure to decorate accordingly ..."
-                ]
-            )
+        if (dataclasses._FIELDS in _current_class.__dict__.keys()
+                and dataclasses._PARAMS in _current_class.__dict__.keys()):
+            raise e.code.CodingError(msgs=[
+                f"Parent class {_parent_class} of class {_current_class} is a "
+                f"dataclass ... so please make sure to decorate accordingly ..."
+            ])
 
     def agree_with_parent_and_merge_settings(self):
         """
@@ -979,54 +941,47 @@ class RuleChecker:
         # ---------------------------------------------------------- 02
         # class_can_be_overridden
         if not self.parent.class_can_be_overridden:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Parent class {self.parent.decorated_class} is configured to "
-                    f"not be overridden. So please refrain from doing it ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Parent class {self.parent.decorated_class} is configured to "
+                f"not be overridden. So please refrain from doing it ..."
+            ])
 
         # ---------------------------------------------------------- 03
         # merge things_to_be_cached
         for _t in self.things_to_be_cached:
             if _t in self.parent.things_to_be_cached:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"You have already configured `{_t}` in RuleChecker of parent class "
-                        f"{self.parent.decorated_class} ..."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"You have already configured `{_t}` in RuleChecker of parent class "
+                    f"{self.parent.decorated_class} ..."
+                ])
         self.things_to_be_cached += self.parent.things_to_be_cached
 
         # ---------------------------------------------------------- 04
         # merge things_to_be_cached
         for _t in self.things_not_to_be_cached:
             if _t in self.parent.things_not_to_be_cached:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"You have already `{_t}` in parent class "
-                        f"{self.parent.decorated_class} as well as this class "
-                        f"{self.decorated_class} ..."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"You have already `{_t}` in parent class "
+                    f"{self.parent.decorated_class} as well as this class "
+                    f"{self.decorated_class} ..."
+                ])
         self.things_not_to_be_cached += self.parent.things_not_to_be_cached
 
         # ---------------------------------------------------------- 05
         # merge things_to_be_cached
         for _t in self.things_not_to_be_overridden:
             if _t in self.parent.things_not_to_be_overridden:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"You have already configured `{_t}` in parent class "
-                        f"{self.parent.decorated_class} ..."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"You have already configured `{_t}` in parent class "
+                    f"{self.parent.decorated_class} ..."
+                ])
         self.things_not_to_be_overridden += self.parent.things_not_to_be_overridden
 
 
 class Checker:
 
     class LITERAL(metaclass=_ReadOnlyClass):
+
         def __new__(cls, *args, **kwargs):
             raise e.code.NotAllowed(msgs=[
                 f"This class is meant to be used to hold class "
@@ -1062,16 +1017,22 @@ class Checker:
     @classmethod
     def class_init(cls):
         raise e.code.NotSupported(
-            msgs=[f"Please override this class method in class {cls} ..."]
-        )
+            msgs=[f"Please override this class method in class {cls} ..."])
 
 
 @RuleChecker(
-    things_to_be_cached=['internal'],
+    things_to_be_cached=["internal"],
     things_not_to_be_cached=[
-        'is_called', 'on_call', 'on_enter', 'on_exit', 'richy_panel',
+        "is_called",
+        "on_call",
+        "on_enter",
+        "on_exit",
+        "richy_panel",
     ],
-    things_not_to_be_overridden=['is_called', 'richy_panel', ]
+    things_not_to_be_overridden=[
+        "is_called",
+        "richy_panel",
+    ],
 )
 class Tracker(Checker):
     """
@@ -1114,10 +1075,10 @@ class Tracker(Checker):
         if self.is_called and self.in_with_context:
             return self.internal.richy_panel
         else:
-            raise e.code.CodingError(
-                msgs=[f"The self of type {self.__class__} is not in with context and is not called ...",
-                      "So we do not have access to richy_panel ..."]
-            )
+            raise e.code.CodingError(msgs=[
+                f"The self of type {self.__class__} is not in with context and is not called ...",
+                "So we do not have access to richy_panel ...",
+            ])
             # from . import richy
             # return richy.StatusPanel(
             #     title=f"{self.__module__}.{self.__class__.__name__}",
@@ -1151,15 +1112,15 @@ class Tracker(Checker):
         # note that we cannot enter exits with __enter__ and __exit__ here as we dont knwo when to exit
         # so the user must enter in with context of richy panel and pass it here
         if not richy_panel.is_in_with_context:
-            raise e.code.CodingError(
-                msgs=["Please make sure to pass richy panel from with context"]
-            )
+            raise e.code.CodingError(msgs=[
+                "Please make sure to pass richy panel from with context"
+            ])
 
         # previous richy_panel should not exist
         if self.internal.richy_panel is not None:
-            raise e.code.CodingError(
-                msgs=["Previous richy_panel still exists ... did you miss to __exit__ properly"]
-            )
+            raise e.code.CodingError(msgs=[
+                "Previous richy_panel still exists ... did you miss to __exit__ properly"
+            ])
 
         # set internal richy_panel
         self.internal.richy_panel = richy_panel
@@ -1418,6 +1379,7 @@ class YamlLoader(yaml.UnsafeLoader):
     def load(cls, file_or_text: t.Union["storage.Path", str],
              **kwargs) -> t.Union[dict, "YamlRepr"]:
         from . import storage
+
         # get text
         _text = file_or_text
         if isinstance(file_or_text, storage.Path):
@@ -1449,8 +1411,7 @@ class YamlLoader(yaml.UnsafeLoader):
 
 
 @RuleChecker(
-    things_not_to_be_overridden=['yaml'],
-)
+    things_not_to_be_overridden=["yaml"], )
 class YamlRepr(Tracker):
     """
     This class makes it possible to have YamlRepr for dataclasses.
@@ -1562,9 +1523,9 @@ class YamlRepr(Tracker):
 
     @staticmethod
     def get_class(
-        file_or_text: t.Union["storage.Path", str]
-    ) -> t.Type["YamlRepr"]:
+            file_or_text: t.Union["storage.Path", str]) -> t.Type["YamlRepr"]:
         from . import storage
+
         _text = file_or_text
         if isinstance(file_or_text, storage.Path):
             _text = file_or_text.read_text()
@@ -1572,12 +1533,11 @@ class YamlRepr(Tracker):
         try:
             return YAML_TAG_MAPPING[_tag]
         except KeyError:
-            raise e.code.CodingError(
-                msgs=[
-                    "Cannot detect hashable class from provided `file_or_text` ...",
-                    "Cannot process tag at the start ... check:", _text,
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "Cannot detect hashable class from provided `file_or_text` ...",
+                "Cannot process tag at the start ... check:",
+                _text,
+            ])
 
     def clone(self) -> "YamlRepr":
         return self.from_yaml(self.yaml())
@@ -1589,9 +1549,9 @@ class YamlRepr(Tracker):
         ])
 
     @classmethod
-    def from_dict(
-        cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
-    ) -> "YamlRepr":
+    def from_dict(cls, yaml_state: t.Dict[str,
+                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+                  **kwargs) -> "YamlRepr":
         # noinspection PyArgumentList
         return cls(**yaml_state)
 
@@ -1846,7 +1806,8 @@ class FrozenEnum(YamlRepr):
         return {"name": self.name}
 
     @classmethod
-    def from_dict(cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+    def from_dict(cls, yaml_state: t.Dict[str,
+                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
                   **kwargs) -> "FrozenEnum":
         return getattr(cls, yaml_state["name"])
 
@@ -1854,8 +1815,8 @@ class FrozenEnum(YamlRepr):
 # @dataclasses.dataclass(eq=True, frozen=True)
 @dataclasses.dataclass(frozen=True)
 @RuleChecker(
-    things_to_be_cached=['hex_hash', 'rich_panel'],
-    things_not_to_be_overridden=['hex_hash'],
+    things_to_be_cached=["hex_hash", "rich_panel"],
+    things_not_to_be_overridden=["hex_hash"],
     # todo: any method or property that returns storage.FileSystem,
     #  Table FileGroup, Folder must be cached
     #  Will need to look at each property and methods return type and based on that
@@ -1884,6 +1845,7 @@ class HashableClass(YamlRepr, abc.ABC):
     todo: We can have a class method to be used with class validate where we
       can store names of properties that need to be cached.
     """
+
     @property
     def name(self) -> str:
         """
@@ -1959,7 +1921,7 @@ class HashableClass(YamlRepr, abc.ABC):
     @property
     def mini_hex_hash(self) -> str:
         _hex_hash = self.hex_hash
-        _hex_hash = _hex_hash[len(_hex_hash)-12:]
+        _hex_hash = _hex_hash[len(_hex_hash) - 12:]
         return _hex_hash
 
     @property
@@ -2030,13 +1992,16 @@ class HashableClass(YamlRepr, abc.ABC):
         #    Temporary workaround is to create fake HashableClass instance once all modules are loaded in your library
         if settings.DO_RULE_CHECK:
             from . import richy
+
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
             # _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
             if bool(_rc_keys):
                 for _rc_k in richy.Progress.simple_track(
-                    _rc_keys,
-                    description=f"Rule Check ({len(_rc_keys)} classes) ...",
-                    title="Rule Check", tc_log=_LOGGER, console=None,
+                        _rc_keys,
+                        description=f"Rule Check ({len(_rc_keys)} classes) ...",
+                        title="Rule Check",
+                        tc_log=_LOGGER,
+                        console=None,
                 ):
                     _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
                     del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]
@@ -2111,17 +2076,18 @@ class HashableClass(YamlRepr, abc.ABC):
         if settings.TF_KERAS_WORKS:
             # Handle serialization for keras loss, optimizer and layer
             from keras.api._v2 import keras as tk
+
             for f_name in _field_names:
                 _v = getattr(self, f_name)
                 if isinstance(_v, tk.losses.Loss):
                     _v = tk.losses.serialize(_v)
-                    _v['__keras_instance__'] = "loss"
+                    _v["__keras_instance__"] = "loss"
                 if isinstance(_v, tk.layers.Layer):
                     _v = tk.layers.serialize(_v)
-                    _v['__keras_instance__'] = "layer"
+                    _v["__keras_instance__"] = "layer"
                 if isinstance(_v, tk.optimizers.Optimizer):
                     _v = tk.optimizers.serialize(_v)
-                    _v['__keras_instance__'] = "optimizer"
+                    _v["__keras_instance__"] = "optimizer"
                 # this need not be handled as it is automatically handled by optimizer
                 # if isinstance(_v, tk.optimizers.schedules.LearningRateSchedule):
                 #     _v = tk.optimizers.schedules.serialize(_v)
@@ -2134,30 +2100,31 @@ class HashableClass(YamlRepr, abc.ABC):
         return _ret
 
     @classmethod
-    def from_dict(
-        cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
-    ) -> "HashableClass":
+    def from_dict(cls, yaml_state: t.Dict[str,
+                                          "SUPPORTED_HASHABLE_OBJECTS_TYPE"],
+                  **kwargs) -> "HashableClass":
         if settings.TF_KERAS_WORKS:
             # Handle deserialization for keras loss, optimizer and layer
             # noinspection PyUnresolvedReferences,PyProtectedMember
             from keras.api._v2 import keras as tk
+
             for _n in yaml_state.keys():
                 _v = yaml_state[_n]
-                if isinstance(_v, dict) and '__keras_instance__' in _v.keys():
-                    _keras_instance_type = _v['__keras_instance__']
-                    del _v['__keras_instance__']
+                if isinstance(_v, dict) and "__keras_instance__" in _v.keys():
+                    _keras_instance_type = _v["__keras_instance__"]
+                    del _v["__keras_instance__"]
                     if _keras_instance_type == "loss":
-                        yaml_state[_n] = tk.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
+                        yaml_state[_n] = tk.losses.deserialize(
+                            _v,
+                            custom_objects=CUSTOM_KERAS_CLASSES_MAP["loss"])
                     elif _keras_instance_type == "layer":
                         yaml_state[_n] = tk.layers.deserialize(_v)
                     elif _keras_instance_type == "optimizer":
                         yaml_state[_n] = tk.optimizers.deserialize(_v)
                     else:
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"Unknown keras instance type {_keras_instance_type!r}"
-                            ]
-                        )
+                        raise e.code.CodingError(msgs=[
+                            f"Unknown keras instance type {_keras_instance_type!r}"
+                        ])
         # noinspection PyTypeChecker
         return super().from_dict(yaml_state=yaml_state, **kwargs)
 
@@ -2206,11 +2173,11 @@ class HashableClass(YamlRepr, abc.ABC):
     def info_widget(self) -> "gui.widget.Text":
         # import
         from . import gui
+
         # make
         # noinspection PyUnresolvedReferences
         _ret_widget = gui.widget.Text(
-            default_value=f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
-        )
+            default_value=f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}")
         # return
         return _ret_widget
 
@@ -2222,14 +2189,16 @@ class HashableClass(YamlRepr, abc.ABC):
         This will avoid any accidental file/folder creations and IO tracking
         """
         from . import storage
+
         e.validation.ShouldNotBeInstanceOf(
-            value=self, value_types=(storage.StorageHashable, ),
+            value=self,
+            value_types=(storage.StorageHashable, ),
             msgs=[
                 f"Do not use {storage.StorageHashable} for field_key `{field_key}`",
                 f"This check indicates that the hashable class is not supposed for storage on network/disk "
                 f"and we want to use it as pure HashableClass ...",
-                f"This will avoid any accidental file/folder creations and IO tracking ..."
-            ]
+                f"This will avoid any accidental file/folder creations and IO tracking ...",
+            ],
         ).raise_if_failed()
         for _f in self.dataclass_field_names:
             _v = getattr(self, _f)
@@ -2240,20 +2209,20 @@ class HashableClass(YamlRepr, abc.ABC):
 if settings.TF_KERAS_WORKS:
     # noinspection PyUnresolvedReferences,PyProtectedMember
     from keras.api._v2 import keras as tk
-    from keras.optimizers.optimizer_experimental import \
-        optimizer as optimizer_experimental
+    from keras.optimizers.optimizer_experimental import (
+        optimizer as optimizer_experimental,
+    )
+
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
-        int, float, str, slice, list, dict,
-        np.float32, np.int64, np.int32,
-        datetime.datetime, None, FrozenEnum,
-        HashableClass, pa.Schema,
-        tk.losses.Loss, tk.layers.Layer,
-        tk.optimizers.Optimizer, optimizer_experimental.Optimizer,
-    ]
+        int, float, str, slice, list, dict, np.float32, np.int64, np.int32,
+        datetime.datetime, None, FrozenEnum, HashableClass, pa.Schema,
+        tk.losses.Loss, tk.layers.Layer, tk.optimizers.Optimizer,
+        optimizer_experimental.Optimizer, ]
 else:
-    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict,
-                                              np.float32, np.int64, np.int32,
-                                              datetime.datetime, None, FrozenEnum,
-                                              HashableClass, pa.Schema, ]
+    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list,
+                                              dict, np.float32, np.int64,
+                                              np.int32, datetime.datetime,
+                                              None, FrozenEnum, HashableClass,
+                                              pa.Schema, ]
 # noinspection PyUnresolvedReferences
 SUPPORTED_HASHABLE_OBJECTS = SUPPORTED_HASHABLE_OBJECTS_TYPE.__args__

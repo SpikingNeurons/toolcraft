@@ -2,29 +2,31 @@
 todo: deprecate in favour of dapr module
 """
 import abc
+import asyncio
+import dataclasses
 import datetime
 import enum
-import inspect
-import pathlib
-import typing as t
-import dataclasses
-import subprocess
-import itertools
-import yaml
-import sys
-import pickle
-import asyncio
 import hashlib
+import inspect
+import itertools
+import pathlib
+import pickle
+import subprocess
+import sys
 import types
-import blosc
-_now = datetime.datetime.now
+import typing as t
 
-from . import logger
+import blosc
+import yaml
+
 from . import error as e
+from . import logger
 from . import marshalling as m
-from . import util
-from . import storage as s
 from . import richy
+from . import storage as s
+from . import util
+
+_now = datetime.datetime.now
 
 try:
     import tensorflow as tf
@@ -33,11 +35,9 @@ except ImportError:
     tf = None
     tf_util = None
 
-
 # noinspection PyUnreachableCode
 if False:
     from . import gui
-
 
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
@@ -70,15 +70,16 @@ class ArtifactViewer:
             if _.startswith("_"):
                 continue
             if _ in ArtifactViewer._fn_mapper.keys():
-                raise e.code.CodingError(
-                    msgs=[f"You have already registered artifact-viewer for "
-                          f"key `{_}` with function "
-                          f"{ArtifactViewer._fn_mapper[_]}"]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"You have already registered artifact-viewer for "
+                    f"key `{_}` with function "
+                    f"{ArtifactViewer._fn_mapper[_]}"
+                ])
             ArtifactViewer._fn_mapper[_] = getattr(cls, _)
 
     @staticmethod
-    def call(artifact: str, experiment: t.Optional["Experiment"], file_path: s.Path) -> "gui.widget.Widget":
+    def call(artifact: str, experiment: t.Optional["Experiment"],
+             file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
 
         # if file does not exist
@@ -91,16 +92,19 @@ class ArtifactViewer:
             if experiment is None:
                 return ArtifactViewer._fn_mapper[artifact](file_path=file_path)
             else:
-                return ArtifactViewer._fn_mapper[artifact](experiment=experiment, file_path=file_path)
+                return ArtifactViewer._fn_mapper[artifact](
+                    experiment=experiment, file_path=file_path)
         # if artifact has dot then we need to call extension methods
         elif artifact.find(".") != -1:
             artifact_m = "dot_" + artifact.split(".")[1]
             if artifact_m in ArtifactViewer._fn_mapper.keys():
-                return ArtifactViewer._fn_mapper[artifact_m](experiment=experiment, file_path=file_path)
+                return ArtifactViewer._fn_mapper[artifact_m](
+                    experiment=experiment, file_path=file_path)
             else:
-                return gui.widget.Text(f"View not provided for file extension {'*.'+artifact.split('.')[1]!r} \n"
-                                       f"... cannot render ... \n"
-                                       f"Please support method {artifact_m!r}")
+                return gui.widget.Text(
+                    f"View not provided for file extension {'*.'+artifact.split('.')[1]!r} \n"
+                    f"... cannot render ... \n"
+                    f"Please support method {artifact_m!r}")
         else:
             return gui.widget.Text(
                 f"View not provided for artifact {artifact!r} \n"
@@ -108,14 +112,19 @@ class ArtifactViewer:
                 f"Please support method {artifact!r}")
 
     @staticmethod
-    def dot_png(experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
+    def dot_png(experiment: "Experiment",
+                file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
+
         subprocess.call(["start", file_path.local_path.as_posix()], shell=True)
-        return gui.widget.Text(f"Image will be opened in external window\n{file_path}")
+        return gui.widget.Text(
+            f"Image will be opened in external window\n{file_path}")
 
     @staticmethod
-    def dot_txt(experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
+    def dot_txt(experiment: "Experiment",
+                file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
+
         return gui.widget.Text(file_path.read_text())
 
 
@@ -123,6 +132,7 @@ class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     """
     todo: support ibm_lsf over ssh using https://www.fabfile.org
     """
+
     ibm_lsf = enum.auto()
     local = enum.auto()
 
@@ -131,6 +141,7 @@ class JobFlowId(t.NamedTuple):
     """
     A tuple that helps you find job in the Flow
     """
+
     stage: int
     job_group: int
     job: int
@@ -143,6 +154,7 @@ class JobGroupFlowId(t.NamedTuple):
     """
     A tuple that helps you find job group in the Flow
     """
+
     stage: int
     job_group: int
 
@@ -165,16 +177,13 @@ class Tag:
     def create(self, data: t.Dict[str, t.Any] = None):
         if self.path.exists():
             raise e.code.CodingError(
-                msgs=[f"Tag at {self.path} already exists ..."]
-            )
+                msgs=[f"Tag at {self.path} already exists ..."])
         if data is None:
             data = {}
         if "time" in data.keys():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Do not supply key time in data dict we will add it ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Do not supply key time in data dict we will add it ..."
+            ])
         data["time"] = _now()
         _LOGGER.info(msg=f"Creating tag {self.path}")
         self.path.write_text(text=yaml.safe_dump(data))
@@ -182,8 +191,7 @@ class Tag:
     def read(self) -> t.Dict[str, t.Any]:
         if not self.path.exists():
             raise e.code.CodingError(
-                msgs=[f"Tag at {self.path} does not exist ..."]
-            )
+                msgs=[f"Tag at {self.path} does not exist ..."])
         _LOGGER.info(msg=f"Reading tag {self.path}")
         return yaml.safe_load(self.path.read_text())
 
@@ -195,11 +203,9 @@ class Tag:
             _LOGGER.info(msg=f"Deleting tag {self.path}")
             self.path.delete()
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"The tag {self.path} does not exist so cannot delete ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"The tag {self.path} does not exist so cannot delete ..."
+            ])
 
     def update(self, data: t.Dict[str, t.Any]):
         # _LOGGER.info(msg=f"Updating tag {self.path}")
@@ -215,6 +221,7 @@ class TagManager:
       To support dynamic tags we might need some document storage database instead of
       fixed schema database ...
     """
+
     job: "Job"
 
     @property
@@ -252,6 +259,7 @@ class TagManager:
 
     def gui(self) -> "gui.widget.Text":
         from . import gui
+
         _ret = ""
         if self.finished.exists():
             _ret += "--- FINISHED JOB ---\n\n"
@@ -291,12 +299,10 @@ class JobViewer(m.HashableClass):
         _ret = self.internal.job
         if _ret.experiment != self.experiment:
             raise e.code.CodingError(
-                msgs=["Job set to this JobViewer is not correct ..."]
-            )
+                msgs=["Job set to this JobViewer is not correct ..."])
         if _ret.method.__name__ != self.method_name:
             raise e.code.CodingError(
-                msgs=[f"The method name set is not correct"]
-            )
+                msgs=[f"The method name set is not correct"])
         return _ret
 
     @property
@@ -343,7 +349,10 @@ class JobViewer(m.HashableClass):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["tags_gui", "artifacts_gui", ],
+            callable_names=[
+                "tags_gui",
+                "artifacts_gui",
+            ],
             collapsing_header_open=True,
         )
 
@@ -365,14 +374,14 @@ class JobViewer(m.HashableClass):
         """
         # import
         from . import gui
+
         # make
         _experiment = self.experiment
-        _text = f"job-id: {self.job.job_id}\n" \
-                f"flow-id: {self.job.flow_id}\n" \
-                f"method: {self.method_name}\n\n"
+        _text = (f"job-id: {self.job.job_id}\n"
+                 f"flow-id: {self.job.flow_id}\n"
+                 f"method: {self.method_name}\n\n")
         if _experiment is not None:
-            _text += f"hex-hash: {_experiment.hex_hash}\n" \
-                    f"{_experiment.yaml()}"
+            _text += f"hex-hash: {_experiment.hex_hash}\n" f"{_experiment.yaml()}"
         # noinspection PyUnresolvedReferences
         _ret_widget = gui.widget.Text(default_value=_text)
         # return
@@ -439,7 +448,10 @@ class ArtifactManager:
                         # add ui
                         self_1.receiver.clear()
                         _w = ArtifactViewer.call(
-                                artifact=_key, experiment=self.job.experiment, file_path=_file)
+                            artifact=_key,
+                            experiment=self.job.experiment,
+                            file_path=_file,
+                        )
                         self_1.receiver(_w)
 
                 return __Callback()
@@ -475,17 +487,19 @@ class SubProcessManager:
         launched multiple times
         """
         from . import gui
+
         _bt = gui.BlockingTask(
             fn=self.blocking_fn,
             # todo: making this false raises pickling error as the blocking task is run in different thread
             #    we need to investigate if we want to fix this
-            concurrent=True
+            concurrent=True,
         )
         _bt.add_to_task_queue()
         return _bt
 
     async def awaitable_fn(self, receiver_grp: "gui.widget.Group"):
         from .gui.widget import Text
+
         _blinker = itertools.cycle(["..", "....", "......"])
 
         try:
@@ -520,12 +534,12 @@ class SubProcessManager:
 
                 # add streams
                 with receiver_grp:
-                    Text(default_value="="*15 + " STDOUT " + "="*15)
+                    Text(default_value="=" * 15 + " STDOUT " + "=" * 15)
                     Text(default_value="\n".join(self.stdout_stream))
-                    Text(default_value="="*15 + " ====== " + "="*15)
-                    Text(default_value="="*15 + " STDERR " + "="*15)
+                    Text(default_value="=" * 15 + " ====== " + "=" * 15)
+                    Text(default_value="=" * 15 + " STDERR " + "=" * 15)
                     Text(default_value="\n".join(self.stderr_stream))
-                    Text(default_value="="*15 + " ====== " + "="*15)
+                    Text(default_value="=" * 15 + " ====== " + "=" * 15)
 
                 # if running
                 if _future.running():
@@ -538,15 +552,21 @@ class SubProcessManager:
                     _exp = _future.exception()
                     if _exp is None:
                         with receiver_grp:
-                            Text(default_value="="*15 + " ======= " + "="*14)
-                            Text(default_value="="*15 + " SUCCESS " + "="*14)
-                            Text(default_value="="*15 + " ======= " + "="*14)
+                            Text(default_value="=" * 15 + " ======= " +
+                                 "=" * 14)
+                            Text(default_value="=" * 15 + " SUCCESS " +
+                                 "=" * 14)
+                            Text(default_value="=" * 15 + " ======= " +
+                                 "=" * 14)
                         break
                     else:
                         with receiver_grp:
-                            Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
-                            Text(default_value="X"*15 + " FAILURE " + "X"*14)
-                            Text(default_value="X"*15 + " XXXXXXX " + "X"*14)
+                            Text(default_value="X" * 15 + " XXXXXXX " +
+                                 "X" * 14)
+                            Text(default_value="X" * 15 + " FAILURE " +
+                                 "X" * 14)
+                            Text(default_value="X" * 15 + " XXXXXXX " +
+                                 "X" * 14)
                         raise _exp
 
         except Exception as _e:
@@ -579,19 +599,24 @@ class SubProcessManager:
 
         _ret_code = _process.returncode
         if _ret_code == 0:
-            _final_lines = ["=" * 30, f"Finished with return code {_ret_code}", "=" * 30]
+            _final_lines = [
+                "=" * 30,
+                f"Finished with return code {_ret_code}",
+                "=" * 30,
+            ]
             _stdout_stream.extend(_final_lines)
         else:
-            _final_lines = ["=" * 30, f"Failed with return code {_ret_code}", "=" * 30]
+            _final_lines = [
+                "=" * 30, f"Failed with return code {_ret_code}", "=" * 30
+            ]
             _stderr_stream.extend(_final_lines)
         if _ret_code != 0:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Below cli command failed with error code {_ret_code}:",
-                    self.job.cli_command,
-                    f"The stderr from subprocess is as below:", _stderr_stream,
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Below cli command failed with error code {_ret_code}:",
+                self.job.cli_command,
+                f"The stderr from subprocess is as below:",
+                _stderr_stream,
+            ])
 
     def gui(self) -> "gui.widget.Group":
         # import
@@ -600,40 +625,36 @@ class SubProcessManager:
         # test that the there is no residual job running failed started or completed
         # todo: only is_started check should suffice ...
         if self.job.is_started:
-            raise e.code.CodingError(
-                msgs=[
-                    "You might not need to call this multiple times!!!",
-                    "Job has already started for cli command: ", self.job.cli_command,
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "You might not need to call this multiple times!!!",
+                "Job has already started for cli command: ",
+                self.job.cli_command,
+            ])
         if self.job.is_running:
-            raise e.code.CodingError(
-                msgs=[
-                    "Multiple calls detected for cli command: ", self.job.cli_command,
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "Multiple calls detected for cli command: ",
+                self.job.cli_command,
+            ])
         if self.job.is_failed:
-            raise e.code.CodingError(
-                msgs=[
-                    "You might not need to call this multiple times!!!",
-                    "Previous call to below cli command has failed: ", self.job.cli_command,
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "You might not need to call this multiple times!!!",
+                "Previous call to below cli command has failed: ",
+                self.job.cli_command,
+            ])
         if self.job.is_finished:
-            raise e.code.CodingError(
-                msgs=[
-                    "You might not need to call this multiple times!!!",
-                    "Previous call to below cli command has finished: ", self.job.cli_command,
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "You might not need to call this multiple times!!!",
+                "Previous call to below cli command has finished: ",
+                self.job.cli_command,
+            ])
 
         # return widget
         _grp = gui.widget.Group()
 
         # make awaitable task and run that can read process streams
         gui.AwaitableTask(
-            fn=self.awaitable_fn, fn_kwargs=dict(receiver_grp=_grp)
-        ).add_to_task_queue()
+            fn=self.awaitable_fn,
+            fn_kwargs=dict(receiver_grp=_grp)).add_to_task_queue()
 
         # return
         return _grp
@@ -650,7 +671,8 @@ class Job:
     @property
     @util.CacheResult
     def viewer(self) -> JobViewer:
-        _ret = JobViewer(experiment=self.experiment, method_name=self.method.__name__)
+        _ret = JobViewer(experiment=self.experiment,
+                         method_name=self.method.__name__)
         _ret.internal.job = self
         return _ret
 
@@ -689,10 +711,7 @@ class Job:
     def flow_id(self) -> str:
         if self._flow_id is None:
             raise e.code.CodingError(
-                msgs=[
-                    f"This must be automatically set by code ..."
-                ]
-            )
+                msgs=[f"This must be automatically set by code ..."])
         return self._flow_id
 
     @flow_id.setter
@@ -704,11 +723,12 @@ class Job:
         + experiment hex_hash if present
         """
         if self._flow_id is None:
-            self._flow_id = value + f"|{self.path.suffix_path.replace('/', '|')}"
+            self._flow_id = value + \
+                f"|{self.path.suffix_path.replace('/', '|')}"
         else:
-            raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
-            )
+            raise e.code.CodingError(msgs=[
+                f"This property is already set you cannot set it again ..."
+            ])
 
     @property
     def job_id(self) -> str:
@@ -739,7 +759,9 @@ class Job:
     @property
     def cli_command(self) -> t.List[str]:
         _command = [
-            "python", self.runner.py_script, self.method.__func__.__name__,
+            "python",
+            self.runner.py_script,
+            self.method.__func__.__name__,
         ]
         if self.experiment is not None:
             _command += [self.experiment.hex_hash]
@@ -772,14 +794,17 @@ class Job:
         runner: "Runner",
         method: t.Callable,
         experiment: t.Optional["Experiment"] = None,
-        wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
+        wait_on: t.List[t.Union["Job", "SequentialJobGroup",
+                                "ParallelJobGroup"]] = None,
     ):
         # assign some vars
         self.runner = runner
         # noinspection PyTypeChecker
         self.method = method  # type: types.MethodType
         self.experiment = experiment
-        self.wait_on = wait_on or []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
+        self.wait_on = (
+            wait_on or []
+        )  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
         # noinspection PyTypeChecker
         self._flow_id = None  # type: str
 
@@ -788,14 +813,10 @@ class Job:
             # noinspection PyTypeChecker
             if id(self.method.__self__) != id(runner):
                 raise e.code.CodingError(
-                    msgs=["Was expecting them to be same instance"]
-                )
+                    msgs=["Was expecting them to be same instance"])
         except Exception as _ex:
             raise e.code.CodingError(
-                msgs=[
-                    f"Doesn't seem like a method of an instance ...", _ex
-                ]
-            )
+                msgs=[f"Doesn't seem like a method of an instance ...", _ex])
 
         # if experiment provided
         if self.experiment is not None:
@@ -804,10 +825,10 @@ class Job:
             # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
             # use with storage ... this will avoid creating files/folders and doing any IO
             self.experiment.check_for_storage_hashable(
-                field_key=f"{self.experiment.__class__.__name__}"
-            )
+                field_key=f"{self.experiment.__class__.__name__}")
             # make <hex_hash>.info if not present
-            self.runner.monitor.make_experiment_info_file(experiment=self.experiment)
+            self.runner.monitor.make_experiment_info_file(
+                experiment=self.experiment)
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
@@ -833,6 +854,7 @@ class Job:
 
         # reconfig logger to change log file for job
         import logging
+
         _log = self.path / "toolcraft.log"
         logger.setup_logging(
             propagate=False,
@@ -847,13 +869,11 @@ class Job:
         _start = _now()
         _LOGGER.info(
             msg=f"Starting job on worker machine ...",
-            msgs=[
-                {
-                    "flow-id": self.flow_id,
-                    "job-id": self.job_id,
-                    "started": _start.ctime(),
-                }
-            ]
+            msgs=[{
+                "flow-id": self.flow_id,
+                "job-id": self.job_id,
+                "started": _start.ctime(),
+            }],
         )
         self.tag_manager.started.create()
         self.tag_manager.running.create()
@@ -861,66 +881,61 @@ class Job:
         try:
             for _wj in self.wait_on_jobs:
                 if not _wj.is_finished:
-                    raise e.code.CodingError(
-                        msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
-                              f"{_wj.job_id} is supposed to be finished ..."]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"Wait-on job with flow-id {_wj.flow_id} and job-id "
+                        f"{_wj.job_id} is supposed to be finished ..."
+                    ])
             _sub_title = [
-                f"flow-id: {self.flow_id}", f"job-id: {self.job_id}",
+                f"flow-id: {self.flow_id}",
+                f"job-id: {self.job_id}",
             ]
             if self.experiment is not None:
-                _sub_title.extend(
-                    [
-                        f"{self.experiment.__module__}.{self.experiment.__class__.__name__}",
-                        f"{self.experiment.name}",
-                    ]
-                )
+                _sub_title.extend([
+                    f"{self.experiment.__module__}.{self.experiment.__class__.__name__}",
+                    f"{self.experiment.name}",
+                ])
             _job_display_name = f"{self.runner.__module__}.{self.runner.__class__.__name__}.{self.method.__name__}"
             with richy.StatusPanel(
-                title=f"Running job {_job_display_name}",
-                sub_title=_sub_title, tc_log=logger.get_logger(self.runner.__module__)
+                    title=f"Running job {_job_display_name}",
+                    sub_title=_sub_title,
+                    tc_log=logger.get_logger(self.runner.__module__),
             ) as _rp:
                 if self.experiment is None:
                     with self.runner(richy_panel=_rp):
                         self.method()
                 else:
-                    with (self.runner(richy_panel=_rp), self.experiment(richy_panel=_rp)):
+                    with (
+                            self.runner(richy_panel=_rp),
+                            self.experiment(richy_panel=_rp),
+                    ):
                         self.method(experiment=self.experiment)
             self.tag_manager.running.delete()
             self.tag_manager.finished.create()
             _end = _now()
             _LOGGER.info(
                 msg=f"Successfully finished job on worker machine ...",
-                msgs=[
-                    {
-                        "flow-id": self.flow_id,
-                        "job-id": self.job_id,
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                    }
-                ]
+                msgs=[{
+                    "flow-id": self.flow_id,
+                    "job-id": self.job_id,
+                    "started": _start.ctime(),
+                    "ended": _end.ctime(),
+                    "seconds": str((_end - _start).total_seconds()),
+                }],
             )
         except Exception as _ex:
             _failed = True
-            self.tag_manager.failed.create(
-                data={
-                    "exception": str(_ex)
-                }
-            )
+            self.tag_manager.failed.create(data={"exception": str(_ex)})
             _end = _now()
             _LOGGER.info(
                 msg=f"Failed job on worker machine ...",
-                msgs=[
-                    {
-                        "flow-id": self.flow_id,
-                        "job-id": self.job_id,
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                        "exception": str(_ex),
-                    }
-                ]
+                msgs=[{
+                    "flow-id": self.flow_id,
+                    "job-id": self.job_id,
+                    "started": _start.ctime(),
+                    "ended": _end.ctime(),
+                    "seconds": str((_end - _start).total_seconds()),
+                    "exception": str(_ex),
+                }],
             )
             self.tag_manager.running.delete()
             # above thing will tell toolcraft that things failed gracefully
@@ -954,11 +969,17 @@ class Job:
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
             _log = self.path / "bsub.log"
-            _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), "-J", self.job_id]
+            _nxdi_prefix = [
+                "bsub",
+                "-oo",
+                _log.local_path.as_posix(),
+                "-J",
+                self.job_id,
+            ]
             _wait_on_jobs = self.wait_on_jobs
             if bool(_wait_on_jobs):
-                _wait_on = \
-                    " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
+                _wait_on = " && ".join(
+                    [f"done({_.job_id})" for _ in _wait_on_jobs])
                 _nxdi_prefix += ["-w", f"{_wait_on}"]
             _command = _nxdi_prefix + _command
             subprocess.run(_command)
@@ -966,14 +987,13 @@ class Job:
         # ------------------------------------------------------------- 02.04
         else:
             raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {cluster_type}"]
-            )
+                msgs=[f"Unsupported cluster_type {cluster_type}"])
 
         # ------------------------------------------------------------- 03
         # log
         _LOGGER.info(
             msg=f"Launching jobs from main machine with below command...",
-            msgs=[_command]
+            msgs=[_command],
         )
 
     @classmethod
@@ -983,12 +1003,10 @@ class Job:
     ) -> "Job":
         # test if running on machines that execute jobs ...
         if runner.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This call is available only for jobs submitted to server ... "
-                    "it cannot be accessed by instance which launches jobs ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "This call is available only for jobs submitted to server ... "
+                "it cannot be accessed by instance which launches jobs ..."
+            ])
 
         # fetch method
         _method_name = sys.argv[1]
@@ -998,19 +1016,19 @@ class Job:
         if len(sys.argv) == 2:
             _experiment = None
         elif len(sys.argv) == 3:
-            _experiment = runner.monitor.get_experiment_from_hex_hash(hex_hash=sys.argv[2])
+            _experiment = runner.monitor.get_experiment_from_hex_hash(
+                hex_hash=sys.argv[2])
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    "there can be only two or three sys arguments ... found",
-                    sys.argv,
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "there can be only two or three sys arguments ... found",
+                sys.argv,
+            ])
 
         # search job from `runner.flow.stages` and `runner.flow.other_jobs`
         _search_job = None
         for _j in itertools.chain.from_iterable(
-            [_stage.all_jobs for _stage in runner.flow.stages] + [runner.flow.other_jobs]):
+            [_stage.all_jobs
+             for _stage in runner.flow.stages] + [runner.flow.other_jobs]):
 
             # detect if same
             # note that __eq__ does not work as dataclass overrides its behaviour
@@ -1030,77 +1048,71 @@ class Job:
             if _is_same_method and _is_experiment_same and _is_runner_same:
                 if _search_job is not None:
                     raise e.code.CodingError(
-                        msgs=[
-                            "Multiple jobs match for the given cli kwargs"
-                        ]
-                    )
+                        msgs=["Multiple jobs match for the given cli kwargs"])
                 _search_job = _j
 
         # if no job found raise
         if _search_job is None:
             raise e.code.ShouldNeverHappen(
-                msgs=["We expect to find a matching job ..."]
-            )
+                msgs=["We expect to find a matching job ..."])
 
         # return
         return _search_job
 
     def check_health(self):
         # if job has already started
-        _job_info = {"flow-id": self.flow_id, "job-id": self.job_id, "path": self.path.full_path}
+        _job_info = {
+            "flow-id": self.flow_id,
+            "job-id": self.job_id,
+            "path": self.path.full_path,
+        }
         if self.is_started:
             # if job was finished then skip
             if self.is_finished:
                 _LOGGER.info(
                     msg=f"Job is already completed so skipping call ...",
-                    msgs=[_job_info]
+                    msgs=[_job_info],
                 )
                 return
             if self.is_failed:
                 _LOGGER.error(
                     msg=f"Previous job has failed so skipping call ...",
-                    msgs=["Delete previous calls files to make this call work ...",
-                          _job_info]
+                    msgs=[
+                        "Delete previous calls files to make this call work ...",
+                        _job_info,
+                    ],
                 )
                 return
             if self.is_running:
-                raise e.code.CodingError(
-                    msgs=[
-                        "This is bug ... there is ongoing job running ...",
-                        "Either you have abruptly killed previous jobs or you "
-                        "have run same job multiple times ...",
-                        "Also teh job might have failed and you missed to catch "
-                        "exception and set failed tag appropriately ... in that case "
-                        "check logs",
-                        _job_info,
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    "This is bug ... there is ongoing job running ...",
+                    "Either you have abruptly killed previous jobs or you "
+                    "have run same job multiple times ...",
+                    "Also teh job might have failed and you missed to catch "
+                    "exception and set failed tag appropriately ... in that case "
+                    "check logs",
+                    _job_info,
+                ])
         else:
             # if started tag does not exist then other tags should not exist
             if self.is_running:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `running` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
+                e.code.CodingError(msgs=[
+                    "Found tag for `running` ... we expect it to not be present "
+                    "as the job was never started",
+                    _job_info,
+                ])
             if self.is_finished:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `finished` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
+                e.code.CodingError(msgs=[
+                    "Found tag for `finished` ... we expect it to not be present "
+                    "as the job was never started",
+                    _job_info,
+                ])
             if self.is_failed:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `failed` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
+                e.code.CodingError(msgs=[
+                    "Found tag for `failed` ... we expect it to not be present "
+                    "as the job was never started",
+                    _job_info,
+                ])
 
     # noinspection PyUnresolvedReferences
     def save_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
@@ -1109,27 +1121,25 @@ class Job:
         """
         # check if tensorflow available
         if tf is None:
-            raise e.code.CodingError(
-                msgs=["Tensorflow is not available so cannot call dont use this method"]
-            )
+            raise e.code.CodingError(msgs=[
+                "Tensorflow is not available so cannot call dont use this method"
+            ])
 
         # if name has . do not allow
         if name.find(".") != -1:
-            raise e.validation.NotAllowed(
-                msgs=[f"Tensorflow checkpoint saving mechanism does not allow `.` in checkpoint names ... "
-                      f"Correct the value `{name}`"]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"Tensorflow checkpoint saving mechanism does not allow `.` in checkpoint names ... "
+                f"Correct the value `{name}`"
+            ])
 
         # check if files present
         _file = self.tf_chkpts_path / name
         _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
         _index_file = self.tf_chkpts_path / f"{name}.index"
         if _file.exists() or _data_file.exists() or _index_file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"looks like there is already a checkpoint artifact or simple artifact for name '{name}' present"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"looks like there is already a checkpoint artifact or simple artifact for name '{name}' present"
+            ])
 
         # write
         # options have type tf.train.CheckpointOptions
@@ -1141,36 +1151,31 @@ class Job:
         """
         # check if tensorflow available
         if tf is None:
-            raise e.code.CodingError(
-                msgs=["Tensorflow is not available so cannot call dont use this method"]
-            )
+            raise e.code.CodingError(msgs=[
+                "Tensorflow is not available so cannot call dont use this method"
+            ])
 
         # check if respective files present
         _file = self.tf_chkpts_path / name
         _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
         _index_file = self.tf_chkpts_path / f"{name}.index"
         if not _data_file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"was expecting {_data_file.name} to be present on the disk ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"was expecting {_data_file.name} to be present on the disk ..."
+            ])
         if not _index_file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"was expecting {_index_file.name} to be present on the disk ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"was expecting {_index_file.name} to be present on the disk ..."
+            ])
         if _file.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    f"This should not happen as tensorflow saves things as data and index file ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"This should not happen as tensorflow saves things as data and index file ..."
+            ])
 
         # options have type tf.train.CheckpointOptions
         _status = tf_chkpt.read(
-            save_path=_file.local_path.as_posix(), options=None)  # type: tf_util.CheckpointLoadStatus
+            save_path=_file.local_path.as_posix(),
+            options=None)  # type: tf_util.CheckpointLoadStatus
         _status.assert_existing_objects_matched()
         _status.assert_nontrivial_match()
         _status.expect_partial()
@@ -1188,10 +1193,7 @@ class JobGroup(abc.ABC):
     def flow_id(self) -> str:
         if self._flow_id is None:
             raise e.code.CodingError(
-                msgs=[
-                    f"This must be automatically set by code ..."
-                ]
-            )
+                msgs=[f"This must be automatically set by code ..."])
         return self._flow_id
 
     @flow_id.setter
@@ -1208,12 +1210,11 @@ class JobGroup(abc.ABC):
                     _j.flow_id = f"{value}.p{_i:0{_len}d}"
                 else:
                     raise e.code.CodingError(
-                        msgs=[f"unsupported type {type(_j)}"]
-                    )
+                        msgs=[f"unsupported type {type(_j)}"])
         else:
-            raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
-            )
+            raise e.code.CodingError(msgs=[
+                f"This property is already set you cannot set it again ..."
+            ])
 
     @property
     def is_on_main_machine(self) -> bool:
@@ -1297,7 +1298,7 @@ class SequentialJobGroup(JobGroup):
         # this ties up all jobs in list to execute one after other
         for _ in range(1, len(self.jobs)):
             _j = self.jobs[_]
-            _pj = self.jobs[_-1]
+            _pj = self.jobs[_ - 1]
             if isinstance(_j, Job):
                 _j.wait_on.append(_pj)
             else:
@@ -1388,12 +1389,14 @@ class Flow:
         # --------------------------------------------------------- 02
         # check health of all jobs
         with richy.StatusPanel(
-            title="Running the flow for runner ...",
-            sub_title=self.runner, tc_log=_LOGGER,
+                title="Running the flow for runner ...",
+                sub_title=self.runner,
+                tc_log=_LOGGER,
         ) as _rp:
             _rp.update("Checking health of all jobs ...")
             _job: Job
-            for _job in _rp.track(sequence=_all_jobs, task_name="check health"):
+            for _job in _rp.track(sequence=_all_jobs,
+                                  task_name="check health"):
                 _job.check_health()
 
         # --------------------------------------------------------- 03
@@ -1413,13 +1416,11 @@ class Flow:
                         _wait_jobs += _wo.bottom_jobs
                 for _wj in _wait_jobs:
                     if _wj not in _completed_jobs:
-                        raise e.code.CodingError(
-                            msgs=[
-                                "When not on server we expect that property `all_jobs` should resolve in such "
-                                "a way that all `wait_on` jobs must be already done ..",
-                                f"Check {_wj.flow_id} which should be completed by now ..."
-                            ]
-                        )
+                        raise e.code.CodingError(msgs=[
+                            "When not on server we expect that property `all_jobs` should resolve in such "
+                            "a way that all `wait_on` jobs must be already done ..",
+                            f"Check {_wj.flow_id} which should be completed by now ...",
+                        ])
 
                 # call _j
                 _j(cluster_type)
@@ -1430,21 +1431,19 @@ class Flow:
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             _rp = richy.StatusPanel(
                 title=f"Launch stages on `{cluster_type.name}` for runner",
-                sub_title=self.runner, tc_log=_LOGGER,
-                stages=self.stages
+                sub_title=self.runner,
+                tc_log=_LOGGER,
+                stages=self.stages,
             )
             for _stage in _rp:
                 _rp.update(f"launching jobs for stage: {_stage}...")
                 _jobs = _stage.all_jobs
                 _job: t.Union[Job, ParallelJobGroup]
-                for _job in _rp.track(
-                    sequence=_jobs, task_name=f"stage {_stage}"
-                ):
+                for _job in _rp.track(sequence=_jobs,
+                                      task_name=f"stage {_stage}"):
                     _job(cluster_type)
         else:
-            raise e.code.NotSupported(
-                msgs=[f"Not supported {cluster_type}"]
-            )
+            raise e.code.NotSupported(msgs=[f"Not supported {cluster_type}"])
 
         # todo: add richy tracking panel ...that makes a layout for all stages and
         #  shows status of all jobs submitted above
@@ -1468,9 +1467,11 @@ class Flow:
         # define dashboard class
         @dataclasses.dataclass
         class FlowDashboard(gui.dashboard.BasicDashboard):
-            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
+            theme_selector: gui.widget.Combo = (
+                gui.callback.SetThemeCallback.get_combo_widget())
 
-            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.runner.py_script}")
+            title_text: gui.widget.Text = gui.widget.Text(
+                default_value=f"Flow for {self.runner.py_script}")
 
             hr1: gui.widget.Separator = gui.widget.Separator()
             hr2: gui.widget.Separator = gui.widget.Separator()
@@ -1498,7 +1499,9 @@ class Flow:
                 gui.widget.Separator()
                 _forms[_i] = gui.form.DoubleSplitForm(
                     title=f"*** [[ STAGE {_i:03d} ]] ***",
-                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
+                    callable_name="job_gui",
+                    allow_refresh=False,
+                    collapsing_header_open=False,
                 )
             # --------------------------------------------------------------- 04.02
             # for other jobs that will be run on client with gui
@@ -1507,7 +1510,9 @@ class Flow:
                 gui.widget.Separator()
                 _other_jobs_form = gui.form.DoubleSplitForm(
                     title=f"*** [[ OTHER JOBS ]] ***",
-                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=False,
+                    callable_name="job_gui_with_run",
+                    allow_refresh=False,
+                    collapsing_header_open=False,
                 )
 
         # ------------------------------------------------------------------- 05
@@ -1523,12 +1528,18 @@ class Flow:
             #    just have spinners if job is running or status icons indicating job status ... may be the
             #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
             for _job in _stage.all_jobs:
-                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
+                _forms[_i].add(
+                    hashable=_job.viewer,
+                    group_key=_job.viewer.method_name,
+                )
         # ------------------------------------------------------------------- 05.02
         # for other jobs that will be run on client with gui
         if bool(self.other_jobs):
             for _job in self.other_jobs:
-                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
+                _other_jobs_form.add(
+                    hashable=_job.viewer,
+                    group_key=_job.viewer.method_name,
+                )
 
         # ------------------------------------------------------------------- 06
         # run
@@ -1563,23 +1574,25 @@ class Monitor:
             _file.write_text(experiment.yaml())
 
     def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
-        _experiment_info_file = self.experiments_folder_path / f"{hex_hash}.info"
+        _experiment_info_file = self.experiments_folder_path / \
+            f"{hex_hash}.info"
         if _experiment_info_file.exists():
             # noinspection PyTypeChecker
             return m.HashableClass.get_class(_experiment_info_file).from_yaml(
-                _experiment_info_file
-            )
+                _experiment_info_file)
         else:
-            raise e.code.CodingError(
-                msgs=[f"We expect that you should have already created file "
-                      f"{_experiment_info_file}"]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect that you should have already created file "
+                f"{_experiment_info_file}"
+            ])
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments'],
-    things_not_to_be_overridden=['cwd', 'job', 'monitor', 'get_another_job'],
+    things_to_be_cached=[
+        "cwd", "job", "flow", "monitor", "registered_experiments"
+    ],
+    things_not_to_be_overridden=["cwd", "job", "monitor", "get_another_job"],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1628,6 +1641,7 @@ class Runner(m.HashableClass, abc.ABC):
     @property
     def py_script(self) -> str:
         import pathlib
+
         return pathlib.Path(sys.argv[0]).name
 
     @property
@@ -1642,9 +1656,10 @@ class Runner(m.HashableClass, abc.ABC):
         todo: adapt code so that the cwd can be on any other file system instead of CWD
         """
         import pathlib
+
         _py_script = self.py_script
         _folder_name = _py_script.replace(".py", "")
-        _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
+        _ret = s.Path(suffix_path=_folder_name, fs_name="CWD")
         e.code.AssertError(
             value1=_ret.local_path.as_posix(),
             value2=(pathlib.Path(_py_script).parent / _folder_name).as_posix(),
@@ -1653,8 +1668,8 @@ class Runner(m.HashableClass, abc.ABC):
                 f"{pathlib.Path.cwd() / _folder_name}",
                 f"While the accompanying script is at "
                 f"{pathlib.Path(_py_script).as_posix()}",
-                f"Please debug ..."
-            ]
+                f"Please debug ...",
+            ],
         ).raise_if_failed()
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
@@ -1673,12 +1688,10 @@ class Runner(m.HashableClass, abc.ABC):
     @util.CacheResult
     def job(self) -> Job:
         if self.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This job is available only for jobs submitted to server ... "
-                    "it cannot be accessed by instance which launches jobs ..."
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "This job is available only for jobs submitted to server ... "
+                "it cannot be accessed by instance which launches jobs ..."
+            ])
         else:
             return Job.from_cli(runner=self)
 
@@ -1690,7 +1703,8 @@ class Runner(m.HashableClass, abc.ABC):
     def setup(self):
         _exps = self.registered_experiments
         _rp = self.richy_panel
-        for _exp in _rp.track(sequence=_exps, task_name=f"setup {len(_exps)} experiments"):
+        for _exp in _rp.track(sequence=_exps,
+                              task_name=f"setup {len(_exps)} experiments"):
             with _exp(richy_panel=_rp):
                 ...
 
@@ -1698,21 +1712,18 @@ class Runner(m.HashableClass, abc.ABC):
     def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
         return [cls.run, cls.init, cls.clone, cls.get_another_job]
 
-    def get_another_job(
-        self, method: t.Callable, experiment: t.Optional["Experiment"]
-    ) -> Job:
+    def get_another_job(self, method: t.Callable,
+                        experiment: t.Optional["Experiment"]) -> Job:
         """
         In some cases you might want to access results from other job so this is the method for it.
         The only restriction is that the requested job must be completed ...
         """
         _job = Job(runner=self, method=method, experiment=experiment)
         if not _job.is_finished:
-            raise e.code.CodingError(
-                msgs=[
-                    "The job you are requesting is not finished",
-                    "Please check the `flow` as jobs that are completed can only be accessed",
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "The job you are requesting is not finished",
+                "Please check the `flow` as jobs that are completed can only be accessed",
+            ])
         return _job
 
     def init(self):
@@ -1722,8 +1733,10 @@ class Runner(m.HashableClass, abc.ABC):
         # setup logger
         import logging
         import pathlib
+
         # note that this should always be local ... dont use `self.cwd`
-        _log_file = pathlib.Path(self.py_script.replace(".py", "")) / "runner.log"
+        _log_file = pathlib.Path(self.py_script.replace(".py",
+                                                        "")) / "runner.log"
         _log_file.parent.mkdir(parents=True, exist_ok=True)
         logger.setup_logging(
             propagate=False,
@@ -1768,14 +1781,12 @@ class Runner(m.HashableClass, abc.ABC):
             # --------------------------------------------------- 02.05
             # you must have self
             if "self" not in _parameter_keys:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Any method defined in class {cls} can be used for job ... ",
-                        f"So we expect it to have `self` i.e., it should be instance method",
-                        f"If you are using anything special either make it private with `_` or define it in "
-                        f"{cls.methods_that_cannot_be_a_job}"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"Any method defined in class {cls} can be used for job ... ",
+                    f"So we expect it to have `self` i.e., it should be instance method",
+                    f"If you are using anything special either make it private with `_` or define it in "
+                    f"{cls.methods_that_cannot_be_a_job}",
+                ])
 
             # --------------------------------------------------- 02.06
             # if no other kwarg it's okay
@@ -1784,21 +1795,17 @@ class Runner(m.HashableClass, abc.ABC):
             # if two keys then second kwarg must be "experiment"
             elif len(_parameter_keys) == 2:
                 if _parameter_keys[1] != "experiment":
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Any method defined in class {cls} can be used for job ... ",
-                            f"So if you are specifying any kwarg then it can only be `experiment` of type {Experiment}",
-                            f"Found {_parameter_keys[1]}"
-                        ]
-                    )
-            else:
-                raise e.code.CodingError(
-                    msgs=[
+                    raise e.code.CodingError(msgs=[
                         f"Any method defined in class {cls} can be used for job ... ",
-                        "We only restrict you to have one or no kwarg ... and if one kwarg is supplied "
-                        "then it can be only named `experiment`"
-                    ]
-                )
+                        f"So if you are specifying any kwarg then it can only be `experiment` of type {Experiment}",
+                        f"Found {_parameter_keys[1]}",
+                    ])
+            else:
+                raise e.code.CodingError(msgs=[
+                    f"Any method defined in class {cls} can be used for job ... ",
+                    "We only restrict you to have one or no kwarg ... and if one kwarg is supplied "
+                    "then it can be only named `experiment`",
+                ])
 
     def run(self, cluster_type: JobRunnerClusterType):
         if self.is_on_main_machine:

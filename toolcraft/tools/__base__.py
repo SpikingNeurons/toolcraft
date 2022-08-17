@@ -22,6 +22,7 @@
 import abc
 import inspect
 import typing as t
+
 from rich import pretty
 
 from .. import error as e
@@ -53,9 +54,7 @@ class Tool(abc.ABC):
         # -------------------------------------------------------- 01.01
         # all subclasses must be concrete
         if inspect.isabstract(cls):
-            raise Exception(
-                f"Class {cls} is not concrete ..."
-            )
+            raise Exception(f"Class {cls} is not concrete ...")
         # -------------------------------------------------------- 01.02
         # nothing except command_fn should be overridden in subclass
         _command_fn_name = Tool.command_fn.__name__
@@ -63,38 +62,32 @@ class Tool(abc.ABC):
         for _k in Tool.__dict__.keys():
             if _k == _command_fn_name:
                 continue
-            if _k.startswith('_'):
+            if _k.startswith("_"):
                 continue
             if _k in _child_class_keys:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"You are not allowed to override {_k} in child class "
-                        f"{cls} as it is already defined in parent class {Tool}"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"You are not allowed to override {_k} in child class "
+                    f"{cls} as it is already defined in parent class {Tool}"
+                ])
         # -------------------------------------------------------- 01.03
         # there can be only one tool class per module
         if cls.tool_name() in cls.AVAILABLE_TOOL_CLASSES.keys():
-            raise e.code.CodingError(
-                msgs=[
-                    f"There is already a tool named {cls.tool_name()} taken by class "
-                    f"{cls}",
-                    f"you can have only one concrete subclass of {Tool} in "
-                    f"module {cls.__module__}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"There is already a tool named {cls.tool_name()} taken by class "
+                f"{cls}",
+                f"you can have only one concrete subclass of {Tool} in "
+                f"module {cls.__module__}",
+            ])
 
         # -------------------------------------------------------- 02
         # store tool classes for future reference ...
         cls.AVAILABLE_TOOL_CLASSES[cls.tool_name()] = cls
 
     def __init__(self):
-        raise e.code.CodingError(
-            msgs=[
-                "We do not allow to create instances for this class as it needs to "
-                "used at class level ..."
-            ]
-        )
+        raise e.code.CodingError(msgs=[
+            "We do not allow to create instances for this class as it needs to "
+            "used at class level ..."
+        ])
 
     @classmethod
     def tool_name(cls) -> str:

@@ -1,10 +1,10 @@
-import typing as t
+import errno
 import pathlib
 import subprocess
-import errno
+import typing as t
 
-from .. import logger
 from .. import error as e
+from .. import logger
 
 _LOGGER = logger.get_logger()
 
@@ -28,35 +28,55 @@ def make_pdf_with_pdflatex(
     """
 
     try:
-        _check_output_kwargs = {'cwd': pdf_file.parent.as_posix()}
+        _check_output_kwargs = {"cwd": pdf_file.parent.as_posix()}
 
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", tex_file.as_posix()],
+            stderr=subprocess.STDOUT,
+            **_check_output_kwargs,
+        )
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running bibtex")
         _output = subprocess.run(
-            ["bibtex", tex_file.as_posix().replace("tex", "aux")], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["bibtex", tex_file.as_posix().replace("tex", "aux")],
+            stderr=subprocess.STDOUT,
+            **_check_output_kwargs,
+        )
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", tex_file.as_posix()],
+            stderr=subprocess.STDOUT,
+            **_check_output_kwargs,
+        )
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", tex_file.as_posix()],
+            stderr=subprocess.STDOUT,
+            **_check_output_kwargs,
+        )
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
 
         if clean:
             for _ext in [
-                'log', 'out', 'fls', 'fdb_latexmk', 'dvi',
-                'auxlock', 'acn', 'glo', 'ist',
-                # beamer related ...
-                'snm', 'nav',
+                    "log",
+                    "out",
+                    "fls",
+                    "fdb_latexmk",
+                    "dvi",
+                    "auxlock",
+                    "acn",
+                    "glo",
+                    "ist",
+                    # beamer related ...
+                    "snm",
+                    "nav",
             ]:
-                (
-                    pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
-                ).unlink(missing_ok=True)
+                (pdf_file.parent /
+                 pdf_file.name.replace(".pdf", f".{_ext}")).unlink(
+                     missing_ok=True)
 
     except (IOError, OSError) as ex_:
         raise ex_
@@ -90,16 +110,16 @@ def make_pdf(
     if compiler_args is None:
         compiler_args = []
     if compiler is not None:
-        compilers = ((compiler, []),)
+        compilers = ((compiler, []), )
     else:
         compilers = (
-            ('pdflatex', []),
-            ('latexmk',  ['--pdf']),
+            ("pdflatex", []),
+            ("latexmk", ["--pdf"]),
         )
 
-    main_arguments = ['--interaction=nonstopmode', tex_file.as_posix()]
+    main_arguments = ["--interaction=nonstopmode", tex_file.as_posix()]
 
-    check_output_kwargs = {'cwd': pdf_file.parent.as_posix()}
+    check_output_kwargs = {"cwd": pdf_file.parent.as_posix()}
 
     for compiler, arguments in compilers:
 
@@ -116,14 +136,10 @@ def make_pdf(
             if os_error.errno == errno.ENOENT:
                 # If compiler does not exist, try next in the list
                 continue
-            raise e.code.NotAllowed(
-                msgs=[ex_]
-            )
+            raise e.code.NotAllowed(msgs=[ex_])
         except subprocess.CalledProcessError as ex_:
             # For all other errors print the output and raise the error
-            raise e.code.NotAllowed(
-                msgs=[ex_.output.decode()]
-            )
+            raise e.code.NotAllowed(msgs=[ex_.output.decode()])
         else:
             if not silent:
                 _LOGGER.info(msg=output.decode())
@@ -142,8 +158,12 @@ def make_pdf(
         else:
             # so that toc is handled
             make_pdf(
-                tex_file=tex_file, pdf_file=pdf_file, compiler=compiler, compiler_args=compiler_args,
-                silent=silent, _second_run=True,
+                tex_file=tex_file,
+                pdf_file=pdf_file,
+                compiler=compiler,
+                compiler_args=compiler_args,
+                silent=silent,
+                _second_run=True,
             )
 
         # Compilation has finished, so no further compilers have to be
@@ -151,13 +171,11 @@ def make_pdf(
         break
 
     else:
-        raise e.code.NotAllowed(
-            msgs=[
-                'We cannot find suitable LaTeX compiler ...',
-                'Either specify a LaTex compiler '
-                'or make sure you have latexmk or pdfLaTex installed.'
-            ]
-        )
+        raise e.code.NotAllowed(msgs=[
+            "We cannot find suitable LaTeX compiler ...",
+            "Either specify a LaTex compiler "
+            "or make sure you have latexmk or pdfLaTex installed.",
+        ])
 
 
 def make_math(in_: str) -> str:

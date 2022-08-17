@@ -11,22 +11,24 @@ import pathlib
 import sys
 import time
 import typing as t
-# todo ... get rich dunder methods for YamlRepr and then get rid of this print ;)
-from rich import print
-
-
-sys.path.append("..")
 
 import numpy as np
 import pandas as pd
 import pyarrow as pa
+
+# todo ... get rich dunder methods for YamlRepr and then get rid of this print ;)
+from rich import print
+
+from toolcraft import logger
 from toolcraft import marshalling as m
-from toolcraft import settings
+from toolcraft import richy, settings
 from toolcraft import storage as s
-from toolcraft import util, richy, logger
-from toolcraft.storage import file_system, Path
+from toolcraft import util
+from toolcraft.storage import Path, file_system
 from toolcraft.storage.table import Filter
 from toolcraft.storage.table import make_expression as me
+
+sys.path.append("..")
 
 settings.DEBUG_HASHABLE_STATE = False
 
@@ -56,15 +58,12 @@ def try_hashable_ser():
     _hashable = HashableTry(
         a=33,
         e=NewEnum.a1,
-        child=HashableTryChild(
-            a=66,
-        ),
+        child=HashableTryChild(a=66, ),
     )
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2")
     # noinspection PyTypeChecker
-    _de_ser_hashable = HashableTry.from_yaml(
-        _hashable.yaml(),
-    )  # type: HashableTry
+    _de_ser_hashable = HashableTry.from_yaml(_hashable.yaml(),
+                                             )  # type: HashableTry
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>3")
 
     print(_hashable.yaml())
@@ -86,25 +85,33 @@ class DnTestFile(s.DownloadFileGroup):
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
-            "file1": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file1":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
-            "file2": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file2":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
-            "file3": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file3":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
-            "file4": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file4":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
         }
 
     def get_hashes(self) -> t.Dict[str, str]:
         return {
-            "file1": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "file1":
+            "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
             "885e6adb4",
-            "file2": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "file2":
+            "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
             "885e6adb4",
-            "file3": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "file3":
+            "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
             "885e6adb4",
-            "file4": "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
+            "file4":
+            "3df79d34abbca99308e79cb94461c1893582604d68329a41fd4bec1"
             "885e6adb4",
         }
 
@@ -136,13 +143,17 @@ class DnTestFileAutoHashed(s.DownloadFileGroup):
 
     def get_urls(self) -> t.Dict[str, str]:
         return {
-            "file1": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file1":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
-            "file2": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file2":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
-            "file3": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file3":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
-            "file4": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
+            "file4":
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/"
             "resources/pdf/dummy.pdf",
         }
 
@@ -157,7 +168,8 @@ def try_auto_hashed_download_file():
     df = DnTestFileAutoHashed()
     df0 = DnTestFile()
 
-    with richy.StatusPanel(title="Test Auto Hashed Download File", tc_log=_LOGGER) as _rp:
+    with richy.StatusPanel(title="Test Auto Hashed Download File",
+                           tc_log=_LOGGER) as _rp:
         with (df(richy_panel=_rp), df0(richy_panel=_rp)):
             df.get_file(file_key="file1")
             df0.get_file(file_key="file1")
@@ -170,7 +182,8 @@ def try_metainfo_file():
     # noinspection SpellCheckingInspection
     df = DnTestFile()
 
-    with richy.StatusPanel(title="Test MetaInfo of Download File", tc_log=_LOGGER) as _rp:
+    with richy.StatusPanel(title="Test MetaInfo of Download File",
+                           tc_log=_LOGGER) as _rp:
         with df(richy_panel=_rp):
             # note that creating instance above creates file
             df.delete(force=True)
@@ -229,9 +242,11 @@ def try_creating_folders():
     )
     folder3 = Folder3(parent_folder=folder2, for_hashable="leaf_folder")
 
-    with richy.StatusPanel(title="Try Creating Folders", tc_log=_LOGGER) as _rp:
+    with richy.StatusPanel(title="Try Creating Folders",
+                           tc_log=_LOGGER) as _rp:
 
-        with folder0(richy_panel=_rp), folder1(richy_panel=_rp), folder2(richy_panel=_rp), folder3(richy_panel=_rp):
+        with folder0(richy_panel=_rp), folder1(richy_panel=_rp), folder2(
+                richy_panel=_rp), folder3(richy_panel=_rp):
 
             print([_.full_path for _ in folder0.path.ls()])
 
@@ -251,6 +266,7 @@ def try_creating_folders():
 
 @dataclasses.dataclass(frozen=True)
 class TestStorageResultsFolder(s.Folder):
+
     @property
     def file_system(self) -> str:
         return "CWD"
@@ -258,6 +274,7 @@ class TestStorageResultsFolder(s.Folder):
 
 @dataclasses.dataclass(frozen=True)
 class TestStorageResultsFolderGcs(s.Folder):
+
     @property
     def file_system(self) -> str:
         return "GCS"
@@ -282,9 +299,11 @@ class TestStorage(m.HashableClass):
     @property
     @util.CacheResult
     def store_with_partition_cols(self) -> s.Table:
-        return s.Table(parent_folder=self.results_folder,
-                       for_hashable="store_with_partition_cols",
-                       partition_cols=["a", "b"],)
+        return s.Table(
+            parent_folder=self.results_folder,
+            for_hashable="store_with_partition_cols",
+            partition_cols=["a", "b"],
+        )
 
     def on_enter(self):
         super().on_enter()
@@ -306,14 +325,15 @@ class TestStorage(m.HashableClass):
         b: int = None,
     ) -> pa.Table:
         return {
-            "pandas_dataframe": pa.table({"a": np.asarray([1, 2, 3, 4])}),
-            "pandas_dataframe_with_partition_cols": pa.table(
+            "pandas_dataframe":
+            pa.table({"a": np.asarray([1, 2, 3, 4])}),
+            "pandas_dataframe_with_partition_cols":
+            pa.table(
                 {
                     "a": np.asarray([a] * 4),
                     "b": np.asarray([b] * 4),
                     "c": np.asarray([6, 7, 8, 9]),
-                },
-            ),
+                }, ),
         }[key]
 
 
@@ -356,9 +376,7 @@ def try_arrow_storage(gcs: bool):
         ts = TestStorage(1, 2.0)
     _ = ts.store
     _ = ts.store_with_partition_cols
-    _rp = richy.StatusPanel(
-        title="Try Arrow Storage", tc_log=_LOGGER
-    )
+    _rp = richy.StatusPanel(title="Try Arrow Storage", tc_log=_LOGGER)
     with _rp, ts(richy_panel=_rp):
         # ---------------------------------------------------------01
         print("---------------------------------------------------------01")
@@ -389,84 +407,100 @@ def try_arrow_storage(gcs: bool):
         print("---------------------------------------------------------02.01")
         # pandas_dataframe_with_partition_cols
         print("ts.store_with_partition_cols.write(value=...) >> a=1, b=2")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=2),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=1, b=2), )
         r = ts.store_with_partition_cols.read()
         print("ts.store_with_partition_cols.read()")
         pd.testing.assert_frame_equal(
             r.to_pandas().sort_index(axis=1),
-            ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=2)
-            .to_pandas()
-            .sort_index(axis=1),
+            ts.data_vector("pandas_dataframe_with_partition_cols", a=1,
+                           b=2).to_pandas().sort_index(axis=1),
         )
         print("ts.store_with_partition_cols.delete_()")
         assert ts.store_with_partition_cols.delete_()
 
         print("---------------------------------------------------------02.02")
         print("ts.store_with_partition_cols.write(value=...) >> a=1, b=22")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=1, b=22), )
         print("ts.store_with_partition_cols.write(value=...) >> a=1, b=33")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=1, b=33), )
         r = ts.store_with_partition_cols.read()
         print("ts.store_with_partition_cols.read()")
         pd.testing.assert_frame_equal(
             r.to_pandas().sort_index(axis=1),
             pd.concat(
                 [
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
-                    .to_pandas()
-                    .sort_index(axis=1),
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33)
-                    .to_pandas()
-                    .sort_index(axis=1),
+                    ts.data_vector("pandas_dataframe_with_partition_cols",
+                                   a=1,
+                                   b=22).to_pandas().sort_index(axis=1),
+                    ts.data_vector("pandas_dataframe_with_partition_cols",
+                                   a=1,
+                                   b=33).to_pandas().sort_index(axis=1),
                 ],
                 ignore_index=True,
             ),
         )
-        r = ts.store_with_partition_cols.read(filter_expression=me([Filter('a', '=', 1)]))
-        print("ts.store_with_partition_cols.read(filter_expression=me(\n\t[Filter('a', '=', 1)]))")
+        r = ts.store_with_partition_cols.read(
+            filter_expression=me([Filter("a", "=", 1)]))
+        print(
+            "ts.store_with_partition_cols.read(filter_expression=me(\n\t[Filter('a', '=', 1)]))"
+        )
         pd.testing.assert_frame_equal(
             r.to_pandas().sort_index(axis=1),
             pd.concat(
                 [
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
-                    .to_pandas()
-                    .sort_index(axis=1),
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33)
-                    .to_pandas()
-                    .sort_index(axis=1),
+                    ts.data_vector("pandas_dataframe_with_partition_cols",
+                                   a=1,
+                                   b=22).to_pandas().sort_index(axis=1),
+                    ts.data_vector("pandas_dataframe_with_partition_cols",
+                                   a=1,
+                                   b=33).to_pandas().sort_index(axis=1),
                 ],
                 ignore_index=True,
             ),
         )
-        r = ts.store_with_partition_cols.read(filter_expression=me([Filter('a', '=', 1), Filter('b', '=', 22)]))
-        print("ts.store_with_partition_cols.read(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 22)]))")
+        r = ts.store_with_partition_cols.read(filter_expression=me(
+            [Filter("a", "=", 1), Filter("b", "=", 22)]))
+        print(
+            "ts.store_with_partition_cols.read(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 22)]))"
+        )
         pd.testing.assert_frame_equal(
             r.to_pandas().sort_index(axis=1),
-            ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
-            .to_pandas()
-            .sort_index(axis=1),
+            ts.data_vector("pandas_dataframe_with_partition_cols", a=1,
+                           b=22).to_pandas().sort_index(axis=1),
         )
 
-        print("ts.store_with_partition_cols.exists(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 22)]))")
-        assert ts.store_with_partition_cols.exists(filter_expression=me([Filter('a', '=', 1), Filter('b', '=', 22)]))
+        print(
+            "ts.store_with_partition_cols.exists(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 22)]))"
+        )
+        assert ts.store_with_partition_cols.exists(filter_expression=me(
+            [Filter("a", "=", 1), Filter("b", "=", 22)]))
 
-        print("ts.store_with_partition_cols.exists(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 33)]))")
-        assert ts.store_with_partition_cols.exists(filter_expression=me([Filter('a', '=', 1), Filter('b', '=', 33)]))
+        print(
+            "ts.store_with_partition_cols.exists(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 33)]))"
+        )
+        assert ts.store_with_partition_cols.exists(filter_expression=me(
+            [Filter("a", "=", 1), Filter("b", "=", 33)]))
 
-        print("not ts.store_with_partition_cols.exists(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 55)]))")
-        assert not ts.store_with_partition_cols.exists(filter_expression=me([Filter('a', '=', 1), Filter('b', '=', 55)]))
+        print(
+            "not ts.store_with_partition_cols.exists(filter_expression=me(\n\t[Filter('a', '=', 1), Filter('b', '=', 55)]))"
+        )
+        assert not ts.store_with_partition_cols.exists(filter_expression=me(
+            [Filter("a", "=", 1), Filter("b", "=", 55)]))
 
-        print("ts.store_with_partition_cols.delete_(filters=[Filter('b', '=', 33)])")
-        assert ts.store_with_partition_cols.delete_(filters=[Filter('b', '=', 33)])
+        print(
+            "ts.store_with_partition_cols.delete_(filters=[Filter('b', '=', 33)])"
+        )
+        assert ts.store_with_partition_cols.delete_(
+            filters=[Filter("b", "=", 33)])
 
-        print("not ts.store_with_partition_cols.exists(filter_expression=me([Filter('b', '=', 33)]))")
-        assert not ts.store_with_partition_cols.exists(filter_expression=me([Filter('b', '=', 33)]))
+        print(
+            "not ts.store_with_partition_cols.exists(filter_expression=me([Filter('b', '=', 33)]))"
+        )
+        assert not ts.store_with_partition_cols.exists(
+            filter_expression=me([Filter("b", "=", 33)]))
 
         r = ts.store_with_partition_cols.read()
         print("ts.store_with_partition_cols.read()")
@@ -474,9 +508,9 @@ def try_arrow_storage(gcs: bool):
             r.to_pandas().sort_index(axis=1),
             pd.concat(
                 [
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22)
-                    .to_pandas()
-                    .sort_index(axis=1),
+                    ts.data_vector("pandas_dataframe_with_partition_cols",
+                                   a=1,
+                                   b=22).to_pandas().sort_index(axis=1),
                 ],
                 ignore_index=True,
             ),
@@ -487,29 +521,23 @@ def try_arrow_storage(gcs: bool):
 
         print("---------------------------------------------------------02.03")
         print("ts.store_with_partition_cols.write(value=...) >> a=1, b=11")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=11),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=1, b=11), )
         print("ts.store_with_partition_cols.write(value=...) >> a=1, b=22")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=22),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=1, b=22), )
         print("ts.store_with_partition_cols.write(value=...) >> a=1, b=33")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=1, b=33),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=1, b=33), )
         print("ts.store_with_partition_cols.write(value=...) >> a=2, b=44")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=2, b=44),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=2, b=44), )
         print("ts.store_with_partition_cols.write(value=...) >> a=2, b=55")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=2, b=55),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=2, b=55), )
         print("ts.store_with_partition_cols.write(value=...) >> a=2, b=66")
-        assert ts.store_with_partition_cols.write(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=2, b=66),
-        )
+        assert ts.store_with_partition_cols.write(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=2, b=66), )
         # todo: support this test later when delete_ supports filter_expression
         # r = ts.store_with_partition_cols(mode="d", a=1, filters=[("b", "=", "77")])
         # print(
@@ -606,19 +634,16 @@ def try_arrow_storage(gcs: bool):
         # pandas_dataframe_append with partition cols
 
         print("ts.store_with_partition_cols.append(value=...) >> a=11, b=22")
-        assert ts.store_with_partition_cols.append(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=11, b=22),
-        )
+        assert ts.store_with_partition_cols.append(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=11, b=22), )
 
         print("ts.store_with_partition_cols.append(value=...) >> a=33, b=44")
-        assert ts.store_with_partition_cols.append(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=33, b=44),
-        )
+        assert ts.store_with_partition_cols.append(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=33, b=44), )
 
         print("ts.store_with_partition_cols.append(value=...) >> a=55, b=66")
-        assert ts.store_with_partition_cols.append(
-            value=ts.data_vector("pandas_dataframe_with_partition_cols", a=55, b=66),
-        )
+        assert ts.store_with_partition_cols.append(value=ts.data_vector(
+            "pandas_dataframe_with_partition_cols", a=55, b=66), )
 
         r = ts.store_with_partition_cols.read()
         print("ts.store_with_partition_cols.read()")
@@ -626,12 +651,21 @@ def try_arrow_storage(gcs: bool):
             r.to_pandas().sort_index(axis=1),
             pd.concat(
                 [
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=11, b=22,)
-                    .to_pandas().sort_index(axis=1),
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=33, b=44,)
-                    .to_pandas().sort_index(axis=1),
-                    ts.data_vector("pandas_dataframe_with_partition_cols", a=55, b=66,)
-                    .to_pandas().sort_index(axis=1),
+                    ts.data_vector(
+                        "pandas_dataframe_with_partition_cols",
+                        a=11,
+                        b=22,
+                    ).to_pandas().sort_index(axis=1),
+                    ts.data_vector(
+                        "pandas_dataframe_with_partition_cols",
+                        a=33,
+                        b=44,
+                    ).to_pandas().sort_index(axis=1),
+                    ts.data_vector(
+                        "pandas_dataframe_with_partition_cols",
+                        a=55,
+                        b=66,
+                    ).to_pandas().sort_index(axis=1),
                 ],
                 ignore_index=True,
             ),
@@ -686,10 +720,9 @@ def try_file_storage(gcs: bool):
     folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0", file_system="CWD")
     fg0 = FileGroup0(start_str="f1", parent_folder=folder0)
     fg1 = FileGroup0(start_str="f2", parent_folder=folder0)
-    _rp = richy.StatusPanel(
-        title="Try File Storage", tc_log=_LOGGER
-    )
-    with _rp, folder0(richy_panel=_rp), fg0(richy_panel=_rp), fg1(richy_panel=_rp):
+    _rp = richy.StatusPanel(title="Try File Storage", tc_log=_LOGGER)
+    with _rp, folder0(richy_panel=_rp), fg0(richy_panel=_rp), fg1(
+            richy_panel=_rp):
 
         print("---------------------------------------------------------01")
         print("Delete fg0")
@@ -700,25 +733,28 @@ def try_file_storage(gcs: bool):
         folder0.delete(force=True)
 
         # create file group from path
-        folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0", file_system="CWD")
+        folder0 = Folder0(for_hashable=f"{_TEMP_PATH}/folder0",
+                          file_system="CWD")
         print("---------------------------------------------------------02")
         print("Create folder0=Folder0(...)")
         print("Create some folders and files inside it with folder0 as parent")
         _fgs = []
         for _dir, _files in {
-            "dir0": ["aa", "bb", "cc"],
-            "dir1": ["xxaa", "xxbb", "xxcc", "xxdd"]
+                "dir0": ["aa", "bb", "cc"],
+                "dir1": ["xxaa", "xxbb", "xxcc", "xxdd"],
         }.items():
             print(f"    create for {_dir}")
             (folder0.path / _dir).mkdir()
             for _file in _files:
                 (folder0.path / _dir / _file).touch()
-                (folder0.path / _dir / _file).write_text("Hi I am toolcraft ...")
+                (folder0.path / _dir /
+                 _file).write_text("Hi I am toolcraft ...")
             _fgs.append(
                 s.FileGroupFromPaths(
-                    parent_folder=folder0, folder_name=_dir, keys=_files,
-                )
-            )
+                    parent_folder=folder0,
+                    folder_name=_dir,
+                    keys=_files,
+                ))
         print("Delete file groups")
         for _fg in _fgs:
             with _fg(richy_panel=_rp):

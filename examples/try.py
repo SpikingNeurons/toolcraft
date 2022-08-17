@@ -1,5 +1,7 @@
-import dearpygui.dearpygui as dpg
 import sys
+
+import dearpygui.dearpygui as dpg
+
 try:
     raise Exception("ggg")
 except Exception:
@@ -25,7 +27,7 @@ with dpg.window(label="Tutorial"):
                 for j in range(0, 2):
                     dpg.add_text(f"Row{i} Column{j}")
 
-dpg.create_viewport(title='Custom Title', width=800, height=600)
+dpg.create_viewport(title="Custom Title", width=800, height=600)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()

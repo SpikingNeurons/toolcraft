@@ -1,10 +1,22 @@
-import numpy as np
 import typing as t
-import common, symbols
 
-from toolcraft.texipy import Document, Section, Color, SubSection, Fa, \
-    FontSize, Positioning, helper, FloatObjAlignment, Scalar
-from toolcraft.texipy import table
+import common
+import numpy as np
+import symbols
+
+from toolcraft.texipy import (
+    Color,
+    Document,
+    Fa,
+    FloatObjAlignment,
+    FontSize,
+    Positioning,
+    Scalar,
+    Section,
+    SubSection,
+    helper,
+    table,
+)
 
 
 def compute_simulated_dataset_acc():
@@ -29,9 +41,8 @@ def compute_simulated_dataset_acc():
 
     _labels = np.random.randint(0, 256, _size, np.uint8)
 
-    _hw_labels = np.vectorize(
-        lambda x: bin(x).count("1")
-    )(_labels).astype(np.uint8)
+    _hw_labels = np.vectorize(lambda x: bin(x).count("1"))(_labels).astype(
+        np.uint8)
 
     _matched = 0
     for _i in range(9):
@@ -45,7 +56,7 @@ def compute_simulated_dataset_acc():
 
     _acc = _matched / _size
 
-    print(_acc*100.)
+    print(_acc * 100.0)
 
 
 def make_table(scale: t.Tuple[float, float] = None):
@@ -53,146 +64,120 @@ def make_table(scale: t.Tuple[float, float] = None):
     # compute_simulated_dataset_acc()
 
     _table = table.Table(
-        type='X',
+        type="X",
         scale=scale,
         caption="Results for standard and \\mtovc classifier",
         label="table:results",
         positioning=Positioning(here=True, top=True, special_float_page=True),
         alignment=FloatObjAlignment.centering,
-        t_width=Scalar(1, 'textwidth'),
-        t_cols_def=table.TableColsDef.from_list(
-            items=[
-                table.ColumnFmt.insert_before(insert="\\arraybackslash"),
-                table.ColumnFmt.para_middle(width=Scalar(0.22, 'textwidth')),
-                table.ColumnFmt.insert_before(insert="\\arraybackslash"),
-                table.ColumnFmt.para_middle(width=Scalar(0.18, 'textwidth')),
-                table.ColumnFmt.insert_before(insert="\\centering\\arraybackslash"),
-                table.ColumnFmt.stretched,
-                table.ColumnFmt.insert_before(insert="\\centering\\arraybackslash"),
-                table.ColumnFmt.stretched,
-                table.ColumnFmt.insert_before(insert="\\centering\\arraybackslash"),
-                table.ColumnFmt.stretched,
-            ],
-        )
+        t_width=Scalar(1, "textwidth"),
+        t_cols_def=table.TableColsDef.from_list(items=[
+            table.ColumnFmt.insert_before(insert="\\arraybackslash"),
+            table.ColumnFmt.para_middle(width=Scalar(0.22, "textwidth")),
+            table.ColumnFmt.insert_before(insert="\\arraybackslash"),
+            table.ColumnFmt.para_middle(width=Scalar(0.18, "textwidth")),
+            table.ColumnFmt.insert_before(
+                insert="\\centering\\arraybackslash"),
+            table.ColumnFmt.stretched,
+            table.ColumnFmt.insert_before(
+                insert="\\centering\\arraybackslash"),
+            table.ColumnFmt.stretched,
+            table.ColumnFmt.insert_before(
+                insert="\\centering\\arraybackslash"),
+            table.ColumnFmt.stretched,
+        ], ),
     )
     # _tikz.show_debug_grid(width=_WIDTH + .01, height=_HEIGHT, step=_STEP)
     # make_fig(_std_traces, _tikz)
 
     _table.add_toprule()
     _table.add_row(
-        table.Row.from_list(
-            items=[
-                "\\textbf{Dataset}",
-                "\\textbf{Model}",
-                f"\\boldmath{symbols.glbacc}\\unboldmath~(\\%)",
-                f"\\boldmath{symbols.glacc}\\unboldmath~(\\%)",
-                f"\\boldmath{symbols.gltgezero}\\unboldmath",
-            ],
-        )
-    )
+        table.Row.from_list(items=[
+            "\\textbf{Dataset}",
+            "\\textbf{Model}",
+            f"\\boldmath{symbols.glbacc}\\unboldmath~(\\%)",
+            f"\\boldmath{symbols.glacc}\\unboldmath~(\\%)",
+            f"\\boldmath{symbols.gltgezero}\\unboldmath",
+        ], ))
     _table.add_midrule()
     # _table.add_toprule()
     # ---------------------------------------------------------------- simulated
     _table.add_row(
-        table.Row.from_list(
-            items=[
-                table.MultiRowCell(num_rows=2, value=f"{symbols.gldssim}"),
-                "Standard", "0.39", "3.44", "21"
-            ],
-        )
-    )
+        table.Row.from_list(items=[
+            table.MultiRowCell(num_rows=2, value=f"{symbols.gldssim}"),
+            "Standard",
+            "0.39",
+            "3.44",
+            "21",
+        ], ))
     _table.add_row(
         table.Row.from_list(
-            items=[
-                "", f"{symbols.mtovc}", "50.0", "100.0", "107"
-            ],
-        )
-    )
+            items=["", f"{symbols.mtovc}", "50.0", "100.0", "107"], ))
     _table.add_cmidrule(n=2, m=5)
     # ---------------------------------------------------------------- simulated-noisy
     _table.add_row(
-        table.Row.from_list(
-            items=[
-                table.MultiRowCell(num_rows=2, value=f"{symbols.gldssimnoisy}"),
-                "Standard", "0.39", "3.21", "412"
-            ],
-        )
-    )
+        table.Row.from_list(items=[
+            table.MultiRowCell(num_rows=2, value=f"{symbols.gldssimnoisy}"),
+            "Standard",
+            "0.39",
+            "3.21",
+            "412",
+        ], ))
     _table.add_row(
         table.Row.from_list(
-            items=[
-                "", f"{symbols.mtovc}", "50.0", "96.78", "272"
-            ],
-        )
-    )
+            items=["", f"{symbols.mtovc}", "50.0", "96.78", "272"], ))
     _table.add_cmidrule(n=2, m=5)
     # ---------------------------------------------------------------- ascad-v1-fk
     _table.add_row(
-        table.Row.from_list(
-            items=[
-                table.MultiRowCell(num_rows=4, value=f"{symbols.gldsascadvonefk}"),
-                "Standard \\cite{zaidMethodologyEfficientCNN2020}", "0.39", "---", "191"
-            ],
-        )
-    )
+        table.Row.from_list(items=[
+            table.MultiRowCell(num_rows=4, value=f"{symbols.gldsascadvonefk}"),
+            "Standard \\cite{zaidMethodologyEfficientCNN2020}",
+            "0.39",
+            "---",
+            "191",
+        ], ))
+    _table.add_row(
+        table.Row.from_list(items=[
+            "",
+            "Standard \\cite{wuChooseYouAutomated2020}",
+            "0.39",
+            "---",
+            "160",
+        ], ))
+    _table.add_row(
+        table.Row.from_list(items=["", "Standard", "0.39", "0.71", "190"], ))
     _table.add_row(
         table.Row.from_list(
-            items=[
-                "", "Standard \\cite{wuChooseYouAutomated2020}", "0.39", "---", "160"
-            ],
-        )
-    )
-    _table.add_row(
-        table.Row.from_list(
-            items=[
-                "", "Standard", "0.39", "0.71", "190"
-            ],
-        )
-    )
-    _table.add_row(
-        table.Row.from_list(
-            items=[
-                "", f"{symbols.mtovc}", "50.0", "95.46", "174"
-            ],
-        )
-    )
+            items=["", f"{symbols.mtovc}", "50.0", "95.46", "174"], ))
     _table.add_cmidrule(n=2, m=5)
     # ---------------------------------------------------------------- ascad-v1-vk
     _table.add_row(
-        table.Row.from_list(
-            items=[
-                table.MultiRowCell(num_rows=4, value=f"{symbols.gldsascadvonevk}"),
-                "Standard  \\cite{zaidMethodologyEfficientCNN2020}", "0.39", "---", "---"
-            ],
-        )
-    )
+        table.Row.from_list(items=[
+            table.MultiRowCell(num_rows=4, value=f"{symbols.gldsascadvonevk}"),
+            "Standard  \\cite{zaidMethodologyEfficientCNN2020}",
+            "0.39",
+            "---",
+            "---",
+        ], ))
+    _table.add_row(
+        table.Row.from_list(items=[
+            "",
+            "Standard \\cite{wuChooseYouAutomated2020}",
+            "0.39",
+            "---",
+            "3144",
+        ], ))
+    _table.add_row(
+        table.Row.from_list(items=["", "Standard", "0.39", "0.64", "3121"], ))
     _table.add_row(
         table.Row.from_list(
-            items=[
-                "", "Standard \\cite{wuChooseYouAutomated2020}", "0.39", "---", "3144"
-            ],
-        )
-    )
-    _table.add_row(
-        table.Row.from_list(
-            items=[
-                "", "Standard", "0.39", "0.64", "3121"
-            ],
-        )
-    )
-    _table.add_row(
-        table.Row.from_list(
-            items=[
-                "", f"{symbols.mtovc}", "50.0", "91.36", "2583"
-            ],
-        )
-    )
+            items=["", f"{symbols.mtovc}", "50.0", "91.36", "2583"], ))
     _table.add_bottomrule()
 
     return _table
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # todo: for future papers add these readings for 8-bit dataset and give code with
     #  simulated data so that people can test

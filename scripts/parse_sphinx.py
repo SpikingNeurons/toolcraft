@@ -11,7 +11,6 @@ import os
 
 from bs4 import BeautifulSoup
 
-
 js_scripts = """
 <script type="text/javascript" id="documentation_options" data-url_root="./" src="/js/documentation_options.js"></script>
 <script type="text/javascript" src="/js/jquery.js"></script>
@@ -37,8 +36,7 @@ def parse_sphinx(input_dir, output_dir):
                     soup = BeautifulSoup(f.read(), "html.parser")
                     doc = soup.find("div", {"class": "document"})
                     wrapped_doc = doc.wrap(
-                        soup.new_tag("div", **{"class": "sphinx"}),
-                    )
+                        soup.new_tag("div", **{"class": "sphinx"}), )
                 # add js
                 if fname == "search.html":
                     out = js_scripts + search_js_scripts + str(wrapped_doc)
@@ -50,16 +48,16 @@ def parse_sphinx(input_dir, output_dir):
                 )
                 os.makedirs(output_path, exist_ok=True)
                 with open(
-                    os.path.join(output_path, fname),
-                    "w",
-                    encoding="utf8",
+                        os.path.join(output_path, fname),
+                        "w",
+                        encoding="utf8",
                 ) as fout:
                     fout.write(out)
 
     # update reference in JS file
     with open(
-        os.path.join(input_dir, "_static/searchtools.js"),
-        encoding="utf8",
+            os.path.join(input_dir, "_static/searchtools.js"),
+            encoding="utf8",
     ) as js_file:
         js = js_file.read()
     js = js.replace(
@@ -67,17 +65,16 @@ def parse_sphinx(input_dir, output_dir):
         "'_sphinx-sources/'",
     )
     with open(
-        os.path.join(input_dir, "_static/searchtools.js"),
-        "w",
-        encoding="utf8",
+            os.path.join(input_dir, "_static/searchtools.js"),
+            "w",
+            encoding="utf8",
     ) as js_file:
         js_file.write(js)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Strip HTML body from Sphinx docs.",
-    )
+        description="Strip HTML body from Sphinx docs.", )
     parser.add_argument(
         "-i",
         "--input_dir",

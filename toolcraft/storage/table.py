@@ -52,21 +52,21 @@ todo: we use table as counterpart to mlflow metrics ... we have more options her
   explore aggregating multiple tables from different HashableClass instances with same HashableClass
 """
 
-
-import typing as t
-import pathlib
 import dataclasses
-import pyarrow as pa
-import pyarrow.dataset as pds
-import types
 import itertools
 import operator
+import pathlib
 import time
+import types
+import typing as t
 
-from .. import util
+import pyarrow as pa
+import pyarrow.dataset as pds
+
 from .. import error as e
 from .. import marshalling as m
 from .. import storage as s
+from .. import util
 from . import Folder
 
 # noinspection PyUnresolvedReferences
@@ -78,21 +78,20 @@ if False:
 # _FILE_FORMAT = pds.CsvFileFormat()
 _FILE_FORMAT = pds.IpcFileFormat()
 
-
 # todo: check pds.Expression for more operations that are supported
 
 _OP_MAPPER = {
-    '=': operator.eq,
-    '==': operator.eq,
-    '<': operator.lt,
-    '>': operator.gt,
-    '<=': operator.le,
-    '>=': operator.ge,
-    '!=': operator.ne,
-    'and': operator.and_,
-    'or': operator.or_,
-    'in': lambda _x, _l: _x in _l,
-    'not in': lambda _x, _l: _x not in _l,
+    "=": operator.eq,
+    "==": operator.eq,
+    "<": operator.lt,
+    ">": operator.gt,
+    "<=": operator.le,
+    ">=": operator.ge,
+    "!=": operator.ne,
+    "and": operator.and_,
+    "or": operator.or_,
+    "in": lambda _x, _l: _x in _l,
+    "not in": lambda _x, _l: _x not in _l,
     # todo: dont know how this will be used filter tuple that uses three
     #  elements
     # '~': lambda _x: ~x,
@@ -103,17 +102,17 @@ _OP_MAPPER = {
 # do not try to reuse code for operators as we encounter problem of using
 # last value while looping over dict _OP_MAPPER (loop rolling issue with python)
 _OP_MAPPER_EXP = {
-    '=': lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
-    '==': lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
-    '<': lambda _x, _y: operator.lt(pds.field(_x), pds.scalar(_y)),
-    '>': lambda _x, _y: operator.gt(pds.field(_x), pds.scalar(_y)),
-    '<=': lambda _x, _y: operator.le(pds.field(_x), pds.scalar(_y)),
-    '>=': lambda _x, _y: operator.ge(pds.field(_x), pds.scalar(_y)),
-    '!=': lambda _x, _y: operator.ne(pds.field(_x), pds.scalar(_y)),
-    'and': lambda _x, _y: operator.and_(pds.field(_x), pds.scalar(_y)),
-    'or': lambda _x, _y: operator.or_(pds.field(_x), pds.scalar(_y)),
-    'in': lambda _x, _l: pds.field(_x).isin(_l),
-    'not in': lambda _x, _l: operator.inv(pds.field(_x).isin(_l)),
+    "=": lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
+    "==": lambda _x, _y: operator.eq(pds.field(_x), pds.scalar(_y)),
+    "<": lambda _x, _y: operator.lt(pds.field(_x), pds.scalar(_y)),
+    ">": lambda _x, _y: operator.gt(pds.field(_x), pds.scalar(_y)),
+    "<=": lambda _x, _y: operator.le(pds.field(_x), pds.scalar(_y)),
+    ">=": lambda _x, _y: operator.ge(pds.field(_x), pds.scalar(_y)),
+    "!=": lambda _x, _y: operator.ne(pds.field(_x), pds.scalar(_y)),
+    "and": lambda _x, _y: operator.and_(pds.field(_x), pds.scalar(_y)),
+    "or": lambda _x, _y: operator.or_(pds.field(_x), pds.scalar(_y)),
+    "in": lambda _x, _l: pds.field(_x).isin(_l),
+    "not in": lambda _x, _l: operator.inv(pds.field(_x).isin(_l)),
     # todo: dont know how this will be used filter tuple that uses three
     #  elements
     # '~': lambda _x: operator.inv(pds.scalar(_x)),
@@ -130,11 +129,12 @@ class Filter(t.NamedTuple):
     Predicates are expressed in disjunctive normal form (DNF),
     like [[('x', '=', 0), ...], ...]
     """
+
     column: str
-    op_type: t.Literal[
-        '=', '==', '<', '>', '<=', '>=', '!=', '&', '|', 'in', 'not in',
-        # '~', 'not',
-    ]
+    op_type: t.Literal["=", "==", "<", ">", "<=", ">=", "!=", "&", "|", "in",
+                       "not in",
+                       # '~', 'not',
+                       ]
     value: t.Union[bool, int, float, str, set, list, tuple]
 
     @property
@@ -150,9 +150,8 @@ class Filter(t.NamedTuple):
 FILTERS_TYPE = t.List[t.Union[Filter, t.List[Filter]]]
 
 
-def make_expression(
-    filters: FILTERS_TYPE, restrict_columns: t.List[str] = None
-) -> pds.Expression:
+def make_expression(filters: FILTERS_TYPE,
+                    restrict_columns: t.List[str] = None) -> pds.Expression:
     """
     Predicates are expressed in disjunctive normal form (DNF),
     like [[('x', '=', 0), ...], ...]
@@ -165,9 +164,9 @@ def make_expression(
     # ---------------------------------------------------- 01
     # validate
     e.validation.ShouldBeInstanceOf(
-        value=filters, value_types=(list, ),
-        msgs=["Was expecting list type for filters"]
-    ).raise_if_failed()
+        value=filters,
+        value_types=(list, ),
+        msgs=["Was expecting list type for filters"]).raise_if_failed()
 
     # ---------------------------------------------------- 02
     # loop
@@ -182,8 +181,9 @@ def make_expression(
         elif isinstance(_filter, Filter):
             if bool(restrict_columns):
                 e.validation.ShouldBeOneOf(
-                    value=_filter.column, values=restrict_columns,
-                    msgs=["You should use one of restricted columns ..."]
+                    value=_filter.column,
+                    values=restrict_columns,
+                    msgs=["You should use one of restricted columns ..."],
                 ).raise_if_failed()
             _exp = _filter.expression
             if _ret_exp is None:
@@ -191,7 +191,8 @@ def make_expression(
             else:
                 _ret_exp = operator.and_(_ret_exp, _exp)
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(_filter)}"])
+            raise e.code.ShouldNeverHappen(
+                msgs=[f"Unknown type {type(_filter)}"])
 
     # ---------------------------------------------------- 03
     # return
@@ -216,7 +217,7 @@ def _read_table(
     if bool(columns):
         table_schema = pa.schema(
             fields=[table_schema.field(_c) for _c in columns],
-            metadata=table_schema.metadata
+            metadata=table_schema.metadata,
         )
     # noinspection PyProtectedMember
     _path = table_as_folder.path
@@ -249,7 +250,9 @@ def _read_table(
 
 
 def _write_table(
-    table_as_folder: "Table", table: pa.Table, append: bool,
+    table_as_folder: "Table",
+    table: pa.Table,
+    append: bool,
     delete_partition: bool = False,
 ):
     # file name formatter
@@ -270,7 +273,7 @@ def _write_table(
     # delete entire partition folder ... while in write mode this will have same
     # behaviour
     if delete_partition:
-        _existing_data_behavior = 'delete_matching'
+        _existing_data_behavior = "delete_matching"
     else:
         _existing_data_behavior = "overwrite_or_ignore"
 
@@ -309,21 +312,17 @@ class _TableInternal(m.Internal):
 class TableConfig(s.Config):
     schema: t.Optional[pa.Schema] = None
 
-    def update_schema(
-        self, table: pa.Table = None
-    ):
+    def update_schema(self, table: pa.Table = None):
         # ------------------------------------------------------------- 01
         # if table is not provided we expect that schema is already available
         if table is None:
             if self.schema is None:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We cannot guess schema as you have not "
-                        f"supplied table nor there is schema definition "
-                        f"available in config which should be either "
-                        f"supplied by user or guessed while first write."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"We cannot guess schema as you have not "
+                    f"supplied table nor there is schema definition "
+                    f"available in config which should be either "
+                    f"supplied by user or guessed while first write."
+                ])
             return
 
         # ------------------------------------------------------------- 02
@@ -341,12 +340,10 @@ class TableConfig(s.Config):
             _partition_cols = []
         for _col in _partition_cols:
             if _col not in _tables_cols:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The pa.Table provided do not have important partition "
-                        f"column `{_col}`"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"The pa.Table provided do not have important partition "
+                    f"column `{_col}`"
+                ])
         # ------------------------------------------------------------- 02.02
         # if table_schema none estimate from first table and write it
         # back to config
@@ -356,16 +353,14 @@ class TableConfig(s.Config):
         # if table_schema available then validate
         else:
             if self.schema != table.schema:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The table schema is "
-                        f"not valid",
-                        {
-                            "expected": self.schema,
-                            "found": table.schema
-                        }
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"The table schema is "
+                    f"not valid",
+                    {
+                        "expected": self.schema,
+                        "found": table.schema
+                    },
+                ])
             return
 
 
@@ -422,9 +417,7 @@ class Table(Folder):
     @property
     @util.CacheResult
     def config(self) -> TableConfig:
-        return TableConfig(
-            hashable=self,
-        )
+        return TableConfig(hashable=self, )
 
     @property
     @util.CacheResult
@@ -433,19 +426,16 @@ class Table(Folder):
             return None
         _schema = self.config.schema
         if _schema is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Ideally by now this should be set by now if not "
-                    f"available",
-                    f"That is possible on first write where table schema not "
-                    f"provided it is estimated while writing and stored in "
-                    f"config file"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Ideally by now this should be set by now if not "
+                f"available",
+                f"That is possible on first write where table schema not "
+                f"provided it is estimated while writing and stored in "
+                f"config file",
+            ])
         # noinspection PyUnresolvedReferences
-        return pds.partitioning(
-            _schema.empty_table().select(self.partition_cols).schema
-        )
+        return pds.partitioning(_schema.empty_table().select(
+            self.partition_cols).schema)
 
     def init_validate(self):
         # call super
@@ -454,14 +444,12 @@ class Table(Folder):
         # make sure that for_hashable is str as in super class it
         # can be even HashableClass and that cannot be tolerated here
         if not isinstance(self.for_hashable, str):
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"We only allow for_hashable to be a str as this is "
-                    f"Table.",
-                    f"Most likely for_hashable is name of method on which "
-                    f"StoreField decorator was used.",
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"We only allow for_hashable to be a str as this is "
+                f"Table.",
+                f"Most likely for_hashable is name of method on which "
+                f"StoreField decorator was used.",
+            ])
 
     def something_exists(self) -> bool:
         """
@@ -507,9 +495,11 @@ class Table(Folder):
 
         # read table
         _table = _read_table(
-            self, columns=columns, filter_expression=filter_expression,
+            self,
+            columns=columns,
+            filter_expression=filter_expression,
             partitioning=_partitioning,
-            table_schema=_schema
+            table_schema=_schema,
         )
 
         # return
@@ -535,23 +525,23 @@ class Table(Folder):
 
         # read table
         _table = _read_table(
-            self, columns=columns, filter_expression=filter_expression,
+            self,
+            columns=columns,
+            filter_expression=filter_expression,
             partitioning=_partitioning,
-            table_schema=_schema
+            table_schema=_schema,
         )
 
         # extra check
         if len(_table) == 0:
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    "The exists check before read call should handled it.",
-                    "Found a empty table while reading",
-                    f"Please do not use `.` or `_` at start of any folder in "
-                    f"the path as the pyarrow does not raise error but reads "
-                    f"empty table.",
-                    f"Check path {self.path}"
-                ]
-            )
+            raise e.code.ShouldNeverHappen(msgs=[
+                "The exists check before read call should handled it.",
+                "Found a empty table while reading",
+                f"Please do not use `.` or `_` at start of any folder in "
+                f"the path as the pyarrow does not raise error but reads "
+                f"empty table.",
+                f"Check path {self.path}",
+            ])
 
         # return
         return _table
@@ -560,21 +550,17 @@ class Table(Folder):
         # make sure if some partition folders exists ...
         # applicable when partition_cols present
         if bool(self.partition_cols):
-            _unique_filters = [
-                [Filter(_pc, "=", _v) for _v in value[_pc].unique().tolist()]
-                for _pc in self.partition_cols
-            ]
+            _unique_filters = [[
+                Filter(_pc, "=", _v) for _v in value[_pc].unique().tolist()
+            ] for _pc in self.partition_cols]
             _filters = [list(_) for _ in itertools.product(*_unique_filters)]
-            _table = self.exists(
-                columns=self.partition_cols,
-                filter_expression=make_expression(_filters))
+            _table = self.exists(columns=self.partition_cols,
+                                 filter_expression=make_expression(_filters))
             if _table:
-                e.validation.NotAllowed(
-                    msgs=[
-                        "Below partition col values already exist",
-                        _table.to_pydict()
-                    ]
-                )
+                e.validation.NotAllowed(msgs=[
+                    "Below partition col values already exist",
+                    _table.to_pydict(),
+                ])
 
         # if schema is None update it
         if self.config.schema is None:
@@ -598,7 +584,10 @@ class Table(Folder):
             self.config.update_schema(table=value)
 
         # write
-        _write_table(self, table=value, delete_partition=delete_partition, append=True)
+        _write_table(self,
+                     table=value,
+                     delete_partition=delete_partition,
+                     append=True)
 
         # return success
         return True
@@ -609,7 +598,9 @@ class Table(Folder):
     # argument will have no purpose.
     # noinspection PyMethodOverriding
     def delete_(
-        self, *, filters: FILTERS_TYPE = None,
+        self,
+        *,
+        filters: FILTERS_TYPE = None,
     ) -> bool:
         """
         Note that this is not Folder.delete but delete related to s.Table
@@ -666,25 +657,26 @@ class Table(Folder):
 
         # ------------------------------------------------------02
         if _partition_cols is None:
-            raise e.validation.NotAllowed(
-                msgs=["This Table does not use partition_cols and hence there "
-                      "is no point using filters while calling delete_"]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                "This Table does not use partition_cols and hence there "
+                "is no point using filters while calling delete_"
+            ])
 
         # ------------------------------------------------------02
         # cook _filter_expression
         # make sure that filters are only made for partition_cols as only folders
         # i.e. pivots can be deleted
-        _filter_expression = make_expression(
-            filters=filters, restrict_columns=_partition_cols)
+        _filter_expression = make_expression(filters=filters,
+                                             restrict_columns=_partition_cols)
 
         # ------------------------------------------------------03
         # lets figure out what matches and make dict that can help resolve
         # paths to delete
-        _matches = self.read(
-            columns=_partition_cols, filter_expression=_filter_expression
-        )
-        _uniques = [_matches[_c].unique().to_pylist() for _c in _partition_cols]
+        _matches = self.read(columns=_partition_cols,
+                             filter_expression=_filter_expression)
+        _uniques = [
+            _matches[_c].unique().to_pylist() for _c in _partition_cols
+        ]
 
         # ------------------------------------------------------04
         # make all combos then resolve paths and delete them

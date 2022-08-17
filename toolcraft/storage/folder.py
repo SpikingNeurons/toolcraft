@@ -1,22 +1,19 @@
 import dataclasses
 import typing as t
 
-from .__base__ import StorageHashable
 from .. import error as e
-from .. import util
-from .. import marshalling as m
-from . import Suffix
-from . import Path
-from .. import richy
 from .. import logger
+from .. import marshalling as m
+from .. import richy, util
+from . import Path, Suffix
+from .__base__ import StorageHashable
 
 _LOGGER = logger.get_logger()
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_not_to_be_overridden=['name'],
-)
+    things_not_to_be_overridden=["name"], )
 class Folder(StorageHashable):
     """
     A folder for hashable instance like Dataset or Model.
@@ -122,12 +119,10 @@ class Folder(StorageHashable):
         # deletion
         if _state_manager_files_available:
             if not _folder_present:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The state is available but respective folder is "
-                        f"absent."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"The state is available but respective folder is "
+                    f"absent."
+                ])
 
         # ----------------------------------------------------------------03
         # time to return
@@ -173,7 +168,9 @@ class Folder(StorageHashable):
             response = "y"
         else:
             # todo: need to implement the ask dialog inside richy_panel
-            raise e.code.NotYetImplemented(msgs=["todo: need to implement the ask dialog inside richy_panel"])
+            raise e.code.NotYetImplemented(msgs=[
+                "todo: need to implement the ask dialog inside richy_panel"
+            ])
             # response = richy.r_prompt.Confirm.ask(
             #     f"Do you want to delete files for Folder `{self.path}`?",
             #     default=True,
@@ -189,14 +186,12 @@ class Folder(StorageHashable):
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it
         if not self.path.is_dir_empty():
-            raise e.code.CodingError(
-                msgs=[
-                    f"The folder should be empty by now ...",
-                    f"Check path {self.path}",
-                    f"May be you have non StorageHashable files ... note that even "
-                    f"with force=True we cannot delete this"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"The folder should be empty by now ...",
+                f"Check path {self.path}",
+                f"May be you have non StorageHashable files ... note that even "
+                f"with force=True we cannot delete this",
+            ])
 
     def warn_about_garbage(self):
         """
@@ -215,7 +210,8 @@ class Folder(StorageHashable):
         ...
 
     def walk(
-        self, only_names: bool = True
+            self,
+            only_names: bool = True
     ) -> t.Iterable[t.Union[str, StorageHashable]]:
         """
         When only_names = True things will be fast
@@ -253,7 +249,8 @@ class Folder(StorageHashable):
                 _cls = m.YamlRepr.get_class(f)
                 # noinspection PyTypeChecker
                 _hashable = _cls.from_yaml(
-                    f, parent_folder=self,
+                    f,
+                    parent_folder=self,
                 )  # type: StorageHashable
                 # yield
                 yield _hashable

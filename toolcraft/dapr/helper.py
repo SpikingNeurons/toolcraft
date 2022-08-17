@@ -1,13 +1,13 @@
 """
 module to hold helper classes to be used by our `toolcraft.dapr` module
 """
-import os
 import dataclasses
+import os
 import typing as t
 
-from .. import marshalling as m
 from .. import error as e
 from .. import logger
+from .. import marshalling as m
 from . import invoke
 from .__base__ import DaprMode
 
@@ -19,6 +19,7 @@ class Server(m.HashableClass):
     """
     Use this class to query or retrieve any stats from server ...
     """
+
     @property
     def group_by(self) -> t.List[str]:
         return ["server"]
@@ -30,11 +31,11 @@ class Server(m.HashableClass):
             return f"Log file `{_log_file.as_posix()}` not yet created ..."
         try:
             _file_size = os.stat(_log_file).st_size
-            with _log_file.open(mode='rb') as _f:
+            with _log_file.open(mode="rb") as _f:
                 # for fast read we seek to read only last chunk of data
                 if _file_size > num_bytes:
                     _f.seek(-num_bytes, os.SEEK_END)
                 return _f.read().decode()
         except Exception as _ex:
-            return f"Some error occurred while reading \n" \
-                   f"log file {_log_file.as_posix()}: \n\n {_ex}"
+            return (f"Some error occurred while reading \n"
+                    f"log file {_log_file.as_posix()}: \n\n {_ex}")

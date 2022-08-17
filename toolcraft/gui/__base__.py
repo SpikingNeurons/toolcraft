@@ -4,8 +4,10 @@ The rule for now is to
 + have dataclass fields be specific to instance i.e. data etc.
 """
 import abc
-import dataclasses
 import asyncio
+import dataclasses
+import enum
+import functools
 import inspect
 import itertools
 import subprocess
@@ -14,25 +16,22 @@ import time
 import traceback
 import types
 import typing as t
-import functools
-import enum
-import dearpygui.dearpygui as dpg
+from concurrent.futures import Future, ProcessPoolExecutor, ThreadPoolExecutor
+
 # noinspection PyUnresolvedReferences,PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
+import dearpygui.dearpygui as dpg
 import numpy as np
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, Future
 
 from .. import error as e
 from .. import logger
-from .. import util
 from .. import marshalling as m
-from .. import settings
+from .. import settings, util
 from . import asset
 
 # noinspection PyUnreachableCode
 if False:
-    from . import EnPlatform
-    from . import BlockingTask
+    from . import BlockingTask, EnPlatform
 
 _LOGGER = logger.get_logger()
 COLOR_TYPE = t.Tuple[int, int, int, int]
@@ -42,11 +41,9 @@ PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 # container widget stack ... to add to parent automatically
 _CONTAINER_WIDGET_STACK: t.List["ContainerWidget"] = []
 
-
 # noinspection PyUnresolvedReferences,PyUnreachableCode
 if False:
-    from . import window
-    from . import plot
+    from . import plot, window
 
 
 class Enum(m.FrozenEnum, enum.Enum):
@@ -72,9 +69,10 @@ class _WidgetDpgInternal(m.Internal):
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['dpg_state', 'dpg_config', ]
-)
+@m.RuleChecker(things_not_to_be_cached=[
+    "dpg_state",
+    "dpg_config",
+])
 class _WidgetDpg(m.YamlRepr, abc.ABC):
     """
     This class is just to keep all dpg related things in one place ...
@@ -104,67 +102,67 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
 
     @property
     def is_hovered(self) -> bool:
-        return self.dpg_state['hovered']
+        return self.dpg_state["hovered"]
 
     @property
     def is_active(self) -> bool:
-        return self.dpg_state['active']
+        return self.dpg_state["active"]
 
     @property
     def is_focused(self) -> bool:
-        return self.dpg_state['focused']
+        return self.dpg_state["focused"]
 
     @property
     def is_clicked(self) -> bool:
-        return self.dpg_state['clicked']
+        return self.dpg_state["clicked"]
 
     @property
     def is_left_clicked(self) -> bool:
-        return self.dpg_state['left_clicked']
+        return self.dpg_state["left_clicked"]
 
     @property
     def is_right_clicked(self) -> bool:
-        return self.dpg_state['right_clicked']
+        return self.dpg_state["right_clicked"]
 
     @property
     def is_middle_clicked(self) -> bool:
-        return self.dpg_state['middle_clicked']
+        return self.dpg_state["middle_clicked"]
 
     @property
     def is_visible(self) -> bool:
-        return self.dpg_state['visible']
+        return self.dpg_state["visible"]
 
     @property
     def is_edited(self) -> bool:
-        return self.dpg_state['edited']
+        return self.dpg_state["edited"]
 
     @property
     def is_activated(self) -> bool:
-        return self.dpg_state['activated']
+        return self.dpg_state["activated"]
 
     @property
     def is_deactivated(self) -> bool:
-        return self.dpg_state['deactivated']
+        return self.dpg_state["deactivated"]
 
     @property
     def is_deactivated_after_edit(self) -> bool:
-        return self.dpg_state['deactivated_after_edit']
+        return self.dpg_state["deactivated_after_edit"]
 
     @property
     def is_toggled_open(self) -> bool:
-        return self.dpg_state['toggled_open']
+        return self.dpg_state["toggled_open"]
 
     @property
     def is_ok(self) -> bool:
-        return self.dpg_state['ok']
+        return self.dpg_state["ok"]
 
     @property
     def is_shown(self) -> bool:
-        return self.dpg_config['show']
+        return self.dpg_config["show"]
 
     @property
     def is_enabled(self) -> bool:
-        return self.dpg_config['enabled']
+        return self.dpg_config["enabled"]
 
     # @property
     # def pos(self) -> t.Tuple[int, int]:
@@ -172,19 +170,19 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
 
     @property
     def available_content_region(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['content_region_avail'])
+        return tuple(self.dpg_state["content_region_avail"])
 
     @property
     def rect_size(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['rect_size'])
+        return tuple(self.dpg_state["rect_size"])
 
     @property
     def rect_min(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['rect_min'])
+        return tuple(self.dpg_state["rect_min"])
 
     @property
     def rect_max(self) -> t.Tuple[int, int]:
-        return tuple(self.dpg_state['rect_max'])
+        return tuple(self.dpg_state["rect_max"])
 
     def __post_init__(self):
         self.init_validate()
@@ -224,49 +222,42 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
             # check if Widget and only allow if Form
             if isinstance(v, Widget):
                 if not isinstance(self, Form):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Check field {self.__class__}.{f_name}",
-                            f"You cannot have instance of class {v.__class__} as "
-                            f"dataclass fields of {self.__class__}.",
-                            f"This is only allowed for {Form} where we only allow "
-                            f"{Widget}"
-                        ]
-                    )
+                    raise e.code.CodingError(msgs=[
+                        f"Check field {self.__class__}.{f_name}",
+                        f"You cannot have instance of class {v.__class__} as "
+                        f"dataclass fields of {self.__class__}.",
+                        f"This is only allowed for {Form} where we only allow "
+                        f"{Widget}",
+                    ])
 
     def init(self):
-        raise e.code.CodingError(
-            msgs=["will be anyways overridden by Widget class so this can never be called ..."]
-        )
+        raise e.code.CodingError(msgs=[
+            "will be anyways overridden by Widget class so this can never be called ..."
+        ])
 
     def build_pre_runner(self):
 
         # ---------------------------------------------------- 01
         # check if already built
         if self.is_built:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is already built and registered with:",
-                    {
-                        'parent': self.internal.parent.__class__,
-                    },
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Widget {self.__class__} is already built and registered with:",
+                {
+                    "parent": self.internal.parent.__class__,
+                },
+            ])
 
     @abc.abstractmethod
     def build(self) -> t.Union[int, str]:
         ...
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect build to return int which happens to be dpg_id"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"We expect build to return int which happens to be dpg_id"
+            ])
 
         # test if remaining internals are set
         self.internal.test_if_others_set()
@@ -424,16 +415,17 @@ class WidgetInternal(_WidgetDpgInternal):
     tag: str = None
 
     def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["tag", "parent", ]
+        return super().vars_that_can_be_overwritten() + [
+            "tag",
+            "parent",
+        ]
 
     def test_if_others_set(self):
         if not self.has("parent"):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is not a children to any parent",
-                    f"Please use some container widget and add this Widget",
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Widget {self.__class__} is not a children to any parent",
+                f"Please use some container widget and add this Widget",
+            ])
 
 
 @dataclasses.dataclass
@@ -465,11 +457,9 @@ class BlockingTask:
     def __post_init__(self):
         # validation
         if inspect.iscoroutinefunction(self.fn):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The function {self.fn} should not be async i.e. awaitable ..."
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"The function {self.fn} should not be async i.e. awaitable ..."
+            ])
 
         # set some vars
         self._future = None
@@ -483,9 +473,11 @@ class BlockingTask:
                 raise e.code.CodingError(msgs=["_future must be None"])
 
             if self.concurrent:
-                _future = Engine.thread_pool_executor.submit(self.fn, **self.fn_kwargs)
+                _future = Engine.thread_pool_executor.submit(
+                    self.fn, **self.fn_kwargs)
             else:
-                _future = Engine.process_pool_executor.submit(self.fn, **self.fn_kwargs)
+                _future = Engine.process_pool_executor.submit(
+                    self.fn, **self.fn_kwargs)
 
             self._future = _future
 
@@ -495,19 +487,17 @@ class BlockingTask:
         except Exception as _e:
             _exc_type, _exc_obj, _exc_tb = sys.exc_info()
             traceback.print_exception(_exc_type, _exc_obj, _exc_tb)
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    f"The blocking async task (concurrent={self.concurrent}) has failed",
-                    {
-                        "module": self.__module__,
-                        "class": self.__class__,
-                        "_exc_type": str(_exc_type),
-                        "_exc_obj": str(_exc_obj),
-                        "_exc_tb": str(_exc_tb),
-                    },
-                    _e
-                ]
-            )
+            raise e.code.ShouldNeverHappen(msgs=[
+                f"The blocking async task (concurrent={self.concurrent}) has failed",
+                {
+                    "module": self.__module__,
+                    "class": self.__class__,
+                    "_exc_type": str(_exc_type),
+                    "_exc_obj": str(_exc_obj),
+                    "_exc_tb": str(_exc_tb),
+                },
+                _e,
+            ])
 
     def add_to_task_queue(self):
         Engine.task_queue.put_nowait(self)
@@ -515,7 +505,6 @@ class BlockingTask:
 
 @dataclasses.dataclass
 class AwaitableTask(abc.ABC):
-
     """
     Note that AwaitableTask tasks need you to await ... so keep fast running code between two awaits
     Note AwaitableTask and BlockingTask with concurrent=True is same .... with only difference that you need not
@@ -560,11 +549,9 @@ class AwaitableTask(abc.ABC):
     def __post_init__(self):
         # validation
         if not inspect.iscoroutinefunction(self.fn):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The function {self.fn} needs to be async i.e. awaitable ..."
-                ]
-            )
+            raise e.validation.NotAllowed(msgs=[
+                f"The function {self.fn} needs to be async i.e. awaitable ..."
+            ])
 
         # set some vars
         self._is_completed = False
@@ -572,24 +559,18 @@ class AwaitableTask(abc.ABC):
     async def _run_concurrently(self):
         try:
             if self._is_completed:
-                raise e.code.CodingError(
-                    msgs=["_is_completed must be false"]
-                )
+                raise e.code.CodingError(msgs=["_is_completed must be false"])
             _ret = await self.fn(**self.fn_kwargs)
             if self._is_completed:
-                raise e.code.CodingError(
-                    msgs=[
-                        "_is_completed must be false",
-                        f"looks like {self.fn} has set it ..."
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    "_is_completed must be false",
+                    f"looks like {self.fn} has set it ...",
+                ])
             if _ret is not None:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The fn {self.fn} must return None",
-                        "Please do not return anything"
-                    ]
-                )
+                raise e.code.CodingError(msgs=[
+                    f"The fn {self.fn} must return None",
+                    "Please do not return anything",
+                ])
             self._is_completed = True
         except SystemError as _e:
             # todo: when widgets are deleted the fn sill raise SystemError as calls to dpg_internal will fail
@@ -603,19 +584,17 @@ class AwaitableTask(abc.ABC):
         except Exception as _e:
             _exc_type, _exc_obj, _exc_tb = sys.exc_info()
             traceback.print_exception(_exc_type, _exc_obj, _exc_tb)
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    "The awaitable async task has failed",
-                    {
-                        "module": self.__module__,
-                        "class": self.__class__,
-                        "_exc_type": str(_exc_type),
-                        "_exc_obj": str(_exc_obj),
-                        "_exc_tb": str(_exc_tb),
-                    },
-                    _e
-                ]
-            )
+            raise e.code.ShouldNeverHappen(msgs=[
+                "The awaitable async task has failed",
+                {
+                    "module": self.__module__,
+                    "class": self.__class__,
+                    "_exc_type": str(_exc_type),
+                    "_exc_obj": str(_exc_obj),
+                    "_exc_tb": str(_exc_tb),
+                },
+                _e,
+            ])
 
     def add_to_task_queue(self):
         Engine.task_queue.put_nowait(self)
@@ -646,6 +625,7 @@ class Engine:
       + print - Logs message to the Unity Console (identical to Debug.Log).
       By figuring out which method is overridden we can decide to call it ...
     """
+
     # --------------------------------- 01
     # to refer widgets anywhere
     tags: t.Dict[str, "Widget"] = {}
@@ -731,8 +711,7 @@ class Engine:
 
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.lifecycle_loop}", _e]
-            )
+                msgs=[f"Exception in {Engine.lifecycle_loop}", _e])
 
     @classmethod
     async def lifecycle_physics_loop(cls):
@@ -753,8 +732,7 @@ class Engine:
                     _.fixed_update()
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.lifecycle_physics_loop}", _e]
-            )
+                msgs=[f"Exception in {Engine.lifecycle_physics_loop}", _e])
 
     @classmethod
     async def task_runner_loop(cls):
@@ -766,14 +744,15 @@ class Engine:
         """
         try:
             while True:
-                _awaitable_task: t.Union[AwaitableTask, BlockingTask] = await Engine.task_queue.get()
+                _awaitable_task: t.Union[
+                    AwaitableTask,
+                    BlockingTask] = await Engine.task_queue.get()
                 # noinspection PyProtectedMember
                 asyncio.create_task(_awaitable_task._run_concurrently())
                 Engine.task_queue.task_done()
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.task_runner_loop}", _e]
-            )
+                msgs=[f"Exception in {Engine.task_runner_loop}", _e])
 
     @classmethod
     async def dpg_loop(cls):
@@ -793,8 +772,7 @@ class Engine:
                     await asyncio.sleep(0)
         except Exception as _e:
             raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.dpg_loop}", _e]
-            )
+                msgs=[f"Exception in {Engine.dpg_loop}", _e])
 
     @classmethod
     async def main(cls):
@@ -854,11 +832,7 @@ class Engine:
         # -------------------------------------------------- 01
         # make sure if was already called
         if dash.internal.has("is_run_called"):
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"You can run only once ..."
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[f"You can run only once ..."])
         # -------------------------------------------------- 02
         # setup dpg
         _pyc_debug = settings.PYC_DEBUGGING
@@ -884,7 +858,10 @@ class Engine:
 
         # -------------------------------------------------- 05
         # call gui main code in async
-        asyncio.run(cls.main(), debug=_pyc_debug, )
+        asyncio.run(
+            cls.main(),
+            debug=_pyc_debug,
+        )
 
         # -------------------------------------------------- 06
         # destroy
@@ -896,30 +873,23 @@ class Engine:
             return cls.tags[tag]
         else:
             raise e.validation.NotAllowed(
-                msgs=[
-                    f"We cannot find widget for tag {tag!r}."
-                ]
-            )
+                msgs=[f"We cannot find widget for tag {tag!r}."])
 
     @classmethod
     def tag_widget(cls, tag: str, widget: "Widget"):
         # if tag is already used up
         if tag in cls.tags.keys():
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"A widget with tag `{tag}` already exists. "
-                    f"Please select some unique name."
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"A widget with tag `{tag}` already exists. "
+                f"Please select some unique name."
+            ])
 
         # if already tagged raise error
         if widget.is_tagged:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"The widget is already tagged with tag {widget.tag} "
-                    f"so we cannot assign new tag {tag} ..."
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                f"The widget is already tagged with tag {widget.tag} "
+                f"so we cannot assign new tag {tag} ..."
+            ])
 
         # save reference inside widget
         widget.internal.tag = tag
@@ -928,7 +898,9 @@ class Engine:
         cls.tags[tag] = widget
 
     @classmethod
-    def untag_widget(cls, tag_or_widget: t.Union[str, "Widget"], not_exists_ok: bool = False):
+    def untag_widget(cls,
+                     tag_or_widget: t.Union[str, "Widget"],
+                     not_exists_ok: bool = False):
         # get tag
         _tag = tag_or_widget
         if isinstance(tag_or_widget, Widget):
@@ -939,12 +911,10 @@ class Engine:
             if not_exists_ok:
                 return
             else:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        "There is no widget tagged with the tag name "
-                        f"`{_tag}` hence there is nothing to remove"
-                    ]
-                )
+                raise e.code.NotAllowed(msgs=[
+                    "There is no widget tagged with the tag name "
+                    f"`{_tag}` hence there is nothing to remove"
+                ])
 
         # get tag
         _widget = cls.tags[_tag]
@@ -955,9 +925,7 @@ class Engine:
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['is_tagged', 'get_tag']
-)
+@m.RuleChecker(things_not_to_be_cached=["is_tagged", "get_tag"])
 class Widget(_WidgetDpg, abc.ABC):
     """
     todo: add async update where widget can be updated via long running python code
@@ -1024,10 +992,10 @@ class Widget(_WidgetDpg, abc.ABC):
 
     # noinspection PyMethodOverriding
     def __call__(self):
-        raise e.code.NotAllowed(
-            msgs=[f"__call__ is blocked for class {self.__class__} ... "
-                  f"this is only allowed for {ContainerWidget}"]
-        )
+        raise e.code.NotAllowed(msgs=[
+            f"__call__ is blocked for class {self.__class__} ... "
+            f"this is only allowed for {ContainerWidget}"
+        ])
 
     def init(self):
         global _CONTAINER_WIDGET_STACK
@@ -1048,24 +1016,24 @@ class Widget(_WidgetDpg, abc.ABC):
         return f"gui.widget.{cls.__name__}"
 
     def on_enter(self):
-        raise e.code.NotAllowed(
-            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
-                  f"you cannot use with context"]
-        )
+        raise e.code.NotAllowed(msgs=[
+            f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
+            f"you cannot use with context"
+        ])
 
         # we do not want behaviour of parent as __call__ is overridden
         # super().on_enter()
 
     def on_exit(self, exc_type, exc_val, exc_tb):
-        raise e.code.NotAllowed(
-            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
-                  f"you cannot use with context"]
-        )
+        raise e.code.NotAllowed(msgs=[
+            f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
+            f"you cannot use with context"
+        ])
 
         # we do not want behaviour of parent as __call__ is overridden
         # super().on_exit()
 
-    def get_user_data(self) -> 'USER_DATA':
+    def get_user_data(self) -> "USER_DATA":
         """
         Almost every subclassed Widget will have this field but we cannot have it here
         as dataclass mechanism does not allow it. So we offer this utility method
@@ -1077,19 +1045,17 @@ class Widget(_WidgetDpg, abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting class {self.__class__} to have field `user_data`",
-                    "This is intended to be used by callback mechanism"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Was expecting class {self.__class__} to have field `user_data`",
+                "This is intended to be used by callback mechanism",
+            ])
 
     def get_tag(self) -> str:
         if self.is_tagged:
             return self.internal.tag
-        raise e.validation.NotAllowed(
-            msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
-        )
+        raise e.validation.NotAllowed(msgs=[
+            "This widget was never tagged ... so we cannot retrieve the tag"
+        ])
 
     def tag_it(self, tag: str):
         Engine.tag_widget(tag=tag, widget=self)
@@ -1142,12 +1108,9 @@ class Widget(_WidgetDpg, abc.ABC):
         ...
 
 
-USER_DATA = t.Dict[
-    str, t.Union[
-        int, float, str, slice, tuple, list, dict, None,
-        m.FrozenEnum, m.HashableClass, Widget,
-    ]
-]
+USER_DATA = t.Dict[str,
+                   t.Union[int, float, str, slice, tuple, list, dict, None,
+                           m.FrozenEnum, m.HashableClass, Widget, ], ]
 
 
 @dataclasses.dataclass
@@ -1157,7 +1120,9 @@ class MovableWidget(Widget, abc.ABC):
     def yaml_tag(cls) -> str:
         return f"gui.movable_widget.{cls.__name__}"
 
-    def move(self, parent: "ContainerWidget" = None, before: "MovableWidget" = None):
+    def move(self,
+             parent: "ContainerWidget" = None,
+             before: "MovableWidget" = None):
         """
         Move the item in `parent` or put it before `before`
         """
@@ -1165,15 +1130,13 @@ class MovableWidget(Widget, abc.ABC):
         # check
         # ---------------------------------------------- 01.01
         # either parent or before should be supplied
-        if not((parent is None) ^ (before is None)):
-            raise e.code.CodingError(
-                msgs=[
-                    "Either supply parent or before",
-                    "No need to provide both as parent can be extracted from before",
-                    "While if you supply parent that means you want to add to "
-                    "bottom of its children",
-                ]
-            )
+        if not ((parent is None) ^ (before is None)):
+            raise e.code.CodingError(msgs=[
+                "Either supply parent or before",
+                "No need to provide both as parent can be extracted from before",
+                "While if you supply parent that means you want to add to "
+                "bottom of its children",
+            ])
 
         # ---------------------------------------------- 02
         # if before provided extract parent from it
@@ -1190,7 +1153,8 @@ class MovableWidget(Widget, abc.ABC):
         if before is None:
             parent.children[id(self)] = self
         else:
-            parent.children.insert_before(key=id(before), key_values={id(self): self})
+            parent.children.insert_before(key=id(before),
+                                          key_values={id(self): self})
 
         # ---------------------------------------------- 05
         # sync the move
@@ -1198,8 +1162,10 @@ class MovableWidget(Widget, abc.ABC):
         if self.is_built:
             # noinspection PyUnresolvedReferences
             internal_dpg.move_item(
-                self.dpg_id, parent=parent.dpg_id,
-                before=0 if before is None else before.dpg_id)
+                self.dpg_id,
+                parent=parent.dpg_id,
+                before=0 if before is None else before.dpg_id,
+            )
 
     def before(self) -> t.Optional["MovableWidget"]:
         _ret = self.parent.children.before(key=id(self))
@@ -1225,7 +1191,8 @@ class MovableWidget(Widget, abc.ABC):
             return False
         else:
             del self.parent.children[id(self)]
-            self.parent.children.insert_before(key=id(_before), key_values={id(self): self})
+            self.parent.children.insert_before(key=id(_before),
+                                               key_values={id(self): self})
             if self.is_built:
                 internal_dpg.move_item_up(self.dpg_id)
             return True
@@ -1240,7 +1207,8 @@ class MovableWidget(Widget, abc.ABC):
             return False
         else:
             del self.parent.children[id(self)]
-            self.parent.children.insert_after(key=id(_after), key_values={id(self): self})
+            self.parent.children.insert_after(key=id(_after),
+                                              key_values={id(self): self})
             if self.is_built:
                 internal_dpg.move_item_down(self.dpg_id)
             return True
@@ -1248,8 +1216,7 @@ class MovableWidget(Widget, abc.ABC):
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_to_be_cached=['children'],
-)
+    things_to_be_cached=["children"], )
 class ContainerWidget(Widget, abc.ABC):
     """
     Widget that can hold children
@@ -1262,7 +1229,8 @@ class ContainerWidget(Widget, abc.ABC):
     @util.CacheResult
     def children(self) -> util.SmartDict:
         return util.SmartDict(
-            allow_nested_dict_or_list=False, allowed_types=tuple(self.restrict_children_type)
+            allow_nested_dict_or_list=False,
+            allowed_types=tuple(self.restrict_children_type),
         )
 
     @property
@@ -1281,10 +1249,7 @@ class ContainerWidget(Widget, abc.ABC):
                 widget.move(before=before)
             else:
                 raise e.code.CodingError(
-                    msgs=[
-                        "Do not supply `before` as `widget` is not movable"
-                    ]
-                )
+                    msgs=["Do not supply `before` as `widget` is not movable"])
 
     def _add_child(self, _widget: Widget):
 
@@ -1292,12 +1257,10 @@ class ContainerWidget(Widget, abc.ABC):
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
         if _widget.is_built:
-            raise e.code.NotAllowed(
-                msgs=[
-                    "The widget you are trying to add is already built",
-                    "May be you want to `move()` widget instead.",
-                ]
-            )
+            raise e.code.NotAllowed(msgs=[
+                "The widget you are trying to add is already built",
+                "May be you want to `move()` widget instead.",
+            ])
 
         # -------------------------------------------------- 02
         # set internals
@@ -1334,20 +1297,18 @@ class ContainerWidget(Widget, abc.ABC):
 
     def clone(self) -> "ContainerWidget":
         if bool(self.children):
-            raise e.code.CodingError(
-                msgs=[
-                    "Cannot clone as you have added some widgets as children for "
-                    f"the container widget {self.__class__}"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                "Cannot clone as you have added some widgets as children for "
+                f"the container widget {self.__class__}"
+            ])
         # noinspection PyTypeChecker
         return super().clone()
 
-    def build_post_runner(
-        self, *, hooked_method_return_value: t.Union[int, str]
-    ):
+    def build_post_runner(self, *, hooked_method_return_value: t.Union[int,
+                                                                       str]):
         # call super
-        super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
+        super().build_post_runner(
+            hooked_method_return_value=hooked_method_return_value)
 
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
@@ -1384,10 +1345,8 @@ class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_to_be_cached=['form_fields_container'],
-    things_not_to_be_overridden=['build']
-)
+@m.RuleChecker(things_to_be_cached=["form_fields_container"],
+               things_not_to_be_overridden=["build"])
 class Form(MovableWidget, abc.ABC):
     """
     Form is a special widget which creates a `form_fields_container` container and
@@ -1405,6 +1364,7 @@ class Form(MovableWidget, abc.ABC):
       allow fields of form to be dynamically deleted ... but that is not the case now
       So do only if needed
     """
+
     title: t.Optional[str]
     collapsing_header_open: bool
 
@@ -1423,6 +1383,7 @@ class Form(MovableWidget, abc.ABC):
         Override this property to achieve the same.
         """
         from .widget import Group
+
         return Group()
 
     @classmethod
@@ -1538,8 +1499,8 @@ class Form(MovableWidget, abc.ABC):
         if self.title is None:
             _c = self.form_fields_container
         else:
-            _c = CollapsingHeader(
-                label=self.title, default_open=self.collapsing_header_open)
+            _c = CollapsingHeader(label=self.title,
+                                  default_open=self.collapsing_header_open)
             _c(widget=self.form_fields_container)
 
         # set parent
@@ -1623,12 +1584,10 @@ class Registry(m.YamlRepr, abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting class {self.__class__} to have field `user_data`",
-                    "This is intended to be used by callback mechanism"
-                ]
-            )
+            raise e.code.CodingError(msgs=[
+                f"Was expecting class {self.__class__} to have field `user_data`",
+                "This is intended to be used by callback mechanism",
+            ])
 
     def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
@@ -1717,6 +1676,7 @@ class Dashboard(m.YamlRepr, abc.ABC):
       Also maybe add field save_state for Widget so that we know that only
       these widgets state needs to be saved
     """
+
     # todo: this title needs to set the main title of the entire UI ...
     #  i.e. it should replace "DearPyGui" ... right now has no effect
     title: str
@@ -1790,12 +1750,10 @@ class Dashboard(m.YamlRepr, abc.ABC):
             # if None then make sure that it is supplied ..
             # needed as we need to define values for each field
             if v is None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Please supply value for field `{f_name}` in class "
-                        f"{self.__class__}"
-                    ]
-                )
+                raise e.validation.NotAllowed(msgs=[
+                    f"Please supply value for field `{f_name}` in class "
+                    f"{self.__class__}"
+                ])
             # --------------------------------------------------- 02.03
             # if not Widget class continue
             # that means Widgets and Containers will be clones if default supplied
@@ -1984,6 +1942,7 @@ class Dashboard(m.YamlRepr, abc.ABC):
         >>> dpg.get_platform
         """
         from . import EnPlatform
+
         # noinspection PyArgumentList
         return EnPlatform(internal_dpg.get_platform(**kwargs))
 

@@ -1,19 +1,20 @@
 import dataclasses
-import os
 import enum
-import pathlib
-import typing as t
-import sys
-import socket
 import logging
+import os
+import pathlib
+import socket
+import sys
+import typing as t
+
 import dapr
 from dapr import clients
 from dapr.ext.grpc import App
 
-from .. import logger
 from .. import error as e
-from .. import util
+from .. import logger
 from .. import marshalling as m
+from .. import util
 
 # noinspection PyUnreachableCode
 if False:
@@ -38,16 +39,18 @@ class DaprMode(m.FrozenEnum, enum.Enum):
         try:
             return cls[dapr_mode]
         except KeyError:
-            raise e.code.CodingError(
-                msgs=[f"unknown dapr mode {dapr_mode}",
-                      {"allowed strs": [_.name for _ in cls]}]
-            )
+            raise e.code.CodingError(msgs=[
+                f"unknown dapr mode {dapr_mode}",
+                {
+                    "allowed strs": [_.name for _ in cls]
+                },
+            ])
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['app', 'server', 'log_file'],
-    things_not_to_be_cached=['client'],
+    things_to_be_cached=["app", "server", "log_file"],
+    things_not_to_be_cached=["client"],
 )
 class _Dapr(m.HashableClass):
     """
@@ -65,7 +68,7 @@ class _Dapr(m.HashableClass):
     APP_ID: str
     APP_MAX_CONCURRENCY: int = -1
     APP_PORT: int = 2008
-    APP_PROTOCOL: t.Literal['gRPC', 'HTTP'] = 'HTTP'
+    APP_PROTOCOL: t.Literal["gRPC", "HTTP"] = "HTTP"
     APP_SSL: bool = False
     # COMPONENTS_PATH: str = ...
     # CONFIG: str = ...
@@ -73,7 +76,8 @@ class _Dapr(m.HashableClass):
     DAPR_HTTP_MAX_REQUEST_SIZE: int = -1
     DAPR_HTTP_PORT: int = 2014
     ENABLE_PROFILING: bool = False
-    LOG_LEVEL: t.Literal['debug', 'info', 'warn', 'error', 'fatal', 'panic'] = 'info'
+    LOG_LEVEL: t.Literal["debug", "info", "warn", "error", "fatal",
+                         "panic"] = "info"
     METRICS_PORT: int = -1
     PLACEMENT_HOST_ADDRESS: str = "localhost"
     PROFILE_PORT: int = -1
@@ -103,8 +107,7 @@ class _Dapr(m.HashableClass):
     def client(self) -> "clients.DaprGrpcClient":
         if self.MODE is not DaprMode.client:
             raise e.code.NotAllowed(
-                msgs=[f"Use client property only for {DaprMode.client}"]
-            )
+                msgs=[f"Use client property only for {DaprMode.client}"])
         return clients.DaprGrpcClient(
             # f"{self.DAPR_RUNTIME_HOST}:{self.DAPR_GRPC_PORT}"
         )
@@ -118,10 +121,10 @@ class _Dapr(m.HashableClass):
     @util.CacheResult
     def server(self) -> "helper.Server":
         from . import helper
+
         if self.MODE is not DaprMode.client:
             raise e.code.NotAllowed(
-                msgs=[f"Use server property only for {DaprMode.client}"]
-            )
+                msgs=[f"Use server property only for {DaprMode.client}"])
         return helper.Server()
 
     def init(self):
@@ -147,7 +150,7 @@ class _Dapr(m.HashableClass):
         # make cmd args
         _dapr_args = []
         for f_name in self.dataclass_field_names:
-            if f_name in ['PY_SCRIPT', 'MODE', 'SERVER_IP']:
+            if f_name in ["PY_SCRIPT", "MODE", "SERVER_IP"]:
                 continue
             _new_f_name = f"--{f_name.replace('_', '-').lower()}"
             f_value = getattr(self, f_name)
@@ -161,27 +164,20 @@ class _Dapr(m.HashableClass):
 
         # launch on cmd
         if _dapr_mode is DaprMode.server:
-            os.system(
-                f"dapr run "
-                f"{' '.join(_dapr_args)} "
-                f"-- "
-                f"python {py_script.absolute().as_posix()} server"
-            )
+            os.system(f"dapr run "
+                      f"{' '.join(_dapr_args)} "
+                      f"-- "
+                      f"python {py_script.absolute().as_posix()} server")
         elif _dapr_mode is DaprMode.client:
-            os.system(
-                f"dapr run "
-                f"{' '.join(_dapr_args)} "
-                f"-- "
-                f"python {py_script.absolute().as_posix()} client"
-            )
+            os.system(f"dapr run "
+                      f"{' '.join(_dapr_args)} "
+                      f"-- "
+                      f"python {py_script.absolute().as_posix()} client")
         elif _dapr_mode is DaprMode.launch:
-            os.system(
-                f"python {py_script.absolute().as_posix()} launch"
-            )
+            os.system(f"python {py_script.absolute().as_posix()} launch")
         else:
             raise e.code.NotSupported(
-                msgs=[f"Unsupported dapr mode: {_dapr_mode}"]
-            )
+                msgs=[f"Unsupported dapr mode: {_dapr_mode}"])
 
     def sync_with_dapr_settings(self):
         # todo: this is not elegant but dapr python-sdk is still not mature ...
@@ -204,10 +200,7 @@ class _Dapr(m.HashableClass):
         # validation
         if len(sys.argv) != 2:
             raise e.validation.NotAllowed(
-                msgs=[
-                    "Pass one arg to handle dapr ...", sys.argv[1:]
-                ]
-            )
+                msgs=["Pass one arg to handle dapr ...", sys.argv[1:]])
 
         # --------------------------------------------------- 02
         # get some vars
@@ -223,7 +216,7 @@ class _Dapr(m.HashableClass):
             _server_ip = str(socket.gethostbyname(socket.gethostname()))
         elif _dapr_mode is DaprMode.client:
             try:
-                _server_ip = os.environ['NXDI']
+                _server_ip = os.environ["NXDI"]
                 if _server_ip == "localhost":
                     # todo: find why this happens and if it can be done more elegantly
                     #   Check why this does not resolve to 127.0.0.1
@@ -234,8 +227,7 @@ class _Dapr(m.HashableClass):
                     _server_ip = "127.0.0.1"
             except KeyError:
                 raise e.code.NotAllowed(
-                    msgs=[f"Environment variable NXDI is not set ..."]
-                )
+                    msgs=[f"Environment variable NXDI is not set ..."])
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
         # --------------------------------------------------- 02.05
@@ -300,7 +292,7 @@ class HashableRunner:
         _hcs = m.HashableClass.available_concrete_sub_classes()
         _LOGGER.info(
             msg=f"Below {len(_hcs)} hashable classes are available ",
-            msgs=[f"{_hc}" for _hc in _hcs]
+            msgs=[f"{_hc}" for _hc in _hcs],
         )
 
     @classmethod
@@ -309,9 +301,7 @@ class HashableRunner:
         Responsible to launch dapr server
         """
         cls._start()
-        _LOGGER.info(
-            "Dapr server started ...",
-            msgs=[DAPR.as_dict()])
+        _LOGGER.info("Dapr server started ...", msgs=[DAPR.as_dict()])
         DAPR.app.run(app_port=DAPR.APP_PORT)
 
     @classmethod
@@ -320,9 +310,7 @@ class HashableRunner:
         To be used on clients
         """
         cls._start()
-        _LOGGER.info(
-            "Running client ...",
-            msgs=[DAPR.as_dict()])
+        _LOGGER.info("Running client ...", msgs=[DAPR.as_dict()])
 
     @classmethod
     def launch(cls):
@@ -330,15 +318,15 @@ class HashableRunner:
         will launch jobs on server
         """
         cls._start()
-        _LOGGER.info(
-            "Launching jobs on server ...",
-            msgs=[DAPR.as_dict()])
+        _LOGGER.info("Launching jobs on server ...", msgs=[DAPR.as_dict()])
 
     @classmethod
     def make_dashboard(
-        cls, callable_name: str,
+        cls,
+        callable_name: str,
     ) -> "gui.dashboard.DaprClientDashboard":
         from .. import gui
+
         return gui.dashboard.DaprClientDashboard(
             title="Dapr Client Dashboard ...",
             subtitle=f"Will connect to: {DAPR.SERVER_IP}:{DAPR.APP_PORT}",

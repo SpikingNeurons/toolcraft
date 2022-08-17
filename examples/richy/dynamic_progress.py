@@ -1,5 +1,3 @@
-
-
 """
 https://github.com/Textualize/rich/blob/master/examples/dynamic_progress.py
 
@@ -12,8 +10,8 @@ import time
 
 from rich import box
 from rich.console import Group
-from rich.panel import Panel
 from rich.live import Live
+from rich.panel import Panel
 from rich.progress import (
     BarColumn,
     Progress,
@@ -67,15 +65,17 @@ app_steps_progress = Progress(
     TextColumn("({task.completed} of {task.total} steps done)"),
 )
 # overall progress bar
-overall_progress = Progress(
-    TimeElapsedColumn(), BarColumn(), TextColumn("{task.description}")
-)
+overall_progress = Progress(TimeElapsedColumn(), BarColumn(),
+                            TextColumn("{task.description}"))
 # group of progress bars;
 # some are always visible, others will disappear when progress is complete
-progress_group = Panel(Group(
-    Group(current_app_progress, step_progress, app_steps_progress),
-    Panel(overall_progress, box=box.HORIZONTALS),
-), box=box.ASCII)
+progress_group = Panel(
+    Group(
+        Group(current_app_progress, step_progress, app_steps_progress),
+        Panel(overall_progress, box=box.HORIZONTALS),
+    ),
+    box=box.ASCII,
+)
 
 # tuple specifies how long each step takes for that app
 step_actions = ("downloading", "configuring", "building", "installing")
@@ -95,27 +95,29 @@ with Live(progress_group):
 
     for idx, (name, step_times) in enumerate(apps):
         # update message on overall progress bar
-        top_descr = "[bold #AAAAAA](%d out of %d apps installed)" % (idx, len(apps))
+        top_descr = "[bold #AAAAAA](%d out of %d apps installed)" % (idx,
+                                                                     len(apps))
         overall_progress.update(overall_task_id, description=top_descr)
 
         # add progress bar for steps of this app, and run the steps
-        current_task_id = current_app_progress.add_task("Installing app %s" % name)
-        app_steps_task_id = app_steps_progress.add_task(
-            "", total=len(step_times), name=name
-        )
+        current_task_id = current_app_progress.add_task("Installing app %s" %
+                                                        name)
+        app_steps_task_id = app_steps_progress.add_task("",
+                                                        total=len(step_times),
+                                                        name=name)
         run_steps(name, step_times, app_steps_task_id)
 
         # stop and hide steps progress bar for this specific app
         app_steps_progress.update(app_steps_task_id, visible=False)
         current_app_progress.stop_task(current_task_id)
         current_app_progress.update(
-            current_task_id, description="[bold green]App %s installed!" % name
-        )
+            current_task_id,
+            description="[bold green]App %s installed!" % name)
 
         # increase overall progress now this task is done
         overall_progress.update(overall_task_id, advance=1)
 
     # final update for message on overall progress bar
     overall_progress.update(
-        overall_task_id, description="[bold green]%s apps installed, done!" % len(apps)
-    )
+        overall_task_id,
+        description="[bold green]%s apps installed, done!" % len(apps))
