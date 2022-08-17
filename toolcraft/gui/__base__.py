@@ -1304,7 +1304,7 @@ class ContainerWidget(Widget, abc.ABC):
         _widget.internal.parent = self
 
         # -------------------------------------------------- 03
-        # we can now store widget inside children list
+        # we can now store widget inside children dict
         # noinspection PyTypeChecker
         self.children[id(_widget)] = _widget
 

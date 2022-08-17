@@ -182,18 +182,9 @@ class YAxis(_auto.PlotYAxis):
     def restrict_children_type(self) -> t.List[t.Type[PlotSeries]]:
         return [PlotSeries]
 
-    def __getitem__(self, item: str) -> PlotSeries:
-        for _ in self.children.values():
-            if _.label == item:
-                return _
-        e.validation.ShouldBeOneOf(
-            value=item, values=[_.label for _ in self.children.values()],
-            msgs=["There is no plot_series with this label name"]
-        ).raise_if_failed()
-
     # noinspection PyMethodOverriding
     def __call__(self, widget: PlotSeries):
-        if isinstance(widget, PlotSeries):
+        if widget.label is not None and widget.label.find("#") == -1:
             if widget.label in [_.label for _ in self.children.values()]:
                 raise e.validation.NotAllowed(
                     msgs=[

@@ -547,8 +547,8 @@ def demo():
 
 
 def main():
-    basic_dashboard()
-    # demo()
+    # basic_dashboard()
+    demo()
 
 
 if __name__ == "__main__":

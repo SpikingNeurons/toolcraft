@@ -78,7 +78,7 @@ class ArtifactViewer:
             ArtifactViewer._fn_mapper[_] = getattr(cls, _)
 
     @staticmethod
-    def call(artifact: str, experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
+    def call(artifact: str, experiment: t.Optional["Experiment"], file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
 
         # if file does not exist
@@ -88,7 +88,10 @@ class ArtifactViewer:
             )
         # if directly supported then return
         elif artifact in ArtifactViewer._fn_mapper.keys():
-            return ArtifactViewer._fn_mapper[artifact](experiment=experiment, file_path=file_path)
+            if experiment is None:
+                return ArtifactViewer._fn_mapper[artifact](file_path=file_path)
+            else:
+                return ArtifactViewer._fn_mapper[artifact](experiment=experiment, file_path=file_path)
         # if artifact has dot then we need to call extension methods
         elif artifact.find(".") != -1:
             artifact_m = "dot_" + artifact.split(".")[1]
