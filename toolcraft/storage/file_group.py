@@ -1153,7 +1153,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         return False
 
     def get_tf_dataset(
-        self, batch_size: int, memmap: bool,
+        self, batch_size: int, num_batches: int, memmap: bool,
         expected_element_spec: t.Dict[str, "tf.TensorSpec"]
     ) -> "tf.data.Dataset":
         try:
@@ -1169,7 +1169,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 del _data[_]
 
             # make dataset
-            _ds = tf.data.Dataset.from_tensor_slices(_data).batch(batch_size)
+            _ds = tf.data.Dataset.from_tensor_slices(_data).batch(batch_size).take(num_batches)
 
             # validate element spec
             e.validation.ShouldBeEqual(

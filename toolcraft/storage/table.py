@@ -520,6 +520,10 @@ class Table(Folder):
         columns: t.List[str] = None,
         filter_expression: pds.Expression = None,
     ) -> t.Optional[pa.Table]:
+        # log
+        _rp = self.richy_panel
+        _rp.update(f"reading for {self.__class__}")
+
         # if nothing exists simply exit ... as there is no table to read on disk
         # noinspection PyTypeChecker
         if not self.path.exists():
@@ -557,6 +561,10 @@ class Table(Folder):
         return _table
 
     def write(self, value: pa.Table) -> bool:
+        # log
+        _rp = self.richy_panel
+        _rp.update(f"writing for {self.__class__}")
+
         # make sure if some partition folders exists ...
         # applicable when partition_cols present
         if bool(self.partition_cols):
@@ -592,6 +600,9 @@ class Table(Folder):
           makes it possible to delete the folder for pivot and overwrite it completely
           note that all appends will be wiped ...
         """
+        # log
+        _rp = self.richy_panel
+        _rp.update(f"appending for {self.__class__}")
 
         # if schema is None update it
         if self.config.schema is None:
@@ -643,6 +654,10 @@ class Table(Folder):
           that are not partition columns .... check if we can support it in
           future ... most likely this si not possible so reject this proposal
         """
+        # log
+        _rp = self.richy_panel
+        _rp.update(f"deleting_ for {self.__class__}")
+
         # ------------------------------------------------------01
         # if filters=None then delete everything
         # Note that this is with mode i.e. we are in delete_ not delete

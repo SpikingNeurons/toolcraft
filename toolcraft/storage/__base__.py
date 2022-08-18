@@ -29,8 +29,10 @@ _DOT_DOT = _DOT_DOT_TYPE.__args__[0]
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['config', 'info', 'path', 'uses_parent_folder'],
-    things_not_to_be_overridden=['path', 'uses_parent_folder']
+    things_to_be_cached=[
+        'config', 'info', 'path', 'uses_parent_folder', 'uses_file_system', ],
+    things_not_to_be_overridden=[
+        'path', 'uses_parent_folder', 'uses_file_system', ]
 )
 class StorageHashable(m.HashableClass, abc.ABC):
 
@@ -50,11 +52,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
     def info(self) -> "state.Info":
         from . import state
         return state.Info(hashable=self)
-
-    @property
-    @abc.abstractmethod
-    def file_system(self) -> str:
-        ...
 
     @property
     @util.CacheResult
@@ -87,13 +84,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def uses_parent_folder(self) -> bool:
-        """
-        Adds a parent_folder behavior i.e. this subclass of StorageHashable
-        can be managed by parent_folder or not
-        """
-        # Note we also do validation here ...
-        # that is either parent_folder or file_system should be provided
+    def uses_file_system(self) -> bool:
         _found_file_system = "file_system" in self.dataclass_field_names
         if not _found_file_system:
             _found_file_system = "file_system" in dir(self)
@@ -105,6 +96,11 @@ class StorageHashable(m.HashableClass, abc.ABC):
                             f"{self.__class__}"
                         ]
                     )
+        return _found_file_system
+
+    @property
+    @util.CacheResult
+    def uses_parent_folder(self) -> bool:
         _found_parent_folder = "parent_folder" in self.dataclass_field_names
         if not _found_parent_folder:
             _found_parent_folder = "parent_folder" in dir(self)
@@ -116,19 +112,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
                             f"{self.__class__}"
                         ]
                     )
-        if not(_found_parent_folder ^ _found_file_system):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Either supply dataclass-field/property "
-                    f"`file_system` or `parent_folder` "
-                    f"for class {self.__class__} ...",
-                    "We will raise error if both or none is specified ...",
-                    dict(_found_file_system=_found_file_system,
-                         _found_parent_folder=_found_parent_folder)
-                ]
-            )
-
-        # return
         return _found_parent_folder
 
     @property
@@ -172,9 +155,21 @@ class StorageHashable(m.HashableClass, abc.ABC):
         from .folder import Folder
 
         # ----------------------------------------------------------- 01
-        # test for field file_system or parent_folder
+        # test for field/property file_system or parent_folder
         # calling property does the check
         _uses_parent_folder = self.uses_parent_folder
+        _uses_file_system = self.uses_file_system
+        if not(_uses_parent_folder ^ _uses_file_system):
+            raise e.code.CodingError(
+                msgs=[
+                    f"Either supply dataclass-field/property "
+                    f"`file_system` or `parent_folder` "
+                    f"for class {self.__class__} ...",
+                    "We will raise error if both or none is specified ...",
+                    dict(_uses_file_system=_uses_file_system,
+                         _uses_parent_folder=_uses_parent_folder)
+                ]
+            )
 
         # ----------------------------------------------------------- 02
         # if _uses_parent_folder test instance as we do not have control over
