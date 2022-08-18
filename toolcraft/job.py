@@ -1198,7 +1198,7 @@ class JobGroup(abc.ABC):
     def flow_id(self, value: str):
         if self._flow_id is None:
             self._flow_id = value
-            _len = len(self.jobs)
+            _len = len(str(len(self.jobs)))
             for _i, _j in enumerate(self.jobs):
                 if isinstance(_j, Job):
                     _j.flow_id = f"{value}.j{_i:0{_len}d}"
@@ -1367,7 +1367,7 @@ class Flow:
         self.other_jobs = other_jobs
 
         # set flow ids
-        _len = len(self.stages)
+        _len = len(str(len(self.stages)))
         for _stage_id, _stage in enumerate(self.stages):
             _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
         for _j in other_jobs:
