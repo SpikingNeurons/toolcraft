@@ -121,6 +121,9 @@ def del_tag(c, tag=None):
     # get repo instance
     _repo = git.Repo()
 
+    # print
+    print(f"Deleting tag {tag}")
+
     # delete tag locally
     # _run(c, f"git tag -d {tag}")
     git.Tag.delete(_repo, tag)
