@@ -112,6 +112,7 @@ def doc_preview(c):
 def del_tag(c, tag=None):
     """
     Delete the specified tag locally as well as remotely.
+    >> poetry run invoke del-tag
     """
     # resolve tag
     if tag is None:
