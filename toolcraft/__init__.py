@@ -41,7 +41,7 @@ todo: asyncio (https://docs.python.org/3/library/asyncio-eventloop.html#asyncio.
 """
 __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
-__version__ = "0.1.4a9"
+__version__ = "0.1.4a10"
 
 from . import settings
 from . import logger
