@@ -31,7 +31,7 @@ jobs:
     # The type of runner that the job will run on
     strategy:
       matrix:
-        python-versions: ['3.10-alpha']
+        python-versions: [3.10.6]
         os: [ ubuntu-22.04, windows-latest ]
 
     runs-on: ${{ matrix.os }}
@@ -121,7 +121,7 @@ jobs:
 
     strategy:
       matrix:
-        python-versions: ['3.10-alpha']
+        python-versions: [3.10.6]
         os: [ ubuntu-22.04, windows-latest ]
 
     runs-on: ${{ matrix.os }}
