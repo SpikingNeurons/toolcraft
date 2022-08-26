@@ -43,17 +43,19 @@ __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a7"
 
-from . import settings
-from . import logger
-from . import error
-from . import util
-from . import marshalling
-from . import parallel
-from . import storage
-from . import ml
-from . import job
-from . import richy
-from . import texipy
+from . import (
+    error,
+    job,
+    logger,
+    marshalling,
+    ml,
+    parallel,
+    richy,
+    settings,
+    storage,
+    texipy,
+    util,
+)
 
 if settings.DPG_WORKS:
     # as some rules use dpg
