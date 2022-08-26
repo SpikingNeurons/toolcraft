@@ -1,6 +1,6 @@
 
 
-![ToolCraft](website/static/img/toolcraft.png)
+![ToolCraft](docs/static/toolcraft.png)
 
 ---
 
