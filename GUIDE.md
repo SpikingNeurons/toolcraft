@@ -15,11 +15,11 @@ rm get-poetry.py
 
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py > install-poetry.py
 python install-poetry.py --uninstall
-python install-poetry.py --version 1.2.0a2
+python install-poetry.py --version 1.2.0rc1
 rm install-poetry.py
 poetry --version
 
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python - --version 1.2.0a2
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python - --version 1.2.0rc1
 ```
 
 Open new terminal and check version
