@@ -31,7 +31,7 @@ jobs:
     # The type of runner that the job will run on
     strategy:
       matrix:
-        python-versions: [3.10]
+        python-versions: ['3.10-alpha']
         os: [ ubuntu-22.04, windows-latest ]
 
     runs-on: ${{ matrix.os }}
@@ -106,7 +106,7 @@ jobs:
   release-docs:
     if: startsWith( github.ref, 'refs/tags/v')
     needs: [release-build]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Generate docs
         run: echo Still TODO
@@ -121,8 +121,8 @@ jobs:
 
     strategy:
       matrix:
-        python-versions: [3.8, 3.9]
-        os: [ ubuntu-18.04, windows-latest ]
+        python-versions: ['3.10-alpha']
+        os: [ ubuntu-22.04, windows-latest ]
 
     runs-on: ${{ matrix.os }}
 
