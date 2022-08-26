@@ -14,6 +14,7 @@ generalize them across all tools
 import os
 import pathlib
 import platform
+import subprocess
 import typing as t
 import webbrowser
 from pathlib import Path
@@ -288,6 +289,7 @@ def bump(
             >> invoke bump --dry-run --beta
     """
     # ------------------------------------------------- 01
+    # ------------------------------------------------- 01.01
     # Format is:
     #   >> {major}.{minor}.{patch}{release}{num}\
     #
@@ -296,6 +298,13 @@ def bump(
     #     --current-version 0.1.2 --new-version 0.1.2a2 xyz
     #
     # invoke bump --dry-run --patch --bump-into stable
+    # ------------------------------------------------- 01.02
+    # check if some things in path
+    _where = "where" if platform.system() == "Windows" else "which"
+    if subprocess.call([_where, 'gh']) != 0:
+        raise Exception("We expect command 'gh' in path ...")
+    if subprocess.call([_where, 'git']) != 0:
+        raise Exception("We expect command 'git' in path ...")
 
     # ------------------------------------------------- 02
     # detect current version
