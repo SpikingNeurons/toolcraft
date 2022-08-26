@@ -46,6 +46,8 @@ poetry config repositories.<repo_name> https://upload.pypi.org/legacy/
 poetry config --list
 poetry config http-basic.<repo_name> __token__ <pypi-token>
 poetry publish -r <repo_name>
+poetry cache clear -all .
+poetry update
 ```
 
 ## Getting started with ppw
