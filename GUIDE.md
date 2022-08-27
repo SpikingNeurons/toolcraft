@@ -38,7 +38,7 @@ pre-commit install --install-hooks
 With `tasks.py`
 
 ```bat
-git commit -m "update to next alphs"
+git commit -m "update to next alpha"
 git push
 poetry run invoke bump --alpha
 ```
