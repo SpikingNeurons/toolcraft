@@ -5,27 +5,24 @@
 Note that poetry needs to be installed in isolated environment. So refrain from `pip install poetry`
 
 https://python-poetry.org/docs/master/#installation
+https://python-poetry.org/docs/1.2/
 
 ```bat
 activate base
+conda update --all
+conda install python=3.10
 
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py > get-poetry.py
-python get-poetry.py --uninstall
-rm get-poetry.py
-
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py > install-poetry.py
-python install-poetry.py --uninstall
-python install-poetry.py --version 1.2.0rc2
-rm install-poetry.py
+curl -sSL https://install.python-poetry.org | python - --uninstall
+curl -sSL https://install.python-poetry.org | python - --version 1.2.0rc2
 poetry --version
 
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python - --version 1.2.0rc2
 ```
 
-Open new terminal and check version
+Go to your repo i.e. toolcraft and update packages with poetry
 
 ```bat
-poetry --version
+activate toolcraft
+poetry update
 ```
 
 Also do some more things for pre-commit, docs and pytest to work
