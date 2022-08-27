@@ -35,6 +35,13 @@ pre-commit install --install-hooks
 
 ## Poetry publish
 
+With `tasks.py`
+
+```bat
+poetry run invoke bump --alpha
+```
+
+
 Note that you need to store pypi creds in poetry config and then you can publish
 
 ```bat
