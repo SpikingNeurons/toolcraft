@@ -958,7 +958,7 @@ class StatusPanel(Widget):
         for _i in range(_len):
             _text_str = _summary[_i]
             if highlight_line == _i:
-                _text_str = f">>> {_text_str} <<<"
+                _text_str = f"[white]>>> {_text_str} [white]<<<"
             if (_i == 0) or (_i == (_len - 1)) or (highlight_line == _i) or ((_i % ((_len//8) + 1)) == 0):
                 _text_lines.append(r_text.Text.from_markup(_text_str, justify='center'))
 
