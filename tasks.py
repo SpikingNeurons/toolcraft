@@ -44,7 +44,8 @@ _GITHUB = github.Github(
     login_or_token=os.environ.get("PK_PYGITHUB_TOKEN_PK", None))
 # we will not do authentication as this is public repo
 # _GITHUB = github.Github()
-_GH_REMOTE_REPO = _GITHUB.get_repo("SpikingNeurons/toolcraft")
+_REPO_ROOT_URL = "SpikingNeurons/toolcraft"
+_GH_REMOTE_REPO = _GITHUB.get_repo(_REPO_ROOT_URL)
 
 
 def _find(
@@ -487,6 +488,8 @@ def bump(
     _run(c, _bump_command)
     _run(c, "git push")
     _run(c, "git push --tags")
+    print("Release draft from github to release to pypi")
+    print(f"https://github.com/{_REPO_ROOT_URL}/releases/tag/v{_new_tag}")
     print()
     print()
 
