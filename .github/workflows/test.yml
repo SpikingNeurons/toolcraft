@@ -88,7 +88,7 @@ jobs:
           poetry-version: "1.2.0"
 
       - name: Install build dependencies
-        run: poetry install --with build
+        run: poetry install --with build --no-root
 
       # We are aware that this does not change version in all places as
       # we are using poetry for bumping version.
