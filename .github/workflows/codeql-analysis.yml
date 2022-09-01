@@ -41,6 +41,12 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # Setup Python
+    - name: Setup Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
     # Setup Poetry
     # https://github.com/abatilo/actions-poetry
     - name: Setup Poetry
@@ -49,7 +55,7 @@ jobs:
         poetry-version: "1.2.0"
 
     - name: Install dependencies
-      run: poetry install
+      run: poetry install --no-root
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

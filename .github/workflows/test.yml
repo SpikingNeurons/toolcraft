@@ -50,7 +50,7 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies with test dependencies
-        run: poetry install --with test
+        run: poetry install --with test --no-root
 
       # Test with PyTest and Coverage
       - name: Test with PyTest and Coverage
