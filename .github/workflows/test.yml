@@ -21,10 +21,8 @@ jobs:
     # The type of runner that the job will run on
     strategy:
       matrix:
-        python-versions: [3.8, 3.9]
-        os: [ ubuntu-18.04, windows-latest ]
-#        python-versions: [3.9]
-#        os: [ubuntu-18.04]
+        python-version: ["3.10"]
+        os: [ ubuntu-latest, windows-latest ]
 
     runs-on: ${{ matrix.os }}
 
@@ -33,28 +31,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup Python ${{ matrix.python-versions }}
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-versions }}
+          python-version: ${{ matrix.python-version }}
 
-      # know more at https://github.com/snok/install-poetry
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      # Setup Poetry
+      # https://github.com/abatilo/actions-poetry
+      - name: Setup Poetry
+        uses: abatilo/actions-poetry@v2.0.0
         with:
-          version: 1.2.0a2
-          virtualenvs-create: true
-          virtualenvs-in-project: false
-          # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
-          installer-parallel: true
+          poetry-version: "1.2.0"
 
+      # View poetry help
+      - name: View Poetry Help
+        run: poetry --help
+
+      # Install dependencies
       - name: Install dependencies with test dependencies
         run: poetry install --with test
 
-      - name: Test with PyTest
-        run: poetry run pytest
+      # Test with PyTest and Coverage
+      - name: Test with PyTest and Coverage
+        run: poetry run invoke pytest-cov
+
 
       # Build wheels and source tarball
+      # todo: Note that, at the moment, only pure python wheels are supported. Restriction due to poetry build system
       - name: Build wheels and source tarball
         run: |
           poetry version
@@ -69,20 +72,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup Python 3.9
+      - name: Setup Python 3.10
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: "3.10"
 
-      # know more at https://github.com/snok/install-poetry
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+
+      # Setup Poetry
+      # https://github.com/abatilo/actions-poetry
+      - name: Setup Poetry
+        uses: abatilo/actions-poetry@v2.0.0
         with:
-          version: 1.2.0a2
-          virtualenvs-create: true
-          virtualenvs-in-project: false
-          # virtualenvs-path: ~/my-custom-path  # can use it for caching ... todo: later
-          installer-parallel: true
+          poetry-version: "1.2.0"
 
       - name: Install build dependencies
         run: poetry install --with build

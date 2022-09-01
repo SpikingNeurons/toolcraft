@@ -35,7 +35,6 @@ jobs:
       matrix:
         python-version: ["3.10"]
         os: [ ubuntu-latest, windows-latest ]
-        poetry-version: ["1.2.0"]
 
     runs-on: ${{ matrix.os }}
 
@@ -63,7 +62,7 @@ jobs:
       - name: Setup Poetry
         uses: abatilo/actions-poetry@v2.0.0
         with:
-          poetry-version: ${{ matrix.poetry-version }}
+          poetry-version: "1.2.0"
 
       # View poetry help
       - name: View Poetry Help
@@ -74,7 +73,7 @@ jobs:
         run: poetry install --with test --with build --no-root
 
       # Test with PyTest and Coverage
-      - name: Test with PyTest
+      - name: Test with PyTest and Coverage
         run: poetry run invoke pytest-cov
 
       # Build wheels and source tarball
