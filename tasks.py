@@ -489,7 +489,7 @@ def bump(
     _run(c, "git push")
     _run(c, "git push --tags")
     print("Release draft from github to release to pypi")
-    print(f"https://github.com/{_REPO_ROOT_URL}/releases/tag/v{_new_tag}")
+    print(f"https://github.com/{_REPO_ROOT_URL}/releases")
     print()
     print()
 
