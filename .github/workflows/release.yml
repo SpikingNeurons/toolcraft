@@ -78,6 +78,7 @@ jobs:
         run: poetry run invoke pytest-cov
 
       # Build wheels and source tarball
+      # todo: Note that, at the moment, only pure python wheels are supported. Restriction due to poetry build system
       - name: Build wheels and source tarball
         run: |
           poetry version
@@ -139,5 +140,6 @@ jobs:
           python -m pip install --upgrade pip twine
       - name: Upload using twine
         run: |
-          python -m twine upload dist/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }} --skip-existing
+          python -m twine upload ubuntu*/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }} --skip-existing
+          python -m twine upload windows*/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }} --skip-existing
 

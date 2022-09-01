@@ -79,6 +79,19 @@ def _run(c, command):
 
 
 @task
+def build(c):
+    """
+    Currently we are having `poetry build` in GitHub workflows
+    So the wheels are pure python
+    Hoping that poetry adds more support
+    But in case we want custom build then update this and add to workflow
+    >> poetry build (get rid of this)
+    >> poetry run invoke build
+    """
+    raise Exception("not yet supported")
+
+
+@task
 def pytest_cov(c):
     """
     Run pytest's and shows coverage report local dev machine ...
