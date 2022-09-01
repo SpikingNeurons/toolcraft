@@ -13,7 +13,7 @@ conda update --all
 conda install python=3.10
 
 curl -sSL https://install.python-poetry.org | python - --uninstall
-curl -sSL https://install.python-poetry.org | python - --version 1.2.0rc2
+curl -sSL https://install.python-poetry.org | python - --version 1.2.0
 poetry --version
 
 ```
