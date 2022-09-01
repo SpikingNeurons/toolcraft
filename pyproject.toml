@@ -121,15 +121,8 @@ grpcio-tools = "^1.44.0"
 #mkdocs-autorefs = "^0.2"
 
 
-
-
-
-
-
-
-
 [tool.poetry.scripts]
-toolcraft = 'toolcraft.tools'
+toolcraft = 'toolcraft.tools:run'
 
 
 [build-system]

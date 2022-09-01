@@ -38,5 +38,5 @@ for f in pathlib.Path(__file__).parent.glob("*.py"):
     importlib.import_module(f".{f.stem}", __package__)
 
 
-if __name__ == '__main__':
-    sys.exit(Tool.run())
+def run():
+    return sys.exit(Tool.run())

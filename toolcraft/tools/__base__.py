@@ -97,6 +97,19 @@ class Tool(abc.ABC):
         )
 
     @classmethod
+    def run(cls):
+        """
+        As of now doing nothing
+        todo: We want to register all tools with help of `cls.AVAILABLE_TOOL_CLASSES`
+
+        Note that this method is called by `run` in `toolcraft.tools.__init__.py` while it is registered in
+        `pyproject.toml` as
+            [tool.poetry.scripts]
+            toolcraft = 'toolcraft.tools'
+        """
+        ...
+
+    @classmethod
     def tool_name(cls) -> str:
         """
         There can be ony one tool per module
