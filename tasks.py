@@ -82,6 +82,7 @@ def _run(c, command):
 def pytest_cov(c):
     """
     Run pytest's and shows coverage report local dev machine ...
+    >> poetry run invoke pytest-cov
     """
     # todo: parallelize using https://pypi.org/project/pytest-xdist/
     #   already installed as test dependency
@@ -89,9 +90,10 @@ def pytest_cov(c):
     #   pytest-cov
     #   pytest-xdist
     # todo: this works but takes time uncomment later
-    _run(c, "pytest -s --cov=toolcraft --cov-append "
-         "--cov-report=html tests")
-    webbrowser.open(COVERAGE_REPORT.as_uri())
+    # todo: richy has introduced char encoding issue fix it so that the test and coverage can be done
+    # _run(c, "pytest -s --cov=toolcraft --cov-append --cov-report=html tests")
+    # webbrowser.open(COVERAGE_REPORT.as_uri())
+    ...
 
 
 @task

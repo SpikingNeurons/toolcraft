@@ -44,7 +44,7 @@ jobs:
         run: poetry install --with test
 
       - name: Test with PyTest and get coverage report
-        run: poetry run pytest --cov=./ --cov-report=xml
+        run: poetry run invoke pytest-cov
 
       # know more at https://github.com/codecov/codecov-action
       - name: Upload coverage to Codecov

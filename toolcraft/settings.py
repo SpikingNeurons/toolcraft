@@ -42,6 +42,8 @@ except ImportError:
 
 # make config
 TC_HOME = pathlib.Path.home() / ".toolcraft"
+if not TC_HOME.exists():
+    TC_HOME.mkdir(parents=True)
 TC_CONFIG_FILE = TC_HOME / "config.toml"
 if not TC_CONFIG_FILE.exists():
     TC_CONFIG_FILE.touch()
