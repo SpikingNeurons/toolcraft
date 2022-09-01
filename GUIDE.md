@@ -25,11 +25,20 @@ activate toolcraft
 poetry update
 ```
 
-Also do some more things for pre-commit, docs and pytest to work
+Also do some more things docs and pytest to work
 Rest all dependencies will be taken care on cloud
 
 ```bat
 poetry install --with dev --with test --with docs --with pre-commit --with build --no-root
+```
+
+## Pre-commit (use in future if needed) -- IGNORE
+We will use this in future ...
+
+This works only locally to do automated tests before commit ...
+should be taken care by individuals
+
+```bat
 pre-commit install --install-hooks
 ```
 
