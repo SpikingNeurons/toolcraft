@@ -46,12 +46,17 @@ pre-commit install --install-hooks
 
 With `tasks.py`
 
+Note that there will be draft release on Github ...
+Once you release there things will be uploaded to pypi
+No need to do below stuffs as Github Actions ill handle it :)
+
 ```bat
 git commit -m "update to next alpha"
 git push
 poetry run invoke bump --alpha
 ```
 
+## In case you want to publish from local machine  -- IGNORE
 
 Note that you need to store pypi creds in poetry config and then you can publish
 
@@ -65,7 +70,9 @@ poetry cache clear -all .
 poetry update
 ```
 
-## Getting started with ppw
+## EXTRAS
+
+### Getting started with ppw
 
 + use ppw to start with
 + use invoke instead of fire
@@ -85,33 +92,33 @@ Then ...
   + MDX components
   + multi-platform doc i.e. for mobile, desktop etc ...
 
-## Documentations
+### Documentations
 
-### Docusauraus
+#### Docusauraus
 Docusauraus will be great
 Discussion to get sphinx inside it are going on
 https://github.com/facebook/docusaurus/issues/1059
 
-### mkdocs
+#### mkdocs
 https://www.mkdocs.org
 Not sure but thsi soes not have stuff for Docausaurus
-### pydoc=markdown
+#### pydoc=markdown
 [pydoc-markdown](https://niklasrosenstein.github.io/pydoc-markdown/api/pydoc_markdown/renderers/docusaurus/) has docausaurus renderer
 
 but I assume this one is completely different as it does not use sphinx instead has its own markdowm
 
-## Badges
+### Badges
 
 + You can generate badges and display status
   + https://shields.io/category/coverage
 
 + Add badges for social networking too ...
 
-## LOGO Icons Images
+### LOGO Icons Images
 
 + https://fontmeme.com/minecraft-font
 
-## Gen inspirations for different files from
+### Gen inspirations for different files from
 
 [pyproject.toml](https://github.com/python-poetry/poetry-core/blob/master/pyproject.toml)
 
@@ -120,7 +127,7 @@ but I assume this one is completely different as it does not use sphinx instead 
 [workflows](https://github.com/python-poetry/poetry-core/tree/master/.github/workflows)
 
 
-## CLI for toolcraft using `cleo`
+### CLI for toolcraft using `cleo`
 
 + tasks
   + Note the `tasks.py` is for toolcraft management may be not needed.
@@ -132,13 +139,13 @@ but I assume this one is completely different as it does not use sphinx instead 
   + But anyways get inspiration from poetry library
     + https://github.com/python-poetry/poetry/tree/master/poetry/console/commands
 
-## Understand `tox` and `tox-gh-actions`
+### Understand `tox` and `tox-gh-actions`
 
 Refer
 + https://github.com/ymyzk/tox-gh-actions
 
 
-## Security (check dependencies and check python code)
+### Security (check dependencies and check python code)
 
 Three options for dependencies:
 + snyk
@@ -155,7 +162,7 @@ Currently pyup it expects requirements file ... need to see how and when they wi
 
 Snyk seems to support poetry but the badge link does not work ... need to see that
 
-### Add workflow for security
+#### Add workflow for security
 
 Make sure that before release the vulnerabilities are addressed in workflow
 Either use
@@ -163,17 +170,17 @@ Either use
 + snyk
 + or something else
 
-## Add to conda-forge
+### Add to conda-forge
 Example repo https://github.com/pytest-dev/pytest
 
 
-## Pre-commit
+### Pre-commit
 
 Currently, we let pre-commit serves handle it
 But if it fails our workflows will not know that
 So we can make our own `pre-commit` workflow ... this also make it dependent on release tags
 
-## Coverage
+### Coverage
 
 There are two options
 + codecov
@@ -189,23 +196,23 @@ You can see branches here
 https://app.codecov.io/gh/SpikingNeurons/toolcraft/branches?page=1&order=-updatestamp
 
 
-## Release tag specific readme badge
+### Release tag specific readme badge
 
 We might need to have badges specific to release tage
 And the badges that cannot be release-tag specific must be removed from readme...
 
 
-## Having workflows as dependency
+### Having workflows as dependency
 
 https://github.com/KarmaComputing/Github-Trigger-workflow-from-another-workflow/tree/main/.github/workflows
 
 
-## Netlify
+### Netlify
 
 We will use this as [facebook](https://github.com/facebook/docusaurus/edit/main/README.md) uses it
 
 
-### Cloud functions
+#### Cloud functions
 
 Netlify allows deploying cloud functions
 We have set that to `website/functions` dir
