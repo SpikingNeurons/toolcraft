@@ -1,5 +1,14 @@
 # Guide
 
+## conda env
+
+create or delete environment
+
+```bat
+conda remove --name toolcraft --all
+conda create --name toolcraft python=3.10
+```
+
 ## Poetry installation
 
 Note that poetry needs to be installed in isolated environment. So refrain from `pip install poetry`
