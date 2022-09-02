@@ -22,11 +22,6 @@ import dearpygui._dearpygui as internal_dpg
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, Future
 
-from .. import error as e
-from .. import logger
-from .. import util
-from .. import marshalling as m
-from .. import settings
 from . import asset
 
 # noinspection PyUnreachableCode
