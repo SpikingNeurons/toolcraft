@@ -11,8 +11,154 @@ from . import storage as s
 from . import error as e
 from . import util
 from . import logger
+from . import richy
 
 _LOGGER = logger.get_logger()
+
+
+@dataclasses.dataclass(frozen=True)
+class TfInstallFromSource(s.DownloadFileGroup):
+    """
+
+    Referred from: https://www.tensorflow.org/install/source_windows
+
+    [1] Install pip packages
+
+    pip3 install six numpy wheel
+    pip3 install keras_applications==1.0.6 --no-deps
+    pip3 install keras_preprocessing==1.0.5 --no-deps
+
+    [2] Install Bazel
+
+    Copy to `C:/bazel`
+    Rename to `bazel.exe`
+
+    [3] Install cuda
+
+    [4] Install cudnn
+
+    Extract cudnn and copy to
+     > C://Program Files//NVIDIA GPU Computing Toolkit//CUDA//vXX.X
+
+    [5] Install msys2
+
+    Install msys2 to `C:\msys64`
+
+    Then in `cmd` do `pacman -S git patch unzip`
+
+    [6] Checkout source code
+
+    cd tensorflow
+    git pull
+    git checkout tags/v2.5.0
+    git restore .
+
+    [7] Configure
+
+    python ./configure.py
+
+    > Opt for compute capability 7.5 (both for RS laptop and workstation same
+
+    [8] Bazel build on machine with internet (for GPU)
+
+    ```
+    bazel build --config=opt --config=cuda --define=no_tensorflow_py_deps=true //tensorflow/tools/pip_package:build_pip_package
+    bazel-bin\tensorflow\tools\pip_package\build_pip_package C:/tmp/tensorflow_pkg
+    ```
+
+    [9] Install package (or copy to RS machine)
+
+    cd C:\tmp\tensorflow_pkg
+    pip3 uninstall -y tensorflow
+    pip3 install tensorflow-2.5.0-cp39-cp39-win_amd64.whl
+    """
+
+    class LITERAL(s.DownloadFileGroup.LITERAL):
+        bazel = "bazel-3.7.2-windows-x86_64.exe"
+        cuda = "cuda_11.2.2_461.33_win10.exe"
+        cudnn = "cudnn-11.2-windows-x64-v8.1.1.33.zip"
+        msys2 = "msys2-x86_64-20210604.exe"
+
+    @property
+    def name(self) -> str:
+        return "tensorflow_v2.5.0"
+
+    @property
+    def meta_info(self) -> dict:
+        return {}
+
+    @property
+    @util.CacheResult
+    def root_dir(self) -> pathlib.Path:
+        return pathlib.Path.home() / "Downloads" / ".tensorflow"
+
+    # noinspection SpellCheckingInspection
+    def get_urls(self) -> t.Dict[str, str]:
+        return {
+            self.LITERAL.bazel: "https://github.com/bazelbuild/bazel/releases/"
+                                "download/3.7.2/bazel-3.7.2-windows-x86_64.exe",
+            self.LITERAL.cuda: "https://developer.download.nvidia.com/compute/"
+                               "cuda/11.2.2/local_installers/"
+                               "cuda_11.2.2_461.33_win10.exe",
+            self.LITERAL.cudnn: "https://developer.download.nvidia.com/"
+                                "compute/machine-learning/cudnn/secure/"
+                                "8.1.1.33/11.2_20210301/"
+                                "cudnn-11.2-windows-x64-v8.1.1.33.zip?"
+                                "rO8QEu6qUd-7Odu9DHMQwILLnzOFmI21LxxnFk_CJx4oD"
+                                "a66FWh7gUZ8XYlnM7RRAlvfao2HFT_pejwAoL2hS68rmb"
+                                "pbl2j1soMJPOtUwr8AtWNkI3r_iMTrpsETC5Jiojkyrx"
+                                "_G65xw00s3ian0tjR1XoyJdnfMlyjFQSIA3IXUDKz3kWP"
+                                "RIoyKIxY376w_wHakpxcDNJCC9VVqDtNYtg",
+            self.LITERAL.msys2: "https://repo.msys2.org/distrib/x86_64/"
+                                "msys2-x86_64-20210604.exe"
+        }
+
+    # noinspection SpellCheckingInspection
+    def get_hashes(self) -> t.Dict[str, str]:
+        return {
+            self.LITERAL.bazel: "ecb696b1b9c9da6728d92fbfe8410bafb4b3a65c35898"
+                                "0e49742233f33f74d10",
+            self.LITERAL.cuda: "e572654ac90ea720b73cf72f14af6b175dddf4ff282af8"
+                               "22e32c19d63f0284c4",
+            self.LITERAL.cudnn: "449dac158c423a2e682059650043cd6056a9d7cdfaedb"
+                                "bd056029df1e7229889",
+            self.LITERAL.msys2: "2e9bd59980aa0aa9248e5f0ad0ef26b0ac10adae7c6d3"
+                                "1509762069bb388e600",
+        }
+
+
+@dataclasses.dataclass(frozen=True)
+class PyCharmDownloader(s.DownloadFileGroup):
+
+    version: str
+    professional: bool
+
+    @property
+    def name(self) -> str:
+        _p_or_c = 'professional' if self.professional else 'community'
+        return f"pycharm-{_p_or_c}-{self.version}"
+
+    @property
+    def meta_info(self) -> dict:
+        return {}
+
+    @property
+    @util.CacheResult
+    def root_dir(self) -> pathlib.Path:
+        return pathlib.Path.home() / "Downloads" / ".pycharm"
+
+    def get_urls(self) -> t.Dict[str, str]:
+        return {
+            f"{self.name}.exe":
+                f"https://download-cf.jetbrains.com/python/{self.name}.exe",
+        }
+
+    def get_hashes(self) -> t.Dict[str, str]:
+        # noinspection SpellCheckingInspection
+        return {
+            f"{self.name}.exe": "1678f05cb177b57fa82bb7fd14f16e191c3aaf4caad13"
+                                "5242319855df3908e66",
+        }
 
 
 @dataclasses.dataclass(frozen=True)
@@ -45,39 +191,46 @@ class PythonDownloader(s.DownloadFileGroup):
         }
 
     def package_it(self) -> pathlib.Path:
-        # get paths and if exist return
-        _exe_path = self.path / f"{self.name}.exe"
-        _zip_path = self.path.parent / f"{self.name}.zip"
-        if _zip_path.exists():
-            return _zip_path
 
-        with logger.Spinner(
+        with richy.StatusPanel(
             title=f"Packaging {self.name}",
-            logger=_LOGGER,
-        ) as _s:
+            tc_log=_LOGGER,
+        ) as _rp:
 
-            # get all related debug files
-            _s.text = f"getting debug symbols and all related files"
-            os.system(
-                f"{_exe_path.resolve().as_posix()} /layout"
-            )
+            with self(richy_panel=_rp):
 
-            # zip all files
-            _s.text = f"zipping files"
-            _zip = zipfile.ZipFile(_zip_path, mode="w")
-            for _f in self.path.iterdir():
-                _zip.write(_f, _f.name)
-                if _f != _exe_path:
-                    _f.unlink()
-            _zip.write(self.info.path, self.info.path.name)
-            _zip.write(self.config.path, self.config.path.name)
-            _zip.close()
+                # if not created, then create
+                if not self.is_created:
+                    self.create()
 
-            # deleting
-            _s.text = f"deleting files"
+                # get paths and if exist return
+                _exe_path = self.path / f"{self.name}.exe"
+                _zip_path = self.path.local_path.parent / f"{self.name}.zip"
+                if _zip_path.exists():
+                    return _zip_path
 
-            # return
-            return _zip_path
+                # get all related debug files
+                _rp.text = f"getting debug symbols and all related files"
+                os.system(
+                    f"{_exe_path.local_path.resolve().as_posix()} /layout"
+                )
+
+                # zip all files
+                _rp.text = f"zipping files"
+                _zip = zipfile.ZipFile(_zip_path, mode="w")
+                for _f in self.path.local_path.iterdir():
+                    _zip.write(_f, _f.name)
+                    if _f != _exe_path:
+                        _f.unlink()
+                _zip.write(self.info.path.local_path, self.info.path.name)
+                _zip.write(self.config.path.local_path, self.config.path.name)
+                _zip.close()
+
+                # deleting
+                _rp.text = f"deleting files"
+
+                # return
+                return _zip_path
 
 
 def pip_downloader(
