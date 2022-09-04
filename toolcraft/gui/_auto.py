@@ -3,7 +3,7 @@
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
 >> DearPyGui: 1.6.2
->> Time: 2022-05-07 22:24
+>> Time: 2022-09-04 00:50
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -15,7 +15,6 @@ import dataclasses
 import enum
 import typing as t
 
-from .__base__ import Enum
 from .__base__ import Widget
 from .__base__ import MovableWidget
 from .__base__ import ContainerWidget
@@ -29,7 +28,7 @@ from .__base__ import COLOR_TYPE
 from .__base__ import USER_DATA
 
 
-class EnDir(Enum, enum.Enum):
+class EnDir(enum.Enum):
 
     Left = dpg.mvDir_Left  # 0
     Up = dpg.mvDir_Up  # 2
@@ -38,7 +37,7 @@ class EnDir(Enum, enum.Enum):
     NONE = dpg.mvDir_None  # -1
 
 
-class EnTimeUnit(Enum, enum.Enum):
+class EnTimeUnit(enum.Enum):
 
     Day = dpg.mvTimeUnit_Day  # 5
     Hr = dpg.mvTimeUnit_Hr  # 4
@@ -50,7 +49,7 @@ class EnTimeUnit(Enum, enum.Enum):
     Yr = dpg.mvTimeUnit_Yr  # 7
 
 
-class EnPlotColormap(Enum, enum.Enum):
+class EnPlotColormap(enum.Enum):
 
     BrBG = dpg.mvPlotColormap_BrBG  # 12
     Cool = dpg.mvPlotColormap_Cool  # 7
@@ -71,7 +70,7 @@ class EnPlotColormap(Enum, enum.Enum):
     Viridis = dpg.mvPlotColormap_Viridis  # 4
 
 
-class EnComboHeight(Enum, enum.Enum):
+class EnComboHeight(enum.Enum):
 
     Small = dpg.mvComboHeight_Small  # 0
     Regular = dpg.mvComboHeight_Regular  # 1
@@ -79,14 +78,14 @@ class EnComboHeight(Enum, enum.Enum):
     Largest = dpg.mvComboHeight_Largest  # 3
 
 
-class EnDatePickerLevel(Enum, enum.Enum):
+class EnDatePickerLevel(enum.Enum):
 
     Day = dpg.mvDatePickerLevel_Day  # 0
     Month = dpg.mvDatePickerLevel_Month  # 1
     Year = dpg.mvDatePickerLevel_Year  # 2
 
 
-class EnPlotLocation(Enum, enum.Enum):
+class EnPlotLocation(enum.Enum):
 
     Center = dpg.mvPlot_Location_Center  # 0
     East = dpg.mvPlot_Location_East  # 8
@@ -99,28 +98,28 @@ class EnPlotLocation(Enum, enum.Enum):
     West = dpg.mvPlot_Location_West  # 4
 
 
-class EnThemeCat(Enum, enum.Enum):
+class EnThemeCat(enum.Enum):
 
     Core = dpg.mvThemeCat_Core  # 0
     Plots = dpg.mvThemeCat_Plots  # 1
     Nodes = dpg.mvThemeCat_Nodes  # 2
 
 
-class EnCullMode(Enum, enum.Enum):
+class EnCullMode(enum.Enum):
 
     Back = dpg.mvCullMode_Back  # 1
     Front = dpg.mvCullMode_Front  # 2
     NONE = dpg.mvCullMode_None  # 0
 
 
-class EnNodeAttr(Enum, enum.Enum):
+class EnNodeAttr(enum.Enum):
 
     Input = dpg.mvNode_Attr_Input  # 0
     Output = dpg.mvNode_Attr_Output  # 1
     Static = dpg.mvNode_Attr_Static  # 2
 
 
-class EnMouseButton(Enum, enum.Enum):
+class EnMouseButton(enum.Enum):
 
     Left = dpg.mvMouseButton_Left  # 0
     Middle = dpg.mvMouseButton_Middle  # 2
@@ -129,7 +128,7 @@ class EnMouseButton(Enum, enum.Enum):
     X2 = dpg.mvMouseButton_X2  # 4
 
 
-class EnPlatform(Enum, enum.Enum):
+class EnPlatform(enum.Enum):
 
     Apple = dpg.mvPlatform_Apple  # 1
     Linux = dpg.mvPlatform_Linux  # 2
@@ -190,7 +189,7 @@ class HistogramSeries2D(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_2d_histogram_series(
@@ -299,7 +298,7 @@ class Slider3D(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_3d_slider(
@@ -402,7 +401,7 @@ class AreaSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_area_series(
@@ -457,7 +456,7 @@ class BarSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_bar_series(
@@ -503,7 +502,7 @@ class BoolValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_bool_value(
@@ -587,7 +586,7 @@ class Button(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_button(
             parent=_parent_dpg_id,
@@ -702,7 +701,7 @@ class CandleSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_candle_series(
@@ -787,7 +786,7 @@ class CheckBox(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_checkbox(
@@ -918,7 +917,7 @@ class ColorButton(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_color_button(
             parent=_parent_dpg_id,
@@ -1007,7 +1006,7 @@ class ColorValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_color_value(
@@ -1052,7 +1051,7 @@ class Colormap(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_colormap(
             self.colors,
@@ -1130,7 +1129,7 @@ class ColormapButton(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_colormap_button(
             parent=_parent_dpg_id,
@@ -1243,7 +1242,7 @@ class ColormapScale(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_colormap_scale(
@@ -1335,7 +1334,7 @@ class ColormapSlider(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_colormap_slider(
             parent=_parent_dpg_id,
@@ -1459,7 +1458,7 @@ class Combo(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_combo(
@@ -1581,7 +1580,7 @@ class DatePicker(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_date_picker(
             parent=_parent_dpg_id,
@@ -1665,7 +1664,7 @@ class Double4Value(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_double4_value(
@@ -1707,7 +1706,7 @@ class DoubleValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_double_value(
@@ -1803,7 +1802,7 @@ class DragDouble(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_double(
@@ -1953,7 +1952,7 @@ class DragDoublex(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_doublex(
@@ -2101,7 +2100,7 @@ class DragFloat(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_float(
@@ -2251,7 +2250,7 @@ class DragFloatX(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_floatx(
@@ -2399,7 +2398,7 @@ class DragInt(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_int(
@@ -2549,7 +2548,7 @@ class DragIntX(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_intx(
@@ -2658,7 +2657,7 @@ class PlotDragLine(PlotItem):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_line(
@@ -2729,7 +2728,7 @@ class PlotDragPoint(PlotItem):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_drag_point(
@@ -2790,7 +2789,7 @@ class DynamicTexture(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_dynamic_texture(
             self.width,
@@ -2847,7 +2846,7 @@ class ErrorSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_error_series(
@@ -2904,7 +2903,7 @@ class FileExtension(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_file_extension(
             self.extension,
@@ -2948,7 +2947,7 @@ class Float4Value(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_float4_value(
@@ -2990,7 +2989,7 @@ class FloatValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_float_value(
@@ -3032,7 +3031,7 @@ class FloatVectValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_float_vect_value(
@@ -3071,7 +3070,7 @@ class FontChars(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_font_chars(
             self.chars,
@@ -3111,7 +3110,7 @@ class FontRange(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_font_range(
             self.first_char,
@@ -3149,7 +3148,7 @@ class FontRangeHint(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_font_range_hint(
             self.hint,
@@ -3213,7 +3212,7 @@ class HeatSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_heat_series(
@@ -3288,7 +3287,7 @@ class HistogramSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_histogram_series(
@@ -3339,7 +3338,7 @@ class HLineSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_hline_series(
@@ -3445,7 +3444,7 @@ class InputDouble(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_input_double(
@@ -3601,7 +3600,7 @@ class InputDoublex(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_input_doublex(
@@ -3759,7 +3758,7 @@ class InputFloat(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_input_float(
@@ -3915,7 +3914,7 @@ class InputFloatX(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_input_floatx(
@@ -4070,7 +4069,7 @@ class InputInt(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_input_int(
@@ -4222,7 +4221,7 @@ class InputIntX(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_input_intx(
@@ -4388,7 +4387,7 @@ class InputText(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_input_text(
@@ -4487,7 +4486,7 @@ class Int4Value(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_int4_value(
@@ -4529,7 +4528,7 @@ class IntValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_int_value(
@@ -4571,7 +4570,7 @@ class ItemActivatedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_activated_handler(
             parent=_parent_dpg_id,
@@ -4623,7 +4622,7 @@ class ItemActiveHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_active_handler(
             parent=_parent_dpg_id,
@@ -4678,7 +4677,7 @@ class ItemClickedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_clicked_handler(
             parent=_parent_dpg_id,
@@ -4731,7 +4730,7 @@ class ItemDeactivatedAfterEditHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_deactivated_after_edit_handler(
             parent=_parent_dpg_id,
@@ -4783,7 +4782,7 @@ class ItemDeactivatedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_deactivated_handler(
             parent=_parent_dpg_id,
@@ -4835,7 +4834,7 @@ class ItemEditedHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_edited_handler(
             parent=_parent_dpg_id,
@@ -4887,7 +4886,7 @@ class ItemFocusHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_focus_handler(
             parent=_parent_dpg_id,
@@ -4939,7 +4938,7 @@ class ItemHoverHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_hover_handler(
             parent=_parent_dpg_id,
@@ -4991,7 +4990,7 @@ class ItemResizeHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_resize_handler(
             parent=_parent_dpg_id,
@@ -5043,7 +5042,7 @@ class ItemToggledOpenHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_toggled_open_handler(
             parent=_parent_dpg_id,
@@ -5095,7 +5094,7 @@ class ItemVisibleHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_item_visible_handler(
             parent=_parent_dpg_id,
@@ -5150,7 +5149,7 @@ class KeyDownHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_key_down_handler(
             parent=_parent_dpg_id,
@@ -5206,7 +5205,7 @@ class KeyPressHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_key_press_handler(
             parent=_parent_dpg_id,
@@ -5262,7 +5261,7 @@ class KeyReleaseHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_key_release_handler(
             parent=_parent_dpg_id,
@@ -5360,7 +5359,7 @@ class KnobFloat(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_knob_float(
@@ -5453,7 +5452,7 @@ class LineSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_line_series(
@@ -5539,7 +5538,7 @@ class Listbox(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_listbox(
@@ -5664,7 +5663,7 @@ class LoadingIndicator(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_loading_indicator(
             parent=_parent_dpg_id,
@@ -5758,7 +5757,7 @@ class MenuItem(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_menu_item(
             parent=_parent_dpg_id,
@@ -5834,7 +5833,7 @@ class MouseClickHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_mouse_click_handler(
             parent=_parent_dpg_id,
@@ -5890,7 +5889,7 @@ class MouseDoubleClickHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_mouse_double_click_handler(
             parent=_parent_dpg_id,
@@ -5946,7 +5945,7 @@ class MouseDownHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_mouse_down_handler(
             parent=_parent_dpg_id,
@@ -6005,7 +6004,7 @@ class MouseDragHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_mouse_drag_handler(
             parent=_parent_dpg_id,
@@ -6059,7 +6058,7 @@ class MouseMoveHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_mouse_move_handler(
             parent=_parent_dpg_id,
@@ -6114,7 +6113,7 @@ class MouseReleaseHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_mouse_release_handler(
             parent=_parent_dpg_id,
@@ -6167,7 +6166,7 @@ class MouseWheelHandler(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_mouse_wheel_handler(
             parent=_parent_dpg_id,
@@ -6240,7 +6239,7 @@ class PieSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_pie_series(
@@ -6299,7 +6298,7 @@ class PlotAnnotation(PlotItem):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_plot_annotation(
@@ -6354,7 +6353,7 @@ class PlotLegend(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_plot_legend(
             parent=_parent_dpg_id,
@@ -6446,7 +6445,7 @@ class ProgressBar(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_progress_bar(
@@ -6561,7 +6560,7 @@ class RadioButton(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_radio_button(
@@ -6655,7 +6654,7 @@ class RawTexture(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_raw_texture(
             self.width,
@@ -6701,7 +6700,7 @@ class ScatterSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_scatter_series(
@@ -6787,7 +6786,7 @@ class Selectable(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_selectable(
@@ -6879,7 +6878,7 @@ class Separator(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_separator(
             parent=_parent_dpg_id,
@@ -6921,7 +6920,7 @@ class SeriesValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_series_value(
@@ -6969,7 +6968,7 @@ class ShadeSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_shade_series(
@@ -7059,7 +7058,7 @@ class SimplePlot(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_simple_plot(
@@ -7195,7 +7194,7 @@ class SliderDouble(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_slider_double(
@@ -7343,7 +7342,7 @@ class SliderDoublex(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_slider_doublex(
@@ -7493,7 +7492,7 @@ class SliderFloat(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_slider_float(
@@ -7641,7 +7640,7 @@ class SliderFloatX(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_slider_floatx(
@@ -7791,7 +7790,7 @@ class SliderInt(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_slider_int(
@@ -7939,7 +7938,7 @@ class SliderIntX(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_slider_intx(
@@ -8041,7 +8040,7 @@ class Spacer(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_spacer(
             parent=_parent_dpg_id,
@@ -8088,7 +8087,7 @@ class StairSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_stair_series(
@@ -8135,7 +8134,7 @@ class StaticTexture(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_static_texture(
             self.width,
@@ -8183,7 +8182,7 @@ class StemSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_stem_series(
@@ -8228,7 +8227,7 @@ class StringValue(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_string_value(
@@ -8303,7 +8302,7 @@ class TabButton(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_tab_button(
             parent=_parent_dpg_id,
@@ -8442,7 +8441,7 @@ class TableColumn(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_table_column(
             parent=_parent_dpg_id,
@@ -8540,7 +8539,7 @@ class Text(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_text(
@@ -8632,7 +8631,7 @@ class TextPoint(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_text_point(
@@ -8682,7 +8681,7 @@ class ThemeColor(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_theme_color(
             parent=_parent_dpg_id,
@@ -8730,7 +8729,7 @@ class ThemeStyle(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_theme_style(
             parent=_parent_dpg_id,
@@ -8803,7 +8802,7 @@ class TimePicker(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_time_picker(
             parent=_parent_dpg_id,
@@ -8887,7 +8886,7 @@ class VLineSeries(PlotSeries):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_vline_series(
@@ -8975,7 +8974,7 @@ class ChildWindow(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_child_window(
             parent=_parent_dpg_id,
@@ -9048,7 +9047,7 @@ class Clipper(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_clipper(
             parent=_parent_dpg_id,
@@ -9133,7 +9132,7 @@ class CollapsingHeader(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_collapsing_header(
             parent=_parent_dpg_id,
@@ -9183,7 +9182,7 @@ class CollapsingHeader(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class ColormapRegistry(Registry):
     """
     Refer:
@@ -9268,7 +9267,7 @@ class CustomSeries(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_custom_series(
@@ -9335,7 +9334,7 @@ class DragPayload(ContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_drag_payload(
             parent=_parent_dpg_id,
@@ -9390,7 +9389,7 @@ class DrawArrow(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_arrow(
             self.p1,
@@ -9453,7 +9452,7 @@ class DrawBezierCubic(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_bezier_cubic(
             self.p1,
@@ -9515,7 +9514,7 @@ class DrawBezierQuadratic(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_bezier_quadratic(
             self.p1,
@@ -9576,7 +9575,7 @@ class DrawCircle(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_circle(
             self.center,
@@ -9637,7 +9636,7 @@ class DrawEllipse(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_ellipse(
             self.pmin,
@@ -9689,7 +9688,7 @@ class DrawLayer(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_draw_layer(
             parent=_parent_dpg_id,
@@ -9741,7 +9740,7 @@ class DrawLine(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_line(
             self.p1,
@@ -9782,7 +9781,7 @@ class DrawNode(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_draw_node(
             parent=_parent_dpg_id,
@@ -9831,7 +9830,7 @@ class DrawPolygon(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_polygon(
             self.points,
@@ -9884,7 +9883,7 @@ class DrawPolyline(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_polyline(
             self.points,
@@ -9946,7 +9945,7 @@ class DrawQuad(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_quad(
             self.p1,
@@ -10023,7 +10022,7 @@ class DrawRectangle(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_rectangle(
             self.pmin,
@@ -10083,7 +10082,7 @@ class DrawText(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_text(
             self.pos,
@@ -10142,7 +10141,7 @@ class DrawTriangle(MovableWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.draw_triangle(
             self.p1,
@@ -10209,7 +10208,7 @@ class DrawList(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_drawlist(
             self.width,
@@ -10359,7 +10358,7 @@ class FilterSet(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_filter_set(
             parent=_parent_dpg_id,
@@ -10402,7 +10401,7 @@ class Font(ContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_font(
             self.file,
@@ -10416,7 +10415,7 @@ class Font(ContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class FontRegistry(Registry):
     """
     Refer:
@@ -10513,7 +10512,7 @@ class Group(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_group(
             parent=_parent_dpg_id,
@@ -10561,7 +10560,7 @@ class Group(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class HandlerRegistry(Registry):
     """
     Refer:
@@ -10595,7 +10594,7 @@ class HandlerRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class ItemHandlerRegistry(Registry):
     """
     Refer:
@@ -10677,7 +10676,7 @@ class Menu(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_menu(
             parent=_parent_dpg_id,
@@ -10739,7 +10738,7 @@ class MenuBar(ContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_menu_bar(
             parent=_parent_dpg_id,
@@ -10805,7 +10804,7 @@ class Node(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_node(
             parent=_parent_dpg_id,
@@ -10894,7 +10893,7 @@ class NodeAttribute(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_node_attribute(
             parent=_parent_dpg_id,
@@ -11040,7 +11039,7 @@ class Plot(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_plot(
             parent=_parent_dpg_id,
@@ -11171,7 +11170,7 @@ class PlotXAxis(Widget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_plot_axis(
             dpg.mvXAxis,
@@ -11257,7 +11256,7 @@ class PlotYAxis(ContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_plot_axis(
             dpg.mvYAxis,
@@ -11382,7 +11381,7 @@ class SubPlots(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_subplots(
             self.rows,
@@ -11482,7 +11481,7 @@ class Tab(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_tab(
             parent=_parent_dpg_id,
@@ -11564,7 +11563,7 @@ class TabBar(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_tab_bar(
             parent=_parent_dpg_id,
@@ -11731,7 +11730,7 @@ class Table(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
         _source_dpg_id = getattr(self.source, 'dpg_id', 0)
 
         _ret = internal_dpg.add_table(
@@ -11823,7 +11822,7 @@ class TableCell(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_table_cell(
             parent=_parent_dpg_id,
@@ -11868,7 +11867,7 @@ class TableRow(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_table_row(
             parent=_parent_dpg_id,
@@ -11883,7 +11882,7 @@ class TableRow(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class TemplateRegistry(Registry):
     """
     Refer:
@@ -11913,7 +11912,7 @@ class TemplateRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class TextureRegistry(Registry):
     """
     Refer:
@@ -11974,7 +11973,7 @@ class ThemeComponent(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_theme_component(
             parent=_parent_dpg_id,
@@ -12012,7 +12011,7 @@ class Tooltip(ContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_tooltip(
             parent=_parent_dpg_id,
@@ -12094,7 +12093,7 @@ class TreeNode(MovableContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_tree_node(
             parent=_parent_dpg_id,
@@ -12144,7 +12143,7 @@ class TreeNode(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class ValueRegistry(Registry):
     """
     Refer:
@@ -12204,7 +12203,7 @@ class ViewportMenuBar(ContainerWidget):
 
     def build(self) -> t.Union[int, str]:
 
-        _parent_dpg_id = self.internal.parent.dpg_id
+        _parent_dpg_id = self.parent.dpg_id
 
         _ret = internal_dpg.add_viewport_menu_bar(
             parent=_parent_dpg_id,

@@ -28,8 +28,11 @@ from . import asset
 if False:
     from . import EnPlatform
     from . import BlockingTask
+    from . import widget as _widget
+    from . import callback
 
-_LOGGER = logger.get_logger()
+
+T = t.TypeVar('T', bound='Widget')
 COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
@@ -42,16 +45,10 @@ _CONTAINER_WIDGET_STACK: t.List["ContainerWidget"] = []
 if False:
     from . import window
     from . import plot
+    from ..marshalling import HashableClass
 
 
-class Enum(m.FrozenEnum, enum.Enum):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.enum.{cls.__name__}"
-
-
-class EnColor(Enum, enum.Enum):
+class EnColor(enum.Enum):
     DEFAULT = (-1, -1, -1, -1)
     WHITE = (255, 255, 255, 255)
     BLACK = (0, 0, 0, 255)
@@ -61,29 +58,34 @@ class EnColor(Enum, enum.Enum):
     RED = (255, 0, 0, 255)
 
 
-class _WidgetDpgInternal(m.Internal):
-    dpg_id: t.Union[int, str]
-    post_build_fns: t.List[t.Callable] = list
-
-
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['dpg_state', 'dpg_config', ]
-)
-class _WidgetDpg(m.YamlRepr, abc.ABC):
+class _WidgetDpg(abc.ABC):
     """
     This class is just to keep all dpg related things in one place ...
     Anything specific to our API will go in Widget class
     """
 
     @property
-    @util.CacheResult
-    def internal(self) -> _WidgetDpgInternal:
-        return _WidgetDpgInternal(owner=self)
+    def post_build_fns(self) -> t.List[t.Callable]:
+        return self._post_build_fns
 
     @property
     def dpg_id(self) -> t.Union[int, str]:
-        return self.internal.dpg_id
+        if self._dpg_id is None:
+            raise Exception(
+                f"The dpg_id is not set for instance of class {self.__class__}"
+            )
+        else:
+            return self._dpg_id
+
+    @dpg_id.setter
+    def dpg_id(self, value: t.Union[int, str]):
+        if self._dpg_id is None:
+            self._dpg_id = value
+        else:
+            raise Exception(
+                f"The dpg_id is already set for instance of class {self.__class__}"
+            )
 
     @property
     def dpg_state(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
@@ -181,11 +183,33 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
     def rect_max(self) -> t.Tuple[int, int]:
         return tuple(self.dpg_state['rect_max'])
 
+    @property
+    def dataclass_field_names(self) -> t.List[str]:
+        # noinspection PyUnresolvedReferences
+        return list(self.__dataclass_fields__.keys())
+
     def __post_init__(self):
+        # some internal vars
+        self._dpg_id = None
+        self._post_build_fns = []
+
+        # Needed by subclass Widget but just adding it here for having clean structure view in PyCharm
+        # But note that they are not specific to DPG
+        self._parent = None
+        self._dash_board = None
+        self._is_built = False
+        self._tag = None
+
+        # init pipeline
         self.init_validate()
         self.init()
 
-    def __setattr__(self, key, value):
+    def configure_item(self, key, value):
+        if key not in self.dataclass_field_names:
+            raise Exception(
+                f"The key {key!r} is not a configurable field for widget class {self.__class__}"
+            )
+
         # this might not always work especially when key is custom ...
         # in that case catch exception and figure out how to handle
         if self.is_built:
@@ -194,7 +218,19 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
             # "`internal_dpg.configure_item` ...",
             if not isinstance(self, Form):
                 internal_dpg.configure_item(self.dpg_id, **{key: value})
-        return super().__setattr__(key, value)
+        print("??????????????eeeeeeeeeeeeeeeeeeeee", self.__class__, value.__class__, key)
+        # set for this class
+        setattr(self, key, value)
+
+    def clone(self) -> "_WidgetDpg":
+        _kwargs = dict()
+        for _k in self.dataclass_field_names:
+            _v = getattr(self, _k)
+            if isinstance(_v, _WidgetDpg):
+                _v = _v.clone()
+            _kwargs[_k] = _v
+        # noinspection PyArgumentList
+        return self.__class__(**_kwargs)
 
     @classmethod
     def hook_up_methods(cls):
@@ -263,20 +299,34 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
                 ]
             )
 
-        # test if remaining internals are set
-        self.internal.test_if_others_set()
+        # test if remaining important internals are set
+        from . import window
+        if isinstance(self, Widget):
+            if self._parent is None:
+                raise Exception(
+                    f"We expect 'parent' property for instance of class {self.__class__} to be set by now"
+                )
+        elif isinstance(self, window.Window):
+            if self._dash_board is None:
+                raise Exception(
+                    f"We expect 'dash_board' property for instance of class {self.__class__} to be set by now"
+                )
+        else:
+            raise Exception(
+                f"Unsupported instance of class type {self.__class__}"
+            )
 
         # set dpg_id
-        self.internal.dpg_id = hooked_method_return_value
+        self.dpg_id = hooked_method_return_value
 
         # set flag to indicate build is done
-        self.internal.is_build_done = True
+        self.is_built = True
 
         # call post_build_fns
-        if bool(self.internal.post_build_fns):
+        if bool(self.post_build_fns):
             for _fn in self.internal.post_build_fns:
                 _fn()
-            self.internal.post_build_fns.clear()
+            self.post_build_fns.clear()
 
     def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
@@ -411,24 +461,6 @@ class _WidgetDpg(m.YamlRepr, abc.ABC):
         >>> dpg.disable_item
         """
         internal_dpg.configure_item(self.dpg_id, enabled=False)
-
-
-class WidgetInternal(_WidgetDpgInternal):
-    parent: "ContainerWidget"
-    is_build_done: bool
-    tag: str = None
-
-    def vars_that_can_be_overwritten(self) -> t.List[str]:
-        return super().vars_that_can_be_overwritten() + ["tag", "parent", ]
-
-    def test_if_others_set(self):
-        if not self.has("parent"):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is not a children to any parent",
-                    f"Please use some container widget and add this Widget",
-                ]
-            )
 
 
 @dataclasses.dataclass
@@ -866,22 +898,16 @@ class Engine:
             raise RuntimeError("Viewport was not created and shown.")
 
         # -------------------------------------------------- 03
-        # setup and layout
-        _LOGGER.info(msg="Setup and layout dashboard ...")
-        dash.setup()
-        dash.layout()
-
-        # -------------------------------------------------- 04
         # call build and indicate build is done
         _LOGGER.info(msg="Building dashboard ...")
         dash.build()
         dash.internal.is_run_called = True
 
-        # -------------------------------------------------- 05
+        # -------------------------------------------------- 04
         # call gui main code in async
         asyncio.run(cls.main(), debug=_pyc_debug, )
 
-        # -------------------------------------------------- 06
+        # -------------------------------------------------- 05
         # destroy
         dpg.destroy_context()
 
@@ -950,9 +976,6 @@ class Engine:
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_not_to_be_cached=['is_tagged', 'get_tag']
-)
 class Widget(_WidgetDpg, abc.ABC):
     """
     todo: add async update where widget can be updated via long running python code
@@ -963,29 +986,42 @@ class Widget(_WidgetDpg, abc.ABC):
     """
 
     @property
-    def is_tagged(self) -> bool:
-        return self.internal.tag is not None
-
-    @property
     def is_built(self) -> bool:
-        return self.internal.has(item="is_build_done")
+        try:
+            return self._is_built
+        except AttributeError:
+            return False
 
-    @property
-    @util.CacheResult
-    def internal(self) -> WidgetInternal:
-        return WidgetInternal(owner=self)
+    @is_built.setter
+    def is_built(self, value: bool):
+        if not self._is_built:
+            self._is_built = value
+        else:
+            raise Exception(f"Cannot set as is_built is already "
+                            f"set for instance of class {self.__class__}. "
+                            f"Avoid building multiple times")
 
     @property
     def parent(self) -> "ContainerWidget":
-        return self.internal.parent
+        return self._parent
+
+    @parent.setter
+    def parent(self, value: "ContainerWidget"):
+        self._parent = value
 
     @property
-    @util.CacheResult
+    def tag(self) -> t.Optional[str]:
+        return self._tag
+
+    @tag.setter
+    def tag(self, value: t.Optional[str]):
+        self._tag = value
+
+    @property
     def root(self) -> "window.Window":
         return self.parent.root
 
     @property
-    @util.CacheResult
     def dash_board(self) -> "Dashboard":
         """
         root is always Window and Window has Dashboard
@@ -1010,6 +1046,30 @@ class Widget(_WidgetDpg, abc.ABC):
         Will return False if self.delete() is called as the dpg item will no longer be available
         """
         return dpg.does_item_exist(item=self.dpg_id)
+
+    def __enter__(self: T) -> T:
+
+        # call on_enter
+        self.on_enter()
+
+        # return
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        todo handle exc_type, exc_val, exc_tb args for exception
+
+        Args:
+            exc_type:
+            exc_val:
+            exc_tb:
+
+        Returns:
+
+        """
+
+        # call on exit
+        self.on_exit(exc_type, exc_val, exc_tb)
 
     def __eq__(self, other):
         """
@@ -1037,10 +1097,6 @@ class Widget(_WidgetDpg, abc.ABC):
             Engine.update[id(self)] = self
         if Widget.fixed_update != self.__class__.fixed_update:
             Engine.fixed_update[id(self)] = self
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.widget.{cls.__name__}"
 
     def on_enter(self):
         raise e.code.NotAllowed(
@@ -1139,18 +1195,13 @@ class Widget(_WidgetDpg, abc.ABC):
 
 USER_DATA = t.Dict[
     str, t.Union[
-        int, float, str, slice, tuple, list, dict, None,
-        m.FrozenEnum, m.HashableClass, Widget,
+        int, float, str, slice, tuple, list, dict, None, Widget,
     ]
 ]
 
 
 @dataclasses.dataclass
 class MovableWidget(Widget, abc.ABC):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.movable_widget.{cls.__name__}"
 
     def move(self, parent: "ContainerWidget" = None, before: "MovableWidget" = None):
         """
@@ -1242,9 +1293,6 @@ class MovableWidget(Widget, abc.ABC):
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_to_be_cached=['children'],
-)
 class ContainerWidget(Widget, abc.ABC):
     """
     Widget that can hold children
@@ -1254,19 +1302,16 @@ class ContainerWidget(Widget, abc.ABC):
     """
 
     @property
-    @util.CacheResult
-    def children(self) -> util.SmartDict:
-        return util.SmartDict(
-            allow_nested_dict_or_list=False, allowed_types=tuple(self.restrict_children_type)
-        )
-
-    @property
-    def restrict_children_type(self) -> t.List[t.Type]:
+    def restrict_children_type(self) -> t.Tuple[t.Type]:
         """
         Default is to restrict MovableWidget but you can override this to have
         Widget's as the __call__ method can accept Widget
         """
-        return [MovableWidget]
+        return MovableWidget,
+
+    @property
+    def children(self) -> t.Dict[str, Widget]:
+        return self._children
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: Widget, before: MovableWidget = None):
@@ -1293,15 +1338,23 @@ class ContainerWidget(Widget, abc.ABC):
                     "May be you want to `move()` widget instead.",
                 ]
             )
+        # we can now store widget inside children dict
+        if not isinstance(_widget, self.restrict_children_type):
+            raise Exception(
+                f"Provided widget class type {_widget.__class__} is not one of "
+                f"{self.restrict_children_type}"
+            )
+        # do not try to add again
+        if id(_widget) in self._children.keys():
+            raise Exception("This widget was already added")
 
         # -------------------------------------------------- 02
         # set internals
-        _widget.internal.parent = self
+        _widget.parent = self
 
         # -------------------------------------------------- 03
-        # we can now store widget inside children dict
         # noinspection PyTypeChecker
-        self.children[id(_widget)] = _widget
+        self._children[id(_widget)] = _widget
 
         # -------------------------------------------------- 04
         # if thw parent widget is already built we need to build this widget here
@@ -1309,9 +1362,12 @@ class ContainerWidget(Widget, abc.ABC):
         if self.is_built:
             _widget.build()
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.container_widget.{cls.__name__}"
+    def init(self):
+        # call super
+        super().init()
+
+        # add var
+        self._children = dict()
 
     def on_enter(self):
         global _CONTAINER_WIDGET_STACK
@@ -1328,12 +1384,10 @@ class ContainerWidget(Widget, abc.ABC):
         # super().on_exit()
 
     def clone(self) -> "ContainerWidget":
-        if bool(self.children):
-            raise e.code.CodingError(
-                msgs=[
-                    "Cannot clone as you have added some widgets as children for "
-                    f"the container widget {self.__class__}"
-                ]
+        if bool(self._children):
+            raise Exception(
+                "Cannot clone as you have added some widgets as children for "
+                f"the container widget {self.__class__}"
             )
         # noinspection PyTypeChecker
         return super().clone()
@@ -1346,7 +1400,7 @@ class ContainerWidget(Widget, abc.ABC):
 
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
-        for child in self.children.values():
+        for child in self._children.values():
             child.build()
 
     def hide(self, children_only: bool = False):
@@ -1355,13 +1409,13 @@ class ContainerWidget(Widget, abc.ABC):
         >>> dpg.hide_item
         """
         if children_only:
-            for child in self.children:
+            for child in self._children:
                 child.hide()
         else:
             super().hide()
 
     def clear(self):
-        _children = self.children
+        _children = self._children
         for _k in list(_children.keys()):
             _children[_k].delete()
 
@@ -1372,17 +1426,190 @@ class ContainerWidget(Widget, abc.ABC):
 
 @dataclasses.dataclass
 class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.movable_container_widget.{cls.__name__}"
+    ...
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_to_be_cached=['form_fields_container'],
-    things_not_to_be_overridden=['build']
-)
+class Hashable(abc.ABC):
+
+    @property
+    @abc.abstractmethod
+    def hex_hash(self) -> str:
+        ...
+
+
+class UseMethodInForm:
+    """
+    A decorator for HashableCLass methods that can then be used in forms like
+    HashableMethodsRunnerForm and DoubleSplitForm
+    """
+
+    def __init__(
+        self, label_fmt: str = None, call_as_async: bool = False
+    ):
+        """
+
+        Args:
+            label_fmt: label for button ... if str is property we will
+              call it to get label
+            call_as_async: can call method in async task ...
+        """
+        self.label_fmt = label_fmt
+        self.call_as_async = call_as_async
+
+    @staticmethod
+    async def async_call(_fn: t.Callable):
+        from .gui import widget
+
+        try:
+
+            # loop infinitely
+            while widget.does_exist:
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not widget.is_visible:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # update widget
+                widget.set_value(f"{int(widget.get_value())+1:03d}")
+
+                # change update rate based on some value
+                if self.some_value == "first hashable ...":
+                    await asyncio.sleep(1)
+                    if int(widget.get_value()) == 10:
+                        break
+                else:
+                    await asyncio.sleep(0.1)
+                    if int(widget.get_value()) == 50:
+                        break
+
+        except Exception as _e:
+            if widget.does_exist:
+                raise _e
+            else:
+                ...
+
+    @staticmethod
+    def make_async_caller_fn(_fn: t.Callable) -> t.Callable:
+
+        from . import widget
+
+        async def _async_fn(_self, grp_widget: widget.Group):
+
+            # todo: remove later just for sanity check
+            # noinspection PyUnresolvedReferences
+            assert id(_self) == id(_fn.__self__), "was expecting this to be same"
+
+        def _new_fn(_self):
+            _grp = widget.Group(horizontal=True)
+            with _grp:
+                widget.Text(default_value="count")
+                _txt = widget.Text(default_value="000")
+                Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
+            return _grp
+
+        return _new_fn
+
+    def __call__(self, fn: t.Callable):
+        """
+        todo: add signature test to confirm that Widget or any of its subclass
+          is returned by fn
+        todo: currently fn cannot have any kwargs but eventually read the kwargs and
+          build a form do that parametrized widget running is possible ...
+          a bit complex but possible
+        """
+        # make new fn
+        if self.call_as_async:
+            _new_fn = self.make_async_caller_fn(fn)
+        else:
+            _new_fn = fn
+
+        # set vars
+        self.fn = _new_fn
+
+        # store self inside fn
+        # also check `cls.get_from_hashable_fn` which will help get access
+        # to this instance
+        setattr(fn, f"_{self.__class__.__name__}", self)
+
+        # return fn as this is decorator
+        return self.fn
+
+    @classmethod
+    def get_from_hashable_fn(
+        cls, hashable: t.Union[Hashable, "HashableClass"], fn_name: str
+    ) -> "UseMethodInForm":
+        try:
+            _fn = getattr(hashable.__class__, fn_name)
+        except AttributeError:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Function with name {fn_name} is not present in class "
+                    f"{hashable.__class__}"
+                ]
+            )
+        try:
+            return getattr(_fn, f"_{cls.__name__}")
+        except AttributeError:
+            raise e.code.CodingError(
+                msgs=[
+                    f"The function {_fn} was not decorated with {UseMethodInForm}"
+                ]
+            )
+
+    def get_button_widget(
+        self,
+        hashable: t.Union[Hashable, "HashableClass"],
+        receiver: "widget.ContainerWidget",
+        allow_refresh: bool,
+        group_tag: str = None,
+    ) -> "widget.Button":
+        from . import widget
+
+        # ---------------------------------------------------- 01
+        # test callable name
+        _callable_name = self.fn.__name__
+        if not util.rhasattr(hashable, _callable_name):
+            raise e.code.CodingError(msgs=[
+                f"Callable `{_callable_name}` not available for "
+                f"HashableClass {hashable.__class__}"
+            ])
+
+        # ---------------------------------------------------- 02
+        # make label for button
+        if isinstance(getattr(hashable.__class__, self.label_fmt, None), property):
+            _button_label = getattr(hashable, self.label_fmt)
+        elif self.label_fmt is None:
+            _button_label = f"{hashable.__class__.__name__}.{hashable.hex_hash} " \
+                            f"({_callable_name})"
+        elif isinstance(self.label_fmt, str):
+            _button_label = self.label_fmt
+        else:
+            raise e.code.CodingError(
+                msgs=[f"unknown type {type(self.label_fmt)}"]
+            )
+
+        # ---------------------------------------------------- 03
+        # create callback
+        _callback = callback.HashableMethodRunnerCallback(
+            hashable=hashable,
+            callable_name=_callable_name,
+            receiver=receiver,
+            allow_refresh=allow_refresh,
+            group_tag=group_tag,
+        )
+
+        # ---------------------------------------------------- 04
+        # create and return button
+        return widget.Button(
+            label=_button_label,
+            callback=_callback,
+        )
+
+
+@dataclasses.dataclass
 class Form(MovableWidget, abc.ABC):
     """
     Form is a special widget which creates a `form_fields_container` container and
@@ -1402,27 +1629,6 @@ class Form(MovableWidget, abc.ABC):
     """
     title: t.Optional[str]
     collapsing_header_open: bool
-
-    @property
-    @util.CacheResult
-    def form_fields_container(self) -> MovableContainerWidget:
-        """
-        The container that holds all form fields.
-
-        Note that this should be movable too .. i.e. you cannot use
-        widgets like Window.
-
-        Default is Group but you can have any widget that allows children.
-        ChildWindow is also better option as it has menubar.
-
-        Override this property to achieve the same.
-        """
-        from .widget import Group
-        return Group()
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.form.{cls.__name__}"
 
     def init(self):
         """
@@ -1469,6 +1675,8 @@ class Form(MovableWidget, abc.ABC):
         # ------------------------------------------------------- 01
         # call super
         super().init()
+        # container for form fields
+        self._form_fields_container = None
 
         # ------------------------------------------------------- 02
         # loop over fields
@@ -1503,7 +1711,7 @@ class Form(MovableWidget, abc.ABC):
                 # hack to overwrite field value (as this is frozen)
                 self.__dict__[f_name] = v_cloned
 
-    def layout(self):
+    def layout(self) -> MovableContainerWidget:
         """
         Method to layout widgets in this form and assign Callbacks if any
 
@@ -1518,36 +1726,47 @@ class Form(MovableWidget, abc.ABC):
         For dynamic widgets add Group widget as dataclass field and add dynamic items
         to it
         """
+        # make grp
+        from .widget import Group
+        _grp = Group()
 
         # if there is a widget which is field of this widget then add it
         for f_name in self.dataclass_field_names:
             v = getattr(self, f_name)
             if isinstance(v, MovableWidget):
-                self.form_fields_container(widget=v)
+                _grp(widget=v)
+
+        # return
+        return _grp
 
     def build(self) -> t.Union[int, str]:
         # set internals
         from .widget import CollapsingHeader
 
+        # set form fields container
+        if self._form_fields_container is not None:
+            raise Exception(
+                "We were expecting _form_fields_container to be None"
+            )
+
         # if title present add collapsing header
-        if self.title is None:
-            _c = self.form_fields_container
-        else:
+        _c = self.layout()
+        if self.title is not None:
             _c = CollapsingHeader(
                 label=self.title, default_open=self.collapsing_header_open)
-            _c(widget=self.form_fields_container)
+            _c(widget=_c)
 
         # set parent
-        _c.internal.parent = self.parent
+        _c.parent = self.parent
 
-        # layout
-        self.layout()
+        # set the container for future use
+        self._form_fields_container = _c
 
         # return
         return _c.build()
 
     def clear(self):
-        _children = self.form_fields_container.children
+        _children = self._form_fields_container.children
         for _k in list(_children.keys()):
             _children[_k].delete()
 
@@ -1556,8 +1775,8 @@ class Form(MovableWidget, abc.ABC):
         return super().delete()
 
 
-@dataclasses.dataclass(frozen=True)
-class Callback(m.YamlRepr, abc.ABC):
+@dataclasses.dataclass
+class Callback(abc.ABC):
     """
     Note that `Callback.fn` will as call back function.
     But when it comes to callback data we need not worry as the fields
@@ -1574,10 +1793,6 @@ class Callback(m.YamlRepr, abc.ABC):
     def init(self):
         ...
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.callback.{cls.__name__}"
-
     @abc.abstractmethod
     def fn(self, sender: Widget):
         ...
@@ -1589,8 +1804,8 @@ class Callback(m.YamlRepr, abc.ABC):
         return _ret
 
 
-@dataclasses.dataclass(frozen=True)
-class Registry(m.YamlRepr, abc.ABC):
+@dataclasses.dataclass
+class Registry(abc.ABC):
 
     def __post_init__(self):
         self.init_validate()
@@ -1601,10 +1816,6 @@ class Registry(m.YamlRepr, abc.ABC):
 
     def init(self):
         ...
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.registry.{cls.__name__}"
 
     def get_user_data(self) -> USER_DATA:
         """
@@ -1632,57 +1843,32 @@ class Registry(m.YamlRepr, abc.ABC):
         return _ret
 
 
-class PlotSeriesInternal(WidgetInternal):
-    parent: "plot.YAxis"
-
-
 @dataclasses.dataclass
 class PlotSeries(Widget, abc.ABC):
 
     @property
-    @util.CacheResult
-    def internal(self) -> PlotSeriesInternal:
-        return PlotSeriesInternal(owner=self)
-
-    @property
     def parent(self) -> "plot.YAxis":
-        return self.internal.parent
+        return self._parent
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        # ys -> Y Series
-        return f"gui.plot.ys.{cls.__name__}"
-
-
-class PlotItemInternal(WidgetInternal):
-    parent: "plot.Plot"
+    @parent.setter
+    def parent(self, value: "plot.YAxis"):
+        self._parent = value
 
 
 @dataclasses.dataclass
 class PlotItem(MovableWidget, abc.ABC):
 
     @property
-    @util.CacheResult
-    def internal(self) -> PlotItemInternal:
-        return PlotItemInternal(owner=self)
-
-    @property
     def parent(self) -> "plot.Plot":
-        return self.internal.parent
+        return self._parent
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        # ci -> movable item
-        return f"gui.plot.{cls.__name__}"
-
-
-class DashboardInternal(m.Internal):
-    is_run_called: bool
+    @parent.setter
+    def parent(self, value: "plot.Plot"):
+        self._parent = value
 
 
 @dataclasses.dataclass
-@m.RuleChecker()
-class Dashboard(m.YamlRepr, abc.ABC):
+class Dashboard(abc.ABC):
     """
     Dashboard is not a Widget.
     As of now we think of having only items that do not have parent; like
@@ -1719,9 +1905,9 @@ class Dashboard(m.YamlRepr, abc.ABC):
     height: int = 1200
 
     @property
-    @util.CacheResult
-    def internal(self) -> DashboardInternal:
-        return DashboardInternal(owner=self)
+    def dataclass_field_names(self) -> t.List[str]:
+        # noinspection PyUnresolvedReferences
+        return list(self.__dataclass_fields__.keys())
 
     def __post_init__(self):
         self.init_validate()
@@ -1817,10 +2003,6 @@ class Dashboard(m.YamlRepr, abc.ABC):
                 v_cloned = v.clone()
                 # hack to overwrite field value (as this is frozen)
                 self.__dict__[f_name] = v_cloned
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.dashboard.{cls.__name__}"
 
     @staticmethod
     def is_dearpygui_running() -> bool:
@@ -1992,13 +2174,18 @@ class Dashboard(m.YamlRepr, abc.ABC):
         return internal_dpg.get_total_time(**kwargs)
 
     @abc.abstractmethod
-    def setup(self):
+    def layout(self) -> "window.Window":
         ...
 
-    @abc.abstractmethod
-    def layout(self):
-        ...
-
-    @abc.abstractmethod
     def build(self):
-        ...
+        _primary_window = self.layout()
+        _primary_window.setup(dash_board=self)
+        _primary_window.build()
+        # primary window dpg_id
+        _primary_window_dpg_id = _primary_window.dpg_id
+        # set the things for primary window
+        dpg.set_primary_window(window=_primary_window_dpg_id, value=True)
+        # todo: have to figure out theme, font etc.
+        # themes.set_theme(theme="Dark Grey")
+        # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
+        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())

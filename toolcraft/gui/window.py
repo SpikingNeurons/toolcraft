@@ -1,64 +1,44 @@
-import typing as t
 import dataclasses
-# noinspection PyProtectedMember
-import dearpygui._dearpygui as internal_dpg
 import dearpygui.dearpygui as dpg
 
-from .. import error as e
-from .. import util
 from . import dashboard
-from . import __base__
 from . import _auto
-from . import widget
-from . import EnMouseButton
-
-
-class WindowInternal(__base__.WidgetInternal):
-    dash_board: dashboard.Dashboard
-
-    def test_if_others_set(self):
-        if not self.has("dash_board"):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Window {self.__class__} has no dash_board",
-                    f"Make sure you have called `Window.setup(dash_board)` "
-                    f"before building window",
-                ]
-            )
 
 
 @dataclasses.dataclass
 class Window(_auto.Window):
 
     @property
-    @util.CacheResult
-    def internal(self) -> WindowInternal:
-        # noinspection PyTypeChecker
-        return WindowInternal(owner=self)
-
-    @property
     def parent(self) -> None:
-        raise e.code.CodingError(
-            msgs=[
-                "Use of `parent` for `Window` is not allowed.",
-                "Please use `dash_board` instead.",
-            ]
+        raise Exception(
+            "Use of `parent` for `Window` is not allowed.",
+            "Please use `dash_board` instead.",
+        )
+
+    @parent.setter
+    def parent(self, value):
+        raise Exception(
+            f"Property parent should not be set for Window ..."
         )
 
     @property
-    def dash_board(self) -> dashboard.Dashboard:
-        return self.internal.dash_board
+    def dash_board(self) -> "dashboard.Dashboard":
+        if self._dash_board is None:
+            raise Exception(f"The dash_board property was never set so cannot retrieve it ...")
+        return self._dash_board
+
+    @dash_board.setter
+    def dash_board(self, value: "dashboard.Dashboard"):
+        if self._dash_board is not None:
+            raise Exception(f"The property dash_board is already set so cannot set it again")
+        self._dash_board = value
 
     @property
     def root(self) -> "Window":
         return self
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.window.{cls.__name__}"
-
     def setup(self, dash_board: dashboard.Dashboard):
-        self.internal.dash_board = dash_board
+        self.dash_board = dash_board
 
 
 @dataclasses.dataclass
@@ -102,12 +82,6 @@ class PopUp(Window):
 class FileDialog(_auto.FileDialog):
 
     @property
-    @util.CacheResult
-    def internal(self) -> WindowInternal:
-        # noinspection PyTypeChecker
-        return WindowInternal(owner=self)
-
-    @property
     def parent(self) -> None:
         raise e.code.CodingError(
             msgs=[
@@ -123,10 +97,6 @@ class FileDialog(_auto.FileDialog):
     @property
     def root(self) -> "FileDialog":
         return self
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.window.{cls.__name__}"
 
     def setup(self, dash_board: dashboard.Dashboard):
         self.internal.dash_board = dash_board

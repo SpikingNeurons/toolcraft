@@ -4,7 +4,8 @@ todo: Separate gui module in new package so that
   + can be deployed as exe using pyinstaller, Nuitka
 """
 
-from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE, USER_DATA, Engine, AwaitableTask, BlockingTask
+from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE, USER_DATA, Engine, AwaitableTask, BlockingTask, \
+    Hashable, UseMethodInForm
 from ._enum import *
 from . import widget
 from . import window

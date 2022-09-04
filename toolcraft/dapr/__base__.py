@@ -24,6 +24,104 @@ if False:
 _LOGGER = logger.get_logger()
 
 
+@dataclasses.dataclass
+class DaprClientDashboard(Dashboard):
+
+    subtitle: str = None
+    callable_name: str = None
+
+    def init(self):
+        # call super
+        super().init()
+
+        # make some vars
+        self._split_form = None
+        self._console_form = None
+
+    @property
+    def split_form(self) -> form.DoubleSplitForm:
+        if self._split_form is None:
+            self._split_form = form.DoubleSplitForm(
+                title=f"...",
+                callable_name=self.callable_name,
+                allow_refresh=False,
+                collapsing_header_open=False,
+            )
+        return self._split_form
+
+    @property
+    def console_form(self) -> widget.CollapsingHeader:
+        if self._split_form is not None:
+            return self._split_form
+
+        _console_ch = widget.CollapsingHeader(default_open=False, label="Console")
+        _receiver = widget.Text(default_value="...")
+        # note only available for `dapr.DaprMode.client`
+        _server = dapr.DAPR.server
+
+        @dataclasses.dataclass
+        class Callback(callback.Callback):
+            # noinspection PyMethodParameters
+            def fn(_self, sender: widget.Widget):
+                # noinspection PyTypeChecker
+                _dapr_mode: str = sender.get_user_data()['dapr_mode']
+                _receiver.default_value = _server.read_logs(
+                    num_bytes=2048, dapr_mode=_dapr_mode)
+
+        _button_bar = widget.Group(horizontal=True)
+        _button_bar(
+            widget=widget.Button(
+                label="Launch Log",
+                callback=Callback(),
+                user_data={"dapr_mode": dapr.DaprMode.launch.name},
+            )
+        )
+        _button_bar(
+            widget=widget.Button(
+                label="Server Log",
+                callback=Callback(),
+                user_data={"dapr_mode": dapr.DaprMode.server.name},
+            )
+        )
+
+        _console_ch(widget=_button_bar)
+        _console_ch(widget=_receiver)
+
+        self._split_form = _console_ch
+
+        return _console_ch
+
+    def layout(self) -> "window.Window":
+        # get _primary_window
+        _primary_window = window.Window(
+            label=self.title, width=self.width, height=self.height,
+        )
+
+        # add theme selector
+        _primary_window(
+            widget=callback.SetThemeCallback.get_combo_widget()
+        )
+
+        # add subtitle
+        _primary_window(
+            widget=widget.Text(default_value=self.subtitle,)
+        )
+
+        # add split form
+        _primary_window(widget=self.split_form)
+
+        # make console
+        _primary_window(widget=self.console_form)
+
+        # return
+        return _primary_window
+
+    def add_hashable(self, hashable: "m.Hashable", group_key: str = None, ):
+        self.split_form.add(
+            hashable=hashable, group_key=group_key,
+        )
+
+
 class DaprMode(m.FrozenEnum, enum.Enum):
     server = enum.auto()
     launch = enum.auto()
@@ -337,9 +435,9 @@ class HashableRunner:
     @classmethod
     def make_dashboard(
         cls, callable_name: str,
-    ) -> "gui.dashboard.DaprClientDashboard":
+    ) -> "DaprClientDashboard":
         from .. import gui
-        return gui.dashboard.DaprClientDashboard(
+        return DaprClientDashboard(
             title="Dapr Client Dashboard ...",
             subtitle=f"Will connect to: {DAPR.SERVER_IP}:{DAPR.APP_PORT}",
             callable_name=callable_name,

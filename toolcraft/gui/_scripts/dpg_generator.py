@@ -336,12 +336,6 @@ class DpgDef:
         return _is_container
 
     @property
-    def is_frozen(self) -> bool:
-        if self.is_registry:
-            return True
-        return False
-
-    @property
     def _call_prefix(self) -> str:
 
         _call_prefix = \
@@ -607,14 +601,11 @@ class DpgDef:
         # ------------------------------------------------------- 03
         # make code lines
         # ------------------------------------------------------- 03.01
-        _frozen = ""
-        if self.is_frozen:
-            _frozen = "(frozen=True)"
         # code header
         _lines = [
             "",
             "",
-            f"@dataclasses.dataclass{_frozen}",
+            f"@dataclasses.dataclass",
             f"class {self.name}({self.super_class_name}):",
             '\t"""',
             "\tRefer:",
@@ -643,7 +634,7 @@ class DpgDef:
         # get same values in local vars
         _local_val_lines = []
         if self.is_parent_param_present:
-            _local_val_lines += ["\t\t_parent_dpg_id = self.internal.parent.dpg_id"]
+            _local_val_lines += ["\t\t_parent_dpg_id = self.parent.dpg_id"]
         if self.is_source_param_present:
             _local_val_lines += ["\t\t_source_dpg_id = getattr(self.source, 'dpg_id', 0)"]
         if bool(_local_val_lines):
@@ -779,7 +770,7 @@ class EnumDef:
         _lines = [
             "",
             "",
-            f"class {self.enum_name}(Enum, enum.Enum):",
+            f"class {self.enum_name}(enum.Enum):",
             "",
             # "\tDEFAULT = 0",
         ]
@@ -875,7 +866,6 @@ import dataclasses
 import enum
 import typing as t
 
-from .__base__ import Enum
 from .__base__ import Widget
 from .__base__ import MovableWidget
 from .__base__ import ContainerWidget

@@ -10,12 +10,7 @@ sys.path.append("..")
 import dearpygui.dearpygui as dpg
 from toolcraft.gui import _demo, USER_DATA
 import numpy as np
-from toolcraft import gui, util, logger
-from toolcraft import marshalling as m
-
-_LOGGER = logger.get_logger()
-
-_LOGGER.info(msg="try gui ...")
+from toolcraft import gui
 
 
 @dataclasses.dataclass
@@ -137,19 +132,10 @@ class PlottingWithUpdates(gui.form.Form):
 
     lines_count: int = 0
 
-    @property
-    @util.CacheResult
-    def form_fields_container(self) -> gui.widget.Group:
-        _grp = gui.widget.Group()
-        _grp(self.create_button_bar())
-        return _grp
-
-    @property
-    @util.CacheResult
     def add_button(self) -> gui.widget.Button:
 
-        @dataclasses.dataclass(frozen=True)
-        class __Callback(gui.callback.Callback):
+        @dataclasses.dataclass
+        class Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
@@ -168,16 +154,14 @@ class PlottingWithUpdates(gui.form.Form):
                 _form.combo_select.default_value = _ls_ks[-1]
 
         _button = gui.widget.Button(
-            label="Add", callback=__Callback(), user_data={"form": self},
+            label="Add", callback=Callback(), user_data={"form": self},
         )
         return _button
 
-    @property
-    @util.CacheResult
     def clear_button(self) -> gui.widget.Button:
 
-        @dataclasses.dataclass(frozen=True)
-        class __Callback(gui.callback.Callback):
+        @dataclasses.dataclass
+        class Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
@@ -187,24 +171,20 @@ class PlottingWithUpdates(gui.form.Form):
                 _form.combo_select.default_value = ''
 
         _button = gui.widget.Button(
-            label="Clear", callback=__Callback(), user_data={"form": self},
+            label="Clear", callback=Callback(), user_data={"form": self},
         )
         return _button
 
-    @property
-    @util.CacheResult
     def combo_select(self) -> gui.widget.Combo:
         _combo_select = gui.widget.Combo(
             label="Select line series"
         )
         return _combo_select
 
-    @property
-    @util.CacheResult
     def update_button(self) -> gui.widget.Button:
 
-        @dataclasses.dataclass(frozen=True)
-        class __Callback(gui.callback.Callback):
+        @dataclasses.dataclass
+        class Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
@@ -218,17 +198,15 @@ class PlottingWithUpdates(gui.form.Form):
                 _plot_series.y = np.random.normal(0.0, scale=2.0, size=100)
 
         _button = gui.widget.Button(
-            label="Update", callback=__Callback(), user_data={"form": self},
+            label="Update", callback=Callback(), user_data={"form": self},
         )
 
         return _button
 
-    @property
-    @util.CacheResult
     def delete_button(self) -> gui.widget.Button:
 
-        @dataclasses.dataclass(frozen=True)
-        class __Callback(gui.callback.Callback):
+        @dataclasses.dataclass
+        class Callback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
@@ -246,30 +224,34 @@ class PlottingWithUpdates(gui.form.Form):
                     _form.combo_select.default_value = ''
 
         _button = gui.widget.Button(
-            label="Delete", callback=__Callback(), user_data={"form": self},
+            label="Delete", callback=Callback(), user_data={"form": self},
         )
 
         return _button
 
-    # noinspection PyMethodMayBeStatic
-    def create_button_bar(self) -> gui.widget.Group:
+    def layout(self) -> gui.widget.Group:
+        _layout = super().layout()
         _button_bar = gui.widget.Group(horizontal=True)
-
-        _button_bar(self.add_button)
-        _button_bar(self.clear_button)
+        _button_bar(self.add_button())
+        _button_bar(self.clear_button())
         _button_bar(gui.widget.Text(default_value=" | "))
-        _button_bar(self.combo_select)
-        _button_bar(self.update_button)
-        _button_bar(self.delete_button)
+        _button_bar(self.combo_select())
+        _button_bar(self.update_button())
+        _button_bar(self.delete_button())
+        _layout(_button_bar)
+        # noinspection PyTypeChecker
+        return _layout
 
-        return _button_bar
 
-
-@dataclasses.dataclass(frozen=True)
-class SimpleHashableClass(m.HashableClass):
+@dataclasses.dataclass
+class SimpleHashableClass(gui.Hashable):
 
     some_value: str
     click_count_for_blocking_fn: int = 0
+
+    @property
+    def hex_hash(self) -> str:
+        return f"hex_hash:{self.some_value}"
 
     @property
     def all_plots_gui_label(self) -> str:
@@ -313,7 +295,7 @@ class SimpleHashableClass(m.HashableClass):
             else:
                 ...
 
-    @m.UseMethodInForm(label_fmt="awaitable_task")
+    @gui.UseMethodInForm(label_fmt="awaitable_task")
     def awaitable_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
         with _grp:
@@ -391,7 +373,7 @@ class SimpleHashableClass(m.HashableClass):
             else:
                 ...
 
-    @m.UseMethodInForm(label_fmt="blocking_task")
+    @gui.UseMethodInForm(label_fmt="blocking_task")
     def blocking_task(self) -> gui.widget.Group:
         _grp = gui.widget.Group(horizontal=True)
         gui.AwaitableTask(
@@ -404,7 +386,7 @@ class SimpleHashableClass(m.HashableClass):
     #     time.sleep(5)
     #     return gui.widget.Text(default_value="I am done in 5 seconds ...")
 
-    @m.UseMethodInForm(label_fmt="line")
+    @gui.UseMethodInForm(label_fmt="line")
     def some_line_plot(self) -> gui.plot.Plot:
         _plot = gui.plot.Plot(
             label=f"This is line plot for {self.some_value}",
@@ -427,7 +409,7 @@ class SimpleHashableClass(m.HashableClass):
         )
         return _plot
 
-    @m.UseMethodInForm(label_fmt="scatter")
+    @gui.UseMethodInForm(label_fmt="scatter")
     def some_scatter_plot(self) -> gui.plot.Plot:
         _plot = gui.plot.Plot(
             label=f"This is scatter plot for {self.some_value}",
@@ -450,7 +432,7 @@ class SimpleHashableClass(m.HashableClass):
         )
         return _plot
 
-    @m.UseMethodInForm(
+    @gui.UseMethodInForm(
         label_fmt="all_plots_gui_label"
     )
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
@@ -547,8 +529,8 @@ def demo():
 
 
 def main():
-    # basic_dashboard()
-    demo()
+    basic_dashboard()
+    # demo()
 
 
 if __name__ == "__main__":

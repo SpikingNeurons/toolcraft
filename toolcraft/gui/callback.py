@@ -1,15 +1,17 @@
+import abc
 import dataclasses
 import dearpygui.dearpygui as dpg
 import typing as t
 
-from .. import util
-from .. import marshalling as m
-from .. import error as e
 from . import widget, asset
-from .__base__ import Callback, EnColor, Engine
+from .__base__ import Callback, EnColor, Engine, Hashable
+
+# noinspection PyUnreachableCode
+if False:
+    from ..marshalling import HashableClass
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class SetThemeCallback(Callback):
     """
     todo: we will get rid of this callback in favour of assets module ...
@@ -55,7 +57,7 @@ class SetThemeCallback(Callback):
         sender.parent.bind_theme(theme=_theme)
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class CloseWidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete the widget supplied
@@ -89,7 +91,7 @@ class CloseWidgetCallback(Callback):
             )
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class HashableMethodRunnerCallback(Callback):
     """
     This callback can call a method of HashableClass.
@@ -101,7 +103,7 @@ class HashableMethodRunnerCallback(Callback):
     Note that this will mean that allow_refresh will be True when
     tab_group_name is not None.
     """
-    hashable: m.HashableClass
+    hashable: t.Union[Hashable, "HashableClass"]
     callable_name: str
     receiver: widget.ContainerWidget
     allow_refresh: bool

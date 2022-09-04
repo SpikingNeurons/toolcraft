@@ -1,8 +1,10 @@
 import typing as t
 
-from . import widget
-from .. import marshalling as m
-from .. import error as e
+from . import widget, Hashable
+
+# noinspection PyUnresolvedReferences, PyUnreachableCode
+if False:
+    from ..marshalling import HashableClass
 
 
 def tab_bar_from_widget_dict(widget_dict: t.Dict) -> widget.TabBar:
@@ -16,17 +18,15 @@ def tab_bar_from_widget_dict(widget_dict: t.Dict) -> widget.TabBar:
             for _i, __v in enumerate(_v):
                 _tab(widget=__v)
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Unrecognized type {type(_v)}"
-                ]
+            raise Exception(
+                f"Unrecognized type {type(_v)}"
             )
     return _tab_bar
 
 
 def tab_bar_from_hashable_callables(
     title: str,
-    hashable: m.HashableClass,
+    hashable: t.Union[Hashable, "HashableClass"],
     callable_names: t.Dict[str, str],
 ) -> widget.TabBar:
     # tab bar

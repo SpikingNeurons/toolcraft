@@ -38,6 +38,20 @@ _RULE_CHECKER = "__rule_checker__"
 
 _RULE_CHECKERS_TO_BE_CHECKED = {}  # type: t.Dict[int, RuleChecker]
 
+if settings.DPG_WORKS:
+    # import the real UseMethodInForm
+    from .gui import UseMethodInForm
+else:
+    # fake class that does nothing
+    class UseMethodInForm:
+        def __init__(
+            self, label_fmt: str = None, call_as_async: bool = False
+        ):
+            ...
+
+        def __call__(self, fn: t.Callable):
+            return fn
+
 
 CUSTOM_KERAS_CLASSES_MAP = {
     "loss": dict()
@@ -68,175 +82,6 @@ class _ReadOnlyClass(type):
             f"You cannot override its attribute {key!r} programmatically.",
             f"Edit it during class definition ...",
         ])
-
-
-class UseMethodInForm:
-    """
-    A decorator for HashableCLass methods that can then be used in forms like
-    HashableMethodsRunnerForm and DoubleSplitForm
-    """
-
-    def __init__(
-        self, label_fmt: str = None, call_as_async: bool = False
-    ):
-        """
-
-        Args:
-            label_fmt: label for button ... if str is property we will
-              call it to get label
-            call_as_async: can call method in async task ...
-        """
-        self.label_fmt = label_fmt
-        self.call_as_async = call_as_async
-
-    @staticmethod
-    async def async_call(_fn: t.Callable):
-        from .gui import widget
-
-        try:
-
-            # loop infinitely
-            while widget.does_exist:
-
-                # dont update if not visible
-                # todo: can we await on bool flags ???
-                if not widget.is_visible:
-                    await asyncio.sleep(0.2)
-                    continue
-
-                # update widget
-                widget.set_value(f"{int(widget.get_value())+1:03d}")
-
-                # change update rate based on some value
-                if self.some_value == "first hashable ...":
-                    await asyncio.sleep(1)
-                    if int(widget.get_value()) == 10:
-                        break
-                else:
-                    await asyncio.sleep(0.1)
-                    if int(widget.get_value()) == 50:
-                        break
-
-        except Exception as _e:
-            if widget.does_exist:
-                raise _e
-            else:
-                ...
-
-    @staticmethod
-    def make_async_caller_fn(_fn: t.Callable) -> t.Callable:
-
-        async def _async_fn(_self, grp_widget: gui.widget.Group):
-
-            # todo: remove later just for sanity check
-            # noinspection PyUnresolvedReferences
-            assert id(_self) == id(_fn.__self__), "was expecting this to be same"
-
-        def _new_fn(_self):
-            _grp = gui.widget.Group(horizontal=True)
-            with _grp:
-                gui.widget.Text(default_value="count")
-                _txt = gui.widget.Text(default_value="000")
-                gui.Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
-            return _grp
-
-        return _new_fn
-
-    def __call__(self, fn: t.Callable):
-        """
-        todo: add signature test to confirm that Widget or any of its subclass
-          is returned by fn
-        todo: currently fn cannot have any kwargs but eventually read the kwargs and
-          build a form do that parametrized widget running is possible ...
-          a bit complex but possible
-        """
-        # make new fn
-        if self.call_as_async:
-            _new_fn = self.make_async_caller_fn(fn)
-        else:
-            _new_fn = fn
-
-        # set vars
-        self.fn = _new_fn
-
-        # store self inside fn
-        # also check `cls.get_from_hashable_fn` which will help get access
-        # to this instance
-        setattr(fn, f"_{self.__class__.__name__}", self)
-
-        # return fn as this is decorator
-        return self.fn
-
-    @classmethod
-    def get_from_hashable_fn(
-        cls, hashable: "HashableClass", fn_name: str
-    ) -> "UseMethodInForm":
-        try:
-            _fn = getattr(hashable.__class__, fn_name)
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Function with name {fn_name} is not present in class "
-                    f"{hashable.__class__}"
-                ]
-            )
-        try:
-            return getattr(_fn, f"_{cls.__name__}")
-        except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"The function {_fn} was not decorated with {UseMethodInForm}"
-                ]
-            )
-
-    def get_button_widget(
-        self,
-        hashable: "HashableClass",
-        receiver: "gui.widget.ContainerWidget",
-        allow_refresh: bool,
-        group_tag: str = None,
-    ) -> "gui.widget.Button":
-        from . import gui
-
-        # ---------------------------------------------------- 01
-        # test callable name
-        _callable_name = self.fn.__name__
-        if not util.rhasattr(hashable, _callable_name):
-            raise e.code.CodingError(msgs=[
-                f"Callable `{_callable_name}` not available for "
-                f"HashableClass {hashable.__class__}"
-            ])
-
-        # ---------------------------------------------------- 02
-        # make label for button
-        if isinstance(getattr(hashable.__class__, self.label_fmt, None), property):
-            _button_label = getattr(hashable, self.label_fmt)
-        elif self.label_fmt is None:
-            _button_label = f"{hashable.__class__.__name__}.{hashable.hex_hash} " \
-                            f"({_callable_name})"
-        elif isinstance(self.label_fmt, str):
-            _button_label = self.label_fmt
-        else:
-            raise e.code.CodingError(
-                msgs=[f"unknown type {type(self.label_fmt)}"]
-            )
-
-        # ---------------------------------------------------- 03
-        # create callback
-        _callback = gui.callback.HashableMethodRunnerCallback(
-            hashable=hashable,
-            callable_name=_callable_name,
-            receiver=receiver,
-            allow_refresh=allow_refresh,
-            group_tag=group_tag,
-        )
-
-        # ---------------------------------------------------- 04
-        # create and return button
-        return gui.widget.Button(
-            label=_button_label,
-            callback=_callback,
-        )
 
 
 class Internal:

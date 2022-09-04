@@ -420,15 +420,15 @@ class ArtifactManager:
 
         # class for ButtonBarForm that supports loading artifacts
         @dataclasses.dataclass
-        class __ButtonBarForm(gui.form.ButtonBarForm):
+        class ButtonBarForm(gui.form.ButtonBarForm):
 
             @property
             @util.CacheResult
             def callback(self_1) -> gui.callback.Callback:
 
                 # make class for callback handling
-                @dataclasses.dataclass(frozen=True)
-                class __Callback(gui.callback.Callback):
+                @dataclasses.dataclass
+                class Callback(gui.callback.Callback):
                     # noinspection PyMethodParameters
                     def fn(self_2, sender: gui.widget.Widget):
                         _key = sender.get_user_data()["key"]
@@ -442,9 +442,9 @@ class ArtifactManager:
                                 artifact=_key, experiment=self.job.experiment, file_path=_file)
                         self_1.receiver(_w)
 
-                return __Callback()
+                return Callback()
 
-        _form = __ButtonBarForm(title=None, collapsing_header_open=False)
+        _form = ButtonBarForm(title=None, collapsing_header_open=False)
 
         for _ in self.available_artifacts():
             _form.register(key=_, fn=None)

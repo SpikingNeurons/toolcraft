@@ -1,16 +1,12 @@
 import dataclasses
 import functools
 import typing as t
-import abc
 import dearpygui.dearpygui as dpg
 # noinspection PyProtectedMember
 import dearpygui._dearpygui as internal_dpg
 
-from .__base__ import PlotSeries, PlotItem, PlotItemInternal
+from .__base__ import PlotSeries, PlotItem
 from . import _auto
-from .. import error as e
-from .. import util
-from .. import marshalling as m
 
 # auto pk; start >>>
 # noinspection PyUnresolvedReferences
@@ -48,54 +44,39 @@ from ._auto import VLineSeries
 
 @dataclasses.dataclass
 class Simple(_auto.SimplePlot):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+    ...
 
 
 @dataclasses.dataclass
 class Legend(_auto.PlotLegend):
 
     @property
-    @util.CacheResult
-    def internal(self) -> PlotItemInternal:
-        return PlotItemInternal(owner=self)
-
-    @property
     def parent(self) -> "Plot":
-        return self.internal.parent
+        return self._parent
+
+    @parent.setter
+    def parent(self, value: "Plot"):
+        self._parent = value
 
     @property
     def registered_as_child(self) -> bool:
         return False
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        # ci -> movable item
-        return f"gui.plot.{cls.__name__}"
 
 
 @dataclasses.dataclass
 class XAxis(_auto.PlotXAxis):
 
     @property
-    @util.CacheResult
-    def internal(self) -> PlotItemInternal:
-        return PlotItemInternal(owner=self)
-
-    @property
     def parent(self) -> "Plot":
-        return self.internal.parent
+        return self._parent
+
+    @parent.setter
+    def parent(self, value: "Plot"):
+        self._parent = value
 
     @property
     def registered_as_child(self) -> bool:
         return False
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        # ci -> movable item
-        return f"gui.plot.{cls.__name__}"
 
     def get_limits(self) -> t.List[float]:
         """
@@ -157,7 +138,7 @@ class XAxis(_auto.PlotXAxis):
         if self.is_built:
             internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
         else:
-            self.internal.post_build_fns.append(
+            self.post_build_fns.append(
                 functools.partial(self.set_ticks, label_pairs)
             )
 
@@ -166,21 +147,20 @@ class XAxis(_auto.PlotXAxis):
 class YAxis(_auto.PlotYAxis):
 
     @property
-    @util.CacheResult
-    def internal(self) -> PlotItemInternal:
-        return PlotItemInternal(owner=self)
-
-    @property
     def parent(self) -> "Plot":
-        return self.internal.parent
+        return self._parent
+
+    @parent.setter
+    def parent(self, value: "Plot"):
+        self._parent = value
 
     @property
     def registered_as_child(self) -> bool:
         return False
 
     @property
-    def restrict_children_type(self) -> t.List[t.Type[PlotSeries]]:
-        return [PlotSeries]
+    def restrict_children_type(self) -> t.Tuple[t.Type[PlotSeries]]:
+        return PlotSeries,
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: PlotSeries):
@@ -196,11 +176,6 @@ class YAxis(_auto.PlotYAxis):
                     ]
                 )
         super().__call__(widget=widget, before=None)
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        # ci -> movable item
-        return f"gui.plot.{cls.__name__}"
 
     def get_limits(self) -> t.List[float]:
         """
@@ -283,9 +258,6 @@ class DragPoint(_auto.PlotDragPoint):
 
 
 @dataclasses.dataclass
-@m.RuleChecker(
-    things_to_be_cached=['legend', 'x_axis', 'y1_axis', 'y2_axis', 'y3_axis'],
-)
 class Plot(_auto.Plot):
     """
     Refer this to improve more:
@@ -325,62 +297,58 @@ class Plot(_auto.Plot):
     num_of_y_axis: t.Literal[1, 2, 3] = 1
 
     @property
-    def restrict_children_type(self) -> t.List[t.Type[PlotItem]]:
-        return [PlotItem]
+    def restrict_children_type(self) -> t.Tuple[t.Type[PlotItem]]:
+        return PlotItem,
 
     @property
-    @util.CacheResult
     def legend(self) -> Legend:
-        with self:
-            _ret = Legend()
-            _ret.internal.parent = self
-            return _ret
+        if self._legend is None:
+            with self:
+                self._legend = Legend()
+                self._legend.parent = self
+        return self._legend
 
     @property
-    @util.CacheResult
     def x_axis(self) -> XAxis:
-        with self:
-            _ret = XAxis()
-            _ret.internal.parent = self
-            return _ret
+        if self._x_axis is None:
+            with self:
+                self._x_axis = XAxis()
+                self._x_axis.parent = self
+        return self._x_axis
 
     @property
-    @util.CacheResult
     def y1_axis(self) -> YAxis:
-        with self:
-            _ret = YAxis()
-            _ret.internal.parent = self
-            return _ret
+        if self._y1_axis is None:
+            with self:
+                self._y1_axis = YAxis()
+                self._y1_axis.parent = self
+        return self._y1_axis
 
     @property
-    @util.CacheResult
     def y2_axis(self) -> YAxis:
-        if self.num_of_y_axis not in [2, 3]:
-            raise e.code.CodingError(
-                msgs=[
+        if self._y2_axis is None:
+            if self.num_of_y_axis not in [2, 3]:
+                raise Exception(
                     f"You cannot access this property. "
                     f"Please set the field `num_of_y_axis` to be one of [2, 3]"
-                ]
-            )
-        with self:
-            _ret = YAxis()
-            _ret.internal.parent = self
-            return _ret
+                )
+            with self:
+                self._y2_axis = YAxis()
+                self._y2_axis.parent = self
+        return self._y2_axis
 
     @property
-    @util.CacheResult
     def y3_axis(self) -> YAxis:
-        if self.num_of_y_axis != 3:
-            raise e.code.CodingError(
-                msgs=[
+        if self._y3_axis is None:
+            if self.num_of_y_axis != 3:
+                raise Exception(
                     f"You cannot access this property. "
                     f"Please set the field `num_of_y_axis` to be 3 to use this property"
-                ]
-            )
-        with self:
-            _ret = YAxis()
-            _ret.internal.parent = self
-            return _ret
+                )
+            with self:
+                self._y3_axis = YAxis()
+                self._y3_axis.parent = self
+        return self._y3_axis
 
     @property
     def is_queried(self) -> bool:
@@ -397,20 +365,25 @@ class Plot(_auto.Plot):
         # call super for normal process
         super().__call__(widget=widget, before=before)
 
+    def init(self):
+        # call super
+        super().init()
+
+        # add some important vars
+        self._legend = None
+        self._x_axis = None
+        self._y1_axis = None
+        self._y2_axis = None
+        self._y3_axis = None
+
     def init_validate(self):
         # call super
         super().init_validate()
         # check num_of_y_axis
-        e.validation.ShouldBeOneOf(
-            value=self.num_of_y_axis, values=[1, 2, 3],
-            msgs=[
-                "Please crosscheck the value for field num_of_y_axis"
-            ]
-        ).raise_if_failed()
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"
+        if self.num_of_y_axis not in [1, 2, 3]:
+            raise ValueError(
+                "Please crosscheck the value for field num_of_y_axis. Should be one of [1, 2, 3]"
+            )
 
     def get_query_area(self) -> t.Tuple[float, float]:
         """
@@ -493,12 +466,8 @@ class Plot(_auto.Plot):
 class SubPlots(_auto.SubPlots):
 
     @property
-    def restrict_children_type(self) -> t.List[t.Type[Plot]]:
-        return [Plot]
+    def restrict_children_type(self) -> t.Tuple[t.Type[Plot]]:
+        return Plot,
 
     def __call__(self, widget: Plot, before: Plot = None):
         super().__call__(widget, before)
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.plot.{cls.__name__}"

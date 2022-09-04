@@ -7,24 +7,16 @@ import dearpygui._dearpygui as internal_dpg
 from . import __base__
 from . import COLOR_TYPE
 from . import _auto
-from .. import error as e
-from .. import util
 
 
 @dataclasses.dataclass
 class Column(_auto.TableColumn):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.table.{cls.__name__}"
+    ...
 
 
 @dataclasses.dataclass
 class Cell(_auto.TableCell):
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.table.{cls.__name__}"
+    ...
 
 
 @dataclasses.dataclass
@@ -36,13 +28,16 @@ class Row(_auto.TableRow):
     """
 
     @property
-    def restrict_children_type(self) -> t.List[t.Type[Cell]]:
-        return [Cell]
+    def restrict_children_type(self) -> t.Tuple[t.Type[Cell]]:
+        return Cell,
 
     @property
     def parent(self) -> "Table":
-        # noinspection PyTypeChecker
-        return super().parent
+        return self._parent
+
+    @parent.setter
+    def parent(self, value: "Table"):
+        self._parent = value
 
     def __getitem__(self, item: int) -> Cell:
         # noinspection PyTypeChecker
@@ -84,10 +79,6 @@ class Row(_auto.TableRow):
             ]
         )
 
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.table.{cls.__name__}"
-
 
 @dataclasses.dataclass
 class Table(_auto.Table):
@@ -98,8 +89,8 @@ class Table(_auto.Table):
     columns: t.List[Column] = None
 
     @property
-    def restrict_children_type(self) -> t.List[t.Type[Row]]:
-        return [Row]
+    def restrict_children_type(self) -> t.Tuple[t.Type[Row]]:
+        return Row,
 
     def __call__(self, widget: Row, before: Row = None):
 
@@ -181,10 +172,6 @@ class Table(_auto.Table):
         # todo: instead of using hack have block access via __getattr__ and raise warning ... for now this will suffice
         #   ... also pycharm stops type hinting when __getattr__ is overridden :(
         self.__dict__['rows'] = None
-
-    @classmethod
-    def yaml_tag(cls) -> str:
-        return f"gui.table.{cls.__name__}"
 
     def build_post_runner(
         self, *, hooked_method_return_value: t.Union[int, str]
