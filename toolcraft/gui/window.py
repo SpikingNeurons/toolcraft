@@ -37,9 +37,6 @@ class Window(_auto.Window):
     def root(self) -> "Window":
         return self
 
-    def setup(self, dash_board: dashboard.Dashboard):
-        self.dash_board = dash_board
-
 
 @dataclasses.dataclass
 class PopUp(Window):

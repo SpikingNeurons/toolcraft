@@ -23,19 +23,26 @@ import numpy as np
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, Future
 
 from . import asset
+from . import util
 
 # noinspection PyUnreachableCode
 if False:
     from . import EnPlatform
     from . import BlockingTask
-    from . import widget as _widget
-    from . import callback
+    from .. import gui
 
 
 T = t.TypeVar('T', bound='Widget')
 COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
+
+try:
+    # either borrow from settings
+    from ..settings import PYC_DEBUGGING
+except ImportError:
+    # else in standalone set configuration here
+    PYC_DEBUGGING = True
 
 # container widget stack ... to add to parent automatically
 _CONTAINER_WIDGET_STACK: t.List["ContainerWidget"] = []
@@ -98,6 +105,15 @@ class _WidgetDpg(abc.ABC):
     @property
     def dpg_info(self) -> t.Dict[str, t.Any]:
         return internal_dpg.get_item_info(self.dpg_id)
+
+    @property
+    def is_built(self) -> bool:
+        # noinspection PyBroadException
+        try:
+            _ = self.dpg_id
+            return True
+        except Exception:
+            return False
 
     @property
     def is_hovered(self) -> bool:
@@ -188,39 +204,35 @@ class _WidgetDpg(abc.ABC):
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
 
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+
+        # hookup build
+        util.HookUp(
+            cls=cls,
+            method=cls.build,
+            pre_method=cls.build_pre_runner,
+            post_method=cls.build_post_runner,
+        )
+
     def __post_init__(self):
-        # some internal vars
-        self._dpg_id = None
-        self._post_build_fns = []
-
-        # Needed by subclass Widget but just adding it here for having clean structure view in PyCharm
-        # But note that they are not specific to DPG
-        self._parent = None
-        self._dash_board = None
-        self._is_built = False
-        self._tag = None
-
         # init pipeline
         self.init_validate()
         self.init()
 
-    def configure_item(self, key, value):
-        if key not in self.dataclass_field_names:
-            raise Exception(
-                f"The key {key!r} is not a configurable field for widget class {self.__class__}"
-            )
-
-        # this might not always work especially when key is custom ...
-        # in that case catch exception and figure out how to handle
-        if self.is_built:
-            # The default behaviour is to update configure the dpg item but
-            # note that Form is not a typical Widget and hence we have no need for
-            # "`internal_dpg.configure_item` ...",
-            if not isinstance(self, Form):
-                internal_dpg.configure_item(self.dpg_id, **{key: value})
-        print("??????????????eeeeeeeeeeeeeeeeeeeee", self.__class__, value.__class__, key)
-        # set for this class
-        setattr(self, key, value)
+    def __setattr__(self, key, value):
+        print("__setattr__", id(self), self.__class__, value.__class__, key)
+        if key in self.dataclass_field_names:
+            # this might not always work especially when key is custom ...
+            # in that case catch exception and figure out how to handle
+            if self.is_built:
+                # The default behaviour is to update configure the dpg item but
+                # note that Form is not a typical Widget and hence we have no need for
+                # "`internal_dpg.configure_item` ...",
+                if not isinstance(self, Form):
+                    internal_dpg.configure_item(self.dpg_id, **{key: value})
+        # any other attribute that is not field
+        return super().__setattr__(key, value)
 
     def clone(self) -> "_WidgetDpg":
         _kwargs = dict()
@@ -231,19 +243,6 @@ class _WidgetDpg(abc.ABC):
             _kwargs[_k] = _v
         # noinspection PyArgumentList
         return self.__class__(**_kwargs)
-
-    @classmethod
-    def hook_up_methods(cls):
-        # call super
-        super().hook_up_methods()
-
-        # hookup build
-        util.HookUp(
-            cls=cls,
-            method=cls.build,
-            pre_method=cls.build_pre_runner,
-            post_method=cls.build_post_runner,
-        )
 
     def init_validate(self):
 
@@ -266,22 +265,20 @@ class _WidgetDpg(abc.ABC):
                     )
 
     def init(self):
-        raise e.code.CodingError(
-            msgs=["will be anyways overridden by Widget class so this can never be called ..."]
-        )
+        # some internal vars
+        self._dpg_id = None
+        self._post_build_fns = []
 
     def build_pre_runner(self):
 
         # ---------------------------------------------------- 01
+        print("Widget build_pre_runner :::::::::::::::::::::::::::::::::::::", id(self), self.__class__)
         # check if already built
         if self.is_built:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Widget {self.__class__} is already built and registered with:",
-                    {
-                        'parent': self.internal.parent.__class__,
-                    },
-                ]
+            # noinspection PyUnresolvedReferences
+            raise Exception(
+                f"Widget {self.__class__} is already built and registered with:",
+                f"'parent': {self.parent.__class__,}"
             )
 
     @abc.abstractmethod
@@ -301,30 +298,27 @@ class _WidgetDpg(abc.ABC):
 
         # test if remaining important internals are set
         from . import window
-        if isinstance(self, Widget):
-            if self._parent is None:
-                raise Exception(
-                    f"We expect 'parent' property for instance of class {self.__class__} to be set by now"
-                )
-        elif isinstance(self, window.Window):
+        if isinstance(self, window.Window):
             if self._dash_board is None:
                 raise Exception(
                     f"We expect 'dash_board' property for instance of class {self.__class__} to be set by now"
                 )
+        elif isinstance(self, Widget):
+            if self._parent is None:
+                raise Exception(
+                    f"We expect 'parent' property for instance of class {self.__class__} to be set by now"
+                )
         else:
             raise Exception(
-                f"Unsupported instance of class type {self.__class__}"
+                f"Not supported type {self.__class__}"
             )
 
         # set dpg_id
         self.dpg_id = hooked_method_return_value
 
-        # set flag to indicate build is done
-        self.is_built = True
-
         # call post_build_fns
         if bool(self.post_build_fns):
-            for _fn in self.internal.post_build_fns:
+            for _fn in self.post_build_fns:
                 _fn()
             self.post_build_fns.clear()
 
@@ -805,7 +799,7 @@ class Engine:
     @classmethod
     async def dpg_loop(cls):
         try:
-            if settings.PYC_DEBUGGING:
+            if PYC_DEBUGGING:
                 while internal_dpg.is_dearpygui_running():
                     # add this extra line for callback debug
                     # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
@@ -819,9 +813,7 @@ class Engine:
                     internal_dpg.render_dearpygui_frame()
                     await asyncio.sleep(0)
         except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.dpg_loop}", _e]
-            )
+            raise Exception(f"Exception in {Engine.dpg_loop}", _e)
 
     @classmethod
     async def main(cls):
@@ -878,19 +870,10 @@ class Engine:
 
     @classmethod
     def run(cls, dash: "Dashboard"):
-        # -------------------------------------------------- 01
-        # make sure if was already called
-        if dash.internal.has("is_run_called"):
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"You can run only once ..."
-                ]
-            )
         # -------------------------------------------------- 02
         # setup dpg
-        _pyc_debug = settings.PYC_DEBUGGING
         dpg.create_context()
-        dpg.configure_app(manual_callback_management=_pyc_debug)
+        dpg.configure_app(manual_callback_management=PYC_DEBUGGING)
         dpg.create_viewport()
         dpg.setup_dearpygui()
         dpg.show_viewport()
@@ -899,13 +882,11 @@ class Engine:
 
         # -------------------------------------------------- 03
         # call build and indicate build is done
-        _LOGGER.info(msg="Building dashboard ...")
         dash.build()
-        dash.internal.is_run_called = True
 
         # -------------------------------------------------- 04
         # call gui main code in async
-        asyncio.run(cls.main(), debug=_pyc_debug, )
+        asyncio.run(cls.main(), debug=PYC_DEBUGGING, )
 
         # -------------------------------------------------- 05
         # destroy
@@ -986,22 +967,6 @@ class Widget(_WidgetDpg, abc.ABC):
     """
 
     @property
-    def is_built(self) -> bool:
-        try:
-            return self._is_built
-        except AttributeError:
-            return False
-
-    @is_built.setter
-    def is_built(self, value: bool):
-        if not self._is_built:
-            self._is_built = value
-        else:
-            raise Exception(f"Cannot set as is_built is already "
-                            f"set for instance of class {self.__class__}. "
-                            f"Avoid building multiple times")
-
-    @property
     def parent(self) -> "ContainerWidget":
         return self._parent
 
@@ -1029,16 +994,17 @@ class Widget(_WidgetDpg, abc.ABC):
         return self.root.dash_board
 
     @property
-    def restricted_parent_types(self) -> t.Optional[t.Tuple["Widget", ...]]:
-        return None
-
-    @property
     def registered_as_child(self) -> bool:
         return True
 
     @property
     def is_in_gui_with_mode(self) -> bool:
         return bool(_CONTAINER_WIDGET_STACK)
+
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["ContainerWidget"]]:
+        # noinspection PyTypeChecker
+        return ContainerWidget,
 
     @property
     def does_exist(self) -> bool:
@@ -1079,17 +1045,26 @@ class Widget(_WidgetDpg, abc.ABC):
 
     # noinspection PyMethodOverriding
     def __call__(self):
-        raise e.code.NotAllowed(
-            msgs=[f"__call__ is blocked for class {self.__class__} ... "
-                  f"this is only allowed for {ContainerWidget}"]
+        raise Exception(
+            f"__call__ is blocked for class {self.__class__} ... "
+            f"this is only allowed for {ContainerWidget}"
         )
 
     def init(self):
         global _CONTAINER_WIDGET_STACK
 
+        # call super
+        super().init()
+
+        # set some vars
+        self._parent = None
+        self._dash_board = None
+        self._is_built = False
+        self._tag = None
+
         # if there is parent container that is available via with context then add to it
         # this is only for using with `with` syntax
-        if bool(_CONTAINER_WIDGET_STACK):
+        if self.is_in_gui_with_mode:
             _CONTAINER_WIDGET_STACK[-1](widget=self)
 
         # register in WidgetEngine
@@ -1099,22 +1074,16 @@ class Widget(_WidgetDpg, abc.ABC):
             Engine.fixed_update[id(self)] = self
 
     def on_enter(self):
-        raise e.code.NotAllowed(
-            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
-                  f"you cannot use with context"]
+        raise Exception(
+            f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
+            f"you cannot use with context"
         )
-
-        # we do not want behaviour of parent as __call__ is overridden
-        # super().on_enter()
 
     def on_exit(self, exc_type, exc_val, exc_tb):
-        raise e.code.NotAllowed(
-            msgs=[f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
-                  f"you cannot use with context"]
+        raise Exception(
+            f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
+            f"you cannot use with context"
         )
-
-        # we do not want behaviour of parent as __call__ is overridden
-        # super().on_exit()
 
     def get_user_data(self) -> 'USER_DATA':
         """
@@ -1150,7 +1119,7 @@ class Widget(_WidgetDpg, abc.ABC):
 
     def delete(self):
         """
-        Bote that this will be scheduled for deletion via destroy with help of WidgetEngine
+        Note that this will be scheduled for deletion via destroy with help of WidgetEngine
         """
         # remove from parent
         # some widgets like XAxis, YAxis, Legend are not in parent.children
@@ -1327,7 +1296,6 @@ class ContainerWidget(Widget, abc.ABC):
                 )
 
     def _add_child(self, _widget: Widget):
-
         # -------------------------------------------------- 01
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
@@ -1338,10 +1306,17 @@ class ContainerWidget(Widget, abc.ABC):
                     "May be you want to `move()` widget instead.",
                 ]
             )
+        # check if restricted parents
+        if not isinstance(self, _widget.restrict_parents_to):
+            raise Exception(
+                f"Widget of type {_widget.__class__} can only be added "
+                f"to parents of type {_widget.restrict_parents_to}. "
+                f"While parent of type {self.__class__} is not allowed"
+            )
         # we can now store widget inside children dict
         if not isinstance(_widget, self.restrict_children_type):
             raise Exception(
-                f"Provided widget class type {_widget.__class__} is not one of "
+                f"The child widget instance you want to add of type {_widget.__class__} is not one of "
                 f"{self.restrict_children_type}"
             )
         # do not try to add again
@@ -1367,7 +1342,7 @@ class ContainerWidget(Widget, abc.ABC):
         super().init()
 
         # add var
-        self._children = dict()
+        self._children = dict()  # type: t.Dict[str, Widget]
 
     def on_enter(self):
         global _CONTAINER_WIDGET_STACK
@@ -1401,6 +1376,10 @@ class ContainerWidget(Widget, abc.ABC):
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
         for child in self._children.values():
+            print("children ..............................",
+                  "\n\t\tself", id(self), self.__class__,
+                  "\n\t\tchild", id(child), child.__class__,
+                  "\n\t\tchild.parent", id(child.parent), child.parent.__class__)
             child.build()
 
     def hide(self, children_only: bool = False):
@@ -1566,7 +1545,6 @@ class UseMethodInForm:
         allow_refresh: bool,
         group_tag: str = None,
     ) -> "widget.Button":
-        from . import widget
 
         # ---------------------------------------------------- 01
         # test callable name
@@ -1593,6 +1571,7 @@ class UseMethodInForm:
 
         # ---------------------------------------------------- 03
         # create callback
+        from . import callback
         _callback = callback.HashableMethodRunnerCallback(
             hashable=hashable,
             callable_name=_callable_name,
@@ -1603,6 +1582,7 @@ class UseMethodInForm:
 
         # ---------------------------------------------------- 04
         # create and return button
+        from . import widget
         return widget.Button(
             label=_button_label,
             callback=_callback,
@@ -1750,11 +1730,12 @@ class Form(MovableWidget, abc.ABC):
             )
 
         # if title present add collapsing header
-        _c = self.layout()
-        if self.title is not None:
+        if self.title is None:
+            _c = self.layout()
+        else:
             _c = CollapsingHeader(
                 label=self.title, default_open=self.collapsing_header_open)
-            _c(widget=_c)
+            _c(widget=self.layout())
 
         # set parent
         _c.parent = self.parent
@@ -1909,6 +1890,19 @@ class Dashboard(abc.ABC):
         # noinspection PyUnresolvedReferences
         return list(self.__dataclass_fields__.keys())
 
+    @property
+    def is_built(self) -> bool:
+        return self._is_built
+
+    @is_built.setter
+    def is_built(self, value: bool):
+        if not self._is_built:
+            self._is_built = value
+        else:
+            raise Exception(f"Cannot set as is_built is already "
+                            f"set for instance of class {self.__class__}. "
+                            f"Avoid building multiple times")
+
     def __post_init__(self):
         self.init_validate()
         self.init()
@@ -1959,7 +1953,8 @@ class Dashboard(abc.ABC):
 
         """
         # ------------------------------------------------------- 01
-        # ...
+        # set some vars
+        self._is_built = False
 
         # ------------------------------------------------------- 02
         # loop over fields
@@ -2178,8 +2173,13 @@ class Dashboard(abc.ABC):
         ...
 
     def build(self):
+        # check
+        if self.is_built:
+            raise Exception("The Dashboard is already built ... call this only once")
+
+        # build
         _primary_window = self.layout()
-        _primary_window.setup(dash_board=self)
+        _primary_window.dash_board = self
         _primary_window.build()
         # primary window dpg_id
         _primary_window_dpg_id = _primary_window.dpg_id
@@ -2189,3 +2189,6 @@ class Dashboard(abc.ABC):
         # themes.set_theme(theme="Dark Grey")
         # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
         dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
+
+        # set is_built
+        self.is_built = True

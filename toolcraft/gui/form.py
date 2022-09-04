@@ -17,9 +17,9 @@ if False:
 @dataclasses.dataclass
 class ButtonBarForm(Form):
 
-    def layout(self) -> widget.MovableContainerWidget:
-        # get fromm super
-        _layout = super().layout()
+    def init(self):
+        # call super
+        super().init()
 
         # make class for callback handling
         @dataclasses.dataclass
@@ -34,11 +34,17 @@ class ButtonBarForm(Form):
         # make some vars
         self._mapper = dict()  # type: t.Dict[str, t.Callable]
         self._callback = Callback()
+        self._button_bar = widget.Group(horizontal=True)
+        self._receiver = widget.Group()
+
+
+    def layout(self) -> widget.MovableContainerWidget:
+        # get fromm super
+        _layout = super().layout()
 
         # add more vars
-        with _layout:
-            self._button_bar = widget.Group(horizontal=True)
-            self._receiver = widget.Group()
+        _layout(self._button_bar)
+        _layout(self._receiver)
 
         # return
         return _layout
@@ -151,30 +157,32 @@ class DoubleSplitForm(Form):
 
         # make container for button_panel_group
         self._button_panel_group = dict()  # type: t.Dict[str, widget.CollapsingHeader]
+        self._button_panel = widget.Group(horizontal=False)
+        self._receiver_panel = widget.Group(horizontal=False)
 
     def layout(self) -> table.Table:
         # call super
         _layout = super().layout()
 
-        # add table
-        with _layout:
-            # create table
-            _table = table.Table.table_from_literals(
-                rows=1,
-                cols=2,
-            )
-            _table.header_row = False
-            _table.resizable = True
-            # _table.policy = gui.En
-            _table.borders_innerH = True
-            _table.borders_outerH = True
-            _table.borders_innerV = True
-            _table.borders_outerV = True
+        # create table
+        _table = table.Table.table_from_literals(
+            rows=1,
+            cols=2,
+        )
+        _table.header_row = False
+        _table.resizable = True
+        # _table.policy = gui.En
+        _table.borders_innerH = True
+        _table.borders_outerH = True
+        _table.borders_innerV = True
+        _table.borders_outerV = True
 
-            with _table[0, 0]:
-                self._button_panel = widget.Group(horizontal=False)
-            with _table[0, 1]:
-                self._receiver_panel = widget.Group(horizontal=False)
+        # add cells
+        _table[0, 0](self._button_panel)
+        _table[0, 1](self._receiver_panel)
+
+        # add table
+        _layout(widget=_table)
 
         # return
         # noinspection PyTypeChecker

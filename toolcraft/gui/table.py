@@ -11,12 +11,20 @@ from . import _auto
 
 @dataclasses.dataclass
 class Column(_auto.TableColumn):
-    ...
+
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["__base__.ContainerWidget"]]:
+        # noinspection PyTypeChecker
+        return ()
 
 
 @dataclasses.dataclass
 class Cell(_auto.TableCell):
-    ...
+
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["Row"]]:
+        # noinspection PyTypeChecker
+        return Row,
 
 
 @dataclasses.dataclass
@@ -26,6 +34,11 @@ class Row(_auto.TableRow):
       this is not necessary ... update if we want blank rows ... for now we assume
       that it can stretch table dynamically
     """
+
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["Table"]]:
+        # noinspection PyTypeChecker
+        return Table,
 
     @property
     def restrict_children_type(self) -> t.Tuple[t.Type[Cell]]:
@@ -39,9 +52,12 @@ class Row(_auto.TableRow):
     def parent(self, value: "Table"):
         self._parent = value
 
-    def __getitem__(self, item: int) -> Cell:
-        # noinspection PyTypeChecker
-        return self.children.get(item)
+    def __getitem__(self, item: t.Union[int, slice]) -> t.Union[Cell, t.List[Cell]]:
+        if isinstance(item, (int, slice)):
+            # noinspection PyTypeChecker
+            return list(self.children.values())[item]
+        else:
+            raise Exception(f"Unsupported type {type(item)}")
 
     # noinspection PyMethodOverriding
     def __call__(self):
@@ -51,32 +67,26 @@ class Row(_auto.TableRow):
         # noinspection PyUnresolvedReferences
         _num_columns = len(self.parent.columns)
         if bool(self.children):
-            raise e.code.CodingError(
-                msgs=[
-                    "must be empty when being called for first time",
-                    "you cannot call this for multiple times as cells "
-                    "will be added only once"
-                ]
+            raise Exception(
+                "must be empty when being called for first time",
+                "you cannot call this for multiple times as cells "
+                "will be added only once"
             )
         for _ in range(_num_columns):
             super().__call__(widget=Cell())
 
     def on_enter(self):
-        raise e.code.CodingError(
-            msgs=[
-                f"Although {Row} is ContainerWidget we block using with context as "
-                f"the cells will be already created for and hence instead use "
-                f"indexing i.e., use __getitem__"
-            ]
+        raise Exception(
+            f"Although {Row} is ContainerWidget we block using with context as "
+            f"the cells will be already created for and hence instead use "
+            f"indexing i.e., use __getitem__"
         )
 
     def on_exit(self, exc_type, exc_val, exc_tb):
-        raise e.code.CodingError(
-            msgs=[
-                f"Although {Row} is ContainerWidget we block using with context as "
-                f"the cells will be already created for and hence instead use "
-                f"indexing i.e., use __getitem__"
-            ]
+        raise Exception(
+            f"Although {Row} is ContainerWidget we block using with context as "
+            f"the cells will be already created for and hence instead use "
+            f"indexing i.e., use __getitem__"
         )
 
 
@@ -107,25 +117,33 @@ class Table(_auto.Table):
 
     def __getitem__(
         self, item: t.Union[int, t.Tuple[int, int]]
-    ) -> t.Union[Row, Column, Cell]:
-        """
-        When:
-          + item is int
-            + returns TableRow
-          + item is (int, int)
-            + returns TableCell
-          + item is (:, int)
-            + returns TableColumn
-        """
+    ) -> t.Union[Cell, t.List[Cell], t.List[t.List[Cell]]]:
+        # Note we have hacked rows field to feed it to children dict
         if isinstance(item, int):
-            return self.rows[item]
+            # noinspection PyUnresolvedReferences
+            return list(list(self.children.values())[item].children.values())
         elif isinstance(item, tuple):
-            if item[0] == slice(None, None, None):
-                return self.columns[item[1]]
+            if isinstance(item[0], int):
+                if isinstance(item[1], (int, slice)):
+                    # noinspection PyUnresolvedReferences
+                    return list(list(self.children.values())[item[0]].children.values())[item[1]]
+                else:
+                    raise Exception(f"Unsupported type {type(item[1])}")
+            elif isinstance(item[0], slice):
+                if isinstance(item[1], (int, slice)):
+                    _ret = []
+                    # noinspection PyUnresolvedReferences
+                    for _row in list(self.children.values())[item[0]]:
+                        _ret.append(
+                            list(_row.children.values())[item[1]]
+                        )
+                    return _ret
+                else:
+                    raise Exception(f"Unsupported type {type(item[1])}")
             else:
-                return self.children.get(item[0])[item[1]]
+                raise Exception(f"Unsupported type {type(item[0])}")
         else:
-            raise e.code.CodingError(msgs=[f"Unknown type {type(item)}"])
+            raise Exception(f"Unknown type {type(item)}")
 
     def init_validate(self):
         # call super
@@ -133,11 +151,7 @@ class Table(_auto.Table):
 
         # make sure that column is supplied
         if self.columns is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Please supply mandatory field `columns` ..."
-                ]
-            )
+            raise Exception("Please supply mandatory field `columns` ...")
 
     def init(self):
         # -------------------------------------------------- 01
@@ -151,25 +165,22 @@ class Table(_auto.Table):
             # ---------------------------------------------- 02.01
             # should not be built
             if _c.is_built:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        "The column should not be built ..."
-                    ]
-                )
+                raise Exception("The column should not be built ...")
             # ---------------------------------------------- 02.02
             # set internals
-            _c.internal.parent = self
+            _c.parent = self
 
         # -------------------------------------------------- 03
-        # now call rows so that they add self to themselves
+        # now call rows so that they add themselves to self
         if bool(self.rows):
             for _r in self.rows:
-                _r.internal.parent = self
+                _r.parent = self
                 self(_r)
 
         # -------------------------------------------------- 04
         # rows are managed by children so we hack this to remove reference to Rows
-        # todo: instead of using hack have block access via __getattr__ and raise warning ... for now this will suffice
+        # todo: instead of using hack have block access via __getattr__ and raise warning
+        #   ... for now this will suffice
         #   ... also pycharm stops type hinting when __getattr__ is overridden :(
         self.__dict__['rows'] = None
 
@@ -209,7 +220,7 @@ class Table(_auto.Table):
             for _ in cols:
                 _cols.append(Column(label=_))
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
+            raise Exception(f"Unknown type {type(cols)}")
 
         # make rows
         _rows = []
@@ -217,7 +228,7 @@ class Table(_auto.Table):
             for _ in range(rows):
                 _rows.append(Row())
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(cols)}"])
+            raise Exception(f"Unknown type {type(cols)}")
 
         return Table(rows=_rows, columns=_cols)
 
