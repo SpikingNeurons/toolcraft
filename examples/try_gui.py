@@ -260,10 +260,6 @@ class SimpleHashableClass(gui.Hashable):
     click_count_for_blocking_fn: int = 0
 
     @property
-    def hex_hash(self) -> str:
-        return f"hex_hash:{self.some_value}"
-
-    @property
     def all_plots_gui_label(self) -> str:
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"

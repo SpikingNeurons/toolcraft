@@ -6,6 +6,7 @@ The rule for now is to
 import abc
 import dataclasses
 import asyncio
+import hashlib
 import inspect
 import sys
 import traceback
@@ -16,6 +17,8 @@ import dearpygui.dearpygui as dpg
 import dearpygui._dearpygui as internal_dpg
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, Future
+
+import yaml
 
 from . import asset
 from . import util
@@ -216,7 +219,6 @@ class _WidgetDpg(abc.ABC):
         self.init()
 
     def __setattr__(self, key, value):
-        print("__setattr__", id(self), self.__class__, value.__class__, key)
         if key in self.dataclass_field_names:
             # this might not always work especially when key is custom ...
             # in that case catch exception and figure out how to handle
@@ -265,7 +267,6 @@ class _WidgetDpg(abc.ABC):
     def build_pre_runner(self):
 
         # ---------------------------------------------------- 01
-        print("Widget build_pre_runner :::::::::::::::::::::::::::::::::::::", id(self), self.__class__)
         # check if already built
         if self.is_built:
             # noinspection PyUnresolvedReferences
@@ -1352,10 +1353,6 @@ class ContainerWidget(Widget, abc.ABC):
         # now as layout is completed and build for this widget is completed,
         # now it is time to render children
         for child in self._children.values():
-            print("children ..............................",
-                  "\n\t\tself", id(self), self.__class__,
-                  "\n\t\tchild", id(child), child.__class__,
-                  "\n\t\tchild.parent", id(child.parent), child.parent.__class__)
             child.build()
 
     def hide(self, children_only: bool = False):
@@ -1382,15 +1379,6 @@ class ContainerWidget(Widget, abc.ABC):
 @dataclasses.dataclass
 class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
     ...
-
-
-@dataclasses.dataclass
-class Hashable(abc.ABC):
-
-    @property
-    @abc.abstractmethod
-    def hex_hash(self) -> str:
-        ...
 
 
 class UseMethodInForm:
@@ -1496,7 +1484,7 @@ class UseMethodInForm:
 
     @classmethod
     def get_from_hashable_fn(
-        cls, hashable: t.Union[Hashable, "HashableClass"], fn_name: str
+        cls, hashable: t.Union["Hashable", "HashableClass"], fn_name: str
     ) -> "UseMethodInForm":
         try:
             _fn = getattr(hashable.__class__, fn_name)
@@ -1512,7 +1500,7 @@ class UseMethodInForm:
 
     def get_button_widget(
         self,
-        hashable: t.Union[Hashable, "HashableClass"],
+        hashable: t.Union["Hashable", "HashableClass"],
         receiver: "gui.widget.ContainerWidget",
         allow_refresh: bool,
         group_tag: str = None,
@@ -1557,6 +1545,57 @@ class UseMethodInForm:
             label=_button_label,
             callback=_callback,
         )
+
+
+class YamlDumper(yaml.Dumper):
+    """
+    todo: SafeDumper does not work with python builtin objects same problem
+      with Loader ... figure out later
+    Dumper that avoids using aliases in yaml representation .... makes
+    it verbose ..., but we are sure that if we reuse an object a new repr will
+    be created
+
+    Note: we can go to default and reuse space ... and yaml load will also
+    not create multiple instances ..., but the drawback is when someone
+    reuses references the yaml lib will share repr with pointers
+    """
+
+    def ignore_aliases(self, data):
+        return True
+
+    @classmethod
+    def dump(cls, item) -> str:
+        """
+        The method that dumps with specific yaml config for toolcraft
+        """
+        return yaml.dump(
+            item,
+            Dumper=YamlDumper,
+            sort_keys=False,
+            default_flow_style=False,
+        )
+
+
+@dataclasses.dataclass
+class Hashable(abc.ABC):
+    def yaml(self) -> str:
+        return YamlDumper.dump(self)
+
+    @property
+    def hex_hash(self) -> str:
+        return hashlib.md5(f"{self.yaml()}".encode("utf-8")).hexdigest()
+
+    @UseMethodInForm(label_fmt="Info")
+    def info_widget(self) -> "gui.widget.Text":
+        # import
+        from . import widget
+        # make
+        # noinspection PyUnresolvedReferences
+        _ret_widget = widget.Text(
+            default_value=f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
+        )
+        # return
+        return _ret_widget
 
 
 @dataclasses.dataclass
