@@ -327,9 +327,9 @@ class JobViewer(m.HashableClass):
             collapsing_header_open=True,
         )
 
-        with _ret.button_bar:
+        with _ret._button_bar:
             _txt = gui.widget.Text(default_value="<-- please run")
-            _txt.move_up()
+            # _txt.move_up()
 
         return _ret
 
