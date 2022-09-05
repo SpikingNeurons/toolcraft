@@ -86,11 +86,7 @@ class XAxis(_auto.PlotXAxis):
         if self.is_built:
             return internal_dpg.get_axis_limits(self.dpg_id)
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    "Can get limits only when things are built ..."
-                ]
-            )
+            raise Exception("Can get limits only when things are built ...")
 
     def fit_data(self):
         """
@@ -100,13 +96,13 @@ class XAxis(_auto.PlotXAxis):
         if self.is_built:
             internal_dpg.fit_axis_data(axis=self.dpg_id)
         else:
-            self.internal.post_build_fns.append(self.fit_data)
+            self.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
         if self.is_built:
             internal_dpg.reset_axis_ticks(self.dpg_id)
         else:
-            self.internal.post_build_fns.append(self.reset_ticks)
+            self.post_build_fns.append(self.reset_ticks)
 
     def set_limits(self, ymin: float, ymax: float):
         """
@@ -116,7 +112,7 @@ class XAxis(_auto.PlotXAxis):
         if self.is_built:
             internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
         else:
-            self.internal.post_build_fns.append(
+            self.post_build_fns.append(
                 functools.partial(self.set_limits, ymin, ymax)
             )
 
@@ -128,7 +124,7 @@ class XAxis(_auto.PlotXAxis):
         if self.is_built:
             internal_dpg.set_axis_limits_auto(self.dpg_id)
         else:
-            self.internal.post_build_fns.append(self.set_limits_auto)
+            self.post_build_fns.append(self.set_limits_auto)
 
     def set_ticks(self, label_pairs: t.Any):
         """
@@ -166,14 +162,12 @@ class YAxis(_auto.PlotYAxis):
     def __call__(self, widget: PlotSeries):
         if widget.label is not None and widget.label.find("#") == -1:
             if widget.label in [_.label for _ in self.children.values()]:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"There already exists a plot_series with label "
-                        f"`{widget.label}`",
-                        f"Note that if you want to share label across multiple series "
-                        f"then append `#<some unique name>` to label to make it unique "
-                        f"per plot series",
-                    ]
+                raise Exception(
+                    f"There already exists a plot_series with label "
+                    f"`{widget.label}`",
+                    f"Note that if you want to share label across multiple series "
+                    f"then append `#<some unique name>` to label to make it unique "
+                    f"per plot series",
                 )
         super().__call__(widget=widget, before=None)
 
@@ -185,11 +179,7 @@ class YAxis(_auto.PlotYAxis):
         if self.is_built:
             return internal_dpg.get_axis_limits(self.dpg_id)
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    "Can get limits only when things are built ..."
-                ]
-            )
+            raise Exception("Can get limits only when things are built ...")
 
     def fit_data(self):
         """
@@ -199,13 +189,13 @@ class YAxis(_auto.PlotYAxis):
         if self.is_built:
             internal_dpg.fit_axis_data(axis=self.dpg_id)
         else:
-            self.internal.post_build_fns.append(self.fit_data)
+            self.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
         if self.is_built:
             internal_dpg.reset_axis_ticks(self.dpg_id)
         else:
-            self.internal.post_build_fns.append(self.reset_ticks)
+            self.post_build_fns.append(self.reset_ticks)
 
     def set_limits(self, ymin: float, ymax: float):
         """
@@ -215,7 +205,7 @@ class YAxis(_auto.PlotYAxis):
         if self.is_built:
             internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
         else:
-            self.internal.post_build_fns.append(
+            self.post_build_fns.append(
                 functools.partial(self.set_limits, ymin, ymax)
             )
 
@@ -227,7 +217,7 @@ class YAxis(_auto.PlotYAxis):
         if self.is_built:
             internal_dpg.set_axis_limits_auto(self.dpg_id)
         else:
-            self.internal.post_build_fns.append(self.set_limits_auto)
+            self.post_build_fns.append(self.set_limits_auto)
 
     def set_ticks(self, label_pairs: t.Any):
         """
@@ -237,7 +227,7 @@ class YAxis(_auto.PlotYAxis):
         if self.is_built:
             internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
         else:
-            self.internal.post_build_fns.append(
+            self.post_build_fns.append(
                 functools.partial(self.set_ticks, label_pairs)
             )
 

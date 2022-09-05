@@ -1,6 +1,5 @@
 import dataclasses
 import typing as t
-import asyncio
 
 
 from .__base__ import Form, Hashable, UseMethodInForm

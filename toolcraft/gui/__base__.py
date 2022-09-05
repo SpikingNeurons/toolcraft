@@ -7,14 +7,9 @@ import abc
 import dataclasses
 import asyncio
 import inspect
-import itertools
-import subprocess
 import sys
-import time
 import traceback
-import types
 import typing as t
-import functools
 import enum
 import dearpygui.dearpygui as dpg
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -254,14 +249,12 @@ class _WidgetDpg(abc.ABC):
             # check if Widget and only allow if Form
             if isinstance(v, Widget):
                 if not isinstance(self, Form):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Check field {self.__class__}.{f_name}",
-                            f"You cannot have instance of class {v.__class__} as "
-                            f"dataclass fields of {self.__class__}.",
-                            f"This is only allowed for {Form} where we only allow "
-                            f"{Widget}"
-                        ]
+                    raise Exception(
+                        f"Check field {self.__class__}.{f_name}",
+                        f"You cannot have instance of class {v.__class__} as "
+                        f"dataclass fields of {self.__class__}.",
+                        f"This is only allowed for {Form} where we only allow "
+                        f"{Widget}"
                     )
 
     def init(self):
@@ -290,11 +283,7 @@ class _WidgetDpg(abc.ABC):
     ):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"We expect build to return int which happens to be dpg_id"
-                ]
-            )
+            raise Exception(f"We expect build to return int which happens to be dpg_id")
 
         # test if remaining important internals are set
         from . import window
@@ -321,12 +310,6 @@ class _WidgetDpg(abc.ABC):
             for _fn in self.post_build_fns:
                 _fn()
             self.post_build_fns.clear()
-
-    def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        _ret = {}
-        for f_name in self.dataclass_field_names:
-            _ret[f_name] = getattr(self, f_name)
-        return _ret
 
     def get_value(self) -> t.Any:
         """
@@ -486,11 +469,7 @@ class BlockingTask:
     def __post_init__(self):
         # validation
         if inspect.iscoroutinefunction(self.fn):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The function {self.fn} should not be async i.e. awaitable ..."
-                ]
-            )
+            raise Exception(f"The function {self.fn} should not be async i.e. awaitable ...")
 
         # set some vars
         self._future = None
@@ -501,7 +480,7 @@ class BlockingTask:
         """
         try:
             if self._future is not None:
-                raise e.code.CodingError(msgs=["_future must be None"])
+                raise Exception("_future must be None")
 
             if self.concurrent:
                 _future = Engine.thread_pool_executor.submit(self.fn, **self.fn_kwargs)
@@ -516,18 +495,16 @@ class BlockingTask:
         except Exception as _e:
             _exc_type, _exc_obj, _exc_tb = sys.exc_info()
             traceback.print_exception(_exc_type, _exc_obj, _exc_tb)
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    f"The blocking async task (concurrent={self.concurrent}) has failed",
-                    {
-                        "module": self.__module__,
-                        "class": self.__class__,
-                        "_exc_type": str(_exc_type),
-                        "_exc_obj": str(_exc_obj),
-                        "_exc_tb": str(_exc_tb),
-                    },
-                    _e
-                ]
+            raise Exception(
+                f"The blocking async task (concurrent={self.concurrent}) has failed",
+                {
+                    "module": self.__module__,
+                    "class": self.__class__,
+                    "_exc_type": str(_exc_type),
+                    "_exc_obj": str(_exc_obj),
+                    "_exc_tb": str(_exc_tb),
+                },
+                _e
             )
 
     def add_to_task_queue(self):
@@ -581,11 +558,7 @@ class AwaitableTask(abc.ABC):
     def __post_init__(self):
         # validation
         if not inspect.iscoroutinefunction(self.fn):
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The function {self.fn} needs to be async i.e. awaitable ..."
-                ]
-            )
+            raise Exception(f"The function {self.fn} needs to be async i.e. awaitable ...")
 
         # set some vars
         self._is_completed = False
@@ -593,23 +566,17 @@ class AwaitableTask(abc.ABC):
     async def _run_concurrently(self):
         try:
             if self._is_completed:
-                raise e.code.CodingError(
-                    msgs=["_is_completed must be false"]
-                )
+                raise Exception("_is_completed must be false")
             _ret = await self.fn(**self.fn_kwargs)
             if self._is_completed:
-                raise e.code.CodingError(
-                    msgs=[
-                        "_is_completed must be false",
-                        f"looks like {self.fn} has set it ..."
-                    ]
+                raise Exception(
+                    "_is_completed must be false",
+                    f"looks like {self.fn} has set it ..."
                 )
             if _ret is not None:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The fn {self.fn} must return None",
-                        "Please do not return anything"
-                    ]
+                raise Exception(
+                    f"The fn {self.fn} must return None",
+                    "Please do not return anything"
                 )
             self._is_completed = True
         except SystemError as _e:
@@ -624,18 +591,16 @@ class AwaitableTask(abc.ABC):
         except Exception as _e:
             _exc_type, _exc_obj, _exc_tb = sys.exc_info()
             traceback.print_exception(_exc_type, _exc_obj, _exc_tb)
-            raise e.code.ShouldNeverHappen(
-                msgs=[
-                    "The awaitable async task has failed",
-                    {
-                        "module": self.__module__,
-                        "class": self.__class__,
-                        "_exc_type": str(_exc_type),
-                        "_exc_obj": str(_exc_obj),
-                        "_exc_tb": str(_exc_tb),
-                    },
-                    _e
-                ]
+            raise Exception(
+                "The awaitable async task has failed",
+                {
+                    "module": self.__module__,
+                    "class": self.__class__,
+                    "_exc_type": str(_exc_type),
+                    "_exc_obj": str(_exc_obj),
+                    "_exc_tb": str(_exc_tb),
+                },
+                _e
             )
 
     def add_to_task_queue(self):
@@ -751,9 +716,7 @@ class Engine:
                 # Engine.destroy.clear()
 
         except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.lifecycle_loop}", _e]
-            )
+            raise Exception(f"Exception in {Engine.lifecycle_loop}", _e)
 
     @classmethod
     async def lifecycle_physics_loop(cls):
@@ -773,9 +736,7 @@ class Engine:
                 for _ in Engine.fixed_update.values():
                     _.fixed_update()
         except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.lifecycle_physics_loop}", _e]
-            )
+            raise Exception(f"Exception in {Engine.lifecycle_physics_loop}", _e)
 
     @classmethod
     async def task_runner_loop(cls):
@@ -792,9 +753,7 @@ class Engine:
                 asyncio.create_task(_awaitable_task._run_concurrently())
                 Engine.task_queue.task_done()
         except Exception as _e:
-            raise e.code.CodingError(
-                msgs=[f"Exception in {Engine.task_runner_loop}", _e]
-            )
+            raise Exception(f"Exception in {Engine.task_runner_loop}", _e)
 
     @classmethod
     async def dpg_loop(cls):
@@ -853,19 +812,13 @@ class Engine:
         # ----------------------------------------------------------- 04
         # await on dpg task and cancel update task
         await _dpg
-        _LOGGER.info(msg="Gui closed ...")
-        # _LOGGER.info(msg="lifecycle loop cancelled ...")
         # _lifecycle.cancel()
-        # _LOGGER.info(msg="lifecycle physics loop cancelled ...")
         # _lifecycle_physics.cancel()
-        _LOGGER.info(msg="task runner loop cancelled ...")
         _task_runner.cancel()
 
         # ----------------------------------------------------------- 05
         # shutdown pool executors
-        _LOGGER.info(msg="Shutting down `thread_pool_executor`")
         cls.thread_pool_executor.shutdown(wait=True)
-        _LOGGER.info(msg="Shutting down `process_pool_executor`")
         cls.process_pool_executor.shutdown(wait=True)
 
     @classmethod
@@ -897,34 +850,26 @@ class Engine:
         if tag in cls.tags.keys():
             return cls.tags[tag]
         else:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"We cannot find widget for tag {tag!r}."
-                ]
-            )
+            raise Exception(f"We cannot find widget for tag {tag!r}.")
 
     @classmethod
     def tag_widget(cls, tag: str, widget: "Widget"):
         # if tag is already used up
         if tag in cls.tags.keys():
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"A widget with tag `{tag}` already exists. "
-                    f"Please select some unique name."
-                ]
+            raise Exception(
+                f"A widget with tag `{tag}` already exists. "
+                f"Please select some unique name."
             )
 
         # if already tagged raise error
-        if widget.is_tagged:
-            raise e.code.NotAllowed(
-                msgs=[
-                    f"The widget is already tagged with tag {widget.tag} "
-                    f"so we cannot assign new tag {tag} ..."
-                ]
+        if widget.tag is not None:
+            raise Exception(
+                f"The widget is already tagged with tag {widget.tag} "
+                f"so we cannot assign new tag {tag} ..."
             )
 
         # save reference inside widget
-        widget.internal.tag = tag
+        widget.tag = tag
 
         # save in global container
         cls.tags[tag] = widget
@@ -934,25 +879,23 @@ class Engine:
         # get tag
         _tag = tag_or_widget
         if isinstance(tag_or_widget, Widget):
-            _tag = tag_or_widget.internal.tag
+            _tag = tag_or_widget.tag
 
         # if tag name not present
         if _tag not in cls.tags.keys():
             if not_exists_ok:
                 return
             else:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        "There is no widget tagged with the tag name "
-                        f"`{_tag}` hence there is nothing to remove"
-                    ]
+                raise Exception(
+                    "There is no widget tagged with the tag name "
+                    f"`{_tag}` hence there is nothing to remove"
                 )
 
         # get tag
         _widget = cls.tags[_tag]
 
         # since tag exists remove it ... also set internal.tag to None
-        _widget.internal.tag = None
+        _widget.tag = None
         del cls.tags[_tag]
 
 
@@ -1097,19 +1040,15 @@ class Widget(_WidgetDpg, abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting class {self.__class__} to have field `user_data`",
-                    "This is intended to be used by callback mechanism"
-                ]
+            raise Exception(
+                f"Was expecting class {self.__class__} to have field `user_data`",
+                "This is intended to be used by callback mechanism"
             )
 
     def get_tag(self) -> str:
-        if self.is_tagged:
-            return self.internal.tag
-        raise e.validation.NotAllowed(
-            msgs=["This widget was never tagged ... so we cannot retrieve the tag"]
-        )
+        if self.tag is not None:
+            return self.tag
+        raise Exception("This widget was never tagged ... so we cannot retrieve the tag")
 
     def tag_it(self, tag: str):
         Engine.tag_widget(tag=tag, widget=self)
@@ -1127,7 +1066,7 @@ class Widget(_WidgetDpg, abc.ABC):
             del self.parent.children[id(self)]
 
         # if tagged then untag
-        if self.is_tagged:
+        if self.tag is not None:
             self.untag_it(not_exists_ok=True)
 
         # adapt widget engine
@@ -1172,63 +1111,108 @@ USER_DATA = t.Dict[
 @dataclasses.dataclass
 class MovableWidget(Widget, abc.ABC):
 
-    def move(self, parent: "ContainerWidget" = None, before: "MovableWidget" = None):
+    def move(
+        self,
+        top: "ContainerWidget" = None,
+        bottom: "ContainerWidget" = None,
+        before: "MovableWidget" = None,
+        after: "MovableWidget" = None,
+    ):
         """
-        Move the item in `parent` or put it before `before`
+        Args:
+            top: move the item to top of container
+            bottom: move the item to bottom of container
+            before: move before widget
+            after: move after widget
         """
         # ---------------------------------------------- 01
         # check
-        # ---------------------------------------------- 01.01
-        # either parent or before should be supplied
-        if not((parent is None) ^ (before is None)):
-            raise e.code.CodingError(
-                msgs=[
-                    "Either supply parent or before",
-                    "No need to provide both as parent can be extracted from before",
-                    "While if you supply parent that means you want to add to "
-                    "bottom of its children",
-                ]
+        # only one kwarg must be provided
+        _top_supplied = top is not None
+        _bottom_supplied = bottom is not None
+        _before_supplied = before is not None
+        _after_supplied = after is not None
+        if not (_top_supplied ^ _bottom_supplied ^ _before_supplied ^ _after_supplied):
+            _d = dict(
+                _top_supplied=_top_supplied, _bottom_supplied=_bottom_supplied,
+                _before_supplied=_before_supplied, _after_supplied=_after_supplied
+            )
+            raise Exception(
+                f"Only one of the move kwarg must be supplied. {_d}"
             )
 
         # ---------------------------------------------- 02
-        # if before provided extract parent from it
-        if parent is None:
-            # noinspection PyUnresolvedReferences
-            parent = before.parent
+        # estimate parent and before to be used for move
+        if _top_supplied:
+            _parent = top
+            try:
+                _before = next(iter(top.children.values()))
+            except StopIteration:
+                # when children dict is empty
+                _before = None
+        elif _bottom_supplied:
+            _parent = bottom
+            _before = None
+        elif _before_supplied:
+            _parent = before.parent
+            _before = before
+        elif _after_supplied:
+            _parent = after.parent
+            _before = after.after()
+        else:
+            raise Exception("Should not happen ...")
 
         # ---------------------------------------------- 03
-        # first del from self.parent.children
-        del self.parent.children[id(self)]
+        # check if new parent allows adding the self
+        if not isinstance(self, _parent.restrict_children_type):
+            raise Exception(
+                f"Cannot move item of type {self.__class__} in parent of type {_parent.__class__}. "
+                f"Allowed children types for this parent are {_parent.restrict_children_type}"
+            )
 
         # ---------------------------------------------- 04
-        # now move it to new parent.children
-        if before is None:
-            parent.children[id(self)] = self
-        else:
-            parent.children.insert_before(key=id(before), key_values={id(self): self})
+        # first del from self.parent.children
+        del self.parent.children[id(self)]
+        # change the parent
+        self.parent = _parent
 
         # ---------------------------------------------- 05
+        # now move it to new parent.children
+        if _before is None:
+            _parent.children[id(self)] = self
+        else:
+            _backup = _parent._children
+            _parent._children = {}
+            for _k in _backup.keys():
+                if _k == id(before):
+                    _parent._children[id(self)] = self
+                _parent._children[_k] = _backup[_k]
+
+        # ---------------------------------------------- 06
         # sync the move
-        self.internal.parent = parent
         if self.is_built:
             # noinspection PyUnresolvedReferences
             internal_dpg.move_item(
-                self.dpg_id, parent=parent.dpg_id,
-                before=0 if before is None else before.dpg_id)
+                self.dpg_id, parent=_parent.dpg_id,
+                before=0 if _before is None else _before.dpg_id)
 
     def before(self) -> t.Optional["MovableWidget"]:
-        _ret = self.parent.children.before(key=id(self))
-        if _ret is None:
-            return _ret
-        else:
-            return _ret[1]
+        _before = None
+        for _v in self.parent.children.values():
+            if self == _v:
+                break
+            _before = _v
+        return _before
 
-    def after(self) -> t.Optional[t.Tuple[t.Union[int, str], "MovableWidget"]]:
-        _ret = self.parent.children.after(key=id(self))
-        if _ret is None:
-            return _ret
-        else:
-            return _ret[1]
+    def after(self) -> t.Optional["MovableWidget"]:
+        _after = None
+        _matched = False
+        for _v in self.parent.children.values():
+            if _matched:
+                _after = _v
+                break
+            _matched = self == _v
+        return _after
 
     def move_up(self) -> bool:
         """
@@ -1239,10 +1223,9 @@ class MovableWidget(Widget, abc.ABC):
         if _before is None:
             return False
         else:
-            del self.parent.children[id(self)]
-            self.parent.children.insert_before(key=id(_before), key_values={id(self): self})
-            if self.is_built:
-                internal_dpg.move_item_up(self.dpg_id)
+            self.move(before=self.before())
+            # if self.is_built:
+            #     internal_dpg.move_item_up(self.dpg_id)
             return True
 
     def move_down(self) -> bool:
@@ -1254,10 +1237,9 @@ class MovableWidget(Widget, abc.ABC):
         if _after is None:
             return False
         else:
-            del self.parent.children[id(self)]
-            self.parent.children.insert_after(key=id(_after), key_values={id(self): self})
-            if self.is_built:
-                internal_dpg.move_item_down(self.dpg_id)
+            self.move(after=_after)
+            # if self.is_built:
+            #     internal_dpg.move_item_down(self.dpg_id)
             return True
 
 
@@ -1271,7 +1253,7 @@ class ContainerWidget(Widget, abc.ABC):
     """
 
     @property
-    def restrict_children_type(self) -> t.Tuple[t.Type]:
+    def restrict_children_type(self) -> t.Tuple[t.Type[MovableWidget]]:
         """
         Default is to restrict MovableWidget but you can override this to have
         Widget's as the __call__ method can accept Widget
@@ -1279,7 +1261,7 @@ class ContainerWidget(Widget, abc.ABC):
         return MovableWidget,
 
     @property
-    def children(self) -> t.Dict[str, Widget]:
+    def children(self) -> t.Dict[int, Widget]:
         return self._children
 
     # noinspection PyMethodOverriding
@@ -1289,22 +1271,16 @@ class ContainerWidget(Widget, abc.ABC):
             if isinstance(widget, MovableWidget):
                 widget.move(before=before)
             else:
-                raise e.code.CodingError(
-                    msgs=[
-                        "Do not supply `before` as `widget` is not movable"
-                    ]
-                )
+                raise Exception("Do not supply `before` as `widget` is not movable")
 
     def _add_child(self, _widget: Widget):
         # -------------------------------------------------- 01
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
         if _widget.is_built:
-            raise e.code.NotAllowed(
-                msgs=[
-                    "The widget you are trying to add is already built",
-                    "May be you want to `move()` widget instead.",
-                ]
+            raise Exception(
+                "The widget you are trying to add is already built",
+                "May be you want to `move()` widget instead.",
             )
         # check if restricted parents
         if not isinstance(self, _widget.restrict_parents_to):
@@ -1342,7 +1318,7 @@ class ContainerWidget(Widget, abc.ABC):
         super().init()
 
         # add var
-        self._children = dict()  # type: t.Dict[str, Widget]
+        self._children = dict()  # type: t.Dict[int, Widget]
 
     def on_enter(self):
         global _CONTAINER_WIDGET_STACK
@@ -1388,7 +1364,7 @@ class ContainerWidget(Widget, abc.ABC):
         >>> dpg.hide_item
         """
         if children_only:
-            for child in self._children:
+            for child in self.children.values():
                 child.hide()
         else:
             super().hide()
@@ -1438,7 +1414,7 @@ class UseMethodInForm:
 
     @staticmethod
     async def async_call(_fn: t.Callable):
-        from .gui import widget
+        from ..gui import widget
 
         try:
 
@@ -1455,6 +1431,7 @@ class UseMethodInForm:
                 widget.set_value(f"{int(widget.get_value())+1:03d}")
 
                 # change update rate based on some value
+                # noinspection PyUnresolvedReferences
                 if self.some_value == "first hashable ...":
                     await asyncio.sleep(1)
                     if int(widget.get_value()) == 10:
@@ -1486,6 +1463,7 @@ class UseMethodInForm:
             with _grp:
                 widget.Text(default_value="count")
                 _txt = widget.Text(default_value="000")
+                # noinspection PyUnresolvedReferences
                 Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
             return _grp
 
@@ -1523,37 +1501,31 @@ class UseMethodInForm:
         try:
             _fn = getattr(hashable.__class__, fn_name)
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Function with name {fn_name} is not present in class "
-                    f"{hashable.__class__}"
-                ]
+            raise Exception(
+                f"Function with name {fn_name} is not present in class "
+                f"{hashable.__class__}"
             )
         try:
             return getattr(_fn, f"_{cls.__name__}")
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"The function {_fn} was not decorated with {UseMethodInForm}"
-                ]
-            )
+            raise Exception(f"The function {_fn} was not decorated with {UseMethodInForm}")
 
     def get_button_widget(
         self,
         hashable: t.Union[Hashable, "HashableClass"],
-        receiver: "widget.ContainerWidget",
+        receiver: "gui.widget.ContainerWidget",
         allow_refresh: bool,
         group_tag: str = None,
-    ) -> "widget.Button":
+    ) -> "gui.widget.Button":
 
         # ---------------------------------------------------- 01
         # test callable name
         _callable_name = self.fn.__name__
         if not util.rhasattr(hashable, _callable_name):
-            raise e.code.CodingError(msgs=[
+            raise Exception(
                 f"Callable `{_callable_name}` not available for "
                 f"HashableClass {hashable.__class__}"
-            ])
+            )
 
         # ---------------------------------------------------- 02
         # make label for button
@@ -1565,9 +1537,7 @@ class UseMethodInForm:
         elif isinstance(self.label_fmt, str):
             _button_label = self.label_fmt
         else:
-            raise e.code.CodingError(
-                msgs=[f"unknown type {type(self.label_fmt)}"]
-            )
+            raise Exception(f"unknown type {type(self.label_fmt)}")
 
         # ---------------------------------------------------- 03
         # create callback
@@ -1778,12 +1748,6 @@ class Callback(abc.ABC):
     def fn(self, sender: Widget):
         ...
 
-    def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        _ret = {}
-        for f_name in self.dataclass_field_names:
-            _ret[f_name] = getattr(self, f_name)
-        return _ret
-
 
 @dataclasses.dataclass
 class Registry(abc.ABC):
@@ -1810,18 +1774,10 @@ class Registry(abc.ABC):
             # noinspection PyUnresolvedReferences
             return self.user_data
         except AttributeError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting class {self.__class__} to have field `user_data`",
-                    "This is intended to be used by callback mechanism"
-                ]
+            raise Exception(
+                f"Was expecting class {self.__class__} to have field `user_data`",
+                "This is intended to be used by callback mechanism"
             )
-
-    def as_dict(self) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
-        _ret = {}
-        for f_name in self.dataclass_field_names:
-            _ret[f_name] = getattr(self, f_name)
-        return _ret
 
 
 @dataclasses.dataclass
@@ -1966,11 +1922,9 @@ class Dashboard(abc.ABC):
             # if None then make sure that it is supplied ..
             # needed as we need to define values for each field
             if v is None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"Please supply value for field `{f_name}` in class "
-                        f"{self.__class__}"
-                    ]
+                raise Exception(
+                    f"Please supply value for field `{f_name}` in class "
+                    f"{self.__class__}"
                 )
             # --------------------------------------------------- 02.03
             # if not Widget class continue

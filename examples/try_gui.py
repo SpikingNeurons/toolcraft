@@ -132,10 +132,14 @@ class PlottingWithUpdates(gui.form.Form):
 
     lines_count: int = 0
 
-    def add_button(self) -> gui.widget.Button:
+    def layout(self) -> gui.widget.Group:
+        # ---------------------------------------------------------- 01
+        # make a button bar
+        _button_bar = gui.widget.Group(horizontal=True)
 
+        # ---------------------------------------------------------- 02
         @dataclasses.dataclass
-        class Callback(gui.callback.Callback):
+        class AddCallback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
@@ -150,95 +154,101 @@ class PlottingWithUpdates(gui.form.Form):
                 _y1_axis = _form.line_plot.y1_axis
                 _y1_axis(_ls)
                 _ls_ks = [_.label for _ in _y1_axis.children.values()]
-                _form.combo_select.items = _ls_ks
-                _form.combo_select.default_value = _ls_ks[-1]
-
-        _button = gui.widget.Button(
-            label="Add", callback=Callback(), user_data={"form": self},
+                _form._combo_select.items = _ls_ks
+                _form._combo_select.default_value = _ls_ks[-1]
+        self._add_button = gui.widget.Button(
+            label="Add", callback=AddCallback(), user_data={"form": self},
         )
-        return _button
+        _button_bar(self._add_button)
 
-    def clear_button(self) -> gui.widget.Button:
-
+        # ---------------------------------------------------------- 03
         @dataclasses.dataclass
-        class Callback(gui.callback.Callback):
+        class ClearCallback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
                 _form: PlottingWithUpdates = sender.get_user_data()['form']
                 _form.line_plot.clear()
-                _form.combo_select.items = []
-                _form.combo_select.default_value = ''
+                _form._combo_select.items = []
+                _form._combo_select.default_value = ''
 
-        _button = gui.widget.Button(
-            label="Clear", callback=Callback(), user_data={"form": self},
+        self._clear_button = gui.widget.Button(
+            label="Clear", callback=ClearCallback(), user_data={"form": self},
         )
-        return _button
+        _button_bar(self._clear_button)
 
-    def combo_select(self) -> gui.widget.Combo:
-        _combo_select = gui.widget.Combo(
+        # ---------------------------------------------------------- 04
+        _button_bar(gui.widget.Text(default_value=" | "))
+
+        # ---------------------------------------------------------- 05
+        self._combo_select = gui.widget.Combo(
             label="Select line series"
         )
-        return _combo_select
+        _button_bar(self._combo_select)
 
-    def update_button(self) -> gui.widget.Button:
-
+        # ---------------------------------------------------------- 06
         @dataclasses.dataclass
-        class Callback(gui.callback.Callback):
+        class UpdateCallback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
                 _form: PlottingWithUpdates = sender.get_user_data()['form']
                 _y1_axis = _form.line_plot.y1_axis
-                _combo_select_value = _form.combo_select.get_value()
+                _combo_select_value = _form._combo_select.get_value()
                 if _combo_select_value == '':
                     return
-                _plot_series = _y1_axis[_combo_select_value]
+                _plot_series = None
+                for _ in _y1_axis.children.values():
+                    if _.label == _combo_select_value:
+                        _plot_series = _
+                        break
+                if _plot_series is None:
+                    raise Exception("should never happen ...")
                 _plot_series.x = np.arange(100)
                 _plot_series.y = np.random.normal(0.0, scale=2.0, size=100)
-
-        _button = gui.widget.Button(
-            label="Update", callback=Callback(), user_data={"form": self},
+        self._update_button = gui.widget.Button(
+            label="Update", callback=UpdateCallback(), user_data={"form": self},
         )
+        _button_bar(self._update_button)
 
-        return _button
-
-    def delete_button(self) -> gui.widget.Button:
+        # ---------------------------------------------------------- 07
 
         @dataclasses.dataclass
-        class Callback(gui.callback.Callback):
+        class DeleteCallback(gui.callback.Callback):
             # noinspection PyMethodParameters
             def fn(_self, sender: gui.widget.Widget):
                 # noinspection PyTypeChecker
                 _form: PlottingWithUpdates = sender.get_user_data()['form']
                 _y1_axis = _form.line_plot.y1_axis
-                _combo_select_value = _form.combo_select.get_value()
+                _combo_select_value = _form._combo_select.get_value()
                 if _combo_select_value == '':
                     return
-                _y1_axis[_combo_select_value].delete()
+                _plot_series = None
+                for _ in _y1_axis.children.values():
+                    if _.label == _combo_select_value:
+                        _plot_series = _
+                        break
+                if _plot_series is None:
+                    raise Exception("should never happen ...")
+                _plot_series.delete()
                 _ls_ks = [_.label for _ in _y1_axis.children.values()]
-                _form.combo_select.items = _ls_ks
+                _form._combo_select.items = _ls_ks
                 try:
-                    _form.combo_select.default_value = _ls_ks[-1]
+                    _form._combo_select.default_value = _ls_ks[-1]
                 except IndexError:
-                    _form.combo_select.default_value = ''
-
-        _button = gui.widget.Button(
-            label="Delete", callback=Callback(), user_data={"form": self},
+                    _form._combo_select.default_value = ''
+        self._delete_button = gui.widget.Button(
+            label="Delete", callback=DeleteCallback(), user_data={"form": self},
         )
+        _button_bar(self._delete_button)
 
-        return _button
-
-    def layout(self) -> gui.widget.Group:
+        # ---------------------------------------------------------- 08
+        # get layout
         _layout = super().layout()
-        _button_bar = gui.widget.Group(horizontal=True)
-        _button_bar(self.add_button())
-        _button_bar(self.clear_button())
-        _button_bar(gui.widget.Text(default_value=" | "))
-        _button_bar(self.combo_select())
-        _button_bar(self.update_button())
-        _button_bar(self.delete_button())
+        # add to layout and return
         _layout(_button_bar)
+        # move up
+        _button_bar.move_up()
         # noinspection PyTypeChecker
         return _layout
 

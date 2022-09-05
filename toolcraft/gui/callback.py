@@ -3,7 +3,7 @@ import dataclasses
 import dearpygui.dearpygui as dpg
 import typing as t
 
-from . import widget, asset
+from . import widget, asset, util
 from .__base__ import Callback, EnColor, Engine, Hashable
 
 # noinspection PyUnreachableCode
@@ -48,11 +48,7 @@ class SetThemeCallback(Callback):
         elif _theme_str == "Light":
             _theme = asset.Theme.LIGHT
         else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"unknown theme {_theme_str}"
-                ]
-            )
+            raise Exception(f"unknown theme {_theme_str}")
         # we change theme of parent to which this Combo widget is child
         sender.parent.bind_theme(theme=_theme)
 
@@ -83,11 +79,9 @@ class CloseWidgetCallback(Callback):
         try:
             sender.get_user_data()['widget_to_delete'].delete()
         except KeyError:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting you to supply dict item `widget_to_delete` in "
-                    f"`user_data` of sender {sender.__class__}"
-                ]
+            raise KeyError(
+                f"Was expecting you to supply dict item `widget_to_delete` in "
+                f"`user_data` of sender {sender.__class__}"
             )
 
 
@@ -118,11 +112,9 @@ class HashableMethodRunnerCallback(Callback):
         # So ensure that the allow_refresh is True
         if self.group_tag is not None:
             if not self.allow_refresh:
-                raise e.code.NotAllowed(
-                    msgs=[
-                        f"looks like you are using group_tag. So please "
-                        f"ensure that allow_refresh is set to True"
-                    ]
+                raise Exception(
+                    f"looks like you are using group_tag. So please "
+                    f"ensure that allow_refresh is set to True"
                 )
 
     def fn(self, sender: widget.Widget):
