@@ -1,5 +1,7 @@
 import inspect
 import pathlib
+import shutil
+
 import dearpygui
 import dearpygui.dearpygui as dpg
 from typing import NamedTuple
@@ -1222,5 +1224,13 @@ def main():
     #         print("\t\t\t: ", _child_dpg_def.fn)
 
 
+def backup_to_scf():
+    _src = pathlib.Path.home() / "Github" / "toolcraft" / "toolcraft" / "gui"
+    _dst = pathlib.Path.home() / "Github" / "RU" / "scaffold" / "dl" / "examples" / "deep_learning" / "viewer"
+    shutil.copytree(_src, _dst, dirs_exist_ok=True)
+    shutil.rmtree(_dst / "_scripts")
+
+
 if __name__ == '__main__':
     main()
+    backup_to_scf()
