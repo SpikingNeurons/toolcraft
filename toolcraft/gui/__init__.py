@@ -5,7 +5,7 @@ todo: Separate gui module in new package so that
 """
 
 from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE, USER_DATA, Engine, AwaitableTask, BlockingTask, \
-    Hashable, UseMethodInForm
+    Hashable, UseMethodInForm, EscapeWithContext
 from ._enum import *
 from . import widget
 from . import window

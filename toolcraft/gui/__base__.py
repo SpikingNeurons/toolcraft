@@ -63,6 +63,21 @@ class EnColor(enum.Enum):
     RED = (255, 0, 0, 255)
 
 
+class EscapeWithContext:
+
+    def __init__(self):
+        self._backup = None
+
+    def __enter__(self):
+        global _CONTAINER_WIDGET_STACK
+        self._backup = _CONTAINER_WIDGET_STACK
+        _CONTAINER_WIDGET_STACK = []
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        global _CONTAINER_WIDGET_STACK
+        _CONTAINER_WIDGET_STACK = self._backup
+
+
 @dataclasses.dataclass
 class _WidgetDpg(abc.ABC):
     """

@@ -468,7 +468,7 @@ class MyDashboard(gui.dashboard.BasicDashboard):
     theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
 
     welcome_msg: gui.widget.Text = gui.widget.Text(
-        "Welcome to my dashboard ..... toolcraft ..... ",
+        default_value="Welcome to my dashboard ..... toolcraft ..... ",
     )
 
     topic1: InfoForm = InfoForm()
@@ -480,6 +480,8 @@ class MyDashboard(gui.dashboard.BasicDashboard):
     topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
     topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
+
+    container: gui.widget.Group = gui.widget.Group()
 
 
 def basic_dashboard():
@@ -508,6 +510,14 @@ def basic_dashboard():
     _dash.topic5.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
     _dash.topic5.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
     _dash.topic5.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
+    with _dash.container:
+        with gui.widget.CollapsingHeader(label="Test container"):
+            gui.widget.Text(default_value="first element in container ...")
+            _ = gui.form.DoubleSplitForm(
+                title=f"*** [[ ]] ***",
+                callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
+            )
+            _ = gui.form.ButtonBarForm(title="*** [[ ]] ***", collapsing_header_open=False)
 
     gui.Engine.run(_dash)
 

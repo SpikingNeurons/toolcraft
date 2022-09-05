@@ -2,7 +2,7 @@ import dataclasses
 import typing as t
 
 
-from .__base__ import Form, Hashable, UseMethodInForm
+from .__base__ import Form, Hashable, UseMethodInForm, EscapeWithContext
 from . import widget
 from . import table
 from . import callback
@@ -33,8 +33,9 @@ class ButtonBarForm(Form):
         # make some vars
         self._mapper = dict()  # type: t.Dict[str, t.Callable]
         self._callback = Callback()
-        self._button_bar = widget.Group(horizontal=True)
-        self._receiver = widget.Group()
+        with EscapeWithContext():
+            self._button_bar = widget.Group(horizontal=True)
+            self._receiver = widget.Group()
 
 
     def layout(self) -> widget.MovableContainerWidget:
@@ -156,8 +157,9 @@ class DoubleSplitForm(Form):
 
         # make container for button_panel_group
         self._button_panel_group = dict()  # type: t.Dict[str, widget.CollapsingHeader]
-        self._button_panel = widget.Group(horizontal=False)
-        self._receiver_panel = widget.Group(horizontal=False)
+        with EscapeWithContext():
+            self._button_panel = widget.Group(horizontal=False)
+            self._receiver_panel = widget.Group(horizontal=False)
 
     def layout(self) -> table.Table:
         # call super
