@@ -97,14 +97,22 @@ class HashableMethodsRunnerForm(Form):
     info_button: bool
     callable_names: t.List[str]
 
+    def init(self):
+        # call super
+        super().init()
+
+        # make some vars
+        with EscapeWithContext():
+            self._button_bar = widget.Group(horizontal=True)
+            self._receiver = widget.Group()
+
     def layout(self) -> widget.MovableContainerWidget:
         # get fromm super
         _layout = super().layout()
 
         # add more vars
-        with _layout:
-            self._button_bar = widget.Group(horizontal=True)
-            self._receiver = widget.Group()
+        _layout(self._button_bar)
+        _layout(self._receiver)
 
         # add close button
         if self.close_button:

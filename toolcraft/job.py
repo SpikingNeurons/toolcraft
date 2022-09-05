@@ -348,7 +348,7 @@ class JobViewer(m.HashableClass):
         )
 
         _job = self.job
-        with _ret.button_bar:
+        with _ret._button_bar:
             if _job.is_failed:
                 gui.widget.Text(default_value="--- FAILED ---")
             elif _job.is_finished:
