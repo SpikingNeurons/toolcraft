@@ -50,6 +50,9 @@ class ButtonBarForm(Form):
         return _layout
 
     def register(self, key: str, fn: t.Optional[t.Callable], gui_name: str = None, ):
+        """
+        todo: handle fn is None with different callback for now it is reassigned in job.ArtifactManager.gui
+        """
         # just set default
         if gui_name is None:
             gui_name = key

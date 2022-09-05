@@ -422,10 +422,11 @@ class ArtifactManager:
         @dataclasses.dataclass
         class ButtonBarForm(gui.form.ButtonBarForm):
 
-            @property
-            @util.CacheResult
-            def callback(self_1) -> gui.callback.Callback:
+            def init(self_1):
+                # call super
+                super().init()
 
+                # use a different callback
                 # make class for callback handling
                 @dataclasses.dataclass
                 class Callback(gui.callback.Callback):
@@ -437,16 +438,19 @@ class ArtifactManager:
                         _file = self.path / _key
 
                         # add ui
-                        self_1.receiver.clear()
+                        self_1._receiver.clear()
                         _w = ArtifactViewer.call(
                                 artifact=_key, experiment=self.job.experiment, file_path=_file)
-                        self_1.receiver(_w)
+                        self_1._receiver(_w)
 
-                return Callback()
+                # set the var
+                self_1._callback = Callback()
 
         _form = ButtonBarForm(title=None, collapsing_header_open=False)
 
         for _ in self.available_artifacts():
+            # todo: see if specialization can be done when fn is None ...
+            #   i.e. use different callback in parent class gui.form.ButtonBarForm instead of overriding here
             _form.register(key=_, fn=None)
 
         return _form
