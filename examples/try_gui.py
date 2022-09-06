@@ -314,8 +314,8 @@ class SimpleHashableClass(gui.Hashable):
 
     @gui.UseMethodInForm(label_fmt="blocking_task", run_async=True)
     def blocking_task(self) -> gui.widget.Text:
-        time.sleep(5)
-        return gui.widget.Text(default_value="done sleeping for 5 seconds")
+        time.sleep(10)
+        return gui.widget.Text(default_value="done sleeping for 10 seconds")
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
     # def async_update(self) -> gui.widget.Widget:

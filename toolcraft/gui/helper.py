@@ -20,7 +20,8 @@ async def make_async_fn_runner(
     from .. import gui
 
     # get reference
-    _msg = f"Running fn {blocking_fn.__name__!r} in async \n"
+    _cnt = 0
+    _msg = f"Running fn {blocking_fn.__name__!r} in async {{cnt:03d}}\n"
     _blinker = itertools.cycle(["..", "....", "......"])
 
     try:
@@ -55,8 +56,9 @@ async def make_async_fn_runner(
             # if running
             if _future.running():
                 with receiver_grp:
+                    _cnt += 1
                     gui.widget.Text(
-                        default_value=_msg + next(_blinker)
+                        default_value=_msg.format(cnt=_cnt) + next(_blinker)
                     )
                 await asyncio.sleep(0.4)
                 continue
