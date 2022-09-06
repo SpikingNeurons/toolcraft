@@ -6,6 +6,7 @@ from . import widget, Hashable
 
 # noinspection PyUnresolvedReferences, PyUnreachableCode
 if False:
+    # noinspection PyUnresolvedReferences
     from ..marshalling import HashableClass
 
 
@@ -15,6 +16,7 @@ async def make_async_fn_runner(
     """
     to be used by `_make_async`
     """
+    # noinspection PyUnresolvedReferences
     from .. import gui
 
     # get reference
