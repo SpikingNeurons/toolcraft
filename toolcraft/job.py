@@ -110,7 +110,7 @@ class ArtifactViewer:
     @staticmethod
     def dot_png(experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
         from . import gui
-        subprocess.call(["start", file_path.local_path.as_posix()], shell=True)
+        subprocess.Popen(["start", file_path.local_path.as_posix()], shell=True)
         return gui.widget.Text(f"Image will be opened in external window\n{file_path}")
 
     @staticmethod

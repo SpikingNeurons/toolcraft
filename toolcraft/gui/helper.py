@@ -88,6 +88,13 @@ def tab_bar_from_widget_dict(widget_dict: t.Dict) -> widget.TabBar:
         elif isinstance(_v, list):
             for _i, __v in enumerate(_v):
                 _tab(widget=__v)
+        elif isinstance(_v, widget.Widget):
+            if _v.registered_as_child:
+                _tab(widget=_v)
+            else:
+                raise Exception(
+                    f"Widget of type {type(_v)} cannot be added as child ...."
+                )
         else:
             raise Exception(
                 f"Unrecognized type {type(_v)}"
