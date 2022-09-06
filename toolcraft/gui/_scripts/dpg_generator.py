@@ -856,7 +856,6 @@ class CodeMaker:
 This code is auto-generated:
 >> Script: {_script_file}
 >> DearPyGui: {dearpygui.__version__}
->> Time: {_now().strftime("%Y-%m-%d %H:%M")}
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """

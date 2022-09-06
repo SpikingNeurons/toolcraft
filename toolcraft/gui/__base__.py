@@ -1612,6 +1612,7 @@ class Hashable(abc.ABC):
         )
         # return
         return _ret_widget
+
     def yaml(self) -> str:
         try:
             return YamlDumper.dump(self)
