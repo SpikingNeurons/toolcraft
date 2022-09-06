@@ -6,10 +6,13 @@ The rule for now is to
 import abc
 import dataclasses
 import asyncio
+import functools
 import hashlib
 import inspect
+import itertools
 import sys
 import traceback
+import types
 import typing as t
 import enum
 import dearpygui.dearpygui as dpg
@@ -1403,7 +1406,7 @@ class UseMethodInForm:
     """
 
     def __init__(
-        self, label_fmt: str = None, call_as_async: bool = False
+        self, label_fmt: str = None, run_async: bool = False
     ):
         """
 
@@ -1413,10 +1416,10 @@ class UseMethodInForm:
             call_as_async: can call method in async task ...
         """
         self.label_fmt = label_fmt
-        self.call_as_async = call_as_async
+        self.run_async = run_async
 
     @staticmethod
-    async def async_call(_fn: t.Callable):
+    async def _async_call(_fn: t.Callable):
         from ..gui import widget
 
         try:
@@ -1451,7 +1454,7 @@ class UseMethodInForm:
                 ...
 
     @staticmethod
-    def make_async_caller_fn(_fn: t.Callable) -> t.Callable:
+    def _make_async_caller_fn(_fn: t.Callable) -> t.Callable:
 
         from . import widget
 
@@ -1480,21 +1483,20 @@ class UseMethodInForm:
           build a form do that parametrized widget running is possible ...
           a bit complex but possible
         """
-        # make new fn
-        if self.call_as_async:
-            _new_fn = self.make_async_caller_fn(fn)
-        else:
-            _new_fn = fn
 
-        # set vars
-        self.fn = _new_fn
+        # if label fmt is None then use fn name
+        if self.label_fmt is None:
+            self.label_fmt = fn.__name__
+
+        # set fn
+        self.fn = fn
 
         # store self inside fn
         # also check `cls.get_from_hashable_fn` which will help get access
         # to this instance
-        setattr(fn, f"_{self.__class__.__name__}", self)
+        setattr(self.fn, f"_{self.__class__.__name__}", self)
 
-        # return fn as this is decorator
+        # return self.fn as this is decorator
         return self.fn
 
     @classmethod
@@ -1546,6 +1548,7 @@ class UseMethodInForm:
         # create callback
         from . import callback
         _callback = callback.HashableMethodRunnerCallback(
+            run_async=self.run_async,
             hashable=hashable,
             callable_name=_callable_name,
             receiver=receiver,
@@ -1593,8 +1596,6 @@ class YamlDumper(yaml.Dumper):
 
 @dataclasses.dataclass
 class Hashable(abc.ABC):
-    def yaml(self) -> str:
-        return YamlDumper.dump(self)
 
     @property
     def hex_hash(self) -> str:
@@ -1611,6 +1612,15 @@ class Hashable(abc.ABC):
         )
         # return
         return _ret_widget
+    def yaml(self) -> str:
+        try:
+            return YamlDumper.dump(self)
+        except Exception as _e:
+            raise Exception(
+                "Cannot be serialized by YamlDumper. "
+                "Override this method in case you are using "
+                "non-serializable fields.", str(_e)
+            )
 
 
 @dataclasses.dataclass

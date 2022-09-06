@@ -1,9 +1,7 @@
-import abc
 import dataclasses
-import dearpygui.dearpygui as dpg
 import typing as t
 
-from . import widget, asset, util
+from . import widget, asset, util, AwaitableTask, helper
 from .__base__ import Callback, EnColor, Engine, Hashable
 
 # noinspection PyUnreachableCode
@@ -102,6 +100,7 @@ class HashableMethodRunnerCallback(Callback):
     receiver: widget.ContainerWidget
     allow_refresh: bool
     group_tag: str = None
+    run_async: bool = False
 
     def init_validate(self):
         # call super
@@ -170,8 +169,18 @@ class HashableMethodRunnerCallback(Callback):
         if _widget is None:
             # get actual result widget we are interested to display ... and make
             # it child to receiver
-            _new_widget = util.rgetattr(
-                _hashable, self.callable_name)()  # type: widget.MovableWidget
+            if self.run_async:
+                _new_widget = widget.Group(horizontal=False)
+                AwaitableTask(
+                    fn=helper.make_async_fn_runner,
+                    fn_kwargs=dict(
+                        receiver_grp=_new_widget,
+                        blocking_fn=util.rgetattr(_hashable, self.callable_name)
+                    )
+                ).add_to_task_queue()
+            else:
+                _new_widget = util.rgetattr(
+                    _hashable, self.callable_name)()  # type: widget.MovableWidget
 
             # tag it as it was newly created
             Engine.tag_widget(tag=_tag, widget=_new_widget)

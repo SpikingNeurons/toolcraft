@@ -312,80 +312,10 @@ class SimpleHashableClass(gui.Hashable):
             ).add_to_task_queue()
         return _grp
 
-    def some_blocking_fn(self) -> gui.widget.Text:
-        # self.click_count_for_blocking_fn += 1
-        _cnt = self.click_count_for_blocking_fn
-        print("sleeping ...", self.some_value, _cnt)
-        time.sleep(10)
-        print("finished sleeping ...", self.some_value, _cnt)
+    @gui.UseMethodInForm(label_fmt="blocking_task", run_async=True)
+    def blocking_task(self) -> gui.widget.Text:
+        time.sleep(5)
         return gui.widget.Text(default_value="done sleeping for 5 seconds")
-
-    async def some_awaitable_fn_with_blocking_task(
-        self, receiver_grp: gui.widget.Group
-    ):
-        # get reference
-        _blinker = itertools.cycle(["..", "....", "......"])
-
-        try:
-
-            # schedule blocking task to run in queue
-            _blocking_task = gui.BlockingTask(
-                fn=self.some_blocking_fn, concurrent=False
-            )
-            _blocking_task.add_to_task_queue()
-            _future = None
-            while _future is None:
-                await asyncio.sleep(0.4)
-                _future = _blocking_task.future
-
-            # loop infinitely
-            while receiver_grp.does_exist:
-
-                # if not build continue
-                if not receiver_grp.is_built:
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # dont update if not visible
-                # todo: can we await on bool flags ???
-                if not receiver_grp.is_visible:
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # clear group
-                receiver_grp.clear()
-
-                # if running
-                if _future.running():
-                    with receiver_grp:
-                        gui.widget.Text(default_value=next(_blinker))
-                    await asyncio.sleep(0.4)
-                    continue
-
-                # if done
-                if _future.done():
-                    _exp = _future.exception()
-                    if _exp is None:
-                        receiver_grp(widget=_future.result())
-                        break
-                    else:
-                        with receiver_grp:
-                            gui.widget.Text(default_value="Failed ...")
-                            raise _exp
-
-        except Exception as _e:
-            if receiver_grp.does_exist:
-                raise _e
-            else:
-                ...
-
-    @gui.UseMethodInForm(label_fmt="blocking_task")
-    def blocking_task(self) -> gui.widget.Group:
-        _grp = gui.widget.Group(horizontal=True)
-        gui.AwaitableTask(
-            fn=self.some_awaitable_fn_with_blocking_task, fn_kwargs=dict(receiver_grp=_grp)
-        ).add_to_task_queue()
-        return _grp
 
     # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
     # def async_update(self) -> gui.widget.Widget:
@@ -448,7 +378,7 @@ class SimpleHashableClass(gui.Hashable):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task", ],
+            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task"],
             collapsing_header_open=True,
         )
 
