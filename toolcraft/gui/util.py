@@ -1,6 +1,31 @@
 import functools
 import typing as t
 import inspect
+import pathlib
+import blosc2
+import pickle
+
+
+def save_compressed_pickle(data: t.Any, file: pathlib.Path):
+    if file.exists():
+        raise Exception(
+            f"file {file.name} already exists ... cannot over write"
+        )
+    _pickled_data = pickle.dumps(data)
+    _compressed_pickled_data = blosc2.compress(_pickled_data)
+    with file.open('wb') as _file:
+        _file.write(_compressed_pickled_data)
+
+
+def load_compressed_pickle(file: pathlib.Path) -> t.Any:
+    if not file.exists():
+        raise Exception(
+            f"file {file.name} does not exist ... cannot load"
+        )
+    with file.open('rb') as _file:
+        _compressed_pickled_data = _file.read()
+    _pickled_data = blosc2.decompress(_compressed_pickled_data)
+    return pickle.loads(_pickled_data)
 
 
 def rsetattr(obj, attr, val):

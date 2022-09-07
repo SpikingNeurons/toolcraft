@@ -38,12 +38,10 @@ import pathlib
 import pickle
 import typing as t
 
-import blosc
+import blosc2
 import fsspec
 import os
 import toml
-import json
-import pyarrow as pa
 import gcsfs
 
 # todo: keep exploring these known_implementationsas they are updated
@@ -501,7 +499,7 @@ class Path:
                 ]
             )
         _pickled_data = pickle.dumps(data)
-        _compressed_pickled_data = blosc.compress(_pickled_data)
+        _compressed_pickled_data = blosc2.compress(_pickled_data)
         with self.open('wb') as _file:
             _file.write(_compressed_pickled_data)
 
@@ -514,7 +512,7 @@ class Path:
             )
         with self.open('rb') as _file:
             _compressed_pickled_data = _file.read()
-        _pickled_data = blosc.decompress(_compressed_pickled_data)
+        _pickled_data = blosc2.decompress(_compressed_pickled_data)
         return pickle.loads(_pickled_data)
 
     def write_text(self, text: str):

@@ -75,7 +75,7 @@ rich = "^12.4.4"
 #panel = "^0.12.5"
 paramiko = "^2.9.2"
 #toml = "^0.10.2"
-blosc = "^1.10.6"
+blosc2 = "^0.3.2"
 
 
 [tool.poetry.group.test]

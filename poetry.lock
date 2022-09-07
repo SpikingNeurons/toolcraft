@@ -88,12 +88,12 @@ css = ["tinycss2 (>=1.1.0,<1.2)"]
 dev = ["Sphinx (==4.3.2)", "black (==22.3.0)", "build (==0.8.0)", "flake8 (==4.0.1)", "hashin (==0.17.0)", "mypy (==0.961)", "pip-tools (==6.6.2)", "pytest (==7.1.2)", "tox (==3.25.0)", "twine (==4.0.1)", "wheel (==0.37.1)"]
 
 [[package]]
-name = "blosc"
-version = "1.10.6"
-description = "Blosc data compressor"
+name = "blosc2"
+version = "0.3.2"
+description = "Python wrapper for the C-Blosc2 library."
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.8, <4"
 
 [[package]]
 name = "bump2version"
@@ -1202,7 +1202,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<4.0.0"
-content-hash = "b0a9a82afbff87341236ab51cbabf60e528efd28cd30cd0e54092a2422634511"
+content-hash = "3e310af9e97e908c77351f0118fd36ae6466fba6244dc24857095315bcf6eb3d"
 
 [metadata.files]
 aiohttp = [
@@ -1312,23 +1312,23 @@ bleach = [
     {file = "bleach-5.0.1-py3-none-any.whl", hash = "sha256:085f7f33c15bd408dd9b17a4ad77c577db66d76203e5984b1bd59baeee948b2a"},
     {file = "bleach-5.0.1.tar.gz", hash = "sha256:0d03255c47eb9bd2f26aa9bb7f2107732e7e8fe195ca2f64709fcf3b0a4a085c"},
 ]
-blosc = [
-    {file = "blosc-1.10.6-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:cab567bcda075dde74ec80c406a48d36d8fc886ac8a989bb58cc9f7cb60ec6bf"},
-    {file = "blosc-1.10.6-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:daa06af88b5264bab13659bfb4dd84dedf3541b4972cf0ce4a3c957e4a40ce41"},
-    {file = "blosc-1.10.6-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:cfe447f6b8778ec5140f7671a283c396b15a269188ee3697f932c66abfbc26d1"},
-    {file = "blosc-1.10.6-cp37-cp37m-win32.whl", hash = "sha256:4c7af607edfd2f56916f78346ae1e49b016d470f0675bed1d5292ef7c324a181"},
-    {file = "blosc-1.10.6-cp37-cp37m-win_amd64.whl", hash = "sha256:2874ac08785913818dd4fc6ee59ed456b732f5b14a1ca12093a1eafcbff039b7"},
-    {file = "blosc-1.10.6-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:094ea5de87e2765868a87c5c03daa88297bda2e6d6b9fe1ed42e87f9d5c2335e"},
-    {file = "blosc-1.10.6-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:0ce3f50b357f65f24d47ef5ff0265426dd149a3916d0feb061fa9e9b12af4a19"},
-    {file = "blosc-1.10.6-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:b30326c84b745e307ed35766a231572cc66b65a2e15a06acf9a68ec946043224"},
-    {file = "blosc-1.10.6-cp38-cp38-win32.whl", hash = "sha256:fb135356ab39bb7222b214958f2c6794c65801ecfe45a52116adc23e1d956b4c"},
-    {file = "blosc-1.10.6-cp38-cp38-win_amd64.whl", hash = "sha256:67e5c9be04de7cfc64be6a3385ea1da7228eb25b84a5cc6f1d16e53319ec8d2a"},
-    {file = "blosc-1.10.6-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3260832994f10ecde7f2c1b27ed6c9e2581b8584ea60554ab35b436153af7556"},
-    {file = "blosc-1.10.6-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b1d8c9779625cc001ea35d893da769f155d38a67b052797eb4cab11147886533"},
-    {file = "blosc-1.10.6-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:1c11cf9b9915ca43a8a8557f3412f974051510712790a170b46fa481581e07fe"},
-    {file = "blosc-1.10.6-cp39-cp39-win32.whl", hash = "sha256:d9a9ec1eda375b35ab64c0f9b9295e8219b29fbaf8646d1f54251102411544db"},
-    {file = "blosc-1.10.6-cp39-cp39-win_amd64.whl", hash = "sha256:4d166c0ef9363c6ff5d163b81b2089103d8012651520487408bea49eb664f9ce"},
-    {file = "blosc-1.10.6.tar.gz", hash = "sha256:55d9d57b85d6eeec010c6c399f2820f96f566dccbc6ddfeefb60501f8e10b548"},
+blosc2 = [
+    {file = "blosc2-0.3.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b5b892642dc2d1a31e02b2bd5334835b9ddab24d8b310dc7c84b4676489c2bb5"},
+    {file = "blosc2-0.3.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:33423af150a529f936b0c48781b6787f118db5ec788e4c3b6b2b7b26ea1a0305"},
+    {file = "blosc2-0.3.2-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:c6b6e4c3dac7907150f5208f762ac36ba161c1705361b7172ee25897899f84f9"},
+    {file = "blosc2-0.3.2-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:a1337f87fadce2810f3ca6a74d705429077406c3f40e7dcb1bcac78f9a748efe"},
+    {file = "blosc2-0.3.2-cp310-cp310-win_amd64.whl", hash = "sha256:e97d67b905abe6b2b5e6f6091d05c00016d5fe89b608efca21f2fb997700e432"},
+    {file = "blosc2-0.3.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:b743a784f7fd39f047cb9c108fcfb3ca4b4e342f6906bdf34a6fe8214c3cc554"},
+    {file = "blosc2-0.3.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:88092b6cd8325604dbe3bb97190f6cb5d10d28b0ca323bd69347bcfd6a8604dc"},
+    {file = "blosc2-0.3.2-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:4a721f13388ec7962913de1243552e0df3ad507e3df6a841410f1b24a4c8f600"},
+    {file = "blosc2-0.3.2-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:bbbdc750d1f77846fe6a93497c38bd469ce3a98ff2d96608f390c9b0f473bd74"},
+    {file = "blosc2-0.3.2-cp38-cp38-win_amd64.whl", hash = "sha256:8bbc0b75ab6b9c5200daeda1a7f2e403ccf47b85b7cb3e70495e0160d1f8d25c"},
+    {file = "blosc2-0.3.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5953614cf2acdee5e44195c51396a874b7e564f5960a3b4f71dc010beabd05c5"},
+    {file = "blosc2-0.3.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:27c2a3f735bc5546ffb06f781060122e8eda227e30dff13536b00bbab9d0030f"},
+    {file = "blosc2-0.3.2-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:894f230eee8ab6323a8227885d934d865890ac6470a6846d8c934323e695bd00"},
+    {file = "blosc2-0.3.2-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:2e9d5ec16f828d4bd0887b3058027b70c0d0490109d78d4b829f8c7ed24248ad"},
+    {file = "blosc2-0.3.2-cp39-cp39-win_amd64.whl", hash = "sha256:3e66b932028d89ddd43bd6f2815cd81e6c4702a5b601b70beea6ad9c80b70661"},
+    {file = "blosc2-0.3.2.tar.gz", hash = "sha256:99679a330506f85dafe71080a96483ddaf091fabb84f51ed673b8fd860aa34bd"},
 ]
 bump2version = [
     {file = "bump2version-1.0.1-py2.py3-none-any.whl", hash = "sha256:37f927ea17cde7ae2d7baf832f8e80ce3777624554a653006c9144f8017fe410"},
