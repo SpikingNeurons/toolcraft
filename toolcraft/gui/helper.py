@@ -17,7 +17,7 @@ async def make_async_fn_runner(
     to be used by `_make_async`
     """
     # noinspection PyUnresolvedReferences
-    from .. import gui
+    from . import BlockingTask, widget
 
     # get reference
     _cnt = 0
@@ -27,7 +27,7 @@ async def make_async_fn_runner(
     try:
 
         # schedule blocking task to run in queue
-        _blocking_task = gui.BlockingTask(
+        _blocking_task = BlockingTask(
             fn=blocking_fn, concurrent=False
         )
         _blocking_task.add_to_task_queue()
@@ -57,7 +57,7 @@ async def make_async_fn_runner(
             if _future.running():
                 with receiver_grp:
                     _cnt += 1
-                    gui.widget.Text(
+                    widget.Text(
                         default_value=_msg.format(cnt=_cnt) + next(_blinker)
                     )
                 await asyncio.sleep(0.4)
@@ -71,8 +71,8 @@ async def make_async_fn_runner(
                     break
                 else:
                     with receiver_grp:
-                        gui.widget.Text(default_value="Failed ...")
-                        gui.widget.Text(default_value=str(_exp))
+                        widget.Text(default_value="Failed ...")
+                        widget.Text(default_value=str(_exp))
                     raise _exp
 
     except Exception as _e:
