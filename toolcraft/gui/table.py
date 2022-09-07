@@ -236,7 +236,7 @@ class Table(_auto.Table):
     def table_from_dict(
         cls, input_dict: t.Dict,
     ) -> "Table":
-        from .. import gui
+        from . import widget
         _rows = list(input_dict.keys())
         _columns = ["\\"] + list(input_dict[_rows[0]].keys())
         _table = cls.table_from_literals(
@@ -246,11 +246,11 @@ class Table(_auto.Table):
             for _cid, _c in enumerate(_columns):
                 if _c == "\\":
                     _table[_rid, _cid](
-                        gui.widget.Text(default_value=f"{_r}")
+                        widget.Text(default_value=f"{_r}")
                     )
                 else:
                     _table[_rid, _cid](
-                        gui.widget.Text(default_value=f"{input_dict[_r][_c]}")
+                        widget.Text(default_value=f"{input_dict[_r][_c]}")
                     )
         return _table
 
