@@ -1215,7 +1215,7 @@ def io_is_dir_empty(_dir: pathlib.Path) -> bool:
     return _is_empty
 
 
-def find_free_port():
+def find_free_port(localhost: bool):
     """
     Inspired from
     https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
@@ -1223,7 +1223,8 @@ def find_free_port():
     with contextlib.closing(
         socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ) as _socket:
-        _socket.bind(('', 0))
+        # use 'localhost' for local machines ... or else I assume that it will scan all network routes
+        _socket.bind(('localhost' if localhost else '', 0))
         _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return _socket.getsockname()[1]
 
