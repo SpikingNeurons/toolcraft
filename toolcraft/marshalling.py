@@ -2088,7 +2088,7 @@ if settings.TF_KERAS_WORKS:
     from keras.optimizers.optimizer_experimental import \
         optimizer as optimizer_experimental
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
-        int, float, str, slice, list, dict,
+        int, float, str, slice, list, dict, tuple,
         np.float32, np.int64, np.int32,
         datetime.datetime, None, FrozenEnum,
         HashableClass, pa.Schema,
@@ -2096,7 +2096,7 @@ if settings.TF_KERAS_WORKS:
         tk.optimizers.Optimizer, optimizer_experimental.Optimizer,
     ]
 else:
-    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict,
+    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict, tuple,
                                               np.float32, np.int64, np.int32,
                                               datetime.datetime, None, FrozenEnum,
                                               HashableClass, pa.Schema, ]
