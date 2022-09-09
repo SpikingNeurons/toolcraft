@@ -2,7 +2,7 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.6.2
+>> DearPyGui: 1.7.0
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -3359,7 +3359,7 @@ class InputDouble(MovableWidget):
     Refer:
     >>> dpg.add_input_double
 
-     Adds input for an double. Useful when input float is not accurate enough.+/- buttons can be activated by setting the value of step.
+     Adds input for an double. Useful when input float is not accurate enough. +/- buttons can be activated by setting the value of step.
 
     """
 
@@ -3423,10 +3423,10 @@ class InputDouble(MovableWidget):
     # max_value (float, optional): Value for upper limit of input. By default this limits the step buttons. Use max_clamped to limit manual input.
     max_value: float = 100.0
 
-    # step (float, optional): Increment to change value by when the step buttons are pressed. Setting this to a value of 0 or smaller will turn off step buttons.
+    # step (float, optional): Increment to change value by when the step buttons are pressed. Setting this and step_fast to a value of 0 or less will turn off step buttons.
     step: float = 0.1
 
-    # step_fast (float, optional): After holding the step buttons for extended time the increments will switch to this value.
+    # step_fast (float, optional): Increment to change value by when ctrl + step buttons are pressed. Setting this and step to a value of 0 or less will turn off step buttons.
     step_fast: float = 1.0
 
     # min_clamped (bool, optional): Activates and deactivates the enforcment of min_value.
@@ -3737,10 +3737,10 @@ class InputFloat(MovableWidget):
     # max_value (float, optional): Value for upper limit of input. By default this limits the step buttons. Use max_clamped to limit manual input.
     max_value: float = 100.0
 
-    # step (float, optional): Increment to change value by when the step buttons are pressed. Setting this to a value of 0 or smaller will turn off step buttons.
+    # step (float, optional): Increment to change value by when the step buttons are pressed. Setting this and step_fast to a value of 0 or less will turn off step buttons.
     step: float = 0.1
 
-    # step_fast (float, optional): After holding the step buttons for extended time the increments will switch to this value.
+    # step_fast (float, optional): Increment to change value by when ctrl + step buttons are pressed. Setting this and step to a value of 0 or less will turn off step buttons.
     step_fast: float = 1.0
 
     # min_clamped (bool, optional): Activates and deactivates the enforcment of min_value.
@@ -4048,10 +4048,10 @@ class InputInt(MovableWidget):
     # max_value (int, optional): Value for upper limit of input. By default this limits the step buttons. Use max_clamped to limit manual input.
     max_value: int = 100
 
-    # step (int, optional): Increment to change value by when the step buttons are pressed. Setting this to a value of 0 or smaller will turn off step buttons.
+    # step (int, optional): Increment to change value by when the step buttons are pressed. Setting this and step_fast to a value of 0 or less will turn off step buttons.
     step: int = 1
 
-    # step_fast (int, optional): After holding the step buttons for extended time the increments will switch to this value.
+    # step_fast (int, optional): Increment to change value by when ctrl + step buttons are pressed. Setting this and step to a value of 0 or less will turn off step buttons.
     step_fast: int = 100
 
     # min_clamped (bool, optional): Activates and deactivates the enforcment of min_value.
@@ -6783,6 +6783,9 @@ class Selectable(MovableWidget):
     # span_columns (bool, optional): Forces the selectable to span the width of all columns if placed in a table.
     span_columns: bool = False
 
+    # disable_popup_close (bool, optional): Disable closing a modal or popup window.
+    disable_popup_close: bool = False
+
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.parent.dpg_id
@@ -6809,6 +6812,7 @@ class Selectable(MovableWidget):
             track_offset=self.track_offset,
             default_value=self.default_value,
             span_columns=self.span_columns,
+            disable_popup_close=self.disable_popup_close,
         )
         
         return _ret
