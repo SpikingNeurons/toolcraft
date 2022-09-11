@@ -1505,7 +1505,7 @@ class Flow:
                 gui.widget.Separator()
                 _forms[_i] = gui.form.DoubleSplitForm(
                     title=f"*** [[ STAGE {_i:03d} ]] ***",
-                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
+                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=True,
                 )
             # --------------------------------------------------------------- 04.02
             # for other jobs that will be run on client with gui
@@ -1514,7 +1514,7 @@ class Flow:
                 gui.widget.Separator()
                 _other_jobs_form = gui.form.DoubleSplitForm(
                     title=f"*** [[ OTHER JOBS ]] ***",
-                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=False,
+                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=True,
                 )
 
         # ------------------------------------------------------------------- 05

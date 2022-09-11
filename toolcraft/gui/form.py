@@ -229,7 +229,7 @@ class DoubleSplitForm(Form):
             else:
                 with self._button_panel:
                     self._button_panel_group[group_key] = widget.CollapsingHeader(
-                        label=group_key, default_open=False,
+                        label=group_key, default_open=self.collapsing_header_open,
                     )
                     _container = self._button_panel_group[group_key]
 
