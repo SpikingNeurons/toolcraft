@@ -86,7 +86,13 @@ class ArtifactViewer:
         # if directly supported then return
         elif artifact in ArtifactViewer._fn_mapper.keys():
             if experiment is None:
-                return ArtifactViewer._fn_mapper[artifact](file_path=file_path)
+                _fn = ArtifactViewer._fn_mapper[artifact]
+                if 'experiment' in inspect.signature(_fn).parameters.keys():
+                    raise e.code.CodingError(
+                        msgs=[f"Please do not define kwarg `experiment` in function {_fn} "
+                              f"as it not meant to be used with it ..."]
+                    )
+                return _fn(file_path=file_path)
             else:
                 return ArtifactViewer._fn_mapper[artifact](experiment=experiment, file_path=file_path)
         # if artifact has dot then we need to call extension methods
