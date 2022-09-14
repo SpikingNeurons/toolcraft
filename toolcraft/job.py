@@ -1530,12 +1530,12 @@ class Flow:
             #    just have spinners if job is running or status icons indicating job status ... may be the
             #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
             for _job in _stage.all_jobs:
-                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
+                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
         # ------------------------------------------------------------------- 05.02
         # for other jobs that will be run on client with gui
         if bool(self.other_jobs):
             for _job in self.other_jobs:
-                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, )
+                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
 
         # ------------------------------------------------------------------- 06
         # run

@@ -204,6 +204,7 @@ class DoubleSplitForm(Form):
         self,
         hashable: t.Union[Hashable, "HashableClass"],
         group_key: str = None,
+        default_open: bool = False,
     ):
 
         # ----------------------------------------------------- 01
@@ -229,7 +230,7 @@ class DoubleSplitForm(Form):
             else:
                 with self._button_panel:
                     self._button_panel_group[group_key] = widget.CollapsingHeader(
-                        label=group_key, default_open=self.collapsing_header_open,
+                        label=group_key, default_open=default_open,
                     )
                     _container = self._button_panel_group[group_key]
 
