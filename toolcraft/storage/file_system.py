@@ -43,6 +43,8 @@ import fsspec
 import os
 import toml
 import gcsfs
+import io
+from fsspec.spec import AbstractBufferedFile
 
 # todo: keep exploring these known_implementationsas they are updated
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -119,21 +121,12 @@ class FileSystemConfig(m.HashableClass):
                 # some vars
                 _credentials_file = settings.TC_HOME / self.kwargs['credentials']
                 _project = _kwargs['project']
-                _bucket = _kwargs['bucket']
                 # make _fs
                 _fs = _protocol_class(
                     project=_project,
                     check_connection=True,
                     token=_credentials_file.as_posix()
                 )  # type: gcsfs.GCSFileSystem
-                # test if bucket exists
-                e.validation.ShouldBeOneOf(
-                    value=_bucket + '/',  # as buckets from _fs ahs suffix `/`
-                    values=_fs.buckets,
-                    msgs=[
-                        "Provided bucket is not available ..."
-                    ]
-                ).raise_if_failed()
             # --------------------------------------------------------- 02.02
             else:
                 _fs = _protocol_class(**_kwargs)
@@ -151,6 +144,25 @@ class FileSystemConfig(m.HashableClass):
             )
 
         # ------------------------------------------------------------- 03
+        # make fs specific checks
+        # ------------------------------------------------------------- 03.01
+        # for GCP
+        if self.protocol in ['gs', 'gcs']:
+            _fs: gcsfs.GCSFileSystem
+            # some vars
+            _credentials_file = settings.TC_HOME / self.kwargs['credentials']
+            _project = _kwargs['project']
+            _bucket = _kwargs['bucket']
+            # test if bucket exists
+            e.validation.ShouldBeOneOf(
+                value=_bucket + '/',  # as buckets from _fs has suffix `/`
+                values=_fs.buckets,
+                msgs=[
+                    "Cannot find bucket on GCS ...",
+                ]
+            ).raise_if_failed()
+
+        # ------------------------------------------------------------- 04
         return _fs
 
     def init_validate(self):
@@ -192,7 +204,7 @@ class FileSystemConfig(m.HashableClass):
             if not _credentials_file.exists():
                 raise e.validation.NotAllowed(
                     msgs=[
-                        f"Cannot find credential file {_credentials_file}",
+                        f"Cannot find credential file {_credentials_file} for file system {self.fs_name}",
                         f"Please create it using information from here:",
                         "https://cloud.google.com/docs/authentication/"
                         "getting-started#create-service-account-console",
@@ -233,6 +245,13 @@ class FileSystemConfig(m.HashableClass):
                     ]
                 )
 
+    def make_root_path(self, sep: str) -> str:
+        assert sep == self.fs.sep, "was expecting this to be same"
+        if self.protocol in ['gs', 'gcs']:
+            return self.kwargs['bucket'] + sep + self.root_dir
+        else:
+            return self.root_dir
+
     @classmethod
     def get(cls, fs_name: str) -> "FileSystemConfig":
         # --------------------------------------------------------- 01
@@ -241,9 +260,7 @@ class FileSystemConfig(m.HashableClass):
             return _FILE_SYSTEM_CONFIGS[fs_name]
 
         # --------------------------------------------------------- 02
-        # not available so create
-        # --------------------------------------------------------- 02.01
-        # check in settings if any file_system is provided
+        # load `settings.TC_CONFIG["file_systems"]` to get predefined file systems in `toolcraft/config.toml`
         try:
             _all_fs_config = settings.TC_CONFIG["file_systems"]
         except KeyError:
@@ -252,8 +269,13 @@ class FileSystemConfig(m.HashableClass):
             # update settings and save
             settings.TC_CONFIG["file_systems"] = _all_fs_config
             settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
-        # --------------------------------------------------------- 02.02
-        # now check for specific fs
+
+        # --------------------------------------------------------- 03
+        # now check if fs_name is supplied in `toolcraft/config.toml`
+        # + if found then make FileSystemConfig from it
+        # + else
+        #    + if 'CWD` create it and save to config.toml
+        #    + else raise error
         try:
             _fs_config = _all_fs_config[fs_name]
         except KeyError:
@@ -276,15 +298,19 @@ class FileSystemConfig(m.HashableClass):
                         f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
                     ]
                 )
-        # --------------------------------------------------------- 02.03
-        # make sure that _fs_config is dict
+
+        # --------------------------------------------------------- 04
+        # now that we have _fs_config for fs_name from `toolcraft/config.toml`
+        # lets test it
+        # --------------------------------------------------------- 04.01
+        # first validate _fs_config is proper dict with specific keys
         e.validation.ShouldBeInstanceOf(
             value=_fs_config, value_types=(dict, ), msgs=[
                 f"Was expecting dict for file system {fs_name} configured in settings",
                 f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
             ]
         ).raise_if_failed()
-        # --------------------------------------------------------- 02.04
+        # --------------------------------------------------------- 04.02
         # make sure that there we know thw settings i.e. they should be one or more
         # of these three
         for _k in _fs_config.keys():
@@ -295,11 +321,12 @@ class FileSystemConfig(m.HashableClass):
                     f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
                 ]
             ).raise_if_failed()
-        # --------------------------------------------------------- 02.05
-        # make instance and save
+
+        # --------------------------------------------------------- 05
+        # make FileSystemConfig instance from _fs_config
         _FILE_SYSTEM_CONFIGS[fs_name] = FileSystemConfig(fs_name=fs_name, **_fs_config)
 
-        # --------------------------------------------------------- 03
+        # --------------------------------------------------------- 06
         # return
         return _FILE_SYSTEM_CONFIGS[fs_name]
 
@@ -412,8 +439,11 @@ class Path:
         self.fs_config = FileSystemConfig.get(self.fs_name)  # type: FileSystemConfig
         self.fs = self.fs_config.fs  # type: fsspec.AbstractFileSystem
         self.sep = self.fs.sep  # type: str
-        self.root_path = self.fs_config.root_dir  # type: str
-        self.full_path = self.root_path + self.sep + self.suffix_path
+        self.root_path = self.fs_config.make_root_path(sep=self.sep)
+        if self.suffix_path == "":
+            self.full_path = self.root_path
+        else:
+            self.full_path = self.root_path + self.sep + self.suffix_path
         self.name = self.suffix_path.split(self.sep)[-1]
         e.io.LongPath(path=self.full_path, msgs=[]).raise_if_failed()
 
@@ -482,7 +512,7 @@ class Path:
         block_size=None,
         cache_options=None,
         compression=None,
-    ):
+    ) -> t.Union[AbstractBufferedFile, io.TextIOWrapper]:
         return self.fs.open(
             path=self.full_path,
             mode=mode,
@@ -536,7 +566,7 @@ class Path:
            - (for example LocalFileSystem it is needed)
 
         """
-        _root_path = self.root_path
+        _root_path = self.root_path + self.sep
         if self.fs_name == "CWD":
             # we replace `.` with cwd
             # todo: also test for linux

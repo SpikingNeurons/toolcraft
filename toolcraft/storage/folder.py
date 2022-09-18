@@ -107,7 +107,7 @@ class Folder(StorageHashable):
           this property is minimal
         """
         # ----------------------------------------------------------------01
-        _folder_present = self.path.isdir()
+        # _folder_present = self.path.isdir()
         # (The super method is responsible to do this as state manager is
         # available)
         _state_manager_files_available = super().is_created
@@ -118,16 +118,18 @@ class Folder(StorageHashable):
         # files are deleted we might still retain Folders as they hold
         # valuable files like download files, processed files, results etc.
         # NOTE: we do delete state files in cases when config and info files
-        # are are modifies over new versions ... so we need to protect data
+        # are modifies over new versions ... so we need to protect data
         # deletion
-        if _state_manager_files_available:
-            if not _folder_present:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"The state is available but respective folder is "
-                        f"absent."
-                    ]
-                )
+        # Avoid check if folder is present as file systems GCS do not create folder's until and unless you
+        # write something to it .... it is allowed via browser or you are allowed to copy create empty folder
+        # if _state_manager_files_available:
+        #     if not _folder_present:
+        #         raise e.code.CodingError(
+        #             msgs=[
+        #                 f"The state is available but respective folder is "
+        #                 f"absent."
+        #             ]
+        #         )
 
         # ----------------------------------------------------------------03
         # time to return
