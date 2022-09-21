@@ -82,16 +82,21 @@ async def make_async_fn_runner(
             ...
 
 
-def tab_bar_from_widget_dict(widget_dict: t.Dict) -> widget.TabBar:
-    _tab_bar = widget.TabBar()
+def tab_bar_from_widget_dict(widget_dict: t.Dict, label: str = None) -> widget.TabBar:
+    _tab_bar = widget.TabBar(label=label)
     for _k, _v in widget_dict.items():
         _tab = widget.Tab(label=_k)
         _tab_bar(widget=_tab)
         if isinstance(_v, dict):
-            _tab(tab_bar_from_widget_dict(_v))
+            _tab(tab_bar_from_widget_dict(_v, label=_k))
         elif isinstance(_v, list):
-            for _i, __v in enumerate(_v):
-                _tab(widget=__v)
+            for __v in _v:
+                if __v.registered_as_child:
+                    _tab(widget=__v)
+                else:
+                    raise Exception(
+                        f"Widget of type {type(__v)} cannot be added as child ...."
+                    )
         elif isinstance(_v, widget.Widget):
             if _v.registered_as_child:
                 _tab(widget=_v)
