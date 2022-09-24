@@ -41,7 +41,7 @@ class Row(_auto.TableRow):
         return Table,
 
     @property
-    def restrict_children_type(self) -> t.Tuple[t.Type[Cell]]:
+    def restrict_children_to(self) -> t.Tuple[t.Type[Cell]]:
         return Cell,
 
     @property
@@ -99,7 +99,7 @@ class Table(_auto.Table):
     columns: t.List[Column] = None
 
     @property
-    def restrict_children_type(self) -> t.Tuple[t.Type[Row]]:
+    def restrict_children_to(self) -> t.Tuple[t.Type[Row]]:
         return Row,
 
     def __call__(self, widget: Row, before: Row = None):

@@ -11478,6 +11478,10 @@ class Tab(MovableContainerWidget):
     # order_mode (bool, optional): set using a constant
     order_mode: bool = 0
 
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["ContainerWidget"]]:
+        return TabBar, 
+
     def build(self) -> t.Union[int, str]:
 
         _parent_dpg_id = self.parent.dpg_id
@@ -11559,6 +11563,10 @@ class TabBar(MovableContainerWidget):
 
     # reorderable (bool, optional): Allows for the user to change the order of the tabs.
     reorderable: bool = False
+
+    @property
+    def restrict_children_to(self) -> t.Tuple[t.Type["MovableWidget"]]:
+        return Tab, 
 
     def build(self) -> t.Union[int, str]:
 

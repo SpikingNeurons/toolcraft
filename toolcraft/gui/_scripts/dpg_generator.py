@@ -338,6 +338,21 @@ class DpgDef:
         return _is_container
 
     @property
+    def restrict_children_to(self) -> t.Optional[t.List[str]]:
+        if self._name == "TabBar":
+            # just for fun we do this ... note that this is already taken care by restrict_parent_to
+            return ["Tab", ]
+        else:
+            return None
+
+    @property
+    def restrict_parent_to(self) -> t.Optional[t.List[str]]:
+        if self._name == "Tab":
+            return ["TabBar", ]
+        else:
+            return None
+
+    @property
     def _call_prefix(self) -> str:
 
         _call_prefix = \
@@ -628,7 +643,27 @@ class DpgDef:
         # ------------------------------------------------------- 03.03
         # add properties
         # ------------------------------------------------------- 03.03.01
-        # property ...
+        # property restrict_parents_to
+        if bool(self.restrict_parent_to):
+            _r = ""
+            for _ in self.restrict_parent_to:
+                _r += f"{_}, "
+            _lines += [
+                "\t@property",
+                "\tdef restrict_parents_to(self) -> t.Tuple[t.Type[\"ContainerWidget\"]]:",
+                f"\t\treturn {_r}", "",
+            ]
+        # ------------------------------------------------------- 03.03.01
+        # property restrict_parents_to
+        if bool(self.restrict_children_to):
+            _r = ""
+            for _ in self.restrict_children_to:
+                _r += f"{_}, "
+            _lines += [
+                "\t@property",
+                "\tdef restrict_children_to(self) -> t.Tuple[t.Type[\"MovableWidget\"]]:",
+                f"\t\treturn {_r}", "",
+            ]
 
         # ------------------------------------------------------- 03.04
         # add build method

@@ -155,7 +155,7 @@ class YAxis(_auto.PlotYAxis):
         return False
 
     @property
-    def restrict_children_type(self) -> t.Tuple[t.Type[PlotSeries]]:
+    def restrict_children_to(self) -> t.Tuple[t.Type[PlotSeries]]:
         return PlotSeries,
 
     # noinspection PyMethodOverriding
@@ -287,7 +287,7 @@ class Plot(_auto.Plot):
     num_of_y_axis: t.Literal[1, 2, 3] = 1
 
     @property
-    def restrict_children_type(self) -> t.Tuple[t.Type[PlotItem]]:
+    def restrict_children_to(self) -> t.Tuple[t.Type[PlotItem]]:
         return PlotItem,
 
     @property
@@ -456,7 +456,7 @@ class Plot(_auto.Plot):
 class SubPlots(_auto.SubPlots):
 
     @property
-    def restrict_children_type(self) -> t.Tuple[t.Type[Plot]]:
+    def restrict_children_to(self) -> t.Tuple[t.Type[Plot]]:
         return Plot,
 
     def __call__(self, widget: Plot, before: Plot = None):

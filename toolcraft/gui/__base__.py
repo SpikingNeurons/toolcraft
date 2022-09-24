@@ -1183,10 +1183,10 @@ class MovableWidget(Widget, abc.ABC):
 
         # ---------------------------------------------- 03
         # check if new parent allows adding the self
-        if not isinstance(self, _parent.restrict_children_type):
+        if not isinstance(self, _parent.restrict_children_to):
             raise Exception(
                 f"Cannot move item of type {self.__class__} in parent of type {_parent.__class__}. "
-                f"Allowed children types for this parent are {_parent.restrict_children_type}"
+                f"Allowed children types for this parent are {_parent.restrict_children_to}"
             )
 
         # ---------------------------------------------- 04
@@ -1272,7 +1272,7 @@ class ContainerWidget(Widget, abc.ABC):
     """
 
     @property
-    def restrict_children_type(self) -> t.Tuple[t.Type[MovableWidget]]:
+    def restrict_children_to(self) -> t.Tuple[t.Type[MovableWidget]]:
         """
         Default is to restrict MovableWidget but you can override this to have
         Widget's as the __call__ method can accept Widget
@@ -1309,10 +1309,10 @@ class ContainerWidget(Widget, abc.ABC):
                 f"While parent of type {self.__class__} is not allowed"
             )
         # we can now store widget inside children dict
-        if not isinstance(_widget, self.restrict_children_type):
+        if not isinstance(_widget, self.restrict_children_to):
             raise Exception(
-                f"The child widget instance you want to add of type {_widget.__class__} is not one of "
-                f"{self.restrict_children_type}"
+                f"The child widget instance you want to add is of type {_widget.__class__} instead we expect it "
+                f"to be one of {self.restrict_children_to}"
             )
         # do not try to add again
         if id(_widget) in self._children.keys():
