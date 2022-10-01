@@ -810,9 +810,13 @@ class Job:
             # not s.StorageHashable
             # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
             # use with storage ... this will avoid creating files/folders and doing any IO
-            self.experiment.check_for_storage_hashable(
-                field_key=f"{self.experiment.__class__.__name__}"
-            )
+            # todo: we disable this as now instance creation of StorageHashable's do not cause IO
+            #   confirm this behaviour and delete this code .... the check is commented for now as we
+            #   want to allow StorageHashable's to work example with
+            #   `experiment/downloads.py` and `experiment/prepared_datas.py`
+            # self.experiment.check_for_storage_hashable(
+            #     field_key=f"{self.experiment.__class__.__name__}"
+            # )
             # make <hex_hash>.info if not present
             self.runner.monitor.make_experiment_info_file(experiment=self.experiment)
 

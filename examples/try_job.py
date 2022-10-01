@@ -1,6 +1,3 @@
-"""
-Eventually move this to toolcraft/examples
-"""
 
 import enum
 import typing as t

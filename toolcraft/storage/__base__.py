@@ -130,6 +130,12 @@ class StorageHashable(m.HashableClass, abc.ABC):
             )
         return _info_there and _config_there
 
+    def wipe_state(self):
+        if self.info.is_available:
+            self.info.delete()
+        if self.config.is_available:
+            self.config.delete()
+
     @classmethod
     def hook_up_methods(cls):
         # call super

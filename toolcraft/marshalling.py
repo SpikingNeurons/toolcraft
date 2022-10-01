@@ -1162,7 +1162,7 @@ class Tracker(Checker):
         ...
 
     @classmethod
-    def available_concrete_sub_classes(cls) -> t.List[t.Type["YamlRepr"]]:
+    def available_concrete_sub_classes(cls) -> t.List[t.Type[T]]:
         """
         Return a subset of AvailableHashableClasses that are subclass of
         incoming argument hashable_type.

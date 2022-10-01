@@ -44,6 +44,9 @@ if False:
     from . import folder
     import tensorflow as tf
 
+
+T = t.TypeVar('T', bound='FileGroup')
+
 _LOGGER = logger.get_logger()
 
 # noinspection PyUnresolvedReferences
@@ -320,6 +323,21 @@ class FileGroup(StorageHashable, abc.ABC):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
         subprocess.Popen(f'explorer {self.path}')
+
+    @classmethod
+    def make_possible_instances(cls) -> t.List[T]:
+        """
+        Implement this method when you know that there are finite instances for class
+        Useful for
+        + DownloadFileGroup
+        + PreparedData
+        """
+        raise e.code.CodingError(
+            msgs=[
+                f"This method is not supported for class {cls}",
+                f"Implement this method when you know that there are finite instances for class {cls}",
+            ]
+        )
 
     # noinspection PyMethodMayBeStatic
     def get_gcp_file_system(self) -> gcsfs.GCSFileSystem:
@@ -1408,13 +1426,6 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     @property
     def file_system(self) -> str:
         return "DOWNLOAD"
-
-    @property
-    def name(self) -> str:
-        # we assume that this will remain unique as we group by module name.
-        # Note that this does mean that you cannot add fields to
-        # DownloadFieldGroup
-        return self.__class__.__name__
 
     @property
     @util.CacheResult
