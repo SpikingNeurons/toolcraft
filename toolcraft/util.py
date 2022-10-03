@@ -1648,6 +1648,47 @@ def shuffle_arrays(
     np.random.seed(None)
 
 
+def safe_npy_reduce_dtype(val: np.ndarray) -> np.ndarray:
+    """
+    Can transform val to some dtype that takes less bytes
+    Only works for scalar types
+    """
+    _integer_signed_dtypes = [np.int8, np.int16, np.int32, np.int64, ]
+    _integer_unsigned_dtypes = [np.uint8, np.uint16, np.uint32, np.uint64, ]
+    _float_dtypes = [np.float16, np.float32, np.float64]
+    e.validation.ShouldBeOneOf(
+        value=val.dtype, values=_integer_signed_dtypes + _integer_unsigned_dtypes + _float_dtypes,
+        msgs=["util method safe_npy_reduce_dtype only supported for certain types"]
+    ).raise_if_failed()
+    # noinspection PyArgumentList
+    _is_signed = val.min() < 0.
+    if val.dtype in _float_dtypes:
+        if _is_signed:
+            _is_integer = np.array_equal(val, val.astype(np.int64).astype(val.dtype))
+        else:
+            _is_integer = np.array_equal(val, val.astype(np.uint64).astype(val.dtype))
+    else:
+        _is_integer = True
+    if _is_integer:
+        if _is_signed:
+            for _dtype in _integer_signed_dtypes:
+                _new_val = val.astype(_dtype)
+                if np.array_equal(val, _new_val.astype(val.dtype)):
+                    return _new_val
+        else:
+            for _dtype in _integer_unsigned_dtypes:
+                _new_val = val.astype(_dtype)
+                if np.array_equal(val, _new_val.astype(val.dtype)):
+                    return _new_val
+        return val
+    else:
+        for _dtype in _float_dtypes:
+            _new_val = val.astype(_dtype)
+            if np.array_equal(val, _new_val.astype(val.dtype)):
+                return _new_val
+        return val
+
+
 def np_to_lnp(data: np.ndarray) -> t.List:
     """
     Convert any n-dim array to nested list of lists of 1D array
