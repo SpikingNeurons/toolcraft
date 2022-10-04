@@ -1130,6 +1130,17 @@ class FileGroup(StorageHashable, abc.ABC):
             )
 
 
+@dataclasses.dataclass
+class NpyFileGroupConfig(FileGroupConfig):
+
+    # look for auto_hashes field in super class to understand how fields are created and value assigned
+    # also note that this shape and dtype is generated based on files created
+    # also the user define properties NpyFileGroup.shape and NpyFileGroup.dtype which do same job
+    # but this gives nice way to save it in config state file ... so that users can read it without code
+    shape: dict = None
+    dtype: dict = None
+
+
 @dataclasses.dataclass(frozen=True)
 class NpyFileGroup(FileGroup, abc.ABC):
     """
@@ -1137,6 +1148,13 @@ class NpyFileGroup(FileGroup, abc.ABC):
       memory map to numpy arrays ... this will keep references alive and hence
       python garbage collection will not take over
     """
+
+    @property
+    @util.CacheResult
+    def config(self) -> NpyFileGroupConfig:
+        return NpyFileGroupConfig(
+            hashable=self,
+        )
 
     @property
     @abc.abstractmethod
@@ -1381,14 +1399,41 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 )
 
         # ----------------------------------------------------------------03
+        # first get shape and dtype and then
         # delete memmaps ... so that it is quickly eligible for garbage
         # collection
+        # Note this info can be extract from properties shape and dtype but we get it from memmap for pretty print
+        # and so that python classes related to numpy doe not populate yaml
+        _shape = {_k: str(list(_v.shape)) for _k, _v in _npy_memmaps.items()}
+        _dtype = {_k: str(_v.dtype) for _k, _v in _npy_memmaps.items()}
         del _npy_memmaps
 
         # ----------------------------------------------------------------04
-        # call super and return
-        return super().create_post_runner(
+        # call super so that state files are created and any checks are done
+        _ret = super().create_post_runner(
             hooked_method_return_value=hooked_method_return_value)
+
+        # ----------------------------------------------------------------05
+        if self.config.shape is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `shape` "
+                    f"to be present in the config"
+                ]
+            )
+        if self.config.dtype is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `dtype` "
+                    f"to be present in the config"
+                ]
+            )
+        self.config.shape = _shape
+        self.config.dtype = _dtype
+
+        # ----------------------------------------------------------------06
+        # finally return
+        return _ret
 
 
 @dataclasses.dataclass(frozen=True)
