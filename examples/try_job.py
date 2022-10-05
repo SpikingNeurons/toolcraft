@@ -65,10 +65,6 @@ class Runner(job.Runner):
                     runner=self, method=self.some_job,
                     wait_on=[_stage_1],
                 ),
-                job.Job(
-                    runner=self, method=self.some_job,
-                    wait_on=[_stage_1],
-                ),
             ]
         )
         _stage_3 = job.ParallelJobGroup(
@@ -105,9 +101,10 @@ class Runner(job.Runner):
 
 
 if __name__ == '__main__':
-    # todo: still needs fix
-    Runner().run(
+    _runner = Runner()
+    _runner.run(
         job.JobRunnerClusterType.ibm_lsf
         if False else
         job.JobRunnerClusterType.local
     )
+    _runner.view()

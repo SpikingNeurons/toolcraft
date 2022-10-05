@@ -31,6 +31,8 @@ if False:
     from . import EnPlatform
     from . import BlockingTask
     from .. import gui
+    from . import plot
+    from ..marshalling import HashableClass
 
 
 T = t.TypeVar('T', bound='Widget')
@@ -47,13 +49,6 @@ except ImportError:
 
 # container widget stack ... to add to parent automatically
 _CONTAINER_WIDGET_STACK: t.List["ContainerWidget"] = []
-
-
-# noinspection PyUnresolvedReferences,PyUnreachableCode
-if False:
-    from . import window
-    from . import plot
-    from ..marshalling import HashableClass
 
 
 class EnColor(enum.Enum):
@@ -2187,8 +2182,12 @@ class Dashboard(abc.ABC):
         # noinspection PyArgumentList
         return internal_dpg.get_total_time(**kwargs)
 
+    def add_window(self, window: "gui.window.Window"):
+        window.dash_board = self
+        window.build()
+
     @abc.abstractmethod
-    def layout(self) -> "window.Window":
+    def layout(self) -> "gui.window.Window":
         ...
 
     def build(self):

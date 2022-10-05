@@ -1470,80 +1470,52 @@ class Flow:
         #  IMP: see docstring we can even have dearpygui client if we can submit jobs
         #    and track jobs via ssh
 
-    def view(self):
-        # ------------------------------------------------------------------- 01
-        # import
+    def status(self) -> t.Dict:
+        _ret = dict()
+        for _si, _stage in enumerate(self.stages):
+            _jobs = _stage.all_jobs
+            _total = 0
+            _started = 0
+            _running = 0
+            _finished = 0
+            _failed = 0
+            _job: Job
+            for _job in _jobs:
+                _total += 1
+                if _job.is_started:
+                    _started += 1
+                if _job.is_running:
+                    _running += 1
+                if _job.is_finished:
+                    _finished += 1
+                if _job.is_failed:
+                    _failed += 1
+            _ret[f"Stage {_si:03d}"] = dict(
+                total=_total, started=_started, running=_running, finished=_finished, failed=_failed,
+            )
+        return _ret
+
+    def status_text(self) -> "gui.widget.Text":
         from . import gui
-
-        # ------------------------------------------------------------------- 02
-        # define dashboard class
-        @dataclasses.dataclass
-        class FlowDashboard(gui.dashboard.BasicDashboard):
-            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
-
-            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.runner.py_script}")
-
-            hr1: gui.widget.Separator = gui.widget.Separator()
-            hr2: gui.widget.Separator = gui.widget.Separator()
-            hr3: gui.widget.Separator = gui.widget.Separator()
-
-            container: gui.widget.Group = gui.widget.Group()
-
-            hr4: gui.widget.Separator = gui.widget.Separator()
-            hr5: gui.widget.Separator = gui.widget.Separator()
-            hr6: gui.widget.Separator = gui.widget.Separator()
-
-        # ------------------------------------------------------------------- 03
-        # make dashboard
-        _dashboard = FlowDashboard(title="Flow Dashboard")
-
-        # ------------------------------------------------------------------- 04
-        # make gui
-        _forms = {}
-        _other_jobs_form = None
-        with _dashboard.container:
-            # --------------------------------------------------------------- 04.01
-            # for stages
-            for _i, _stage in enumerate(self.stages):
-                gui.widget.Separator()
-                gui.widget.Separator()
-                _forms[_i] = gui.form.DoubleSplitForm(
-                    title=f"*** [[ STAGE {_i:03d} ]] ***",
-                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=True,
-                )
-            # --------------------------------------------------------------- 04.02
-            # for other jobs that will be run on client with gui
-            if bool(self.other_jobs):
-                gui.widget.Separator()
-                gui.widget.Separator()
-                _other_jobs_form = gui.form.DoubleSplitForm(
-                    title=f"*** [[ OTHER JOBS ]] ***",
-                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=True,
-                )
-
-        # ------------------------------------------------------------------- 05
-        # add jobs to forms
-        # ------------------------------------------------------------------- 05.01
-        # for stages
-        for _i, _stage in enumerate(self.stages):
-            # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
-            #  + currently we will get all jobs in stage and render them
-            #  + we can have window pop-up for any JobGroup and then again have any JobGroup or jobs
-            #    rendered inside it
-            #  + may-be we need not differentiate between Sequential and Parallel JobGroup's ... we can
-            #    just have spinners if job is running or status icons indicating job status ... may be the
-            #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
-            for _job in _stage.all_jobs:
-                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
-        # ------------------------------------------------------------------- 05.02
-        # for other jobs that will be run on client with gui
-        if bool(self.other_jobs):
-            for _job in self.other_jobs:
-                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
-
-        # ------------------------------------------------------------------- 06
-        # run
-        gui.Engine.run(_dashboard)
+        _lines = []
+        for _stage, _value in self.status().items():
+            _stage_msg = ""
+            if _value['running'] != 0:
+                _stage_msg = " !!  Running !! "
+            if _value['failed'] != 0:
+                _stage_msg = " XX  Failed  XX "
+            if _value['finished'] == _value['total']:
+                _stage_msg = " (: Finished :) "
+            _lines += [("---"*15) + _stage_msg]
+            _lines += [
+                f"{_stage}: Total: {_value['total']:03d}"
+            ]
+            _lines += [f" >>> Started  {_value['started']:03d} : Running {_value['running']:03d} "]
+            _lines += [f" >>> Finished {_value['finished']:03d} : Failed  {_value['failed']:03d} "]
+        _lines += ["---"*15]
+        return gui.widget.Text(
+            default_value="\n".join(_lines)
+        )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1707,7 +1679,7 @@ class Runner(m.HashableClass, abc.ABC):
 
     @classmethod
     def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
-        return [cls.run, cls.init, cls.clone, cls.get_another_job]
+        return [cls.run, cls.init, cls.clone, cls.get_another_job, cls.view]
 
     def get_another_job(
         self, method: t.Callable, experiment: t.Optional["Experiment"]
@@ -1818,13 +1790,125 @@ class Runner(m.HashableClass, abc.ABC):
             self.job(cluster_type)
 
     def view(self):
-        """
-        if command line args are present then we will call job ... as maybe you want to run job from viewer ...
-        """
-        if self.is_on_main_machine:
-            self.flow.view()
-        else:
-            self.job(JobRunnerClusterType.local)
+        # ---------------------------------------------------------------- 01
+        # if command line args exist then may be you requested job to from within UI on your local machine,
+        # so we run job locally
+        if not self.is_on_main_machine:
+            return self.job(JobRunnerClusterType.local)
+
+        # ---------------------------------------------------------------- 02
+        # build dashboard
+        from . import gui
+
+        @dataclasses.dataclass
+        class ShowFlowStatusCallback(gui.callback.Callback):
+
+            def fn(_self, sender: gui.widget.Widget):
+                _window = gui.window.Window(
+                    label="Job Flow Status", width=600, height=700, pos=(250, 250),
+                )
+                with _window:
+                    self.flow.status_text()
+                _dashboard.add_window(window=_window)
+
+        @dataclasses.dataclass
+        class RunnerDashboard(gui.dashboard.BasicDashboard):
+            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
+            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.py_script}")
+            job_status: gui.widget.Button = gui.widget.Button(
+                label=">>> Show Job Flow Status <<<", callback=ShowFlowStatusCallback(),
+            )
+            hr1: gui.widget.Separator = gui.widget.Separator()
+            hr2: gui.widget.Separator = gui.widget.Separator()
+            experiment_view: gui.form.DoubleSplitForm = gui.form.DoubleSplitForm(
+                title="Experiments ...",
+                callable_name="all_views",
+                allow_refresh=False,
+                collapsing_header_open=True,
+            )
+
+        # ---------------------------------------------------------------- 02.01
+        # make dashboard
+        _dashboard = RunnerDashboard(title="Runner Dashboard")
+
+        # ---------------------------------------------------------------- 03
+        # run
+        gui.Engine.run(_dashboard)
+
+    def _view(self):
+        # ------------------------------------------------------------------- 01
+        # import
+        from . import gui
+
+        # ------------------------------------------------------------------- 02
+        # define dashboard class
+        @dataclasses.dataclass
+        class FlowDashboard(gui.dashboard.BasicDashboard):
+            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
+
+            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.runner.py_script}")
+
+            hr1: gui.widget.Separator = gui.widget.Separator()
+            hr2: gui.widget.Separator = gui.widget.Separator()
+            hr3: gui.widget.Separator = gui.widget.Separator()
+
+            container: gui.widget.Group = gui.widget.Group()
+
+            hr4: gui.widget.Separator = gui.widget.Separator()
+            hr5: gui.widget.Separator = gui.widget.Separator()
+            hr6: gui.widget.Separator = gui.widget.Separator()
+
+        # ------------------------------------------------------------------- 03
+        # make dashboard
+        _dashboard = FlowDashboard(title="Flow Dashboard")
+
+        # ------------------------------------------------------------------- 04
+        # make gui
+        _forms = {}
+        _other_jobs_form = None
+        with _dashboard.container:
+            # --------------------------------------------------------------- 04.01
+            # for stages
+            for _i, _stage in enumerate(self.stages):
+                gui.widget.Separator()
+                gui.widget.Separator()
+                _forms[_i] = gui.form.DoubleSplitForm(
+                    title=f"*** [[ STAGE {_i:03d} ]] ***",
+                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=True,
+                )
+            # --------------------------------------------------------------- 04.02
+            # for other jobs that will be run on client with gui
+            if bool(self.other_jobs):
+                gui.widget.Separator()
+                gui.widget.Separator()
+                _other_jobs_form = gui.form.DoubleSplitForm(
+                    title=f"*** [[ OTHER JOBS ]] ***",
+                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=True,
+                )
+
+        # ------------------------------------------------------------------- 05
+        # add jobs to forms
+        # ------------------------------------------------------------------- 05.01
+        # for stages
+        for _i, _stage in enumerate(self.stages):
+            # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
+            #  + currently we will get all jobs in stage and render them
+            #  + we can have window pop-up for any JobGroup and then again have any JobGroup or jobs
+            #    rendered inside it
+            #  + may-be we need not differentiate between Sequential and Parallel JobGroup's ... we can
+            #    just have spinners if job is running or status icons indicating job status ... may be the
+            #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
+            for _job in _stage.all_jobs:
+                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
+        # ------------------------------------------------------------------- 05.02
+        # for other jobs that will be run on client with gui
+        if bool(self.other_jobs):
+            for _job in self.other_jobs:
+                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
+
+        # ------------------------------------------------------------------- 06
+        # run
+        gui.Engine.run(_dashboard)
 
 
 @dataclasses.dataclass(frozen=True)
