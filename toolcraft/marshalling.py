@@ -22,6 +22,7 @@ import yaml
 
 from . import error as e
 from . import logger, settings, util
+from .gui import UseMethodInForm
 
 
 # to avoid cyclic imports
@@ -37,20 +38,6 @@ _LITERAL_CLASS_NAME = 'LITERAL'
 _RULE_CHECKER = "__rule_checker__"
 
 _RULE_CHECKERS_TO_BE_CHECKED = {}  # type: t.Dict[int, RuleChecker]
-
-if settings.DPG_WORKS:
-    # import the real UseMethodInForm
-    from .gui import UseMethodInForm
-else:
-    # fake class that does nothing
-    class UseMethodInForm:
-        def __init__(
-            self, label_fmt: str = None, call_as_async: bool = False
-        ):
-            ...
-
-        def __call__(self, fn: t.Callable):
-            return fn
 
 
 CUSTOM_KERAS_CLASSES_MAP = {

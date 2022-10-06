@@ -24,10 +24,6 @@ class Experiment(job.Experiment):
     a: int
     runner: "Runner"
 
-    @property
-    def gui_label(self) -> t.Tuple[str, t.List[str]]:
-        return "test ...", [f"a: {self.a}"]
-
 
 @dataclasses.dataclass(frozen=True)
 class Runner(job.Runner):

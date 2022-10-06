@@ -27,12 +27,6 @@ INTERACTIVE = not hasattr(main, '__file__')
 LOGGER_USE_FILE_HANDLER = False
 
 try:
-    import dearpygui.dearpygui as dpg
-    DPG_WORKS = True
-except ImportError:
-    DPG_WORKS = False
-
-try:
     from keras.api._v2 import keras as tk
     import tensorflow as tf
     TF_KERAS_WORKS = True

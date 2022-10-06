@@ -22,6 +22,7 @@ from . import marshalling as m
 from . import util
 from . import storage as s
 from . import richy
+from .gui import UseMethodInForm
 
 try:
     import tensorflow as tf
@@ -307,7 +308,7 @@ class JobViewer(m.HashableClass):
     def button_label(self) -> str:
         if self.experiment is None:
             return self.method_name
-        _title, _args = self.experiment.gui_label
+        _title, _args = self.experiment.view_gui_label
         return "\n".join([_title, *_args])
 
     @m.UseMethodInForm(label_fmt="button_label")
@@ -1797,7 +1798,7 @@ class Runner(m.HashableClass, abc.ABC):
             return self.job(JobRunnerClusterType.local)
 
         # ---------------------------------------------------------------- 02
-        # build dashboard
+        # define dashboard
         from . import gui
 
         @dataclasses.dataclass
@@ -1822,16 +1823,23 @@ class Runner(m.HashableClass, abc.ABC):
             hr2: gui.widget.Separator = gui.widget.Separator()
             experiment_view: gui.form.DoubleSplitForm = gui.form.DoubleSplitForm(
                 title="Experiments ...",
-                callable_name="all_views",
+                callable_name="view",
                 allow_refresh=False,
                 collapsing_header_open=True,
             )
 
-        # ---------------------------------------------------------------- 02.01
+        # ---------------------------------------------------------------- 03
         # make dashboard
         _dashboard = RunnerDashboard(title="Runner Dashboard")
 
-        # ---------------------------------------------------------------- 03
+        # ---------------------------------------------------------------- 04
+        # add experiments
+        for _experiment in self.registered_experiments:
+            _dashboard.experiment_view.add(
+                hashable=_experiment,
+            )
+
+        # ---------------------------------------------------------------- 05
         # run
         gui.Engine.run(_dashboard)
 
@@ -1921,6 +1929,14 @@ class Experiment(m.HashableClass, abc.ABC):
     # runner
     runner: Runner
 
+    @property
+    def view_gui_label(self) -> str:
+        return f"{self.__class__.__module__}:{self.hex_hash}"
+
+    @property
+    def view_callable_names(self) -> t.List[str]:
+        return []
+
     def init(self):
         # call super
         super().init()
@@ -1928,7 +1944,15 @@ class Experiment(m.HashableClass, abc.ABC):
         # register self to runner
         self.runner.registered_experiments.append(self)
 
-    @property
-    @abc.abstractmethod
-    def gui_label(self) -> t.Tuple[str, t.List[str]]:
-        ...
+    @UseMethodInForm(label_fmt="view_gui_label")
+    def view(self) -> "gui.form.HashableMethodsRunnerForm":
+        from . import gui
+        return gui.form.HashableMethodsRunnerForm(
+            title=self.view_gui_label.split("\n")[0],
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=self.view_callable_names,
+            collapsing_header_open=True,
+        )

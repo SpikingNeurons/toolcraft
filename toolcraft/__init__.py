@@ -54,10 +54,7 @@ from . import ml
 from . import job
 from . import richy
 from . import texipy
-
-if settings.DPG_WORKS:
-    # as some rules use dpg
-    from . import gui
+from . import gui
 
 # decorate undecorated and hence rule check
 

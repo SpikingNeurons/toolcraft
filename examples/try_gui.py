@@ -264,6 +264,18 @@ class SimpleHashableClass(gui.Hashable):
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
+    @gui.UseMethodInForm(label_fmt="all_plots_gui_label")
+    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
+        return gui.form.HashableMethodsRunnerForm(
+            title=self.all_plots_gui_label.split("\n")[0],
+            group_tag="simple",
+            hashable=self,
+            close_button=True,
+            info_button=True,
+            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task"],
+            collapsing_header_open=True,
+        )
+
     async def some_awaitable_fn(self, txt_widget: gui.widget.Text):
 
         try:
@@ -367,20 +379,6 @@ class SimpleHashableClass(gui.Hashable):
             )
         )
         return _plot
-
-    @gui.UseMethodInForm(
-        label_fmt="all_plots_gui_label"
-    )
-    def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
-        return gui.form.HashableMethodsRunnerForm(
-            title=self.all_plots_gui_label,
-            group_tag="simple",
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task"],
-            collapsing_header_open=True,
-        )
 
 
 @dataclasses.dataclass

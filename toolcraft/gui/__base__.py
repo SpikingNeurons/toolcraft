@@ -1408,7 +1408,7 @@ class UseMethodInForm:
         Args:
             label_fmt: label for button ... if str is property we will
               call it to get label
-            call_as_async: can call method in async task ...
+            run_async: can call method in async task ...
         """
         self.label_fmt = label_fmt
         self.run_async = run_async
@@ -1479,10 +1479,6 @@ class UseMethodInForm:
           a bit complex but possible
         """
 
-        # if label fmt is None then use fn name
-        if self.label_fmt is None:
-            self.label_fmt = fn.__name__
-
         # set fn
         self.fn = fn
 
@@ -1529,11 +1525,10 @@ class UseMethodInForm:
 
         # ---------------------------------------------------- 02
         # make label for button
-        if isinstance(getattr(hashable.__class__, self.label_fmt, None), property):
+        if self.label_fmt is None:
+            _button_label = f"{hashable.__class__.__name__}.{hashable.hex_hash} ({_callable_name})"
+        elif isinstance(getattr(hashable.__class__, self.label_fmt, None), property):
             _button_label = getattr(hashable, self.label_fmt)
-        elif self.label_fmt is None:
-            _button_label = f"{hashable.__class__.__name__}.{hashable.hex_hash} " \
-                            f"({_callable_name})"
         elif isinstance(self.label_fmt, str):
             _button_label = self.label_fmt
         else:
