@@ -92,7 +92,6 @@ class Runner(job.Runner):
             stages=[
                 _stage_1, _stage_2, _stage_3, _stage_4,
             ],
-            other_jobs=[],
         )
 
 

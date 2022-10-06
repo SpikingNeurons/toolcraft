@@ -782,6 +782,7 @@ class Job:
         experiment: t.Optional["Experiment"] = None,
         wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
     ):
+        # ------------------------------------------------------------------ 01
         # assign some vars
         self.runner = runner
         # noinspection PyTypeChecker
@@ -791,6 +792,7 @@ class Job:
         # noinspection PyTypeChecker
         self._flow_id = None  # type: str
 
+        # ------------------------------------------------------------------ 02
         # make sure that method is from same runner instance
         try:
             # noinspection PyTypeChecker
@@ -805,8 +807,10 @@ class Job:
                 ]
             )
 
+        # ------------------------------------------------------------------ 03
         # if experiment provided
         if self.experiment is not None:
+            # -------------------------------------------------------------- 03.01
             # make sure that it is not s.StorageHashable or any of its fields are
             # not s.StorageHashable
             # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
@@ -820,6 +824,31 @@ class Job:
             # )
             # make <hex_hash>.info if not present
             self.runner.monitor.make_experiment_info_file(experiment=self.experiment)
+            # -------------------------------------------------------------- 03.02
+            # check if there is associated job for method already present in experiment
+            # if not then associate self with experiment
+            if method in experiment.associated_jobs.keys():
+                raise e.code.CodingError(
+                    msgs=[
+                        f"there is already a job registered for runner method {method} in experiment ..."
+                    ]
+                )
+            else:
+                experiment.associated_jobs[method] = self
+
+        # ------------------------------------------------------------------ 04
+        # if experiment is not provided .... then job is runner level
+        if self.experiment is None:
+            # check if there is associated job for method already present in experiment
+            # if not then associate self with experiment
+            if method in runner.associated_jobs.keys():
+                raise e.code.CodingError(
+                    msgs=[
+                        f"there is already a job registered for runner method {method} in runner ..."
+                    ]
+                )
+            else:
+                runner.associated_jobs[method] = self
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
@@ -1114,6 +1143,10 @@ class Job:
                     ]
                 )
 
+    def view(self) -> "gui.widget.Widget":
+        from . import gui
+        return gui.widget.Text(f"{self.job_id}")
+
     # noinspection PyUnresolvedReferences
     def save_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
         """
@@ -1371,19 +1404,15 @@ class Flow:
         self,
         stages: t.List[ParallelJobGroup],
         runner: "Runner",
-        other_jobs: t.List[Job],
     ):
         # save reference
         self.stages = stages
         self.runner = runner
-        self.other_jobs = other_jobs
 
         # set flow ids
         _len = len(str(len(self.stages)))
         for _stage_id, _stage in enumerate(self.stages):
             _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
-        for _j in other_jobs:
-            _j.flow_id = f"#[other]"
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
@@ -1562,7 +1591,7 @@ class Monitor:
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments'],
+    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments', "associated_jobs"],
     things_not_to_be_overridden=['cwd', 'job', 'monitor', 'get_another_job'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
@@ -1618,6 +1647,11 @@ class Runner(m.HashableClass, abc.ABC):
     @util.CacheResult
     def monitor(self) -> Monitor:
         return Monitor(runner=self)
+
+    @property
+    @util.CacheResult
+    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
+        return {}
 
     @property
     @util.CacheResult
@@ -1690,6 +1724,7 @@ class Runner(m.HashableClass, abc.ABC):
         The only restriction is that the requested job must be completed ...
         """
         _job = Job(runner=self, method=method, experiment=experiment)
+        _job = experiment.associated_jobs[method]
         if not _job.is_finished:
             raise e.code.CodingError(
                 msgs=[
@@ -1821,6 +1856,12 @@ class Runner(m.HashableClass, abc.ABC):
             )
             hr1: gui.widget.Separator = gui.widget.Separator()
             hr2: gui.widget.Separator = gui.widget.Separator()
+            runner_jobs_view: gui.form.ButtonBarForm = gui.form.ButtonBarForm(
+                title="Runner Jobs ...",
+                collapsing_header_open=True,
+            )
+            hr3: gui.widget.Separator = gui.widget.Separator()
+            hr4: gui.widget.Separator = gui.widget.Separator()
             experiment_view: gui.form.DoubleSplitForm = gui.form.DoubleSplitForm(
                 title="Experiments ...",
                 callable_name="view",
@@ -1831,6 +1872,17 @@ class Runner(m.HashableClass, abc.ABC):
         # ---------------------------------------------------------------- 03
         # make dashboard
         _dashboard = RunnerDashboard(title="Runner Dashboard")
+
+        # ---------------------------------------------------------------- 04
+        # register jobs for runner
+        def _j_view(_j: Job) -> gui.widget.Widget:
+            return _j.view()
+        for _method, _job in self.associated_jobs.items():
+            _dashboard.runner_jobs_view.register(
+                key=_method.__name__, gui_name=_method.__name__,
+                fn=_j_view,
+                fn_kwargs={"_j": _job}
+            )
 
         # ---------------------------------------------------------------- 04
         # add experiments
@@ -1920,6 +1972,9 @@ class Runner(m.HashableClass, abc.ABC):
 
 
 @dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=["associated_jobs"],
+)
 class Experiment(m.HashableClass, abc.ABC):
     """
     Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
@@ -1928,6 +1983,11 @@ class Experiment(m.HashableClass, abc.ABC):
 
     # runner
     runner: Runner
+
+    @property
+    @util.CacheResult
+    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
+        return {}
 
     @property
     def view_gui_label(self) -> str:

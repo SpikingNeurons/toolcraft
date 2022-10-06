@@ -28,10 +28,14 @@ class ButtonBarForm(Form):
                 _key = sender.get_user_data()["key"]
                 self._receiver.clear()
                 with self._receiver:
-                    self._mapper[_key]()
+                    _fn, _fn_kwargs = self._mapper[_key]
+                    if _fn_kwargs is None:
+                        _fn()
+                    else:
+                        _fn(**_fn_kwargs)
 
         # make some vars
-        self._mapper = dict()  # type: t.Dict[str, t.Callable]
+        self._mapper = dict()  # type: t.Dict[str, (t.Callable, t.Dict)]
         self._callback = Callback()
         with EscapeWithContext():
             self._button_bar = widget.Group(horizontal=True)
@@ -49,7 +53,7 @@ class ButtonBarForm(Form):
         # return
         return _layout
 
-    def register(self, key: str, fn: t.Optional[t.Callable], gui_name: str = None, ):
+    def register(self, key: str, fn: t.Callable, fn_kwargs: t.Dict = None, gui_name: str = None, ):
         """
         todo: handle fn is None with different callback for now it is reassigned in job.ArtifactManager.gui
         """
@@ -70,7 +74,7 @@ class ButtonBarForm(Form):
             )
 
         # add
-        self._mapper[key] = fn
+        self._mapper[key] = fn, fn_kwargs
 
         # make button and add it to container
         with self._button_bar:
