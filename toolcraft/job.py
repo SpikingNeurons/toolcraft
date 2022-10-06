@@ -254,13 +254,14 @@ class TagManager:
     def description(self) -> Tag:
         return Tag(name="description", manager=self)
 
-    def gui(self) -> "gui.widget.Text":
+    def view(self) -> "gui.widget.Text":
         from . import gui
         _ret = ""
         if self.finished.exists():
             _ret += "--- FINISHED JOB ---\n\n"
         if self.failed.exists():
             _ret += "XXX--- FAILED JOB ---XXX\n\n"
+        _ret += f">>> Job: {self.job.flow_id} [{self.job.job_id}] <<< \n"
         if self.started.exists():
             _ret += f"started at: {self.started.read()}\n"
         if self.running.exists():
@@ -1144,8 +1145,7 @@ class Job:
                 )
 
     def view(self) -> "gui.widget.Widget":
-        from . import gui
-        return gui.widget.Text(f"{self.job_id}")
+        return self.tag_manager.view()
 
     # noinspection PyUnresolvedReferences
     def save_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
@@ -1995,7 +1995,7 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @property
     def view_callable_names(self) -> t.List[str]:
-        return []
+        return ["associated_jobs_view"]
 
     def init(self):
         # call super
@@ -2003,6 +2003,21 @@ class Experiment(m.HashableClass, abc.ABC):
 
         # register self to runner
         self.runner.registered_experiments.append(self)
+
+    @UseMethodInForm(label_fmt="Job's")
+    def associated_jobs_view(self) -> "gui.widget.Group":
+        from . import gui
+        _ret = gui.widget.Group()
+        with _ret:
+            _jobs = self.associated_jobs
+            if bool(_jobs):
+                for _k, _j in _jobs.items():
+                    gui.widget.Separator()
+                    gui.widget.Text(default_value=f"[[[ {_k.__name__} ]]]")
+                    _j.tag_manager.view()
+            else:
+                gui.widget.Text(default_value="There are no jobs for this experiment ...")
+        return _ret
 
     @UseMethodInForm(label_fmt="view_gui_label")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
