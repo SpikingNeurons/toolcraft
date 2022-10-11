@@ -1292,6 +1292,12 @@ class YamlRepr(Tracker):
       + __rich_measure__
     """
 
+    @property
+    @util.CacheResult
+    def dataclass_field_names(self) -> t.List[str]:
+        # noinspection PyDataclass
+        return [_.name for _ in dataclasses.fields(self)]
+
     @classmethod
     def class_init(cls):
         """ """
@@ -1723,11 +1729,6 @@ class HashableClass(YamlRepr, abc.ABC):
         `hex_hash` will anyways be unique for a instance.
         """
         return self.hex_hash
-
-    @property
-    @util.CacheResult
-    def dataclass_field_names(self) -> t.List[str]:
-        return [_.name for _ in dataclasses.fields(self)]
 
     @property
     def group_by(self) -> t.List[str]:
