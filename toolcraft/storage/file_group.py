@@ -52,7 +52,7 @@ _LOGGER = logger.get_logger()
 # noinspection PyUnresolvedReferences
 USE_ALL = slice(None, None, None)
 
-# note that this needs to be yaml serializable so do not have no.ndarray
+# note that this needs to be yaml serializable so do not have no.ndarray,
 # although it is supported by NpyMemMap
 SELECT_TYPE = t.Union[
     int, slice, t.List[int],

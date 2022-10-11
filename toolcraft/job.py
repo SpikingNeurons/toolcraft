@@ -1051,8 +1051,7 @@ class Job:
 
         # search job from `runner.flow.stages` and `runner.flow.other_jobs`
         _search_job = None
-        for _j in itertools.chain.from_iterable(
-            [_stage.all_jobs for _stage in runner.flow.stages] + [runner.flow.other_jobs]):
+        for _j in itertools.chain.from_iterable([_stage.all_jobs for _stage in runner.flow.stages]):
 
             # detect if same
             # note that __eq__ does not work as dataclass overrides its behaviour
