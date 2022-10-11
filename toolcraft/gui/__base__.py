@@ -83,6 +83,8 @@ class _WidgetDpg(abc.ABC):
     Anything specific to our API will go in Widget class
     """
 
+    _UID_CNT: t.ClassVar[int] = 0
+
     @property
     def post_build_fns(self) -> t.List[t.Callable]:
         return self._post_build_fns
@@ -103,6 +105,24 @@ class _WidgetDpg(abc.ABC):
         else:
             raise Exception(
                 f"The dpg_id is already set for instance of class {self.__class__}"
+            )
+
+    @property
+    def uid(self) -> int:
+        if self._uid is None:
+            raise Exception(
+                f"The uid is not set for instance of class {self.__class__}"
+            )
+        else:
+            return self._uid
+
+    @uid.setter
+    def uid(self, value: int):
+        if self._uid is None:
+            self._uid = value
+        else:
+            raise Exception(
+                f"The uid is already set for instance of class {self.__class__}"
             )
 
     @property
@@ -212,8 +232,7 @@ class _WidgetDpg(abc.ABC):
 
     @property
     def dataclass_field_names(self) -> t.List[str]:
-        # noinspection PyUnresolvedReferences
-        return list(self.__dataclass_fields__.keys())
+        return [_.name for _ in dataclasses.fields(self)]
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
@@ -274,6 +293,9 @@ class _WidgetDpg(abc.ABC):
 
     def init(self):
         # some internal vars
+        self._uid = None
+        self.uid = _WidgetDpg._UID_CNT
+        _WidgetDpg._UID_CNT += 1
         self._dpg_id = None
         self._post_build_fns = []
 
@@ -720,7 +742,7 @@ class Engine:
                 #
                 # # call update_resume phase
                 # for _ in Engine.update_resume:
-                #     Engine.update[id(_)] = _
+                #     Engine.update[_.uid] = _
                 # Engine.update_resume.clear()
                 #
                 # # call destroy ... if there is something for deletion ...
@@ -998,7 +1020,7 @@ class Widget(_WidgetDpg, abc.ABC):
         """
         Helps in finding children
         """
-        return id(self) == id(other)
+        return self.uid == other.uid
 
     # noinspection PyMethodOverriding
     def __call__(self):
@@ -1026,9 +1048,9 @@ class Widget(_WidgetDpg, abc.ABC):
 
         # register in WidgetEngine
         if Widget.update != self.__class__.update:
-            Engine.update[id(self)] = self
+            Engine.update[self.uid] = self
         if Widget.fixed_update != self.__class__.fixed_update:
-            Engine.fixed_update[id(self)] = self
+            Engine.fixed_update[self.uid] = self
 
     def on_enter(self):
         raise Exception(
@@ -1076,23 +1098,23 @@ class Widget(_WidgetDpg, abc.ABC):
         """
         # remove from parent
         # some widgets like XAxis, YAxis, Legend are not in parent.children
+        _uid = self.uid
         if self.registered_as_child:
-            del self.parent.children[id(self)]
+            del self.parent.children[_uid]
 
         # if tagged then untag
         if self.tag is not None:
             self.untag_it(not_exists_ok=True)
 
         # adapt widget engine
-        _id = id(self)
         # unregister update
         try:
-            del Engine.update[_id]
+            del Engine.update[_uid]
         except KeyError:
             ...
         # unregister fixed_update
         try:
-            del Engine.fixed_update[_id]
+            del Engine.fixed_update[_uid]
         except KeyError:
             ...
 
@@ -1186,20 +1208,21 @@ class MovableWidget(Widget, abc.ABC):
 
         # ---------------------------------------------- 04
         # first del from self.parent.children
-        del self.parent.children[id(self)]
+        print("kkkkk", self.parent.children.keys(), self.uid, self.__class__, self.parent.__class__)
+        del self.parent.children[self.uid]
         # change the parent
         self.parent = _parent
 
         # ---------------------------------------------- 05
         # now move it to new parent.children
         if _before is None:
-            _parent.children[id(self)] = self
+            _parent.children[self.uid] = self
         else:
             _backup = _parent._children
             _parent._children = {}
             for _k in _backup.keys():
-                if _k == id(before):
-                    _parent._children[id(self)] = self
+                if _k == before.uid:
+                    _parent._children[self.uid] = self
                 _parent._children[_k] = _backup[_k]
 
         # ---------------------------------------------- 06
@@ -1310,7 +1333,7 @@ class ContainerWidget(Widget, abc.ABC):
                 f"to be one of {self.restrict_children_to}"
             )
         # do not try to add again
-        if id(_widget) in self._children.keys():
+        if _widget.uid in self._children.keys():
             raise Exception("This widget was already added")
 
         # -------------------------------------------------- 02
@@ -1319,7 +1342,7 @@ class ContainerWidget(Widget, abc.ABC):
 
         # -------------------------------------------------- 03
         # noinspection PyTypeChecker
-        self._children[id(_widget)] = _widget
+        self._children[_widget.uid] = _widget
 
         # -------------------------------------------------- 04
         # if thw parent widget is already built we need to build this widget here
@@ -1398,10 +1421,12 @@ class UseMethodInForm:
     """
     A decorator for HashableCLass methods that can then be used in forms like
     HashableMethodsRunnerForm and DoubleSplitForm
+
+    Note than async behaviour is handled by callback HashableMethodRunnerCallback
     """
 
     def __init__(
-        self, label_fmt: str = None, run_async: bool = False
+        self, label_fmt: str = None, run_async: bool = False, allow_refresh: bool = None,
     ):
         """
 
@@ -1412,63 +1437,7 @@ class UseMethodInForm:
         """
         self.label_fmt = label_fmt
         self.run_async = run_async
-
-    @staticmethod
-    async def _async_call(_fn: t.Callable):
-        from ..gui import widget
-
-        try:
-
-            # loop infinitely
-            while widget.does_exist:
-
-                # dont update if not visible
-                # todo: can we await on bool flags ???
-                if not widget.is_visible:
-                    await asyncio.sleep(0.2)
-                    continue
-
-                # update widget
-                widget.set_value(f"{int(widget.get_value())+1:03d}")
-
-                # change update rate based on some value
-                # noinspection PyUnresolvedReferences
-                if self.some_value == "first hashable ...":
-                    await asyncio.sleep(1)
-                    if int(widget.get_value()) == 10:
-                        break
-                else:
-                    await asyncio.sleep(0.1)
-                    if int(widget.get_value()) == 50:
-                        break
-
-        except Exception as _e:
-            if widget.does_exist:
-                raise _e
-            else:
-                ...
-
-    @staticmethod
-    def _make_async_caller_fn(_fn: t.Callable) -> t.Callable:
-
-        from . import widget
-
-        async def _async_fn(_self, grp_widget: widget.Group):
-
-            # todo: remove later just for sanity check
-            # noinspection PyUnresolvedReferences
-            assert id(_self) == id(_fn.__self__), "was expecting this to be same"
-
-        def _new_fn(_self):
-            _grp = widget.Group(horizontal=True)
-            with _grp:
-                widget.Text(default_value="count")
-                _txt = widget.Text(default_value="000")
-                # noinspection PyUnresolvedReferences
-                Engine.gui_task_add(fn=self.txt_update_fn, fn_kwargs=dict(widget=_txt))
-            return _grp
-
-        return _new_fn
+        self.allow_refresh = allow_refresh
 
     def __call__(self, fn: t.Callable):
         """
@@ -1510,7 +1479,7 @@ class UseMethodInForm:
         self,
         hashable: t.Union["Hashable", "HashableClass"],
         receiver: "gui.widget.ContainerWidget",
-        allow_refresh: bool,
+        allow_refresh: bool = None,
         group_tag: str = None,
     ) -> "gui.widget.Button":
 
@@ -1535,6 +1504,20 @@ class UseMethodInForm:
             raise Exception(f"unknown type {type(self.label_fmt)}")
 
         # ---------------------------------------------------- 03
+        # if local allow_refresh is None then it is needed to pass allow_refresh kwarg
+        if self.allow_refresh is None:
+            if allow_refresh is None:
+                raise Exception(
+                    f"Decorator UseMethodInFor setting `allow_refresh` is not set so it is mandatory to supply "
+                    f"kwarg `allow_refresh` while calling this method"
+                )
+        else:
+            if allow_refresh is not None:
+                raise Exception(
+                    f"Decorator UseMethodInFor setting `allow_refresh` is supplied so do not set "
+                    f"kwarg `allow_refresh` while calling this method"
+                )
+            allow_refresh = self.allow_refresh
         # create callback
         from . import callback
         _callback = callback.HashableMethodRunnerCallback(

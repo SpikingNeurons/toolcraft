@@ -2,9 +2,9 @@
 import enum
 import typing as t
 import dataclasses
-import pickle
+import time
 import sys
-import pickle
+import asyncio
 import os
 import pathlib
 import numpy as np
@@ -14,6 +14,7 @@ from toolcraft import job
 from toolcraft import settings
 from toolcraft import util
 from toolcraft import logger
+from toolcraft import gui
 
 _LOGGER = logger.get_logger()
 
@@ -23,6 +24,60 @@ class Experiment(job.Experiment):
 
     a: int
     runner: "Runner"
+
+    @property
+    def view_callable_names(self) -> t.List[str]:
+        return super().view_callable_names + ["awaitable_task", "blocking_task"]
+
+    async def some_awaitable_fn(self, txt_widget: "gui.widget.Text"):
+
+        try:
+
+            # loop infinitely
+            while txt_widget.does_exist:
+
+                # if not build continue
+                if not txt_widget.is_built:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # dont update if not visible
+                # todo: can we await on bool flags ???
+                if not txt_widget.is_visible:
+                    await asyncio.sleep(0.2)
+                    continue
+
+                # update widget
+                txt_widget.set_value(f"{int(txt_widget.get_value())+1:03d}")
+
+                # change update rate based on some value
+                await asyncio.sleep(0.1)
+                if int(txt_widget.get_value()) == 50:
+                    break
+
+        except Exception as _e:
+            if txt_widget.does_exist:
+                raise _e
+            else:
+                ...
+
+    @gui.UseMethodInForm(label_fmt="awaitable_task")
+    def awaitable_task(self) -> "gui.widget.Group":
+        _grp = gui.widget.Group(horizontal=True)
+        with _grp:
+            gui.widget.Text(default_value="count")
+            _txt = gui.widget.Text(default_value="000")
+            gui.AwaitableTask(
+                fn=self.some_awaitable_fn, fn_kwargs=dict(txt_widget=_txt)
+            ).add_to_task_queue()
+        return _grp
+
+    @gui.UseMethodInForm(label_fmt="blocking_task", run_async=True)
+    def blocking_task(self) -> "gui.widget.Text":
+        time.sleep(10)
+        return gui.widget.Text(default_value="done sleeping for 10 seconds")
+
+
 
 
 @dataclasses.dataclass(frozen=True)

@@ -103,6 +103,7 @@ class HashableMethodsRunnerForm(Form):
     # todo: add icons for this
     info_button: bool
     callable_names: t.List[str]
+    allow_refresh: bool
 
     def init(self):
         # call super
@@ -142,11 +143,18 @@ class HashableMethodsRunnerForm(Form):
             _use_method_in_form_obj = UseMethodInForm.get_from_hashable_fn(
                 hashable=_hashable, fn_name=_callable_name
             )
+            # if allow_refresh setting is not provided in _use_method_in_form_obj then supply global form setting
+            # else _use_method_in_form_obj already knows its local allow_refresh setting so pass None
+            # Note that if local setting it is must to pass none as the underlying code will raise error
+            _allow_refresh = None
+            if _use_method_in_form_obj.allow_refresh is None:
+                _allow_refresh = self.allow_refresh
+
             # create button widget
             _button = _use_method_in_form_obj.get_button_widget(
                 hashable=_hashable,
                 receiver=_receiver,
-                allow_refresh=True,
+                allow_refresh=_allow_refresh,
                 group_tag=self.group_tag,
             )
             # add button
@@ -209,6 +217,7 @@ class DoubleSplitForm(Form):
         hashable: t.Union[Hashable, "HashableClass"],
         group_key: str = None,
         default_open: bool = False,
+        allow_refresh: bool = None,
     ):
 
         # ----------------------------------------------------- 01
@@ -241,11 +250,14 @@ class DoubleSplitForm(Form):
         # ----------------------------------------------------- 04
         # create button widget ... note use of with context so that it can also work when
         # `add` is called inside `with` context
+        if allow_refresh is None:
+            # if local setting not overriden then use form level setting
+            allow_refresh = self.allow_refresh
         with _container:
             _use_method_in_form_obj.get_button_widget(
                 hashable=hashable,
                 receiver=self._receiver_panel,
-                allow_refresh=self.allow_refresh,
+                allow_refresh=allow_refresh,
                 # we can maintain this as we will be using single `callable_name` and hence
                 # no use for this kwarg
                 group_tag=None,

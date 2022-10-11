@@ -2,7 +2,7 @@ import asyncio
 import itertools
 import typing as t
 
-from . import widget, Hashable
+from . import widget, Hashable, EscapeWithContext
 
 # noinspection PyUnresolvedReferences, PyUnreachableCode
 if False:
@@ -85,8 +85,8 @@ async def make_async_fn_runner(
 def tab_bar_from_widget_dict(widget_dict: t.Dict, label: str = None) -> widget.TabBar:
     _tab_bar = widget.TabBar(label=label)
     for _k, _v in widget_dict.items():
-        _tab = widget.Tab(label=_k)
-        _tab_bar(widget=_tab)
+        with _tab_bar:
+            _tab = widget.Tab(label=_k)
         if isinstance(_v, dict):
             _tab(tab_bar_from_widget_dict(_v, label=_k))
         elif isinstance(_v, list):

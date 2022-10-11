@@ -933,12 +933,6 @@ class Tracker(Checker):
         return self.internal.is_called
 
     @property
-    @util.CacheResult
-    def dataclass_field_names(self) -> t.List[str]:
-        # noinspection PyUnresolvedReferences
-        return list(self.__dataclass_fields__.keys())
-
-    @property
     def richy_panel(self) -> "richy.StatusPanel":
         """
         should be made available only when is_called and in_with_context
@@ -1729,6 +1723,11 @@ class HashableClass(YamlRepr, abc.ABC):
         `hex_hash` will anyways be unique for a instance.
         """
         return self.hex_hash
+
+    @property
+    @util.CacheResult
+    def dataclass_field_names(self) -> t.List[str]:
+        return [_.name for _ in dataclasses.fields(self)]
 
     @property
     def group_by(self) -> t.List[str]:

@@ -1143,7 +1143,7 @@ class Job:
                     ]
                 )
 
-    def view(self) -> "gui.widget.Widget":
+    def view(self) -> "gui.widget.Text":
         return self.tag_manager.view()
 
     # noinspection PyUnresolvedReferences
@@ -2029,4 +2029,5 @@ class Experiment(m.HashableClass, abc.ABC):
             info_button=True,
             callable_names=self.view_callable_names,
             collapsing_header_open=True,
+            allow_refresh=True,
         )

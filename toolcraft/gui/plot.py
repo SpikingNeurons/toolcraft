@@ -160,8 +160,11 @@ class YAxis(_auto.PlotYAxis):
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: PlotSeries):
+        # noinspection PyUnresolvedReferences
         if widget.label is not None and widget.label.find("#") == -1:
+            # noinspection PyUnresolvedReferences
             if widget.label in [_.label for _ in self.children.values()]:
+                # noinspection PyUnresolvedReferences
                 raise Exception(
                     f"There already exists a plot_series with label "
                     f"`{widget.label}`",
@@ -390,7 +393,7 @@ class Plot(_auto.Plot):
         self.y1_axis.delete()
         if self.num_of_y_axis == 2:
             self.y2_axis.delete()
-        elif self.num_of_y_axis == 3:
+        if self.num_of_y_axis == 3:
             self.y2_axis.delete()
             self.y3_axis.delete()
 

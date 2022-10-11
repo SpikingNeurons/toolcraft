@@ -272,8 +272,9 @@ class SimpleHashableClass(gui.Hashable):
             hashable=self,
             close_button=True,
             info_button=True,
-            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task"],
+            callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task", ],
             collapsing_header_open=True,
+            allow_refresh=True,
         )
 
     async def some_awaitable_fn(self, txt_widget: gui.widget.Text):
