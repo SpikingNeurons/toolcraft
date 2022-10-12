@@ -92,6 +92,9 @@ class FileGroupConfig(s.Config):
     #  as of now *.config will suffice.
     auto_hashes: dict = None
 
+    # if hashes are supplied we store it here ... i.e. when e do not use auto_hashes
+    hashes: dict = None
+
     @property
     @util.CacheResult
     def check_interval_choice(self) -> int:
@@ -1024,21 +1027,34 @@ class FileGroup(StorageHashable, abc.ABC):
             hooked_method_return_value=hooked_method_return_value)
 
         # ----------------------------------------------------------------05
+        # save hashes/auto_hashes in config file
+        # ----------------------------------------------------------------05.01
+        # validation
+        if self.config.auto_hashes is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect auto "
+                    f"hashes to be present in the config"
+                ]
+            )
+        if self.config.hashes is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect "
+                    f"hashes to be present in the config"
+                ]
+            )
+        # ----------------------------------------------------------------05.02
         # in case of auto hashing we need to generate hashes and save it in
         # config ....
         # Note we call super above as below code will generate config file on
         # disc and hence super will raise error ... in super the auto_hashes
         # will get set to None and then here we update it after computing hashes
         if self.is_auto_hash:
-            if self.config.auto_hashes is not None:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"We just generated files so we do not expect auto "
-                        f"hashes to be present in the config"
-                    ]
-                )
-            _auto_hashes = self.do_hash_check(compute=True)
-            self.config.auto_hashes = _auto_hashes
+            self.config.auto_hashes = self.do_hash_check(compute=True)
+        # else if not auto_hash then store supplied hashes in config.hashes
+        else:
+            self.config.hashes = self.get_hashes()
 
         # ----------------------------------------------------------------06
         # return
@@ -1363,8 +1379,8 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # check shape, dtype
         # ----------------------------------------------------------------02.01
         # loop over all file keys
-        _dtypes = self.dtype
-        _shapes = self.shape
+        _dtype = self.dtype
+        _shape = self.shape
         for file_key in self.file_keys:
             # ------------------------------------------------------------02.02
             # get memmap for file key
@@ -1374,7 +1390,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             _npy_memmap = _npy_memmaps[file_key]
             # ------------------------------------------------------------02.03
             # check dtype
-            if _npy_memmap.dtype != _dtypes[file_key]:
+            if _npy_memmap.dtype != _dtype[file_key]:
                 raise e.validation.NotAllowed(
                     msgs=[
                         f"Type mismatch for files created.",
@@ -1387,13 +1403,13 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 )
             # ------------------------------------------------------------02.03
             # check shape
-            if _npy_memmap.shape != _shapes[file_key]:
+            if _npy_memmap.shape != _shape[file_key]:
                 raise e.validation.NotAllowed(
                     msgs=[
                         f"Shape mismatch for files created.",
                         f"The shape for loaded numpy file from disk for "
                         f"file_key `{file_key}` does not match.",
-                        f"Expected {_shapes[file_key]} but found "
+                        f"Expected {_shape[file_key]} but found "
                         f"{_npy_memmap.shape}"
                     ]
                 )
@@ -1403,7 +1419,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # delete memmaps ... so that it is quickly eligible for garbage
         # collection
         # Note this info can be extract from properties shape and dtype but we get it from memmap for pretty print
-        # and so that python classes related to numpy doe not populate yaml
+        # and so that python classes related to numpy do not populate yaml
         _shape = {_k: str(list(_v.shape)) for _k, _v in _npy_memmaps.items()}
         _dtype = {_k: str(_v.dtype) for _k, _v in _npy_memmaps.items()}
         del _npy_memmaps
