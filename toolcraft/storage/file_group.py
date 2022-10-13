@@ -337,7 +337,7 @@ class FileGroup(StorageHashable, abc.ABC):
         """
         raise e.code.CodingError(
             msgs=[
-                f"This method is not supported for class {cls}",
+                f"The `make_possible_instances` method is not supported for class {cls}",
                 f"Implement this method when you know that there are finite instances for class {cls}",
             ]
         )
