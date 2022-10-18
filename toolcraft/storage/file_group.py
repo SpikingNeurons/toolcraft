@@ -1237,7 +1237,9 @@ class NpyFileGroup(FileGroup, abc.ABC):
             )
 
     def load_as_dict(
-        self, memory_limit_in_gbytes: int = None, fix_all_lengths_same: bool = False, memmap: bool = True
+        self,
+        memory_limit_in_gbytes: int = None, fix_all_lengths_same: bool = False, memmap: bool = True,
+        # optional_slice: slice = slice(0, 4000),
     ) -> t.Dict[str, t.Union[np.ndarray, t.Dict[str, np.ndarray]]]:
         """
         Full load in memory for fast access
@@ -1259,10 +1261,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # -------------------------------------------------- 02
         # get all in memory ... note we load via get_files so access info is saved to config files ...
-        _ret = {
-            _k: self.load_npy_data(file_key=_k, memmap=memmap)
-            for _k, _ in self.get_files(file_keys=self.file_keys).items()
-        }
+        _ret = {}
+        for _k in self.file_keys:
+            _v = self.load_npy_data(file_key=_k, memmap=memmap)
+            # if optional_slice is not None:
+            #     _v = _v[optional_slice]
+            _ret[_k] = _v
 
         # -------------------------------------------------- 03
         # augment singular elements
