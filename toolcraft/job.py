@@ -1722,7 +1722,6 @@ class Runner(m.HashableClass, abc.ABC):
         In some cases you might want to access results from other job so this is the method for it.
         The only restriction is that the requested job must be completed ...
         """
-        _job = Job(runner=self, method=method, experiment=experiment)
         _job = experiment.associated_jobs[method]
         if not _job.is_finished:
             raise e.code.CodingError(
