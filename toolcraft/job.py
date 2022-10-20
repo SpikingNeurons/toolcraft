@@ -1989,11 +1989,13 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @property
     def view_gui_label(self) -> str:
-        return f"{self.__class__.__module__}:{self.hex_hash}"
+        return f"{self.__class__.__module__}:{self.hex_hash[:10]}"
 
     @property
     def view_callable_names(self) -> t.List[str]:
         _ret = self.methods_to_be_used_in_gui_form()
+        # skip info_widget as that is controlled by `Experiment.view()` method
+        # Skip view as that makes the main form in which the remaining methods are shown
         return [_ for _ in _ret if _ not in ["info_widget", "view"]]
 
     def init(self):
