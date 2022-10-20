@@ -25,10 +25,6 @@ class Experiment(job.Experiment):
     a: int
     runner: "Runner"
 
-    @property
-    def view_callable_names(self) -> t.List[str]:
-        return super().view_callable_names + ["awaitable_task", "blocking_task"]
-
     async def some_awaitable_fn(self, txt_widget: "gui.widget.Text"):
 
         try:

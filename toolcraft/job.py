@@ -1993,7 +1993,8 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @property
     def view_callable_names(self) -> t.List[str]:
-        return ["associated_jobs_view"]
+        _ret = self.methods_to_be_used_in_gui_form()
+        return [_ for _ in _ret if _ not in ["info_widget", "view"]]
 
     def init(self):
         # call super

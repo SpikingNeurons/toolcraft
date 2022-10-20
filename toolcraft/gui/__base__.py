@@ -1427,6 +1427,7 @@ class UseMethodInForm:
 
     def __init__(
         self, label_fmt: str = None, run_async: bool = False, allow_refresh: bool = None,
+        display_in_form: bool = True,
     ):
         """
 
@@ -1438,6 +1439,7 @@ class UseMethodInForm:
         self.label_fmt = label_fmt
         self.run_async = run_async
         self.allow_refresh = allow_refresh
+        self.display_in_form = display_in_form
 
     def __call__(self, fn: t.Callable):
         """

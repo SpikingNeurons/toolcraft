@@ -1937,6 +1937,19 @@ class HashableClass(YamlRepr, abc.ABC):
     #     print(self.hex_hash, other.hex_hash, "eq ...........................")
     #     return self.hex_hash == other.hex_hash
 
+    @classmethod
+    def methods_to_be_used_in_gui_form(cls) -> t.List[str]:
+        _ret = []
+        for _ in dir(cls):
+            _v = getattr(cls, _)
+            if isinstance(_v, types.FunctionType):
+                if hasattr(_v, f"_{UseMethodInForm.__name__}"):
+                    _use_method_in_form: UseMethodInForm
+                    _use_method_in_form = getattr(_v, f"_{UseMethodInForm.__name__}")
+                    if _use_method_in_form.display_in_form:
+                        _ret.append(_)
+        return _ret
+
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         _ret = {}
         _field_names = self.dataclass_field_names
