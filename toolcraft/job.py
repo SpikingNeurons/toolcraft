@@ -1403,15 +1403,22 @@ class Flow:
         self,
         stages: t.List[ParallelJobGroup],
         runner: "Runner",
+        client_jobs: t.List[t.Union[Job, ParallelJobGroup, SequentialJobGroup]],
     ):
         # save reference
         self.stages = stages
         self.runner = runner
+        self.client_jobs = client_jobs
 
         # set flow ids
         _len = len(str(len(self.stages)))
         for _stage_id, _stage in enumerate(self.stages):
             _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
+
+        # set flow_ids for client jobs
+        _len = len(str(len(self.client_jobs)))
+        for _id, _client_job in enumerate(self.client_jobs):
+            _client_job.flow_id = f"#C[{_id:0{_len}d}]"
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
