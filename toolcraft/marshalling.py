@@ -1392,9 +1392,9 @@ class YamlRepr(Tracker):
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
-    @staticmethod
+    @classmethod
     def get_class(
-        file_or_text: t.Union["storage.Path", str]
+        cls, file_or_text: t.Union["storage.Path", str]
     ) -> t.Type["YamlRepr"]:
         from . import storage
         _text = file_or_text

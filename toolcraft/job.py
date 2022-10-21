@@ -256,12 +256,12 @@ class TagManager:
 
     def view(self) -> "gui.widget.Text":
         from . import gui
-        _ret = ""
+        _ret = f"[[[ Job: {self.job.method.__name__} ]]] "
         if self.finished.exists():
-            _ret += "--- FINISHED JOB ---\n\n"
+            _ret += "--- FINISHED ---"
         if self.failed.exists():
-            _ret += "XXX--- FAILED JOB ---XXX\n\n"
-        _ret += f">>> Job: {self.job.flow_id} [{self.job.job_id}] <<< \n"
+            _ret += "XXX  FAILED  XXX"
+        _ret += "\n"
         if self.started.exists():
             _ret += f"started at: {self.started.read()}\n"
         if self.running.exists():
@@ -809,47 +809,21 @@ class Job:
             )
 
         # ------------------------------------------------------------------ 03
-        # if experiment provided
-        if self.experiment is not None:
-            # -------------------------------------------------------------- 03.01
-            # make sure that it is not s.StorageHashable or any of its fields are
-            # not s.StorageHashable
-            # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
-            # use with storage ... this will avoid creating files/folders and doing any IO
-            # todo: we disable this as now instance creation of StorageHashable's do not cause IO
-            #   confirm this behaviour and delete this code .... the check is commented for now as we
-            #   want to allow StorageHashable's to work example with
-            #   `experiment/downloads.py` and `experiment/prepared_datas.py`
-            # self.experiment.check_for_storage_hashable(
-            #     field_key=f"{self.experiment.__class__.__name__}"
-            # )
-            # make <hex_hash>.info if not present
-            self.runner.monitor.make_experiment_info_file(experiment=self.experiment)
-            # -------------------------------------------------------------- 03.02
-            # check if there is associated job for method already present in experiment
-            # if not then associate self with experiment
-            if method in experiment.associated_jobs.keys():
-                raise e.code.CodingError(
-                    msgs=[
-                        f"there is already a job registered for runner method {method} in experiment ..."
-                    ]
-                )
-            else:
-                experiment.associated_jobs[method] = self
-
-        # ------------------------------------------------------------------ 04
-        # if experiment is not provided .... then job is runner level
-        if self.experiment is None:
-            # check if there is associated job for method already present in experiment
-            # if not then associate self with experiment
-            if method in runner.associated_jobs.keys():
-                raise e.code.CodingError(
-                    msgs=[
-                        f"there is already a job registered for runner method {method} in runner ..."
-                    ]
-                )
-            else:
-                runner.associated_jobs[method] = self
+        # check if method supplies is available in runner
+        if experiment is None:
+            e.validation.ShouldBeOneOf(
+                value=method, values=runner.methods_to_be_used_in_jobs()["runner"],
+                msgs=[
+                    f"Method {method} is not recognized as a method that can be used with runner level Job's"
+                ]
+            ).raise_if_failed()
+        else:
+            e.validation.ShouldBeOneOf(
+                value=method, values=runner.methods_to_be_used_in_jobs()["experiment"],
+                msgs=[
+                    f"Method {method} is not recognized as a method that can be used with experiment level Job's"
+                ]
+            ).raise_if_failed()
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
@@ -1403,22 +1377,15 @@ class Flow:
         self,
         stages: t.List[ParallelJobGroup],
         runner: "Runner",
-        client_jobs: t.List[t.Union[Job, ParallelJobGroup, SequentialJobGroup]],
     ):
         # save reference
         self.stages = stages
         self.runner = runner
-        self.client_jobs = client_jobs
 
         # set flow ids
         _len = len(str(len(self.stages)))
         for _stage_id, _stage in enumerate(self.stages):
             _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
-
-        # set flow_ids for client jobs
-        _len = len(str(len(self.client_jobs)))
-        for _id, _client_job in enumerate(self.client_jobs):
-            _client_job.flow_id = f"#C[{_id:0{_len}d}]"
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
@@ -1597,8 +1564,11 @@ class Monitor:
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=['cwd', 'job', 'flow', 'monitor', 'registered_experiments', "associated_jobs"],
-    things_not_to_be_overridden=['cwd', 'job', 'monitor', 'get_another_job'],
+    things_to_be_cached=[
+        'cwd', 'job', 'flow', 'monitor', 'registered_experiments',
+        'associated_jobs', 'methods_to_be_used_in_jobs',
+    ],
+    things_not_to_be_overridden=['cwd', 'job', 'monitor', 'methods_to_be_used_in_jobs'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1656,8 +1626,11 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
-        return {}
+    def associated_jobs(self) -> t.Dict[types.MethodType, Job]:
+        _methods = self.methods_to_be_used_in_jobs()["runner"]
+        return {
+            _m: Job(method=_m, runner=self, experiment=None) for _m in _methods
+        }
 
     @property
     @util.CacheResult
@@ -1711,33 +1684,12 @@ class Runner(m.HashableClass, abc.ABC):
     def registered_experiments(self) -> t.List["Experiment"]:
         return []
 
-    def setup(self):
-        _exps = self.registered_experiments
-        _rp = self.richy_panel
-        for _exp in _rp.track(sequence=_exps, task_name=f"setup {len(_exps)} experiments"):
-            with _exp(richy_panel=_rp):
-                ...
+    def init_validate(self):
+        # call super
+        super().init_validate()
 
-    @classmethod
-    def methods_that_cannot_be_a_job(cls) -> t.List[t.Callable]:
-        return [cls.run, cls.init, cls.clone, cls.get_another_job, cls.view]
-
-    def get_another_job(
-        self, method: t.Callable, experiment: t.Optional["Experiment"]
-    ) -> Job:
-        """
-        In some cases you might want to access results from other job so this is the method for it.
-        The only restriction is that the requested job must be completed ...
-        """
-        _job = experiment.associated_jobs[method]
-        if not _job.is_finished:
-            raise e.code.CodingError(
-                msgs=[
-                    "The job you are requesting is not finished",
-                    "Please check the `flow` as jobs that are completed can only be accessed",
-                ]
-            )
-        return _job
+        # call this property to test class methods
+        _ = self.methods_to_be_used_in_jobs()
 
     def init(self):
         # call super
@@ -1759,34 +1711,43 @@ class Runner(m.HashableClass, abc.ABC):
             ],
         )
 
-    @classmethod
-    def class_init(cls):
-
+    @util.CacheResult
+    def methods_to_be_used_in_jobs(self) -> t.Dict[str, t.List[types.MethodType]]:
         # ------------------------------------------------------- 01
-        # call super
-        super().class_init()
+        # container to return
+        _ret = {'runner': [], 'experiment': []}
+        # methods to skip
+        _methods_to_skip = [
+            self.run, self.view, self.methods_to_be_used_in_jobs
+        ]
+        # attrs to ignore that come from parent class
+        _hashable_class_attrs = dir(m.HashableClass)
+        # other vars
+        _cls = self.__class__
 
         # ------------------------------------------------------- 02
         # test fn signature
-        # loop over attributes
-        for _attr in [_ for _ in cls.__dict__.keys() if not _.startswith("_")]:
+        # loop over attributes ... to find eligible methods for job
+        for _attr in [_ for _ in dir(_cls) if _ not in _hashable_class_attrs]:
+
             # --------------------------------------------------- 02.01
             # get cls attr value
-            _val = getattr(cls, _attr)
+            _cls_val = getattr(_cls, _attr)
 
             # --------------------------------------------------- 02.02
-            # ignore some special methods
-            if _val in cls.methods_that_cannot_be_a_job():
+            # if not method skip
+            if not inspect.isfunction(_cls_val):
                 continue
 
             # --------------------------------------------------- 02.03
-            # skip if not function
-            if not inspect.isfunction(_val):
+            # ignore some special methods
+            _val = getattr(self, _attr)
+            if _val in _methods_to_skip:
                 continue
 
             # --------------------------------------------------- 02.04
             # get signature
-            _signature = inspect.signature(_val)
+            _signature = inspect.signature(_cls_val)
             _parameter_keys = list(_signature.parameters.keys())
 
             # --------------------------------------------------- 02.05
@@ -1794,35 +1755,41 @@ class Runner(m.HashableClass, abc.ABC):
             if "self" not in _parameter_keys:
                 raise e.code.CodingError(
                     msgs=[
-                        f"Any method defined in class {cls} can be used for job ... ",
+                        f"Any method defined in class {_cls} is used for job ... ",
                         f"So we expect it to have `self` i.e., it should be instance method",
-                        f"If you are using anything special either make it private with `_` or define it in "
-                        f"{cls.methods_that_cannot_be_a_job}"
+                        f"If you are using anything special either make it private with `_` or "
+                        f"update code in {self.methods_to_be_used_in_jobs} to skip it ..."
                     ]
                 )
 
             # --------------------------------------------------- 02.06
             # if no other kwarg it's okay
             if len(_parameter_keys) == 1:
-                ...
+                _ret["runner"].append(_val)
             # if two keys then second kwarg must be "experiment"
             elif len(_parameter_keys) == 2:
                 if _parameter_keys[1] != "experiment":
                     raise e.code.CodingError(
                         msgs=[
-                            f"Any method defined in class {cls} can be used for job ... ",
+                            f"Any method defined in class {_cls} can be used for job ... ",
                             f"So if you are specifying any kwarg then it can only be `experiment` of type {Experiment}",
                             f"Found {_parameter_keys[1]}"
                         ]
                     )
+                _ret["experiment"].append(_val)
             else:
                 raise e.code.CodingError(
                     msgs=[
-                        f"Any method defined in class {cls} can be used for job ... ",
+                        f"Any method defined in class {_cls} can be used for job ... ",
                         "We only restrict you to have one or no kwarg ... and if one kwarg is supplied "
-                        "then it can be only named `experiment`"
+                        "then it can be only named `experiment`",
+                        f"Check signature for {_cls_val}"
                     ]
                 )
+
+        # ------------------------------------------------------- 03
+        # return
+        return _ret
 
     def run(self, cluster_type: JobRunnerClusterType):
         if self.is_on_main_machine:
@@ -1900,80 +1867,12 @@ class Runner(m.HashableClass, abc.ABC):
         # run
         gui.Engine.run(_dashboard)
 
-    def _view(self):
-        # ------------------------------------------------------------------- 01
-        # import
-        from . import gui
-
-        # ------------------------------------------------------------------- 02
-        # define dashboard class
-        @dataclasses.dataclass
-        class FlowDashboard(gui.dashboard.BasicDashboard):
-            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
-
-            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.runner.py_script}")
-
-            hr1: gui.widget.Separator = gui.widget.Separator()
-            hr2: gui.widget.Separator = gui.widget.Separator()
-            hr3: gui.widget.Separator = gui.widget.Separator()
-
-            container: gui.widget.Group = gui.widget.Group()
-
-            hr4: gui.widget.Separator = gui.widget.Separator()
-            hr5: gui.widget.Separator = gui.widget.Separator()
-            hr6: gui.widget.Separator = gui.widget.Separator()
-
-        # ------------------------------------------------------------------- 03
-        # make dashboard
-        _dashboard = FlowDashboard(title="Flow Dashboard")
-
-        # ------------------------------------------------------------------- 04
-        # make gui
-        _forms = {}
-        _other_jobs_form = None
-        with _dashboard.container:
-            # --------------------------------------------------------------- 04.01
-            # for stages
-            for _i, _stage in enumerate(self.stages):
-                gui.widget.Separator()
-                gui.widget.Separator()
-                _forms[_i] = gui.form.DoubleSplitForm(
-                    title=f"*** [[ STAGE {_i:03d} ]] ***",
-                    callable_name="job_gui", allow_refresh=False, collapsing_header_open=True,
-                )
-            # --------------------------------------------------------------- 04.02
-            # for other jobs that will be run on client with gui
-            if bool(self.other_jobs):
-                gui.widget.Separator()
-                gui.widget.Separator()
-                _other_jobs_form = gui.form.DoubleSplitForm(
-                    title=f"*** [[ OTHER JOBS ]] ***",
-                    callable_name="job_gui_with_run", allow_refresh=False, collapsing_header_open=True,
-                )
-
-        # ------------------------------------------------------------------- 05
-        # add jobs to forms
-        # ------------------------------------------------------------------- 05.01
-        # for stages
-        for _i, _stage in enumerate(self.stages):
-            # todo: decide something for SequentialJobGroup and ParallelJobGroup (Advanced feature ...)
-            #  + currently we will get all jobs in stage and render them
-            #  + we can have window pop-up for any JobGroup and then again have any JobGroup or jobs
-            #    rendered inside it
-            #  + may-be we need not differentiate between Sequential and Parallel JobGroup's ... we can
-            #    just have spinners if job is running or status icons indicating job status ... may be the
-            #    max we can do is hust display array between Job/JobGroup is they are from SequentialJobGroup
-            for _job in _stage.all_jobs:
-                _forms[_i].add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
-        # ------------------------------------------------------------------- 05.02
-        # for other jobs that will be run on client with gui
-        if bool(self.other_jobs):
-            for _job in self.other_jobs:
-                _other_jobs_form.add(hashable=_job.viewer, group_key=_job.viewer.method_name, default_open=False)
-
-        # ------------------------------------------------------------------- 06
-        # run
-        gui.Engine.run(_dashboard)
+    def setup(self):
+        _exps = self.registered_experiments
+        _rp = self.richy_panel
+        for _exp in _rp.track(sequence=_exps, task_name=f"setup {len(_exps)} experiments"):
+            with _exp(richy_panel=_rp):
+                ...
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1991,8 +1890,12 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
-        return {}
+    def associated_jobs(self) -> t.Dict[types.MethodType, Job]:
+        _runner = self.runner
+        _methods = _runner.methods_to_be_used_in_jobs()["experiment"]
+        return {
+            _m: Job(method=_m, runner=_runner, experiment=self) for _m in _methods
+        }
 
     @property
     def view_gui_label(self) -> str:
@@ -2006,11 +1909,30 @@ class Experiment(m.HashableClass, abc.ABC):
         return [_ for _ in _ret if _ not in ["info_widget", "view"]]
 
     def init(self):
+        # ------------------------------------------------------------------ 01
         # call super
         super().init()
 
+        # ------------------------------------------------------------------ 02
         # register self to runner
         self.runner.registered_experiments.append(self)
+
+        # ------------------------------------------------------------------ 03
+        # make sure that it is not s.StorageHashable or any of its fields are
+        # not s.StorageHashable
+        # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
+        # use with storage ... this will avoid creating files/folders and doing any IO
+        # todo: we disable this as now instance creation of StorageHashable's do not cause IO
+        #   confirm this behaviour and delete this code .... the check is commented for now as we
+        #   want to allow StorageHashable's to work example with
+        #   `experiment/downloads.py` and `experiment/prepared_datas.py`
+        # self.check_for_storage_hashable(
+        #     field_key=f"{self.experiment.__class__.__name__}"
+        # )
+
+        # ------------------------------------------------------------------ 04
+        # make <hex_hash>.info if not present
+        self.runner.monitor.make_experiment_info_file(experiment=self)
 
     @UseMethodInForm(label_fmt="Job's")
     def associated_jobs_view(self) -> "gui.widget.Group":
@@ -2021,7 +1943,6 @@ class Experiment(m.HashableClass, abc.ABC):
             if bool(_jobs):
                 for _k, _j in _jobs.items():
                     gui.widget.Separator()
-                    gui.widget.Text(default_value=f"[[[ {_k.__name__} ]]]")
                     _j.tag_manager.view()
             else:
                 gui.widget.Text(default_value="There are no jobs for this experiment ...")
