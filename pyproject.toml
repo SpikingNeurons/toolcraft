@@ -46,16 +46,16 @@ generate-setup-file = false
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0.0"
 PyYAML = "^6.0.0"
-dearpygui = "1.6.2"
-pandas = "^1.4.4"
+dearpygui = "1.7.2"
+pandas = "^1.5.1"
 pyarrow = "^9.0.0"
 toml = "^0.10.2"
 dearpygui-ext = "0.9.5"
-fsspec = "^2022.8.2"
-gcsfs = "^2022.8.2"
-dapr = "^1.6.1"
-dapr-ext-grpc = "^1.6.0"
-rich = "^12.5.1"
+fsspec = "^2022.10.0"
+gcsfs = "^2022.10.0"
+dapr = "^1.8.3"
+dapr-ext-grpc = "^1.8.3"
+rich = "^12.6.0"
 
 
 #[tool.poetry.group.dev]
@@ -75,7 +75,7 @@ rich = "^12.5.1"
 #panel = "^0.12.5"
 paramiko = "^2.11.0"
 #toml = "^0.10.2"
-blosc2 = "^0.3.2"
+blosc2 = "^0.5.1"
 
 
 [tool.poetry.group.test]
