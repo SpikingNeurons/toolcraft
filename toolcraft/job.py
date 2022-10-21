@@ -1626,7 +1626,7 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def associated_jobs(self) -> t.Dict[types.MethodType, Job]:
+    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
         _methods = self.methods_to_be_used_in_jobs()["runner"]
         return {
             _m: Job(method=_m, runner=self, experiment=None) for _m in _methods
@@ -1890,7 +1890,7 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def associated_jobs(self) -> t.Dict[types.MethodType, Job]:
+    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
         _runner = self.runner
         _methods = _runner.methods_to_be_used_in_jobs()["experiment"]
         return {
