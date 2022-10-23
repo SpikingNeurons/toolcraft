@@ -1351,11 +1351,11 @@ class ContainerWidget(Widget, abc.ABC):
             _widget.build()
 
     def init(self):
+        # add var
+        # noinspection PyAttributeOutsideInit
+        self._children = dict()  # type: t.Dict[int, Widget]
         # call super
         super().init()
-
-        # add var
-        self._children = dict()  # type: t.Dict[int, Widget]
 
     def on_enter(self):
         global _CONTAINER_WIDGET_STACK

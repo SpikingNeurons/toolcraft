@@ -33,6 +33,7 @@ if False:
     from . import richy
 
 T = t.TypeVar('T', bound='Tracker')
+YamlReprT = t.TypeVar('YamlReprT', bound='YamlRepr')
 _LOGGER = logger.get_logger()
 _LITERAL_CLASS_NAME = 'LITERAL'
 _RULE_CHECKER = "__rule_checker__"
@@ -1387,15 +1388,14 @@ class YamlRepr(Tracker):
         return YamlDumper.dump(self)
 
     @classmethod
-    def from_yaml(cls, file_or_text: t.Union["storage.Path", str],
-                  **kwargs) -> "YamlRepr":
+    def from_yaml(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> YamlReprT:
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
     @classmethod
     def get_class(
         cls, file_or_text: t.Union["storage.Path", str]
-    ) -> t.Type["YamlRepr"]:
+    ) -> t.Type[YamlReprT]:
         from . import storage
         _text = file_or_text
         if isinstance(file_or_text, storage.Path):

@@ -5,6 +5,7 @@ import abc
 import datetime
 import enum
 import inspect
+import pathlib
 import typing as t
 import dataclasses
 import subprocess
@@ -183,11 +184,9 @@ class Tag:
         _LOGGER.info(msg=f"Creating tag {self.path}")
         self.path.write_text(text=yaml.safe_dump(data))
 
-    def read(self) -> t.Dict[str, t.Any]:
+    def read(self) -> t.Optional[t.Dict[str, t.Any]]:
         if not self.path.exists():
-            raise e.code.CodingError(
-                msgs=[f"Tag at {self.path} does not exist ..."]
-            )
+            return None
         _LOGGER.info(msg=f"Reading tag {self.path}")
         return yaml.safe_load(self.path.read_text())
 
@@ -231,6 +230,11 @@ class TagManager:
 
     @property
     @util.CacheResult
+    def launched(self) -> Tag:
+        return Tag(name="launched", manager=self)
+
+    @property
+    @util.CacheResult
     def started(self) -> Tag:
         return Tag(name="started", manager=self)
 
@@ -254,25 +258,52 @@ class TagManager:
     def description(self) -> Tag:
         return Tag(name="description", manager=self)
 
-    def view(self) -> "gui.widget.Text":
+    def view(self) -> "gui.widget.Widget":
+        # ----------------------------------------------------------------- 01
+        # read tags
+        _launched = self.launched.read()
+        _started = self.started.read()
+        _running = self.running.read()
+        _finished = self.finished.read()
+        _failed = self.failed.read()
+        _description = self.description.read()
+
+        # ----------------------------------------------------------------- 02
+        # make gui
         from . import gui
-        _ret = f"[[[ Job: {self.job.method.__name__} ]]] "
-        if self.finished.exists():
-            _ret += "--- FINISHED ---"
-        if self.failed.exists():
-            _ret += "XXX  FAILED  XXX"
-        _ret += "\n"
-        if self.started.exists():
-            _ret += f"started at: {self.started.read()}\n"
-        if self.running.exists():
-            _ret += f"running from: {self.running.read()}\n"
-        if self.failed.exists():
-            _ret += f"failed at: {self.failed.read()}\n"
-        if self.finished.exists():
-            _ret += f"finished at: {self.finished.read()}\n"
-        if self.description.exists():
-            _ret += f"\n-- description --\n {self.description.read()}\n"
-        return gui.widget.Text(default_value=_ret)
+        _ret = gui.widget.Group(horizontal=False)
+        with _ret:
+            with gui.widget.Group(horizontal=True):
+                gui.widget.Text(default_value=f"[[[ Job: {self.job.method.__name__} ]]]")
+                if _finished:
+                    gui.widget.Text(default_value="--- FINISHED ---")
+                elif _failed:
+                    gui.widget.Text(default_value="XXX  FAILED  XXX")
+                elif _launched:
+                    if _running:
+                        gui.widget.Text(default_value="--- RUNNING  ---")
+                    elif _started:
+                        gui.widget.Text(default_value="--- STARTED  ---")
+                    else:
+                        gui.widget.Text(default_value="--- LAUNCHED ---")
+                else:
+                    gui.widget.Text(default_value=">> PLEASE RUN <<")
+            if _launched:
+                gui.widget.Text(default_value=f"launched at: {_launched}")
+            if _started:
+                gui.widget.Text(default_value=f"started at: {_started}")
+            if _running:
+                gui.widget.Text(default_value=f"running from: {_running}")
+            if _failed:
+                gui.widget.Text(default_value=f"failed at: {_failed}")
+            if _finished:
+                gui.widget.Text(default_value=f"finished at: {_finished}")
+            if _description:
+                gui.widget.Text(default_value=f"\n-- description --\n {_description}")
+
+        # ----------------------------------------------------------------- 03
+        # return
+        return _ret
 
 
 class JobViewerInternal(m.Internal):
@@ -679,6 +710,10 @@ class Job:
         return SubProcessManager(job=self)
 
     @property
+    def is_launched(self) -> bool:
+        return self.tag_manager.launched.exists()
+
+    @property
     def is_started(self) -> bool:
         return self.tag_manager.started.exists()
 
@@ -692,7 +727,7 @@ class Job:
 
     @property
     def is_failed(self) -> bool:
-        return self.tag_manager.failed.exists()
+        return self.tag_manager.finished.exists()
 
     @property
     def flow_id(self) -> str:
@@ -738,7 +773,7 @@ class Job:
     @property
     def wait_on_jobs(self) -> t.List["Job"]:
         _wait_on_jobs = []
-        for _j in self.wait_on:
+        for _j in self._wait_on:
             if isinstance(_j, Job):
                 _wait_on_jobs += [_j]
             else:
@@ -781,7 +816,6 @@ class Job:
         runner: "Runner",
         method: t.Callable,
         experiment: t.Optional["Experiment"] = None,
-        wait_on: t.List[t.Union["Job", "SequentialJobGroup", "ParallelJobGroup"]] = None,
     ):
         # ------------------------------------------------------------------ 01
         # assign some vars
@@ -789,7 +823,12 @@ class Job:
         # noinspection PyTypeChecker
         self.method = method  # type: types.MethodType
         self.experiment = experiment
-        self.wait_on = wait_on or []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
+        # make simple name
+        self.name = method.__name__
+        if experiment is not None:
+            self.name += f":{experiment.hex_hash[:10]}"
+        # container to save wait_on jobs
+        self._wait_on = []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
         # noinspection PyTypeChecker
         self._flow_id = None  # type: str
 
@@ -829,12 +868,6 @@ class Job:
         # check health
         self.check_health()
 
-        # if finished or failed earlier return
-        # Note that we already log error or info if lob is finished or failed in
-        # above call to check_health
-        if self.is_finished or self.is_failed:
-            return
-
         # launch
         if self.is_on_main_machine:
             self._launch_on_main_machine(cluster_type)
@@ -847,6 +880,7 @@ class Job:
         worker machines that will execute those scheduled jobs
         """
 
+        # ------------------------------------------------------------------- 01
         # reconfig logger to change log file for job
         import logging
         _log = self.path / "toolcraft.log"
@@ -865,14 +899,33 @@ class Job:
             msg=f"Starting job on worker machine ...",
             msgs=[
                 {
-                    "flow-id": self.flow_id,
-                    "job-id": self.job_id,
+                    "name": self.name,
                     "started": _start.ctime(),
                 }
             ]
         )
+
+        # ------------------------------------------------------------------- 02
+        # check if launcher client machine has created launched tag
+        if not self.tag_manager.launched.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    "We expect that `launched` tag is created by client launching machine .... "
+                    "check _launch_on_main_machine"
+                ]
+            )
+
+        # ------------------------------------------------------------------- 03
+        # indicates that job is started
         self.tag_manager.started.create()
+
+        # ------------------------------------------------------------------- 04
+        # indicate that job will now be running
+        # also note this acts as semaphore and is deleted when job is finished
+        # ... hence started tag is important
         self.tag_manager.running.create()
+
+        # ------------------------------------------------------------------- 05
         _failed = False
         try:
             for _wj in self.wait_on_jobs:
@@ -882,18 +935,11 @@ class Job:
                               f"{_wj.job_id} is supposed to be finished ..."]
                     )
             _sub_title = [
-                f"flow-id: {self.flow_id}", f"job-id: {self.job_id}",
+                f"name: {self.name}", f"py-script: {self.runner.py_script}",
             ]
-            if self.experiment is not None:
-                _sub_title.extend(
-                    [
-                        f"{self.experiment.__module__}.{self.experiment.__class__.__name__}",
-                        f"{self.experiment.name}",
-                    ]
-                )
             _job_display_name = f"{self.runner.__module__}.{self.runner.__class__.__name__}.{self.method.__name__}"
             with richy.StatusPanel(
-                title=f"Running job {_job_display_name}",
+                title="Running Job",
                 sub_title=_sub_title, tc_log=logger.get_logger(self.runner.__module__)
             ) as _rp:
                 if self.experiment is None:
@@ -909,8 +955,8 @@ class Job:
                 msg=f"Successfully finished job on worker machine ...",
                 msgs=[
                     {
-                        "flow-id": self.flow_id,
-                        "job-id": self.job_id,
+                        "name": self.name,
+                        "py-script": self.runner.py_script,
                         "started": _start.ctime(),
                         "ended": _end.ctime(),
                         "seconds": str((_end - _start).total_seconds()),
@@ -929,8 +975,8 @@ class Job:
                 msg=f"Failed job on worker machine ...",
                 msgs=[
                     {
-                        "flow-id": self.flow_id,
-                        "job-id": self.job_id,
+                        "name": self.name,
+                        "py-script": self.runner.py_script,
                         "started": _start.ctime(),
                         "ended": _end.ctime(),
                         "seconds": str((_end - _start).total_seconds()),
@@ -956,15 +1002,19 @@ class Job:
         _command = self.cli_command
 
         # ------------------------------------------------------------- 02
+        # create tag so that worker machine knows that the client has launched it
+        self.tag_manager.launched.create()
+
+        # ------------------------------------------------------------- 03
         # launch
         # todo: might be feasible only with `local` not sure about `ibm_lsf`
         #   + figure out how `subprocess.run` kwargs can be used to pull the console rendered by subprocess i.e.
         #     things like rich ui can be grabbed and streamed
         #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
-        # ------------------------------------------------------------- 02.01
+        # ------------------------------------------------------------- 03.01
         if cluster_type is JobRunnerClusterType.local:
             subprocess.run(_command)
-        # ------------------------------------------------------------- 02.03
+        # ------------------------------------------------------------- 03.02
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
             # todo: when self.path is not local we need to see how to log files ...
             #   should we stream or dump locally ?? ... or maybe figure out
@@ -979,18 +1029,22 @@ class Job:
             _command = _nxdi_prefix + _command
             subprocess.run(_command)
 
-        # ------------------------------------------------------------- 02.04
+        # ------------------------------------------------------------- 03.03
         else:
             raise e.code.ShouldNeverHappen(
                 msgs=[f"Unsupported cluster_type {cluster_type}"]
             )
 
-        # ------------------------------------------------------------- 03
+        # ------------------------------------------------------------- 04
         # log
         _LOGGER.info(
             msg=f"Launching jobs from main machine with below command...",
             msgs=[_command]
         )
+
+    def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
+        self._wait_on.append(wait_on)
+        return self
 
     @classmethod
     def from_cli(
@@ -1001,8 +1055,8 @@ class Job:
         if runner.is_on_main_machine:
             raise e.code.CodingError(
                 msgs=[
-                    "This call is available only for jobs submitted to server ... "
-                    "it cannot be accessed by instance which launches jobs ..."
+                    "This call is available only for jobs submitted to worker ... "
+                    "it cannot be accessed by client which launches jobs ..."
                 ]
             )
 
@@ -1012,9 +1066,10 @@ class Job:
 
         # fetch experiment
         if len(sys.argv) == 2:
-            _experiment = None
+            return runner.associated_jobs[_method]
         elif len(sys.argv) == 3:
             _experiment = runner.monitor.get_experiment_from_hex_hash(hex_hash=sys.argv[2])
+            return _experiment.associated_jobs[_method]
         else:
             raise e.code.CodingError(
                 msgs=[
@@ -1023,101 +1078,102 @@ class Job:
                 ]
             )
 
-        # search job from `runner.flow.stages` and `runner.flow.other_jobs`
-        _search_job = None
-        for _j in itertools.chain.from_iterable([_stage.all_jobs for _stage in runner.flow.stages]):
-
-            # detect if same
-            # note that __eq__ does not work as dataclass overrides its behaviour
-            # https://stackoverflow.com/questions/61430552/dataclass-not-inheriting-eq-method-from-its-parent
-            # todo: test dataclass(eq=False) behaviour to make direct comparison work until then we use code below
-            _is_same_method = _j.method == _method
-            if _j.experiment is None or _experiment is None:
-                _is_experiment_same = _j.experiment == _experiment
-            else:
-                _is_experiment_same = _j.experiment.hex_hash == _experiment.hex_hash
-            if _j.runner is None or runner is None:
-                _is_runner_same = _j.runner == runner
-            else:
-                _is_runner_same = _j.runner.hex_hash == runner.hex_hash
-
-            # check if match
-            if _is_same_method and _is_experiment_same and _is_runner_same:
-                if _search_job is not None:
-                    raise e.code.CodingError(
-                        msgs=[
-                            "Multiple jobs match for the given cli kwargs"
-                        ]
-                    )
-                _search_job = _j
-
-        # if no job found raise
-        if _search_job is None:
-            raise e.code.ShouldNeverHappen(
-                msgs=["We expect to find a matching job ..."]
-            )
-
-        # return
-        return _search_job
-
     def check_health(self):
-        # if job has already started
-        _job_info = {"flow-id": self.flow_id, "job-id": self.job_id, "path": self.path.full_path}
-        if self.is_started:
-            # if job was finished then skip
-            if self.is_finished:
-                _LOGGER.info(
-                    msg=f"Job is already completed so skipping call ...",
-                    msgs=[_job_info]
-                )
-                return
-            if self.is_failed:
-                _LOGGER.error(
-                    msg=f"Previous job has failed so skipping call ...",
-                    msgs=["Delete previous calls files to make this call work ...",
-                          _job_info]
-                )
-                return
-            if self.is_running:
-                raise e.code.CodingError(
+        # ------------------------------------------------------------- 01
+        # some vars
+        _job_info = {"name": self.name, "py-script": self.runner.py_script, "path": self.path.full_path}
+        _tm = self.tag_manager
+        _launched = _tm.launched.read()
+        _started = _tm.started.read()
+        _running = _tm.running.read()
+        _finished = _tm.finished.read()
+        _failed = _tm.failed.read()
+
+        # ------------------------------------------------------------- 02
+        # if either finished or failed running tag must never be present as we take care in code to delete it
+        if _finished or _failed:
+            if _running:
+                raise e.code.ShouldNeverHappen(
                     msgs=[
-                        "This is bug ... there is ongoing job running ...",
-                        "Either you have abruptly killed previous jobs or you "
-                        "have run same job multiple times ...",
-                        "Also teh job might have failed and you missed to catch "
-                        "exception and set failed tag appropriately ... in that case "
-                        "check logs",
+                        "the previous job was wither failed or finished but the running tag was never deleted",
+                        "Please fix any bugs ...",
                         _job_info,
                     ]
                 )
-        else:
-            # if started tag does not exist then other tags should not exist
-            if self.is_running:
-                e.code.CodingError(
+        # ------------------------------------------------------------- 03
+        # raise error if already called (i.e. finished or failed)
+        if _finished:
+            raise e.code.CodingError(
+                msgs=[
+                    "The job was already finished ... ",
+                    "Please refrain from calling again or test with property `is_finished` before calling",
+                    _job_info,
+                    {"finished msg": _finished},
+                ]
+            )
+        if _failed:
+            raise e.code.CodingError(
+                msgs=[
+                    "The job was already failed ... please delete run files manually to run it again ...",
+                    _job_info,
+                    {"failed msg": _failed},
+                ]
+            )
+        # ------------------------------------------------------------- 04
+        # if _running is present then _started should be present
+        if _running:
+            if not _started:
+                raise e.code.ShouldNeverHappen(
                     msgs=[
-                        "Found tag for `running` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
+                        "When running started tag is expected to be present",
+                        _job_info,
                     ]
                 )
-            if self.is_finished:
-                e.code.CodingError(
+        # if _started is present then _launched should be present
+        if _started:
+            if not _launched:
+                raise e.code.ShouldNeverHappen(
                     msgs=[
-                        "Found tag for `finished` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
-                    ]
-                )
-            if self.is_failed:
-                e.code.CodingError(
-                    msgs=[
-                        "Found tag for `failed` ... we expect it to not be present "
-                        "as the job was never started",
-                        _job_info
+                        "When started launched tag is expected to be present",
+                        _job_info,
                     ]
                 )
 
-    def view(self) -> "gui.widget.Text":
+        # ------------------------------------------------------------- 05
+        if self.is_on_main_machine:
+            if _launched or _started or _running:
+                raise e.code.CodingError(
+                    msgs=[
+                        "You are on main (client) machine that launches job",
+                        "So no tags including launched must be present",
+                        _job_info,
+                        {
+                            "launched msg": _launched, "started msg": _started, "running msg": _running,
+                        },
+                    ]
+                )
+        else:
+            if not _launched:
+                raise e.code.CodingError(
+                    msgs=[
+                        "You are on worker machine so we expect to have launched tag that will be created by main "
+                        "(i.e. client) machine that launches job",
+                        _job_info,
+                    ]
+                )
+            if _started or _running:
+                raise e.code.CodingError(
+                    msgs=[
+                        "You are on worker machine that runs job",
+                        "So no tag started and running must not be present",
+                        _job_info,
+                        {
+                            "launched msg": _launched, "started msg": _started, "running msg": _running,
+                        },
+                    ]
+                )
+
+    def view(self) -> "gui.widget.Widget":
         return self.tag_manager.view()
 
     # noinspection PyUnresolvedReferences
@@ -1317,10 +1373,10 @@ class SequentialJobGroup(JobGroup):
             _j = self.jobs[_]
             _pj = self.jobs[_-1]
             if isinstance(_j, Job):
-                _j.wait_on.append(_pj)
+                _j.wait_on(_pj)
             else:
                 for __j in _j.top_jobs:
-                    __j.wait_on.append(_pj)
+                    __j.wait_on(_pj)
 
 
 class ParallelJobGroup(JobGroup):
@@ -1420,7 +1476,7 @@ class Flow:
             for _j in _all_jobs:
                 # extract wait on jobs that need to finished before calling _j
                 _wait_jobs = []
-                for _wo in _j.wait_on:
+                for _wo in _j._wait_on:
                     if isinstance(_wo, Job):
                         _wait_jobs += [_wo]
                     else:
@@ -1551,10 +1607,18 @@ class Monitor:
     def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
         _experiment_info_file = self.experiments_folder_path / f"{hex_hash}.info"
         if _experiment_info_file.exists():
-            # noinspection PyTypeChecker
-            return m.HashableClass.get_class(_experiment_info_file).from_yaml(
-                _experiment_info_file
-            )
+            # get class
+            _cls = m.HashableClass.get_class(_experiment_info_file)
+            # create instance from yaml
+            _instance_1: Experiment
+            _instance_1 = _cls.from_yaml(_experiment_info_file)
+            # get kwargs to bake new instance
+            _kwargs = _instance_1.as_dict()
+            # need to replace runner ... as loading from yaml creates new runner which we want to replace with
+            # existing one so that associated_jobs property can be used properly
+            _kwargs["runner"] = self.runner
+            # return new instance
+            return _cls(**_kwargs)
         else:
             raise e.code.CodingError(
                 msgs=[f"We expect that you should have already created file "
@@ -1616,7 +1680,6 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     def py_script(self) -> str:
-        import pathlib
         return pathlib.Path(sys.argv[0]).name
 
     @property
@@ -1669,15 +1732,7 @@ class Runner(m.HashableClass, abc.ABC):
     @property
     @util.CacheResult
     def job(self) -> Job:
-        if self.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This job is available only for jobs submitted to server ... "
-                    "it cannot be accessed by instance which launches jobs ..."
-                ]
-            )
-        else:
-            return Job.from_cli(runner=self)
+        return Job.from_cli(runner=self)
 
     @property
     @util.CacheResult
