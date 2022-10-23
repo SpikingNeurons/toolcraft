@@ -1242,8 +1242,7 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(cls, file_or_text: t.Union["storage.Path", str],
-             **kwargs) -> t.Union[dict, "YamlRepr"]:
+    def load(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> t.Union[dict, YamlReprT]:
         from . import storage
         # get text
         _text = file_or_text
@@ -1264,8 +1263,6 @@ class YamlLoader(yaml.UnsafeLoader):
                 "found": _instance.__class__,
                 "yaml_txt": _text,
             }
-            if isinstance(file_or_text, pathlib.Path):
-                _msgs["file_or_text"] = file_or_text.as_posix()
             raise e.code.CodingError(msgs=[
                 f"We expect yaml str is for correct class ",
                 _msgs,

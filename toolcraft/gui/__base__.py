@@ -36,6 +36,7 @@ if False:
 
 
 T = t.TypeVar('T', bound='Widget')
+YamlReprT = t.TypeVar('YamlReprT', bound='YamlRepr')
 COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
@@ -1569,6 +1570,57 @@ class YamlDumper(yaml.Dumper):
         )
 
 
+class YamlLoader(yaml.UnsafeLoader):
+    """
+    todo: we need to make this inherit from yaml.SafeLoader
+    """
+
+    def __init__(self, stream, extra_kwargs):
+        """
+        Args:
+            stream:
+                the yaml text
+            extra_kwargs:
+                we use this extra_kwargs to do some updates to
+                loaded dict from yaml file
+        """
+        self.extra_kwargs = extra_kwargs
+        super().__init__(stream=stream)
+
+    @staticmethod
+    def load(cls, file_or_text: str, **kwargs) -> t.Union[dict, YamlReprT]:
+        # get text
+        _text = file_or_text
+        if not isinstance(file_or_text, str):
+            raise Exception(
+                "Only str is expected as value for kwarg `file_or_text`. ",
+                "Note that this is gui related Hashable and not `m.HashableClass` "
+                "which can work with yaml files on disk."
+            )
+
+        # load with Loader
+        _loader = YamlLoader(stream=_text, extra_kwargs=kwargs)
+        try:
+            _instance = _loader.get_single_data()
+        finally:
+            _loader.dispose()
+
+        # check
+        if _instance.__class__ != cls:
+            _msgs = {
+                "expected": cls,
+                "found": _instance.__class__,
+                "yaml_txt": _text,
+            }
+            raise Exception(
+                f"We expect yaml str is for correct class ",
+                str(_msgs),
+            )
+
+        # return
+        return _instance
+
+
 @dataclasses.dataclass
 class Hashable(abc.ABC):
 
@@ -1597,6 +1649,11 @@ class Hashable(abc.ABC):
                 "Override this method in case you are using "
                 "non-serializable fields.", str(_e)
             )
+
+    @classmethod
+    def from_yaml(cls, file_or_text: str, **kwargs) -> YamlReprT:
+        # return
+        return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
 
 @dataclasses.dataclass
