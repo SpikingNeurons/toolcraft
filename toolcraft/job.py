@@ -42,88 +42,6 @@ _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
 
 
-class ArtifactViewer:
-    """
-    Just add static methods to the subclasses ... and make sure that they have only one arg named `data`
-
-    Note that this class has no static methods
-
-    Then any artifact-file that is saved in artifacts folder and whose name matches one of static method of this
-    class is supported ...
-
-    Unknown file names will get a Text widget stating that it is `unknown artifact`
-
-    For supporting more artifacts simple extend this class and any static methods in child class will be registered
-
-    todo: this pattern seems good for register-plugins kind of things ... see if it can be added elsewhere
-    """
-
-    _fn_mapper = {}
-
-    def __init_subclass__(cls, **kwargs):
-        # validation
-        # todo: add validation to test if only static methods are defined the subclasses
-
-        # detect fn's and register
-        for _ in dir(cls):
-            if _.startswith("_"):
-                continue
-            if _ in ArtifactViewer._fn_mapper.keys():
-                raise e.code.CodingError(
-                    msgs=[f"You have already registered artifact-viewer for "
-                          f"key `{_}` with function "
-                          f"{ArtifactViewer._fn_mapper[_]}"]
-                )
-            ArtifactViewer._fn_mapper[_] = getattr(cls, _)
-
-    @staticmethod
-    def call(artifact: str, experiment: t.Optional["Experiment"], file_path: s.Path) -> "gui.widget.Widget":
-        from . import gui
-
-        # if file does not exist
-        if not file_path.exists():
-            return gui.widget.Text(
-                f"Cannot find artifact for {file_path.name!r} on the disk ...\n{file_path}"
-            )
-        # if directly supported then return
-        elif artifact in ArtifactViewer._fn_mapper.keys():
-            if experiment is None:
-                _fn = ArtifactViewer._fn_mapper[artifact]
-                if 'experiment' in inspect.signature(_fn).parameters.keys():
-                    raise e.code.CodingError(
-                        msgs=[f"Please do not define kwarg `experiment` in function {_fn} "
-                              f"as it not meant to be used with it ..."]
-                    )
-                return _fn(file_path=file_path)
-            else:
-                return ArtifactViewer._fn_mapper[artifact](experiment=experiment, file_path=file_path)
-        # if artifact has dot then we need to call extension methods
-        elif artifact.find(".") != -1:
-            artifact_m = "dot_" + artifact.split(".")[1]
-            if artifact_m in ArtifactViewer._fn_mapper.keys():
-                return ArtifactViewer._fn_mapper[artifact_m](experiment=experiment, file_path=file_path)
-            else:
-                return gui.widget.Text(f"View not provided for file extension {'*.'+artifact.split('.')[1]!r} \n"
-                                       f"... cannot render ... \n"
-                                       f"Please support method {artifact_m!r}")
-        else:
-            return gui.widget.Text(
-                f"View not provided for artifact {artifact!r} \n"
-                f"... cannot render ... \n"
-                f"Please support method {artifact!r}")
-
-    @staticmethod
-    def dot_png(experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
-        from . import gui
-        subprocess.Popen(["start", file_path.local_path.as_posix()], shell=True)
-        return gui.widget.Text(f"Image will be opened in external window\n{file_path}")
-
-    @staticmethod
-    def dot_txt(experiment: "Experiment", file_path: s.Path) -> "gui.widget.Widget":
-        from . import gui
-        return gui.widget.Text(file_path.read_text())
-
-
 class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     """
     todo: support ibm_lsf over ssh using https://www.fabfile.org
@@ -291,7 +209,7 @@ class TagManager:
                     _show_log = False
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
                 if _show_log:
-                    self.job.log_file.view()
+                    self.job.log_file.webbrowser_open_button(label="Show Log")
             if _launched:
                 gui.widget.Text(default_value=f"launched at: {_launched}")
             if _started:
@@ -454,7 +372,7 @@ class ArtifactManager:
     def available_artifacts(self) -> t.List[str]:
         return [_.name for _ in self.path.ls()]
 
-    def gui(self) -> "gui.form.ButtonBarForm":
+    def _gui(self) -> "gui.form.ButtonBarForm":
         # import
         from . import gui
 

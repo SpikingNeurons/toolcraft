@@ -43,6 +43,7 @@ import fsspec
 import os
 import toml
 import gcsfs
+import subprocess
 import io
 from fsspec.spec import AbstractBufferedFile
 
@@ -76,23 +77,12 @@ from .. import logger
 from .. import settings
 from .. import marshalling as m
 from .. import util
+from .. import gui
 
-# noinspection PyUnreachableCode
-if False:
-    from .. import gui
 
 _LOGGER = logger.get_logger()
 
 _FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, FileSystemConfig]
-
-
-def _open_path(_file: "Path"):
-    """
-    Just opens file in notepad
-    """
-    if _file.exists():
-        # noinspection PyTypeChecker
-        webbrowser.open(_file.local_path)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -498,11 +488,94 @@ class Path:
             fs_name=fs_name, suffix_path=""
         )
 
-    def view(self) -> "gui.widget.Widget":
-        from .. import gui
-        return gui.callback.CallFnCallback.get_button_widget(
-            label="Show Log", call_fn=_open_path, call_fn_kwargs=dict(_file=self),
+    def webbrowser_open_button(self, label: str) -> "gui.widget.Widget":
+        # NOTE: the returned widget of of `self.webbrowser_open` has no effect ...
+        return gui.callback.CallFnCallback().get_button_widget(
+            label=label, call_fn=self.webbrowser_open,
         )
+
+    def webbrowser_open(self) -> "gui.widget.Text":
+        if not self.exists():
+            return gui.widget.Text(f"Image does not exist in path \n - {self}")
+
+        # noinspection PyTypeChecker
+        webbrowser.open(self.local_path)
+        return gui.widget.Text(f"Image will be opened in external window\n - {self}")
+
+    def pb_open(self) -> "gui.widget.Widget":
+        """
+        todo: improve on this ... right now the tensorboard server runs and we need to kill process
+          also the .tb_log folder can hold graph only for the first clicked graph ... all three i.e.
+          train, validate and predict graphs cannot be shown at same time ... may be we need to write them in
+          same session with different names
+        Args:
+            experiment:
+            data:
+
+        Returns:
+
+        """
+        from tensorflow.core.framework import graph_pb2
+        from tensorflow.python.client import session
+        from tensorflow.python.framework import importer
+        from tensorflow.python.framework import ops
+        from tensorflow.python.platform import gfile
+        from tensorflow.python.summary import summary
+
+        if not self.exists():
+            return gui.widget.Text(f"graph *.pb file does not exist in path \n - {self}")
+
+        # todo: support somewhere ... Launches tensorboard in thread
+        # import threading
+        #
+        # def _launch_tensorboard(folder: pathlib.Path):
+        #     import os
+        #     import webbrowser
+        #
+        #     port = util.find_free_port()
+        #     os.system(
+        #         f'tensorboard '
+        #         f'--logdir={folder.resolve().as_posix()} '
+        #         f'--port={port} '
+        #     )
+        #
+        #     webbrowser.open_new(url=f"http://localhost:{port}/")
+        #
+        # _thread = threading.Thread(
+        #     target=_launch_tensorboard, args=([self.tb_path, ])
+        # )
+        # _thread.start()
+
+        # make tensorboard log dir
+        _tb_log = self.parent / ".tb_log"
+        if _tb_log.exists():
+            _tb_log.delete(recursive=True)
+
+        # write files
+        with session.Session(graph=ops.Graph()) as sess:
+            with gfile.GFile(self.local_path.as_posix(), "rb") as f:
+                graph_def = graph_pb2.GraphDef()
+                graph_def.ParseFromString(f.read())
+                importer.import_graph_def(graph_def)
+
+            pb_visual_writer = summary.FileWriter(_tb_log.local_path.as_posix())
+            pb_visual_writer.add_graph(sess.graph)
+
+        # run tensorboard
+        _free_port = util.find_free_port(localhost=True)
+        subprocess.Popen(
+            [
+                "tensorboard", f"--logdir={_tb_log.local_path.as_posix()}",
+                "--port", f"{_free_port}", "--host", "localhost"
+            ],
+            creationflags=subprocess.CREATE_NEW_CONSOLE,
+        )
+
+        # run web browser
+        webbrowser.open(f"http://localhost:{_free_port}/")
+
+        # return some text to display
+        return gui.widget.Text(f"Tensorflow graph will be opened in browser (port: {_free_port})...\n - {self}")
 
     def exists(self) -> bool:
         return self.fs.exists(path=self.full_path)

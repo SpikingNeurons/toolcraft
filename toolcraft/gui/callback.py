@@ -54,13 +54,12 @@ class SetThemeCallback(Callback):
 @dataclasses.dataclass
 class CallFnCallback(Callback):
 
-    @classmethod
     def get_button_widget(
-        cls, label: str, call_fn: t.Callable, call_fn_kwargs: t.Dict[str, t.Any] = None
+        self, label: str, call_fn: t.Callable, call_fn_kwargs: t.Dict[str, t.Any] = None
     ) -> widget.Button:
         return widget.Button(
             label=label,
-            callback=cls(),
+            callback=self,
             user_data={'call_fn': call_fn, 'call_fn_kwargs': call_fn_kwargs},
         )
 

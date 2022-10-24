@@ -20,23 +20,9 @@ class ButtonBarForm(Form):
         # call super
         super().init()
 
-        # make class for callback handling
-        @dataclasses.dataclass
-        class Callback(callback.Callback):
-            # noinspection PyMethodParameters
-            def fn(_self, sender: widget.Widget):
-                _key = sender.get_user_data()["key"]
-                self._receiver.clear()
-                with self._receiver:
-                    _fn, _fn_kwargs = self._mapper[_key]
-                    if _fn_kwargs is None:
-                        _fn()
-                    else:
-                        _fn(**_fn_kwargs)
-
         # make some vars
         self._mapper = dict()  # type: t.Dict[str, (t.Callable, t.Dict)]
-        self._callback = Callback()
+        self._callback = callback.CallFnCallback()
         with EscapeWithContext():
             self._button_bar = widget.Group(horizontal=True)
             self._receiver = widget.Group()
@@ -78,9 +64,17 @@ class ButtonBarForm(Form):
 
         # make button and add it to container
         with self._button_bar:
-            widget.Button(
-                label=gui_name, callback=self._callback, user_data={"key": key},
+            self._callback.get_button_widget(
+                label=gui_name, call_fn=self._call_fn, call_fn_kwargs=dict(_key=key),
             )
+
+    def _call_fn(self, _key: str):
+        self._receiver.clear()
+        with self._receiver:
+            _fn, _fn_kwargs = self._mapper[_key]
+            if _fn_kwargs is None:
+                _fn_kwargs = dict()
+            _fn(**_fn_kwargs)
 
 
 @dataclasses.dataclass

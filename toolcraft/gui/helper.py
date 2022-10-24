@@ -71,7 +71,13 @@ async def make_async_fn_runner(
             if _future.done():
                 _exp = _future.exception()
                 if _exp is None:
-                    receiver_grp(widget=_future.result())
+                    _result = _future.result()
+                    if not isinstance(_result, widget.Widget):
+                        raise Exception(
+                            f"Expecting {blocking_fn.__name__} to return {widget.Widget}, "
+                            f"but found type {type(_result)}"
+                        )
+                    receiver_grp(widget=_result)
                     break
                 else:
                     with receiver_grp:
