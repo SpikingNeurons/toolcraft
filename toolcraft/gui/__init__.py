@@ -40,7 +40,11 @@ else:
     # dpg cannot be used as this is server side code
     class UseMethodInForm:
         def __init__(
-            self, label_fmt: str = None, call_as_async: bool = False
+            self,
+            label_fmt: str = None,
+            run_async: bool = False,
+            allow_refresh: bool = None,
+            display_in_form: bool = True,
         ):
             ...
 

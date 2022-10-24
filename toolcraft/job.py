@@ -811,6 +811,10 @@ class Job:
             _ret.mkdir(create_parents=True)
         return _ret
 
+    @property
+    def log_file(self) -> s.Path:
+        return self.path / "toolcraft.log"
+
     def __init__(
         self,
         runner: "Runner",
@@ -883,7 +887,7 @@ class Job:
         # ------------------------------------------------------------------- 01
         # reconfig logger to change log file for job
         import logging
-        _log = self.path / "toolcraft.log"
+        _log = self.log_file
         logger.setup_logging(
             propagate=False,
             level=logging.NOTSET,
@@ -1727,6 +1731,11 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     def is_on_main_machine(self) -> bool:
+        """
+        This also means when the script was called on main threads without args i.e. job runs were not requested
+        Returns:
+
+        """
         return len(sys.argv) == 1
 
     @property
@@ -1853,11 +1862,12 @@ class Runner(m.HashableClass, abc.ABC):
             self.job(cluster_type)
 
     def view(self):
+
         # ---------------------------------------------------------------- 01
-        # if command line args exist then may be you requested job to from within UI on your local machine,
-        # so we run job locally
+        # That is do not call view when not on main machine
+        # i.e. when py-script was called without args
         if not self.is_on_main_machine:
-            return self.job(JobRunnerClusterType.local)
+            return
 
         # ---------------------------------------------------------------- 02
         # define dashboard
@@ -1911,14 +1921,14 @@ class Runner(m.HashableClass, abc.ABC):
                 fn_kwargs={"_j": _job}
             )
 
-        # ---------------------------------------------------------------- 04
+        # ---------------------------------------------------------------- 05
         # add experiments
         for _experiment in self.registered_experiments:
             _dashboard.experiment_view.add(
                 hashable=_experiment,
             )
 
-        # ---------------------------------------------------------------- 05
+        # ---------------------------------------------------------------- 06
         # run
         gui.Engine.run(_dashboard)
 

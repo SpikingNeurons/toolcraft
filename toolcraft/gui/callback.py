@@ -175,7 +175,7 @@ class HashableMethodRunnerCallback(Callback):
                     fn=helper.make_async_fn_runner,
                     fn_kwargs=dict(
                         receiver_grp=_new_widget,
-                        blocking_fn=util.rgetattr(_hashable, self.callable_name)
+                        blocking_fn=util.rgetattr(_hashable, self.callable_name),
                     )
                 ).add_to_task_queue()
             else:

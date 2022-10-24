@@ -24,6 +24,7 @@ async def make_async_fn_runner(
     _msg = f"Running fn {blocking_fn.__name__!r} in async {{cnt:03d}}\n"
     _blinker = itertools.cycle(["..", "....", "......"])
 
+    # launch task
     try:
 
         # schedule blocking task to run in queue
@@ -55,12 +56,15 @@ async def make_async_fn_runner(
 
             # if running
             if _future.running():
+
                 with receiver_grp:
                     _cnt += 1
                     widget.Text(
                         default_value=_msg.format(cnt=_cnt) + next(_blinker)
                     )
                 await asyncio.sleep(0.4)
+
+                # continue
                 continue
 
             # if done

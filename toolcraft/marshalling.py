@@ -1895,6 +1895,13 @@ class HashableClass(YamlRepr, abc.ABC):
         # call init logic
         self.init()
 
+    def __getstate__(self):
+        """
+        This helps pickling while used with AwaitableTask and BlockingTask
+        This is because the cached properties can have some non picklable things
+        """
+        return self.as_dict()
+
     def __str__(self) -> str:
         """
         We can have self.name to be returned here but will check later.

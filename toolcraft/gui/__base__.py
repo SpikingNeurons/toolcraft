@@ -1427,7 +1427,10 @@ class UseMethodInForm:
     """
 
     def __init__(
-        self, label_fmt: str = None, run_async: bool = False, allow_refresh: bool = None,
+        self,
+        label_fmt: str = None,
+        run_async: bool = False,
+        allow_refresh: bool = None,
         display_in_form: bool = True,
     ):
         """
