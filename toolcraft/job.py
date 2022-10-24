@@ -210,18 +210,18 @@ class TagManager:
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
                 if _show_log:
                     self.job.log_file.webbrowser_open_button(label="Show Log")
-            if _launched:
-                gui.widget.Text(default_value=f"launched at: {_launched}")
-            if _started:
-                gui.widget.Text(default_value=f"started at: {_started}")
-            if _running:
-                gui.widget.Text(default_value=f"running from: {_running}")
-            if _failed:
-                gui.widget.Text(default_value=f"failed at: {_failed}")
-            if _finished:
-                gui.widget.Text(default_value=f"finished at: {_finished}")
-            if _description:
-                gui.widget.Text(default_value=f"\n-- description --\n {_description}")
+            # if _launched:
+            #     gui.widget.Text(default_value=f"launched at: {_launched}")
+            # if _started:
+            #     gui.widget.Text(default_value=f"started at: {_started}")
+            # if _running:
+            #     gui.widget.Text(default_value=f"running from: {_running}")
+            # if _failed:
+            #     gui.widget.Text(default_value=f"failed at: {_failed}")
+            # if _finished:
+            #     gui.widget.Text(default_value=f"finished at: {_finished}")
+            # if _description:
+            #     gui.widget.Text(default_value=f"\n-- description --\n {_description}")
 
         # ----------------------------------------------------------------- 03
         # return
