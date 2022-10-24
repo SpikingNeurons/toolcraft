@@ -52,6 +52,33 @@ class SetThemeCallback(Callback):
 
 
 @dataclasses.dataclass
+class CallFnCallback(Callback):
+
+    @classmethod
+    def get_button_widget(
+        cls, label: str, call_fn: t.Callable, call_fn_kwargs: t.Dict[str, t.Any] = None
+    ) -> widget.Button:
+        return widget.Button(
+            label=label,
+            callback=cls(),
+            user_data={'call_fn': call_fn, 'call_fn_kwargs': call_fn_kwargs},
+        )
+
+    def fn(self, sender: widget.Widget):
+        try:
+            _call_fn = sender.get_user_data()['call_fn']
+            _call_fn_kwargs = sender.get_user_data()['call_fn_kwargs']
+            if _call_fn_kwargs is None:
+                _call_fn_kwargs = dict()
+            _call_fn(**_call_fn_kwargs)
+        except KeyError:
+            raise KeyError(
+                f"Was expecting you to supply dict item 'call_fn' or `call_fn_kwargs` in "
+                f"`user_data` of sender {sender.__class__}"
+            )
+
+
+@dataclasses.dataclass
 class CloseWidgetCallback(Callback):
     """
     This callback will be added to a Button that will delete the widget supplied
@@ -59,7 +86,7 @@ class CloseWidgetCallback(Callback):
 
     @classmethod
     def get_button_widget(
-        cls, widget_to_delete: widget.Widget, label="Close [X]",
+        cls, widget_to_delete: widget.Widget, label: str ="Close [X]",
     ) -> widget.Button:
         # return widget.ColorButton(
         #     default_value=EnColor.RED.value,

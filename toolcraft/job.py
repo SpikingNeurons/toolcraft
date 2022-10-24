@@ -274,6 +274,7 @@ class TagManager:
         _ret = gui.widget.Group(horizontal=False)
         with _ret:
             with gui.widget.Group(horizontal=True):
+                _show_log = True
                 gui.widget.Text(default_value=f"[[[ Job: {self.job.method.__name__} ]]]")
                 if _finished:
                     gui.widget.Text(default_value="--- FINISHED ---")
@@ -287,7 +288,10 @@ class TagManager:
                     else:
                         gui.widget.Text(default_value="--- LAUNCHED ---")
                 else:
+                    _show_log = False
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
+                if _show_log:
+                    self.job.log_file.view()
             if _launched:
                 gui.widget.Text(default_value=f"launched at: {_launched}")
             if _started:

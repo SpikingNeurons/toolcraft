@@ -37,7 +37,7 @@ import dataclasses
 import pathlib
 import pickle
 import typing as t
-
+import webbrowser
 import blosc2
 import fsspec
 import os
@@ -77,9 +77,22 @@ from .. import settings
 from .. import marshalling as m
 from .. import util
 
+# noinspection PyUnreachableCode
+if False:
+    from .. import gui
+
 _LOGGER = logger.get_logger()
 
 _FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, FileSystemConfig]
+
+
+def _open_path(_file: "Path"):
+    """
+    Just opens file in notepad
+    """
+    if _file.exists():
+        # noinspection PyTypeChecker
+        webbrowser.open(_file.local_path)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -483,6 +496,12 @@ class Path:
     def get_root(cls, fs_name: str) -> "Path":
         return Path(
             fs_name=fs_name, suffix_path=""
+        )
+
+    def view(self) -> "gui.widget.Widget":
+        from .. import gui
+        return gui.callback.CallFnCallback.get_button_widget(
+            label="Show Log", call_fn=_open_path, call_fn_kwargs=dict(_file=self),
         )
 
     def exists(self) -> bool:
