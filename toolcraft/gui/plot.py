@@ -174,6 +174,14 @@ class YAxis(_auto.PlotYAxis):
                 )
         super().__call__(widget=widget, before=None)
 
+    def clear(self):
+        # todo: with many points the dpg crashes and also things are slow ... so we just resort to clear
+        #   note that if any PlotSeries is tagged we will not be releasing it :( ...
+        #   check super code where we call delete() on each child .... that behaviour is now stopped ...
+        # todo: raise issue with dpg that why lot of PlotSeries items deleted with dpg_id causes crash
+        # this override will avoid deleting each PlotSeries one after other .... making this fast
+        self._children.clear()
+
     def get_limits(self) -> t.List[float]:
         """
         Refer:

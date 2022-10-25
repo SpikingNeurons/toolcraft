@@ -1119,7 +1119,8 @@ class Widget(_WidgetDpg, abc.ABC):
         except KeyError:
             ...
 
-        # delete the dpg UI counterpart
+        # delete the dpg UI counterpart .... skip line series
+        from .plot import LineSeries
         dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
         # todo: make _widget unusable ... figure out
 
