@@ -1342,8 +1342,14 @@ class YamlRepr(Tracker):
         if cls.__name__.startswith("__"):
             return str(cls)
 
+        # module name
+        # this is needed as with multiprocessing the main module gets extra __mp_
+        _module = cls.__module__
+        if _module in ['__main__', '__mp_main__']:
+            _module = "_main_"
+
         # return
-        return f"!{cls.__module__}:{cls.__name__}"
+        return f"!{_module}:{cls.__name__}"
 
     @classmethod
     def _yaml_representer(cls, dumper: YamlDumper,

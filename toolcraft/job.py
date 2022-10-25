@@ -792,7 +792,10 @@ class Job:
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         # check health
-        self.check_health()
+        _ret = self.check_health()
+        if _ret is not None:
+            _LOGGER.error(msg=_ret)
+            return
 
         # launch
         if self.is_on_main_machine:
@@ -1004,7 +1007,11 @@ class Job:
                 ]
             )
 
-    def check_health(self):
+    def check_health(self) -> t.Optional[str]:
+        """
+        If str is returned then skip calling job and print error message ...
+        If none is returned then we need to call job
+        """
         # ------------------------------------------------------------- 01
         # some vars
         _job_info = {"name": self.name, "py-script": self.runner.py_script, "path": self.path.full_path}
@@ -1026,26 +1033,8 @@ class Job:
                         _job_info,
                     ]
                 )
+
         # ------------------------------------------------------------- 03
-        # raise error if already called (i.e. finished or failed)
-        if _finished:
-            raise e.code.CodingError(
-                msgs=[
-                    "The job was already finished ... ",
-                    "Please refrain from calling again or test with property `is_finished` before calling",
-                    _job_info,
-                    {"finished msg": _finished},
-                ]
-            )
-        if _failed:
-            raise e.code.CodingError(
-                msgs=[
-                    "The job was already failed ... please delete run files manually to run it again ...",
-                    _job_info,
-                    {"failed msg": _failed},
-                ]
-            )
-        # ------------------------------------------------------------- 04
         # if _running is present then _started should be present
         if _running:
             if not _started:
@@ -1065,6 +1054,15 @@ class Job:
                     ]
                 )
 
+        # ------------------------------------------------------------- 04
+        # return str (i.e. finished or failed or running) so that job is not called
+        if _finished:
+            return "The job was already finished ..."
+        if _failed:
+            return "The job was already failed ... please delete run files manually to run it again ..."
+        if _running:
+            return "There is already a job running on worker .... please kill job and delete files to run it again ..."
+
         # ------------------------------------------------------------- 05
         if self.is_on_main_machine:
             if _launched or _started or _running:
@@ -1078,6 +1076,7 @@ class Job:
                         },
                     ]
                 )
+            return None
         else:
             if not _launched:
                 raise e.code.CodingError(
@@ -1098,6 +1097,7 @@ class Job:
                         },
                     ]
                 )
+            return None
 
     def view(self) -> "gui.widget.Widget":
         return self.tag_manager.view()
@@ -1382,17 +1382,6 @@ class Flow:
             _all_jobs += _stage.all_jobs
 
         # --------------------------------------------------------- 02
-        # check health of all jobs
-        with richy.StatusPanel(
-            title="Running the flow for runner ...",
-            sub_title=self.runner, tc_log=_LOGGER,
-        ) as _rp:
-            _rp.update("Checking health of all jobs ...")
-            _job: Job
-            for _job in _rp.track(sequence=_all_jobs, task_name="check health"):
-                _job.check_health()
-
-        # --------------------------------------------------------- 03
         # call jobs ...
         if cluster_type is JobRunnerClusterType.local:
             # tracker containers
