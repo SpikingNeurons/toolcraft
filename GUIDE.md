@@ -101,6 +101,14 @@ Then ...
   + MDX components
   + multi-platform doc i.e. for mobile, desktop etc ...
 
+### Unittests
+
+#### hypothesis
+Maybe look hypothesis .... it is modern ...
+The author has added feature add_node in python 3.11 for exceptions
+Also look it has specialized numpy pandas and pyarrow api
+https://hypothesis.readthedocs.io/en/latest/numpy.html#array-api
+
 ### Documentations
 
 #### Docusauraus
