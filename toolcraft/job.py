@@ -669,11 +669,18 @@ class Job:
         + fn_kwargs if present
         + experiment hex_hash if present
         """
+        _value_to_set = value + f"|{self.path.suffix_path.replace('/', '|')}"
         if self._flow_id is None:
-            self._flow_id = value + f"|{self.path.suffix_path.replace('/', '|')}"
+            self._flow_id = _value_to_set
         else:
             raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
+                msgs=[
+                    f"This property is already set ...",
+                    {
+                        "current value    - ": self._flow_id,
+                        "want to set with - ": _value_to_set
+                    }
+                ]
             )
 
     @property
@@ -1212,7 +1219,13 @@ class JobGroup(abc.ABC):
                     )
         else:
             raise e.code.CodingError(
-                msgs=[f"This property is already set you cannot set it again ..."]
+                msgs=[
+                    f"This property is already set ...",
+                    {
+                        "current value    - ": self._flow_id,
+                        "want to set with - ": value
+                    }
+                ]
             )
 
     @property
@@ -1368,6 +1381,9 @@ class Flow:
         _len = len(str(len(self.stages)))
         for _stage_id, _stage in enumerate(self.stages):
             _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
+            if _stage_id > 0:
+                for _ in _stage.all_jobs:
+                    _.wait_on(self.stages[_stage_id-1])
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
