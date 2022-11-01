@@ -160,6 +160,7 @@ class IsSliceOrListWithin(_CustomException):
     ):
         _raise = False
         if isinstance(value, slice):
+            value = slice(*value.indices(max_value))
             if value.start < 0:
                 msgs += [
                     f"Please do not provide negative `start`, "
