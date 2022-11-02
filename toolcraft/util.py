@@ -1243,6 +1243,13 @@ def npy_load(file: "s.Path", memmap: bool = False) -> np.ndarray:
 
 
 def npy_array_save(file: "s.Path", npy_array: np.ndarray):
+
+    # if file exists raise error
+    if file.exists():
+        raise e.code.CodingError(
+            msgs=[f"The file {file} was already crated"]
+        )
+
     # only supported type is np.ndarray
     e.validation.ShouldBeInstanceOf(
         value=npy_array,
@@ -1270,7 +1277,7 @@ def npy_array_save(file: "s.Path", npy_array: np.ndarray):
 
 def npy_record_save(
     file: "s.Path", npy_record_dict: t.Dict[str, np.ndarray]
-):
+) -> np.ndarray:
     """
     todo: migrate to `np.core.records.fromarrays` if needed
      ... maybe do not do this as we get more elaborate errors in our
@@ -1280,6 +1287,10 @@ def npy_record_save(
     """
     # ---------------------------------------------------------------01
     # do some validations
+    if file.exists():
+        raise e.code.CodingError(
+            msgs=[f"The file {file} was already crated"]
+        )
     e.validation.ShouldBeInstanceOf(
         value=npy_record_dict, value_types=(dict,),
         msgs=[
@@ -1353,6 +1364,10 @@ def npy_record_save(
     with file.open(mode='wb') as f:
         np.save(f, npy_record, allow_pickle=False, fix_imports=False)
         f.close()
+
+    # ---------------------------------------------------------------05
+    # since we created record we can return if you want to use
+    return npy_record
 
 
 class HookUp:

@@ -916,15 +916,15 @@ class FileGroup(StorageHashable, abc.ABC):
             _created_file = _expected_file if _expected_file.exists() else \
                 self.create_file(file_key=k)
 
-            # if check if created and expected file is same
+            # check if created and expected file is same
+            if not isinstance(_created_file, Path):
+                raise e.code.CodingError(
+                    msgs=[
+                        f"You are supported to return instance of {Path} ... "
+                        f"instead found {type(_created_file)}"
+                    ]
+                )
             if _expected_file != _created_file:
-                if not isinstance(_created_file, Path):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"You are supported to return instance of {Path} ... "
-                            f"instead found {type(_created_file)}"
-                        ]
-                    )
                 raise e.code.CodingError(
                     msgs=[
                         f"The {self.__class__}.create() returns file path "
@@ -935,6 +935,11 @@ class FileGroup(StorageHashable, abc.ABC):
                         },
                     ]
                 )
+            # note we do not check if exists as sometimes some files are created in post runner
+            # if not _created_file.exists():
+            #     raise e.code.CodingError(
+            #         msgs=["The create_file returned successfully ... but file was not created ..."]
+            #     )
 
             # append
             _ret.append(_expected_file)
