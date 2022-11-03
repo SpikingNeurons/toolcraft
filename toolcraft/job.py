@@ -649,7 +649,7 @@ class Job:
 
     @property
     def is_failed(self) -> bool:
-        return self.tag_manager.finished.exists()
+        return self.tag_manager.failed.exists()
 
     @property
     def flow_id(self) -> str:
