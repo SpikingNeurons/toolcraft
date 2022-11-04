@@ -488,8 +488,21 @@ class Path:
             fs_name=fs_name, suffix_path=""
         )
 
+    def delete_folder_button(self, label: str) -> "gui.widget.Widget":
+        """
+        todo: Add `window.PopUp` UI later
+        """
+        if not self.isdir():
+            raise e.code.CodingError(
+                msgs=[f"There is no dir so cannot create the delete folder button, check path {self}"]
+            )
+        # NOTE: the returned widget of `self.webbrowser_open` has no effect ...
+        return gui.callback.CallFnCallback().get_button_widget(
+            label=label, call_fn=self.full_force_delete,
+        )
+
     def webbrowser_open_button(self, label: str) -> "gui.widget.Widget":
-        # NOTE: the returned widget of of `self.webbrowser_open` has no effect ...
+        # NOTE: the returned widget of `self.webbrowser_open` has no effect ...
         return gui.callback.CallFnCallback().get_button_widget(
             label=label, call_fn=self.webbrowser_open,
         )
@@ -591,6 +604,9 @@ class Path:
 
     def touch(self, truncate: bool = True):
         return self.fs.touch(path=self.full_path, truncate=truncate)
+
+    def full_force_delete(self):
+        return self.delete(recursive=True)
 
     def delete(self, recursive: bool = False, maxdepth: int = None):
         return self.fs.delete(

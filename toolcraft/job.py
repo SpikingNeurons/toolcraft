@@ -198,6 +198,7 @@ class TagManager:
                     gui.widget.Text(default_value="--- FINISHED ---")
                 elif _failed:
                     gui.widget.Text(default_value="XXX  FAILED  XXX")
+                    self.job.path.delete_folder_button(label="Delete")
                 elif _launched:
                     if _running:
                         gui.widget.Text(default_value="--- RUNNING  ---")
