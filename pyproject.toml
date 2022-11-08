@@ -76,6 +76,7 @@ rich = "^12.6.0"
 paramiko = "^2.11.0"
 #toml = "^0.10.2"
 blosc2 = "^0.5.1"
+typer = {extras = ["all"], version = "^0.7.0"}
 
 
 [tool.poetry.group.test]

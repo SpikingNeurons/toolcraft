@@ -1558,6 +1558,19 @@ class Monitor:
             )
 
 
+class RunnerType(str, enum.Enum):
+    """
+    submit - submits the jobs in runner
+    run - runs the job in runner
+    view - views the job in runner
+    clean - cleans the job in runner
+    """
+    submit = "submit"
+    run = "run"
+    view = "view"
+    clean = "clean"
+
+
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=[
