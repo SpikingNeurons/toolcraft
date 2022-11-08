@@ -1558,17 +1558,28 @@ class Monitor:
             )
 
 
-class RunnerType(str, enum.Enum):
+class RunnerMode(str, enum.Enum):
     """
     submit - submits the jobs in runner
     run - runs the job in runner
     view - views the job in runner
-    clean - cleans the job in runner
+    clean - cleans the job in runner that are not finished (use carefully)
     """
     submit = "submit"
     run = "run"
     view = "view"
     clean = "clean"
+
+    @classmethod
+    def get_mode(cls) -> "RunnerMode":
+        if len(sys.argv) < 2:
+            raise e.code.CodingError(
+                msgs=[""]
+            )
+        _argv = sys.argv[1]
+
+    def execute(self, runner: "Runner"):
+        ...
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1577,7 +1588,7 @@ class RunnerType(str, enum.Enum):
         'cwd', 'job', 'flow', 'monitor', 'registered_experiments',
         'associated_jobs', 'methods_to_be_used_in_jobs',
     ],
-    things_not_to_be_overridden=['cwd', 'job', 'monitor', 'methods_to_be_used_in_jobs'],
+    things_not_to_be_overridden=['cwd', 'job', 'mode', 'py_script', 'monitor', 'methods_to_be_used_in_jobs'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1622,10 +1633,15 @@ class Runner(m.HashableClass, abc.ABC):
 
     todo: add models support (in folder `self.storage_dir/models`)
     """
+    cluster_type: JobRunnerClusterType
 
     @property
     def py_script(self) -> str:
         return pathlib.Path(sys.argv[0]).name
+
+    @property
+    def mode(self) -> RunnerMode:
+        return RunnerMode[sys.argv[1]]
 
     @property
     @util.CacheResult
@@ -1795,6 +1811,10 @@ class Runner(m.HashableClass, abc.ABC):
         # ------------------------------------------------------- 03
         # return
         return _ret
+
+    # noinspection PyMethodOverriding
+    def __call__(self):
+        ...
 
     def run(self, cluster_type: JobRunnerClusterType):
         if self.is_on_main_machine:
