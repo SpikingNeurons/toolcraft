@@ -42,7 +42,6 @@ from .file_system import Path
 # noinspection PyUnreachableCode
 if False:
     from . import folder
-    import tensorflow as tf
 
 
 T = t.TypeVar('T', bound='FileGroup')

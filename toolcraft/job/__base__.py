@@ -15,15 +15,16 @@ import sys
 import asyncio
 import hashlib
 import types
-_now = datetime.datetime.now
 
-from . import logger
-from . import error as e
-from . import marshalling as m
-from . import util
-from . import storage as s
-from . import richy
-from .gui import UseMethodInForm
+from .. import logger
+from .. import error as e
+from .. import marshalling as m
+from .. import util
+from .. import storage as s
+from .. import richy
+from ..gui import UseMethodInForm
+
+_now = datetime.datetime.now
 
 try:
     import tensorflow as tf
@@ -35,7 +36,7 @@ except ImportError:
 
 # noinspection PyUnreachableCode
 if False:
-    from . import gui
+    from .. import gui
 
 
 _LOGGER = logger.get_logger()
@@ -188,7 +189,7 @@ class TagManager:
 
         # ----------------------------------------------------------------- 02
         # make gui
-        from . import gui
+        from .. import gui
         _ret = gui.widget.Group(horizontal=False)
         with _ret:
             with gui.widget.Group(horizontal=True):
@@ -269,7 +270,7 @@ class JobViewer(m.HashableClass):
     @m.UseMethodInForm(label_fmt="button_label")
     def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
         # import
-        from . import gui
+        from .. import gui
 
         # if finished return
         _job = self.job
@@ -294,7 +295,7 @@ class JobViewer(m.HashableClass):
 
     @m.UseMethodInForm(label_fmt="button_label")
     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
-        from . import gui
+        from .. import gui
 
         _ret = gui.form.HashableMethodsRunnerForm(
             title=self.button_label.split("\n")[0] + f" : {self.method_name}",
@@ -323,7 +324,7 @@ class JobViewer(m.HashableClass):
         We override as we are interested in field `experiment` and not `self` ...
         """
         # import
-        from . import gui
+        from .. import gui
         # make
         _experiment = self.experiment
         _text = f"job-id: {self.job.job_id}\n" \
@@ -338,16 +339,8 @@ class JobViewer(m.HashableClass):
         return _ret_widget
 
     @m.UseMethodInForm(label_fmt="tags")
-    def tags_gui(self) -> "gui.widget.Text":
-        return self.job.tag_manager.gui()
-
-    @m.UseMethodInForm(label_fmt="artifacts")
-    def artifacts_gui(self) -> "gui.form.ButtonBarForm":
-        return self.job.artifact_manager.gui()
-
-    @m.UseMethodInForm(label_fmt="run")
-    def run_gui(self) -> "gui.widget.Group":
-        return self.job.sub_process_manager.gui()
+    def tags_gui(self) -> "gui.widget.Widget":
+        return self.job.tag_manager.view()
 
 
 @dataclasses.dataclass
@@ -373,47 +366,6 @@ class ArtifactManager:
     def available_artifacts(self) -> t.List[str]:
         return [_.name for _ in self.path.ls()]
 
-    def _gui(self) -> "gui.form.ButtonBarForm":
-        # import
-        from . import gui
-
-        # class for ButtonBarForm that supports loading artifacts
-        @dataclasses.dataclass
-        class ButtonBarForm(gui.form.ButtonBarForm):
-
-            def init(self_1):
-                # call super
-                super().init()
-
-                # use a different callback
-                # make class for callback handling
-                @dataclasses.dataclass
-                class Callback(gui.callback.Callback):
-                    # noinspection PyMethodParameters
-                    def fn(self_2, sender: gui.widget.Widget):
-                        _key = sender.get_user_data()["key"]
-
-                        # the file on disk
-                        _file = self.path / _key
-
-                        # add ui
-                        self_1._receiver.clear()
-                        _w = ArtifactViewer.call(
-                                artifact=_key, experiment=self.job.experiment, file_path=_file)
-                        self_1._receiver(_w)
-
-                # set the var
-                self_1._callback = Callback()
-
-        _form = ButtonBarForm(title=None, collapsing_header_open=False)
-
-        for _ in self.available_artifacts():
-            # todo: see if specialization can be done when fn is None ...
-            #   i.e. use different callback in parent class gui.form.ButtonBarForm instead of overriding here
-            _form.register(key=_, fn=None)
-
-        return _form
-
 
 @dataclasses.dataclass
 class SubProcessManager:
@@ -437,7 +389,7 @@ class SubProcessManager:
         Note we cache and also queue this task on first call as we do not want to get this task
         launched multiple times
         """
-        from . import gui
+        from .. import gui
         _bt = gui.BlockingTask(
             fn=self.blocking_fn,
             # todo: making this false raises pickling error as the blocking task is run in different thread
@@ -448,7 +400,7 @@ class SubProcessManager:
         return _bt
 
     async def awaitable_fn(self, receiver_grp: "gui.widget.Group"):
-        from .gui.widget import Text
+        from ..gui.widget import Text
         _blinker = itertools.cycle(["..", "....", "......"])
 
         try:
@@ -558,7 +510,7 @@ class SubProcessManager:
 
     def gui(self) -> "gui.widget.Group":
         # import
-        from . import gui
+        from .. import gui
 
         # test that the there is no residual job running failed started or completed
         # todo: only is_started check should suffice ...
@@ -987,25 +939,21 @@ class Job:
     def from_cli(
         cls,
         runner: "Runner",
-    ) -> "Job":
+    ) -> t.Optional["Job"]:
         # test if running on machines that execute jobs ...
-        if runner.is_on_main_machine:
-            raise e.code.CodingError(
-                msgs=[
-                    "This call is available only for jobs submitted to worker ... "
-                    "it cannot be accessed by client which launches jobs ..."
-                ]
-            )
+        if len(sys.argv) == 2:
+            # i.e. you are calling view, submit or clean
+            return None
 
         # fetch method
-        _method_name = sys.argv[1]
+        _method_name = sys.argv[2]
         _method = getattr(runner, _method_name)
 
         # fetch experiment
-        if len(sys.argv) == 2:
+        if len(sys.argv) == 3:
             return runner.associated_jobs[_method]
-        elif len(sys.argv) == 3:
-            _experiment = runner.monitor.get_experiment_from_hex_hash(hex_hash=sys.argv[2])
+        elif len(sys.argv) == 4:
+            _experiment = runner.monitor.get_experiment_from_hex_hash(hex_hash=sys.argv[3])
             return _experiment.associated_jobs[_method]
         else:
             raise e.code.CodingError(
@@ -1371,7 +1319,7 @@ class Flow:
 
     def __init__(
         self,
-        stages: t.List[ParallelJobGroup],
+        stages: t.Dict[str, ParallelJobGroup],
         runner: "Runner",
     ):
         # save reference
@@ -1379,12 +1327,13 @@ class Flow:
         self.runner = runner
 
         # set flow ids
-        _len = len(str(len(self.stages)))
-        for _stage_id, _stage in enumerate(self.stages):
-            _stage.flow_id = f"#[{_stage_id:0{_len}d}]"
-            if _stage_id > 0:
+        _previous_stage_id = None
+        for _stage_id, _stage in self.stages.items():
+            _stage.flow_id = f"#[{_stage_id}]"
+            if _previous_stage_id is not None:
                 for _ in _stage.all_jobs:
-                    _.wait_on(self.stages[_stage_id-1])
+                    _.wait_on(self.stages[_previous_stage_id])
+            _previous_stage_id = _stage_id
 
     def __call__(self, cluster_type: JobRunnerClusterType):
         """
@@ -1393,7 +1342,8 @@ class Flow:
           This will also help to have gui in dearpygui
         """
         # --------------------------------------------------------- 01
-        # gather all jobs
+        # get some vars
+        _rp = self.runner.richy_panel
         _all_jobs = []
         for _stage in self.stages:
             _all_jobs += _stage.all_jobs
@@ -1487,7 +1437,7 @@ class Flow:
         return _ret
 
     def status_text(self) -> "gui.widget.Text":
-        from . import gui
+        from .. import gui
         _lines = []
         for _stage, _value in self.status().items():
             _stage_msg = ""
@@ -1558,37 +1508,13 @@ class Monitor:
             )
 
 
-class RunnerMode(str, enum.Enum):
-    """
-    submit - submits the jobs in runner
-    run - runs the job in runner
-    view - views the job in runner
-    clean - cleans the job in runner that are not finished (use carefully)
-    """
-    submit = "submit"
-    run = "run"
-    view = "view"
-    clean = "clean"
-
-    @classmethod
-    def get_mode(cls) -> "RunnerMode":
-        if len(sys.argv) < 2:
-            raise e.code.CodingError(
-                msgs=[""]
-            )
-        _argv = sys.argv[1]
-
-    def execute(self, runner: "Runner"):
-        ...
-
-
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=[
         'cwd', 'job', 'flow', 'monitor', 'registered_experiments',
         'associated_jobs', 'methods_to_be_used_in_jobs',
     ],
-    things_not_to_be_overridden=['cwd', 'job', 'mode', 'py_script', 'monitor', 'methods_to_be_used_in_jobs'],
+    things_not_to_be_overridden=['cwd', 'job', 'py_script', 'monitor', 'methods_to_be_used_in_jobs'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1633,15 +1559,10 @@ class Runner(m.HashableClass, abc.ABC):
 
     todo: add models support (in folder `self.storage_dir/models`)
     """
-    cluster_type: JobRunnerClusterType
 
     @property
     def py_script(self) -> str:
         return pathlib.Path(sys.argv[0]).name
-
-    @property
-    def mode(self) -> RunnerMode:
-        return RunnerMode[sys.argv[1]]
 
     @property
     @util.CacheResult
@@ -1687,15 +1608,6 @@ class Runner(m.HashableClass, abc.ABC):
         ...
 
     @property
-    def is_on_main_machine(self) -> bool:
-        """
-        This also means when the script was called on main threads without args i.e. job runs were not requested
-        Returns:
-
-        """
-        return len(sys.argv) == 1
-
-    @property
     @util.CacheResult
     def job(self) -> Job:
         return Job.from_cli(runner=self)
@@ -1711,6 +1623,16 @@ class Runner(m.HashableClass, abc.ABC):
 
         # call this property to test class methods
         _ = self.methods_to_be_used_in_jobs()
+
+        # make sure that enough arguments are present
+        if len(sys.argv) not in [2, 3, 4]:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"Inappropriate number of arguments specified on cli.",
+                    f"Can be 2, 3 or 4 but found {len(sys.argv)}.",
+                    sys.argv
+                ]
+            )
 
     def init(self):
         # call super
@@ -1732,6 +1654,9 @@ class Runner(m.HashableClass, abc.ABC):
             ],
         )
 
+        # call property flow .... so that some experiments dynamically added to flow are available to Runner
+        _ = self.flow
+
     @util.CacheResult
     def methods_to_be_used_in_jobs(self) -> t.Dict[str, t.List[types.MethodType]]:
         # ------------------------------------------------------- 01
@@ -1739,7 +1664,7 @@ class Runner(m.HashableClass, abc.ABC):
         _ret = {'runner': [], 'experiment': []}
         # methods to skip
         _methods_to_skip = [
-            self.run, self.view, self.methods_to_be_used_in_jobs
+            self.run, self.methods_to_be_used_in_jobs
         ]
         # attrs to ignore that come from parent class
         _hashable_class_attrs = dir(m.HashableClass)
@@ -1812,86 +1737,21 @@ class Runner(m.HashableClass, abc.ABC):
         # return
         return _ret
 
-    # noinspection PyMethodOverriding
-    def __call__(self):
-        ...
-
     def run(self, cluster_type: JobRunnerClusterType):
-        if self.is_on_main_machine:
-            self.flow(cluster_type)
-        else:
-            self.job(cluster_type)
-
-    def view(self):
-
-        # ---------------------------------------------------------------- 01
-        # That is do not call view when not on main machine
-        # i.e. when py-script was called without args
-        if not self.is_on_main_machine:
-            return
-
-        # ---------------------------------------------------------------- 02
-        # define dashboard
-        from . import gui
-
-        @dataclasses.dataclass
-        class ShowFlowStatusCallback(gui.callback.Callback):
-
-            def fn(_self, sender: gui.widget.Widget):
-                _window = gui.window.Window(
-                    label="Job Flow Status", width=600, height=700, pos=(250, 250),
-                )
-                with _window:
-                    self.flow.status_text()
-                _dashboard.add_window(window=_window)
-
-        @dataclasses.dataclass
-        class RunnerDashboard(gui.dashboard.BasicDashboard):
-            theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
-            title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {self.py_script}")
-            job_status: gui.widget.Button = gui.widget.Button(
-                label=">>> Show Job Flow Status <<<", callback=ShowFlowStatusCallback(),
-            )
-            hr1: gui.widget.Separator = gui.widget.Separator()
-            hr2: gui.widget.Separator = gui.widget.Separator()
-            runner_jobs_view: gui.form.ButtonBarForm = gui.form.ButtonBarForm(
-                title="Runner Jobs ...",
-                collapsing_header_open=True,
-            )
-            hr3: gui.widget.Separator = gui.widget.Separator()
-            hr4: gui.widget.Separator = gui.widget.Separator()
-            experiment_view: gui.form.DoubleSplitForm = gui.form.DoubleSplitForm(
-                title="Experiments ...",
-                callable_name="view",
-                allow_refresh=False,
-                collapsing_header_open=True,
-            )
-
-        # ---------------------------------------------------------------- 03
-        # make dashboard
-        _dashboard = RunnerDashboard(title="Runner Dashboard")
-
-        # ---------------------------------------------------------------- 04
-        # register jobs for runner
-        def _j_view(_j: Job) -> gui.widget.Widget:
-            return _j.view()
-        for _method, _job in self.associated_jobs.items():
-            _dashboard.runner_jobs_view.register(
-                key=_method.__name__, gui_name=_method.__name__,
-                fn=_j_view,
-                fn_kwargs={"_j": _job}
-            )
-
-        # ---------------------------------------------------------------- 05
-        # add experiments
-        for _experiment in self.registered_experiments:
-            _dashboard.experiment_view.add(
-                hashable=_experiment,
-            )
-
-        # ---------------------------------------------------------------- 06
-        # run
-        gui.Engine.run(_dashboard)
+        from . import cli
+        _job = self.job
+        _job_msgs = []
+        if _job is not None:
+            _job_msgs += _job.flow_id
+            _job_msgs += _job.job_id
+        with richy.StatusPanel(
+            title=f"Running for py_script: {self.py_script!r}", tc_log=_LOGGER,
+            sub_title=[
+                f"command: {sys.argv[1]}", *_job_msgs
+            ]
+        ) as _rp:
+            with self(richy_panel=_rp):
+                cli.get_app(runner=self, cluster_type=cluster_type)()
 
     def setup(self):
         _exps = self.registered_experiments
@@ -1962,7 +1822,7 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @UseMethodInForm(label_fmt="Job's")
     def associated_jobs_view(self) -> "gui.widget.Group":
-        from . import gui
+        from .. import gui
         _ret = gui.widget.Group()
         with _ret:
             _jobs = self.associated_jobs
@@ -1976,7 +1836,7 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @UseMethodInForm(label_fmt="view_gui_label")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
-        from . import gui
+        from .. import gui
         return gui.form.HashableMethodsRunnerForm(
             title=self.view_gui_label.split("\n")[0],
             group_tag="simple",

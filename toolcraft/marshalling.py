@@ -614,11 +614,11 @@ class RuleChecker:
                         ]
                     ).raise_if_failed()
             else:
-                # empty list was supplied that means you dont want to use any fields
+                # empty list was supplied that means you don't want to use any fields
                 if bool(_annotated_attr_keys):
                     raise e.code.CodingError(
                         msgs=[
-                            f"Please do not specify ant dataclass fields for class "
+                            f"Please do not specify any dataclass fields for class "
                             f"{_hashable_cls}",
                             f"We found below fields defined",
                             _annotated_attr_keys,
