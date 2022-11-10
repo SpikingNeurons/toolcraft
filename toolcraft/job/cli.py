@@ -2,6 +2,7 @@ import enum
 import typer
 import sys
 import dataclasses
+import typing as t
 
 from .. import error as e
 from .__base__ import Runner, Job, JobRunnerClusterType
@@ -35,19 +36,27 @@ def get_app(runner: Runner, cluster_type: JobRunnerClusterType):
 
 
 @_APP.command()
-def submit():
+def launch():
     """
-    Submits all the jobs in runner.
+    Launches all the jobs in runner.
     """
-    ...
+    _rp = _RUNNER.richy_panel
+    _rp.update(f"launching jobs on {_CLUSTER_TYPE.name!r}")
+    _RUNNER.flow(_CLUSTER_TYPE)
 
 
 @_APP.command()
-def run():
+def run(
+    method: str = typer.Argument(..., help="Method to execute in runner."),
+    experiment: t.Optional[str] = typer.Argument(None, help="Experiment which will be used by method in runner.")
+):
     """
     Run a job in runner.
     """
-    ...
+    _rp = _RUNNER.richy_panel
+    # note that this will consume cli args method and experiment to find respective job
+    # check the code for property `_RUNNER.job`
+    _job = _RUNNER.job
 
 
 @_APP.command()
@@ -144,6 +153,8 @@ def clean():
     _rp = _RUNNER.richy_panel
     for _stage_name, _stage in _rp.track(_RUNNER.flow.stages.items(), task_name="Scanning stages"):
         _rp.update(f"Scanning stage {_stage_name} ...")
+        _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             if not _j.is_finished:
                 _rp.update(f"Deleting job {_j.flow_id}")
+                _j.path.delete(recursive=True)

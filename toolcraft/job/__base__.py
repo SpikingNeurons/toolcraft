@@ -641,10 +641,6 @@ class Job:
         return f"x{hashlib.sha256(self.flow_id.encode('utf-8')).hexdigest()[:16]}"
 
     @property
-    def is_on_main_machine(self) -> bool:
-        return self.runner.is_on_main_machine
-
-    @property
     @util.CacheResult
     def tf_chkpts_path(self) -> s.Path:
         _ret = self.path / "tf_chkpts"
@@ -750,7 +746,7 @@ class Job:
                 ]
             ).raise_if_failed()
 
-    def __call__(self, cluster_type: JobRunnerClusterType):
+    def __call__(self, cluster_type: JobRunnerClusterType, from_flow: bool):
         # check health
         _ret = self.check_health()
         if _ret is not None:
@@ -902,6 +898,9 @@ class Job:
         #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
         # ------------------------------------------------------------- 03.01
         if cluster_type is JobRunnerClusterType.local:
+            # subprocess.run(["start", "/wait", "cmd", "/c", "python", "-c",
+            #                 "import time; print('start ...'); time.sleep(5); print('done ...'); time.sleep(2)"],
+            #                shell=True)
             subprocess.run(_command)
         # ------------------------------------------------------------- 03.02
         elif cluster_type is JobRunnerClusterType.ibm_lsf:
@@ -1344,53 +1343,59 @@ class Flow:
         # --------------------------------------------------------- 01
         # get some vars
         _rp = self.runner.richy_panel
-        _all_jobs = []
-        for _stage in self.stages:
-            _all_jobs += _stage.all_jobs
 
         # --------------------------------------------------------- 02
         # call jobs ...
+        # --------------------------------------------------------- 02.01
+        # for local
         if cluster_type is JobRunnerClusterType.local:
+
             # tracker containers
             _completed_jobs = []
 
-            # loop over all jobs in flow
-            for _j in _all_jobs:
-                # extract wait on jobs that need to finished before calling _j
-                _wait_jobs = []
-                for _wo in _j._wait_on:
-                    if isinstance(_wo, Job):
-                        _wait_jobs += [_wo]
-                    else:
-                        _wait_jobs += _wo.bottom_jobs
-                for _wj in _wait_jobs:
-                    if _wj not in _completed_jobs:
-                        raise e.code.CodingError(
-                            msgs=[
-                                "When not on server we expect that property `all_jobs` should resolve in such "
-                                "a way that all `wait_on` jobs must be already done ..",
-                                f"Check {_wj.flow_id} which should be completed by now ..."
-                            ]
-                        )
+            # loop over stages
+            for _stage_key, _stage in self.stages.items():
+                _rp.update(f"launching jobs for stage: {_stage_key}...")
 
-                # call _j
-                _j(cluster_type)
-
-                # append to list as job is completed
-                _completed_jobs.append(_j)
-
-        elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            _rp = richy.StatusPanel(
-                title=f"Launch stages on `{cluster_type.name}` for runner",
-                sub_title=self.runner, tc_log=_LOGGER,
-                stages=self.stages
-            )
-            for _stage in _rp:
-                _rp.update(f"launching jobs for stage: {_stage}...")
+                # loop over jobs in current _stage
                 _jobs = _stage.all_jobs
-                _job: t.Union[Job, ParallelJobGroup]
                 for _job in _rp.track(
-                    sequence=_jobs, task_name=f"stage {_stage}"
+                    sequence=_jobs, task_name=f"stage {_stage_key}"
+                ):
+                    # get wait on jobs that are needed to be completed before executing _job
+                    _wait_jobs = []
+                    for _wo in _job._wait_on:
+                        if isinstance(_wo, Job):
+                            _wait_jobs += [_wo]
+                        else:
+                            _wait_jobs += _wo.bottom_jobs
+
+                    # check if all wait on jobs are completed
+                    for _wj in _wait_jobs:
+                        if _wj not in _completed_jobs:
+                            raise e.code.CodingError(
+                                msgs=[
+                                    "When not on server we expect that property `all_jobs` "
+                                    "should resolve in such a way that all `wait_on` jobs "
+                                    "must be already done ..",
+                                    f"Check {_wj.flow_id} which should be completed by now ..."
+                                ]
+                            )
+
+                    # call job
+                    _job(cluster_type)
+
+                    # append to list as job is completed
+                    _completed_jobs.append(_job)
+
+        # --------------------------------------------------------- 02.02
+        # for ibm_lsf
+        elif cluster_type is JobRunnerClusterType.ibm_lsf:
+            for _stage_key, _stage in self.stages.items():
+                _rp.update(f"launching jobs for stage: {_stage_key}...")
+                _jobs = _stage.all_jobs
+                for _job in _rp.track(
+                    sequence=_jobs, task_name=f"stage {_stage_key}"
                 ):
                     _job(cluster_type)
         else:
