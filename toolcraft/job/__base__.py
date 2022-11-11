@@ -661,7 +661,7 @@ class Job:
     @property
     def cli_command(self) -> t.List[str]:
         _command = [
-            "python", self.runner.py_script, self.method.__func__.__name__,
+            "python", self.runner.py_script, "run", self.method.__func__.__name__,
         ]
         if self.experiment is not None:
             _command += [self.experiment.hex_hash]
@@ -746,18 +746,65 @@ class Job:
                 ]
             ).raise_if_failed()
 
-    def __call__(self, cluster_type: JobRunnerClusterType, from_flow: bool):
+    def __call__(self, cluster_type: JobRunnerClusterType):
+        """
+        A call to job will launch a new terminal on local machine or submit job if on ibm_lsf.
+        todo: make this run on client and run jobs over ssh connection ... for ibm_lsf
+        """
+        # ------------------------------------------------------------- 01
         # check health
         _ret = self.check_health()
         if _ret is not None:
             _LOGGER.error(msg=_ret)
             return
 
+        # ------------------------------------------------------------- 02
+        # make command to run on cli
+        _command = self.cli_command
+
+        # ------------------------------------------------------------- 03
+        # create tag so that worker machine knows that the client has launched it
+        self.tag_manager.launched.create()
+
+        # ------------------------------------------------------------- 04
         # launch
-        if self.is_on_main_machine:
-            self._launch_on_main_machine(cluster_type)
+        # todo: might be feasible only with `local` not sure about `ibm_lsf`
+        #   + figure out how `subprocess.run` kwargs can be used to pull the console rendered by subprocess i.e.
+        #     things like rich ui can be grabbed and streamed
+        #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
+        # ------------------------------------------------------------- 04.01
+        if cluster_type is JobRunnerClusterType.local:
+            subprocess.run(
+                ["start", "/wait", "cmd", "/c", ] + _command,
+                shell=True
+            )
+        # ------------------------------------------------------------- 04.02
+        elif cluster_type is JobRunnerClusterType.ibm_lsf:
+            # todo: when self.path is not local we need to see how to log files ...
+            #   should we stream or dump locally ?? ... or maybe figure out
+            #   dapr telemetry
+            _log = self.path / "bsub.log"
+            _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), "-J", self.job_id]
+            _wait_on_jobs = self.wait_on_jobs
+            if bool(_wait_on_jobs):
+                _wait_on = \
+                    " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
+                _nxdi_prefix += ["-w", f"{_wait_on}"]
+            _command = _nxdi_prefix + _command
+            subprocess.run(_command)
+
+        # ------------------------------------------------------------- 04.03
         else:
-            self._launch_on_worker_machine()
+            raise e.code.ShouldNeverHappen(
+                msgs=[f"Unsupported cluster_type {cluster_type}"]
+            )
+
+        # ------------------------------------------------------------- 05
+        # log
+        _LOGGER.info(
+            msg=f"Launching jobs from main machine with below command...",
+            msgs=[_command]
+        )
 
     def _launch_on_worker_machine(self):
         """
@@ -876,59 +923,6 @@ class Job:
             #  future jobs to run ... but this is expected as we want to debug in
             #  this mode mostly
             raise _ex
-
-    def _launch_on_main_machine(self, cluster_type: JobRunnerClusterType):
-        """
-        This runs on your main machine so that jobs are launched on cluster
-        todo: make this run on client and run jobs over ssh connection ...
-        """
-        # ------------------------------------------------------------- 01
-        # make command to run on cli
-        _command = self.cli_command
-
-        # ------------------------------------------------------------- 02
-        # create tag so that worker machine knows that the client has launched it
-        self.tag_manager.launched.create()
-
-        # ------------------------------------------------------------- 03
-        # launch
-        # todo: might be feasible only with `local` not sure about `ibm_lsf`
-        #   + figure out how `subprocess.run` kwargs can be used to pull the console rendered by subprocess i.e.
-        #     things like rich ui can be grabbed and streamed
-        #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
-        # ------------------------------------------------------------- 03.01
-        if cluster_type is JobRunnerClusterType.local:
-            # subprocess.run(["start", "/wait", "cmd", "/c", "python", "-c",
-            #                 "import time; print('start ...'); time.sleep(5); print('done ...'); time.sleep(2)"],
-            #                shell=True)
-            subprocess.run(_command)
-        # ------------------------------------------------------------- 03.02
-        elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            # todo: when self.path is not local we need to see how to log files ...
-            #   should we stream or dump locally ?? ... or maybe figure out
-            #   dapr telemetry
-            _log = self.path / "bsub.log"
-            _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), "-J", self.job_id]
-            _wait_on_jobs = self.wait_on_jobs
-            if bool(_wait_on_jobs):
-                _wait_on = \
-                    " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
-                _nxdi_prefix += ["-w", f"{_wait_on}"]
-            _command = _nxdi_prefix + _command
-            subprocess.run(_command)
-
-        # ------------------------------------------------------------- 03.03
-        else:
-            raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {cluster_type}"]
-            )
-
-        # ------------------------------------------------------------- 04
-        # log
-        _LOGGER.info(
-            msg=f"Launching jobs from main machine with below command...",
-            msgs=[_command]
-        )
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
