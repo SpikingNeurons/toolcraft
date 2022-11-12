@@ -3,10 +3,14 @@ import typer
 import sys
 import dataclasses
 import typing as t
+import subprocess
 
 from .. import error as e
+from .. import logger
 from .__base__ import Runner, Job, JobRunnerClusterType
 
+
+_LOGGER = logger.get_logger()
 # noinspection PyTypeChecker
 _RUNNER: Runner = None
 # noinspection PyTypeChecker
@@ -40,23 +44,180 @@ def launch():
     """
     Launches all the jobs in runner.
     """
+
+    # --------------------------------------------------------- 01
+    # get some vars
     _rp = _RUNNER.richy_panel
-    _rp.update(f"launching jobs on {_CLUSTER_TYPE.name!r}")
-    _RUNNER.flow(_CLUSTER_TYPE)
+    _rp.update(f"launching jobs on {_CLUSTER_TYPE.name!r} cluster ...")
+    _flow = _RUNNER.flow
+
+    # --------------------------------------------------------- 02
+    # call jobs ...
+    # todo: we might want this to be called from client machine and submit jobs via
+    #   ssh ... rather than using instance on cluster to launch jobs
+    #   This will also help to have gui in dearpygui
+    # --------------------------------------------------------- 02.01
+    # for local
+    if _CLUSTER_TYPE is JobRunnerClusterType.local:
+
+        # ----------------------------------------------------- 02.01.01
+        # tracker containers
+        _completed_jobs = []
+
+        # ----------------------------------------------------- 02.01.02
+        # loop over stages
+        for _stage_key, _stage in _flow.stages.items():
+            _rp.update(f"launching jobs for stage: {_stage_key}...")
+
+            # ------------------------------------------------- 02.01.03
+            # loop over jobs in current _stage
+            _jobs = _stage.all_jobs
+            for _job in _rp.track(
+                sequence=_jobs, task_name=f"stage {_stage_key}"
+            ):
+                # --------------------------------------------- 02.01.03.01
+                # get wait on jobs that are needed to be completed before executing _job
+                _wait_jobs = []
+                for _wo in _job._wait_on:
+                    if isinstance(_wo, Job):
+                        _wait_jobs += [_wo]
+                    else:
+                        _wait_jobs += _wo.bottom_jobs
+
+                # --------------------------------------------- 02.01.03.02
+                # check if all wait on jobs are completed
+                for _wj in _wait_jobs:
+                    if _wj not in _completed_jobs:
+                        raise e.code.CodingError(
+                            msgs=[
+                                "When not on server we expect that property `all_jobs` "
+                                "should resolve in such a way that all `wait_on` jobs "
+                                "must be already done ..",
+                                f"Check {_wj.flow_id} which should be completed by now ..."
+                            ]
+                        )
+
+                # --------------------------------------------- 02.01.03.03
+                # make cli command
+                _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
+
+                # --------------------------------------------- 02.01.03.04
+                # run job
+                _run_job(_job, _cli_command)
+
+                # --------------------------------------------- 02.01.03.05
+                # append to list as job is completed
+                _completed_jobs.append(_job)
+
+    # --------------------------------------------------------- 02.02
+    # for ibm_lsf
+    elif _CLUSTER_TYPE is JobRunnerClusterType.ibm_lsf:
+        # ----------------------------------------------------- 02.02.01
+        # loop over stages
+        for _stage_key, _stage in _flow.stages.items():
+            _rp.update(f"launching jobs for stage: {_stage_key}...")
+
+            # ------------------------------------------------- 02.02.02
+            # loop over jobs in current _stage
+            _jobs = _stage.all_jobs
+            for _job in _rp.track(
+                sequence=_jobs, task_name=f"stage {_stage_key}"
+            ):
+                # --------------------------------------------- 02.02.02.01
+                # make cli command
+                # todo: when self.path is not local we need to see how to log files ...
+                #   should we stream or dump locally ?? ... or maybe figure out
+                #   dapr telemetry
+                _log = _job.path / "bsub.log"
+                _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), "-J", _job.job_id]
+                _wait_on_jobs = _job.wait_on_jobs
+                if bool(_wait_on_jobs):
+                    _wait_on = \
+                        " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
+                    _nxdi_prefix += ["-w", f"{_wait_on}"]
+                _cli_command = _nxdi_prefix + _job.cli_command
+
+                # --------------------------------------------- 02.02.02.02
+                # run job
+                _run_job(_job, _cli_command)
+
+    # --------------------------------------------------------- 02.03
+    else:
+        raise e.code.NotSupported(
+            msgs=[f"Not supported {_CLUSTER_TYPE}"]
+        )
+
+    # todo: add richy tracking panel ...that makes a layout for all stages and
+    #  shows status of all jobs submitted above
+    #  The status info will be based on tracking provided by
+    #  + if toolcraft maybe use predefined tags to show status ... but his might
+    #    cause some io overhead ... instead have toolcraft.Job to update
+    #    richy client
+    #  + Also see if you can use
+    #    - bsub
+    #    - qsub
+    #    - dapr telemetry
+    #  IMP: see docstring we can even have dearpygui client if we can submit jobs
+    #    and track jobs via ssh
+
+
+def _run_job(_job: Job, _cli_command: t.List[str]):
+    # ------------------------------------------------------------- 01
+    # check health
+    _ret = _job.check_health()
+    if _ret is not None:
+        _LOGGER.error(msg=_ret)
+        return
+
+    # ------------------------------------------------------------- 02
+    # create tag so that worker machine knows that the client has
+    # launched it
+    _job.tag_manager.launched.create()
+
+    # ------------------------------------------------------------- 03
+    # run in subprocess
+    subprocess.run(_cli_command)
+
+    # ------------------------------------------------------------- 04
+    # log
+    _LOGGER.info(
+        msg=f"Launched job from main machine with below command...", msgs=[_cli_command],
+    )
 
 
 @_APP.command()
 def run(
-    method: str = typer.Argument(..., help="Method to execute in runner."),
-    experiment: t.Optional[str] = typer.Argument(None, help="Experiment which will be used by method in runner.")
+    method: str = typer.Argument(..., help="Method to execute in runner.", show_default=False, ),
+    experiment: t.Optional[str] = typer.Argument(None, help="Experiment which will be used by method in runner."),
 ):
     """
     Run a job in runner.
     """
+    # ------------------------------------------------------------ 01
+    # get respective job
+    try:
+        _method = getattr(_RUNNER, method)
+    except AttributeError as _ae:
+        raise e.code.NotAllowed(
+            msgs=[f"The method with name {method} is not available in runner class {_RUNNER.__class__}"]
+        )
+    if experiment is None:
+        _experiment = None
+        _job = _RUNNER.associated_jobs[_method]
+    else:
+        _experiment = _RUNNER.monitor.get_experiment_from_hex_hash(hex_hash=experiment)
+        _job = _experiment.associated_jobs[_method]
+
+    # ------------------------------------------------------------ 02
+    # set job in runner
+    _RUNNER.internal.job = _job
+
+    # ------------------------------------------------------------ 03
+    # get some vars
     _rp = _RUNNER.richy_panel
-    # note that this will consume cli args method and experiment to find respective job
-    # check the code for property `_RUNNER.job`
-    _job = _RUNNER.job
+
+
+    print(method, experiment)
 
 
 @_APP.command()

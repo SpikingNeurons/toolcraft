@@ -746,66 +746,6 @@ class Job:
                 ]
             ).raise_if_failed()
 
-    def __call__(self, cluster_type: JobRunnerClusterType):
-        """
-        A call to job will launch a new terminal on local machine or submit job if on ibm_lsf.
-        todo: make this run on client and run jobs over ssh connection ... for ibm_lsf
-        """
-        # ------------------------------------------------------------- 01
-        # check health
-        _ret = self.check_health()
-        if _ret is not None:
-            _LOGGER.error(msg=_ret)
-            return
-
-        # ------------------------------------------------------------- 02
-        # make command to run on cli
-        _command = self.cli_command
-
-        # ------------------------------------------------------------- 03
-        # create tag so that worker machine knows that the client has launched it
-        self.tag_manager.launched.create()
-
-        # ------------------------------------------------------------- 04
-        # launch
-        # todo: might be feasible only with `local` not sure about `ibm_lsf`
-        #   + figure out how `subprocess.run` kwargs can be used to pull the console rendered by subprocess i.e.
-        #     things like rich ui can be grabbed and streamed
-        #   + explore logger handlers with extra kwargs to grab streams using `subprocess.run`
-        # ------------------------------------------------------------- 04.01
-        if cluster_type is JobRunnerClusterType.local:
-            subprocess.run(
-                ["start", "/wait", "cmd", "/c", ] + _command,
-                shell=True
-            )
-        # ------------------------------------------------------------- 04.02
-        elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            # todo: when self.path is not local we need to see how to log files ...
-            #   should we stream or dump locally ?? ... or maybe figure out
-            #   dapr telemetry
-            _log = self.path / "bsub.log"
-            _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), "-J", self.job_id]
-            _wait_on_jobs = self.wait_on_jobs
-            if bool(_wait_on_jobs):
-                _wait_on = \
-                    " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
-                _nxdi_prefix += ["-w", f"{_wait_on}"]
-            _command = _nxdi_prefix + _command
-            subprocess.run(_command)
-
-        # ------------------------------------------------------------- 04.03
-        else:
-            raise e.code.ShouldNeverHappen(
-                msgs=[f"Unsupported cluster_type {cluster_type}"]
-            )
-
-        # ------------------------------------------------------------- 05
-        # log
-        _LOGGER.info(
-            msg=f"Launching jobs from main machine with below command...",
-            msgs=[_command]
-        )
-
     def _launch_on_worker_machine(self):
         """
         The jobs are run on cluster ... this piece of code will execute on the
@@ -928,34 +868,6 @@ class Job:
         self._wait_on.append(wait_on)
         return self
 
-    @classmethod
-    def from_cli(
-        cls,
-        runner: "Runner",
-    ) -> t.Optional["Job"]:
-        # test if running on machines that execute jobs ...
-        if len(sys.argv) == 2:
-            # i.e. you are calling view, submit or clean
-            return None
-
-        # fetch method
-        _method_name = sys.argv[2]
-        _method = getattr(runner, _method_name)
-
-        # fetch experiment
-        if len(sys.argv) == 3:
-            return runner.associated_jobs[_method]
-        elif len(sys.argv) == 4:
-            _experiment = runner.monitor.get_experiment_from_hex_hash(hex_hash=sys.argv[3])
-            return _experiment.associated_jobs[_method]
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    "there can be only two or three sys arguments ... found",
-                    sys.argv,
-                ]
-            )
-
     def check_health(self) -> t.Optional[str]:
         """
         If str is returned then skip calling job and print error message ...
@@ -978,7 +890,7 @@ class Job:
                 raise e.code.ShouldNeverHappen(
                     msgs=[
                         "the previous job was wither failed or finished but the running tag was never deleted",
-                        "Please fix any bugs ...",
+                        "Please fix any bugs or `clean` previous runs ...",
                         _job_info,
                     ]
                 )
@@ -1008,9 +920,9 @@ class Job:
         if _finished:
             return "The job was already finished ..."
         if _failed:
-            return "The job was already failed ... please delete run files manually to run it again ..."
+            return "The job was already failed ... please `clean` so that you can `run` it again ..."
         if _running:
-            return "There is already a job running on worker .... please kill job and delete files to run it again ..."
+            return "There is already a job running on worker .... please kill job and/or `clean` to `run` it again ..."
 
         # ------------------------------------------------------------- 05
         if self.is_on_main_machine:
@@ -1328,91 +1240,9 @@ class Flow:
                     _.wait_on(self.stages[_previous_stage_id])
             _previous_stage_id = _stage_id
 
-    def __call__(self, cluster_type: JobRunnerClusterType):
-        """
-        todo: we might want this to be called from client machine and submit jobs via
-          ssh ... rather than using instance on cluster to launch jobs
-          This will also help to have gui in dearpygui
-        """
-        # --------------------------------------------------------- 01
-        # get some vars
-        _rp = self.runner.richy_panel
-
-        # --------------------------------------------------------- 02
-        # call jobs ...
-        # --------------------------------------------------------- 02.01
-        # for local
-        if cluster_type is JobRunnerClusterType.local:
-
-            # tracker containers
-            _completed_jobs = []
-
-            # loop over stages
-            for _stage_key, _stage in self.stages.items():
-                _rp.update(f"launching jobs for stage: {_stage_key}...")
-
-                # loop over jobs in current _stage
-                _jobs = _stage.all_jobs
-                for _job in _rp.track(
-                    sequence=_jobs, task_name=f"stage {_stage_key}"
-                ):
-                    # get wait on jobs that are needed to be completed before executing _job
-                    _wait_jobs = []
-                    for _wo in _job._wait_on:
-                        if isinstance(_wo, Job):
-                            _wait_jobs += [_wo]
-                        else:
-                            _wait_jobs += _wo.bottom_jobs
-
-                    # check if all wait on jobs are completed
-                    for _wj in _wait_jobs:
-                        if _wj not in _completed_jobs:
-                            raise e.code.CodingError(
-                                msgs=[
-                                    "When not on server we expect that property `all_jobs` "
-                                    "should resolve in such a way that all `wait_on` jobs "
-                                    "must be already done ..",
-                                    f"Check {_wj.flow_id} which should be completed by now ..."
-                                ]
-                            )
-
-                    # call job
-                    _job(cluster_type)
-
-                    # append to list as job is completed
-                    _completed_jobs.append(_job)
-
-        # --------------------------------------------------------- 02.02
-        # for ibm_lsf
-        elif cluster_type is JobRunnerClusterType.ibm_lsf:
-            for _stage_key, _stage in self.stages.items():
-                _rp.update(f"launching jobs for stage: {_stage_key}...")
-                _jobs = _stage.all_jobs
-                for _job in _rp.track(
-                    sequence=_jobs, task_name=f"stage {_stage_key}"
-                ):
-                    _job(cluster_type)
-        else:
-            raise e.code.NotSupported(
-                msgs=[f"Not supported {cluster_type}"]
-            )
-
-        # todo: add richy tracking panel ...that makes a layout for all stages and
-        #  shows status of all jobs submitted above
-        #  The status info will be based on tracking provided by
-        #  + if toolcraft maybe use predefined tags to show status ... but his might
-        #    cause some io overhead ... instead have toolcraft.Job to update
-        #    richy client
-        #  + Also see if you can use
-        #    - bsub
-        #    - qsub
-        #    - dapr telemetry
-        #  IMP: see docstring we can even have dearpygui client if we can submit jobs
-        #    and track jobs via ssh
-
     def status(self) -> t.Dict:
         _ret = dict()
-        for _si, _stage in enumerate(self.stages):
+        for _sk, _stage in self.stages.items():
             _jobs = _stage.all_jobs
             _total = 0
             _started = 0
@@ -1430,7 +1260,7 @@ class Flow:
                     _finished += 1
                 if _job.is_failed:
                     _failed += 1
-            _ret[f"Stage {_si:03d}"] = dict(
+            _ret[f"Stage {_sk}"] = dict(
                 total=_total, started=_started, running=_running, finished=_finished, failed=_failed,
             )
         return _ret
@@ -1507,13 +1337,17 @@ class Monitor:
             )
 
 
+class RunnerInternal(m.Internal):
+    job: Job
+
+
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=[
-        'cwd', 'job', 'flow', 'monitor', 'registered_experiments',
+        'cwd', 'flow', 'monitor', 'registered_experiments',
         'associated_jobs', 'methods_to_be_used_in_jobs',
     ],
-    things_not_to_be_overridden=['cwd', 'job', 'py_script', 'monitor', 'methods_to_be_used_in_jobs'],
+    things_not_to_be_overridden=['cwd', 'py_script', 'monitor', 'methods_to_be_used_in_jobs'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1565,6 +1399,11 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
+    def internal(self) -> RunnerInternal:
+        return RunnerInternal(self)
+
+    @property
+    @util.CacheResult
     def monitor(self) -> Monitor:
         return Monitor(runner=self)
 
@@ -1607,9 +1446,14 @@ class Runner(m.HashableClass, abc.ABC):
         ...
 
     @property
-    @util.CacheResult
     def job(self) -> Job:
-        return Job.from_cli(runner=self)
+        if self.internal.has("job"):
+            return self.internal.job
+        else:
+            raise e.code.CodingError(
+                msgs=["Before using this property we expect this to be set by "
+                      "`toolcraft.job.cli.run()`"]
+            )
 
     @property
     @util.CacheResult
@@ -1738,16 +1582,10 @@ class Runner(m.HashableClass, abc.ABC):
 
     def run(self, cluster_type: JobRunnerClusterType):
         from . import cli
-        _job = self.job
-        _job_msgs = []
-        if _job is not None:
-            _job_msgs += _job.flow_id
-            _job_msgs += _job.job_id
         with richy.StatusPanel(
-            title=f"Running for py_script: {self.py_script!r}", tc_log=_LOGGER,
-            sub_title=[
-                f"command: {sys.argv[1]}", *_job_msgs
-            ]
+            tc_log=_LOGGER,
+            title=f"Running for py_script: {self.py_script!r}",
+            sub_title=[":command:", f"{sys.argv[1:]}", ],
         ) as _rp:
             with self(richy_panel=_rp):
                 cli.get_app(runner=self, cluster_type=cluster_type)()
@@ -1755,7 +1593,9 @@ class Runner(m.HashableClass, abc.ABC):
     def setup(self):
         _exps = self.registered_experiments
         _rp = self.richy_panel
-        for _exp in _rp.track(sequence=_exps, task_name=f"setup {len(_exps)} experiments"):
+        for _exp in _rp.track(
+            sequence=_exps, task_name=f"setup {len(_exps)} experiments",
+        ):
             with _exp(richy_panel=_rp):
                 ...
 
