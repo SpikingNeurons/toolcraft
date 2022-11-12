@@ -4,6 +4,7 @@ import sys
 import dataclasses
 import typing as t
 import subprocess
+import datetime
 
 from .. import error as e
 from .. import logger
@@ -16,6 +17,7 @@ _RUNNER: Runner = None
 # noinspection PyTypeChecker
 _CLUSTER_TYPE: JobRunnerClusterType = None
 _APP = typer.Typer(name="Toolcraft Job Runner")
+_now = datetime.datetime.now
 
 
 def get_app(runner: Runner, cluster_type: JobRunnerClusterType):
@@ -194,30 +196,139 @@ def run(
     Run a job in runner.
     """
 
+    # ------------------------------------------------------------ 01
+    # get respective job
+    try:
+        _method = getattr(_RUNNER, method)
+    except AttributeError as _ae:
+        raise e.code.NotAllowed(
+            msgs=[f"The method with name {method} is not available in runner class {_RUNNER.__class__}"]
+        )
+    if experiment is None:
+        _experiment = None
+        _job = _RUNNER.associated_jobs[_method]
+    else:
+        _experiment = _RUNNER.monitor.get_experiment_from_hex_hash(hex_hash=experiment)
+        _job = _experiment.associated_jobs[_method]
 
-    print(method, experiment, "<<<<<<<<<<<<<<<<<<<<<<<<<<<")
-    # # ------------------------------------------------------------ 01
-    # # get respective job
-    # try:
-    #     _method = getattr(_RUNNER, method)
-    # except AttributeError as _ae:
-    #     raise e.code.NotAllowed(
-    #         msgs=[f"The method with name {method} is not available in runner class {_RUNNER.__class__}"]
-    #     )
-    # if experiment is None:
-    #     _experiment = None
-    #     _job = _RUNNER.associated_jobs[_method]
-    # else:
-    #     _experiment = _RUNNER.monitor.get_experiment_from_hex_hash(hex_hash=experiment)
-    #     _job = _experiment.associated_jobs[_method]
-    #
-    # # ------------------------------------------------------------ 02
-    # # set job in runner
-    # _RUNNER.internal.job = _job
-    #
-    # # ------------------------------------------------------------ 03
-    # # get some vars
-    # _rp = _RUNNER.richy_panel
+    # ------------------------------------------------------------ 02
+    # set job in runner
+    _RUNNER.internal.job = _job
+
+    # ------------------------------------------------------------ 03
+    # get some vars
+    _rp = _RUNNER.richy_panel
+
+    # ------------------------------------------------------------ 04
+    # reconfig logger to change log file for job
+    import logging
+    _log = _job.log_file
+    logger.setup_logging(
+        propagate=False,
+        level=logging.NOTSET,
+        # todo: here we can config that on server where things will be logged
+        handlers=[
+            # logger.get_rich_handler(),
+            # logger.get_stream_handler(),
+            logger.get_file_handler(_log.local_path),
+        ],
+    )
+    _start = _now()
+    _LOGGER.info(
+        msg=f"Starting job on worker machine ...",
+        msgs=[
+            {
+                "name": _job.name,
+                "sys.argv": sys.argv,
+                "started": _start.ctime(),
+            }
+        ]
+    )
+
+    # ------------------------------------------------------------ 05
+    # check if launcher client machine has created launched tag
+    if not _job.tag_manager.launched.exists():
+        raise e.code.CodingError(
+            msgs=[
+                "We expect that `launched` tag is created by client launching machine .... "
+            ]
+        )
+
+    # ------------------------------------------------------------ 06
+    # indicates that job is started
+    _job.tag_manager.started.create()
+
+    # ------------------------------------------------------------ 07
+    # indicate that job will now be running
+    # also note this acts as semaphore and is deleted when job is finished
+    # ... hence started tag is important
+    _job.tag_manager.running.create()
+
+    # ------------------------------------------------------------ 08
+    _failed = False
+    try:
+        for _wj in _job.wait_on_jobs:
+            if not _wj.is_finished:
+                raise e.code.CodingError(
+                    msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
+                          f"{_wj.job_id} is supposed to be finished ..."]
+                )
+        _rp.log(
+            [
+                f"flow_id: {_job.flow_id}",
+                f"job_id : {_job.job_id}",
+                f"name   : {_job.name}",
+            ]
+        )
+        if _experiment is None:
+            _job.method()
+        else:
+            _job.method(experiment=_experiment)
+        _job.tag_manager.running.delete()
+        _job.tag_manager.finished.create()
+        _end = _now()
+        _LOGGER.info(
+            msg=f"Successfully finished job on worker machine ...",
+            msgs=[
+                {
+                    "flow_id": _job.flow_id,
+                    "job_id": _job.job_id,
+                    "name": _job.name,
+                    "started": _start.ctime(),
+                    "ended": _end.ctime(),
+                    "seconds": str((_end - _start).total_seconds()),
+                }
+            ]
+        )
+    except Exception as _ex:
+        _failed = True
+        _job.tag_manager.failed.create(
+            data={
+                "exception": str(_ex)
+            }
+        )
+        _end = _now()
+        _LOGGER.info(
+            msg=f"Failed job on worker machine ...",
+            msgs=[
+                {
+                    "flow_id": _job.flow_id,
+                    "job_id": _job.job_id,
+                    "name": _job.name,
+                    "started": _start.ctime(),
+                    "ended": _end.ctime(),
+                    "seconds": str((_end - _start).total_seconds()),
+                    "exception": str(_ex),
+                }
+            ]
+        )
+        _job.tag_manager.running.delete()
+        # above thing will tell toolcraft that things failed gracefully
+        # while below raise will tell cluster systems like bsub that job has failed
+        # todo for `JobRunnerClusterType.local_on_same_thread` this will not allow
+        #  future jobs to run ... but this is expected as we want to debug in
+        #  this mode mostly
+        raise _ex
 
 
 @_APP.command()
