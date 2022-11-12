@@ -164,7 +164,7 @@ def launch():
 def _run_job(_job: Job, _cli_command: t.List[str]):
     # ------------------------------------------------------------- 01
     # check health
-    _ret = _job.check_health()
+    _ret = _job.check_health(is_on_main_machine=True)
     if _ret is not None:
         _LOGGER.error(msg=_ret)
         return
@@ -176,7 +176,7 @@ def _run_job(_job: Job, _cli_command: t.List[str]):
 
     # ------------------------------------------------------------- 03
     # run in subprocess
-    subprocess.run(_cli_command)
+    subprocess.run(_cli_command, shell=True)
 
     # ------------------------------------------------------------- 04
     # log
@@ -193,31 +193,31 @@ def run(
     """
     Run a job in runner.
     """
-    # ------------------------------------------------------------ 01
-    # get respective job
-    try:
-        _method = getattr(_RUNNER, method)
-    except AttributeError as _ae:
-        raise e.code.NotAllowed(
-            msgs=[f"The method with name {method} is not available in runner class {_RUNNER.__class__}"]
-        )
-    if experiment is None:
-        _experiment = None
-        _job = _RUNNER.associated_jobs[_method]
-    else:
-        _experiment = _RUNNER.monitor.get_experiment_from_hex_hash(hex_hash=experiment)
-        _job = _experiment.associated_jobs[_method]
-
-    # ------------------------------------------------------------ 02
-    # set job in runner
-    _RUNNER.internal.job = _job
-
-    # ------------------------------------------------------------ 03
-    # get some vars
-    _rp = _RUNNER.richy_panel
 
 
-    print(method, experiment)
+    print(method, experiment, "<<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    # # ------------------------------------------------------------ 01
+    # # get respective job
+    # try:
+    #     _method = getattr(_RUNNER, method)
+    # except AttributeError as _ae:
+    #     raise e.code.NotAllowed(
+    #         msgs=[f"The method with name {method} is not available in runner class {_RUNNER.__class__}"]
+    #     )
+    # if experiment is None:
+    #     _experiment = None
+    #     _job = _RUNNER.associated_jobs[_method]
+    # else:
+    #     _experiment = _RUNNER.monitor.get_experiment_from_hex_hash(hex_hash=experiment)
+    #     _job = _experiment.associated_jobs[_method]
+    #
+    # # ------------------------------------------------------------ 02
+    # # set job in runner
+    # _RUNNER.internal.job = _job
+    #
+    # # ------------------------------------------------------------ 03
+    # # get some vars
+    # _rp = _RUNNER.richy_panel
 
 
 @_APP.command()

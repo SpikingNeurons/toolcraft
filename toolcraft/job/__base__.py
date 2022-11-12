@@ -868,7 +868,7 @@ class Job:
         self._wait_on.append(wait_on)
         return self
 
-    def check_health(self) -> t.Optional[str]:
+    def check_health(self, is_on_main_machine: bool) -> t.Optional[str]:
         """
         If str is returned then skip calling job and print error message ...
         If none is returned then we need to call job
@@ -925,7 +925,7 @@ class Job:
             return "There is already a job running on worker .... please kill job and/or `clean` to `run` it again ..."
 
         # ------------------------------------------------------------- 05
-        if self.is_on_main_machine:
+        if is_on_main_machine:
             if _launched or _started or _running:
                 raise e.code.CodingError(
                     msgs=[
