@@ -152,7 +152,7 @@ def launch():
 
                 # --------------------------------------------- 02.02.02.03
                 # run job
-                _run_job(_job, _cli_command)
+                _run_job(_job, _cli_command, shell=False)
 
     # --------------------------------------------------------- 02.03
     else:
@@ -174,7 +174,7 @@ def launch():
     #    and track jobs via ssh
 
 
-def _run_job(_job: Job, _cli_command: t.List[str]):
+def _run_job(_job: Job, _cli_command: t.List[str], shell: bool = True):
     # ------------------------------------------------------------- 01
     # check health
     _ret = _job.check_health(is_on_main_machine=True)
@@ -189,7 +189,7 @@ def _run_job(_job: Job, _cli_command: t.List[str]):
 
     # ------------------------------------------------------------- 03
     # run in subprocess
-    subprocess.run(_cli_command, shell=True)
+    subprocess.run(_cli_command, shell=shell)
 
     # ------------------------------------------------------------- 04
     # log
