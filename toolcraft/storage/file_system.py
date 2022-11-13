@@ -653,16 +653,16 @@ class Path:
         _pickled_data = blosc2.decompress(_compressed_pickled_data)
         return pickle.loads(_pickled_data)
 
-    def write_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='w') as _f:
+    def write_text(self, text: str, encoding: str = None):
+        with self.fs.open(path=self.full_path, mode='w', encoding=encoding) as _f:
             _f.write(text)
 
-    def append_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='a') as _f:
+    def append_text(self, text: str, encoding: str = None):
+        with self.fs.open(path=self.full_path, mode='a', encoding=encoding) as _f:
             _f.write(text)
 
-    def read_text(self) -> str:
-        with self.fs.open(path=self.full_path, mode='r') as _f:
+    def read_text(self, encoding: str = None) -> str:
+        with self.fs.open(path=self.full_path, mode='r', encoding=encoding) as _f:
             return _f.read()
 
     def _post_process_res(self, _res) -> t.List["Path"]:

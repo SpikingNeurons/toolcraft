@@ -6,6 +6,7 @@ import datetime
 import enum
 import inspect
 import pathlib
+import shutil
 import typing as t
 import dataclasses
 import subprocess
@@ -86,7 +87,7 @@ class Tag:
         _ret = self.manager.path / self.name
         return _ret
 
-    def create(self, data: t.Dict[str, t.Any] = None):
+    def create(self, data: t.Dict[str, t.Any] = None, exception: str = None):
         if self.path.exists():
             raise e.code.CodingError(
                 msgs=[f"Tag at {self.path} already exists ..."]
@@ -101,7 +102,16 @@ class Tag:
             )
         data["time"] = _now()
         _LOGGER.info(msg=f"Creating tag {self.path}")
-        self.path.write_text(text=yaml.safe_dump(data))
+        _txt = yaml.safe_dump(data)
+        print("????????????????????????????????????????????", self.manager.job.flow_id)
+        print("?? 1 ??", _txt)
+        if exception is not None:
+            _txt += "\n".join(["", ">>> EXCEPTION <<<", "", exception])
+        print("?? 2 ??", _txt)
+        if exception is not None:
+            import time
+            time.sleep(10)
+        self.path.write_text(text=_txt, encoding='utf-8')
 
     def read(self) -> t.Optional[t.Dict[str, t.Any]]:
         if not self.path.exists():
@@ -661,7 +671,7 @@ class Job:
     @property
     def cli_command(self) -> t.List[str]:
         _command = [
-            "python", self.runner.py_script, "run", self.method.__func__.__name__,
+            shutil.which('python'), self.runner.py_script, "run", self.method.__func__.__name__,
         ]
         if self.experiment is not None:
             _command += [self.experiment.hex_hash]

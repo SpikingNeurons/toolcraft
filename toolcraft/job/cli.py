@@ -5,6 +5,7 @@ import dataclasses
 import typing as t
 import subprocess
 import datetime
+import traceback
 
 from .. import error as e
 from .. import logger
@@ -265,7 +266,6 @@ def run(
     _job.tag_manager.running.create()
 
     # ------------------------------------------------------------ 08
-    _failed = False
     try:
         for _wj in _job.wait_on_jobs:
             if not _wj.is_finished:
@@ -301,12 +301,8 @@ def run(
             ]
         )
     except Exception as _ex:
-        _failed = True
-        _job.tag_manager.failed.create(
-            data={
-                "exception": str(_ex)
-            }
-        )
+        _ex_str = traceback.format_exc()
+        _job.tag_manager.failed.create(exception=_ex_str)
         _end = _now()
         _LOGGER.info(
             msg=f"Failed job on worker machine ...",
@@ -318,7 +314,7 @@ def run(
                     "started": _start.ctime(),
                     "ended": _end.ctime(),
                     "seconds": str((_end - _start).total_seconds()),
-                    "exception": str(_ex),
+                    "exception": _ex_str,
                 }
             ]
         )
