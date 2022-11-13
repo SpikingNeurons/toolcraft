@@ -1,4 +1,3 @@
-import enum
 import typer
 import sys
 import dataclasses
@@ -427,5 +426,5 @@ def clean():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             if not _j.is_finished:
-                _rp.update(f"Deleting job {_j.flow_id}")
+                _rp.update(f"Deleting job {_j.job_id}")
                 _j.path.delete(recursive=True)
