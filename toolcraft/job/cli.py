@@ -426,7 +426,7 @@ def view():
 @_APP.command()
 def copy():
     """
-    Copies from nxdi to cwd.
+    Copies from server to cwd.
     """
     _rp = _RUNNER.richy_panel
     _rp.update("copying results from nxdi to cwd ...")
