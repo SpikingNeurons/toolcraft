@@ -424,6 +424,26 @@ def view():
 
 
 @_APP.command()
+def copy():
+    """
+    Copies from nxdi to cwd.
+    """
+    _rp = _RUNNER.richy_panel
+    _rp.update("copying results from nxdi to cwd ...")
+    xx= "ROBOCOPY E:\scandal\dnd\Prepared \\smb.nxdi.nl-cdc01.nxp.com\home\va_tools_ns_user01\nxa06038\scandal\Prepared *.* /J /E /ETA"
+    print(_RUNNER.cwd.local_path.absolute().as_posix())
+
+    # subprocess.check_call(
+    #     [
+    #         "ROBOCOPY",
+    #         _RUNNER.cwd.local_path.absolute().as_posix(),
+    #         ...,
+    #         "*.*", "/J", "/E", "/ETA"
+    #     ], timeout=None,
+    # )
+
+
+@_APP.command()
 def clean():
     """
     Cleans the job in runner that are not finished (use carefully).
