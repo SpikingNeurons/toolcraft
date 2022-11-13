@@ -1,3 +1,5 @@
+import pathlib
+
 import typer
 import sys
 import dataclasses
@@ -197,6 +199,17 @@ def _run_job(_job: Job, _cli_command: t.List[str]):
 
 
 @_APP.command()
+def nxdi():
+    """
+    Test nxdi environment
+    """
+    import tensorflow as tf
+    print("__is_on_nxdi__", (pathlib.Path.home() / "__is_on_nxdi__").exists())
+    print("CUDA", tf.test.is_built_with_cuda())
+    print("Devices", tf.config.list_physical_devices())
+
+
+@_APP.command()
 def run(
     method: str = typer.Argument(..., help="Method to execute in runner.", show_default=False, ),
     experiment: t.Optional[str] = typer.Argument(None, help="Experiment which will be used by method in runner."),
@@ -281,11 +294,6 @@ def run(
                     msgs=[f"Wait-on job with job-id "
                           f"{_wj.job_id} is supposed to be finished ..."]
                 )
-        _rp.log(
-            [
-                f"job_id : {_job.job_id}",
-            ]
-        )
         if _experiment is None:
             _job.method()
         else:
