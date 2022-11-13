@@ -9,6 +9,7 @@ import traceback
 
 from .. import error as e
 from .. import logger
+from .. import settings
 from .__base__ import Runner, Job, JobRunnerClusterType
 
 
@@ -79,6 +80,8 @@ def launch():
                 sequence=_jobs, task_name=f"stage {_stage_key}"
             ):
                 # --------------------------------------------- 02.01.03.01
+                _rp.update(f"launching {_stage_key}:{_job.job_id}")
+                # --------------------------------------------- 02.01.03.02
                 # get wait on jobs that are needed to be completed before executing _job
                 _wait_jobs = []
                 for _wo in _job._wait_on:
@@ -87,7 +90,7 @@ def launch():
                     else:
                         _wait_jobs += _wo.bottom_jobs
 
-                # --------------------------------------------- 02.01.03.02
+                # --------------------------------------------- 02.01.03.03
                 # check if all wait on jobs are completed
                 for _wj in _wait_jobs:
                     if _wj not in _completed_jobs:
@@ -100,15 +103,18 @@ def launch():
                             ]
                         )
 
-                # --------------------------------------------- 02.01.03.03
-                # make cli command
-                _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
-
                 # --------------------------------------------- 02.01.03.04
+                # make cli command
+                if settings.PYC_DEBUGGING:
+                    _cli_command = _job.cli_command
+                else:
+                    _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
+
+                # --------------------------------------------- 02.01.03.05
                 # run job
                 _run_job(_job, _cli_command)
 
-                # --------------------------------------------- 02.01.03.05
+                # --------------------------------------------- 02.01.03.06
                 # append to list as job is completed
                 _completed_jobs.append(_job)
 
@@ -127,6 +133,9 @@ def launch():
                 sequence=_jobs, task_name=f"stage {_stage_key}"
             ):
                 # --------------------------------------------- 02.02.02.01
+                _rp.update(f"launching {_stage_key}:{_job.job_id}")
+
+                # --------------------------------------------- 02.02.02.02
                 # make cli command
                 # todo: when self.path is not local we need to see how to log files ...
                 #   should we stream or dump locally ?? ... or maybe figure out
@@ -140,7 +149,7 @@ def launch():
                     _nxdi_prefix += ["-w", f"{_wait_on}"]
                 _cli_command = _nxdi_prefix + _job.cli_command
 
-                # --------------------------------------------- 02.02.02.02
+                # --------------------------------------------- 02.02.02.03
                 # run job
                 _run_job(_job, _cli_command)
 
@@ -239,7 +248,7 @@ def run(
         msg=f"Starting job on worker machine ...",
         msgs=[
             {
-                "name": _job.name,
+                "job_id": _job.job_id,
                 "sys.argv": sys.argv,
                 "started": _start.ctime(),
             }
@@ -270,14 +279,12 @@ def run(
         for _wj in _job.wait_on_jobs:
             if not _wj.is_finished:
                 raise e.code.CodingError(
-                    msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
+                    msgs=[f"Wait-on job with job-id "
                           f"{_wj.job_id} is supposed to be finished ..."]
                 )
         _rp.log(
             [
-                f"flow_id: {_job.flow_id}",
                 f"job_id : {_job.job_id}",
-                f"name   : {_job.name}",
             ]
         )
         if _experiment is None:
@@ -291,9 +298,7 @@ def run(
             msg=f"Successfully finished job on worker machine ...",
             msgs=[
                 {
-                    "flow_id": _job.flow_id,
                     "job_id": _job.job_id,
-                    "name": _job.name,
                     "started": _start.ctime(),
                     "ended": _end.ctime(),
                     "seconds": str((_end - _start).total_seconds()),
@@ -308,9 +313,7 @@ def run(
             msg=f"Failed job on worker machine ...",
             msgs=[
                 {
-                    "flow_id": _job.flow_id,
                     "job_id": _job.job_id,
-                    "name": _job.name,
                     "started": _start.ctime(),
                     "ended": _end.ctime(),
                     "seconds": str((_end - _start).total_seconds()),

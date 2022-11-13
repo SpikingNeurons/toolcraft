@@ -49,6 +49,9 @@ class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
     todo: support ibm_lsf over ssh using https://www.fabfile.org
     """
     ibm_lsf = enum.auto()
+    # todo: explore windows task scheduler
+    #    https://www.jcchouinard.com/python-automation-using-task-scheduler/
+    #    Or make custom bsub job scheduler for windows in python
     local = enum.auto()
 
 
@@ -103,14 +106,8 @@ class Tag:
         data["time"] = _now()
         _LOGGER.info(msg=f"Creating tag {self.path}")
         _txt = yaml.safe_dump(data)
-        print("????????????????????????????????????????????", self.manager.job.flow_id)
-        print("?? 1 ??", _txt)
         if exception is not None:
             _txt += "\n".join(["", ">>> EXCEPTION <<<", "", exception])
-        print("?? 2 ??", _txt)
-        if exception is not None:
-            import time
-            time.sleep(10)
         self.path.write_text(text=_txt, encoding='utf-8')
 
     def read(self) -> t.Optional[t.Dict[str, t.Any]]:
@@ -337,9 +334,7 @@ class JobViewer(m.HashableClass):
         from .. import gui
         # make
         _experiment = self.experiment
-        _text = f"job-id: {self.job.job_id}\n" \
-                f"flow-id: {self.job.flow_id}\n" \
-                f"method: {self.method_name}\n\n"
+        _text = f"job-id: {self.job.job_id}\n\n"
         if _experiment is not None:
             _text += f"hex-hash: {_experiment.hex_hash}\n" \
                     f"{_experiment.yaml()}"
@@ -615,40 +610,22 @@ class Job:
         return self.tag_manager.failed.exists()
 
     @property
-    def flow_id(self) -> str:
-        if self._flow_id is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"This must be automatically set by code ..."
-                ]
-            )
-        return self._flow_id
-
-    @flow_id.setter
-    def flow_id(self, value: str):
-        """
-        This takes in account
-        + fn_name
-        + fn_kwargs if present
-        + experiment hex_hash if present
-        """
-        _value_to_set = value + f"|{self.path.suffix_path.replace('/', '|')}"
-        if self._flow_id is None:
-            self._flow_id = _value_to_set
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"This property is already set ...",
-                    {
-                        "current value    - ": self._flow_id,
-                        "want to set with - ": _value_to_set
-                    }
-                ]
-            )
-
-    @property
     def job_id(self) -> str:
-        return f"x{hashlib.sha256(self.flow_id.encode('utf-8')).hexdigest()[:16]}"
+        """
+        Note that the job is made up of three unique things namely experiment, method and runner.
+        We assume that the runner is constant per file so to make job id unique we compose it with method name
+        and `experiment.hex_hash`.
+        Note that experiment has runner as dataclass field so we really need not worry uniqueness of our job :)
+        But when experiment is None we need to use runner hex_hash :(
+        """
+        _ret = self.method.__name__
+        if self.experiment is None:
+            # we have to use runner hex has as the job will not be unique on cluster
+            _ret += ":" + self.runner.hex_hash
+        else:
+            # NOte we do not consider runner as it is dataclass field of experiment :)
+            _ret += ":" + self.experiment.hex_hash
+        return _ret
 
     @property
     @util.CacheResult
@@ -670,8 +647,13 @@ class Job:
 
     @property
     def cli_command(self) -> t.List[str]:
+        # _command = [
+        #     shutil.which('python'), self.runner.py_script.absolute().as_posix(),
+        #     "run", self.method.__func__.__name__,
+        # ]
         _command = [
-            shutil.which('python'), self.runner.py_script, "run", self.method.__func__.__name__,
+            'python', self.runner.py_script.name,
+            "run", self.method.__func__.__name__,
         ]
         if self.experiment is not None:
             _command += [self.experiment.hex_hash]
@@ -715,14 +697,8 @@ class Job:
         # noinspection PyTypeChecker
         self.method = method  # type: types.MethodType
         self.experiment = experiment
-        # make simple name
-        self.name = method.__name__
-        if experiment is not None:
-            self.name += f":{experiment.hex_hash[:10]}"
         # container to save wait_on jobs
         self._wait_on = []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
-        # noinspection PyTypeChecker
-        self._flow_id = None  # type: str
 
         # ------------------------------------------------------------------ 02
         # make sure that method is from same runner instance
@@ -756,124 +732,6 @@ class Job:
                 ]
             ).raise_if_failed()
 
-    def _launch_on_worker_machine(self):
-        """
-        The jobs are run on cluster ... this piece of code will execute on the
-        worker machines that will execute those scheduled jobs
-        """
-
-        # ------------------------------------------------------------------- 01
-        # reconfig logger to change log file for job
-        import logging
-        _log = self.log_file
-        logger.setup_logging(
-            propagate=False,
-            level=logging.NOTSET,
-            # todo: here we can config that on server where things will be logged
-            handlers=[
-                # logger.get_rich_handler(),
-                # logger.get_stream_handler(),
-                logger.get_file_handler(_log.local_path),
-            ],
-        )
-        _start = _now()
-        _LOGGER.info(
-            msg=f"Starting job on worker machine ...",
-            msgs=[
-                {
-                    "name": self.name,
-                    "started": _start.ctime(),
-                }
-            ]
-        )
-
-        # ------------------------------------------------------------------- 02
-        # check if launcher client machine has created launched tag
-        if not self.tag_manager.launched.exists():
-            raise e.code.CodingError(
-                msgs=[
-                    "We expect that `launched` tag is created by client launching machine .... "
-                    "check _launch_on_main_machine"
-                ]
-            )
-
-        # ------------------------------------------------------------------- 03
-        # indicates that job is started
-        self.tag_manager.started.create()
-
-        # ------------------------------------------------------------------- 04
-        # indicate that job will now be running
-        # also note this acts as semaphore and is deleted when job is finished
-        # ... hence started tag is important
-        self.tag_manager.running.create()
-
-        # ------------------------------------------------------------------- 05
-        _failed = False
-        try:
-            for _wj in self.wait_on_jobs:
-                if not _wj.is_finished:
-                    raise e.code.CodingError(
-                        msgs=[f"Wait-on job with flow-id {_wj.flow_id} and job-id "
-                              f"{_wj.job_id} is supposed to be finished ..."]
-                    )
-            _sub_title = [
-                f"name: {self.name}", f"py-script: {self.runner.py_script}",
-            ]
-            _job_display_name = f"{self.runner.__module__}.{self.runner.__class__.__name__}.{self.method.__name__}"
-            with richy.StatusPanel(
-                title="Running Job",
-                sub_title=_sub_title, tc_log=logger.get_logger(self.runner.__module__)
-            ) as _rp:
-                if self.experiment is None:
-                    with self.runner(richy_panel=_rp):
-                        self.method()
-                else:
-                    with (self.runner(richy_panel=_rp), self.experiment(richy_panel=_rp)):
-                        self.method(experiment=self.experiment)
-            self.tag_manager.running.delete()
-            self.tag_manager.finished.create()
-            _end = _now()
-            _LOGGER.info(
-                msg=f"Successfully finished job on worker machine ...",
-                msgs=[
-                    {
-                        "name": self.name,
-                        "py-script": self.runner.py_script,
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                    }
-                ]
-            )
-        except Exception as _ex:
-            _failed = True
-            self.tag_manager.failed.create(
-                data={
-                    "exception": str(_ex)
-                }
-            )
-            _end = _now()
-            _LOGGER.info(
-                msg=f"Failed job on worker machine ...",
-                msgs=[
-                    {
-                        "name": self.name,
-                        "py-script": self.runner.py_script,
-                        "started": _start.ctime(),
-                        "ended": _end.ctime(),
-                        "seconds": str((_end - _start).total_seconds()),
-                        "exception": str(_ex),
-                    }
-                ]
-            )
-            self.tag_manager.running.delete()
-            # above thing will tell toolcraft that things failed gracefully
-            # while below raise will tell cluster systems like bsub that job has failed
-            # todo for `JobRunnerClusterType.local_on_same_thread` this will not allow
-            #  future jobs to run ... but this is expected as we want to debug in
-            #  this mode mostly
-            raise _ex
-
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
         return self
@@ -885,7 +743,7 @@ class Job:
         """
         # ------------------------------------------------------------- 01
         # some vars
-        _job_info = {"name": self.name, "py-script": self.runner.py_script, "path": self.path.full_path}
+        _job_info = {"name": self.job_id, "py-script": self.runner.py_script, "path": self.path.full_path}
         _tm = self.tag_manager
         _launched = _tm.launched.read()
         _started = _tm.started.read()
@@ -1056,43 +914,6 @@ class JobGroup(abc.ABC):
     """
 
     @property
-    def flow_id(self) -> str:
-        if self._flow_id is None:
-            raise e.code.CodingError(
-                msgs=[
-                    f"This must be automatically set by code ..."
-                ]
-            )
-        return self._flow_id
-
-    @flow_id.setter
-    def flow_id(self, value: str):
-        if self._flow_id is None:
-            self._flow_id = value
-            _len = len(str(len(self.jobs)))
-            for _i, _j in enumerate(self.jobs):
-                if isinstance(_j, Job):
-                    _j.flow_id = f"{value}.j{_i:0{_len}d}"
-                elif isinstance(_j, SequentialJobGroup):
-                    _j.flow_id = f"{value}.s{_i:0{_len}d}"
-                elif isinstance(_j, ParallelJobGroup):
-                    _j.flow_id = f"{value}.p{_i:0{_len}d}"
-                else:
-                    raise e.code.CodingError(
-                        msgs=[f"unsupported type {type(_j)}"]
-                    )
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    f"This property is already set ...",
-                    {
-                        "current value    - ": self._flow_id,
-                        "want to set with - ": value
-                    }
-                ]
-            )
-
-    @property
     def is_on_main_machine(self) -> bool:
         return self.runner.is_on_main_machine
 
@@ -1125,14 +946,9 @@ class JobGroup(abc.ABC):
         # save vars
         self.runner = runner
         self.jobs = jobs
-        # noinspection PyTypeChecker
-        self._flow_id = None  # type: str
 
         # call init
         self.init()
-
-    def __str__(self) -> str:
-        return self.flow_id
 
     def init(self):
         ...
@@ -1244,7 +1060,6 @@ class Flow:
         # set flow ids
         _previous_stage_id = None
         for _stage_id, _stage in self.stages.items():
-            _stage.flow_id = f"#[{_stage_id}]"
             if _previous_stage_id is not None:
                 for _ in _stage.all_jobs:
                     _.wait_on(self.stages[_previous_stage_id])
@@ -1325,8 +1140,36 @@ class Monitor:
                 f"Creating experiment info file {_file.local_path.as_posix()}")
             _file.write_text(experiment.yaml())
 
+    def make_runner_info_file(self):
+        _file = self.path / f"{self.runner.hex_hash}.info"
+        if not _file.exists():
+            _LOGGER.info(
+                f"Creating runner info file {_file.local_path.as_posix()}")
+            _file.write_text(self.runner.yaml())
+
     def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
+        """
+        Note that the experiments are present in Runner instance so we can return that.
+        But sometimes you might have filtered experiments or trying some other experiments while
+        commenting previous experiments while running Runner instance. In that case the experiments might still
+        be on disk but current Runner instance might not be aware of it. So we will make an instance for you.
+        But be aware that the runner will not know any thing about it
+        """
+        # ------------------------------------------------------------- 01
+        # some vars
         _experiment_info_file = self.experiments_folder_path / f"{hex_hash}.info"
+
+        # ------------------------------------------------------------- 02
+        # check if current runner instance has it
+        for _ in self.runner.registered_experiments:
+            if _.hex_hash == hex_hash:
+                # sanity check
+                assert _experiment_info_file.exists(), "was expecting this to be present"
+                return _
+
+        # ------------------------------------------------------------- 03
+        # check if there is some experiment on disk with given hex hash
+        # note that this will also register this experiment with current runner instance
         if _experiment_info_file.exists():
             # get class
             _cls = m.HashableClass.get_class(_experiment_info_file)
@@ -1340,11 +1183,13 @@ class Monitor:
             _kwargs["runner"] = self.runner
             # return new instance
             return _cls(**_kwargs)
-        else:
-            raise e.code.CodingError(
-                msgs=[f"We expect that you should have already created file "
-                      f"{_experiment_info_file}"]
-            )
+
+        # ------------------------------------------------------------- 04
+        # raise error as there is no experiment that is monitored for his hex_hash
+        raise e.code.CodingError(
+            msgs=[f"We expect that you should have already created file "
+                  f"{_experiment_info_file}"]
+        )
 
 
 class RunnerInternal(m.Internal):
@@ -1404,8 +1249,8 @@ class Runner(m.HashableClass, abc.ABC):
     """
 
     @property
-    def py_script(self) -> str:
-        return pathlib.Path(sys.argv[0]).name
+    def py_script(self) -> pathlib.Path:
+        return pathlib.Path(sys.argv[0])
 
     @property
     @util.CacheResult
@@ -1433,16 +1278,15 @@ class Runner(m.HashableClass, abc.ABC):
         """
         import pathlib
         _py_script = self.py_script
-        _folder_name = _py_script.replace(".py", "")
+        _folder_name = _py_script.name.replace(".py", "")
         _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
         e.code.AssertError(
-            value1=_ret.local_path.as_posix(),
-            value2=(pathlib.Path(_py_script).parent / _folder_name).as_posix(),
+            value1=_ret.local_path.absolute().as_posix(),
+            value2=(_py_script.parent / _folder_name).absolute().as_posix(),
             msgs=[
-                f"Something unexpected ... the cwd for job runner is "
-                f"{pathlib.Path.cwd() / _folder_name}",
-                f"While the accompanying script is at "
-                f"{pathlib.Path(_py_script).as_posix()}",
+                f"This is unexpected ... ",
+                f"The cwd for job runner is {_ret.local_path.absolute().as_posix()}",
+                f"While the accompanying script is at {_py_script.as_posix()}",
                 f"Please debug ..."
             ]
         ).raise_if_failed()
@@ -1495,7 +1339,7 @@ class Runner(m.HashableClass, abc.ABC):
         import logging
         import pathlib
         # note that this should always be local ... dont use `self.cwd`
-        _log_file = pathlib.Path(self.py_script.replace(".py", "")) / "runner.log"
+        _log_file = self.py_script.parent / self.py_script.name.replace(".py", "") / "runner.log"
         _log_file.parent.mkdir(parents=True, exist_ok=True)
         logger.setup_logging(
             propagate=False,
@@ -1509,6 +1353,9 @@ class Runner(m.HashableClass, abc.ABC):
 
         # call property flow .... so that some experiments dynamically added to flow are available to Runner
         _ = self.flow
+
+        # make <hex_hash>.info for runner if not present
+        self.monitor.make_runner_info_file()
 
     @util.CacheResult
     def methods_to_be_used_in_jobs(self) -> t.Dict[str, t.List[types.MethodType]]:
@@ -1592,10 +1439,13 @@ class Runner(m.HashableClass, abc.ABC):
 
     def run(self, cluster_type: JobRunnerClusterType):
         from . import cli
+        _sub_title = [f"command: {sys.argv[1]}"]
+        if bool(sys.argv[2:]):
+            _sub_title += [f"args: {sys.argv[2:]}"]
         with richy.StatusPanel(
             tc_log=_LOGGER,
-            title=f"Running for py_script: {self.py_script!r}",
-            sub_title=[":command:", f"{sys.argv[1:]}", ],
+            title=f"Running for py_script: {self.py_script.name!r}",
+            sub_title=_sub_title,
         ) as _rp:
             with self(richy_panel=_rp):
                 cli.get_app(runner=self, cluster_type=cluster_type)()
@@ -1666,7 +1516,7 @@ class Experiment(m.HashableClass, abc.ABC):
         # )
 
         # ------------------------------------------------------------------ 04
-        # make <hex_hash>.info if not present
+        # make <hex_hash>.info for experiment if not present
         self.runner.monitor.make_experiment_info_file(experiment=self)
 
     @UseMethodInForm(label_fmt="Job's")
