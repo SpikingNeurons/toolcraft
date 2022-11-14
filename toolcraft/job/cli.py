@@ -191,12 +191,6 @@ def _run_job(_job: Job, _cli_command: t.List[str], shell: bool = True):
     # run in subprocess
     subprocess.run(_cli_command, shell=shell)
 
-    # ------------------------------------------------------------- 04
-    # log
-    _LOGGER.info(
-        msg=f"Launched job from main machine with below command...", msgs=[_cli_command],
-    )
-
 
 @_APP.command()
 def nxdi():
