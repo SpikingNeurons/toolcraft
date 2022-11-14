@@ -1271,6 +1271,11 @@ class Runner(m.HashableClass, abc.ABC):
         }
 
     @property
+    @abc.abstractmethod
+    def copy_src_dst(self) -> t.Tuple[str, str]:
+        ...
+
+    @property
     @util.CacheResult
     def cwd(self) -> s.Path:
         """

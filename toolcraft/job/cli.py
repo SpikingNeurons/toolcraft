@@ -429,18 +429,19 @@ def copy():
     Copies from server to cwd.
     """
     _rp = _RUNNER.richy_panel
-    _rp.update("copying results from nxdi to cwd ...")
-    xx= "ROBOCOPY E:\scandal\dnd\Prepared \\smb.nxdi.nl-cdc01.nxp.com\home\va_tools_ns_user01\nxa06038\scandal\Prepared *.* /J /E /ETA"
-    print(_RUNNER.cwd.local_path.absolute().as_posix())
-
-    # subprocess.check_call(
-    #     [
-    #         "ROBOCOPY",
-    #         _RUNNER.cwd.local_path.absolute().as_posix(),
-    #         ...,
-    #         "*.*", "/J", "/E", "/ETA"
-    #     ], timeout=None,
-    # )
+    _rp.update("copying results from server to cwd ...")
+    _rp._live.stop()
+    _cmd_tokens = [
+        "ROBOCOPY",
+        _RUNNER.copy_src_dst[1], _RUNNER.copy_src_dst[0],
+        "*.*", "/J", "/E", "/ETA"
+    ]
+    _cmd = " ".join(_cmd_tokens)
+    subprocess.check_call(
+        _cmd_tokens, timeout=None,
+    )
+    _rp._live.start()
+    print(_cmd)
 
 
 @_APP.command()

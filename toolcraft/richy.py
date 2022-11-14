@@ -725,7 +725,7 @@ class StatusPanel(Widget):
     todo: we have now full support for s.FileGroup and s.Folder
       so add counters on status panel for that ... so that `on_enter` can call them and they will update
       via `self.richy_panel`
-      We will have some thing like (FG-FileGroup, Fo-Folder, C-created, A-accessed, D-deleted)
+      We will have something like (FG-FileGroup, Fo-Folder, C-created, A-accessed, D-deleted)
       + FG C:02 A:67 D:04
       + Fo C:12 A:03 D:43
     """
