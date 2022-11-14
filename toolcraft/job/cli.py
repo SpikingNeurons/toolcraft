@@ -437,8 +437,8 @@ def copy():
         "*.*", "/J", "/E", "/ETA"
     ]
     _cmd = " ".join(_cmd_tokens)
-    subprocess.check_call(
-        _cmd_tokens, timeout=None,
+    subprocess.run(
+        _cmd_tokens, shell=False
     )
     _rp._live.start()
     print(_cmd)
