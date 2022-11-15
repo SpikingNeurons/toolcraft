@@ -742,9 +742,9 @@ class Engine:
             # this will run infinitely ...
             while True:
 
-                # await (physics will run at 5 Hz)
-                # todo: make sure that all fixed_update's happen in 0.2 seconds
-                await asyncio.sleep(0.2)
+                # await (physics will run at 2 Hz)
+                # todo: make sure that all fixed_update's happen in 0.5 seconds
+                await asyncio.sleep(0.5)
 
                 # call fixed_update phase
                 # todo: asyncio.create_task or asyncio.to_thread
@@ -815,8 +815,8 @@ class Engine:
 
         # ----------------------------------------------------------- 02
         # todo: work this out when we want to have lifecycle for widgets
-        # _lifecycle = asyncio.create_task(cls.lifecycle_loop())
-        # _lifecycle_physics = asyncio.create_task(cls.lifecycle_physics_loop())
+        _lifecycle = asyncio.create_task(cls.lifecycle_loop())
+        _lifecycle_physics = asyncio.create_task(cls.lifecycle_physics_loop())
 
         # ----------------------------------------------------------- 03
         # todo this loop can go on parallel processes where they will loop infinitely and wait for tasks
@@ -955,8 +955,11 @@ class Widget(_WidgetDpg, abc.ABC):
         super().init()
 
         # set some vars
+        # noinspection PyAttributeOutsideInit
         self._parent = None
+        # noinspection PyAttributeOutsideInit
         self._dash_board = None
+        # noinspection PyAttributeOutsideInit
         self._is_built = False
 
         # if there is parent container that is available via with context then add to it

@@ -265,11 +265,6 @@ class _Callback(gui.callback.Callback):
 @dataclasses.dataclass
 class PlottingWithContiniousUpdates(gui.form.Form):
 
-
-    def init(self):
-        super().init()
-        print(id(self.line_plot.callback), id(self.__class__.line_plot.callback), "<<<<<<<<<<<<<<<<<<")
-
     title: str = "Plotting with continious updates ..."
 
     collapsing_header_open: bool = False
@@ -279,6 +274,9 @@ class PlottingWithContiniousUpdates(gui.form.Form):
         height=200, width=-1,
         callback=_Callback()
     )
+
+    def fixed_update(self):
+        print(">>>>>>>>>>>>>>>>>>>", self)
 
 
 @dataclasses.dataclass
