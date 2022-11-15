@@ -329,6 +329,12 @@ class _WidgetDpg(abc.ABC):
                 _fn()
             self.post_build_fns.clear()
 
+        # register in WidgetEngine
+        if Widget.update != self.__class__.update:
+            Engine.update[self.guid] = self
+        if Widget.fixed_update != self.__class__.fixed_update:
+            Engine.fixed_update[self.guid] = self
+
     def get_value(self) -> t.Any:
         """
         Refer:
@@ -456,6 +462,20 @@ class _WidgetDpg(abc.ABC):
         >>> dpg.disable_item
         """
         internal_dpg.configure_item(self.guid, enabled=False)
+
+    def fixed_update(self):
+        ...
+
+    def update(self):
+        """
+        todo: async update that can have await ... (Try this is try_* rough work first ...)
+          A method run can be spread over multiple frames where
+            only part of code until next await executes in a given frame ...
+          Note that also deletion needs to happen after entire update is executed ...
+            or maybe for every await in update method check if deletion is requested
+
+        """
+        ...
 
 
 @dataclasses.dataclass
@@ -710,7 +730,8 @@ class Engine:
                 # call update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.update.values():
-                    _.update()
+                    if _.is_built:
+                        _.update()
 
                 # todo: other phases nut need to rethink design ...
                 #   note that destroy for widget.delete is not effective
@@ -749,7 +770,8 @@ class Engine:
                 # call fixed_update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.fixed_update.values():
-                    _.fixed_update()
+                    if _.is_built:
+                        _.fixed_update()
         except Exception as _e:
             raise Exception(f"Exception in {Engine.lifecycle_physics_loop}", _e)
 
@@ -967,12 +989,6 @@ class Widget(_WidgetDpg, abc.ABC):
         if self.is_in_gui_with_mode:
             _CONTAINER_WIDGET_STACK[-1](widget=self)
 
-        # register in WidgetEngine
-        if Widget.update != self.__class__.update:
-            Engine.update[self.guid] = self
-        if Widget.fixed_update != self.__class__.fixed_update:
-            Engine.fixed_update[self.guid] = self
-
     def on_enter(self):
         raise Exception(
             f"Widget for class {self.__class__} is not a {ContainerWidget.__name__!r} so "
@@ -1036,20 +1052,6 @@ class Widget(_WidgetDpg, abc.ABC):
                 raise _e
 
         # todo: make _widget unusable ... figure out
-
-    def fixed_update(self):
-        ...
-
-    def update(self):
-        """
-        todo: async update that can have await ... (Try this is try_* rough work first ...)
-          A method run can be spread over multiple frames where
-            only part of code until next await executes in a given frame ...
-          Note that also deletion needs to happen after entire update is executed ...
-            or maybe for every await in update method check if deletion is requested
-
-        """
-        ...
 
 
 USER_DATA = t.Dict[
@@ -1597,6 +1599,21 @@ class Form(MovableWidget, abc.ABC):
                 # noinspection PyAttributeOutsideInit
                 self._container = gui.widget.Group()
             return self._container
+
+    @property
+    def dpg_state(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
+        # as form is fake dpg widget
+        return internal_dpg.get_item_state(self.container.guid)
+
+    @property
+    def dpg_config(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
+        # as form is fake dpg widget
+        return internal_dpg.get_item_configuration(self.container.guid)
+
+    @property
+    def dpg_info(self) -> t.Dict[str, t.Any]:
+        # as form is fake dpg widget
+        return internal_dpg.get_item_info(self.container.guid)
 
     def init(self):
         """

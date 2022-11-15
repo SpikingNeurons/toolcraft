@@ -276,7 +276,10 @@ class PlottingWithContiniousUpdates(gui.form.Form):
     )
 
     def fixed_update(self):
-        print(">>>>>>>>>>>>>>>>>>>", self)
+        print("yyyyyyyyyyyyyyyyyyyyyyy", self.is_built)
+        _1 = self.line_plot.x_axis.get_limits()
+        _2 = self.line_plot.y1_axis.get_limits()
+        print(">>>>>>>>>>>>>>>>>>>", _1, _2)
 
 
 @dataclasses.dataclass
