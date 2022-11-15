@@ -719,7 +719,7 @@ class DpgDef:
                 "\t\t# eventually remove this sanity check in ("
                 "dpg_widgets_generator.py)...",
                 "\t\tassert sender_guid == self.guid, \\"
-                "\n\t\t\t'was expecting the dpg_id to match ...'",
+                "\n\t\t\t'was expecting the guid to match ...'",
                 # "\t\tassert id(user_data) == id(self.user_data), \\"
                 # "\n\t\t\t'was expecting the user_data to match ...'",
                 "",
@@ -792,7 +792,7 @@ class DpgDef:
             _kwargs.update(self.parametrize)
 
         if self.is_container:
-            with self.fn(parent=parent, **_kwargs) as _child_dpg_id:
+            with self.fn(parent=parent, **_kwargs):
                 ...
         else:
             self.fn(parent=parent, **_kwargs)

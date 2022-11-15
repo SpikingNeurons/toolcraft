@@ -101,7 +101,6 @@ class CloseWidgetCallback(Callback):
 
     def fn(self, sender: widget.Widget):
         try:
-            print("????????????????", sender.get_user_data()['widget_to_delete'])
             sender.get_user_data()['widget_to_delete'].delete()
         except KeyError:
             raise KeyError(

@@ -68,7 +68,7 @@ class PopUp(Window):
     #         callback=lambda: internal_dpg.configure_item(
     #             _internal_popup_id, show=True))
     #     internal_dpg.bind_item_handler_registry(
-    #         self.hover_over.dpg_id, _handler_reg_id)
+    #         self.hover_over.guid, _handler_reg_id)
     #
     #     _ret = super().build()
     #

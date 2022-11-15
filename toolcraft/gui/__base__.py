@@ -296,7 +296,7 @@ class _WidgetDpg(abc.ABC):
     ):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
-            raise Exception(f"We expect build to return int which happens to be dpg_id")
+            raise Exception(f"We expect build to return int which happens to be guid")
 
         # test if remaining important internals are set
         from . import window
@@ -420,7 +420,7 @@ class _WidgetDpg(abc.ABC):
         dpg.bind_item_theme(item=self.guid, theme=theme.get())
 
     def set_widget_configuration(self, **kwargs):
-        # if any value is widget then get its dpg_id
+        # if any value is widget then get its guid
         _new_kwargs = {}
         for _k in kwargs.keys():
             _v = kwargs[_k]
@@ -432,7 +432,7 @@ class _WidgetDpg(abc.ABC):
 
     def display_raw_configuration(self) -> t.Dict:
         """
-        Note that raw dpg_id is not treated
+        Note that raw guid is not treated
         """
         return dpg.get_item_configuration(item=self.guid)
 
@@ -1023,7 +1023,15 @@ class Widget(_WidgetDpg, abc.ABC):
 
         # delete the dpg UI counterpart .... skip line series
         # from .plot import LineSeries
-        dpg.delete_item(item=_guid, children_only=False, slot=-1)
+        try:
+            dpg.delete_item(item=_guid, children_only=False, slot=-1)
+        except Exception as _e:
+            # Forms are fake widgets and have no dpg counterpart ... so skip it
+            if isinstance(self, Form):
+                ...
+            else:
+                raise _e
+
         # todo: make _widget unusable ... figure out
 
     def fixed_update(self):
@@ -1168,7 +1176,7 @@ class MovableWidget(Widget, abc.ABC):
         else:
             self.move(before=self.before())
             # if self.is_built:
-            #     internal_dpg.move_item_up(self.dpg_id)
+            #     internal_dpg.move_item_up(self.guid)
             return True
 
     def move_down(self) -> bool:
@@ -1182,7 +1190,7 @@ class MovableWidget(Widget, abc.ABC):
         else:
             self.move(after=_after)
             # if self.is_built:
-            #     internal_dpg.move_item_down(self.dpg_id)
+            #     internal_dpg.move_item_down(self.guid)
             return True
 
 
@@ -2129,13 +2137,13 @@ class Dashboard(abc.ABC):
         _primary_window = self.layout()
         _primary_window.dash_board = self
         _primary_window.build()
-        # primary window dpg_id
+        # primary window guid
         _primary_window_guid = _primary_window.guid
         # set the things for primary window
         dpg.set_primary_window(window=_primary_window_guid, value=True)
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
-        # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
+        # assets.Font.RobotoRegular.set(item_guid=_ret, size=16)
         dpg.bind_item_theme(item=_primary_window_guid, theme=asset.Theme.DARK.get())
 
         # set is_built

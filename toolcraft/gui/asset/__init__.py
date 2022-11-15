@@ -15,9 +15,9 @@ class Font(enum.Enum):
     def file(self) -> pathlib.Path:
         return _ASSET_FOLDER / "fonts" / f"{self.name}.ttf"
 
-    def set(self, item_dpg_id: int, size: int = 13):
+    def set(self, item_fuid: int, size: int = 13):
         _dpg_font_id = dpg.font(file=self.file.as_posix(), size=size)
-        dpg.set_item_font(item_dpg_id, _dpg_font_id)
+        dpg.set_item_font(item_fuid, _dpg_font_id)
 
 
 _THEMES_CACHE = {}
