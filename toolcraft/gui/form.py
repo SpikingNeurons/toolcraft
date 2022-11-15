@@ -88,10 +88,6 @@ class HashableMethodsRunnerForm(Form):
     """
 
     hashable: t.Union[Hashable, "HashableClass"]
-    # a single receiver will be used for all methods given by callable_names,
-    # so we share it with `group_tag`
-    # This allows to use keys in callable_names as tab bar
-    group_tag: t.Optional[str]
     # todo: add icons for this
     close_button: bool
     # todo: add icons for this
@@ -108,7 +104,7 @@ class HashableMethodsRunnerForm(Form):
             # noinspection PyAttributeOutsideInit
             self._button_bar = widget.Group(horizontal=True)
             # noinspection PyAttributeOutsideInit
-            self._receiver = widget.Group()
+            self._receiver = widget.Group(user_data=dict())
 
     def layout(self) -> widget.MovableContainerWidget:
         # get fromm super
@@ -150,8 +146,7 @@ class HashableMethodsRunnerForm(Form):
             _button = _use_method_in_form_obj.get_button_widget(
                 hashable=_hashable,
                 receiver=_receiver,
-                allow_refresh=_allow_refresh,
-                group_tag=self.group_tag,
+                receiver_tag="common_tag",
             )
             # add button
             _button_bar(widget=_button)
@@ -175,10 +170,14 @@ class DoubleSplitForm(Form):
         super().init()
 
         # make container for button_panel_group
+        # noinspection PyAttributeOutsideInit
         self._button_panel_group = dict()  # type: t.Dict[str, widget.CollapsingHeader]
         with EscapeWithContext():
+            # noinspection PyAttributeOutsideInit
             self._button_panel = widget.Group(horizontal=False)
-            self._receiver_panel = widget.Group(horizontal=False)
+            # we will dict for user data to save things for _receiver_panel
+            # noinspection PyAttributeOutsideInit
+            self._receiver_panel = widget.Group(horizontal=False, user_data=dict())
 
     def layout(self) -> table.Table:
         # call super
@@ -253,8 +252,7 @@ class DoubleSplitForm(Form):
             _use_method_in_form_obj.get_button_widget(
                 hashable=hashable,
                 receiver=self._receiver_panel,
-                allow_refresh=allow_refresh,
                 # we can maintain this as we will be using single `callable_name` and hence
                 # no use for this kwarg
-                group_tag=None,
+                receiver_tag=None,
             )

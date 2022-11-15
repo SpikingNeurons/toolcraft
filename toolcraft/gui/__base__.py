@@ -1136,8 +1136,8 @@ class MovableWidget(Widget, abc.ABC):
         if self.is_built:
             # noinspection PyUnresolvedReferences
             internal_dpg.move_item(
-                self.dpg_id, parent=_parent.dpg_id,
-                before=0 if _before is None else _before.dpg_id)
+                self.guid, parent=_parent.guid,
+                before=0 if _before is None else _before.guid)
 
     def before(self) -> t.Optional["MovableWidget"]:
         _before = None
@@ -1340,7 +1340,7 @@ class UseMethodInForm:
         self,
         label_fmt: str = None,
         run_async: bool = False,
-        allow_refresh: bool = None,
+        allow_refresh: bool = True,
         display_in_form: bool = True,
     ):
         """
@@ -1395,8 +1395,7 @@ class UseMethodInForm:
         self,
         hashable: t.Union["Hashable", "HashableClass"],
         receiver: "gui.widget.ContainerWidget",
-        allow_refresh: bool = None,
-        group_tag: str = None,
+        receiver_tag: str = None,
     ) -> "gui.widget.Button":
 
         # ---------------------------------------------------- 01
@@ -1420,20 +1419,6 @@ class UseMethodInForm:
             raise Exception(f"unknown type {type(self.label_fmt)}")
 
         # ---------------------------------------------------- 03
-        # if local allow_refresh is None then it is needed to pass allow_refresh kwarg
-        if self.allow_refresh is None:
-            if allow_refresh is None:
-                raise Exception(
-                    f"Decorator UseMethodInFor setting `allow_refresh` is not set so it is mandatory to supply "
-                    f"kwarg `allow_refresh` while calling this method"
-                )
-        else:
-            if allow_refresh is not None:
-                raise Exception(
-                    f"Decorator UseMethodInFor setting `allow_refresh` is supplied so do not set "
-                    f"kwarg `allow_refresh` while calling this method"
-                )
-            allow_refresh = self.allow_refresh
         # create callback
         from . import callback
         _callback = callback.HashableMethodRunnerCallback(
@@ -1441,8 +1426,8 @@ class UseMethodInForm:
             hashable=hashable,
             callable_name=_callable_name,
             receiver=receiver,
-            allow_refresh=allow_refresh,
-            group_tag=group_tag,
+            allow_refresh=self.allow_refresh,
+            receiver_tag=receiver_tag,
         )
 
         # ---------------------------------------------------- 04

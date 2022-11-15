@@ -296,7 +296,6 @@ class SimpleHashableClass(gui.Hashable):
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
         return gui.form.HashableMethodsRunnerForm(
             title=self.all_plots_gui_label.split("\n")[0],
-            group_tag="simple",
             hashable=self,
             close_button=True,
             info_button=True,

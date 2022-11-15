@@ -286,7 +286,6 @@ class JobViewer(m.HashableClass):
 
         _ret = gui.form.HashableMethodsRunnerForm(
             title=self.button_label.split("\n")[0],
-            group_tag="simple",
             hashable=self,
             close_button=True,
             info_button=True,
@@ -306,7 +305,6 @@ class JobViewer(m.HashableClass):
 
         _ret = gui.form.HashableMethodsRunnerForm(
             title=self.button_label.split("\n")[0] + f" : {self.method_name}",
-            group_tag="simple",
             hashable=self,
             close_button=True,
             info_button=True,
@@ -1543,7 +1541,6 @@ class Experiment(m.HashableClass, abc.ABC):
         from .. import gui
         return gui.form.HashableMethodsRunnerForm(
             title=self.view_gui_label.split("\n")[0],
-            group_tag="simple",
             hashable=self,
             close_button=True,
             info_button=True,
