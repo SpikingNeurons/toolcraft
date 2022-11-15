@@ -5,6 +5,8 @@ import typing as t
 import sys
 import time
 
+from toolcraft.gui.__base__ import Widget
+
 sys.path.append("..")
 
 import dearpygui.dearpygui as dpg
@@ -254,6 +256,32 @@ class PlottingWithUpdates(gui.form.Form):
 
 
 @dataclasses.dataclass
+class _Callback(gui.callback.Callback):
+
+    def fn(self, sender: Widget):
+        print("???///")
+
+
+@dataclasses.dataclass
+class PlottingWithContiniousUpdates(gui.form.Form):
+
+
+    def init(self):
+        super().init()
+        print(id(self.line_plot.callback), id(self.__class__.line_plot.callback), "<<<<<<<<<<<<<<<<<<")
+
+    title: str = "Plotting with continious updates ..."
+
+    collapsing_header_open: bool = False
+
+    line_plot: gui.plot.Plot = gui.plot.Plot(
+        label="This is line plot ...",
+        height=200, width=-1,
+        callback=_Callback()
+    )
+
+
+@dataclasses.dataclass
 class SimpleHashableClass(gui.Hashable):
 
     some_value: str
@@ -406,9 +434,11 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic3: PlottingWithUpdates = PlottingWithUpdates()
 
-    topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
+    topic4: PlottingWithContiniousUpdates = PlottingWithContiniousUpdates()
 
-    topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
+    topic5: gui.form.DoubleSplitForm = MyDoubleSplitForm()
+
+    topic6: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
 
     container: gui.widget.Group = gui.widget.Group()
 
@@ -417,31 +447,31 @@ def basic_dashboard():
     _dash = MyDashboard(title="My Dashboard")
     _dash.topic2.plot_some_examples()
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="first hashable ..."),
         group_key="Group 1 ..."
     )
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="second hashable ..."),
         group_key="Group 1 ..."
     )
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="third hashable ..."),
         group_key="Group 2 ..."
     )
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="fourth hashable ..."),
         group_key="Group 2 ..."
     )
-    _dash.topic5.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
-    _dash.topic5.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
-    _dash.topic5.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
+    _dash.topic6.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
+    _dash.topic6.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
+    _dash.topic6.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
     with _dash.container:
-        with gui.widget.CollapsingHeader(label="Test container"):
-            gui.widget.Text(default_value="first element in container ...")
+        with gui.widget.CollapsingHeader(label="Test container") as _cc:
+            _t = gui.widget.Text(default_value="first element in container ...")
             _ = gui.form.DoubleSplitForm(
                 title=f"*** [[ ]] ***",
                 callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
@@ -474,8 +504,8 @@ def demo():
 
 
 def main():
-    # basic_dashboard()
-    demo()
+    basic_dashboard()
+    # demo()
 
 
 if __name__ == "__main__":

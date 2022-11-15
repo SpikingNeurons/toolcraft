@@ -147,6 +147,15 @@ class HashableMethodRunnerCallback(Callback):
         # _sender = self.sender
         _hashable = self.hashable
         _receiver = self.receiver
+
+        # check if dashboard same
+        # .... doesn't matter if you use sender or _receiver as there is one dashboard for all
+        #      This might change if we have multiple dashboard instances
+        # todo: we are using Engine we do not need this
+        # todo: precaution check ... remove later
+        assert id(_receiver.dash_board) == id(sender.dash_board), "must be same ..."
+
+
         if self.group_tag is None:
             _tag = f"{_hashable.__class__.__name__}:" \
                    f"{_hashable.hex_hash[-10:]}.{self.callable_name}"
@@ -158,12 +167,6 @@ class HashableMethodRunnerCallback(Callback):
                    f"{_hashable.hex_hash[-10:]}.{self.group_tag}"
 
         # get widget for given tag if present
-        # .... doesn't matter if you use sender or _receiver as there is one dashboard for all
-        #      This might change if we have multiple dashboard instances
-        # todo: we are using Engine we do not need this
-        _dash_board = _receiver.dash_board
-        # todo: precaution check ... remove later
-        assert id(_dash_board) == id(sender.dash_board), "must be same ..."
         # noinspection PyTypeChecker
         _widget = Engine.tags.get(_tag, None)
         _after_widget = None

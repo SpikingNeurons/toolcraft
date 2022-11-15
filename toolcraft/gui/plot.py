@@ -84,7 +84,7 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.get_axis_limits
         """
         if self.is_built:
-            return internal_dpg.get_axis_limits(self.dpg_id)
+            return internal_dpg.get_axis_limits(self.guid)
         else:
             raise Exception("Can get limits only when things are built ...")
 
@@ -94,13 +94,13 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.fit_axis_data
         """
         if self.is_built:
-            internal_dpg.fit_axis_data(axis=self.dpg_id)
+            internal_dpg.fit_axis_data(axis=self.guid)
         else:
             self.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
         if self.is_built:
-            internal_dpg.reset_axis_ticks(self.dpg_id)
+            internal_dpg.reset_axis_ticks(self.guid)
         else:
             self.post_build_fns.append(self.reset_ticks)
 
@@ -110,7 +110,7 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.set_axis_limits
         """
         if self.is_built:
-            internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+            internal_dpg.set_axis_limits(self.guid, ymin, ymax)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_limits, ymin, ymax)
@@ -122,7 +122,7 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.set_axis_limits_auto
         """
         if self.is_built:
-            internal_dpg.set_axis_limits_auto(self.dpg_id)
+            internal_dpg.set_axis_limits_auto(self.guid)
         else:
             self.post_build_fns.append(self.set_limits_auto)
 
@@ -132,7 +132,7 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.set_axis_ticks
         """
         if self.is_built:
-            internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+            internal_dpg.set_axis_ticks(self.guid, label_pairs)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_ticks, label_pairs)
@@ -188,7 +188,7 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.get_axis_limits
         """
         if self.is_built:
-            return internal_dpg.get_axis_limits(self.dpg_id)
+            return internal_dpg.get_axis_limits(self.guid)
         else:
             raise Exception("Can get limits only when things are built ...")
 
@@ -198,13 +198,13 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.fit_axis_data
         """
         if self.is_built:
-            internal_dpg.fit_axis_data(axis=self.dpg_id)
+            internal_dpg.fit_axis_data(axis=self.guid)
         else:
             self.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
         if self.is_built:
-            internal_dpg.reset_axis_ticks(self.dpg_id)
+            internal_dpg.reset_axis_ticks(self.guid)
         else:
             self.post_build_fns.append(self.reset_ticks)
 
@@ -214,7 +214,7 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.set_axis_limits
         """
         if self.is_built:
-            internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+            internal_dpg.set_axis_limits(self.guid, ymin, ymax)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_limits, ymin, ymax)
@@ -226,7 +226,7 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.set_axis_limits_auto
         """
         if self.is_built:
-            internal_dpg.set_axis_limits_auto(self.dpg_id)
+            internal_dpg.set_axis_limits_auto(self.guid)
         else:
             self.post_build_fns.append(self.set_limits_auto)
 
@@ -236,7 +236,7 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.set_axis_ticks
         """
         if self.is_built:
-            internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+            internal_dpg.set_axis_ticks(self.guid, label_pairs)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_ticks, label_pairs)
@@ -353,7 +353,7 @@ class Plot(_auto.Plot):
 
     @property
     def is_queried(self) -> bool:
-        return internal_dpg.is_plot_queried(self.dpg_id)
+        return internal_dpg.is_plot_queried(self.guid)
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: PlotItem, before: PlotItem = None):
@@ -391,7 +391,7 @@ class Plot(_auto.Plot):
         Refer:
         >>> dpg.get_plot_query_area
         """
-        return tuple(internal_dpg.get_plot_query_area(self.dpg_id))
+        return tuple(internal_dpg.get_plot_query_area(self.guid))
 
     def delete(self):
 

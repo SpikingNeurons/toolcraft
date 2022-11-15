@@ -186,19 +186,20 @@ class HistogramSeries2D(PlotSeries):
     # outliers (bool, optional): ...
     outliers: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_2d_histogram_series(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             xbins=self.xbins,
             ybins=self.ybins,
@@ -295,20 +296,21 @@ class Slider3D(MovableWidget):
     # scale (float, optional): Size of the widget.
     scale: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_3d_slider(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -330,9 +332,9 @@ class Slider3D(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -341,9 +343,9 @@ class Slider3D(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -352,9 +354,9 @@ class Slider3D(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -398,19 +400,20 @@ class AreaSeries(PlotSeries):
     # contribute_to_bounds (bool, optional): ...
     contribute_to_bounds: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_area_series(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             fill=self.fill,
             contribute_to_bounds=self.contribute_to_bounds,
@@ -453,19 +456,20 @@ class BarSeries(PlotSeries):
     # horizontal (bool, optional): ...
     horizontal: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_bar_series(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             weight=self.weight,
             horizontal=self.horizontal,
@@ -499,17 +503,18 @@ class BoolValue(Widget):
     # default_value (bool, optional): ...
     default_value: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_bool_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -583,12 +588,13 @@ class Button(MovableWidget):
     # direction (int, optional): Sets the cardinal direction for the arrow buy using constants mvDir_Left, mvDir_Up, mvDir_Down, mvDir_Right, mvDir_None. Arrow keyword must be set to True.
     direction: EnDir = EnDir.Left
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_button(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -612,9 +618,9 @@ class Button(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -623,9 +629,9 @@ class Button(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -634,9 +640,9 @@ class Button(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -698,10 +704,10 @@ class CandleSeries(PlotSeries):
     # time_unit (int, optional): mvTimeUnit_* constants. Default mvTimeUnit_Day.
     time_unit: EnTimeUnit = EnTimeUnit.Day
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_candle_series(
             self.dates,
@@ -709,11 +715,12 @@ class CandleSeries(PlotSeries):
             self.closes,
             self.lows,
             self.highs,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             bull_color=self.bull_color,
             bear_color=self.bear_color,
@@ -783,18 +790,19 @@ class CheckBox(MovableWidget):
     # default_value (bool, optional): Sets the default value of the checkmark
     default_value: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_checkbox(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -810,9 +818,9 @@ class CheckBox(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -821,9 +829,9 @@ class CheckBox(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -832,9 +840,9 @@ class CheckBox(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -914,12 +922,13 @@ class ColorButton(MovableWidget):
     # no_drag_drop (bool, optional): Disable ability to drag and drop small preview (color square) to apply colors to other items.
     no_drag_drop: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_color_button(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
@@ -944,9 +953,9 @@ class ColorButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -955,9 +964,9 @@ class ColorButton(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -966,9 +975,9 @@ class ColorButton(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1003,17 +1012,18 @@ class ColorValue(Widget):
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
     default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_color_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -1048,14 +1058,15 @@ class Colormap(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_colormap(
             self.colors,
             self.qualitative,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -1126,12 +1137,13 @@ class ColormapButton(MovableWidget):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_colormap_button(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
@@ -1153,9 +1165,9 @@ class ColormapButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1164,9 +1176,9 @@ class ColormapButton(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1175,9 +1187,9 @@ class ColormapButton(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1239,20 +1251,21 @@ class ColormapScale(MovableWidget):
     # max_scale (float, optional): Sets the max number of the color scale. Typically is the same as the max scale from the heat series.
     max_scale: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_colormap_scale(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             drop_callback=self.drop_callback_fn,
             show=self.show,
@@ -1264,9 +1277,9 @@ class ColormapScale(MovableWidget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1331,12 +1344,13 @@ class ColormapSlider(MovableWidget):
     # default_value (float, optional): ...
     default_value: float = 0.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_colormap_slider(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -1356,9 +1370,9 @@ class ColormapSlider(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1367,9 +1381,9 @@ class ColormapSlider(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1455,20 +1469,21 @@ class Combo(MovableWidget):
     # height_mode (int, optional): Controlls the number of items shown in the dropdown by the constants mvComboHeight_Small, mvComboHeight_Regular, mvComboHeight_Large, mvComboHeight_Largest
     height_mode: EnComboHeight = EnComboHeight.Regular
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_combo(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -1488,9 +1503,9 @@ class Combo(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1499,9 +1514,9 @@ class Combo(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1510,9 +1525,9 @@ class Combo(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1577,12 +1592,13 @@ class DatePicker(MovableWidget):
     # level (int, optional): Use avaliable constants. mvDatePickerLevel_Day, mvDatePickerLevel_Month, mvDatePickerLevel_Year
     level: EnDatePickerLevel = EnDatePickerLevel.Day
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_date_picker(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -1602,9 +1618,9 @@ class DatePicker(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1613,9 +1629,9 @@ class DatePicker(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1624,9 +1640,9 @@ class DatePicker(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1661,17 +1677,18 @@ class Double4Value(Widget):
     # default_value (Any, optional): ...
     default_value: t.Any = (0.0, 0.0, 0.0, 0.0)
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_double4_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -1703,17 +1720,18 @@ class DoubleValue(Widget):
     # default_value (float, optional): ...
     default_value: float = 0.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_double_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -1799,19 +1817,20 @@ class DragDouble(MovableWidget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_double(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -1833,9 +1852,9 @@ class DragDouble(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1844,9 +1863,9 @@ class DragDouble(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1855,9 +1874,9 @@ class DragDouble(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1949,19 +1968,20 @@ class DragDoublex(MovableWidget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_doublex(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -1984,9 +2004,9 @@ class DragDoublex(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -1995,9 +2015,9 @@ class DragDoublex(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2006,9 +2026,9 @@ class DragDoublex(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2097,19 +2117,20 @@ class DragFloat(MovableWidget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_float(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -2131,9 +2152,9 @@ class DragFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2142,9 +2163,9 @@ class DragFloat(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2153,9 +2174,9 @@ class DragFloat(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2247,19 +2268,20 @@ class DragFloatX(MovableWidget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_floatx(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -2282,9 +2304,9 @@ class DragFloatX(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2293,9 +2315,9 @@ class DragFloatX(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2304,9 +2326,9 @@ class DragFloatX(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2395,19 +2417,20 @@ class DragInt(MovableWidget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_int(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -2429,9 +2452,9 @@ class DragInt(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2440,9 +2463,9 @@ class DragInt(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2451,9 +2474,9 @@ class DragInt(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2545,19 +2568,20 @@ class DragIntX(MovableWidget):
     # clamped (bool, optional): Applies the min and max limits to direct entry methods also such as double click and CTRL+Click.
     clamped: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_intx(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -2580,9 +2604,9 @@ class DragIntX(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2591,9 +2615,9 @@ class DragIntX(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2602,9 +2626,9 @@ class DragIntX(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2654,17 +2678,18 @@ class PlotDragLine(PlotItem):
     # vertical (bool, optional): ...
     vertical: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_line(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             callback=self.callback_fn,
             show=self.show,
             default_value=self.default_value,
@@ -2676,9 +2701,9 @@ class PlotDragLine(PlotItem):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2725,17 +2750,18 @@ class PlotDragPoint(PlotItem):
     # show_label (bool, optional): ...
     show_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_drag_point(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             callback=self.callback_fn,
             show=self.show,
             default_value=self.default_value,
@@ -2746,9 +2772,9 @@ class PlotDragPoint(PlotItem):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -2786,15 +2812,16 @@ class DynamicTexture(Widget):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_dynamic_texture(
             self.width,
             self.height,
             self.default_value,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -2843,21 +2870,22 @@ class ErrorSeries(PlotSeries):
     # horizontal (bool, optional): ...
     horizontal: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_error_series(
             self.x,
             self.y,
             self.negative,
             self.positive,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             contribute_to_bounds=self.contribute_to_bounds,
             horizontal=self.horizontal,
@@ -2900,13 +2928,14 @@ class FileExtension(MovableWidget):
     # color (Union[List[int], Tuple[int, ...]], optional): Color for the text that will be shown with specified extensions.
     color: COLOR_TYPE = (-255, 0, 0, 255)
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_file_extension(
             self.extension,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -2944,17 +2973,18 @@ class Float4Value(Widget):
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
     default_value: PLOT_DATA_TYPE = (0.0, 0.0, 0.0, 0.0)
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_float4_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -2986,17 +3016,18 @@ class FloatValue(Widget):
     # default_value (float, optional): ...
     default_value: float = 0.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_float_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -3028,17 +3059,18 @@ class FloatVectValue(Widget):
     # default_value (Union[List[float], Tuple[float, ...]], optional): ...
     default_value: PLOT_DATA_TYPE = ()
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_float_vect_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -3067,13 +3099,14 @@ class FontChars(Widget):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_font_chars(
             self.chars,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3107,14 +3140,15 @@ class FontRange(Widget):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_font_range(
             self.first_char,
             self.last_char,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3145,13 +3179,14 @@ class FontRangeHint(Widget):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_font_range_hint(
             self.hint,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -3209,20 +3244,21 @@ class HeatSeries(PlotSeries):
     # contribute_to_bounds (bool, optional): ...
     contribute_to_bounds: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_heat_series(
             self.x,
             self.rows,
             self.cols,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             scale_min=self.scale_min,
             scale_max=self.scale_max,
@@ -3284,18 +3320,19 @@ class HistogramSeries(PlotSeries):
     # contribute_to_bounds (bool, optional): ...
     contribute_to_bounds: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_histogram_series(
             self.x,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             bins=self.bins,
             bar_scale=self.bar_scale,
@@ -3335,18 +3372,19 @@ class HLineSeries(PlotSeries):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_hline_series(
             self.x,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
         )
         
@@ -3441,19 +3479,20 @@ class InputDouble(MovableWidget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_input_double(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3478,9 +3517,9 @@ class InputDouble(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3489,9 +3528,9 @@ class InputDouble(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3500,9 +3539,9 @@ class InputDouble(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3597,19 +3636,20 @@ class InputDoublex(MovableWidget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_input_doublex(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3633,9 +3673,9 @@ class InputDoublex(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3644,9 +3684,9 @@ class InputDoublex(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3655,9 +3695,9 @@ class InputDoublex(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3755,19 +3795,20 @@ class InputFloat(MovableWidget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_input_float(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3792,9 +3833,9 @@ class InputFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3803,9 +3844,9 @@ class InputFloat(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3814,9 +3855,9 @@ class InputFloat(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3911,19 +3952,20 @@ class InputFloatX(MovableWidget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_input_floatx(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -3947,9 +3989,9 @@ class InputFloatX(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3958,9 +4000,9 @@ class InputFloatX(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -3969,9 +4011,9 @@ class InputFloatX(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4066,19 +4108,20 @@ class InputInt(MovableWidget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_input_int(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -4102,9 +4145,9 @@ class InputInt(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4113,9 +4156,9 @@ class InputInt(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4124,9 +4167,9 @@ class InputInt(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4218,19 +4261,20 @@ class InputIntX(MovableWidget):
     # readonly (bool, optional): Activates read only mode where no text can be input but text can still be highlighted.
     readonly: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_input_intx(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -4253,9 +4297,9 @@ class InputIntX(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4264,9 +4308,9 @@ class InputIntX(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4275,9 +4319,9 @@ class InputIntX(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4384,20 +4428,21 @@ class InputText(MovableWidget):
     # on_enter (bool, optional): Only runs callback on enter key press.
     if_entered: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_input_text(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -4424,9 +4469,9 @@ class InputText(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4435,9 +4480,9 @@ class InputText(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4446,9 +4491,9 @@ class InputText(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4483,17 +4528,18 @@ class Int4Value(Widget):
     # default_value (Union[List[int], Tuple[int, ...]], optional): ...
     default_value: t.Union[t.List[int], t.Tuple[int, ...]] = (0, 0, 0, 0)
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_int4_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -4525,17 +4571,18 @@ class IntValue(Widget):
     # default_value (int, optional): ...
     default_value: int = 0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_int_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -4567,12 +4614,13 @@ class ItemActivatedHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_activated_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4582,9 +4630,9 @@ class ItemActivatedHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4619,12 +4667,13 @@ class ItemActiveHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_active_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4634,9 +4683,9 @@ class ItemActiveHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4674,12 +4723,13 @@ class ItemClickedHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_clicked_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -4690,9 +4740,9 @@ class ItemClickedHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4727,12 +4777,13 @@ class ItemDeactivatedAfterEditHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_deactivated_after_edit_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4742,9 +4793,9 @@ class ItemDeactivatedAfterEditHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4779,12 +4830,13 @@ class ItemDeactivatedHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_deactivated_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4794,9 +4846,9 @@ class ItemDeactivatedHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4831,12 +4883,13 @@ class ItemEditedHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_edited_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4846,9 +4899,9 @@ class ItemEditedHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4883,12 +4936,13 @@ class ItemFocusHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_focus_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4898,9 +4952,9 @@ class ItemFocusHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4935,12 +4989,13 @@ class ItemHoverHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_hover_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4950,9 +5005,9 @@ class ItemHoverHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -4987,12 +5042,13 @@ class ItemResizeHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_resize_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5002,9 +5058,9 @@ class ItemResizeHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5039,12 +5095,13 @@ class ItemToggledOpenHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_toggled_open_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5054,9 +5111,9 @@ class ItemToggledOpenHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5091,12 +5148,13 @@ class ItemVisibleHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_item_visible_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5106,9 +5164,9 @@ class ItemVisibleHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5146,12 +5204,13 @@ class KeyDownHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_key_down_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             key=self.key,
             label=self.label,
             user_data=self.user_data,
@@ -5162,9 +5221,9 @@ class KeyDownHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5202,12 +5261,13 @@ class KeyPressHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_key_press_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             key=self.key,
             label=self.label,
             user_data=self.user_data,
@@ -5218,9 +5278,9 @@ class KeyPressHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5258,12 +5318,13 @@ class KeyReleaseHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_key_release_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             key=self.key,
             label=self.label,
             user_data=self.user_data,
@@ -5274,9 +5335,9 @@ class KeyReleaseHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5356,20 +5417,21 @@ class KnobFloat(MovableWidget):
     # max_value (float, optional): Applies upper limit to value.
     max_value: float = 100.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_knob_float(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -5387,9 +5449,9 @@ class KnobFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5398,9 +5460,9 @@ class KnobFloat(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5409,9 +5471,9 @@ class KnobFloat(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5449,19 +5511,20 @@ class LineSeries(PlotSeries):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_line_series(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
         )
         
@@ -5535,20 +5598,21 @@ class Listbox(MovableWidget):
     # num_items (int, optional): Expands the height of the listbox to show specified number of items.
     num_items: int = 3
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_listbox(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -5565,9 +5629,9 @@ class Listbox(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5576,9 +5640,9 @@ class Listbox(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5587,9 +5651,9 @@ class Listbox(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5660,12 +5724,13 @@ class LoadingIndicator(MovableWidget):
     # secondary_color (Union[List[int], Tuple[int, ...]], optional): Background of the dots in dot mode.
     secondary_color: COLOR_TYPE = (29, 151, 236, 103)
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_loading_indicator(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5687,9 +5752,9 @@ class LoadingIndicator(MovableWidget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5754,12 +5819,13 @@ class MenuItem(MovableWidget):
     # check (bool, optional): Displays a checkmark on the menu item when it is selected and placed in a menu.
     check: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_menu_item(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5779,9 +5845,9 @@ class MenuItem(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5790,9 +5856,9 @@ class MenuItem(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5830,12 +5896,13 @@ class MouseClickHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_mouse_click_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -5846,9 +5913,9 @@ class MouseClickHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5886,12 +5953,13 @@ class MouseDoubleClickHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_mouse_double_click_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -5902,9 +5970,9 @@ class MouseDoubleClickHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -5942,12 +6010,13 @@ class MouseDownHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_mouse_down_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -5958,9 +6027,9 @@ class MouseDownHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6001,12 +6070,13 @@ class MouseDragHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_mouse_drag_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             button=self.button,
             threshold=self.threshold,
             label=self.label,
@@ -6018,9 +6088,9 @@ class MouseDragHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6055,12 +6125,13 @@ class MouseMoveHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_mouse_move_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6070,9 +6141,9 @@ class MouseMoveHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6110,12 +6181,13 @@ class MouseReleaseHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_mouse_release_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             button=self.button,
             label=self.label,
             user_data=self.user_data,
@@ -6126,9 +6198,9 @@ class MouseReleaseHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6163,12 +6235,13 @@ class MouseWheelHandler(Widget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_mouse_wheel_handler(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6178,9 +6251,9 @@ class MouseWheelHandler(Widget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6236,10 +6309,10 @@ class PieSeries(PlotSeries):
     # normalize (bool, optional): ...
     normalize: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_pie_series(
             self.x,
@@ -6247,11 +6320,12 @@ class PieSeries(PlotSeries):
             self.radius,
             self.values,
             self.labels,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             format=self.format,
             angle=self.angle,
@@ -6295,17 +6369,18 @@ class PlotAnnotation(PlotItem):
     # clamped (bool, optional): ...
     clamped: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_plot_annotation(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             default_value=self.default_value,
             offset=self.offset,
@@ -6350,12 +6425,13 @@ class PlotLegend(Widget):
     # outside (bool, optional): ...
     outside: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_plot_legend(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
@@ -6369,9 +6445,9 @@ class PlotLegend(Widget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6442,20 +6518,21 @@ class ProgressBar(MovableWidget):
     # default_value (float, optional): Normalized value to fill the bar from 0.0 to 1.0.
     default_value: float = 0.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_progress_bar(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
@@ -6470,9 +6547,9 @@ class ProgressBar(MovableWidget):
         
         return _ret
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6481,9 +6558,9 @@ class ProgressBar(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6557,19 +6634,20 @@ class RadioButton(MovableWidget):
     # horizontal (bool, optional): Displays the radio options horizontally.
     horizontal: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_radio_button(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             items=self.items,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -6586,9 +6664,9 @@ class RadioButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6597,9 +6675,9 @@ class RadioButton(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6608,9 +6686,9 @@ class RadioButton(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6651,15 +6729,16 @@ class RawTexture(Widget):
     # format (int, optional): Data format.
     format: int = 0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_raw_texture(
             self.width,
             self.height,
             self.default_value,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6697,19 +6776,20 @@ class ScatterSeries(PlotSeries):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_scatter_series(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
         )
         
@@ -6786,20 +6866,21 @@ class Selectable(MovableWidget):
     # disable_popup_close (bool, optional): Disable closing a modal or popup window.
     disable_popup_close: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_selectable(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -6817,9 +6898,9 @@ class Selectable(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6828,9 +6909,9 @@ class Selectable(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6839,9 +6920,9 @@ class Selectable(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -6879,12 +6960,13 @@ class Separator(MovableWidget):
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_separator(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6921,17 +7003,18 @@ class SeriesValue(Widget):
     # default_value (Any, optional): ...
     default_value: t.Any = ()
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_series_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -6969,19 +7052,20 @@ class ShadeSeries(PlotSeries):
     # y2 (Any, optional): ...
     y2: t.Any = dataclasses.field(default_factory=lambda: [])
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_shade_series(
             self.x,
             self.y1,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             y2=self.y2,
         )
@@ -7059,20 +7143,21 @@ class SimplePlot(MovableWidget):
     # max_scale (float, optional): ...
     max_scale: float = 0.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_simple_plot(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
@@ -7090,9 +7175,9 @@ class SimplePlot(MovableWidget):
         
         return _ret
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7101,9 +7186,9 @@ class SimplePlot(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7195,20 +7280,21 @@ class SliderDouble(MovableWidget):
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
     format: str = '%.3f'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_slider_double(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -7230,9 +7316,9 @@ class SliderDouble(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7241,9 +7327,9 @@ class SliderDouble(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7252,9 +7338,9 @@ class SliderDouble(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7343,19 +7429,20 @@ class SliderDoublex(MovableWidget):
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%.3f'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_slider_doublex(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -7377,9 +7464,9 @@ class SliderDoublex(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7388,9 +7475,9 @@ class SliderDoublex(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7399,9 +7486,9 @@ class SliderDoublex(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7493,20 +7580,21 @@ class SliderFloat(MovableWidget):
     # format (str, optional): Determines the format the float will be displayed as use python string formatting.
     format: str = '%.3f'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_slider_float(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -7528,9 +7616,9 @@ class SliderFloat(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7539,9 +7627,9 @@ class SliderFloat(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7550,9 +7638,9 @@ class SliderFloat(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7641,19 +7729,20 @@ class SliderFloatX(MovableWidget):
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%.3f'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_slider_floatx(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -7675,9 +7764,9 @@ class SliderFloatX(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7686,9 +7775,9 @@ class SliderFloatX(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7697,9 +7786,9 @@ class SliderFloatX(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7791,20 +7880,21 @@ class SliderInt(MovableWidget):
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%d'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_slider_int(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -7826,9 +7916,9 @@ class SliderInt(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7837,9 +7927,9 @@ class SliderInt(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7848,9 +7938,9 @@ class SliderInt(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7939,19 +8029,20 @@ class SliderIntX(MovableWidget):
     # format (str, optional): Determines the format the int will be displayed as use python string formatting.
     format: str = '%d'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_slider_intx(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             callback=self.callback_fn,
             drag_callback=self.drag_callback_fn,
@@ -7973,9 +8064,9 @@ class SliderIntX(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7984,9 +8075,9 @@ class SliderIntX(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -7995,9 +8086,9 @@ class SliderIntX(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8041,12 +8132,13 @@ class Spacer(MovableWidget):
     # pos (Union[List[int], Tuple[int, ...]], optional): Places the item relative to window coordinates, [0,0] is top left.
     pos: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [])
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_spacer(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8088,19 +8180,20 @@ class StairSeries(PlotSeries):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_stair_series(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
         )
         
@@ -8135,15 +8228,16 @@ class StaticTexture(Widget):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_static_texture(
             self.width,
             self.height,
             self.default_value,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8183,20 +8277,21 @@ class StemSeries(PlotSeries):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_stem_series(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
         )
         
@@ -8228,17 +8323,18 @@ class StringValue(Widget):
     # default_value (str, optional): ...
     default_value: str = ''
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_string_value(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             default_value=self.default_value,
         )
         
@@ -8303,12 +8399,13 @@ class TabButton(MovableWidget):
     # no_tooltip (bool, optional): Disable tooltip for the given tab.
     no_tooltip: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_tab_button(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8329,9 +8426,9 @@ class TabButton(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8340,9 +8437,9 @@ class TabButton(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8351,9 +8448,9 @@ class TabButton(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8442,12 +8539,13 @@ class TableColumn(MovableWidget):
     # indent_disable (bool, optional): Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.
     indent_disable: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_table_column(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8540,19 +8638,20 @@ class Text(MovableWidget):
     # show_label (bool, optional): Displays the label to the right of the text.
     show_label: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_text(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             default_value=self.default_value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
             drop_callback=self.drop_callback_fn,
@@ -8569,9 +8668,9 @@ class Text(MovableWidget):
         
         return _ret
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8580,9 +8679,9 @@ class Text(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8632,19 +8731,20 @@ class TextPoint(MovableWidget):
     # vertical (bool, optional): ...
     vertical: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_text_point(
             self.x,
             self.y,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
             x_offset=self.x_offset,
             y_offset=self.y_offset,
@@ -8682,12 +8782,13 @@ class ThemeColor(Widget):
     # category (int, optional): Options include mvThemeCat_Core, mvThemeCat_Plots, mvThemeCat_Nodes.
     category: EnThemeCat = EnThemeCat.Core
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_theme_color(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             target=self.target,
             value=self.value,
             label=self.label,
@@ -8730,12 +8831,13 @@ class ThemeStyle(Widget):
     # category (int, optional): Options include mvThemeCat_Core, mvThemeCat_Plots, mvThemeCat_Nodes.
     category: EnThemeCat = EnThemeCat.Core
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_theme_style(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             target=self.target,
             x=self.x,
             y=self.y,
@@ -8803,12 +8905,13 @@ class TimePicker(MovableWidget):
     # hour24 (bool, optional): Show 24 hour clock instead of 12 hour.
     hour24: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_time_picker(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -8828,9 +8931,9 @@ class TimePicker(MovableWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8839,9 +8942,9 @@ class TimePicker(MovableWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8850,9 +8953,9 @@ class TimePicker(MovableWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -8887,18 +8990,19 @@ class VLineSeries(PlotSeries):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_vline_series(
             self.x,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
-            source=_source_dpg_id,
+            source=_source_guid,
             show=self.show,
         )
         
@@ -8975,12 +9079,13 @@ class ChildWindow(MovableContainerWidget):
     # menubar (bool, optional): Shows/Hides the menubar at the top.
     menubar: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_child_window(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9005,9 +9110,9 @@ class ChildWindow(MovableContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -9048,12 +9153,13 @@ class Clipper(MovableContainerWidget):
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_clipper(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9133,12 +9239,13 @@ class CollapsingHeader(MovableContainerWidget):
     # bullet (bool, optional): Display a bullet instead of arrow.
     bullet: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_collapsing_header(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9162,9 +9269,9 @@ class CollapsingHeader(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -9173,9 +9280,9 @@ class CollapsingHeader(MovableContainerWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -9207,9 +9314,10 @@ class ColormapRegistry(Registry):
     # show (bool, optional): Attempt to render widget.
     show: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_colormap_registry(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9268,20 +9376,21 @@ class CustomSeries(MovableContainerWidget):
     # tooltip (bool, optional): Show tooltip when plot is hovered.
     tooltip: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_custom_series(
             self.x,
             self.y,
             self.channel_count,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
-            source=_source_dpg_id,
+            source=_source_guid,
             callback=self.callback_fn,
             show=self.show,
             y1=self.y1,
@@ -9292,9 +9401,9 @@ class CustomSeries(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -9335,12 +9444,13 @@ class DragPayload(ContainerWidget):
     # payload_type (str, optional): ...
     payload_type: str = '$$DPG_PAYLOAD'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_drag_payload(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9390,14 +9500,15 @@ class DrawArrow(MovableWidget):
     # size (int, optional): ...
     size: int = 4
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_arrow(
             self.p1,
             self.p2,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9453,16 +9564,17 @@ class DrawBezierCubic(MovableWidget):
     # segments (int, optional): Number of segments to approximate bezier curve.
     segments: int = 0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_bezier_cubic(
             self.p1,
             self.p2,
             self.p3,
             self.p4,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9515,15 +9627,16 @@ class DrawBezierQuadratic(MovableWidget):
     # segments (int, optional): Number of segments to approximate bezier curve.
     segments: int = 0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_bezier_quadratic(
             self.p1,
             self.p2,
             self.p3,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9576,14 +9689,15 @@ class DrawCircle(MovableWidget):
     # segments (int, optional): Number of segments to approximate circle.
     segments: int = 0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_circle(
             self.center,
             self.radius,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9637,14 +9751,15 @@ class DrawEllipse(MovableWidget):
     # segments (int, optional): Number of segments to approximate bezier curve.
     segments: int = 32
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_ellipse(
             self.pmin,
             self.pmax,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9689,12 +9804,13 @@ class DrawLayer(MovableContainerWidget):
     # cull_mode (int, optional): New in 1.1. culling mode, mvCullMode_* constants. Only works with triangles currently.
     cull_mode: EnCullMode = EnCullMode.NONE
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_draw_layer(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9741,14 +9857,15 @@ class DrawLine(MovableWidget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_line(
             self.p1,
             self.p2,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9782,12 +9899,13 @@ class DrawNode(MovableContainerWidget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_draw_node(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9831,13 +9949,14 @@ class DrawPolygon(MovableWidget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_polygon(
             self.points,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9884,13 +10003,14 @@ class DrawPolyline(MovableWidget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_polyline(
             self.points,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -9946,16 +10066,17 @@ class DrawQuad(MovableWidget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_quad(
             self.p1,
             self.p2,
             self.p3,
             self.p4,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10023,14 +10144,15 @@ class DrawRectangle(MovableWidget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_rectangle(
             self.pmin,
             self.pmax,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10083,14 +10205,15 @@ class DrawText(MovableWidget):
     # size (float, optional): ...
     size: float = 10.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_text(
             self.pos,
             self.text,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10142,15 +10265,16 @@ class DrawTriangle(MovableWidget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.draw_triangle(
             self.p1,
             self.p2,
             self.p3,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10209,14 +10333,15 @@ class DrawList(MovableContainerWidget):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_drawlist(
             self.width,
             self.height,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10231,9 +10356,9 @@ class DrawList(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10298,9 +10423,10 @@ class FileDialog(ContainerWidget):
     # cancel_callback (Callable, optional): Callback called when cancel button is clicked.
     cancel_callback: Callback = None
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_file_dialog(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10320,9 +10446,9 @@ class FileDialog(ContainerWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10331,9 +10457,9 @@ class FileDialog(ContainerWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def cancel_callback_fn(self, sender_dpg_id: int):
+    def cancel_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10374,12 +10500,13 @@ class FilterSet(MovableContainerWidget):
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_filter_set(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10417,14 +10544,15 @@ class Font(ContainerWidget):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_font(
             self.file,
             self.size,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10455,9 +10583,10 @@ class FontRegistry(Registry):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_font_registry(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10528,12 +10657,13 @@ class Group(MovableContainerWidget):
     # xoffset (float, optional): Offset from containing window x item location within group.
     xoffset: float = 0.0
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_group(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10555,9 +10685,9 @@ class Group(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10566,9 +10696,9 @@ class Group(MovableContainerWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10600,9 +10730,10 @@ class HandlerRegistry(Registry):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_handler_registry(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10634,9 +10765,10 @@ class ItemHandlerRegistry(Registry):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_item_handler_registry(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10692,12 +10824,13 @@ class Menu(MovableContainerWidget):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_menu(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10714,9 +10847,9 @@ class Menu(MovableContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10754,12 +10887,13 @@ class MenuBar(ContainerWidget):
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_menu_bar(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10820,12 +10954,13 @@ class Node(MovableContainerWidget):
     # draggable (bool, optional): Allow node to be draggable.
     draggable: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_node(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -10843,9 +10978,9 @@ class Node(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10854,9 +10989,9 @@ class Node(MovableContainerWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -10909,12 +11044,13 @@ class NodeAttribute(MovableContainerWidget):
     # category (str, optional): Category
     category: str = 'general'
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_node_attribute(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11055,12 +11191,13 @@ class Plot(MovableContainerWidget):
     # vertical_mod (int, optional): expands active box selection/query vertically to plot edge when held
     vertical_mod: int = 16
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_plot(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11103,9 +11240,9 @@ class Plot(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11114,9 +11251,9 @@ class Plot(MovableContainerWidget):
         else:
             return self.callback.fn(sender=self)
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11125,9 +11262,9 @@ class Plot(MovableContainerWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11186,13 +11323,14 @@ class PlotXAxis(Widget):
     # time (bool, optional): ...
     time: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_plot_axis(
             dpg.mvXAxis,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
@@ -11211,9 +11349,9 @@ class PlotXAxis(Widget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11272,13 +11410,14 @@ class PlotYAxis(ContainerWidget):
     # time (bool, optional): ...
     time: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_plot_axis(
             dpg.mvYAxis,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             use_internal_label=False,
             label=None if self.label is None else self.label.split('#')[0],
             user_data=self.user_data,
@@ -11297,9 +11436,9 @@ class PlotYAxis(ContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11397,14 +11536,15 @@ class SubPlots(MovableContainerWidget):
     # column_major (bool, optional): subplots are added in column major order instead of the default row major order
     column_major: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_subplots(
             self.rows,
             self.columns,
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11433,9 +11573,9 @@ class SubPlots(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11501,12 +11641,13 @@ class Tab(MovableContainerWidget):
     def restrict_parents_to(self) -> t.Tuple[t.Type["ContainerWidget"]]:
         return TabBar, 
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_tab(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11525,9 +11666,9 @@ class Tab(MovableContainerWidget):
         
         return _ret
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11587,12 +11728,13 @@ class TabBar(MovableContainerWidget):
     def restrict_children_to(self) -> t.Tuple[t.Type["MovableWidget"]]:
         return Tab, 
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_tab_bar(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11609,9 +11751,9 @@ class TabBar(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11754,20 +11896,21 @@ class Table(MovableContainerWidget):
     # no_saved_settings (bool, optional): Never load/save settings in .ini file.
     no_saved_settings: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
-        _source_dpg_id = getattr(self.source, 'dpg_id', 0)
+        _parent_guid = self.parent.guid
+        _source_guid = getattr(self.source, 'guid', 0)
 
         _ret = internal_dpg.add_table(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
             height=self.height,
             indent=self.indent,
-            source=_source_dpg_id,
+            source=_source_guid,
             callback=self.callback_fn,
             show=self.show,
             pos=self.pos,
@@ -11806,9 +11949,9 @@ class Table(MovableContainerWidget):
         
         return _ret
 
-    def callback_fn(self, sender_dpg_id: int):
+    def callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -11846,12 +11989,13 @@ class TableCell(MovableContainerWidget):
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_table_cell(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11891,12 +12035,13 @@ class TableRow(MovableContainerWidget):
     # filter_key (str, optional): Used by filter widget.
     filter_key: str = ''
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_table_row(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11927,9 +12072,10 @@ class TemplateRegistry(Registry):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_template_registry(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11960,9 +12106,10 @@ class TextureRegistry(Registry):
     # show (bool, optional): Attempt to render widget.
     show: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_texture_registry(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -11997,12 +12144,13 @@ class ThemeComponent(MovableContainerWidget):
     # enabled_state (bool, optional): ...
     enabled_state: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_theme_component(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             item_type=self.item_type,
             label=self.label,
             user_data=self.user_data,
@@ -12035,12 +12183,13 @@ class Tooltip(ContainerWidget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_tooltip(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -12117,12 +12266,13 @@ class TreeNode(MovableContainerWidget):
     # selectable (bool, optional): Makes the tree selectable.
     selectable: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_tree_node(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -12146,9 +12296,9 @@ class TreeNode(MovableContainerWidget):
         
         return _ret
 
-    def drag_callback_fn(self, sender_dpg_id: int):
+    def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -12157,9 +12307,9 @@ class TreeNode(MovableContainerWidget):
         else:
             return self.drag_callback.fn(sender=self)
 
-    def drop_callback_fn(self, sender_dpg_id: int):
+    def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...
@@ -12188,9 +12338,10 @@ class ValueRegistry(Registry):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_value_registry(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -12227,12 +12378,13 @@ class ViewportMenuBar(ContainerWidget):
     # delay_search (bool, optional): Delays searching container for specified items until the end of the app. Possible optimization when a container has many children that are not accessed often.
     delay_search: bool = False
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
-        _parent_dpg_id = self.parent.dpg_id
+        _parent_guid = self.parent.guid
 
         _ret = internal_dpg.add_viewport_menu_bar(
-            parent=_parent_dpg_id,
+            tag=self.guid,
+            parent=_parent_guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -12341,9 +12493,10 @@ class Window(ContainerWidget):
     # on_close (Callable, optional): Callback ran when window is closed.
     on_close: Callback = None
 
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
 
         _ret = internal_dpg.add_window(
+            tag=self.guid,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -12377,9 +12530,9 @@ class Window(ContainerWidget):
         
         return _ret
 
-    def on_close_fn(self, sender_dpg_id: int):
+    def on_close_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
-        assert sender_dpg_id == self.dpg_id, \
+        assert sender_guid == self.guid, \
             'was expecting the dpg_id to match ...'
 
         # logic ...

@@ -59,7 +59,7 @@ class PopUp(Window):
     # no_move: bool = False
     # no_background: bool = False
     #
-    # def build(self) -> t.Union[int, str]:
+    # def build(self) -> int:
     #     _internal_popup_id = internal_dpg.generate_uuid()
     #     _handler_reg_id = internal_dpg.add_item_handler_registry()
     #     internal_dpg.add_item_clicked_handler(

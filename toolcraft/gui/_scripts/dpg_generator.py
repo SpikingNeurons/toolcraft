@@ -561,7 +561,7 @@ class DpgDef:
             if _param_name == "source":
                 _param_type = "t.Optional[Widget]"
                 _param_value = "None"
-                _param_dpg_value = "_source_dpg_id"
+                _param_dpg_value = "_source_guid"
             if _param_name == "user_data":
                 _param_type = "USER_DATA"
                 _param_value = "None"
@@ -671,23 +671,23 @@ class DpgDef:
         # get same values in local vars
         _local_val_lines = []
         if self.is_parent_param_present:
-            _local_val_lines += ["\t\t_parent_dpg_id = self.parent.dpg_id"]
+            _local_val_lines += ["\t\t_parent_guid = self.parent.guid"]
         if self.is_source_param_present:
-            _local_val_lines += ["\t\t_source_dpg_id = getattr(self.source, 'dpg_id', 0)"]
+            _local_val_lines += ["\t\t_source_guid = getattr(self.source, 'guid', 0)"]
         if bool(_local_val_lines):
             _local_val_lines = [""] + _local_val_lines
         # ------------------------------------------------------- 03.04.02
         # add some internal params needed for dpg call
-        _internal_params = {}
+        _internal_params = {'tag': 'self.guid'}
         if self.is_parent_param_present:
-            _internal_params['parent'] = "_parent_dpg_id"
+            _internal_params['parent'] = "_parent_guid"
         if self.is_plot_series_related or self.is_plot_related:
             _internal_params['use_internal_label'] = "False"
         # ------------------------------------------------------- 03.04.03
         _parametrized_params = {} if self.parametrize is None else self.parametrize
         # ------------------------------------------------------- 03.04.04
         _lines += [
-            "\tdef build(self) -> t.Union[int, str]:",
+            "\tdef build(self) -> int:",
             *_local_val_lines,
             "",
             f"\t\t_ret = {self.call_prefix}(",
@@ -714,11 +714,11 @@ class DpgDef:
                 continue
             _lines += [
                 "",
-                f"\tdef {_pd.name}_fn(self, sender_dpg_id: int):",
+                f"\tdef {_pd.name}_fn(self, sender_guid: int):",
                 # todo: eventually remove this sanity check
                 "\t\t# eventually remove this sanity check in ("
                 "dpg_widgets_generator.py)...",
-                "\t\tassert sender_dpg_id == self.dpg_id, \\"
+                "\t\tassert sender_guid == self.guid, \\"
                 "\n\t\t\t'was expecting the dpg_id to match ...'",
                 # "\t\tassert id(user_data) == id(self.user_data), \\"
                 # "\n\t\t\t'was expecting the user_data to match ...'",

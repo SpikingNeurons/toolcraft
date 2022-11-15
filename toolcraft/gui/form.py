@@ -83,7 +83,7 @@ class HashableMethodsRunnerForm(Form):
     This is the form which appears on right side of split window. And it needs
     accompanying button wo work with
 
-    todo: if methods takes kwargs then make a form inside form fo that the method
+    todo: if methods takes kwargs then make a form inside form so that the method
       call can be parametrized
     """
 
@@ -105,7 +105,9 @@ class HashableMethodsRunnerForm(Form):
 
         # make some vars
         with EscapeWithContext():
+            # noinspection PyAttributeOutsideInit
             self._button_bar = widget.Group(horizontal=True)
+            # noinspection PyAttributeOutsideInit
             self._receiver = widget.Group()
 
     def layout(self) -> widget.MovableContainerWidget:
