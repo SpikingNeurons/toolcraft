@@ -276,6 +276,37 @@ class _WidgetDpg(abc.ABC):
     def init(self):
         ...
 
+    def delete(self):
+        """
+        Note that this will be scheduled for deletion via destroy with help of WidgetEngine
+        """
+        _guid = self.guid
+
+        # adapt widget engine
+        # unregister update
+        try:
+            del Engine.update[_guid]
+        except KeyError:
+            ...
+        # unregister fixed_update
+        try:
+            del Engine.fixed_update[_guid]
+        except KeyError:
+            ...
+
+        # delete the dpg UI counterpart .... skip line series
+        # from .plot import LineSeries
+        try:
+            dpg.delete_item(item=_guid, children_only=False, slot=-1)
+        except Exception as _e:
+            # Forms are fake widgets and have no dpg counterpart ... so skip it
+            if isinstance(self, Form):
+                ...
+            else:
+                raise _e
+
+        # todo: make _widget unusable ... figure out
+
     def build_pre_runner(self):
 
         # ---------------------------------------------------- 01
@@ -730,8 +761,7 @@ class Engine:
                 # call update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.update.values():
-                    if _.is_built:
-                        _.update()
+                    _.update()
 
                 # todo: other phases nut need to rethink design ...
                 #   note that destroy for widget.delete is not effective
@@ -770,8 +800,7 @@ class Engine:
                 # call fixed_update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.fixed_update.values():
-                    if _.is_built:
-                        _.fixed_update()
+                    _.fixed_update()
         except Exception as _e:
             raise Exception(f"Exception in {Engine.lifecycle_physics_loop}", _e)
 
@@ -1019,39 +1048,14 @@ class Widget(_WidgetDpg, abc.ABC):
             )
 
     def delete(self):
-        """
-        Note that this will be scheduled for deletion via destroy with help of WidgetEngine
-        """
         # remove from parent
         # some widgets like XAxis, YAxis, Legend are not in parent.children
         _guid = self.guid
         if self.registered_as_child:
             del self.parent.children[_guid]
 
-        # adapt widget engine
-        # unregister update
-        try:
-            del Engine.update[_guid]
-        except KeyError:
-            ...
-        # unregister fixed_update
-        try:
-            del Engine.fixed_update[_guid]
-        except KeyError:
-            ...
-
-        # delete the dpg UI counterpart .... skip line series
-        # from .plot import LineSeries
-        try:
-            dpg.delete_item(item=_guid, children_only=False, slot=-1)
-        except Exception as _e:
-            # Forms are fake widgets and have no dpg counterpart ... so skip it
-            if isinstance(self, Form):
-                ...
-            else:
-                raise _e
-
-        # todo: make _widget unusable ... figure out
+        # call super
+        return super().delete()
 
 
 USER_DATA = t.Dict[
