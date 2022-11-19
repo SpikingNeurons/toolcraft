@@ -913,6 +913,53 @@ class Engine:
 
 
 @dataclasses.dataclass
+class __WidgetHandlerRegistry:
+
+    """
+    This registeries can be bound to Widgets. They can be bound to multiple widgets to prevent
+    duplication for every widget.
+
+    Refer:
+    >>> dpg.item_handler_registry
+    >>> dpg.add_item_handler_registry()
+    https://dearpygui.readthedocs.io/en/latest/documentation/io-handlers-state.html
+
+    Events that are supported for Widgets:
+    >>> dpg.add_item_activated_handler()
+    >>> dpg.add_item_active_handler()
+    >>> dpg.add_item_edited_handler()
+    >>> dpg.add_item_focus_handler()
+    >>> dpg.add_item_hover_handler()
+    >>> dpg.add_item_clicked_handler()
+    >>> dpg.add_item_deactivated_after_edit_handler()
+    >>> dpg.add_item_deactivated_handler()
+    >>> dpg.add_item_resize_handler()
+    >>> dpg.add_item_toggled_open_handler()
+    >>> dpg.add_item_visible_handler()
+    """
+
+    label: str = None
+    user_data: t.Dict = None
+    show: bool = True
+
+    def __post_init__(self):
+        # ------------------------------------------------------------ 01
+        # initialize with empty dict if None
+        if self.user_data is None:
+            self.user_data = dict()
+
+        # ------------------------------------------------------------ 02
+        # based on overriden methods decide handlers to use for this instance of WidgetHandlerRegistry
+        with dpg.item_handler_registry(
+            label=self.label, show=self.show, user_data=self.user_data, tag=self.guid,
+        ) as _handler:
+            if Widget.update != self.__class__.update:
+                Engine.update[self.guid] = self
+            if Widget.fixed_update != self.__class__.fixed_update:
+                Engine.fixed_update[self.guid] = self
+
+
+@dataclasses.dataclass
 class Widget(_WidgetDpg, abc.ABC):
     """
     todo: add async update where widget can be updated via long running python code
@@ -1032,7 +1079,7 @@ class Widget(_WidgetDpg, abc.ABC):
 
     def get_user_data(self) -> 'USER_DATA':
         """
-        Almost every subclassed Widget will have this field but we cannot have it here
+        Almost every subclassed Widget will have this field, but we cannot have it here
         as dataclass mechanism does not allow it. So we offer this utility method
 
         todo: raise issue with dpg for why they need user_data for Widgets which do
@@ -1593,7 +1640,7 @@ class Form(MovableWidget, abc.ABC):
     collapsing_header_open: bool
 
     @property
-    def container(self) -> "gui.widget.Group":
+    def container(self) -> "gui.widget.CollapsingHeader":
         try:
             # noinspection PyUnresolvedReferences
             return self._container
@@ -1601,7 +1648,8 @@ class Form(MovableWidget, abc.ABC):
             from .. import gui
             with gui.EscapeWithContext():
                 # noinspection PyAttributeOutsideInit
-                self._container = gui.widget.Group()
+                self._container = gui.widget.CollapsingHeader(
+                    label=self.title, default_open=self.collapsing_header_open)
             return self._container
 
     @property
@@ -1730,17 +1778,8 @@ class Form(MovableWidget, abc.ABC):
 
     def build(self) -> int:
 
-        # if title present add collapsing header
-        if self.title is None:
-            _c = self.layout()
-        else:
-            from .widget import CollapsingHeader
-            _c = CollapsingHeader(
-                label=self.title, default_open=self.collapsing_header_open)
-            _c(widget=self.layout())
-
         # set the container for future use
-        self._container(widget=_c)
+        self._container(widget=self.layout())
         self._container.parent = self.parent
         self._container.build()
 
@@ -1756,6 +1795,7 @@ class Form(MovableWidget, abc.ABC):
 
     def delete(self):
         self.clear()
+        self.container.delete()
         return super().delete()
 
 
@@ -1783,34 +1823,26 @@ class Callback(abc.ABC):
 
 
 @dataclasses.dataclass
-class Registry(abc.ABC):
+class RegistryItem(Widget, abc.ABC):
 
-    def __post_init__(self):
-        self.init_validate()
-        self.init()
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["Registry"]]:
+        raise Exception(
+            "The dpg_generator script must auto generate this ..."
+        )
 
-    def init_validate(self):
-        ...
 
-    def init(self):
-        ...
+@dataclasses.dataclass
+class Registry(ContainerWidget, abc.ABC):
+    """
+    Registry is like ContainerWidget
+    """
 
-    def get_user_data(self) -> USER_DATA:
-        """
-        Almost every subclassed Registry will have this field but we cannot have it here
-        as dataclass mechanism does not allow it. So we offer this utility method
-
-        todo: raise issue with dpg for why they need user_data for registry if they
-          do not use any callbacks
-        """
-        try:
-            # noinspection PyUnresolvedReferences
-            return self.user_data
-        except AttributeError:
-            raise Exception(
-                f"Was expecting class {self.__class__} to have field `user_data`",
-                "This is intended to be used by callback mechanism"
-            )
+    @property
+    def restrict_children_to(self) -> t.Tuple[t.Type[RegistryItem]]:
+        raise Exception(
+            "The dpg_generator script must auto generate this ..."
+        )
 
 
 @dataclasses.dataclass
@@ -1822,6 +1854,7 @@ class PlotSeries(Widget, abc.ABC):
 
     @parent.setter
     def parent(self, value: "plot.YAxis"):
+        # noinspection PyAttributeOutsideInit
         self._parent = value
 
 
@@ -1834,6 +1867,7 @@ class PlotItem(MovableWidget, abc.ABC):
 
     @parent.setter
     def parent(self, value: "plot.Plot"):
+        # noinspection PyAttributeOutsideInit
         self._parent = value
 
 

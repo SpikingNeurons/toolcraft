@@ -12,6 +12,7 @@ import dearpygui._dearpygui as internal_dpg
 import dearpygui.dearpygui as dpg
 import dataclasses
 import enum
+import abc
 import typing as t
 
 from .__base__ import Widget
@@ -20,6 +21,7 @@ from .__base__ import ContainerWidget
 from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
+from .__base__ import RegistryItem
 from .__base__ import PlotSeries
 from .__base__ import PlotItem
 from .__base__ import PLOT_DATA_TYPE
@@ -29,109 +31,273 @@ from .__base__ import USER_DATA
 
 class EnDir(enum.Enum):
 
-    Left = dpg.mvDir_Left  # 0
-    Up = dpg.mvDir_Up  # 2
-    Down = dpg.mvDir_Down  # 3
-    Right = dpg.mvDir_Right  # 1
-    NONE = dpg.mvDir_None  # -1
+    Left = internal_dpg.mvDir_Left  # 0
+    Up = internal_dpg.mvDir_Up  # 2
+    Down = internal_dpg.mvDir_Down  # 3
+    Right = internal_dpg.mvDir_Right  # 1
+    NONE = internal_dpg.mvDir_None  # -1
 
 
 class EnTimeUnit(enum.Enum):
 
-    Day = dpg.mvTimeUnit_Day  # 5
-    Hr = dpg.mvTimeUnit_Hr  # 4
-    Min = dpg.mvTimeUnit_Min  # 3
-    Mo = dpg.mvTimeUnit_Mo  # 6
-    Ms = dpg.mvTimeUnit_Ms  # 1
-    S = dpg.mvTimeUnit_S  # 2
-    Us = dpg.mvTimeUnit_Us  # 0
-    Yr = dpg.mvTimeUnit_Yr  # 7
+    Day = internal_dpg.mvTimeUnit_Day  # 5
+    Hr = internal_dpg.mvTimeUnit_Hr  # 4
+    Min = internal_dpg.mvTimeUnit_Min  # 3
+    Mo = internal_dpg.mvTimeUnit_Mo  # 6
+    Ms = internal_dpg.mvTimeUnit_Ms  # 1
+    S = internal_dpg.mvTimeUnit_S  # 2
+    Us = internal_dpg.mvTimeUnit_Us  # 0
+    Yr = internal_dpg.mvTimeUnit_Yr  # 7
 
 
 class EnPlotColormap(enum.Enum):
 
-    BrBG = dpg.mvPlotColormap_BrBG  # 12
-    Cool = dpg.mvPlotColormap_Cool  # 7
-    Dark = dpg.mvPlotColormap_Dark  # 1
-    Deep = dpg.mvPlotColormap_Deep  # 0
-    Default = dpg.mvPlotColormap_Default  # 0
-    Greys = dpg.mvPlotColormap_Greys  # 15
-    Hot = dpg.mvPlotColormap_Hot  # 6
-    Jet = dpg.mvPlotColormap_Jet  # 9
-    Paired = dpg.mvPlotColormap_Paired  # 3
-    Pastel = dpg.mvPlotColormap_Pastel  # 2
-    PiYG = dpg.mvPlotColormap_PiYG  # 13
-    Pink = dpg.mvPlotColormap_Pink  # 8
-    Plasma = dpg.mvPlotColormap_Plasma  # 5
-    RdBu = dpg.mvPlotColormap_RdBu  # 11
-    Spectral = dpg.mvPlotColormap_Spectral  # 14
-    Twilight = dpg.mvPlotColormap_Twilight  # 10
-    Viridis = dpg.mvPlotColormap_Viridis  # 4
+    BrBG = internal_dpg.mvPlotColormap_BrBG  # 12
+    Cool = internal_dpg.mvPlotColormap_Cool  # 7
+    Dark = internal_dpg.mvPlotColormap_Dark  # 1
+    Deep = internal_dpg.mvPlotColormap_Deep  # 0
+    Default = internal_dpg.mvPlotColormap_Default  # 0
+    Greys = internal_dpg.mvPlotColormap_Greys  # 15
+    Hot = internal_dpg.mvPlotColormap_Hot  # 6
+    Jet = internal_dpg.mvPlotColormap_Jet  # 9
+    Paired = internal_dpg.mvPlotColormap_Paired  # 3
+    Pastel = internal_dpg.mvPlotColormap_Pastel  # 2
+    PiYG = internal_dpg.mvPlotColormap_PiYG  # 13
+    Pink = internal_dpg.mvPlotColormap_Pink  # 8
+    Plasma = internal_dpg.mvPlotColormap_Plasma  # 5
+    RdBu = internal_dpg.mvPlotColormap_RdBu  # 11
+    Spectral = internal_dpg.mvPlotColormap_Spectral  # 14
+    Twilight = internal_dpg.mvPlotColormap_Twilight  # 10
+    Viridis = internal_dpg.mvPlotColormap_Viridis  # 4
 
 
 class EnComboHeight(enum.Enum):
 
-    Small = dpg.mvComboHeight_Small  # 0
-    Regular = dpg.mvComboHeight_Regular  # 1
-    Large = dpg.mvComboHeight_Large  # 2
-    Largest = dpg.mvComboHeight_Largest  # 3
+    Small = internal_dpg.mvComboHeight_Small  # 0
+    Regular = internal_dpg.mvComboHeight_Regular  # 1
+    Large = internal_dpg.mvComboHeight_Large  # 2
+    Largest = internal_dpg.mvComboHeight_Largest  # 3
 
 
 class EnDatePickerLevel(enum.Enum):
 
-    Day = dpg.mvDatePickerLevel_Day  # 0
-    Month = dpg.mvDatePickerLevel_Month  # 1
-    Year = dpg.mvDatePickerLevel_Year  # 2
+    Day = internal_dpg.mvDatePickerLevel_Day  # 0
+    Month = internal_dpg.mvDatePickerLevel_Month  # 1
+    Year = internal_dpg.mvDatePickerLevel_Year  # 2
 
 
 class EnPlotLocation(enum.Enum):
 
-    Center = dpg.mvPlot_Location_Center  # 0
-    East = dpg.mvPlot_Location_East  # 8
-    North = dpg.mvPlot_Location_North  # 1
-    NorthEast = dpg.mvPlot_Location_NorthEast  # 9
-    NorthWest = dpg.mvPlot_Location_NorthWest  # 5
-    South = dpg.mvPlot_Location_South  # 2
-    SouthEast = dpg.mvPlot_Location_SouthEast  # 10
-    SouthWest = dpg.mvPlot_Location_SouthWest  # 6
-    West = dpg.mvPlot_Location_West  # 4
+    Center = internal_dpg.mvPlot_Location_Center  # 0
+    East = internal_dpg.mvPlot_Location_East  # 8
+    North = internal_dpg.mvPlot_Location_North  # 1
+    NorthEast = internal_dpg.mvPlot_Location_NorthEast  # 9
+    NorthWest = internal_dpg.mvPlot_Location_NorthWest  # 5
+    South = internal_dpg.mvPlot_Location_South  # 2
+    SouthEast = internal_dpg.mvPlot_Location_SouthEast  # 10
+    SouthWest = internal_dpg.mvPlot_Location_SouthWest  # 6
+    West = internal_dpg.mvPlot_Location_West  # 4
 
 
 class EnThemeCat(enum.Enum):
 
-    Core = dpg.mvThemeCat_Core  # 0
-    Plots = dpg.mvThemeCat_Plots  # 1
-    Nodes = dpg.mvThemeCat_Nodes  # 2
+    Core = internal_dpg.mvThemeCat_Core  # 0
+    Plots = internal_dpg.mvThemeCat_Plots  # 1
+    Nodes = internal_dpg.mvThemeCat_Nodes  # 2
 
 
 class EnCullMode(enum.Enum):
 
-    Back = dpg.mvCullMode_Back  # 1
-    Front = dpg.mvCullMode_Front  # 2
-    NONE = dpg.mvCullMode_None  # 0
+    Back = internal_dpg.mvCullMode_Back  # 1
+    Front = internal_dpg.mvCullMode_Front  # 2
+    NONE = internal_dpg.mvCullMode_None  # 0
 
 
 class EnNodeAttr(enum.Enum):
 
-    Input = dpg.mvNode_Attr_Input  # 0
-    Output = dpg.mvNode_Attr_Output  # 1
-    Static = dpg.mvNode_Attr_Static  # 2
+    Input = internal_dpg.mvNode_Attr_Input  # 0
+    Output = internal_dpg.mvNode_Attr_Output  # 1
+    Static = internal_dpg.mvNode_Attr_Static  # 2
 
 
 class EnMouseButton(enum.Enum):
 
-    Left = dpg.mvMouseButton_Left  # 0
-    Middle = dpg.mvMouseButton_Middle  # 2
-    Right = dpg.mvMouseButton_Right  # 1
-    X1 = dpg.mvMouseButton_X1  # 3
-    X2 = dpg.mvMouseButton_X2  # 4
+    Left = internal_dpg.mvMouseButton_Left  # 0
+    Middle = internal_dpg.mvMouseButton_Middle  # 2
+    Right = internal_dpg.mvMouseButton_Right  # 1
+    X1 = internal_dpg.mvMouseButton_X1  # 3
+    X2 = internal_dpg.mvMouseButton_X2  # 4
+    Any = -1
 
 
 class EnPlatform(enum.Enum):
 
-    Apple = dpg.mvPlatform_Apple  # 1
-    Linux = dpg.mvPlatform_Linux  # 2
-    Windows = dpg.mvPlatform_Windows  # 0
+    Apple = internal_dpg.mvPlatform_Apple  # 1
+    Linux = internal_dpg.mvPlatform_Linux  # 2
+    Windows = internal_dpg.mvPlatform_Windows  # 0
+
+
+class EnKey(enum.Enum):
+
+    Num0 = internal_dpg.mvKey_0  # 48
+    Num1 = internal_dpg.mvKey_1  # 49
+    Num2 = internal_dpg.mvKey_2  # 50
+    Num3 = internal_dpg.mvKey_3  # 51
+    Num4 = internal_dpg.mvKey_4  # 52
+    Num5 = internal_dpg.mvKey_5  # 53
+    Num6 = internal_dpg.mvKey_6  # 54
+    Num7 = internal_dpg.mvKey_7  # 55
+    Num8 = internal_dpg.mvKey_8  # 56
+    Num9 = internal_dpg.mvKey_9  # 57
+    A = internal_dpg.mvKey_A  # 65
+    Add = internal_dpg.mvKey_Add  # 107
+    Alt = internal_dpg.mvKey_Alt  # 18
+    Apps = internal_dpg.mvKey_Apps  # 93
+    B = internal_dpg.mvKey_B  # 66
+    Back = internal_dpg.mvKey_Back  # 8
+    Backslash = internal_dpg.mvKey_Backslash  # 220
+    Browser_Back = internal_dpg.mvKey_Browser_Back  # 166
+    Browser_Favorites = internal_dpg.mvKey_Browser_Favorites  # 171
+    Browser_Forward = internal_dpg.mvKey_Browser_Forward  # 167
+    Browser_Home = internal_dpg.mvKey_Browser_Home  # 172
+    Browser_Refresh = internal_dpg.mvKey_Browser_Refresh  # 168
+    Browser_Search = internal_dpg.mvKey_Browser_Search  # 170
+    Browser_Stop = internal_dpg.mvKey_Browser_Stop  # 169
+    C = internal_dpg.mvKey_C  # 67
+    Capital = internal_dpg.mvKey_Capital  # 20
+    Clear = internal_dpg.mvKey_Clear  # 12
+    Close_Brace = internal_dpg.mvKey_Close_Brace  # 221
+    Colon = internal_dpg.mvKey_Colon  # 186
+    Comma = internal_dpg.mvKey_Comma  # 188
+    Control = internal_dpg.mvKey_Control  # 17
+    D = internal_dpg.mvKey_D  # 68
+    Decimal = internal_dpg.mvKey_Decimal  # 110
+    Delete = internal_dpg.mvKey_Delete  # 46
+    Divide = internal_dpg.mvKey_Divide  # 111
+    Down = internal_dpg.mvKey_Down  # 40
+    E = internal_dpg.mvKey_E  # 69
+    End = internal_dpg.mvKey_End  # 35
+    Escape = internal_dpg.mvKey_Escape  # 27
+    Execute = internal_dpg.mvKey_Execute  # 43
+    F = internal_dpg.mvKey_F  # 70
+    F1 = internal_dpg.mvKey_F1  # 112
+    F10 = internal_dpg.mvKey_F10  # 121
+    F11 = internal_dpg.mvKey_F11  # 122
+    F12 = internal_dpg.mvKey_F12  # 123
+    F13 = internal_dpg.mvKey_F13  # 124
+    F14 = internal_dpg.mvKey_F14  # 125
+    F15 = internal_dpg.mvKey_F15  # 126
+    F16 = internal_dpg.mvKey_F16  # 127
+    F17 = internal_dpg.mvKey_F17  # 128
+    F18 = internal_dpg.mvKey_F18  # 129
+    F19 = internal_dpg.mvKey_F19  # 130
+    F2 = internal_dpg.mvKey_F2  # 113
+    F20 = internal_dpg.mvKey_F20  # 131
+    F21 = internal_dpg.mvKey_F21  # 132
+    F22 = internal_dpg.mvKey_F22  # 133
+    F23 = internal_dpg.mvKey_F23  # 134
+    F24 = internal_dpg.mvKey_F24  # 135
+    F25 = internal_dpg.mvKey_F25  # 136
+    F3 = internal_dpg.mvKey_F3  # 114
+    F4 = internal_dpg.mvKey_F4  # 115
+    F5 = internal_dpg.mvKey_F5  # 116
+    F6 = internal_dpg.mvKey_F6  # 117
+    F7 = internal_dpg.mvKey_F7  # 118
+    F8 = internal_dpg.mvKey_F8  # 119
+    F9 = internal_dpg.mvKey_F9  # 120
+    G = internal_dpg.mvKey_G  # 71
+    H = internal_dpg.mvKey_H  # 72
+    Help = internal_dpg.mvKey_Help  # 47
+    Home = internal_dpg.mvKey_Home  # 36
+    I = internal_dpg.mvKey_I  # 73
+    Insert = internal_dpg.mvKey_Insert  # 45
+    J = internal_dpg.mvKey_J  # 74
+    K = internal_dpg.mvKey_K  # 75
+    L = internal_dpg.mvKey_L  # 76
+    LControl = internal_dpg.mvKey_LControl  # 162
+    LMenu = internal_dpg.mvKey_LMenu  # 164
+    LShift = internal_dpg.mvKey_LShift  # 160
+    LWin = internal_dpg.mvKey_LWin  # 91
+    Launch_App1 = internal_dpg.mvKey_Launch_App1  # 182
+    Launch_App2 = internal_dpg.mvKey_Launch_App2  # 183
+    Launch_Mail = internal_dpg.mvKey_Launch_Mail  # 180
+    Launch_Media_Select = internal_dpg.mvKey_Launch_Media_Select  # 181
+    Left = internal_dpg.mvKey_Left  # 37
+    M = internal_dpg.mvKey_M  # 77
+    Media_Next_Track = internal_dpg.mvKey_Media_Next_Track  # 176
+    Media_Play_Pause = internal_dpg.mvKey_Media_Play_Pause  # 179
+    Media_Prev_Track = internal_dpg.mvKey_Media_Prev_Track  # 177
+    Media_Stop = internal_dpg.mvKey_Media_Stop  # 178
+    Minus = internal_dpg.mvKey_Minus  # 189
+    Multiply = internal_dpg.mvKey_Multiply  # 106
+    N = internal_dpg.mvKey_N  # 78
+    Next = internal_dpg.mvKey_Next  # 34
+    NumLock = internal_dpg.mvKey_NumLock  # 144
+    NumPad0 = internal_dpg.mvKey_NumPad0  # 96
+    NumPad1 = internal_dpg.mvKey_NumPad1  # 97
+    NumPad2 = internal_dpg.mvKey_NumPad2  # 98
+    NumPad3 = internal_dpg.mvKey_NumPad3  # 99
+    NumPad4 = internal_dpg.mvKey_NumPad4  # 100
+    NumPad5 = internal_dpg.mvKey_NumPad5  # 101
+    NumPad6 = internal_dpg.mvKey_NumPad6  # 102
+    NumPad7 = internal_dpg.mvKey_NumPad7  # 103
+    NumPad8 = internal_dpg.mvKey_NumPad8  # 104
+    NumPad9 = internal_dpg.mvKey_NumPad9  # 105
+    O = internal_dpg.mvKey_O  # 79
+    Open_Brace = internal_dpg.mvKey_Open_Brace  # 219
+    P = internal_dpg.mvKey_P  # 80
+    Pause = internal_dpg.mvKey_Pause  # 19
+    Period = internal_dpg.mvKey_Period  # 190
+    Plus = internal_dpg.mvKey_Plus  # 187
+    Print = internal_dpg.mvKey_Print  # 42
+    PrintScreen = internal_dpg.mvKey_PrintScreen  # 44
+    Prior = internal_dpg.mvKey_Prior  # 33
+    Q = internal_dpg.mvKey_Q  # 81
+    Quote = internal_dpg.mvKey_Quote  # 222
+    R = internal_dpg.mvKey_R  # 82
+    RControl = internal_dpg.mvKey_RControl  # 163
+    RMenu = internal_dpg.mvKey_RMenu  # 165
+    RShift = internal_dpg.mvKey_RShift  # 161
+    RWin = internal_dpg.mvKey_RWin  # 92
+    Return = internal_dpg.mvKey_Return  # 13
+    Right = internal_dpg.mvKey_Right  # 39
+    S = internal_dpg.mvKey_S  # 83
+    ScrollLock = internal_dpg.mvKey_ScrollLock  # 145
+    Select = internal_dpg.mvKey_Select  # 41
+    Separator = internal_dpg.mvKey_Separator  # 108
+    Shift = internal_dpg.mvKey_Shift  # 16
+    Slash = internal_dpg.mvKey_Slash  # 191
+    Sleep = internal_dpg.mvKey_Sleep  # 95
+    Spacebar = internal_dpg.mvKey_Spacebar  # 32
+    Subtract = internal_dpg.mvKey_Subtract  # 109
+    T = internal_dpg.mvKey_T  # 84
+    Tab = internal_dpg.mvKey_Tab  # 9
+    Tilde = internal_dpg.mvKey_Tilde  # 192
+    U = internal_dpg.mvKey_U  # 85
+    Up = internal_dpg.mvKey_Up  # 38
+    V = internal_dpg.mvKey_V  # 86
+    Volume_Down = internal_dpg.mvKey_Volume_Down  # 174
+    Volume_Mute = internal_dpg.mvKey_Volume_Mute  # 173
+    Volume_Up = internal_dpg.mvKey_Volume_Up  # 175
+    W = internal_dpg.mvKey_W  # 87
+    X = internal_dpg.mvKey_X  # 88
+    Y = internal_dpg.mvKey_Y  # 89
+    Z = internal_dpg.mvKey_Z  # 90
+    Any = -1
+
+
+class GlobalHandler(RegistryItem, abc.ABC):
+
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["GlobalHandlerRegistry"]]:
+        return GlobalHandlerRegistry, 
+
+
+class WidgetHandler(RegistryItem, abc.ABC):
+
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["WidgetHandlerRegistry"]]:
+        return WidgetHandlerRegistry, 
 
 
 @dataclasses.dataclass
@@ -4590,7 +4756,7 @@ class IntValue(Widget):
 
 
 @dataclasses.dataclass
-class ItemActivatedHandler(Widget):
+class WidgetActivatedHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_activated_handler
@@ -4643,7 +4809,7 @@ class ItemActivatedHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemActiveHandler(Widget):
+class WidgetActiveHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_active_handler
@@ -4696,7 +4862,7 @@ class ItemActiveHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemClickedHandler(Widget):
+class WidgetClickedHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_clicked_handler
@@ -4706,7 +4872,7 @@ class ItemClickedHandler(Widget):
     """
 
     # button (int, optional): Submits callback for all mouse buttons
-    button: int = -1
+    button: EnMouseButton = EnMouseButton.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -4730,7 +4896,7 @@ class ItemClickedHandler(Widget):
         _ret = internal_dpg.add_item_clicked_handler(
             tag=self.guid,
             parent=_parent_guid,
-            button=self.button,
+            button=self.button.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -4753,7 +4919,7 @@ class ItemClickedHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemDeactivatedAfterEditHandler(Widget):
+class WidgetDeactivatedAfterEditHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_deactivated_after_edit_handler
@@ -4806,7 +4972,7 @@ class ItemDeactivatedAfterEditHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemDeactivatedHandler(Widget):
+class WidgetDeactivatedHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_deactivated_handler
@@ -4859,7 +5025,7 @@ class ItemDeactivatedHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemEditedHandler(Widget):
+class WidgetEditedHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_edited_handler
@@ -4912,7 +5078,7 @@ class ItemEditedHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemFocusHandler(Widget):
+class WidgetFocusHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_focus_handler
@@ -4965,7 +5131,7 @@ class ItemFocusHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemHoverHandler(Widget):
+class WidgetHoverHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_hover_handler
@@ -5018,7 +5184,7 @@ class ItemHoverHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemResizeHandler(Widget):
+class WidgetResizeHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_resize_handler
@@ -5071,7 +5237,7 @@ class ItemResizeHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemToggledOpenHandler(Widget):
+class WidgetToggledOpenHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_toggled_open_handler
@@ -5124,7 +5290,7 @@ class ItemToggledOpenHandler(Widget):
 
 
 @dataclasses.dataclass
-class ItemVisibleHandler(Widget):
+class WidgetVisibleHandler(WidgetHandler):
     """
     Refer:
     >>> dpg.add_item_visible_handler
@@ -5177,7 +5343,7 @@ class ItemVisibleHandler(Widget):
 
 
 @dataclasses.dataclass
-class KeyDownHandler(Widget):
+class KeyDownHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_key_down_handler
@@ -5187,7 +5353,7 @@ class KeyDownHandler(Widget):
     """
 
     # key (int, optional): Submits callback for all keys
-    key: int = -1
+    key: EnKey = EnKey.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -5211,7 +5377,7 @@ class KeyDownHandler(Widget):
         _ret = internal_dpg.add_key_down_handler(
             tag=self.guid,
             parent=_parent_guid,
-            key=self.key,
+            key=self.key.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5234,7 +5400,7 @@ class KeyDownHandler(Widget):
 
 
 @dataclasses.dataclass
-class KeyPressHandler(Widget):
+class KeyPressHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_key_press_handler
@@ -5244,7 +5410,7 @@ class KeyPressHandler(Widget):
     """
 
     # key (int, optional): Submits callback for all keys
-    key: int = -1
+    key: EnKey = EnKey.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -5268,7 +5434,7 @@ class KeyPressHandler(Widget):
         _ret = internal_dpg.add_key_press_handler(
             tag=self.guid,
             parent=_parent_guid,
-            key=self.key,
+            key=self.key.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5291,7 +5457,7 @@ class KeyPressHandler(Widget):
 
 
 @dataclasses.dataclass
-class KeyReleaseHandler(Widget):
+class KeyReleaseHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_key_release_handler
@@ -5301,7 +5467,7 @@ class KeyReleaseHandler(Widget):
     """
 
     # key (int, optional): Submits callback for all keys
-    key: int = -1
+    key: EnKey = EnKey.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -5325,7 +5491,7 @@ class KeyReleaseHandler(Widget):
         _ret = internal_dpg.add_key_release_handler(
             tag=self.guid,
             parent=_parent_guid,
-            key=self.key,
+            key=self.key.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5869,7 +6035,7 @@ class MenuItem(MovableWidget):
 
 
 @dataclasses.dataclass
-class MouseClickHandler(Widget):
+class MouseClickHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_mouse_click_handler
@@ -5879,7 +6045,7 @@ class MouseClickHandler(Widget):
     """
 
     # button (int, optional): Submits callback for all mouse buttons
-    button: int = -1
+    button: EnMouseButton = EnMouseButton.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -5903,7 +6069,7 @@ class MouseClickHandler(Widget):
         _ret = internal_dpg.add_mouse_click_handler(
             tag=self.guid,
             parent=_parent_guid,
-            button=self.button,
+            button=self.button.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5926,7 +6092,7 @@ class MouseClickHandler(Widget):
 
 
 @dataclasses.dataclass
-class MouseDoubleClickHandler(Widget):
+class MouseDoubleClickHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_mouse_double_click_handler
@@ -5936,7 +6102,7 @@ class MouseDoubleClickHandler(Widget):
     """
 
     # button (int, optional): Submits callback for all mouse buttons
-    button: int = -1
+    button: EnMouseButton = EnMouseButton.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -5960,7 +6126,7 @@ class MouseDoubleClickHandler(Widget):
         _ret = internal_dpg.add_mouse_double_click_handler(
             tag=self.guid,
             parent=_parent_guid,
-            button=self.button,
+            button=self.button.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -5983,7 +6149,7 @@ class MouseDoubleClickHandler(Widget):
 
 
 @dataclasses.dataclass
-class MouseDownHandler(Widget):
+class MouseDownHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_mouse_down_handler
@@ -5993,7 +6159,7 @@ class MouseDownHandler(Widget):
     """
 
     # button (int, optional): Submits callback for all mouse buttons
-    button: int = -1
+    button: EnMouseButton = EnMouseButton.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -6017,7 +6183,7 @@ class MouseDownHandler(Widget):
         _ret = internal_dpg.add_mouse_down_handler(
             tag=self.guid,
             parent=_parent_guid,
-            button=self.button,
+            button=self.button.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6040,7 +6206,7 @@ class MouseDownHandler(Widget):
 
 
 @dataclasses.dataclass
-class MouseDragHandler(Widget):
+class MouseDragHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_mouse_drag_handler
@@ -6050,7 +6216,7 @@ class MouseDragHandler(Widget):
     """
 
     # button (int, optional): Submits callback for all mouse buttons
-    button: int = -1
+    button: EnMouseButton = EnMouseButton.Any
 
     # threshold (float, optional): The threshold the mouse must be dragged before the callback is ran
     threshold: float = 10.0
@@ -6077,7 +6243,7 @@ class MouseDragHandler(Widget):
         _ret = internal_dpg.add_mouse_drag_handler(
             tag=self.guid,
             parent=_parent_guid,
-            button=self.button,
+            button=self.button.value,
             threshold=self.threshold,
             label=self.label,
             user_data=self.user_data,
@@ -6101,7 +6267,7 @@ class MouseDragHandler(Widget):
 
 
 @dataclasses.dataclass
-class MouseMoveHandler(Widget):
+class MouseMoveHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_mouse_move_handler
@@ -6154,7 +6320,7 @@ class MouseMoveHandler(Widget):
 
 
 @dataclasses.dataclass
-class MouseReleaseHandler(Widget):
+class MouseReleaseHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_mouse_release_handler
@@ -6164,7 +6330,7 @@ class MouseReleaseHandler(Widget):
     """
 
     # button (int, optional): Submits callback for all mouse buttons
-    button: int = -1
+    button: EnMouseButton = EnMouseButton.Any
 
     # label (str, optional): Overrides 'name' as label.
     label: str = None
@@ -6188,7 +6354,7 @@ class MouseReleaseHandler(Widget):
         _ret = internal_dpg.add_mouse_release_handler(
             tag=self.guid,
             parent=_parent_guid,
-            button=self.button,
+            button=self.button.value,
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
@@ -6211,7 +6377,7 @@ class MouseReleaseHandler(Widget):
 
 
 @dataclasses.dataclass
-class MouseWheelHandler(Widget):
+class MouseWheelHandler(GlobalHandler):
     """
     Refer:
     >>> dpg.add_mouse_wheel_handler
@@ -10709,7 +10875,7 @@ class Group(MovableContainerWidget):
 
 
 @dataclasses.dataclass
-class HandlerRegistry(Registry):
+class GlobalHandlerRegistry(Registry):
     """
     Refer:
     >>> dpg.handler_registry
@@ -10730,6 +10896,10 @@ class HandlerRegistry(Registry):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    @property
+    def restrict_children_to(self) -> t.Tuple[t.Type["GlobalHandler", ]]:
+        return GlobalHandler, 
+
     def build(self) -> int:
 
         _ret = internal_dpg.add_handler_registry(
@@ -10744,7 +10914,7 @@ class HandlerRegistry(Registry):
 
 
 @dataclasses.dataclass
-class ItemHandlerRegistry(Registry):
+class WidgetHandlerRegistry(Registry):
     """
     Refer:
     >>> dpg.item_handler_registry
@@ -10764,6 +10934,10 @@ class ItemHandlerRegistry(Registry):
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
+
+    @property
+    def restrict_children_to(self) -> t.Tuple[t.Type["WidgetHandler", ]]:
+        return WidgetHandler, 
 
     def build(self) -> int:
 
@@ -11638,7 +11812,7 @@ class Tab(MovableContainerWidget):
     order_mode: bool = 0
 
     @property
-    def restrict_parents_to(self) -> t.Tuple[t.Type["ContainerWidget"]]:
+    def restrict_parents_to(self) -> t.Tuple[t.Type["TabBar", ]]:
         return TabBar, 
 
     def build(self) -> int:
@@ -11725,7 +11899,7 @@ class TabBar(MovableContainerWidget):
     reorderable: bool = False
 
     @property
-    def restrict_children_to(self) -> t.Tuple[t.Type["MovableWidget"]]:
+    def restrict_children_to(self) -> t.Tuple[t.Type["Tab", ]]:
         return Tab, 
 
     def build(self) -> int:

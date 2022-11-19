@@ -1,3 +1,4 @@
+import dataclasses
 import inspect
 import pathlib
 import shutil
@@ -11,7 +12,7 @@ import datetime
 _now = datetime.datetime.now
 
 _WRAP_TEXT_WIDTH = 70
-_NEEDED_ENUMS = {}  # type: t.Dict[str, 'EnumDef']
+_NEEDED_ENUMS = {}  # type: t.Dict[str, EnumDef]
 
 _SKIP_METHODS = [
     # not required
@@ -293,6 +294,22 @@ class DpgBuildParamDef(NamedTuple):
 class DpgDef:
 
     @property
+    def is_registry_related(self) -> bool:
+        if self.fn.__name__.endswith("_registry"):
+            return True
+        else:
+            return False
+
+    @property
+    def is_registry_item_related(self) -> bool:
+        _fn_name = self.fn.__name__
+        # case for WidgetHandler and
+        if _fn_name.startswith("add_") and _fn_name.endswith("_handler"):
+            return True
+        else:
+            return False
+
+    @property
     def is_plot_related(self) -> bool:
         # this means that items that Plot class can hold
         # note that plot, subplots and simple_plot are not the children of plot
@@ -339,9 +356,14 @@ class DpgDef:
 
     @property
     def restrict_children_to(self) -> t.Optional[t.List[str]]:
+
         if self._name == "TabBar":
             # just for fun we do this ... note that this is already taken care by restrict_parent_to
             return ["Tab", ]
+        elif self._name == "WidgetHandlerRegistry":
+            return ["WidgetHandler", ]
+        elif self._name == "GlobalHandlerRegistry":
+            return ["GlobalHandler", ]
         else:
             return None
 
@@ -390,15 +412,24 @@ class DpgDef:
                 if self.is_container:
                     _class_name = "ContainerWidget"
                 else:
-                    _class_name = "Widget"
+                    if self.is_registry_item_related:
+                        _fn_name = self.fn.__name__
+                        if _fn_name.startswith("add_") and _fn_name.endswith("_handler"):
+                            if _fn_name.startswith("add_item_"):
+                                _class_name = "WidgetHandler"
+                            else:
+                                _class_name = "GlobalHandler"
+                    else:
+                        _class_name = "Widget"
 
-        elif self.is_registry:
-            _class_name = "Registry"
+
         else:
             if self.fn in [
                 dpg.window, dpg.file_dialog,
             ]:
                 _class_name = "ContainerWidget"
+            if self.is_registry_related:
+                _class_name = "Registry"
         return _class_name
 
     @property
@@ -438,12 +469,18 @@ class DpgDef:
             return "PlotDragLine"
         if self.fn == dpg.add_drag_point:
             return "PlotDragPoint"
+        if self.fn == dpg.handler_registry:
+            return "GlobalHandlerRegistry"
+        if self.fn == dpg.item_handler_registry:
+            return "WidgetHandlerRegistry"
 
         # ------------------------------------------------------- 04
         # default name generation
         _name = self.fn.__name__.replace("add_", "")
         _name = _name.title().replace("_", "")
         _name = _name.replace("Intx", "IntX").replace("Floatx", "FloatX")
+        if _name.startswith("Item") and _name.endswith("Handler"):
+            _name = _name.replace("Item", "Widget")
 
         # ------------------------------------------------------- 05
         return _name
@@ -569,6 +606,18 @@ class DpgDef:
                 _param_name = "if_entered"
                 _param_dpg_name = "on_enter"
                 _param_dpg_value = "self.if_entered"
+            if _param_name == "key":
+                assert _param_type == 'int'
+                assert _param_value == -1
+                _param_type = "EnKey"
+                _param_value = "EnKey.Any"
+                _param_dpg_value = f"self.{_param_name}.value"
+            if _param_name == "button":
+                assert _param_type == 'int'
+                assert _param_value == -1
+                _param_type = "EnMouseButton"
+                _param_value = "EnMouseButton.Any"
+                _param_dpg_value = f"self.{_param_name}.value"
             if _param_name == "label":
                 if self.is_plot_series_related or self.is_plot_related:
                     _param_dpg_value = "None if self.label is None else self.label.split('#')[0]"
@@ -646,22 +695,26 @@ class DpgDef:
         # property restrict_parents_to
         if bool(self.restrict_parent_to):
             _r = ""
+            _rt = ""
             for _ in self.restrict_parent_to:
                 _r += f"{_}, "
+                _rt += f"\"{_}\", "
             _lines += [
                 "\t@property",
-                "\tdef restrict_parents_to(self) -> t.Tuple[t.Type[\"ContainerWidget\"]]:",
+                f"\tdef restrict_parents_to(self) -> t.Tuple[t.Type[{_rt}]]:",
                 f"\t\treturn {_r}", "",
             ]
         # ------------------------------------------------------- 03.03.01
         # property restrict_parents_to
         if bool(self.restrict_children_to):
             _r = ""
+            _rt = ""
             for _ in self.restrict_children_to:
                 _r += f"{_}, "
+                _rt += f"\"{_}\", "
             _lines += [
                 "\t@property",
-                "\tdef restrict_children_to(self) -> t.Tuple[t.Type[\"MovableWidget\"]]:",
+                f"\tdef restrict_children_to(self) -> t.Tuple[t.Type[{_rt}]]:",
                 f"\t\treturn {_r}", "",
             ]
 
@@ -752,9 +805,6 @@ class DpgDef:
         self.fn_signature = inspect.signature(self.fn)
 
         # -------------------------------------------------------- 03
-        self.is_registry = self.fn.__name__.find("registry") != -1
-
-        # -------------------------------------------------------- 04
         self.is_before_param_present = False
         self.is_source_param_present = False
         self.is_parent_param_present = False
@@ -772,7 +822,7 @@ class DpgDef:
             if not self.is_parent_param_present:
                 raise Exception("If before is present then parent should also be present")
 
-        # -------------------------------------------------------- 05
+        # -------------------------------------------------------- 04
         self.name = self._name
         self.call_prefix = self._call_prefix
         self.super_class_name = self._super_class_name
@@ -796,6 +846,36 @@ class DpgDef:
                 ...
         else:
             self.fn(parent=parent, **_kwargs)
+
+
+@dataclasses.dataclass
+class RegistryItemDef:
+    name: str
+    restrict_parents_to: str
+
+    @property
+    def _code(self) -> t.List[str]:
+        # add header
+        _lines = [
+            "",
+            "",
+            f"class {self.name}(RegistryItem, abc.ABC):",
+            "",
+            "    @property",
+            f"    def restrict_parents_to(self) -> t.Tuple[t.Type[\"{self.restrict_parents_to}\"]]:",
+            f"        return {self.restrict_parents_to}, ",
+        ]
+        return _lines
+
+    @classmethod
+    def make(cls) -> t.List[str]:
+        _ret = []
+        for _ in [
+            RegistryItemDef(name="GlobalHandler", restrict_parents_to="GlobalHandlerRegistry"),
+            RegistryItemDef(name="WidgetHandler", restrict_parents_to="WidgetHandlerRegistry"),
+        ]:
+            _ret += _._code
+        return _ret
 
 
 class EnumDef:
@@ -822,9 +902,20 @@ class EnumDef:
             # replace None
             _enum_val_str = self.get_dpg_val_to_enum_val(_dpg_val_str)
 
+            # if int then append Num
+            try:
+                _ = int(_enum_val_str)
+                _enum_val_str = f"Num{_}"
+            except ValueError as _ve:
+                ...
+
             # append line
             _lines.append(
-                f"\t{_enum_val_str} = dpg.{_dpg_val_str}  # {_dpg_val}")
+                f"\t{_enum_val_str} = internal_dpg.{_dpg_val_str}  # {_dpg_val}")
+
+        # append any option
+        if self.enum_name in ["EnKey", "EnMouseButton"]:
+            _lines.append(f"\tAny = -1")
 
         # replace \t to 4 spaces
         _lines = [_.replace("\t", "    ") for _ in _lines]
@@ -900,6 +991,7 @@ import dearpygui._dearpygui as internal_dpg
 import dearpygui.dearpygui as dpg
 import dataclasses
 import enum
+import abc
 import typing as t
 
 from .__base__ import Widget
@@ -908,6 +1000,7 @@ from .__base__ import ContainerWidget
 from .__base__ import MovableContainerWidget
 from .__base__ import Callback
 from .__base__ import Registry
+from .__base__ import RegistryItem
 from .__base__ import PlotSeries
 from .__base__ import PlotItem
 from .__base__ import PLOT_DATA_TYPE
@@ -931,6 +1024,10 @@ from .__base__ import USER_DATA
             self.fetch_enum_def_from_fn_param_doc(
                 method=None, param_name=None,
                 param_doc="  Union[int, str]  mvPlatform_*  "
+            ),
+            self.fetch_enum_def_from_fn_param_doc(
+                method=None, param_name=None,
+                param_doc="  Union[int, str]  mvKey_*  "
             ),
         ]
 
@@ -1132,10 +1229,35 @@ from .__base__ import USER_DATA
         # widget and container lines
         _lines = []
         for _widget_def in self.all_dpg_defs:
-            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related or _widget_def.is_plot_related:
+            if _widget_def.is_plot_related or _widget_def.is_table_related or _widget_def.is_plot_series_related \
+                    or _widget_def.is_registry_related or _widget_def.is_registry_item_related:
                 continue
             _lines.append(_dis_inspect)
             _lines.append(f"from ._auto import {_widget_def.name}")
+
+        # -------------------------------- 03
+        self.add_auto_imports_to_py_file(_output_file, _lines)
+
+    def make_registry_py(self):
+        # -------------------------------- 01
+        # init
+        _output_file = pathlib.Path("../registry.py")
+        _dis_inspect = "# noinspection PyUnresolvedReferences"
+
+        # -------------------------------- 02
+        # widget and container lines
+        _lines = []
+        for _widget_def in self.all_dpg_defs:
+            # note that is_plot_related things will be again redefined in ../plot.py
+            # so no need to add import
+            if _widget_def.is_registry_related:
+                _lines.append(_dis_inspect)
+                _lines.append(f"from ._auto import {_widget_def.name}")
+
+            # is_plot_series_related
+            if _widget_def.is_registry_item_related:
+                _lines.append(_dis_inspect)
+                _lines.append(f"from ._auto import {_widget_def.name}")
 
         # -------------------------------- 03
         self.add_auto_imports_to_py_file(_output_file, _lines)
@@ -1152,6 +1274,11 @@ from .__base__ import USER_DATA
         for _widget_def in self.all_dpg_defs:
             # note that is_plot_related things will be again redefined in ../plot.py
             # so no need to add import
+            if _widget_def.is_plot_related:
+                _lines.append(_dis_inspect)
+                _lines.append(f"# from ._auto import {_widget_def.name}")
+
+            # is_plot_series_related
             if _widget_def.is_plot_series_related:
                 _lines.append(_dis_inspect)
                 _lines.append(f"from ._auto import {_widget_def.name}")
@@ -1172,6 +1299,9 @@ from .__base__ import USER_DATA
         for _enum_def in _NEEDED_ENUMS.values():
             _enum_lines += _enum_def.code
         # -------------------------------- 02.02
+        # registry item related
+        _registry_item_def_lines = RegistryItemDef.make()
+        # -------------------------------- 02.03
         # widget and container lines
         _widget_lines = []
         for _widget_def in self.all_dpg_defs:
@@ -1181,7 +1311,7 @@ from .__base__ import USER_DATA
         _output_file.write_text(
             self.header +
             "\n".join(
-                _enum_lines + _widget_lines + [""]
+                _enum_lines + _registry_item_def_lines + _widget_lines + [""]
             )
         )
 
@@ -1216,6 +1346,7 @@ from .__base__ import USER_DATA
         self.make_enum_py()
         self.make_widget_py()
         self.make_plot_py()
+        self.make_registry_py()
 
 
 def try_dpg_children(_dpg_def: DpgDef, _all_dpg_defs: t.List[DpgDef]):

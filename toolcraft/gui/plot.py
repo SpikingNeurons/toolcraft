@@ -18,6 +18,10 @@ from ._auto import BarSeries
 # noinspection PyUnresolvedReferences
 from ._auto import CandleSeries
 # noinspection PyUnresolvedReferences
+# from ._auto import PlotDragLine
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotDragPoint
+# noinspection PyUnresolvedReferences
 from ._auto import ErrorSeries
 # noinspection PyUnresolvedReferences
 from ._auto import HeatSeries
@@ -30,6 +34,10 @@ from ._auto import LineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import PieSeries
 # noinspection PyUnresolvedReferences
+# from ._auto import PlotAnnotation
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotLegend
+# noinspection PyUnresolvedReferences
 from ._auto import ScatterSeries
 # noinspection PyUnresolvedReferences
 from ._auto import ShadeSeries
@@ -39,6 +47,10 @@ from ._auto import StairSeries
 from ._auto import StemSeries
 # noinspection PyUnresolvedReferences
 from ._auto import VLineSeries
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotXAxis
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotYAxis
 # auto pk; end <<<
 
 

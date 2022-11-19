@@ -77,34 +77,6 @@ from ._auto import Int4Value
 # noinspection PyUnresolvedReferences
 from ._auto import IntValue
 # noinspection PyUnresolvedReferences
-from ._auto import ItemActivatedHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemActiveHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemClickedHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemDeactivatedAfterEditHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemDeactivatedHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemEditedHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemFocusHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemHoverHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemResizeHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemToggledOpenHandler
-# noinspection PyUnresolvedReferences
-from ._auto import ItemVisibleHandler
-# noinspection PyUnresolvedReferences
-from ._auto import KeyDownHandler
-# noinspection PyUnresolvedReferences
-from ._auto import KeyPressHandler
-# noinspection PyUnresolvedReferences
-from ._auto import KeyReleaseHandler
-# noinspection PyUnresolvedReferences
 from ._auto import KnobFloat
 # noinspection PyUnresolvedReferences
 from ._auto import Listbox
@@ -112,20 +84,6 @@ from ._auto import Listbox
 from ._auto import LoadingIndicator
 # noinspection PyUnresolvedReferences
 from ._auto import MenuItem
-# noinspection PyUnresolvedReferences
-from ._auto import MouseClickHandler
-# noinspection PyUnresolvedReferences
-from ._auto import MouseDoubleClickHandler
-# noinspection PyUnresolvedReferences
-from ._auto import MouseDownHandler
-# noinspection PyUnresolvedReferences
-from ._auto import MouseDragHandler
-# noinspection PyUnresolvedReferences
-from ._auto import MouseMoveHandler
-# noinspection PyUnresolvedReferences
-from ._auto import MouseReleaseHandler
-# noinspection PyUnresolvedReferences
-from ._auto import MouseWheelHandler
 # noinspection PyUnresolvedReferences
 from ._auto import ProgressBar
 # noinspection PyUnresolvedReferences
@@ -177,8 +135,6 @@ from ._auto import Clipper
 # noinspection PyUnresolvedReferences
 from ._auto import CollapsingHeader
 # noinspection PyUnresolvedReferences
-from ._auto import ColormapRegistry
-# noinspection PyUnresolvedReferences
 from ._auto import CustomSeries
 # noinspection PyUnresolvedReferences
 from ._auto import DragPayload
@@ -219,13 +175,7 @@ from ._auto import FilterSet
 # noinspection PyUnresolvedReferences
 from ._auto import Font
 # noinspection PyUnresolvedReferences
-from ._auto import FontRegistry
-# noinspection PyUnresolvedReferences
 from ._auto import Group
-# noinspection PyUnresolvedReferences
-from ._auto import HandlerRegistry
-# noinspection PyUnresolvedReferences
-from ._auto import ItemHandlerRegistry
 # noinspection PyUnresolvedReferences
 from ._auto import Menu
 # noinspection PyUnresolvedReferences
@@ -243,17 +193,11 @@ from ._auto import Tab
 # noinspection PyUnresolvedReferences
 from ._auto import TabBar
 # noinspection PyUnresolvedReferences
-from ._auto import TemplateRegistry
-# noinspection PyUnresolvedReferences
-from ._auto import TextureRegistry
-# noinspection PyUnresolvedReferences
 from ._auto import ThemeComponent
 # noinspection PyUnresolvedReferences
 from ._auto import Tooltip
 # noinspection PyUnresolvedReferences
 from ._auto import TreeNode
-# noinspection PyUnresolvedReferences
-from ._auto import ValueRegistry
 # noinspection PyUnresolvedReferences
 from ._auto import ViewportMenuBar
 # noinspection PyUnresolvedReferences
