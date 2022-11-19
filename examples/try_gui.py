@@ -276,7 +276,7 @@ class PlottingWithContiniousUpdates(gui.form.Form):
     )
 
     def fixed_update(self):
-        print("yyyyyyyyyyyyyyyyyyyyyyy", self.is_built)
+        print("yyyyyyyyyyyyyyyyyyyyyyy", self.is_built, self.line_plot.is_visible)
         _1 = self.line_plot.x_axis.get_limits()
         _2 = self.line_plot.y1_axis.get_limits()
         print(">>>>>>>>>>>>>>>>>>>", _1, _2)
@@ -504,8 +504,8 @@ def demo():
 
 
 def main():
-    basic_dashboard()
-    # demo()
+    # basic_dashboard()
+    demo()
 
 
 if __name__ == "__main__":
