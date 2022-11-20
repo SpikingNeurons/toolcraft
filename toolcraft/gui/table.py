@@ -48,10 +48,6 @@ class Row(_auto.TableRow):
     def parent(self) -> "Table":
         return self._parent
 
-    @parent.setter
-    def parent(self, value: "Table"):
-        self._parent = value
-
     def __getitem__(self, item: t.Union[int, slice]) -> t.Union[Cell, t.List[Cell]]:
         if isinstance(item, (int, slice)):
             # noinspection PyTypeChecker
@@ -168,13 +164,13 @@ class Table(_auto.Table):
                 raise Exception("The column should not be built ...")
             # ---------------------------------------------- 02.02
             # set internals
-            _c.parent = self
+            _c._parent = self
 
         # -------------------------------------------------- 03
         # now call rows so that they add themselves to self
         if bool(self.rows):
             for _r in self.rows:
-                _r.parent = self
+                _r._parent = self
                 self(_r)
 
         # -------------------------------------------------- 04

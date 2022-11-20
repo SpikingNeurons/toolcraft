@@ -224,6 +224,7 @@ class _WidgetDpg(abc.ABC):
         self.init()
 
     def __setattr__(self, key, value):
+        from .form import Form
         if key in self.dataclass_field_names:
             # needed as this is dataclass and class building happens before
             # __post_init__ will add this attribute to class
@@ -235,9 +236,12 @@ class _WidgetDpg(abc.ABC):
             # in that case catch exception and figure out how to handle
             if _is_built:
                 # The default behaviour is to update configure the dpg item but
-                # note that Form is not a typical Widget and hence we have no need for
-                # "`internal_dpg.configure_item` ...",
-                if not isinstance(self, Form):
+                # note that Form is not a typical Widget and is subclass of CollapsingHeader
+                # It can have more dataclass fields than provided by dpg
+                if isinstance(self, Form):
+                    if key in internal_dpg.get_item_configuration(self.guid).keys():
+                        internal_dpg.configure_item(self.guid, **{key: value})
+                else:
                     internal_dpg.configure_item(self.guid, **{key: value})
         # any other attribute that is not field
         return super().__setattr__(key, value)
@@ -256,6 +260,8 @@ class _WidgetDpg(abc.ABC):
         return self.__class__(**_kwargs)
 
     def init_validate(self):
+
+        from .form import Form
 
         # loop over fields
         for f_name in self.dataclass_field_names:
@@ -296,14 +302,7 @@ class _WidgetDpg(abc.ABC):
 
         # delete the dpg UI counterpart .... skip line series
         # from .plot import LineSeries
-        try:
-            dpg.delete_item(item=_guid, children_only=False, slot=-1)
-        except Exception as _e:
-            # Forms are fake widgets and have no dpg counterpart ... so skip it
-            if isinstance(self, Form):
-                ...
-            else:
-                raise _e
+        dpg.delete_item(item=_guid, children_only=False, slot=-1)
 
         # todo: make _widget unusable ... figure out
 
@@ -924,12 +923,12 @@ class Widget(_WidgetDpg, abc.ABC):
 
     @property
     def parent(self) -> "ContainerWidget":
-        return self._parent
-
-    @parent.setter
-    def parent(self, value: "ContainerWidget"):
-        # noinspection PyAttributeOutsideInit
-        self._parent = value
+        try:
+            return self._parent
+        except AttributeError as _ae:
+            raise Exception(
+                "You need to set self._parent to access parent property ..."
+            )
 
     @property
     def root(self) -> "gui.window.Window":
@@ -1131,7 +1130,7 @@ class MovableWidget(Widget, abc.ABC):
         # first del from self.parent.children
         del self.parent.children[self.guid]
         # change the parent
-        self.parent = _parent
+        self._parent = _parent
 
         # ---------------------------------------------- 05
         # now move it to new parent.children
@@ -1266,7 +1265,7 @@ class ContainerWidget(Widget, abc.ABC):
 
         # -------------------------------------------------- 02
         # set internals
-        _widget.parent = self
+        _widget._parent = self
 
         # -------------------------------------------------- 03
         # noinspection PyTypeChecker
@@ -1572,185 +1571,6 @@ class Hashable(abc.ABC):
 
 
 @dataclasses.dataclass
-class Form(MovableWidget, abc.ABC):
-    """
-    Form is a special widget which creates a `form_fields_container` container and
-    add all form fields to it as defined by layout() method.
-
-    Note that Form itself is not a container and no children can be added to it.
-    It only supports UI elements supplied via fields. Non Widget fields like Callbacks
-    and constants will be can also be supplied to form to enhance form but obviously
-    they are not UI elements and hence will be ignored by layout method.
-
-    If you want dynamic widgets simple have a class field defined with container
-    Widgets like Group and dynamically add elements to it.
-
-    todo: the delete can be called on class field Widgets ... mostly we want to not
-      allow fields of form to be dynamically deleted ... but that is not the case now
-      So do only if needed
-    """
-    title: t.Optional[str]
-    collapsing_header_open: bool
-
-    @property
-    def guid(self) -> int:
-        return self.container.guid
-
-    @property
-    def container(self) -> "gui.widget.CollapsingHeader":
-        try:
-            # noinspection PyUnresolvedReferences
-            return self._container
-        except AttributeError as _ae:
-            from .. import gui
-            with gui.EscapeWithContext():
-                # noinspection PyAttributeOutsideInit
-                self._container = gui.widget.CollapsingHeader(
-                    label=self.title, default_open=self.collapsing_header_open)
-            return self._container
-
-    @property
-    def dpg_state(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
-        # as form is fake dpg widget
-        return internal_dpg.get_item_state(self.container.guid)
-
-    @property
-    def dpg_config(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
-        # as form is fake dpg widget
-        return internal_dpg.get_item_configuration(self.container.guid)
-
-    @property
-    def dpg_info(self) -> t.Dict[str, t.Any]:
-        # as form is fake dpg widget
-        return internal_dpg.get_item_info(self.container.guid)
-
-    def init(self):
-        """
-        WHY DO WE CLONE??
-
-        To be called from init. Will be only called for fields that are
-        Widget or Callback
-
-        Purpose:
-        + When defaults are provided copy them to mimic immutability
-        + Each immutable field can have his own parent
-
-        Why is this needed??
-          Here we trick dataclass to treat some Hashable classes that were
-          assigned as default to be treated as non mutable ... this helps us
-          avoid using default_factory
-
-        Who is using it ??
-          + gui.Widget
-            Needed only while building UI to reuse UI components and keep code
-            readable. This will be in line with declarative syntax.
-          + gui.Callback
-            Although not needed we still allow this behaviour as it will be
-            used by users that build GUI and they might get to used to assigning
-            callbacks while defining class ... so just for convenience we allow
-            this to happen
-
-        Needed for fields that has default values
-          When a instance is assigned during class definition then it is not
-          longer usable with multiple instances of that classes. This applies in
-          case of UI components. But not needed for fields like prepared_data as
-          we actually might be interested to share that field with other
-          instances.
-
-          When such fields are bound for certain instance especially using the
-          property internal we might want an immutable duplicate made for each
-          instance.
-
-        todo: Dont be tempted to use this behaviour in other cases like
-          Model, HashableClass. Brainstorm if you think this needs
-          to be done. AVOID GENERALIZING THIS FUNCTION.
-
-        """
-        # ------------------------------------------------------- 01
-        # call super
-        super().init()
-        # call to make container for form fields
-        _ = self.container
-
-        # ------------------------------------------------------- 02
-        # loop over fields
-        for f_name in self.dataclass_field_names:
-            # --------------------------------------------------- 02.01
-            # get value
-            v = getattr(self, f_name)
-            # --------------------------------------------------- 02.02
-            # if not Widget class continue
-            # that means Widgets and Containers will be clones if default supplied
-            # While Hashable class and even Callbacks will not be cloned
-            # note that for UI we only need Dpg elements to be clones as they have
-            # build() method
-            if not isinstance(v, Widget):
-                continue
-            # --------------------------------------------------- 02.03
-            # get field and its default value
-            # noinspection PyUnresolvedReferences
-            _field = self.__dataclass_fields__[f_name]
-            _default_value = _field.default
-            # --------------------------------------------------- 02.04
-            # if id(_default_value) == id(v) then that means the default value is
-            # supplied ... so now we need to trick dataclass and assigned a clone of
-            # default_value
-            # To understand why we clone ... read __doc_string__
-            # Note that the below code can also handle but we use id(...)
-            #   to be more specific
-            # _default_value == dataclasses.MISSING
-            if id(_default_value) == id(v):
-                # make clone
-                v_cloned = v.clone()
-                # hack to overwrite field value (as this is frozen)
-                self.__dict__[f_name] = v_cloned
-
-    def layout(self) -> MovableContainerWidget:
-        """
-        Method to layout widgets in this form and assign Callbacks if any
-
-        Note that default behaviour is to layout the UI elements in the order as
-        defined in class fields.
-
-        You can override this method to do layout in any order you wish.
-
-        Note that if you have Callbacks for this form as class fields you need to take
-        care to bind them to widgets. The default implementation is very simple
-
-        For dynamic widgets add Group widget as dataclass field and add dynamic items
-        to it
-        """
-        # make grp
-        from .widget import Group
-        _grp = Group()
-
-        # if there is a widget which is field of this widget then add it
-        for f_name in self.dataclass_field_names:
-            v = getattr(self, f_name)
-            if isinstance(v, MovableWidget):
-                _grp(widget=v)
-
-        # return
-        return _grp
-
-    def build(self) -> int:
-
-        # set the container for future use
-        self._container(widget=self.layout())
-        self._container.parent = self.parent
-        self._container.build()
-
-        # return
-        # note that this guid is not bound with any dearpygui ui element
-        # this just makes a unique id but you can access underlying widget via self.container
-        return self.guid
-
-    def delete(self):
-        self.container.delete()
-        return super().delete()
-
-
-@dataclasses.dataclass
 class Callback(abc.ABC):
     """
     Note that `Callback.fn` will as call back function.
@@ -1803,11 +1623,6 @@ class PlotSeries(Widget, abc.ABC):
     def parent(self) -> "plot.YAxis":
         return self._parent
 
-    @parent.setter
-    def parent(self, value: "plot.YAxis"):
-        # noinspection PyAttributeOutsideInit
-        self._parent = value
-
 
 @dataclasses.dataclass
 class PlotItem(MovableWidget, abc.ABC):
@@ -1815,11 +1630,6 @@ class PlotItem(MovableWidget, abc.ABC):
     @property
     def parent(self) -> "plot.Plot":
         return self._parent
-
-    @parent.setter
-    def parent(self, value: "plot.Plot"):
-        # noinspection PyAttributeOutsideInit
-        self._parent = value
 
 
 @dataclasses.dataclass

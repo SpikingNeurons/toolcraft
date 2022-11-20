@@ -66,10 +66,6 @@ class Legend(_auto.PlotLegend):
     def parent(self) -> "Plot":
         return self._parent
 
-    @parent.setter
-    def parent(self, value: "Plot"):
-        self._parent = value
-
     @property
     def registered_as_child(self) -> bool:
         return False
@@ -81,10 +77,6 @@ class XAxis(_auto.PlotXAxis):
     @property
     def parent(self) -> "Plot":
         return self._parent
-
-    @parent.setter
-    def parent(self, value: "Plot"):
-        self._parent = value
 
     @property
     def registered_as_child(self) -> bool:
@@ -157,10 +149,6 @@ class YAxis(_auto.PlotYAxis):
     @property
     def parent(self) -> "Plot":
         return self._parent
-
-    @parent.setter
-    def parent(self, value: "Plot"):
-        self._parent = value
 
     @property
     def registered_as_child(self) -> bool:
@@ -318,7 +306,7 @@ class Plot(_auto.Plot):
         if self._legend is None:
             with self:
                 self._legend = Legend()
-                self._legend.parent = self
+                self._legend._parent = self
         return self._legend
 
     @property
@@ -326,7 +314,7 @@ class Plot(_auto.Plot):
         if self._x_axis is None:
             with self:
                 self._x_axis = XAxis()
-                self._x_axis.parent = self
+                self._x_axis._parent = self
         return self._x_axis
 
     @property
@@ -334,7 +322,7 @@ class Plot(_auto.Plot):
         if self._y1_axis is None:
             with self:
                 self._y1_axis = YAxis()
-                self._y1_axis.parent = self
+                self._y1_axis._parent = self
         return self._y1_axis
 
     @property
@@ -347,7 +335,7 @@ class Plot(_auto.Plot):
                 )
             with self:
                 self._y2_axis = YAxis()
-                self._y2_axis.parent = self
+                self._y2_axis._parent = self
         return self._y2_axis
 
     @property
@@ -360,7 +348,7 @@ class Plot(_auto.Plot):
                 )
             with self:
                 self._y3_axis = YAxis()
-                self._y3_axis.parent = self
+                self._y3_axis._parent = self
         return self._y3_axis
 
     @property

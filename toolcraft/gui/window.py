@@ -15,12 +15,6 @@ class Window(_auto.Window):
             "Please use `dash_board` instead.",
         )
 
-    @parent.setter
-    def parent(self, value):
-        raise Exception(
-            f"Property parent should not be set for Window ..."
-        )
-
     @property
     def dash_board(self) -> "dashboard.Dashboard":
         if self._dash_board is None:

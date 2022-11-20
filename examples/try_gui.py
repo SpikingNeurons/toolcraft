@@ -18,9 +18,9 @@ from toolcraft import gui
 @dataclasses.dataclass
 class InfoForm(gui.form.Form):
 
-    title: str = "Info"
+    label: str = "Info"
 
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
     message: gui.widget.Text = gui.widget.Text(
         "This is topic 1. We will just add some bullet points below ...",
@@ -38,9 +38,9 @@ class InfoForm(gui.form.Form):
 @dataclasses.dataclass
 class Plotting(gui.form.Form):
 
-    title: str = "Plotting"
+    label: str = "Plotting"
 
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
@@ -123,9 +123,9 @@ class Plotting(gui.form.Form):
 @dataclasses.dataclass
 class PlottingWithUpdates(gui.form.Form):
 
-    title: str = "Plotting with updates"
+    label: str = "Plotting with updates"
 
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
@@ -265,9 +265,9 @@ class _Callback(gui.callback.Callback):
 @dataclasses.dataclass
 class PlottingWithContiniousUpdates(gui.form.Form):
 
-    title: str = "Plotting with continious updates ..."
+    label: str = "Plotting with continious updates ..."
 
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
@@ -299,12 +299,12 @@ class SimpleHashableClass(gui.Hashable):
     @gui.UseMethodInForm(label_fmt="all_plots_gui_label")
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
         return gui.form.HashableMethodsRunnerForm(
-            title=self.all_plots_gui_label.split("\n")[0],
+            label=self.all_plots_gui_label.split("\n")[0],
             hashable=self,
             close_button=True,
             info_button=True,
             callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task", ],
-            collapsing_header_open=True,
+            default_open=True,
             allow_refresh=True,
         )
 
@@ -416,10 +416,10 @@ class SimpleHashableClass(gui.Hashable):
 @dataclasses.dataclass
 class MyDoubleSplitForm(gui.form.DoubleSplitForm):
 
-    title: str = "Double split form ..."
+    label: str = "Double split form ..."
     callable_name: str = "all_plots"
     allow_refresh: bool = False
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
 
 @dataclasses.dataclass
@@ -441,7 +441,7 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic5: gui.form.DoubleSplitForm = MyDoubleSplitForm()
 
-    topic6: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
+    topic6: gui.form.ButtonBarForm = gui.form.ButtonBarForm(label="Button bar form ...", default_open=False)
 
     container: gui.widget.Group = gui.widget.Group()
 
@@ -476,10 +476,10 @@ def basic_dashboard():
         with gui.widget.CollapsingHeader(label="Test container") as _cc:
             _t = gui.widget.Text(default_value="first element in container ...")
             _ = gui.form.DoubleSplitForm(
-                title=f"*** [[ ]] ***",
-                callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
+                label=f"*** [[ ]] ***",
+                callable_name="job_gui", allow_refresh=False, default_open=False,
             )
-            _ = gui.form.ButtonBarForm(title="*** [[ ]] ***", collapsing_header_open=False)
+            _ = gui.form.ButtonBarForm(label="*** [[ ]] ***", default_open=False)
 
     gui.Engine.run(_dash)
 
