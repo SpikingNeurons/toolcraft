@@ -285,12 +285,12 @@ class JobViewer(m.HashableClass):
             return self.job_gui()
 
         _ret = gui.form.HashableMethodsRunnerForm(
-            title=self.button_label.split("\n")[0],
+            label=self.button_label.split("\n")[0],
             hashable=self,
             close_button=True,
             info_button=True,
             callable_names=["tags_gui", "artifacts_gui", "run_gui"],
-            collapsing_header_open=True,
+            default_open=True,
         )
 
         with _ret._button_bar:
@@ -304,12 +304,12 @@ class JobViewer(m.HashableClass):
         from .. import gui
 
         _ret = gui.form.HashableMethodsRunnerForm(
-            title=self.button_label.split("\n")[0] + f" : {self.method_name}",
+            label=self.button_label.split("\n")[0] + f" : {self.method_name}",
             hashable=self,
             close_button=True,
             info_button=True,
             callable_names=["tags_gui", "artifacts_gui", ],
-            collapsing_header_open=True,
+            default_open=True,
         )
 
         _job = self.job
@@ -1279,7 +1279,6 @@ class Runner(m.HashableClass, abc.ABC):
         """
         todo: adapt code so that the cwd can be on any other file system instead of CWD
         """
-        import pathlib
         _py_script = self.py_script
         _folder_name = _py_script.name.replace(".py", "")
         _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
@@ -1340,7 +1339,6 @@ class Runner(m.HashableClass, abc.ABC):
 
         # setup logger
         import logging
-        import pathlib
         # note that this should always be local ... dont use `self.cwd`
         _log_file = self.py_script.parent / self.py_script.name.replace(".py", "") / "runner.log"
         _log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -1540,11 +1538,11 @@ class Experiment(m.HashableClass, abc.ABC):
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
         return gui.form.HashableMethodsRunnerForm(
-            title=self.view_gui_label.split("\n")[0],
+            label=self.view_gui_label.split("\n")[0],
             hashable=self,
             close_button=True,
             info_button=True,
             callable_names=self.view_callable_names,
-            collapsing_header_open=True,
+            default_open=True,
             allow_refresh=True,
         )

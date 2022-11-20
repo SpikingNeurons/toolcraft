@@ -197,8 +197,8 @@ def nxdi():
     """
     Test nxdi environment
     """
-    import tensorflow as tf
     print("__is_on_nxdi__", (pathlib.Path.home() / "__is_on_nxdi__").exists())
+    import tensorflow as tf
     print("CUDA", tf.test.is_built_with_cuda())
     print("Devices", tf.config.list_physical_devices())
 
@@ -451,3 +451,17 @@ def clean():
             if not _j.is_finished:
                 _rp.update(f"Deleting job {_j.job_id}")
                 _j.path.delete(recursive=True)
+
+
+@_APP.command()
+def unfinished():
+    """
+    Lists the jobs in runner that are not finished.
+    """
+    _rp = _RUNNER.richy_panel
+    for _stage_name, _stage in _rp.track(_RUNNER.flow.stages.items(), task_name="Scanning stages"):
+        _rp.update(f"Scanning stage {_stage_name} ...")
+        _j: Job
+        for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
+            if not _j.is_finished:
+                _rp.log([_j.method.__name__, _j.experiment])
