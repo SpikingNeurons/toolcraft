@@ -137,7 +137,11 @@ def launch():
                 sequence=_jobs, task_name=f"stage {_stage_key}"
             ):
                 # --------------------------------------------- 02.02.02.01
-                _rp.update(f"launching {_stage_key}:{_job.job_id}")
+                if _job.is_finished:
+                    _rp.update(f"skipping {_stage_key}:{_job.job_id}")
+                    continue
+                else:
+                    _rp.update(f"launching {_stage_key}:{_job.job_id}")
 
                 # --------------------------------------------- 02.02.02.02
                 # make cli command
