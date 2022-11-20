@@ -149,12 +149,12 @@ def launch():
                 #   should we stream or dump locally ?? ... or maybe figure out
                 #   dapr telemetry
                 _log = _job.path / "bsub.log"
-                _nxdi_prefix = ["bsub", "-oo", _log.local_path.as_posix(), ]
+                _nxdi_prefix = ["bsub", ]
                 if BSUB_NUM_PROCESSORS is not None:
                     _nxdi_prefix += ["-n", f"{BSUB_NUM_PROCESSORS}"]
                 if BSUB_RESERVE_MEMORY is not None:
                     _nxdi_prefix += ["-R", f'\"rusage[mem={BSUB_RESERVE_MEMORY}]\"']
-                _nxdi_prefix += ["-J", _job.job_id]
+                _nxdi_prefix += ["-J", _job.job_id, "-oo", _log.local_path.as_posix(), ]
                 _wait_on_jobs = [_ for _ in _job.wait_on_jobs if not _.is_finished]
                 if bool(_wait_on_jobs):
                     _wait_on = \
@@ -162,7 +162,7 @@ def launch():
                     _nxdi_prefix += ["-w", f"{_wait_on}"]
                 _cli_command = _nxdi_prefix + _job.cli_command
                 print(" ".join(_cli_command))
-                _rp.log([" ".join(_cli_command)])
+                # _rp.log([" ".join(_cli_command)])
 
                 # --------------------------------------------- 02.02.02.03
                 # run job
