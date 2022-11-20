@@ -641,7 +641,7 @@ class RuleChecker:
             '__delattr__', '__hash__',
 
             # we allow this
-            '__call__',
+            '__call__', '__str__',
 
             # this is used by RuleChecker
             _RULE_CHECKER,
