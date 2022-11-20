@@ -93,16 +93,18 @@ class CloseWidgetCallback(Callback):
         #     callback=cls(),
         #     user_data={'widget_to_delete': widget_to_delete},
         # )
-        return widget.Button(
+        _ret = widget.Button(
             label=label,
             callback=cls(),
             user_data={'widget_to_delete': widget_to_delete},
         )
+        return _ret
 
     def fn(self, sender: widget.Widget):
-        try:
+        _user_data = sender.get_user_data()
+        if 'widget_to_delete' in _user_data.keys():
             sender.get_user_data()['widget_to_delete'].delete()
-        except KeyError:
+        else:
             raise KeyError(
                 f"Was expecting you to supply dict item `widget_to_delete` in "
                 f"`user_data` of sender {sender.__class__}"

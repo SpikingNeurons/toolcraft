@@ -276,9 +276,10 @@ class PlottingWithContiniousUpdates(gui.form.Form):
     )
 
     def fixed_update(self):
-        print("yyyyyyyyyyyyyyyyyyyyyyy", self.dpg_state['visible'], self.line_plot.dpg_state['visible'])
-        print(self.dpg_state)
-        print(self.line_plot.dpg_state)
+        ...
+        # print("yyyyyyyyyyyyyyyyyyyyyyy", self.dpg_state['visible'], self.line_plot.dpg_state['visible'])
+        # print(self.dpg_state)
+        # print(self.line_plot.dpg_state)
         # _1 = self.line_plot.x_axis.get_limits()
         # _2 = self.line_plot.y1_axis.get_limits()
         # print(">>>>>>>>>>>>>>>>>>>", _1, _2)

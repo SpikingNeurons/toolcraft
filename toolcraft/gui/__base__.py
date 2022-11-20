@@ -913,53 +913,6 @@ class Engine:
 
 
 @dataclasses.dataclass
-class __WidgetHandlerRegistry:
-
-    """
-    This registeries can be bound to Widgets. They can be bound to multiple widgets to prevent
-    duplication for every widget.
-
-    Refer:
-    >>> dpg.item_handler_registry
-    >>> dpg.add_item_handler_registry()
-    https://dearpygui.readthedocs.io/en/latest/documentation/io-handlers-state.html
-
-    Events that are supported for Widgets:
-    >>> dpg.add_item_activated_handler()
-    >>> dpg.add_item_active_handler()
-    >>> dpg.add_item_edited_handler()
-    >>> dpg.add_item_focus_handler()
-    >>> dpg.add_item_hover_handler()
-    >>> dpg.add_item_clicked_handler()
-    >>> dpg.add_item_deactivated_after_edit_handler()
-    >>> dpg.add_item_deactivated_handler()
-    >>> dpg.add_item_resize_handler()
-    >>> dpg.add_item_toggled_open_handler()
-    >>> dpg.add_item_visible_handler()
-    """
-
-    label: str = None
-    user_data: t.Dict = None
-    show: bool = True
-
-    def __post_init__(self):
-        # ------------------------------------------------------------ 01
-        # initialize with empty dict if None
-        if self.user_data is None:
-            self.user_data = dict()
-
-        # ------------------------------------------------------------ 02
-        # based on overriden methods decide handlers to use for this instance of WidgetHandlerRegistry
-        with dpg.item_handler_registry(
-            label=self.label, show=self.show, user_data=self.user_data, tag=self.guid,
-        ) as _handler:
-            if Widget.update != self.__class__.update:
-                Engine.update[self.guid] = self
-            if Widget.fixed_update != self.__class__.fixed_update:
-                Engine.fixed_update[self.guid] = self
-
-
-@dataclasses.dataclass
 class Widget(_WidgetDpg, abc.ABC):
     """
     todo: add async update where widget can be updated via long running python code
@@ -1640,6 +1593,10 @@ class Form(MovableWidget, abc.ABC):
     collapsing_header_open: bool
 
     @property
+    def guid(self) -> int:
+        return self.container.guid
+
+    @property
     def container(self) -> "gui.widget.CollapsingHeader":
         try:
             # noinspection PyUnresolvedReferences
@@ -1788,13 +1745,7 @@ class Form(MovableWidget, abc.ABC):
         # this just makes a unique id but you can access underlying widget via self.container
         return self.guid
 
-    def clear(self):
-        _children = self.container.children
-        for _k in list(_children.keys()):
-            _children[_k].delete()
-
     def delete(self):
-        self.clear()
         self.container.delete()
         return super().delete()
 

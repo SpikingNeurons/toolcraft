@@ -1991,10 +1991,15 @@ class HashableClass(YamlRepr, abc.ABC):
         return _ret
 
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+        """
+        todo: Explore
+           >>> dataclasses.asdict
+        """
         _ret = {}
         _field_names = self.dataclass_field_names
         if settings.TF_KERAS_WORKS:
             # Handle serialization for keras loss, optimizer and layer
+            # noinspection PyUnresolvedReferences
             from keras.api._v2 import keras as tk
             for f_name in _field_names:
                 _v = getattr(self, f_name)
@@ -2125,6 +2130,7 @@ class HashableClass(YamlRepr, abc.ABC):
 if settings.TF_KERAS_WORKS:
     # noinspection PyUnresolvedReferences,PyProtectedMember
     from keras.api._v2 import keras as tk
+    # noinspection PyUnresolvedReferences
     from keras.optimizers.optimizer_experimental import \
         optimizer as optimizer_experimental
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
