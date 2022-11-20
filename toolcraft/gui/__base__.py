@@ -1615,6 +1615,26 @@ class Registry(ContainerWidget, abc.ABC):
             "The dpg_generator script must auto generate this ..."
         )
 
+    def bind(self, widget: Widget):
+        # import
+        from .registry import WidgetHandlerRegistry, GlobalHandlerRegistry
+
+        # check if built
+        if not widget.is_built:
+            raise Exception("the widget is not yet built. Can bind only when Registry and Widget are built.")
+        if not self.is_built:
+            raise Exception("the registry is not yet built. Can bind only when Registry and Widget are built.")
+
+        # if WidgetHandlerRegistry
+        if isinstance(self, WidgetHandlerRegistry):
+            dpg.bind_item_handler_registry(item=widget.guid, handler_registry=self.guid)
+        # if GlobalHandlerRegistry
+        elif isinstance(self, GlobalHandlerRegistry):
+            raise Exception(f"bind is not available for {GlobalHandlerRegistry}")
+        # else
+        else:
+            raise Exception(f"bind is not yet supported for {self.__class__}")
+
 
 @dataclasses.dataclass
 class PlotSeries(Widget, abc.ABC):

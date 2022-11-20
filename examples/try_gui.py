@@ -256,10 +256,15 @@ class PlottingWithUpdates(gui.form.Form):
 
 
 @dataclasses.dataclass
-class _Callback(gui.callback.Callback):
+class WidgetVisibleCallback(gui.callback.Callback):
 
     def fn(self, sender: Widget):
-        print("???///")
+        print(sender, "I am Visible")
+
+
+_widget_handlers = gui.registry.WidgetHandlerRegistry()
+with _widget_handlers:
+    gui.registry.WidgetVisibleHandler(callback=WidgetVisibleCallback())
 
 
 @dataclasses.dataclass
@@ -272,14 +277,13 @@ class PlottingWithContiniousUpdates(gui.form.Form):
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
         height=200, width=-1,
-        callback=_Callback()
     )
 
     def fixed_update(self):
         ...
-        # print("yyyyyyyyyyyyyyyyyyyyyyy", self.dpg_state['visible'], self.line_plot.dpg_state['visible'])
-        # print(self.dpg_state)
-        # print(self.line_plot.dpg_state)
+        print("yyyyyyyyyyyyyyyyyyyyyyy", self.dpg_state['visible'], self.line_plot.dpg_state['visible'])
+        print(self.dpg_state)
+        print(self.line_plot.dpg_state)
         # _1 = self.line_plot.x_axis.get_limits()
         # _2 = self.line_plot.y1_axis.get_limits()
         # print(">>>>>>>>>>>>>>>>>>>", _1, _2)
