@@ -155,7 +155,7 @@ def launch():
                 if BSUB_RESERVE_MEMORY is not None:
                     _nxdi_prefix += ["-R", f'\"rusage[mem={BSUB_RESERVE_MEMORY}]\"']
                 _nxdi_prefix += ["-J", _job.job_id]
-                _wait_on_jobs = _job.wait_on_jobs
+                _wait_on_jobs = [_ for _ in _job.wait_on_jobs if not _.is_finished]
                 if bool(_wait_on_jobs):
                     _wait_on = \
                         " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
