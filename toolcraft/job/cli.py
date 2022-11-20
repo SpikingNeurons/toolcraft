@@ -370,16 +370,16 @@ def view():
         hr1: gui.widget.Separator = gui.widget.Separator()
         hr2: gui.widget.Separator = gui.widget.Separator()
         runner_jobs_view: gui.form.ButtonBarForm = gui.form.ButtonBarForm(
-            title="Runner Jobs ...",
-            collapsing_header_open=True,
+            label="Runner Jobs ...",
+            default_open=True,
         )
         hr3: gui.widget.Separator = gui.widget.Separator()
         hr4: gui.widget.Separator = gui.widget.Separator()
         experiment_view: gui.form.DoubleSplitForm = gui.form.DoubleSplitForm(
-            title="Experiments ...",
+            label="Experiments ...",
             callable_name="view",
             allow_refresh=False,
-            collapsing_header_open=True,
+            default_open=True,
         )
 
     # ---------------------------------------------------------------- 03
