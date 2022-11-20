@@ -464,4 +464,4 @@ def unfinished():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             if not _j.is_finished:
-                _rp.log([_j.method.__name__, _j.experiment])
+                _rp.log([_j.method.__name__, _j.experiment.name])
