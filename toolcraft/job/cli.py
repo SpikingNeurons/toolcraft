@@ -215,6 +215,7 @@ def nxdi():
     Test nxdi environment
     """
     print("__is_on_nxdi__", (pathlib.Path.home() / "__is_on_nxdi__").exists())
+    # noinspection PyUnresolvedReferences
     import tensorflow as tf
     print("CUDA", tf.test.is_built_with_cuda())
     print("Devices", tf.config.list_physical_devices())
