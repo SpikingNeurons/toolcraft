@@ -619,10 +619,10 @@ class Job:
         _ret = self.method.__name__
         if self.experiment is None:
             # we have to use runner hex has as the job will not be unique on cluster
-            _ret += "x" + self.runner.hex_hash
+            _ret += ":" + self.runner.hex_hash
         else:
             # NOte we do not consider runner as it is dataclass field of experiment :)
-            _ret += "x" + self.experiment.hex_hash
+            _ret += ":" + self.experiment.hex_hash
         return _ret
 
     @property

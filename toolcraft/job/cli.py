@@ -24,6 +24,7 @@ _now = datetime.datetime.now
 
 BSUB_NUM_PROCESSORS = None
 BSUB_RESERVE_MEMORY = None
+BSUB_SEND_EMAIL = False
 
 
 def get_app(runner: Runner, cluster_type: JobRunnerClusterType):
@@ -150,14 +151,13 @@ def launch():
                 #   dapr telemetry
                 _log = _job.path / "bsub.log"
                 _nxdi_prefix = ["bsub", ]
-                _nxdi_prefix += [
-                    "-J", _job.job_id,
-                    # "-oo", _log.local_path.as_posix(),
-                ]
+                _nxdi_prefix += ["-J", _job.job_id, ]
+                if not BSUB_SEND_EMAIL:
+                    _nxdi_prefix += ["-oo", _log.local_path.as_posix(), ]
                 if BSUB_NUM_PROCESSORS is not None:
                     _nxdi_prefix += ["-n", f"{BSUB_NUM_PROCESSORS}"]
                 if BSUB_RESERVE_MEMORY is not None:
-                    _nxdi_prefix += ["-R", f'\"rusage[mem={BSUB_RESERVE_MEMORY}]\"']
+                    _nxdi_prefix += ["-R", f'rusage[mem={BSUB_RESERVE_MEMORY}]']
                 _wait_on_jobs = [_ for _ in _job.wait_on_jobs if not _.is_finished]
                 if bool(_wait_on_jobs):
                     _wait_on = \
