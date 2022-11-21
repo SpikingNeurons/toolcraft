@@ -150,14 +150,14 @@ def launch():
                 #   dapr telemetry
                 _log = _job.path / "bsub.log"
                 _nxdi_prefix = ["bsub", ]
-                if BSUB_NUM_PROCESSORS is not None:
-                    _nxdi_prefix += ["-n", f"{BSUB_NUM_PROCESSORS}"]
-                if BSUB_RESERVE_MEMORY is not None:
-                    _nxdi_prefix += ["-R", f'\"rusage[mem={BSUB_RESERVE_MEMORY}]\"']
                 _nxdi_prefix += [
                     "-J", _job.job_id,
                     # "-oo", _log.local_path.as_posix(),
                 ]
+                if BSUB_NUM_PROCESSORS is not None:
+                    _nxdi_prefix += ["-n", f"{BSUB_NUM_PROCESSORS}"]
+                if BSUB_RESERVE_MEMORY is not None:
+                    _nxdi_prefix += ["-R", f'\"rusage[mem={BSUB_RESERVE_MEMORY}]\"']
                 _wait_on_jobs = [_ for _ in _job.wait_on_jobs if not _.is_finished]
                 if bool(_wait_on_jobs):
                     _wait_on = \
