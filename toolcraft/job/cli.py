@@ -1,5 +1,8 @@
+import os
 import pathlib
+import time
 
+import psutil
 import typer
 import sys
 import dataclasses
@@ -70,58 +73,121 @@ def launch():
     if _CLUSTER_TYPE is JobRunnerClusterType.local:
 
         # ----------------------------------------------------- 02.01.01
-        # tracker containers
-        _completed_jobs = []
+        # some vars
+        _MAX_JOBS = os.cpu_count()
+        _MAX_MEMORY_USAGE_IN_PERCENT = 95.
+        _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS = 10
+        _jobs_running_in_parallel = {}
 
         # ----------------------------------------------------- 02.01.02
-        # loop over stages
-        for _stage_key, _stage in _flow.stages.items():
-            _rp.update(f"launching jobs for stage: {_stage_key}...")
+        # populate _all_jobs
+        _all_jobs = {}
+        for _stage in _flow.stages.values():
+            for _job in _stage.all_jobs:
+                _all_jobs[_job.job_id] = _job
+        _job_track_task = _rp.add_task(total=len(_all_jobs), task_name="jobs")
 
-            # ------------------------------------------------- 02.01.03
-            # loop over jobs in current _stage
-            _jobs = _stage.all_jobs
-            for _job in _rp.track(
-                sequence=_jobs, task_name=f"stage {_stage_key}"
-            ):
+        # ----------------------------------------------------- 02.01.03
+        # loop infinitely until all jobs complete
+        while bool(_all_jobs):
+
+            # loop over _all_jobs
+            for _job_flow_id in list(_all_jobs.keys()):
+
                 # --------------------------------------------- 02.01.03.01
-                _rp.update(f"launching {_stage_key}:{_job.job_id}")
+                # get job
+                _job = _all_jobs[_job_flow_id]
+
                 # --------------------------------------------- 02.01.03.02
-                # get wait on jobs that are needed to be completed before executing _job
-                _wait_jobs = []
-                for _wo in _job._wait_on:
-                    if isinstance(_wo, Job):
-                        _wait_jobs += [_wo]
-                    else:
-                        _wait_jobs += _wo.bottom_jobs
+                # if finished skip
+                if _job.is_finished:
+                    _rp.log([f"✅ {_job_flow_id} :: skipping already finished"])
+                    del _all_jobs[_job_flow_id]
+                    _job_track_task.update(advance=1)
+                    continue
 
                 # --------------------------------------------- 02.01.03.03
-                # check if all wait on jobs are completed
-                for _wj in _wait_jobs:
-                    if _wj not in _completed_jobs:
-                        raise e.code.CodingError(
-                            msgs=[
-                                "When not on server we expect that property `all_jobs` "
-                                "should resolve in such a way that all `wait_on` jobs "
-                                "must be already done ..",
-                                f"Check {_wj.flow_id} which should be completed by now ..."
-                            ]
-                        )
+                # if failed skip
+                if _job.is_failed:
+                    _rp.log([f"❌ {_job_flow_id} :: skipping as it is failed"])
+                    del _all_jobs[_job_flow_id]
+                    _job_track_task.update(advance=1)
+                    continue
 
                 # --------------------------------------------- 02.01.03.04
-                # make cli command
-                if settings.PYC_DEBUGGING:
-                    _cli_command = _job.cli_command
-                else:
-                    _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
+                # look in all _wait_on jobs
+                # if one or more failed in _wait_on jobs then skip
+                _one_or_more_failed = False
+                for _wait_job in _job.wait_on_jobs:
+                    if _wait_job.is_failed:
+                        _one_or_more_failed = True
+                        break
+                if _one_or_more_failed:
+                    _rp.log([f"❌ {_job_flow_id} :: skipping as one or more wait_on job failed"])
+                    del _all_jobs[_job_flow_id]
+                    _job_track_task.update(advance=1)
+                    continue
 
                 # --------------------------------------------- 02.01.03.05
-                # run job
-                _run_job(_job, _cli_command)
+                # look in all _wait_on jobs
+                # if any one job is still not finished then skip and do not log it to richy_panel
+                _all_finished = True
+                for _wait_job in _job.wait_on_jobs:
+                    if not _wait_job.is_finished:
+                        _all_finished = False
+                        break
+                if not _all_finished:
+                    _rp.update(f"⏰ {_job.job_id} :: postponed wait_on jobs not completed")
+                    continue
 
                 # --------------------------------------------- 02.01.03.06
-                # append to list as job is completed
-                _completed_jobs.append(_job)
+                # if any already launched job is finished then remove from dict _jobs_running_in_parallel
+                for _k in list(_jobs_running_in_parallel.keys()):
+                    if _jobs_running_in_parallel[_k].is_finished:
+                        _rp.update(f"✅ {_job.job_id} :: completed")
+                        del _jobs_running_in_parallel[_k]
+                        _job_track_task.update(advance=1)
+
+                # --------------------------------------------- 02.01.03.07
+                # if we reach here that means all jobs are over and current job is eligible to execute
+                # but before launching make sure that memory and cpus are available
+                # --------------------------------------------- 02.01.03.07.01
+                # make cli command
+                # if settings.PYC_DEBUGGING:
+                #     _cli_command = _job.cli_command
+                # else:
+                #     _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
+                _cli_command = ["start", "cmd", "/c", ] + _job.cli_command
+                # --------------------------------------------- 02.01.03.07.02
+                # for first job no need to check anything just launch
+                if len(_jobs_running_in_parallel) == 0:
+                    _run_job(_job, _cli_command)
+                    _jobs_running_in_parallel[_job.job_id] = _job
+                    _rp.log([f"🏁 {_job.job_id} :: launching"])
+                    del _all_jobs[_job_flow_id]
+                    _job_track_task.update(advance=1)
+                    continue
+                # --------------------------------------------- 02.01.03.07.03
+                # else we need to do multiple things
+                else:
+                    # if not enough cpus then skip
+                    if len(_jobs_running_in_parallel) >= _MAX_JOBS:
+                        _rp.update(f"⏰ {_job.job_id} :: postponed not enough cpu's")
+                        continue
+                    # if enough memory not available then skip
+                    if psutil.virtual_memory()[2] > _MAX_MEMORY_USAGE_IN_PERCENT:
+                        _rp.update(f"⏰ {_job.job_id} :: postponed not enough memory")
+                        continue
+                    # all is well launch
+                    _run_job(_job, _cli_command)
+                    _jobs_running_in_parallel[_job.job_id] = _job
+                    _rp.log([f"🏁 {_job.job_id} :: launching"])
+                    del _all_jobs[_job_flow_id]
+                    _job_track_task.update(advance=1)
+                # --------------------------------------------- 02.01.03.07.04
+                # _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS
+                # this allows the job to enter properly and get realistic ram usage
+                time.sleep(_WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS)
 
     # --------------------------------------------------------- 02.02
     # for ibm_lsf
@@ -206,7 +272,7 @@ def _run_job(_job: Job, _cli_command: t.List[str], shell: bool = True):
 
     # ------------------------------------------------------------- 03
     # run in subprocess
-    subprocess.run(_cli_command, shell=shell)
+    _ret = subprocess.run(_cli_command, shell=shell)
 
 
 @_APP.command()
@@ -480,6 +546,6 @@ def unfinished():
     for _stage_name, _stage in _rp.track(_RUNNER.flow.stages.items(), task_name="Scanning stages"):
         _rp.update(f"Scanning stage {_stage_name} ...")
         _j: Job
-        for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
+        for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
                 _rp.log([_j.method.__name__, _j.experiment.name])
