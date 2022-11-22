@@ -22,7 +22,7 @@ _LOGGER = logger.get_logger()
 _RUNNER: Runner = None
 # noinspection PyTypeChecker
 _CLUSTER_TYPE: JobRunnerClusterType = None
-_APP = typer.Typer(name="Toolcraft Job Runner")
+_APP = typer.Typer(name="Toolcraft Job Runner", pretty_exceptions_show_locals=False)
 _now = datetime.datetime.now
 
 BSUB_NUM_PROCESSORS = None
@@ -157,6 +157,7 @@ def launch():
                 #     _cli_command = _job.cli_command
                 # else:
                 #     _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
+                # _cli_command = ["start", "cmd", "/k", ] + _job.cli_command
                 _cli_command = ["start", "cmd", "/c", ] + _job.cli_command
                 # --------------------------------------------- 02.01.03.07.02
                 # for first job no need to check anything just launch
@@ -394,7 +395,7 @@ def run(
         _ex_str = traceback.format_exc()
         _job.tag_manager.failed.create(exception=_ex_str)
         _end = _now()
-        _LOGGER.info(
+        _LOGGER.error(
             msg=f"Failed job on worker machine ...",
             msgs=[
                 {
@@ -402,9 +403,11 @@ def run(
                     "started": _start.ctime(),
                     "ended": _end.ctime(),
                     "seconds": str((_end - _start).total_seconds()),
-                    "exception": _ex_str,
                 }
             ]
+        )
+        _LOGGER.error(
+            msg="*** EXCEPTION MESSAGE *** \n" + _ex_str
         )
         _job.tag_manager.running.delete()
         # above thing will tell toolcraft that things failed gracefully

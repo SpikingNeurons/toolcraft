@@ -11,6 +11,8 @@ import typing as t
 import dataclasses
 import subprocess
 import itertools
+
+import rich
 import yaml
 import sys
 import asyncio
@@ -104,10 +106,10 @@ class Tag:
                 ]
             )
         data["time"] = _now()
+        if exception is not None:
+            data['exception'] = "\n".join(["", ">>> EXCEPTION <<<", "", exception])
         _LOGGER.info(msg=f"Creating tag {self.path}")
         _txt = yaml.safe_dump(data)
-        if exception is not None:
-            _txt += "\n".join(["", ">>> EXCEPTION <<<", "", exception])
         self.path.write_text(text=_txt, encoding='utf-8')
 
     def read(self) -> t.Optional[t.Dict[str, t.Any]]:
@@ -218,19 +220,20 @@ class TagManager:
                     _show_log = False
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
                 if _show_log:
-                    self.job.log_file.webbrowser_open_button(label="Show Log")
-            # if _launched:
-            #     gui.widget.Text(default_value=f"launched at: {_launched}")
-            # if _started:
-            #     gui.widget.Text(default_value=f"started at: {_started}")
-            # if _running:
-            #     gui.widget.Text(default_value=f"running from: {_running}")
-            # if _failed:
-            #     gui.widget.Text(default_value=f"failed at: {_failed}")
-            # if _finished:
-            #     gui.widget.Text(default_value=f"finished at: {_finished}")
-            # if _description:
-            #     gui.widget.Text(default_value=f"\n-- description --\n {_description}")
+                    self.job.log_file.webbrowser_open_button(label="Show Full Log")
+            if _description:
+                gui.widget.Text(default_value=f"\n-- description --\n {_description}")
+            if _launched:
+                gui.widget.Text(default_value=f"launched at: {_launched['time']}")
+            if _started:
+                gui.widget.Text(default_value=f"started at: {_started['time']}")
+            if _running:
+                gui.widget.Text(default_value=f"running from: {_running['time']}")
+            if _failed:
+                gui.widget.Text(default_value=f"failed at: {_failed['time']}")
+                gui.widget.Text(default_value=f"{_failed['exception']}")
+            if _finished:
+                gui.widget.Text(default_value=f"finished at: {_finished['time']}")
 
         # ----------------------------------------------------------------- 03
         # return

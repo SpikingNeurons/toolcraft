@@ -194,7 +194,7 @@ class Internal:
         if item not in self.__dict__.keys():
             raise e.code.CodingError(msgs=[
                 f"You cannot access annotated attribute `{item}` as it is "
-                f"not yet set",
+                f"not yet set for class.",
             ])
 
         # return
