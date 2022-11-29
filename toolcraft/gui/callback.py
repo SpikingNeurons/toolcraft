@@ -203,10 +203,16 @@ class HashableMethodRunnerCallback(Callback):
                 # delete widget
                 # this will delete itself
                 # this will also remove itself from `parent.children`
+                print("...............", _receiver, _widget)
                 _widget.delete()
                 # set back to None so that it can be recreated
                 # noinspection PyTypeChecker
                 _widget = None
+        # ------------------------------------------------------------------ 04.04
+        # else just hide widget ...
+        else:
+            if _widget is not None:
+                _widget.hide()
 
         # ------------------------------------------------------------------ 05
         # if widget is not present create it and add to receiver
@@ -235,3 +241,8 @@ class HashableMethodRunnerCallback(Callback):
             # move widget based on _after_widget
             if _after_widget is not None:
                 _new_widget.move(before=_after_widget)
+
+        # ------------------------------------------------------------------ 06
+        # else as widget is present in user_data just show it as it was already built
+        else:
+            _widget.show()
