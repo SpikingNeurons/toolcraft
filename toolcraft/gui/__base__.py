@@ -438,14 +438,14 @@ class _WidgetDpg(abc.ABC):
     def reset_pos(self):
         internal_dpg.reset_pos(self.guid)
 
-    def show(self):
+    def show_widget(self):
         """
         Refer:
         >>> dpg.show_item
         """
         internal_dpg.configure_item(self.guid, show=True)
 
-    def hide(self):
+    def hide_widget(self):
         """
         Refer:
         >>> dpg.hide_item
@@ -1318,16 +1318,16 @@ class ContainerWidget(Widget, abc.ABC):
         for child in self._children.values():
             child.build()
 
-    def hide(self, children_only: bool = False):
+    def hide_widget(self, children_only: bool = False):
         """
         Refer:
         >>> dpg.hide_item
         """
         if children_only:
             for child in self.children.values():
-                child.hide()
+                child.hide_widget()
         else:
-            super().hide()
+            super().hide_widget()
 
     def clear(self):
         _children = self._children

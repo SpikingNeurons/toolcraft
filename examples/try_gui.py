@@ -308,7 +308,6 @@ class SimpleHashableClass(gui.Hashable):
             info_button=True,
             callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task", ],
             default_open=True,
-            allow_refresh=True,
         )
 
     async def some_awaitable_fn(self, txt_widget: gui.widget.Text):
@@ -480,7 +479,7 @@ def basic_dashboard():
             _t = gui.widget.Text(default_value="first element in container ...")
             _ = gui.form.DoubleSplitForm(
                 label=f"*** [[ ]] ***",
-                callable_name="job_gui", allow_refresh=False, default_open=False,
+                callable_name="job_gui", default_open=False,
             )
             _ = gui.form.ButtonBarForm(label="*** [[ ]] ***", default_open=False)
 

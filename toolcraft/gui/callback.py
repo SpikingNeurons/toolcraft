@@ -187,14 +187,19 @@ class HashableMethodRunnerCallback(Callback):
             ...
 
         # ------------------------------------------------------------------ 05
+        # hide all things in _user_data
+        for _ in _user_data.values():
+            _.hide_widget()
+
+        # ------------------------------------------------------------------ 06
         # if above steps results in widget then that means there is a cached widget which we can reuse or overwrite
         # but in case of `tag_in_receiver` is not `auto` then that means that user wants to overwrite previous tag
         if _widget is not None:
-            # if `self.tag_in_receiver` is `auto` than that means we want to hide it
+            # -------------------------------------------------------------- 06.01
+            # if `self.tag_in_receiver` is `auto` than show widget that was hidden in step 05
             if self.tag_in_receiver == 'auto':
-                for _ in _user_data.values():
-                    _.hide()
-                _widget.show()
+                _widget.show_widget()
+            # -------------------------------------------------------------- 06.02
             # if `self.tag_in_receiver` is None or some `str` that means we want to overwrite
             elif self.tag_in_receiver is None or self.tag_in_receiver != 'auto':
                 # delete tag from receiver
@@ -206,13 +211,15 @@ class HashableMethodRunnerCallback(Callback):
                 # set back to None so that it can be recreated
                 # noinspection PyTypeChecker
                 _widget = None
+            # -------------------------------------------------------------- 06.03
+            # else raise exception
             else:
                 raise Exception(f"Unknown {self.tag_in_receiver}")
 
-        # ------------------------------------------------------------------ 06
+        # ------------------------------------------------------------------ 07
         # if _widget is None generate it and then tag it
         if _widget is None:
-            # -------------------------------------------------------------- 06.01
+            # -------------------------------------------------------------- 07.01
             # get actual result widget we are interested to display ...
             if self.run_async:
                 _new_widget = widget.Group(horizontal=False)
@@ -226,13 +233,13 @@ class HashableMethodRunnerCallback(Callback):
             else:
                 _new_widget = util.rgetattr(
                     _hashable, self.callable_name)()  # type: widget.MovableWidget
-            # -------------------------------------------------------------- 06.02
+            # -------------------------------------------------------------- 07.02
             # tag it i.e. save it to receiver user_data as it was newly created
             _user_data[_tag] = _new_widget
-            # -------------------------------------------------------------- 06.03
+            # -------------------------------------------------------------- 07.03
             # also add it to receiver children
             _receiver(_new_widget)
-            # -------------------------------------------------------------- 06.04
+            # -------------------------------------------------------------- 07.04
             # move widget based on _after_widget
             if _after_widget is not None:
                 _new_widget.move(before=_after_widget)
