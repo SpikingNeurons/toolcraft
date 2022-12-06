@@ -1053,6 +1053,8 @@ class Widget(_WidgetDpg, abc.ABC):
         if self.registered_as_child:
             del self.parent.children[_guid]
 
+        print("dddddddddddddd", self.parent, self, self.parent.children.values())
+
         # call super
         return super().delete()
 
