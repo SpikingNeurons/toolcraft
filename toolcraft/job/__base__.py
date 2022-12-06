@@ -1537,7 +1537,7 @@ class Experiment(m.HashableClass, abc.ABC):
                 gui.widget.Text(default_value="There are no jobs for this experiment ...")
         return _ret
 
-    @UseMethodInForm(label_fmt="view_gui_label")
+    @UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False)
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
         return gui.form.HashableMethodsRunnerForm(
@@ -1547,5 +1547,4 @@ class Experiment(m.HashableClass, abc.ABC):
             info_button=True,
             callable_names=self.view_callable_names,
             default_open=True,
-            allow_refresh=True,
         )

@@ -465,7 +465,6 @@ def view():
         experiment_view: gui.form.DoubleSplitForm = gui.form.DoubleSplitForm(
             label="Experiments ...",
             callable_name="view",
-            allow_refresh=False,
             default_open=True,
         )
 
