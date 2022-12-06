@@ -9,7 +9,7 @@ from . import COLOR_TYPE
 from . import _auto
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Column(_auto.TableColumn):
 
     @property
@@ -18,7 +18,7 @@ class Column(_auto.TableColumn):
         return ()
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Cell(_auto.TableCell):
 
     @property
@@ -27,7 +27,7 @@ class Cell(_auto.TableCell):
         return Row,
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Row(_auto.TableRow):
     """
     todo: for now we are forcing to have Cell in each row ...
@@ -86,7 +86,7 @@ class Row(_auto.TableRow):
         )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Table(_auto.Table):
     # ...
     rows: t.List[Row] = None

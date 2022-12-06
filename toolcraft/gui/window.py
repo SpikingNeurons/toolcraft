@@ -5,7 +5,7 @@ from . import dashboard
 from . import _auto
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Window(_auto.Window):
 
     @property
@@ -32,7 +32,7 @@ class Window(_auto.Window):
         return self
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PopUp(Window):
     """
     PopUp is special Window ...
@@ -69,7 +69,7 @@ class PopUp(Window):
     #     return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FileDialog(_auto.FileDialog):
 
     @property

@@ -671,7 +671,7 @@ class DpgDef:
         _lines = [
             "",
             "",
-            f"@dataclasses.dataclass",
+            f"@dataclasses.dataclass(repr=False)",
             f"class {self.name}({self.super_class_name}):",
             '\t"""',
             "\tRefer:",

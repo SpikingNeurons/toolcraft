@@ -13,7 +13,7 @@ if False:
     from ..marshalling import HashableClass
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Form(widget.CollapsingHeader):
     """
     Form is a special widget which creates a `form_fields_container` container and
@@ -146,7 +146,7 @@ class Form(widget.CollapsingHeader):
         self(widget=self.layout())
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ButtonBarForm(Form):
 
     def init(self):
@@ -210,7 +210,7 @@ class ButtonBarForm(Form):
             _fn(**_fn_kwargs)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class HashableMethodsRunnerForm(Form):
     """
     This is the form which appears on right side of split window. And it needs
@@ -291,7 +291,7 @@ class HashableMethodsRunnerForm(Form):
         return _layout
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DoubleSplitForm(Form):
     """
     Takes
@@ -356,7 +356,6 @@ class DoubleSplitForm(Form):
         hashable: t.Union[Hashable, "HashableClass"],
         group_key: str = None,
         default_open: bool = False,
-        allow_refresh: bool = None,
     ):
 
         # ----------------------------------------------------- 01

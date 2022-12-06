@@ -300,7 +300,7 @@ class WidgetHandler(RegistryItem, abc.ABC):
         return WidgetHandlerRegistry, 
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class HistogramSeries2D(PlotSeries):
     """
     Refer:
@@ -380,7 +380,7 @@ class HistogramSeries2D(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Slider3D(MovableWidget):
     """
     Refer:
@@ -532,7 +532,7 @@ class Slider3D(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class AreaSeries(PlotSeries):
     """
     Refer:
@@ -588,7 +588,7 @@ class AreaSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class BarSeries(PlotSeries):
     """
     Refer:
@@ -644,7 +644,7 @@ class BarSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class BoolValue(Widget):
     """
     Refer:
@@ -687,7 +687,7 @@ class BoolValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Button(MovableWidget):
     """
     Refer:
@@ -818,7 +818,7 @@ class Button(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class CandleSeries(PlotSeries):
     """
     Refer:
@@ -898,7 +898,7 @@ class CandleSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class CheckBox(MovableWidget):
     """
     Refer:
@@ -1018,7 +1018,7 @@ class CheckBox(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ColorButton(MovableWidget):
     """
     Refer:
@@ -1153,7 +1153,7 @@ class ColorButton(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ColorValue(Widget):
     """
     Refer:
@@ -1196,7 +1196,7 @@ class ColorValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Colormap(Widget):
     """
     Refer:
@@ -1242,7 +1242,7 @@ class Colormap(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ColormapButton(MovableWidget):
     """
     Refer:
@@ -1365,7 +1365,7 @@ class ColormapButton(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ColormapScale(MovableWidget):
     """
     Refer:
@@ -1455,7 +1455,7 @@ class ColormapScale(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ColormapSlider(MovableWidget):
     """
     Refer:
@@ -1559,7 +1559,7 @@ class ColormapSlider(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Combo(MovableWidget):
     """
     Refer:
@@ -1703,7 +1703,7 @@ class Combo(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DatePicker(MovableWidget):
     """
     Refer:
@@ -1818,7 +1818,7 @@ class DatePicker(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Double4Value(Widget):
     """
     Refer:
@@ -1861,7 +1861,7 @@ class Double4Value(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DoubleValue(Widget):
     """
     Refer:
@@ -1904,7 +1904,7 @@ class DoubleValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragDouble(MovableWidget):
     """
     Refer:
@@ -2052,7 +2052,7 @@ class DragDouble(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragDoublex(MovableWidget):
     """
     Refer:
@@ -2204,7 +2204,7 @@ class DragDoublex(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragFloat(MovableWidget):
     """
     Refer:
@@ -2352,7 +2352,7 @@ class DragFloat(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragFloatX(MovableWidget):
     """
     Refer:
@@ -2504,7 +2504,7 @@ class DragFloatX(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragInt(MovableWidget):
     """
     Refer:
@@ -2652,7 +2652,7 @@ class DragInt(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragIntX(MovableWidget):
     """
     Refer:
@@ -2804,7 +2804,7 @@ class DragIntX(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PlotDragLine(PlotItem):
     """
     Refer:
@@ -2879,7 +2879,7 @@ class PlotDragLine(PlotItem):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PlotDragPoint(PlotItem):
     """
     Refer:
@@ -2950,7 +2950,7 @@ class PlotDragPoint(PlotItem):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DynamicTexture(Widget):
     """
     Refer:
@@ -2996,7 +2996,7 @@ class DynamicTexture(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ErrorSeries(PlotSeries):
     """
     Refer:
@@ -3060,7 +3060,7 @@ class ErrorSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FileExtension(MovableWidget):
     """
     Refer:
@@ -3114,7 +3114,7 @@ class FileExtension(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Float4Value(Widget):
     """
     Refer:
@@ -3157,7 +3157,7 @@ class Float4Value(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FloatValue(Widget):
     """
     Refer:
@@ -3200,7 +3200,7 @@ class FloatValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FloatVectValue(Widget):
     """
     Refer:
@@ -3243,7 +3243,7 @@ class FloatVectValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FontChars(Widget):
     """
     Refer:
@@ -3281,7 +3281,7 @@ class FontChars(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FontRange(Widget):
     """
     Refer:
@@ -3323,7 +3323,7 @@ class FontRange(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FontRangeHint(Widget):
     """
     Refer:
@@ -3361,7 +3361,7 @@ class FontRangeHint(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class HeatSeries(PlotSeries):
     """
     Refer:
@@ -3437,7 +3437,7 @@ class HeatSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class HistogramSeries(PlotSeries):
     """
     Refer:
@@ -3513,7 +3513,7 @@ class HistogramSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class HLineSeries(PlotSeries):
     """
     Refer:
@@ -3557,7 +3557,7 @@ class HLineSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class InputDouble(MovableWidget):
     """
     Refer:
@@ -3717,7 +3717,7 @@ class InputDouble(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class InputDoublex(MovableWidget):
     """
     Refer:
@@ -3873,7 +3873,7 @@ class InputDoublex(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class InputFloat(MovableWidget):
     """
     Refer:
@@ -4033,7 +4033,7 @@ class InputFloat(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class InputFloatX(MovableWidget):
     """
     Refer:
@@ -4189,7 +4189,7 @@ class InputFloatX(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class InputInt(MovableWidget):
     """
     Refer:
@@ -4345,7 +4345,7 @@ class InputInt(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class InputIntX(MovableWidget):
     """
     Refer:
@@ -4497,7 +4497,7 @@ class InputIntX(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class InputText(MovableWidget):
     """
     Refer:
@@ -4669,7 +4669,7 @@ class InputText(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Int4Value(Widget):
     """
     Refer:
@@ -4712,7 +4712,7 @@ class Int4Value(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class IntValue(Widget):
     """
     Refer:
@@ -4755,7 +4755,7 @@ class IntValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetActivatedHandler(WidgetHandler):
     """
     Refer:
@@ -4808,7 +4808,7 @@ class WidgetActivatedHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetActiveHandler(WidgetHandler):
     """
     Refer:
@@ -4861,7 +4861,7 @@ class WidgetActiveHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetClickedHandler(WidgetHandler):
     """
     Refer:
@@ -4918,7 +4918,7 @@ class WidgetClickedHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetDeactivatedAfterEditHandler(WidgetHandler):
     """
     Refer:
@@ -4971,7 +4971,7 @@ class WidgetDeactivatedAfterEditHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetDeactivatedHandler(WidgetHandler):
     """
     Refer:
@@ -5024,7 +5024,7 @@ class WidgetDeactivatedHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetEditedHandler(WidgetHandler):
     """
     Refer:
@@ -5077,7 +5077,7 @@ class WidgetEditedHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetFocusHandler(WidgetHandler):
     """
     Refer:
@@ -5130,7 +5130,7 @@ class WidgetFocusHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetHoverHandler(WidgetHandler):
     """
     Refer:
@@ -5183,7 +5183,7 @@ class WidgetHoverHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetResizeHandler(WidgetHandler):
     """
     Refer:
@@ -5236,7 +5236,7 @@ class WidgetResizeHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetToggledOpenHandler(WidgetHandler):
     """
     Refer:
@@ -5289,7 +5289,7 @@ class WidgetToggledOpenHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetVisibleHandler(WidgetHandler):
     """
     Refer:
@@ -5342,7 +5342,7 @@ class WidgetVisibleHandler(WidgetHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class KeyDownHandler(GlobalHandler):
     """
     Refer:
@@ -5399,7 +5399,7 @@ class KeyDownHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class KeyPressHandler(GlobalHandler):
     """
     Refer:
@@ -5456,7 +5456,7 @@ class KeyPressHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class KeyReleaseHandler(GlobalHandler):
     """
     Refer:
@@ -5513,7 +5513,7 @@ class KeyReleaseHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class KnobFloat(MovableWidget):
     """
     Refer:
@@ -5649,7 +5649,7 @@ class KnobFloat(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class LineSeries(PlotSeries):
     """
     Refer:
@@ -5697,7 +5697,7 @@ class LineSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Listbox(MovableWidget):
     """
     Refer:
@@ -5829,7 +5829,7 @@ class Listbox(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class LoadingIndicator(MovableWidget):
     """
     Refer:
@@ -5930,7 +5930,7 @@ class LoadingIndicator(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MenuItem(MovableWidget):
     """
     Refer:
@@ -6034,7 +6034,7 @@ class MenuItem(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MouseClickHandler(GlobalHandler):
     """
     Refer:
@@ -6091,7 +6091,7 @@ class MouseClickHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MouseDoubleClickHandler(GlobalHandler):
     """
     Refer:
@@ -6148,7 +6148,7 @@ class MouseDoubleClickHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MouseDownHandler(GlobalHandler):
     """
     Refer:
@@ -6205,7 +6205,7 @@ class MouseDownHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MouseDragHandler(GlobalHandler):
     """
     Refer:
@@ -6266,7 +6266,7 @@ class MouseDragHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MouseMoveHandler(GlobalHandler):
     """
     Refer:
@@ -6319,7 +6319,7 @@ class MouseMoveHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MouseReleaseHandler(GlobalHandler):
     """
     Refer:
@@ -6376,7 +6376,7 @@ class MouseReleaseHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MouseWheelHandler(GlobalHandler):
     """
     Refer:
@@ -6429,7 +6429,7 @@ class MouseWheelHandler(GlobalHandler):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PieSeries(PlotSeries):
     """
     Refer:
@@ -6501,7 +6501,7 @@ class PieSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PlotAnnotation(PlotItem):
     """
     Refer:
@@ -6557,7 +6557,7 @@ class PlotAnnotation(PlotItem):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PlotLegend(Widget):
     """
     Refer:
@@ -6623,7 +6623,7 @@ class PlotLegend(Widget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ProgressBar(MovableWidget):
     """
     Refer:
@@ -6736,7 +6736,7 @@ class ProgressBar(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class RadioButton(MovableWidget):
     """
     Refer:
@@ -6864,7 +6864,7 @@ class RadioButton(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class RawTexture(Widget):
     """
     Refer:
@@ -6914,7 +6914,7 @@ class RawTexture(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ScatterSeries(PlotSeries):
     """
     Refer:
@@ -6962,7 +6962,7 @@ class ScatterSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Selectable(MovableWidget):
     """
     Refer:
@@ -7098,7 +7098,7 @@ class Selectable(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Separator(MovableWidget):
     """
     Refer:
@@ -7144,7 +7144,7 @@ class Separator(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SeriesValue(Widget):
     """
     Refer:
@@ -7187,7 +7187,7 @@ class SeriesValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ShadeSeries(PlotSeries):
     """
     Refer:
@@ -7239,7 +7239,7 @@ class ShadeSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SimplePlot(MovableWidget):
     """
     Refer:
@@ -7364,7 +7364,7 @@ class SimplePlot(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SliderDouble(MovableWidget):
     """
     Refer:
@@ -7516,7 +7516,7 @@ class SliderDouble(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SliderDoublex(MovableWidget):
     """
     Refer:
@@ -7664,7 +7664,7 @@ class SliderDoublex(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SliderFloat(MovableWidget):
     """
     Refer:
@@ -7816,7 +7816,7 @@ class SliderFloat(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SliderFloatX(MovableWidget):
     """
     Refer:
@@ -7964,7 +7964,7 @@ class SliderFloatX(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SliderInt(MovableWidget):
     """
     Refer:
@@ -8116,7 +8116,7 @@ class SliderInt(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SliderIntX(MovableWidget):
     """
     Refer:
@@ -8264,7 +8264,7 @@ class SliderIntX(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Spacer(MovableWidget):
     """
     Refer:
@@ -8318,7 +8318,7 @@ class Spacer(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class StairSeries(PlotSeries):
     """
     Refer:
@@ -8366,7 +8366,7 @@ class StairSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class StaticTexture(Widget):
     """
     Refer:
@@ -8412,7 +8412,7 @@ class StaticTexture(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class StemSeries(PlotSeries):
     """
     Refer:
@@ -8464,7 +8464,7 @@ class StemSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class StringValue(Widget):
     """
     Refer:
@@ -8507,7 +8507,7 @@ class StringValue(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TabButton(MovableWidget):
     """
     Refer:
@@ -8626,7 +8626,7 @@ class TabButton(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TableColumn(MovableWidget):
     """
     Refer:
@@ -8740,7 +8740,7 @@ class TableColumn(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Text(MovableWidget):
     """
     Refer:
@@ -8857,7 +8857,7 @@ class Text(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TextPoint(MovableWidget):
     """
     Refer:
@@ -8920,7 +8920,7 @@ class TextPoint(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ThemeColor(Widget):
     """
     Refer:
@@ -8966,7 +8966,7 @@ class ThemeColor(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ThemeStyle(Widget):
     """
     Refer:
@@ -9016,7 +9016,7 @@ class ThemeStyle(Widget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TimePicker(MovableWidget):
     """
     Refer:
@@ -9131,7 +9131,7 @@ class TimePicker(MovableWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class VLineSeries(PlotSeries):
     """
     Refer:
@@ -9175,7 +9175,7 @@ class VLineSeries(PlotSeries):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ChildWindow(MovableContainerWidget):
     """
     Refer:
@@ -9288,7 +9288,7 @@ class ChildWindow(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Clipper(MovableContainerWidget):
     """
     Refer:
@@ -9338,7 +9338,7 @@ class Clipper(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class CollapsingHeader(MovableContainerWidget):
     """
     Refer:
@@ -9458,7 +9458,7 @@ class CollapsingHeader(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ColormapRegistry(Registry):
     """
     Refer:
@@ -9493,7 +9493,7 @@ class ColormapRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class CustomSeries(MovableContainerWidget):
     """
     Refer:
@@ -9579,7 +9579,7 @@ class CustomSeries(MovableContainerWidget):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragPayload(ContainerWidget):
     """
     Refer:
@@ -9629,7 +9629,7 @@ class DragPayload(ContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawArrow(MovableWidget):
     """
     Refer:
@@ -9687,7 +9687,7 @@ class DrawArrow(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawBezierCubic(MovableWidget):
     """
     Refer:
@@ -9753,7 +9753,7 @@ class DrawBezierCubic(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawBezierQuadratic(MovableWidget):
     """
     Refer:
@@ -9815,7 +9815,7 @@ class DrawBezierQuadratic(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawCircle(MovableWidget):
     """
     Refer:
@@ -9877,7 +9877,7 @@ class DrawCircle(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawEllipse(MovableWidget):
     """
     Refer:
@@ -9939,7 +9939,7 @@ class DrawEllipse(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawLayer(MovableContainerWidget):
     """
     Refer:
@@ -9989,7 +9989,7 @@ class DrawLayer(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawLine(MovableWidget):
     """
     Refer:
@@ -10043,7 +10043,7 @@ class DrawLine(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawNode(MovableContainerWidget):
     """
     Refer:
@@ -10081,7 +10081,7 @@ class DrawNode(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawPolygon(MovableWidget):
     """
     Refer:
@@ -10135,7 +10135,7 @@ class DrawPolygon(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawPolyline(MovableWidget):
     """
     Refer:
@@ -10189,7 +10189,7 @@ class DrawPolyline(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawQuad(MovableWidget):
     """
     Refer:
@@ -10255,7 +10255,7 @@ class DrawQuad(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawRectangle(MovableWidget):
     """
     Refer:
@@ -10337,7 +10337,7 @@ class DrawRectangle(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawText(MovableWidget):
     """
     Refer:
@@ -10391,7 +10391,7 @@ class DrawText(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawTriangle(MovableWidget):
     """
     Refer:
@@ -10453,7 +10453,7 @@ class DrawTriangle(MovableWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DrawList(MovableContainerWidget):
     """
     Refer:
@@ -10534,7 +10534,7 @@ class DrawList(MovableContainerWidget):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FileDialog(ContainerWidget):
     """
     Refer:
@@ -10635,7 +10635,7 @@ class FileDialog(ContainerWidget):
             return self.cancel_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FilterSet(MovableContainerWidget):
     """
     Refer:
@@ -10685,7 +10685,7 @@ class FilterSet(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Font(ContainerWidget):
     """
     Refer:
@@ -10727,7 +10727,7 @@ class Font(ContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FontRegistry(Registry):
     """
     Refer:
@@ -10762,7 +10762,7 @@ class FontRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Group(MovableContainerWidget):
     """
     Refer:
@@ -10874,7 +10874,7 @@ class Group(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class GlobalHandlerRegistry(Registry):
     """
     Refer:
@@ -10913,7 +10913,7 @@ class GlobalHandlerRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class WidgetHandlerRegistry(Registry):
     """
     Refer:
@@ -10952,7 +10952,7 @@ class WidgetHandlerRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Menu(MovableContainerWidget):
     """
     Refer:
@@ -11033,7 +11033,7 @@ class Menu(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MenuBar(ContainerWidget):
     """
     Refer:
@@ -11079,7 +11079,7 @@ class MenuBar(ContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Node(MovableContainerWidget):
     """
     Refer:
@@ -11175,7 +11175,7 @@ class Node(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class NodeAttribute(MovableContainerWidget):
     """
     Refer:
@@ -11241,7 +11241,7 @@ class NodeAttribute(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Plot(MovableContainerWidget):
     """
     Refer:
@@ -11448,7 +11448,7 @@ class Plot(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PlotXAxis(Widget):
     """
     Refer:
@@ -11535,7 +11535,7 @@ class PlotXAxis(Widget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PlotYAxis(ContainerWidget):
     """
     Refer:
@@ -11622,7 +11622,7 @@ class PlotYAxis(ContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SubPlots(MovableContainerWidget):
     """
     Refer:
@@ -11759,7 +11759,7 @@ class SubPlots(MovableContainerWidget):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Tab(MovableContainerWidget):
     """
     Refer:
@@ -11852,7 +11852,7 @@ class Tab(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TabBar(MovableContainerWidget):
     """
     Refer:
@@ -11937,7 +11937,7 @@ class TabBar(MovableContainerWidget):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Table(MovableContainerWidget):
     """
     Refer:
@@ -12135,7 +12135,7 @@ class Table(MovableContainerWidget):
             return self.callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TableCell(MovableContainerWidget):
     """
     Refer:
@@ -12181,7 +12181,7 @@ class TableCell(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TableRow(MovableContainerWidget):
     """
     Refer:
@@ -12227,7 +12227,7 @@ class TableRow(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TemplateRegistry(Registry):
     """
     Refer:
@@ -12258,7 +12258,7 @@ class TemplateRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TextureRegistry(Registry):
     """
     Refer:
@@ -12293,7 +12293,7 @@ class TextureRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ThemeComponent(MovableContainerWidget):
     """
     Refer:
@@ -12335,7 +12335,7 @@ class ThemeComponent(MovableContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Tooltip(ContainerWidget):
     """
     Refer:
@@ -12373,7 +12373,7 @@ class Tooltip(ContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class TreeNode(MovableContainerWidget):
     """
     Refer:
@@ -12493,7 +12493,7 @@ class TreeNode(MovableContainerWidget):
             return self.drop_callback.fn(sender=self)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ValueRegistry(Registry):
     """
     Refer:
@@ -12524,7 +12524,7 @@ class ValueRegistry(Registry):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ViewportMenuBar(ContainerWidget):
     """
     Refer:
@@ -12570,7 +12570,7 @@ class ViewportMenuBar(ContainerWidget):
         return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Window(ContainerWidget):
     """
     Refer:

@@ -54,12 +54,12 @@ from ._auto import VLineSeries
 # auto pk; end <<<
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Simple(_auto.SimplePlot):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Legend(_auto.PlotLegend):
 
     @property
@@ -71,7 +71,7 @@ class Legend(_auto.PlotLegend):
         return False
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class XAxis(_auto.PlotXAxis):
 
     @property
@@ -143,7 +143,7 @@ class XAxis(_auto.PlotXAxis):
             )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class YAxis(_auto.PlotYAxis):
 
     @property
@@ -243,22 +243,22 @@ class YAxis(_auto.PlotYAxis):
             )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Annotation(_auto.PlotAnnotation):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragLine(_auto.PlotDragLine):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragPoint(_auto.PlotDragPoint):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Plot(_auto.Plot):
     """
     Refer this to improve more:
@@ -463,7 +463,7 @@ class Plot(_auto.Plot):
             self.y3_axis.build()
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SubPlots(_auto.SubPlots):
 
     @property

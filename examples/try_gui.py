@@ -299,7 +299,7 @@ class SimpleHashableClass(gui.Hashable):
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
-    @gui.UseMethodInForm(label_fmt="all_plots_gui_label")
+    @gui.UseMethodInForm(label_fmt="all_plots_gui_label", hide_previously_opened=False)
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
         return gui.form.HashableMethodsRunnerForm(
             label=self.all_plots_gui_label.split("\n")[0],
@@ -420,7 +420,6 @@ class MyDoubleSplitForm(gui.form.DoubleSplitForm):
 
     label: str = "Double split form ..."
     callable_name: str = "all_plots"
-    allow_refresh: bool = False
     default_open: bool = False
 
 
