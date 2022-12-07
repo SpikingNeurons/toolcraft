@@ -5,7 +5,7 @@ from . import dashboard
 from . import _auto
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Window(_auto.Window):
 
     @property
@@ -13,12 +13,6 @@ class Window(_auto.Window):
         raise Exception(
             "Use of `parent` for `Window` is not allowed.",
             "Please use `dash_board` instead.",
-        )
-
-    @parent.setter
-    def parent(self, value):
-        raise Exception(
-            f"Property parent should not be set for Window ..."
         )
 
     @property
@@ -38,7 +32,7 @@ class Window(_auto.Window):
         return self
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PopUp(Window):
     """
     PopUp is special Window ...
@@ -59,7 +53,7 @@ class PopUp(Window):
     # no_move: bool = False
     # no_background: bool = False
     #
-    # def build(self) -> t.Union[int, str]:
+    # def build(self) -> int:
     #     _internal_popup_id = internal_dpg.generate_uuid()
     #     _handler_reg_id = internal_dpg.add_item_handler_registry()
     #     internal_dpg.add_item_clicked_handler(
@@ -68,14 +62,14 @@ class PopUp(Window):
     #         callback=lambda: internal_dpg.configure_item(
     #             _internal_popup_id, show=True))
     #     internal_dpg.bind_item_handler_registry(
-    #         self.hover_over.dpg_id, _handler_reg_id)
+    #         self.hover_over.guid, _handler_reg_id)
     #
     #     _ret = super().build()
     #
     #     return _ret
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class FileDialog(_auto.FileDialog):
 
     @property

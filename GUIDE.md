@@ -1,5 +1,19 @@
 # Guide
 
+## How to do Readme
+
+How to get readme
++ https://readme.so/editor
++ https://www.youtube.com/watch?v=K7jeBfiNqR4
+
+
+## Making things fast
+
+Especially caching with marshalling.HashableClass
+https://www.youtube.com/watch?v=xKk7IXm0XO0
+
+Note avoid using `__dict__` to keep things fast (listen to talk)
+
 ## conda env
 
 create or delete environment

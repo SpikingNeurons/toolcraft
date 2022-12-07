@@ -23,6 +23,7 @@ if DPG_WORKS:
     from . import plot
     from . import form
     from . import callback
+    from . import registry
     from . import dashboard
     from . import asset
     from . import helper

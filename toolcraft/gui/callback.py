@@ -1,7 +1,7 @@
 import dataclasses
 import typing as t
 
-from . import widget, asset, util, AwaitableTask, helper
+from . import widget, asset, util, AwaitableTask, helper, UseMethodInForm
 from .__base__ import Callback, EnColor, Engine, Hashable
 
 # noinspection PyUnreachableCode
@@ -93,16 +93,18 @@ class CloseWidgetCallback(Callback):
         #     callback=cls(),
         #     user_data={'widget_to_delete': widget_to_delete},
         # )
-        return widget.Button(
+        _ret = widget.Button(
             label=label,
             callback=cls(),
             user_data={'widget_to_delete': widget_to_delete},
         )
+        return _ret
 
     def fn(self, sender: widget.Widget):
-        try:
+        _user_data = sender.get_user_data()
+        if 'widget_to_delete' in _user_data.keys():
             sender.get_user_data()['widget_to_delete'].delete()
-        except KeyError:
+        else:
             raise KeyError(
                 f"Was expecting you to supply dict item `widget_to_delete` in "
                 f"`user_data` of sender {sender.__class__}"
@@ -113,107 +115,147 @@ class CloseWidgetCallback(Callback):
 class HashableMethodRunnerCallback(Callback):
     """
     This callback can call a method of HashableClass.
-
-    If group_tag is None then we make unique guid for all callable_name
-    else we reuse group_tag across different callables this will just
-    mimic the TabGroup behaviour where one receiver widget will be updated.
-
-    Note that this will mean that allow_refresh will be True when
-    tab_group_name is not None.
     """
     hashable: t.Union[Hashable, "HashableClass"]
     callable_name: str
     receiver: widget.ContainerWidget
-    allow_refresh: bool
-    group_tag: str = None
-    run_async: bool = False
+
+    def init(self):
+        # call super
+        super().init()
+
+        # _use_method_in_form_obj
+        # noinspection PyAttributeOutsideInit
+        self._use_method_in_form_obj = UseMethodInForm.get_from_hashable_fn(
+            hashable=self.hashable, fn_name=self.callable_name
+        )
 
     def init_validate(self):
         # call super
         super().init_validate()
 
-        # if tab_group_name is supplied that means you are sharing receiver
-        # object across multiple Callbacks with same tab_group_name
-        # So ensure that the allow_refresh is True
-        if self.group_tag is not None:
-            if not self.allow_refresh:
-                raise Exception(
-                    f"looks like you are using group_tag. So please "
-                    f"ensure that allow_refresh is set to True"
-                )
+        # check i fuser_data is set to dict in receiver
+        _user_data = self.receiver.get_user_data()
+        if not isinstance(_user_data, dict):
+            raise Exception("We expect that you set user_data to dict in receiver ...")
 
     def fn(self, sender: widget.Widget):
+        # ------------------------------------------------------------------ 01
+        # initial stuff
+        # ------------------------------------------------------------------ 01.01
         # get some vars
         # _sender = self.sender
         _hashable = self.hashable
         _receiver = self.receiver
-        if self.group_tag is None:
-            _tag = f"{_hashable.__class__.__name__}:" \
-                   f"{_hashable.hex_hash[-10:]}.{self.callable_name}"
-        else:
-            # this make sure that same guid is shared across multiple
-            # callbacks that use same tab_group_name.
-            # Note this applies if _hashable and receiver are same
-            _tag = f"{_hashable.__class__.__name__}:" \
-                   f"{_hashable.hex_hash[-10:]}.{self.group_tag}"
+        _callable_name = self.callable_name
+        _user_data = _receiver.get_user_data()
+        _use_method_in_form_obj = self._use_method_in_form_obj
+        _tag_in_receiver = _use_method_in_form_obj.tag_in_receiver
+        _run_async = _use_method_in_form_obj.run_async
+        _hide_previously_opened = _use_method_in_form_obj.hide_previously_opened
+        # ------------------------------------------------------------------ 01.02
+        # Remove stale widgets from `_user_data` that might have been deleted from other gui interactions
+        # We detect stale if those widgets are not available in `_receiver.children`
+        # This is because we cannot delete them from `_use_data` when `_widget.delete()` is called
+        for _t, _guid in [(_k, _v.guid) for _k, _v in _user_data.items()]:
+            if _guid not in _receiver.children.keys():
+                del _user_data[_t]
 
-        # get widget for given tag if present
+        # ------------------------------------------------------------------ 02
+        # check if dashboard same
         # .... doesn't matter if you use sender or _receiver as there is one dashboard for all
         #      This might change if we have multiple dashboard instances
         # todo: we are using Engine we do not need this
-        _dash_board = _receiver.dash_board
         # todo: precaution check ... remove later
-        assert id(_dash_board) == id(sender.dash_board), "must be same ..."
-        # noinspection PyTypeChecker
-        _widget = Engine.tags.get(_tag, None)
-        _after_widget = None
+        assert id(_receiver.dash_board) == id(sender.dash_board), "must be same ..."
 
-        # if allow refresh then delete widget and set it to None so that it
-        # can be created again
-        if self.allow_refresh:
-            # if widget is available i.e. it is tagged then delete it
-            if _widget is not None:
-                # fetch _before_widget
-                # we are assuming this will be MovableWidget ... Note that we want to
-                # keep this way and if possible modify other code ... this is possible
-                # for container widgets, and we do not see that this callback will be
-                # used for non-movable Widgets
-                try:
-                    _widget: widget.MovableWidget
-                    _after_widget = _widget.after()
-                except AttributeError:
-                    ...
+        # ------------------------------------------------------------------ 03
+        # create tag
+        _actual_tag = _tag_in_receiver
+        if _actual_tag == 'auto':
+            _actual_tag = f"{_hashable.hex_hash}.{_callable_name}"
+        if _actual_tag is None:
+            _actual_tag = "_NONE_"
+
+        # ------------------------------------------------------------------ 04
+        # get widget and after_widget
+        # ------------------------------------------------------------------ 04.01
+        # some vars
+        # noinspection PyTypeChecker
+        _widget: widget.MovableWidget = None
+        # noinspection PyTypeChecker
+        _after_widget: widget.MovableWidget = None
+        # ------------------------------------------------------------------ 04.02
+        # get widget if already present in user_data
+        if _actual_tag in _user_data.keys():
+            # get cached _widget
+            # noinspection PyTypeChecker
+            _widget = _user_data[_actual_tag]
+        # ------------------------------------------------------------------ 04.03
+        # + we are assuming this will be MovableWidget ... Note that we want to
+        #   keep this way and if possible modify other code ... this is possible
+        #   for container widgets, and we do not see that this callback will be
+        #   used for non-movable Widgets
+        try:
+            _after_widget = _widget.after()
+        except AttributeError:
+            ...
+
+        # ------------------------------------------------------------------ 05
+        # hide all things in _user_data
+        if _hide_previously_opened:
+            for _ in _user_data.values():
+                _.hide_widget()
+
+        # ------------------------------------------------------------------ 06
+        # if above steps results in widget then that means there is a cached widget which we can reuse or overwrite
+        # but in case of `tag_in_receiver` is not `auto` then that means that user wants to overwrite previous tag
+        if _widget is not None:
+            # -------------------------------------------------------------- 06.01
+            # if `self.tag_in_receiver` is `auto` than show widget that was hidden in step 05
+            if _tag_in_receiver == 'auto':
+                _widget.show_widget()
+            # -------------------------------------------------------------- 06.02
+            # if `self.tag_in_receiver` is None or some `str` that means we want to overwrite
+            elif _tag_in_receiver is None or _tag_in_receiver != 'auto':
+                # delete tag from receiver
+                del _user_data[_actual_tag]
+                # delete widget
                 # this will delete itself
                 # this will also remove itself from `parent.children`
-                # this will also untag itself if tagged
                 _widget.delete()
                 # set back to None so that it can be recreated
                 # noinspection PyTypeChecker
                 _widget = None
+            # -------------------------------------------------------------- 06.03
+            # else raise exception
+            else:
+                raise Exception(f"Unknown {_tag_in_receiver}")
 
-        # if widget is not present create it
+        # ------------------------------------------------------------------ 07
+        # if _widget is None generate it and then tag it
         if _widget is None:
-            # get actual result widget we are interested to display ... and make
-            # it child to receiver
-            if self.run_async:
+            # -------------------------------------------------------------- 07.01
+            # get actual result widget we are interested to display ...
+            if _run_async:
                 _new_widget = widget.Group(horizontal=False)
                 AwaitableTask(
                     fn=helper.make_async_fn_runner,
                     fn_kwargs=dict(
                         receiver_grp=_new_widget,
-                        blocking_fn=util.rgetattr(_hashable, self.callable_name),
+                        blocking_fn=util.rgetattr(_hashable, _callable_name),
                     )
                 ).add_to_task_queue()
             else:
                 _new_widget = util.rgetattr(
-                    _hashable, self.callable_name)()  # type: widget.MovableWidget
-
-            # tag it as it was newly created
-            Engine.tag_widget(tag=_tag, widget=_new_widget)
-
-            # add to receiver children
+                    _hashable, _callable_name)()  # type: widget.MovableWidget
+            # -------------------------------------------------------------- 07.02
+            # tag it i.e. save it to receiver user_data as it was newly created
+            _user_data[_actual_tag] = _new_widget
+            # -------------------------------------------------------------- 07.03
+            # also add it to receiver children
             _receiver(_new_widget)
-
-            # move widget
+            # -------------------------------------------------------------- 07.04
+            # move widget based on _after_widget
             if _after_widget is not None:
                 _new_widget.move(before=_after_widget)

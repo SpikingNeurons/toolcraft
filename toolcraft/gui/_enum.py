@@ -23,4 +23,6 @@ from ._auto import EnNodeAttr
 from ._auto import EnMouseButton
 # noinspection PyUnresolvedReferences
 from ._auto import EnPlatform
+# noinspection PyUnresolvedReferences
+from ._auto import EnKey
 # auto pk; end <<<

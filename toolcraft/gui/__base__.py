@@ -6,13 +6,10 @@ The rule for now is to
 import abc
 import dataclasses
 import asyncio
-import functools
 import hashlib
 import inspect
-import itertools
 import sys
 import traceback
-import types
 import typing as t
 import enum
 import dearpygui.dearpygui as dpg
@@ -77,75 +74,45 @@ class EscapeWithContext:
         _CONTAINER_WIDGET_STACK = self._backup
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class _WidgetDpg(abc.ABC):
     """
     This class is just to keep all dpg related things in one place ...
     Anything specific to our API will go in Widget class
     """
 
-    _UID_CNT: t.ClassVar[int] = 0
-
     @property
     def post_build_fns(self) -> t.List[t.Callable]:
         return self._post_build_fns
 
     @property
-    def dpg_id(self) -> t.Union[int, str]:
-        if self._dpg_id is None:
-            raise Exception(
-                f"The dpg_id is not set for instance of class {self.__class__}"
-            )
-        else:
-            return self._dpg_id
-
-    @dpg_id.setter
-    def dpg_id(self, value: t.Union[int, str]):
-        if self._dpg_id is None:
-            self._dpg_id = value
-        else:
-            raise Exception(
-                f"The dpg_id is already set for instance of class {self.__class__}"
-            )
-
-    @property
-    def uid(self) -> int:
-        if self._uid is None:
-            raise Exception(
-                f"The uid is not set for instance of class {self.__class__}"
-            )
-        else:
-            return self._uid
-
-    @uid.setter
-    def uid(self, value: int):
-        if self._uid is None:
-            self._uid = value
-        else:
-            raise Exception(
-                f"The uid is already set for instance of class {self.__class__}"
-            )
+    def guid(self) -> int:
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._guid
+        except AttributeError as _ae:
+            # for any other gui interface update this ....
+            # for dearpygui we can safely use this
+            dpg.create_context()
+            # noinspection PyAttributeOutsideInit
+            self._guid = dpg.generate_uuid()
+            return self._guid
 
     @property
     def dpg_state(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
-        return internal_dpg.get_item_state(self.dpg_id)
+        return internal_dpg.get_item_state(self.guid)
 
     @property
     def dpg_config(self) -> t.Dict[str, t.Union[bool, t.List[int]]]:
-        return internal_dpg.get_item_configuration(self.dpg_id)
+        return internal_dpg.get_item_configuration(self.guid)
 
     @property
     def dpg_info(self) -> t.Dict[str, t.Any]:
-        return internal_dpg.get_item_info(self.dpg_id)
+        return internal_dpg.get_item_info(self.guid)
 
     @property
     def is_built(self) -> bool:
-        # noinspection PyBroadException
-        try:
-            _ = self.dpg_id
-            return True
-        except Exception:
-            return False
+        return self._is_built
 
     @property
     def is_hovered(self) -> bool:
@@ -247,22 +214,40 @@ class _WidgetDpg(abc.ABC):
         )
 
     def __post_init__(self):
+        # call guid to set it
+        _ = self.guid
+        # some internal vars
+        self._post_build_fns = []
+        self._is_built = False
         # init pipeline
         self.init_validate()
         self.init()
 
     def __setattr__(self, key, value):
+        from .form import Form
         if key in self.dataclass_field_names:
+            # needed as this is dataclass and class building happens before
+            # __post_init__ will add this attribute to class
+            try:
+                _is_built = self.is_built
+            except AttributeError as _ae:
+                _is_built = False
             # this might not always work especially when key is custom ...
             # in that case catch exception and figure out how to handle
-            if self.is_built:
+            if _is_built:
                 # The default behaviour is to update configure the dpg item but
-                # note that Form is not a typical Widget and hence we have no need for
-                # "`internal_dpg.configure_item` ...",
-                if not isinstance(self, Form):
-                    internal_dpg.configure_item(self.dpg_id, **{key: value})
+                # note that Form is not a typical Widget and is subclass of CollapsingHeader
+                # It can have more dataclass fields than provided by dpg
+                if isinstance(self, Form):
+                    if key in internal_dpg.get_item_configuration(self.guid).keys():
+                        internal_dpg.configure_item(self.guid, **{key: value})
+                else:
+                    internal_dpg.configure_item(self.guid, **{key: value})
         # any other attribute that is not field
         return super().__setattr__(key, value)
+
+    def __repr__(self):
+        return f"{self.guid}:{self.__class__.__name__}"
 
     def clone(self) -> "_WidgetDpg":
         _kwargs = dict()
@@ -275,6 +260,8 @@ class _WidgetDpg(abc.ABC):
         return self.__class__(**_kwargs)
 
     def init_validate(self):
+
+        from .form import Form
 
         # loop over fields
         for f_name in self.dataclass_field_names:
@@ -293,12 +280,31 @@ class _WidgetDpg(abc.ABC):
                     )
 
     def init(self):
-        # some internal vars
-        self._uid = None
-        self.uid = _WidgetDpg._UID_CNT
-        _WidgetDpg._UID_CNT += 1
-        self._dpg_id = None
-        self._post_build_fns = []
+        ...
+
+    def delete(self):
+        """
+        Note that this will be scheduled for deletion via destroy with help of WidgetEngine
+        """
+        _guid = self.guid
+
+        # adapt widget engine
+        # unregister update
+        try:
+            del Engine.update[_guid]
+        except KeyError:
+            ...
+        # unregister fixed_update
+        try:
+            del Engine.fixed_update[_guid]
+        except KeyError:
+            ...
+
+        # delete the dpg UI counterpart .... skip line series
+        # from .plot import LineSeries
+        dpg.delete_item(item=_guid, children_only=False, slot=-1)
+
+        # todo: make _widget unusable ... figure out
 
     def build_pre_runner(self):
 
@@ -307,12 +313,12 @@ class _WidgetDpg(abc.ABC):
         if self.is_built:
             # noinspection PyUnresolvedReferences
             raise Exception(
-                f"Widget {self.__class__} is already built and registered with:",
-                f"'parent': {self.parent.__class__,}"
+                f"Widget {self} is already built and registered with:",
+                f"'parent': {self.parent}"
             )
 
     @abc.abstractmethod
-    def build(self) -> t.Union[int, str]:
+    def build(self) -> int:
         ...
 
     def build_post_runner(
@@ -320,7 +326,7 @@ class _WidgetDpg(abc.ABC):
     ):
         # if None raise error ... we expect int
         if hooked_method_return_value is None:
-            raise Exception(f"We expect build to return int which happens to be dpg_id")
+            raise Exception(f"We expect build to return int which happens to be guid")
 
         # test if remaining important internals are set
         from . import window
@@ -339,8 +345,13 @@ class _WidgetDpg(abc.ABC):
                 f"Not supported type {self.__class__}"
             )
 
-        # set dpg_id
-        self.dpg_id = hooked_method_return_value
+        # set guid
+        assert self.guid == hooked_method_return_value, "was expecting this to be same"
+
+        # indicate that things are build
+        assert not self._is_built, "was expecting this to be False"
+        # noinspection PyAttributeOutsideInit
+        self._is_built = True
 
         # call post_build_fns
         if bool(self.post_build_fns):
@@ -348,133 +359,153 @@ class _WidgetDpg(abc.ABC):
                 _fn()
             self.post_build_fns.clear()
 
+        # register in WidgetEngine
+        if Widget.update != self.__class__.update:
+            Engine.update[self.guid] = self
+        if Widget.fixed_update != self.__class__.fixed_update:
+            Engine.fixed_update[self.guid] = self
+
     def get_value(self) -> t.Any:
         """
         Refer:
         >>> dpg.get_value
         """
-        return internal_dpg.get_value(self.dpg_id)
+        return internal_dpg.get_value(self.guid)
 
     def set_value(self, value: t.Any):
         """
         Refer:
         >>> dpg.set_value
         """
-        return internal_dpg.set_value(self.dpg_id, value)
+        return internal_dpg.set_value(self.guid, value)
 
     def set_x_scroll(self, value: float):
         """
         Refer:
         >>> dpg.set_x_scroll
         """
-        return internal_dpg.set_x_scroll(self.dpg_id, value)
+        return internal_dpg.set_x_scroll(self.guid, value)
 
     def get_x_scroll(self) -> float:
         """
         Refer:
         >>> dpg.get_x_scroll
         """
-        return internal_dpg.get_x_scroll(self.dpg_id)
+        return internal_dpg.get_x_scroll(self.guid)
 
     def get_x_scroll_max(self) -> float:
         """
         Refer:
         >>> dpg.get_x_scroll_max
         """
-        return internal_dpg.get_x_scroll_max(self.dpg_id)
+        return internal_dpg.get_x_scroll_max(self.guid)
 
     def set_y_scroll(self, value: float):
         """
         Refer:
         >>> dpg.set_y_scroll
         """
-        return internal_dpg.set_y_scroll(self.dpg_id, value)
+        return internal_dpg.set_y_scroll(self.guid, value)
 
     def get_y_scroll(self) -> float:
         """
         Refer:
         >>> dpg.get_y_scroll
         """
-        return internal_dpg.get_y_scroll(self.dpg_id)
+        return internal_dpg.get_y_scroll(self.guid)
 
     def show_debug(self):
         """
         Refer:
         >>> dpg.show_item_debug
         """
-        return internal_dpg.show_item_debug(self.dpg_id)
+        return internal_dpg.show_item_debug(self.guid)
 
     def unstage(self):
         """
         Refer:
         >>> dpg.unstage
         """
-        return internal_dpg.unstage(self.dpg_id)
+        return internal_dpg.unstage(self.guid)
 
     def get_y_scroll_max(self) -> float:
         """
         Refer:
         >>> dpg.get_y_scroll_max
         """
-        return internal_dpg.get_y_scroll_max(self.dpg_id)
+        return internal_dpg.get_y_scroll_max(self.guid)
 
     def reset_pos(self):
-        internal_dpg.reset_pos(self.dpg_id)
+        internal_dpg.reset_pos(self.guid)
 
-    def show(self):
+    def show_widget(self):
         """
         Refer:
         >>> dpg.show_item
         """
-        internal_dpg.configure_item(self.dpg_id, show=True)
+        internal_dpg.configure_item(self.guid, show=True)
 
-    def hide(self):
+    def hide_widget(self):
         """
         Refer:
         >>> dpg.hide_item
         """
-        internal_dpg.configure_item(self.dpg_id, show=False)
+        internal_dpg.configure_item(self.guid, show=False)
 
     def bind_theme(self, theme: asset.Theme):
-        dpg.bind_item_theme(item=self.dpg_id, theme=theme.get())
+        dpg.bind_item_theme(item=self.guid, theme=theme.get())
 
     def set_widget_configuration(self, **kwargs):
-        # if any value is widget then get its dpg_id
+        # if any value is widget then get its guid
         _new_kwargs = {}
         for _k in kwargs.keys():
             _v = kwargs[_k]
             if isinstance(_v, Widget):
-                _v = _v.dpg_id
+                _v = _v.guid
             _new_kwargs[_k] = _v
         # configure
-        dpg.configure_item(item=self.dpg_id, **_new_kwargs)
+        dpg.configure_item(item=self.guid, **_new_kwargs)
 
     def display_raw_configuration(self) -> t.Dict:
         """
-        Note that raw dpg_id is not treated
+        Note that raw guid is not treated
         """
-        return dpg.get_item_configuration(item=self.dpg_id)
+        return dpg.get_item_configuration(item=self.guid)
 
     def focus(self):
         """
         Refer:
         >>> dpg.focus_item
         """
-        dpg.focus_item(self.dpg_id)
+        dpg.focus_item(self.guid)
 
     def enable(self):
         """
         Refer:
         >>> dpg.enable_item
         """
-        internal_dpg.configure_item(self.dpg_id, enabled=True)
+        internal_dpg.configure_item(self.guid, enabled=True)
 
     def disable(self):
         """
         Refer:
         >>> dpg.disable_item
         """
-        internal_dpg.configure_item(self.dpg_id, enabled=False)
+        internal_dpg.configure_item(self.guid, enabled=False)
+
+    def fixed_update(self):
+        ...
+
+    def update(self):
+        """
+        todo: async update that can have await ... (Try this is try_* rough work first ...)
+          A method run can be spread over multiple frames where
+            only part of code until next await executes in a given frame ...
+          Note that also deletion needs to happen after entire update is executed ...
+            or maybe for every await in update method check if deletion is requested
+
+        """
+        ...
 
 
 @dataclasses.dataclass
@@ -669,21 +700,18 @@ class Engine:
       + print - Logs message to the Unity Console (identical to Debug.Log).
       By figuring out which method is overridden we can decide to call it ...
     """
-    # --------------------------------- 01
-    # to refer widgets anywhere
-    tags: t.Dict[str, "Widget"] = {}
 
-    # --------------------------------- 02
+    # --------------------------------- 01
     # lifecycle method - updates every frame
     update: t.Dict[int, "Widget"] = {}
     # lifecycle method - updates at fix frequency ... still to improve
     fixed_update: t.Dict[int, "Widget"] = {}
 
-    # --------------------------------- 03
+    # --------------------------------- 02
     # queue that can process AwaitableTask and BlockingTask
     task_queue: asyncio.Queue = asyncio.Queue()
 
-    # --------------------------------- 04
+    # --------------------------------- 03
     # note we have kept worker=1 so that logs will not pollute
     # todo: increase number of workers when logging is done entirely to files so that stdout doesn't get polluted
     #   especially useful for process_pool_executor
@@ -764,9 +792,9 @@ class Engine:
             # this will run infinitely ...
             while True:
 
-                # await (physics will run at 5 Hz)
-                # todo: make sure that all fixed_update's happen in 0.2 seconds
-                await asyncio.sleep(0.2)
+                # await (physics will run at 2 Hz)
+                # todo: make sure that all fixed_update's happen in 0.5 seconds
+                await asyncio.sleep(0.5)
 
                 # call fixed_update phase
                 # todo: asyncio.create_task or asyncio.to_thread
@@ -837,8 +865,8 @@ class Engine:
 
         # ----------------------------------------------------------- 02
         # todo: work this out when we want to have lifecycle for widgets
-        # _lifecycle = asyncio.create_task(cls.lifecycle_loop())
-        # _lifecycle_physics = asyncio.create_task(cls.lifecycle_physics_loop())
+        _lifecycle = asyncio.create_task(cls.lifecycle_loop())
+        _lifecycle_physics = asyncio.create_task(cls.lifecycle_physics_loop())
 
         # ----------------------------------------------------------- 03
         # todo this loop can go on parallel processes where they will loop infinitely and wait for tasks
@@ -882,61 +910,8 @@ class Engine:
         # destroy
         dpg.destroy_context()
 
-    @classmethod
-    def get_widget_from_tag(cls, tag: str) -> "Widget":
-        if tag in cls.tags.keys():
-            return cls.tags[tag]
-        else:
-            raise Exception(f"We cannot find widget for tag {tag!r}.")
 
-    @classmethod
-    def tag_widget(cls, tag: str, widget: "Widget"):
-        # if tag is already used up
-        if tag in cls.tags.keys():
-            raise Exception(
-                f"A widget with tag `{tag}` already exists. "
-                f"Please select some unique name."
-            )
-
-        # if already tagged raise error
-        if widget.tag is not None:
-            raise Exception(
-                f"The widget is already tagged with tag {widget.tag} "
-                f"so we cannot assign new tag {tag} ..."
-            )
-
-        # save reference inside widget
-        widget.tag = tag
-
-        # save in global container
-        cls.tags[tag] = widget
-
-    @classmethod
-    def untag_widget(cls, tag_or_widget: t.Union[str, "Widget"], not_exists_ok: bool = False):
-        # get tag
-        _tag = tag_or_widget
-        if isinstance(tag_or_widget, Widget):
-            _tag = tag_or_widget.tag
-
-        # if tag name not present
-        if _tag not in cls.tags.keys():
-            if not_exists_ok:
-                return
-            else:
-                raise Exception(
-                    "There is no widget tagged with the tag name "
-                    f"`{_tag}` hence there is nothing to remove"
-                )
-
-        # get tag
-        _widget = cls.tags[_tag]
-
-        # since tag exists remove it ... also set internal.tag to None
-        _widget.tag = None
-        del cls.tags[_tag]
-
-
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Widget(_WidgetDpg, abc.ABC):
     """
     todo: add async update where widget can be updated via long running python code
@@ -948,22 +923,15 @@ class Widget(_WidgetDpg, abc.ABC):
 
     @property
     def parent(self) -> "ContainerWidget":
-        return self._parent
-
-    @parent.setter
-    def parent(self, value: "ContainerWidget"):
-        self._parent = value
-
-    @property
-    def tag(self) -> t.Optional[str]:
-        return self._tag
-
-    @tag.setter
-    def tag(self, value: t.Optional[str]):
-        self._tag = value
+        try:
+            return self._parent
+        except AttributeError as _ae:
+            raise Exception(
+                "You need to set self._parent to access parent property ..."
+            )
 
     @property
-    def root(self) -> "window.Window":
+    def root(self) -> "gui.window.Window":
         return self.parent.root
 
     @property
@@ -991,7 +959,7 @@ class Widget(_WidgetDpg, abc.ABC):
         """
         Will return False if self.delete() is called as the dpg item will no longer be available
         """
-        return dpg.does_item_exist(item=self.dpg_id)
+        return dpg.does_item_exist(item=self.guid)
 
     def __enter__(self: T) -> T:
 
@@ -1021,7 +989,7 @@ class Widget(_WidgetDpg, abc.ABC):
         """
         Helps in finding children
         """
-        return self.uid == other.uid
+        return self.guid == other.guid
 
     # noinspection PyMethodOverriding
     def __call__(self):
@@ -1037,21 +1005,17 @@ class Widget(_WidgetDpg, abc.ABC):
         super().init()
 
         # set some vars
+        # noinspection PyAttributeOutsideInit
         self._parent = None
+        # noinspection PyAttributeOutsideInit
         self._dash_board = None
+        # noinspection PyAttributeOutsideInit
         self._is_built = False
-        self._tag = None
 
         # if there is parent container that is available via with context then add to it
         # this is only for using with `with` syntax
         if self.is_in_gui_with_mode:
             _CONTAINER_WIDGET_STACK[-1](widget=self)
-
-        # register in WidgetEngine
-        if Widget.update != self.__class__.update:
-            Engine.update[self.uid] = self
-        if Widget.fixed_update != self.__class__.fixed_update:
-            Engine.fixed_update[self.uid] = self
 
     def on_enter(self):
         raise Exception(
@@ -1067,7 +1031,7 @@ class Widget(_WidgetDpg, abc.ABC):
 
     def get_user_data(self) -> 'USER_DATA':
         """
-        Almost every subclassed Widget will have this field but we cannot have it here
+        Almost every subclassed Widget will have this field, but we cannot have it here
         as dataclass mechanism does not allow it. So we offer this utility method
 
         todo: raise issue with dpg for why they need user_data for Widgets which do
@@ -1082,61 +1046,17 @@ class Widget(_WidgetDpg, abc.ABC):
                 "This is intended to be used by callback mechanism"
             )
 
-    def get_tag(self) -> str:
-        if self.tag is not None:
-            return self.tag
-        raise Exception("This widget was never tagged ... so we cannot retrieve the tag")
-
-    def tag_it(self, tag: str):
-        Engine.tag_widget(tag=tag, widget=self)
-
-    def untag_it(self, not_exists_ok: bool = False):
-        Engine.untag_widget(tag_or_widget=self, not_exists_ok=not_exists_ok)
-
     def delete(self):
-        """
-        Note that this will be scheduled for deletion via destroy with help of WidgetEngine
-        """
         # remove from parent
         # some widgets like XAxis, YAxis, Legend are not in parent.children
-        _uid = self.uid
+        _guid = self.guid
         if self.registered_as_child:
-            del self.parent.children[_uid]
+            del self.parent.children[_guid]
 
-        # if tagged then untag
-        if self.tag is not None:
-            self.untag_it(not_exists_ok=True)
+        print("dddddddddddddd", self.parent, self, self.parent.children.values())
 
-        # adapt widget engine
-        # unregister update
-        try:
-            del Engine.update[_uid]
-        except KeyError:
-            ...
-        # unregister fixed_update
-        try:
-            del Engine.fixed_update[_uid]
-        except KeyError:
-            ...
-
-        # delete the dpg UI counterpart .... skip line series
-        from .plot import LineSeries
-        dpg.delete_item(item=self.dpg_id, children_only=False, slot=-1)
-        # todo: make _widget unusable ... figure out
-
-    def fixed_update(self):
-        ...
-
-    def update(self):
-        """
-        todo: async update that can have await ... (Try this is try_* rough work first ...)
-          A method run can be spread over multiple frames where
-            only part of code until next await executes in a given frame ...
-          Note that also deletion needs to happen after entire update is executed ...
-            or maybe for every await in update method check if deletion is requested
-
-        """
-        ...
+        # call super
+        return super().delete()
 
 
 USER_DATA = t.Dict[
@@ -1146,7 +1066,7 @@ USER_DATA = t.Dict[
 ]
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MovableWidget(Widget, abc.ABC):
 
     def move(
@@ -1210,21 +1130,23 @@ class MovableWidget(Widget, abc.ABC):
 
         # ---------------------------------------------- 04
         # first del from self.parent.children
-        print("kkkkk", self.parent.children.keys(), self.uid, self.__class__, self.parent.__class__)
-        del self.parent.children[self.uid]
+        del self.parent.children[self.guid]
         # change the parent
-        self.parent = _parent
+        self._parent = _parent
 
         # ---------------------------------------------- 05
         # now move it to new parent.children
         if _before is None:
-            _parent.children[self.uid] = self
+            _parent.children[self.guid] = self
         else:
+            # noinspection PyProtectedMember
             _backup = _parent._children
             _parent._children = {}
             for _k in _backup.keys():
-                if _k == before.uid:
-                    _parent._children[self.uid] = self
+                if _k == before.guid:
+                    # noinspection PyProtectedMember
+                    _parent._children[self.guid] = self
+                # noinspection PyProtectedMember
                 _parent._children[_k] = _backup[_k]
 
         # ---------------------------------------------- 06
@@ -1232,8 +1154,8 @@ class MovableWidget(Widget, abc.ABC):
         if self.is_built:
             # noinspection PyUnresolvedReferences
             internal_dpg.move_item(
-                self.dpg_id, parent=_parent.dpg_id,
-                before=0 if _before is None else _before.dpg_id)
+                self.guid, parent=_parent.guid,
+                before=0 if _before is None else _before.guid)
 
     def before(self) -> t.Optional["MovableWidget"]:
         _before = None
@@ -1264,7 +1186,7 @@ class MovableWidget(Widget, abc.ABC):
         else:
             self.move(before=self.before())
             # if self.is_built:
-            #     internal_dpg.move_item_up(self.dpg_id)
+            #     internal_dpg.move_item_up(self.guid)
             return True
 
     def move_down(self) -> bool:
@@ -1278,11 +1200,11 @@ class MovableWidget(Widget, abc.ABC):
         else:
             self.move(after=_after)
             # if self.is_built:
-            #     internal_dpg.move_item_down(self.dpg_id)
+            #     internal_dpg.move_item_down(self.guid)
             return True
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class ContainerWidget(Widget, abc.ABC):
     """
     Widget that can hold children
@@ -1335,16 +1257,21 @@ class ContainerWidget(Widget, abc.ABC):
                 f"to be one of {self.restrict_children_to}"
             )
         # do not try to add again
-        if _widget.uid in self._children.keys():
+        if _widget.guid in self._children.keys():
+            print("wwwwwwwwwwww")
+            print(self.guid, self)
+            print(_widget.guid, _widget)
+            for _k, _v in self._children.items():
+                print(">>", _k, _v.guid, _v)
             raise Exception("This widget was already added")
 
         # -------------------------------------------------- 02
         # set internals
-        _widget.parent = self
+        _widget._parent = self
 
         # -------------------------------------------------- 03
         # noinspection PyTypeChecker
-        self._children[_widget.uid] = _widget
+        self._children[_widget.guid] = _widget
 
         # -------------------------------------------------- 04
         # if thw parent widget is already built we need to build this widget here
@@ -1393,16 +1320,16 @@ class ContainerWidget(Widget, abc.ABC):
         for child in self._children.values():
             child.build()
 
-    def hide(self, children_only: bool = False):
+    def hide_widget(self, children_only: bool = False):
         """
         Refer:
         >>> dpg.hide_item
         """
         if children_only:
             for child in self.children.values():
-                child.hide()
+                child.hide_widget()
         else:
-            super().hide()
+            super().hide_widget()
 
     def clear(self):
         _children = self._children
@@ -1414,7 +1341,7 @@ class ContainerWidget(Widget, abc.ABC):
         return super().delete()
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class MovableContainerWidget(ContainerWidget, MovableWidget, abc.ABC):
     ...
 
@@ -1431,20 +1358,34 @@ class UseMethodInForm:
         self,
         label_fmt: str = None,
         run_async: bool = False,
-        allow_refresh: bool = None,
         display_in_form: bool = True,
+        tag_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
+        hide_previously_opened: bool = True
     ):
         """
+        Check usage in below places
+        >>> gui.callback.HashableMethodRunnerCallback.fn
 
         Args:
             label_fmt: label for button ... if str is property we will
               call it to get label
             run_async: can call method in async task ...
+            display_in_form:
+            tag_in_receiver:
+                When set to None the widget generated will not be cached.
+                When 'auto' (i.e. default) automatic unique tag for given hashable and method name will be
+                  generated and that tag will be used to cache
+                When some str is provided then that will be used to tag and any previous widget will be deleted to
+                  make way for new widget generated by callback
+            hide_previously_opened:
+                Hides cached widgets in receiver before rendering current one (default)
+                If set to True it will result in widget stacking
         """
         self.label_fmt = label_fmt
         self.run_async = run_async
-        self.allow_refresh = allow_refresh
         self.display_in_form = display_in_form
+        self.tag_in_receiver = tag_in_receiver
+        self.hide_previously_opened = hide_previously_opened
 
     def __call__(self, fn: t.Callable):
         """
@@ -1486,8 +1427,6 @@ class UseMethodInForm:
         self,
         hashable: t.Union["Hashable", "HashableClass"],
         receiver: "gui.widget.ContainerWidget",
-        allow_refresh: bool = None,
-        group_tag: str = None,
     ) -> "gui.widget.Button":
 
         # ---------------------------------------------------- 01
@@ -1511,30 +1450,16 @@ class UseMethodInForm:
             raise Exception(f"unknown type {type(self.label_fmt)}")
 
         # ---------------------------------------------------- 03
-        # if local allow_refresh is None then it is needed to pass allow_refresh kwarg
-        if self.allow_refresh is None:
-            if allow_refresh is None:
-                raise Exception(
-                    f"Decorator UseMethodInFor setting `allow_refresh` is not set so it is mandatory to supply "
-                    f"kwarg `allow_refresh` while calling this method"
-                )
-        else:
-            if allow_refresh is not None:
-                raise Exception(
-                    f"Decorator UseMethodInFor setting `allow_refresh` is supplied so do not set "
-                    f"kwarg `allow_refresh` while calling this method"
-                )
-            allow_refresh = self.allow_refresh
         # create callback
         from . import callback
         _callback = callback.HashableMethodRunnerCallback(
-            run_async=self.run_async,
             hashable=hashable,
             callable_name=_callable_name,
             receiver=receiver,
-            allow_refresh=allow_refresh,
-            group_tag=group_tag,
         )
+        # sanity check must be same
+        # noinspection PyProtectedMember
+        assert self == _callback._use_method_in_form_obj
 
         # ---------------------------------------------------- 04
         # create and return button
@@ -1661,173 +1586,6 @@ class Hashable(abc.ABC):
 
 
 @dataclasses.dataclass
-class Form(MovableWidget, abc.ABC):
-    """
-    Form is a special widget which creates a `form_fields_container` container and
-    add all form fields to it as defined by layout() method.
-
-    Note that Form itself is not a container and no children can be added to it.
-    It only supports UI elements supplied via fields. Non Widget fields like Callbacks
-    and constants will be can also be supplied to form to enhance form but obviously
-    they are not UI elements and hence will be ignored by layout method.
-
-    If you want dynamic widgets simple have a class field defined with container
-    Widgets like Group and dynamically add elements to it.
-
-    todo: the delete can be called on class field Widgets ... mostly we want to not
-      allow fields of form to be dynamically deleted ... but that is not the case now
-      So do only if needed
-    """
-    title: t.Optional[str]
-    collapsing_header_open: bool
-
-    def init(self):
-        """
-        WHY DO WE CLONE??
-
-        To be called from init. Will be only called for fields that are
-        Widget or Callback
-
-        Purpose:
-        + When defaults are provided copy them to mimic immutability
-        + Each immutable field can have his own parent
-
-        Why is this needed??
-          Here we trick dataclass to treat some Hashable classes that were
-          assigned as default to be treated as non mutable ... this helps us
-          avoid using default_factory
-
-        Who is using it ??
-          + gui.Widget
-            Needed only while building UI to reuse UI components and keep code
-            readable. This will be in line with declarative syntax.
-          + gui.Callback
-            Although not needed we still allow this behaviour as it will be
-            used by users that build GUI and they might get to used to assigning
-            callbacks while defining class ... so just for convenience we allow
-            this to happen
-
-        Needed for fields that has default values
-          When a instance is assigned during class definition then it is not
-          longer usable with multiple instances of that classes. This applies in
-          case of UI components. But not needed for fields like prepared_data as
-          we actually might be interested to share that field with other
-          instances.
-
-          When such fields are bound for certain instance especially using the
-          property internal we might want an immutable duplicate made for each
-          instance.
-
-        todo: Dont be tempted to use this behaviour in other cases like
-          Model, HashableClass. Brainstorm if you think this needs
-          to be done. AVOID GENERALIZING THIS FUNCTION.
-
-        """
-        # ------------------------------------------------------- 01
-        # call super
-        super().init()
-        # container for form fields
-        self._form_fields_container = None
-
-        # ------------------------------------------------------- 02
-        # loop over fields
-        for f_name in self.dataclass_field_names:
-            # --------------------------------------------------- 02.01
-            # get value
-            v = getattr(self, f_name)
-            # --------------------------------------------------- 02.02
-            # if not Widget class continue
-            # that means Widgets and Containers will be clones if default supplied
-            # While Hashable class and even Callbacks will not be cloned
-            # note that for UI we only need Dpg elements to be clones as they have
-            # build() method
-            if not isinstance(v, Widget):
-                continue
-            # --------------------------------------------------- 02.03
-            # get field and its default value
-            # noinspection PyUnresolvedReferences
-            _field = self.__dataclass_fields__[f_name]
-            _default_value = _field.default
-            # --------------------------------------------------- 02.04
-            # if id(_default_value) == id(v) then that means the default value is
-            # supplied ... so now we need to trick dataclass and assigned a clone of
-            # default_value
-            # To understand why we clone ... read __doc_string__
-            # Note that the below code can also handle but we use id(...)
-            #   to be more specific
-            # _default_value == dataclasses.MISSING
-            if id(_default_value) == id(v):
-                # make clone
-                v_cloned = v.clone()
-                # hack to overwrite field value (as this is frozen)
-                self.__dict__[f_name] = v_cloned
-
-    def layout(self) -> MovableContainerWidget:
-        """
-        Method to layout widgets in this form and assign Callbacks if any
-
-        Note that default behaviour is to layout the UI elements in the order as
-        defined in class fields.
-
-        You can override this method to do layout in any order you wish.
-
-        Note that if you have Callbacks for this form as class fields you need to take
-        care to bind them to widgets. The default implementation is very simple
-
-        For dynamic widgets add Group widget as dataclass field and add dynamic items
-        to it
-        """
-        # make grp
-        from .widget import Group
-        _grp = Group()
-
-        # if there is a widget which is field of this widget then add it
-        for f_name in self.dataclass_field_names:
-            v = getattr(self, f_name)
-            if isinstance(v, MovableWidget):
-                _grp(widget=v)
-
-        # return
-        return _grp
-
-    def build(self) -> t.Union[int, str]:
-        # set internals
-        from .widget import CollapsingHeader
-
-        # set form fields container
-        if self._form_fields_container is not None:
-            raise Exception(
-                "We were expecting _form_fields_container to be None"
-            )
-
-        # if title present add collapsing header
-        if self.title is None:
-            _c = self.layout()
-        else:
-            _c = CollapsingHeader(
-                label=self.title, default_open=self.collapsing_header_open)
-            _c(widget=self.layout())
-
-        # set parent
-        _c.parent = self.parent
-
-        # set the container for future use
-        self._form_fields_container = _c
-
-        # return
-        return _c.build()
-
-    def clear(self):
-        _children = self._form_fields_container.children
-        for _k in list(_children.keys()):
-            _children[_k].delete()
-
-    def delete(self):
-        self.clear()
-        return super().delete()
-
-
-@dataclasses.dataclass
 class Callback(abc.ABC):
     """
     Note that `Callback.fn` will as call back function.
@@ -1850,59 +1608,64 @@ class Callback(abc.ABC):
         ...
 
 
-@dataclasses.dataclass
-class Registry(abc.ABC):
+@dataclasses.dataclass(repr=False)
+class RegistryItem(Widget, abc.ABC):
 
-    def __post_init__(self):
-        self.init_validate()
-        self.init()
-
-    def init_validate(self):
-        ...
-
-    def init(self):
-        ...
-
-    def get_user_data(self) -> USER_DATA:
-        """
-        Almost every subclassed Registry will have this field but we cannot have it here
-        as dataclass mechanism does not allow it. So we offer this utility method
-
-        todo: raise issue with dpg for why they need user_data for registry if they
-          do not use any callbacks
-        """
-        try:
-            # noinspection PyUnresolvedReferences
-            return self.user_data
-        except AttributeError:
-            raise Exception(
-                f"Was expecting class {self.__class__} to have field `user_data`",
-                "This is intended to be used by callback mechanism"
-            )
+    @property
+    def restrict_parents_to(self) -> t.Tuple[t.Type["Registry"]]:
+        raise Exception(
+            "The dpg_generator script must auto generate this ..."
+        )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
+class Registry(ContainerWidget, abc.ABC):
+    """
+    Registry is like ContainerWidget
+    """
+
+    @property
+    def restrict_children_to(self) -> t.Tuple[t.Type[RegistryItem]]:
+        raise Exception(
+            "The dpg_generator script must auto generate this ..."
+        )
+
+    def bind(self, widget: Widget):
+        # import
+        from .registry import WidgetHandlerRegistry, GlobalHandlerRegistry
+
+        # check if built
+        if not widget.is_built:
+            raise Exception("the widget is not yet built. Can bind only when Registry and Widget are built.")
+        if not self.is_built:
+            raise Exception("the registry is not yet built. Can bind only when Registry and Widget are built.")
+
+        # if WidgetHandlerRegistry
+        if isinstance(self, WidgetHandlerRegistry):
+            dpg.bind_item_handler_registry(item=widget.guid, handler_registry=self.guid)
+        # if GlobalHandlerRegistry
+        elif isinstance(self, GlobalHandlerRegistry):
+            raise Exception(f"bind is not available for {GlobalHandlerRegistry}")
+        # else
+        else:
+            raise Exception(f"bind is not yet supported for {self.__class__}")
+
+
+@dataclasses.dataclass(repr=False)
 class PlotSeries(Widget, abc.ABC):
 
     @property
     def parent(self) -> "plot.YAxis":
         return self._parent
 
-    @parent.setter
-    def parent(self, value: "plot.YAxis"):
-        self._parent = value
 
-
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class PlotItem(MovableWidget, abc.ABC):
 
     @property
     def parent(self) -> "plot.Plot":
+        # noinspection PyTypeChecker
         return self._parent
-
-    @parent.setter
-    def parent(self, value: "plot.Plot"):
-        self._parent = value
 
 
 @dataclasses.dataclass
@@ -1951,16 +1714,8 @@ class Dashboard(abc.ABC):
     def is_built(self) -> bool:
         return self._is_built
 
-    @is_built.setter
-    def is_built(self, value: bool):
-        if not self._is_built:
-            self._is_built = value
-        else:
-            raise Exception(f"Cannot set as is_built is already "
-                            f"set for instance of class {self.__class__}. "
-                            f"Avoid building multiple times")
-
     def __post_init__(self):
+        self._is_built = False
         self.init_validate()
         self.init()
 
@@ -2009,17 +1764,14 @@ class Dashboard(abc.ABC):
           to be done. AVOID GENERALIZING THIS FUNCTION.
 
         """
-        # ------------------------------------------------------- 01
-        # set some vars
-        self._is_built = False
 
-        # ------------------------------------------------------- 02
+        # ------------------------------------------------------- 01
         # loop over fields
         for f_name in self.dataclass_field_names:
-            # --------------------------------------------------- 02.01
+            # --------------------------------------------------- 01.01
             # get value
             v = getattr(self, f_name)
-            # --------------------------------------------------- 02.02
+            # --------------------------------------------------- 01.02
             # if None then make sure that it is supplied ..
             # needed as we need to define values for each field
             if v is None:
@@ -2027,7 +1779,7 @@ class Dashboard(abc.ABC):
                     f"Please supply value for field `{f_name}` in class "
                     f"{self.__class__}"
                 )
-            # --------------------------------------------------- 02.03
+            # --------------------------------------------------- 01.03
             # if not Widget class continue
             # that means Widgets and Containers will be clones if default supplied
             # While Hashable class and even Callbacks will not be cloned
@@ -2035,12 +1787,12 @@ class Dashboard(abc.ABC):
             # build() method
             if not isinstance(v, Widget):
                 continue
-            # --------------------------------------------------- 02.04
+            # --------------------------------------------------- 01.04
             # get field and its default value
             # noinspection PyUnresolvedReferences
             _field = self.__dataclass_fields__[f_name]
             _default_value = _field.default
-            # --------------------------------------------------- 02.05
+            # --------------------------------------------------- 01.05
             # if id(_default_value) == id(v) then that means the default value is
             # supplied ... so now we need to trick dataclass and assigned a clone of
             # default_value
@@ -2240,14 +1992,15 @@ class Dashboard(abc.ABC):
         _primary_window = self.layout()
         _primary_window.dash_board = self
         _primary_window.build()
-        # primary window dpg_id
-        _primary_window_dpg_id = _primary_window.dpg_id
+        # primary window guid
+        _primary_window_guid = _primary_window.guid
         # set the things for primary window
-        dpg.set_primary_window(window=_primary_window_dpg_id, value=True)
+        dpg.set_primary_window(window=_primary_window_guid, value=True)
         # todo: have to figure out theme, font etc.
         # themes.set_theme(theme="Dark Grey")
-        # assets.Font.RobotoRegular.set(item_dpg_id=_ret, size=16)
-        dpg.bind_item_theme(item=_primary_window_dpg_id, theme=asset.Theme.DARK.get())
+        # assets.Font.RobotoRegular.set(item_guid=_ret, size=16)
+        dpg.bind_item_theme(item=_primary_window_guid, theme=asset.Theme.DARK.get())
 
         # set is_built
-        self.is_built = True
+        # noinspection PyAttributeOutsideInit
+        self._is_built = True

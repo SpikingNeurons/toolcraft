@@ -18,6 +18,10 @@ from ._auto import BarSeries
 # noinspection PyUnresolvedReferences
 from ._auto import CandleSeries
 # noinspection PyUnresolvedReferences
+# from ._auto import PlotDragLine
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotDragPoint
+# noinspection PyUnresolvedReferences
 from ._auto import ErrorSeries
 # noinspection PyUnresolvedReferences
 from ._auto import HeatSeries
@@ -30,6 +34,10 @@ from ._auto import LineSeries
 # noinspection PyUnresolvedReferences
 from ._auto import PieSeries
 # noinspection PyUnresolvedReferences
+# from ._auto import PlotAnnotation
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotLegend
+# noinspection PyUnresolvedReferences
 from ._auto import ScatterSeries
 # noinspection PyUnresolvedReferences
 from ._auto import ShadeSeries
@@ -39,40 +47,36 @@ from ._auto import StairSeries
 from ._auto import StemSeries
 # noinspection PyUnresolvedReferences
 from ._auto import VLineSeries
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotXAxis
+# noinspection PyUnresolvedReferences
+# from ._auto import PlotYAxis
 # auto pk; end <<<
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Simple(_auto.SimplePlot):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Legend(_auto.PlotLegend):
 
     @property
     def parent(self) -> "Plot":
         return self._parent
 
-    @parent.setter
-    def parent(self, value: "Plot"):
-        self._parent = value
-
     @property
     def registered_as_child(self) -> bool:
         return False
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class XAxis(_auto.PlotXAxis):
 
     @property
     def parent(self) -> "Plot":
         return self._parent
-
-    @parent.setter
-    def parent(self, value: "Plot"):
-        self._parent = value
 
     @property
     def registered_as_child(self) -> bool:
@@ -84,7 +88,7 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.get_axis_limits
         """
         if self.is_built:
-            return internal_dpg.get_axis_limits(self.dpg_id)
+            return internal_dpg.get_axis_limits(self.guid)
         else:
             raise Exception("Can get limits only when things are built ...")
 
@@ -94,13 +98,13 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.fit_axis_data
         """
         if self.is_built:
-            internal_dpg.fit_axis_data(axis=self.dpg_id)
+            internal_dpg.fit_axis_data(axis=self.guid)
         else:
             self.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
         if self.is_built:
-            internal_dpg.reset_axis_ticks(self.dpg_id)
+            internal_dpg.reset_axis_ticks(self.guid)
         else:
             self.post_build_fns.append(self.reset_ticks)
 
@@ -110,7 +114,7 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.set_axis_limits
         """
         if self.is_built:
-            internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+            internal_dpg.set_axis_limits(self.guid, ymin, ymax)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_limits, ymin, ymax)
@@ -122,7 +126,7 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.set_axis_limits_auto
         """
         if self.is_built:
-            internal_dpg.set_axis_limits_auto(self.dpg_id)
+            internal_dpg.set_axis_limits_auto(self.guid)
         else:
             self.post_build_fns.append(self.set_limits_auto)
 
@@ -132,23 +136,19 @@ class XAxis(_auto.PlotXAxis):
         >>> dpg.set_axis_ticks
         """
         if self.is_built:
-            internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+            internal_dpg.set_axis_ticks(self.guid, label_pairs)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_ticks, label_pairs)
             )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class YAxis(_auto.PlotYAxis):
 
     @property
     def parent(self) -> "Plot":
         return self._parent
-
-    @parent.setter
-    def parent(self, value: "Plot"):
-        self._parent = value
 
     @property
     def registered_as_child(self) -> bool:
@@ -178,7 +178,7 @@ class YAxis(_auto.PlotYAxis):
         # todo: with many points the dpg crashes and also things are slow ... so we just resort to clear
         #   note that if any PlotSeries is tagged we will not be releasing it :( ...
         #   check super code where we call delete() on each child .... that behaviour is now stopped ...
-        # todo: raise issue with dpg that why lot of PlotSeries items deleted with dpg_id causes crash
+        # todo: raise issue with dpg that why lot of PlotSeries items deleted with guid causes crash
         # this override will avoid deleting each PlotSeries one after other .... making this fast
         self._children.clear()
 
@@ -188,7 +188,7 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.get_axis_limits
         """
         if self.is_built:
-            return internal_dpg.get_axis_limits(self.dpg_id)
+            return internal_dpg.get_axis_limits(self.guid)
         else:
             raise Exception("Can get limits only when things are built ...")
 
@@ -198,13 +198,13 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.fit_axis_data
         """
         if self.is_built:
-            internal_dpg.fit_axis_data(axis=self.dpg_id)
+            internal_dpg.fit_axis_data(axis=self.guid)
         else:
             self.post_build_fns.append(self.fit_data)
 
     def reset_ticks(self):
         if self.is_built:
-            internal_dpg.reset_axis_ticks(self.dpg_id)
+            internal_dpg.reset_axis_ticks(self.guid)
         else:
             self.post_build_fns.append(self.reset_ticks)
 
@@ -214,7 +214,7 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.set_axis_limits
         """
         if self.is_built:
-            internal_dpg.set_axis_limits(self.dpg_id, ymin, ymax)
+            internal_dpg.set_axis_limits(self.guid, ymin, ymax)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_limits, ymin, ymax)
@@ -226,7 +226,7 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.set_axis_limits_auto
         """
         if self.is_built:
-            internal_dpg.set_axis_limits_auto(self.dpg_id)
+            internal_dpg.set_axis_limits_auto(self.guid)
         else:
             self.post_build_fns.append(self.set_limits_auto)
 
@@ -236,29 +236,29 @@ class YAxis(_auto.PlotYAxis):
         >>> dpg.set_axis_ticks
         """
         if self.is_built:
-            internal_dpg.set_axis_ticks(self.dpg_id, label_pairs)
+            internal_dpg.set_axis_ticks(self.guid, label_pairs)
         else:
             self.post_build_fns.append(
                 functools.partial(self.set_ticks, label_pairs)
             )
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Annotation(_auto.PlotAnnotation):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragLine(_auto.PlotDragLine):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class DragPoint(_auto.PlotDragPoint):
     ...
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class Plot(_auto.Plot):
     """
     Refer this to improve more:
@@ -306,7 +306,7 @@ class Plot(_auto.Plot):
         if self._legend is None:
             with self:
                 self._legend = Legend()
-                self._legend.parent = self
+                self._legend._parent = self
         return self._legend
 
     @property
@@ -314,7 +314,7 @@ class Plot(_auto.Plot):
         if self._x_axis is None:
             with self:
                 self._x_axis = XAxis()
-                self._x_axis.parent = self
+                self._x_axis._parent = self
         return self._x_axis
 
     @property
@@ -322,7 +322,7 @@ class Plot(_auto.Plot):
         if self._y1_axis is None:
             with self:
                 self._y1_axis = YAxis()
-                self._y1_axis.parent = self
+                self._y1_axis._parent = self
         return self._y1_axis
 
     @property
@@ -335,7 +335,7 @@ class Plot(_auto.Plot):
                 )
             with self:
                 self._y2_axis = YAxis()
-                self._y2_axis.parent = self
+                self._y2_axis._parent = self
         return self._y2_axis
 
     @property
@@ -348,12 +348,12 @@ class Plot(_auto.Plot):
                 )
             with self:
                 self._y3_axis = YAxis()
-                self._y3_axis.parent = self
+                self._y3_axis._parent = self
         return self._y3_axis
 
     @property
     def is_queried(self) -> bool:
-        return internal_dpg.is_plot_queried(self.dpg_id)
+        return internal_dpg.is_plot_queried(self.guid)
 
     # noinspection PyMethodOverriding
     def __call__(self, widget: PlotItem, before: PlotItem = None):
@@ -391,7 +391,7 @@ class Plot(_auto.Plot):
         Refer:
         >>> dpg.get_plot_query_area
         """
-        return tuple(internal_dpg.get_plot_query_area(self.dpg_id))
+        return tuple(internal_dpg.get_plot_query_area(self.guid))
 
     def delete(self):
 
@@ -463,7 +463,7 @@ class Plot(_auto.Plot):
             self.y3_axis.build()
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(repr=False)
 class SubPlots(_auto.SubPlots):
 
     @property

@@ -1,4 +1,11 @@
 """
+todo: eventually will use `typer[all]`
+  + typer has auto completion
+  + supports adding scripts to pyproject.toml
+  + has deep integration with rich
+  + also works with rich exception handling and traceback prints
+  + https://typer.tiangolo.com/tutorial/package/
+
 Tasks for maintaining the project.
 
 Execute 'invoke --list' for guidance on using Invoke

@@ -5,6 +5,8 @@ import typing as t
 import sys
 import time
 
+from toolcraft.gui.__base__ import Widget
+
 sys.path.append("..")
 
 import dearpygui.dearpygui as dpg
@@ -16,9 +18,9 @@ from toolcraft import gui
 @dataclasses.dataclass
 class InfoForm(gui.form.Form):
 
-    title: str = "Info"
+    label: str = "Info"
 
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
     message: gui.widget.Text = gui.widget.Text(
         "This is topic 1. We will just add some bullet points below ...",
@@ -36,9 +38,9 @@ class InfoForm(gui.form.Form):
 @dataclasses.dataclass
 class Plotting(gui.form.Form):
 
-    title: str = "Plotting"
+    label: str = "Plotting"
 
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
@@ -121,9 +123,9 @@ class Plotting(gui.form.Form):
 @dataclasses.dataclass
 class PlottingWithUpdates(gui.form.Form):
 
-    title: str = "Plotting with updates"
+    label: str = "Plotting with updates"
 
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
     line_plot: gui.plot.Plot = gui.plot.Plot(
         label="This is line plot ...",
@@ -254,6 +256,39 @@ class PlottingWithUpdates(gui.form.Form):
 
 
 @dataclasses.dataclass
+class WidgetVisibleCallback(gui.callback.Callback):
+
+    def fn(self, sender: Widget):
+        print(sender, "I am Visible")
+
+
+_widget_handlers = gui.registry.WidgetHandlerRegistry()
+with _widget_handlers:
+    gui.registry.WidgetVisibleHandler(callback=WidgetVisibleCallback())
+
+
+@dataclasses.dataclass
+class PlottingWithContiniousUpdates(gui.form.Form):
+
+    label: str = "Plotting with continious updates ..."
+
+    default_open: bool = False
+
+    line_plot: gui.plot.Plot = gui.plot.Plot(
+        label="This is line plot ...",
+        height=200, width=-1,
+    )
+
+    def fixed_update(self):
+        if self.line_plot.is_visible:
+            # print(self.dpg_state)
+            # print(self.line_plot.dpg_state)
+            _1 = self.line_plot.x_axis.get_limits()
+            _2 = self.line_plot.y1_axis.get_limits()
+            print(">>>>>>>>>>>>>>>>>>>", _1, _2)
+
+
+@dataclasses.dataclass
 class SimpleHashableClass(gui.Hashable):
 
     some_value: str
@@ -264,17 +299,15 @@ class SimpleHashableClass(gui.Hashable):
         return f"{self.__class__.__name__}.{self.hex_hash}\n" \
                f" >> some_value - {self.some_value}"
 
-    @gui.UseMethodInForm(label_fmt="all_plots_gui_label")
+    @gui.UseMethodInForm(label_fmt="all_plots_gui_label", hide_previously_opened=False)
     def all_plots(self) -> gui.form.HashableMethodsRunnerForm:
         return gui.form.HashableMethodsRunnerForm(
-            title=self.all_plots_gui_label.split("\n")[0],
-            group_tag="simple",
+            label=self.all_plots_gui_label.split("\n")[0],
             hashable=self,
             close_button=True,
             info_button=True,
             callable_names=["some_line_plot",  "some_scatter_plot", "awaitable_task", "blocking_task", ],
-            collapsing_header_open=True,
-            allow_refresh=True,
+            default_open=True,
         )
 
     async def some_awaitable_fn(self, txt_widget: gui.widget.Text):
@@ -385,10 +418,9 @@ class SimpleHashableClass(gui.Hashable):
 @dataclasses.dataclass
 class MyDoubleSplitForm(gui.form.DoubleSplitForm):
 
-    title: str = "Double split form ..."
+    label: str = "Double split form ..."
     callable_name: str = "all_plots"
-    allow_refresh: bool = False
-    collapsing_header_open: bool = False
+    default_open: bool = False
 
 
 @dataclasses.dataclass
@@ -406,9 +438,11 @@ class MyDashboard(gui.dashboard.BasicDashboard):
 
     topic3: PlottingWithUpdates = PlottingWithUpdates()
 
-    topic4: gui.form.DoubleSplitForm = MyDoubleSplitForm()
+    topic4: PlottingWithContiniousUpdates = PlottingWithContiniousUpdates()
 
-    topic5: gui.form.ButtonBarForm = gui.form.ButtonBarForm(title="Button bar form ...", collapsing_header_open=False)
+    topic5: gui.form.DoubleSplitForm = MyDoubleSplitForm()
+
+    topic6: gui.form.ButtonBarForm = gui.form.ButtonBarForm(label="Button bar form ...", default_open=False)
 
     container: gui.widget.Group = gui.widget.Group()
 
@@ -417,36 +451,36 @@ def basic_dashboard():
     _dash = MyDashboard(title="My Dashboard")
     _dash.topic2.plot_some_examples()
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="first hashable ..."),
         group_key="Group 1 ..."
     )
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="second hashable ..."),
         group_key="Group 1 ..."
     )
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="third hashable ..."),
         group_key="Group 2 ..."
     )
     # noinspection PyTypeChecker
-    _dash.topic4.add(
+    _dash.topic5.add(
         hashable=SimpleHashableClass(some_value="fourth hashable ..."),
         group_key="Group 2 ..."
     )
-    _dash.topic5.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
-    _dash.topic5.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
-    _dash.topic5.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
+    _dash.topic6.register(key="aaa", gui_name="a...", fn=lambda: gui.widget.Text("aaa..."))
+    _dash.topic6.register(key="bbb", gui_name="b...", fn=lambda: gui.widget.Text("bbb..."))
+    _dash.topic6.register(key="ccc", gui_name="c...", fn=lambda: gui.widget.Text("ccc..."))
     with _dash.container:
-        with gui.widget.CollapsingHeader(label="Test container"):
-            gui.widget.Text(default_value="first element in container ...")
+        with gui.widget.CollapsingHeader(label="Test container") as _cc:
+            _t = gui.widget.Text(default_value="first element in container ...")
             _ = gui.form.DoubleSplitForm(
-                title=f"*** [[ ]] ***",
-                callable_name="job_gui", allow_refresh=False, collapsing_header_open=False,
+                label=f"*** [[ ]] ***",
+                callable_name="job_gui", default_open=False,
             )
-            _ = gui.form.ButtonBarForm(title="*** [[ ]] ***", collapsing_header_open=False)
+            _ = gui.form.ButtonBarForm(label="*** [[ ]] ***", default_open=False)
 
     gui.Engine.run(_dash)
 

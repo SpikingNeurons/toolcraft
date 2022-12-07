@@ -488,8 +488,21 @@ class Path:
             fs_name=fs_name, suffix_path=""
         )
 
+    def delete_folder_button(self, label: str) -> "gui.widget.Widget":
+        """
+        todo: Add `window.PopUp` UI later
+        """
+        if not self.isdir():
+            raise e.code.CodingError(
+                msgs=[f"There is no dir so cannot create the delete folder button, check path {self}"]
+            )
+        # NOTE: the returned widget of `self.webbrowser_open` has no effect ...
+        return gui.callback.CallFnCallback().get_button_widget(
+            label=label, call_fn=self.full_force_delete,
+        )
+
     def webbrowser_open_button(self, label: str) -> "gui.widget.Widget":
-        # NOTE: the returned widget of of `self.webbrowser_open` has no effect ...
+        # NOTE: the returned widget of `self.webbrowser_open` has no effect ...
         return gui.callback.CallFnCallback().get_button_widget(
             label=label, call_fn=self.webbrowser_open,
         )
@@ -592,6 +605,9 @@ class Path:
     def touch(self, truncate: bool = True):
         return self.fs.touch(path=self.full_path, truncate=truncate)
 
+    def full_force_delete(self):
+        return self.delete(recursive=True)
+
     def delete(self, recursive: bool = False, maxdepth: int = None):
         return self.fs.delete(
             path=self.full_path, recursive=recursive, maxdepth=maxdepth)
@@ -637,16 +653,16 @@ class Path:
         _pickled_data = blosc2.decompress(_compressed_pickled_data)
         return pickle.loads(_pickled_data)
 
-    def write_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='w') as _f:
+    def write_text(self, text: str, encoding: str = None):
+        with self.fs.open(path=self.full_path, mode='w', encoding=encoding) as _f:
             _f.write(text)
 
-    def append_text(self, text: str):
-        with self.fs.open(path=self.full_path, mode='a') as _f:
+    def append_text(self, text: str, encoding: str = None):
+        with self.fs.open(path=self.full_path, mode='a', encoding=encoding) as _f:
             _f.write(text)
 
-    def read_text(self) -> str:
-        with self.fs.open(path=self.full_path, mode='r') as _f:
+    def read_text(self, encoding: str = None) -> str:
+        with self.fs.open(path=self.full_path, mode='r', encoding=encoding) as _f:
             return _f.read()
 
     def _post_process_res(self, _res) -> t.List["Path"]:

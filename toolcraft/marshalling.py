@@ -194,7 +194,7 @@ class Internal:
         if item not in self.__dict__.keys():
             raise e.code.CodingError(msgs=[
                 f"You cannot access annotated attribute `{item}` as it is "
-                f"not yet set",
+                f"not yet set for class.",
             ])
 
         # return
@@ -614,11 +614,11 @@ class RuleChecker:
                         ]
                     ).raise_if_failed()
             else:
-                # empty list was supplied that means you dont want to use any fields
+                # empty list was supplied that means you don't want to use any fields
                 if bool(_annotated_attr_keys):
                     raise e.code.CodingError(
                         msgs=[
-                            f"Please do not specify ant dataclass fields for class "
+                            f"Please do not specify any dataclass fields for class "
                             f"{_hashable_cls}",
                             f"We found below fields defined",
                             _annotated_attr_keys,
@@ -1991,10 +1991,15 @@ class HashableClass(YamlRepr, abc.ABC):
         return _ret
 
     def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+        """
+        todo: Explore
+           >>> dataclasses.asdict
+        """
         _ret = {}
         _field_names = self.dataclass_field_names
         if settings.TF_KERAS_WORKS:
             # Handle serialization for keras loss, optimizer and layer
+            # noinspection PyUnresolvedReferences
             from keras.api._v2 import keras as tk
             for f_name in _field_names:
                 _v = getattr(self, f_name)
@@ -2125,6 +2130,7 @@ class HashableClass(YamlRepr, abc.ABC):
 if settings.TF_KERAS_WORKS:
     # noinspection PyUnresolvedReferences,PyProtectedMember
     from keras.api._v2 import keras as tk
+    # noinspection PyUnresolvedReferences
     from keras.optimizers.optimizer_experimental import \
         optimizer as optimizer_experimental
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[

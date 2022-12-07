@@ -42,7 +42,6 @@ from .file_system import Path
 # noinspection PyUnreachableCode
 if False:
     from . import folder
-    import tensorflow as tf
 
 
 T = t.TypeVar('T', bound='FileGroup')
@@ -1289,6 +1288,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # -------------------------------------------------- 04
         # return
+        self.richy_panel.update("finished loading NpyFileGroup as dict")
         return _ret
 
     def load_npy_data(self, file_key: str, memmap: bool) -> t.Union[np.ndarray, t.Dict[str, np.ndarray]]:
