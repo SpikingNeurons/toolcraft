@@ -154,9 +154,9 @@ class HashableMethodRunnerCallback(Callback):
         _run_async = _use_method_in_form_obj.run_async
         _hide_previously_opened = _use_method_in_form_obj.hide_previously_opened
         # ------------------------------------------------------------------ 01.02
-        # remove stale widgets from _user_data that might have been deleted but other gui interactions
-        # we detect stale if those widgets are not available in _receiver.children
-        # this is because we cannot delete them from _use_data when _widget.delete() is called
+        # Remove stale widgets from `_user_data` that might have been deleted from other gui interactions
+        # We detect stale if those widgets are not available in `_receiver.children`
+        # This is because we cannot delete them from `_use_data` when `_widget.delete()` is called
         for _t, _guid in [(_k, _v.guid) for _k, _v in _user_data.items()]:
             if _guid not in _receiver.children.keys():
                 del _user_data[_t]
