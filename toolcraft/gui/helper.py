@@ -28,14 +28,19 @@ async def make_async_fn_runner(
     try:
 
         # schedule blocking task to run in queue
-        _blocking_task = BlockingTask(
-            fn=blocking_fn, concurrent=False
-        )
+        # todo: we are using `concurrent=True` as widgets dynamically added are available
+        #   although `concurrent=False` will launch new process the widgets get rendered but
+        #   cannot be deleted by clear ...
+        _blocking_task = BlockingTask(fn=blocking_fn, concurrent=True)
         _blocking_task.add_to_task_queue()
         _future = None
         while _future is None:
             await asyncio.sleep(0.4)
             _future = _blocking_task.future
+
+        # add blink widget
+        with receiver_grp:
+            _blink_widget = widget.Text(default_value=f"...")
 
         # loop infinitely
         while receiver_grp.does_exist:
@@ -51,17 +56,10 @@ async def make_async_fn_runner(
                 await asyncio.sleep(0.4)
                 continue
 
-            # clear group
-            receiver_grp.clear()
-
             # if running
             if _future.running():
-
-                with receiver_grp:
-                    _cnt += 1
-                    widget.Text(
-                        default_value=_msg.format(cnt=_cnt) + next(_blinker)
-                    )
+                _cnt += 1
+                _blink_widget.default_value = _msg.format(cnt=_cnt) + next(_blinker)
                 await asyncio.sleep(0.4)
 
                 # continue
@@ -77,11 +75,12 @@ async def make_async_fn_runner(
                             f"Expecting {blocking_fn.__name__} to return {widget.Widget}, "
                             f"but found type {type(_result)}"
                         )
+                    _blink_widget.default_value = f"Successfully adding widget: [{_result}]"
                     receiver_grp(widget=_result)
                     break
                 else:
+                    _blink_widget.default_value = "Failed ..."
                     with receiver_grp:
-                        widget.Text(default_value="Failed ...")
                         widget.Text(default_value=str(_exp))
                     raise _exp
 

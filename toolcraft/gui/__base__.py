@@ -875,13 +875,18 @@ class Engine:
         _task_runner = asyncio.create_task(cls.task_runner_loop())
 
         # ----------------------------------------------------------- 04
+        # fake task to just trigger the queue creation
+        # _blocking_task = BlockingTask(fn=lambda: None, concurrent=False)
+        # _blocking_task.add_to_task_queue()
+
+        # ----------------------------------------------------------- 05
         # await on dpg task and cancel update task
         await _dpg
         # _lifecycle.cancel()
         # _lifecycle_physics.cancel()
         _task_runner.cancel()
 
-        # ----------------------------------------------------------- 05
+        # ----------------------------------------------------------- 06
         # shutdown pool executors
         cls.thread_pool_executor.shutdown(wait=True)
         cls.process_pool_executor.shutdown(wait=True)
@@ -1052,8 +1057,6 @@ class Widget(_WidgetDpg, abc.ABC):
         _guid = self.guid
         if self.registered_as_child:
             del self.parent.children[_guid]
-
-        print("dddddddddddddd", self.parent, self, self.parent.children.values())
 
         # call super
         return super().delete()
