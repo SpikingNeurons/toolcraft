@@ -1363,7 +1363,7 @@ class UseMethodInForm:
         run_async: bool = False,
         display_in_form: bool = True,
         tag_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
-        hide_previously_opened: bool = True
+        hide_previously_opened: bool = True,
     ):
         """
         Check usage in below places
