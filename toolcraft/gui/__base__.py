@@ -493,10 +493,10 @@ class _WidgetDpg(abc.ABC):
         """
         internal_dpg.configure_item(self.guid, enabled=False)
 
-    def fixed_update(self):
+    async def fixed_update(self):
         ...
 
-    def update(self):
+    async def update(self):
         """
         todo: async update that can have await ... (Try this is try_* rough work first ...)
           A method run can be spread over multiple frames where
@@ -760,7 +760,7 @@ class Engine:
                 # call update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.update.values():
-                    _.update()
+                    await _.update()
 
                 # todo: other phases nut need to rethink design ...
                 #   note that destroy for widget.delete is not effective
@@ -799,7 +799,7 @@ class Engine:
                 # call fixed_update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.fixed_update.values():
-                    _.fixed_update()
+                    _res = await _.fixed_update()
         except Exception as _e:
             raise Exception(f"Exception in {Engine.lifecycle_physics_loop}", _e)
 

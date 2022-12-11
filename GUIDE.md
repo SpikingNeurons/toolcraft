@@ -9,10 +9,26 @@ How to get readme
 
 ## Making things fast
 
-Especially caching with marshalling.HashableClass
-https://www.youtube.com/watch?v=xKk7IXm0XO0
+ToDo:
++ Especially caching with marshalling.HashableClass
++ Note avoid using `__dict__` to keep things fast (listen to talk)
 
-Note avoid using `__dict__` to keep things fast (listen to talk)
+https://www.youtube.com/watch?v=xKk7IXm0XO0
+* Adaptive specializing interpreter (PEP 659)
+* Consecutively allocated execution frames
+* Zero cost try-except
+* More regular object layout
+* Lazily created object dictionaries.
+
+https://www.youtube.com/watch?v=6P68IBou_cg
+* The fastest way of removing duplicates from a list
+* How much faster your code is when you reuse the built-in functions instead of trying to reinvent the wheel
+* What is faster than the “for loop”
+* If the lookup is faster in a list or a set
+* When it’s better to beg for forgiveness than to ask for permission
+
+https://www.youtube.com/watch?v=9OOJcTp8dqE
++ Multi-threaded python without GIL
 
 ## conda env
 
