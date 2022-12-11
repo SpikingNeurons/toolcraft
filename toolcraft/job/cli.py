@@ -564,4 +564,4 @@ def unfinished():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
-                _rp.log([_j.method.__name__, _j.experiment.name])
+                _rp.log([_j.job_id])
