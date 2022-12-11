@@ -279,7 +279,7 @@ class PlottingWithContiniousUpdates(gui.form.Form):
         height=200, width=-1,
     )
 
-    def fixed_update(self):
+    async def fixed_update(self):
         if self.line_plot.is_visible:
             # print(self.dpg_state)
             # print(self.line_plot.dpg_state)

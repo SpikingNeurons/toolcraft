@@ -975,6 +975,32 @@ class StatusPanel(Widget):
         if self.tc_log is not None:
             self.tc_log.info(msg="Final message: ", msgs=[msg])
 
+    def ask(
+        self,
+        prompt: str,
+        option: t.Union[t.Literal['confirm', 'int', 'float', 'prompt', 'password'], t.List[str]],
+        default: t.Any = ...,
+        show_default: bool = True,
+        stream: t.Optional[t.TextIO] = None,
+    ) -> t.Union[int, float, str, bool]:
+        """
+        todo: make this work with status panel mechanism ...
+        check
+        >>> r_prompt.Prompt.ask
+        """
+        if option == 'confirm':
+            return r_prompt.Confirm.ask(
+                prompt=prompt,
+                console=self.console,
+                default=default,
+                show_default=show_default,
+                stream=stream,
+            )
+        else:
+            raise e.code.CodingError(
+                msgs=[f"Unexpected {_type=}"]
+            )
+
     def update(
         self,
         status: t.Optional[r_console.RenderableType] = None,

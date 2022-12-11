@@ -540,6 +540,22 @@ def clean():
 
 
 @_APP.command()
+def delete():
+    """
+    Deletes the job in runner (use carefully).
+    """
+    _rp = _RUNNER.richy_panel
+    # todo: support asking prompts later ...
+    # _delete = _rp.ask(prompt="Are you sure you want to delete? It will delete even complted runs!!", option='confirm')
+    for _stage_name, _stage in _rp.track(_RUNNER.flow.stages.items(), task_name="Scanning stages"):
+        _rp.update(f"Scanning stage {_stage_name} ...")
+        _j: Job
+        for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
+            _rp.update(f"Deleting job {_j.job_id}")
+            _j.path.delete(recursive=True)
+
+
+@_APP.command()
 def unfinished():
     """
     Lists the jobs in runner that are not finished.
@@ -550,4 +566,4 @@ def unfinished():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
-                _rp.log([_j.method.__name__, _j.experiment.name])
+                _rp.log([_j.job_id])

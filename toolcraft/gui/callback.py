@@ -103,6 +103,7 @@ class CloseWidgetCallback(Callback):
     def fn(self, sender: widget.Widget):
         _user_data = sender.get_user_data()
         if 'widget_to_delete' in _user_data.keys():
+            print("Deleting via Close [X]", sender.get_user_data()['widget_to_delete'])
             sender.get_user_data()['widget_to_delete'].delete()
         else:
             raise KeyError(
@@ -247,8 +248,7 @@ class HashableMethodRunnerCallback(Callback):
                     )
                 ).add_to_task_queue()
             else:
-                _new_widget = util.rgetattr(
-                    _hashable, _callable_name)()  # type: widget.MovableWidget
+                _new_widget = util.rgetattr(_hashable, _callable_name)()  # type: widget.MovableWidget
             # -------------------------------------------------------------- 07.02
             # tag it i.e. save it to receiver user_data as it was newly created
             _user_data[_actual_tag] = _new_widget

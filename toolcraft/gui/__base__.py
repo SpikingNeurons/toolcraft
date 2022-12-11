@@ -493,10 +493,10 @@ class _WidgetDpg(abc.ABC):
         """
         internal_dpg.configure_item(self.guid, enabled=False)
 
-    def fixed_update(self):
+    async def fixed_update(self):
         ...
 
-    def update(self):
+    async def update(self):
         """
         todo: async update that can have await ... (Try this is try_* rough work first ...)
           A method run can be spread over multiple frames where
@@ -760,7 +760,7 @@ class Engine:
                 # call update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.update.values():
-                    _.update()
+                    await _.update()
 
                 # todo: other phases nut need to rethink design ...
                 #   note that destroy for widget.delete is not effective
@@ -799,7 +799,7 @@ class Engine:
                 # call fixed_update phase
                 # todo: asyncio.create_task or asyncio.to_thread
                 for _ in Engine.fixed_update.values():
-                    _.fixed_update()
+                    _res = await _.fixed_update()
         except Exception as _e:
             raise Exception(f"Exception in {Engine.lifecycle_physics_loop}", _e)
 
@@ -875,13 +875,18 @@ class Engine:
         _task_runner = asyncio.create_task(cls.task_runner_loop())
 
         # ----------------------------------------------------------- 04
+        # fake task to just trigger the queue creation
+        # _blocking_task = BlockingTask(fn=lambda: None, concurrent=False)
+        # _blocking_task.add_to_task_queue()
+
+        # ----------------------------------------------------------- 05
         # await on dpg task and cancel update task
         await _dpg
         # _lifecycle.cancel()
         # _lifecycle_physics.cancel()
         _task_runner.cancel()
 
-        # ----------------------------------------------------------- 05
+        # ----------------------------------------------------------- 06
         # shutdown pool executors
         cls.thread_pool_executor.shutdown(wait=True)
         cls.process_pool_executor.shutdown(wait=True)
@@ -1052,8 +1057,6 @@ class Widget(_WidgetDpg, abc.ABC):
         _guid = self.guid
         if self.registered_as_child:
             del self.parent.children[_guid]
-
-        print("dddddddddddddd", self.parent, self, self.parent.children.values())
 
         # call super
         return super().delete()
@@ -1360,7 +1363,7 @@ class UseMethodInForm:
         run_async: bool = False,
         display_in_form: bool = True,
         tag_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
-        hide_previously_opened: bool = True
+        hide_previously_opened: bool = True,
     ):
         """
         Check usage in below places
