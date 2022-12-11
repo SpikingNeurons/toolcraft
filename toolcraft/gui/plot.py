@@ -532,6 +532,16 @@ class SpecialPlot1D(Plot):
         # now it is time to render children ... call super
         super().build_post_runner(hooked_method_return_value=hooked_method_return_value)
 
+        # if samples are less than samples to display then no need for fixed_update ...
+        # we will do things here
+        _x_indices = self.x_indices
+        if len(_x_indices) <= self.num_points_to_display:
+            from .. import gui
+            _y_data = self.y_data
+            for _k, _ls in self._line_seres.items():
+                _ls.set_value([_x_indices, _y_data[_k]])
+            del gui.Engine.fixed_update[self.guid]
+
     def sub_sampling_mode_fn(self) -> t.Callable:
         _subsampling_mode = self.subsampling_mode
         if _subsampling_mode == 'none':
