@@ -490,8 +490,7 @@ def view():
     for _experiment in _rp.track(_RUNNER.registered_experiments, task_name="Register views for Experiments"):
         _dashboard.experiment_view.add(
             hashable=_experiment,
-            # todo: add group key for grouping
-            group_key=None,
+            group_key=_experiment.view_group_key,
         )
 
     # ---------------------------------------------------------------- 06
