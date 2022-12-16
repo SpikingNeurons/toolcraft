@@ -1491,10 +1491,6 @@ class Experiment(m.HashableClass, abc.ABC):
         return f"{self.__class__.__module__}:{self.hex_hash[:10]}"
 
     @property
-    def view_group_key(self) -> t.Optional[str]:
-        return None
-
-    @property
     def view_callable_names(self) -> t.List[str]:
         _ret = self.methods_to_be_used_in_gui_form()
         # skip info_widget as that is controlled by `Experiment.view()` method
