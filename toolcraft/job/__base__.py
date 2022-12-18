@@ -1488,7 +1488,23 @@ class Experiment(m.HashableClass, abc.ABC):
 
     @property
     def view_gui_label(self) -> str:
-        return f"{self.__class__.__module__}:{self.hex_hash[:10]}"
+        return f"{self.__class__.__module__}:{self.mini_hex_hash}"
+
+    @property
+    def gui_label(self) -> t.Tuple[str, t.List[str]]:
+        """
+
+        Returns:
+            (str, list of str)
+            the first element tells the group by clause with unique hex hash
+            the second part is to show some of the fields that differ across experiments
+
+        """
+        _group_str = ""
+        if bool(self.group_by):
+            _group_str = ">".join(self.group_by)
+            _group_str += " "
+        return f"{_group_str}(experiment: {self.mini_hex_hash})", []
 
     @property
     def view_callable_names(self) -> t.List[str]:
@@ -1507,14 +1523,14 @@ class Experiment(m.HashableClass, abc.ABC):
         self.runner.registered_experiments.append(self)
 
         # ------------------------------------------------------------------ 03
-        # make sure that it is not s.StorageHashable or any of its fields are
-        # not s.StorageHashable
+        # Make sure that it is not s.StorageHashable or any of its fields are not s.StorageHashable
         # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
-        # use with storage ... this will avoid creating files/folders and doing any IO
+        #   use with storage ...
+        # This will avoid creating files/folders and doing any IO
         # todo: we disable this as now instance creation of StorageHashable's do not cause IO
         #   confirm this behaviour and delete this code .... the check is commented for now as we
-        #   want to allow StorageHashable's to work example with
-        #   `experiment/downloads.py` and `experiment/prepared_datas.py`
+        #   want to allow StorageHashable's to work example with `experiment/downloads.py`
+        #   and `experiment/prepared_datas.py`
         # self.check_for_storage_hashable(
         #     field_key=f"{self.experiment.__class__.__name__}"
         # )
