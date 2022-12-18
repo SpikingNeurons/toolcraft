@@ -1272,9 +1272,10 @@ class Runner(m.HashableClass, abc.ABC):
         }
 
     @property
-    @abc.abstractmethod
     def copy_src_dst(self) -> t.Tuple[str, str]:
-        ...
+        raise e.code.NotYetImplemented(
+            msgs=["Cannot use copy cli command", "Please implement property copy_src_dst to use copy cli command"]
+        )
 
     @property
     @util.CacheResult

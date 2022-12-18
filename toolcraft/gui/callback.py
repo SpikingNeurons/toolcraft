@@ -103,7 +103,6 @@ class CloseWidgetCallback(Callback):
     def fn(self, sender: widget.Widget):
         _user_data = sender.get_user_data()
         if 'widget_to_delete' in _user_data.keys():
-            print("Deleting via Close [X]", sender.get_user_data()['widget_to_delete'])
             sender.get_user_data()['widget_to_delete'].delete()
         else:
             raise KeyError(

@@ -76,7 +76,7 @@ def launch():
         # some vars
         _MAX_JOBS = os.cpu_count()
         _MAX_MEMORY_USAGE_IN_PERCENT = 95.
-        _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS = 10
+        _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS = 1
         _jobs_running_in_parallel = {}
 
         # ----------------------------------------------------- 02.01.02
