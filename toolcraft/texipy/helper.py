@@ -29,10 +29,10 @@ def make_pdf_with_pdflatex(
 
     try:
         _check_output_kwargs = {'cwd': pdf_file.parent.as_posix()}
-
-        print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
+        import os
+        print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex", tex_file, os.getcwd())
         _output = subprocess.run(
-            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", tex_file.absolute().as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running bibtex")
         _output = subprocess.run(
