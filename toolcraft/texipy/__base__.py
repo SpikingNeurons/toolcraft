@@ -1,4 +1,5 @@
 import dataclasses
+import os
 import typing as t
 import pathlib
 import datetime
@@ -555,8 +556,14 @@ class Document(LaTeX):
         self,
         save_to_file: str,
         make_pdf: bool = False,
+        clean: bool = False,
     ):
         # ----------------------------------------------- 01
+        # save to file
+        _save_to_file = pathlib.Path(save_to_file)
+        # dot dot token
+        _num_save_to_file_parents = len(save_to_file.split("/")) - 1
+        _dot_dot_token = "//".join([".."]*_num_save_to_file_parents) + "//"
         # make document
         _all_lines = [
             # f"% Generated on {datetime.datetime.now().ctime()}",
@@ -565,16 +572,15 @@ class Document(LaTeX):
             if self.main_tex_file is None else
             f"\\documentclass[{self.main_tex_file}]{{subfiles}}",
             ("" if self.main_tex_file is None else "% ") +
-            f"\\usepackage{{{self.usepackage_file.split('.')[0]}}}",
+            f"\\usepackage{{{_dot_dot_token + self.usepackage_file.split('.')[0]}}}",
             ("" if self.main_tex_file is None else "% ") +
-            f"\\input{{{self.symbols_file.split('.')[0]}}}",
+            f"\\input{{{_dot_dot_token + self.symbols_file.split('.')[0]}}}",
             "",
             str(self),
             "",
         ]
 
         # ----------------------------------------------- 02
-        _save_to_file = pathlib.Path(save_to_file)
         _save_to_file.write_text("\n".join(_all_lines))
 
         # ----------------------------------------------- 03
@@ -584,6 +590,7 @@ class Document(LaTeX):
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
                          (_save_to_file.name.split(".")[0] + ".pdf"),
+                clean=clean,
             )
 
 

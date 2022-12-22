@@ -28,23 +28,24 @@ def make_pdf_with_pdflatex(
     """
 
     try:
-        _check_output_kwargs = {'cwd': pdf_file.parent.as_posix()}
-        import os
-        print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex", tex_file, os.getcwd())
+        # note that cwd will change dir to folder where tex file is present for subprocess.run
+        # this helps pdflatex
+        _check_output_kwargs = {'cwd': tex_file.parent.as_posix()}
+        print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.absolute().as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running bibtex")
         _output = subprocess.run(
-            ["bibtex", tex_file.as_posix().replace("tex", "aux")], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["bibtex", tex_file.name.replace("tex", "aux")], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.as_posix()], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
 
         if clean:
@@ -54,9 +55,8 @@ def make_pdf_with_pdflatex(
                 # beamer related ...
                 'snm', 'nav',
             ]:
-                (
-                    pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
-                ).unlink(missing_ok=True)
+                _ext_file = pdf_file.parent / pdf_file.name.replace(".pdf", f".{_ext}")
+                _ext_file.unlink(missing_ok=True)
 
     except (IOError, OSError) as ex_:
         raise ex_
