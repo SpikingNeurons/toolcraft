@@ -675,6 +675,16 @@ class Job:
         _ret = self.runner.cwd
         _ret /= self.method.__func__.__name__
         if self.experiment is not None:
+            # ----------------- remove later
+            if (_ret / self.experiment.hex_hash).exists():
+                _to_path = _ret
+                for _ in self.experiment.group_by:
+                    _to_path /= _
+                _to_path /= self.experiment.hex_hash
+                (_ret / self.experiment.hex_hash).move(to_path=_to_path, recursive=True)
+                if (_ret / self.experiment.hex_hash).isdir():
+                    (_ret / self.experiment.hex_hash).rmdir()
+            # --------------------------------------
             for _ in self.experiment.group_by:
                 _ret /= _
             _ret /= self.experiment.hex_hash
@@ -1135,7 +1145,17 @@ class Monitor:
         return _ret
 
     def make_experiment_info_file(self, experiment: "Experiment"):
-        _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
+        _file = self.experiments_folder_path
+        if bool(experiment.group_by):
+            # ----------------- remove later
+            if (_file / f"{experiment.hex_hash}.info").isfile():
+                (_file / f"{experiment.hex_hash}.info").rm()
+            # -----------------------------------------
+            for _ in experiment.group_by:
+                _file /= _
+            if not _file.exists():
+                _file.mkdir(create_parents=True)
+        _file /= f"{experiment.hex_hash}.info"
         if not _file.exists():
             _LOGGER.info(
                 f"Creating experiment info file {_file.local_path.as_posix()}")
@@ -1490,22 +1510,6 @@ class Experiment(m.HashableClass, abc.ABC):
     @property
     def view_gui_label(self) -> str:
         return f"{self.__class__.__module__}:{self.mini_hex_hash}"
-
-    @property
-    def gui_label(self) -> t.Tuple[str, t.List[str]]:
-        """
-
-        Returns:
-            (str, list of str)
-            the first element tells the group by clause with unique hex hash
-            the second part is to show some of the fields that differ across experiments
-
-        """
-        _group_str = ""
-        if bool(self.group_by):
-            _group_str = ">".join(self.group_by)
-            _group_str += " "
-        return f"{_group_str}(experiment: {self.mini_hex_hash})", []
 
     @property
     def view_callable_names(self) -> t.List[str]:

@@ -593,6 +593,9 @@ class Path:
     def exists(self) -> bool:
         return self.fs.exists(path=self.full_path)
 
+    def move(self, to_path: "Path", recursive: bool = False) -> bool:
+        return self.fs.move(path1=self.full_path, path2=to_path.full_path, recursive=recursive)
+
     def isdir(self) -> bool:
         return self.fs.isdir(path=self.full_path)
 
