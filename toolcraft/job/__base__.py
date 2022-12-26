@@ -46,17 +46,6 @@ _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
 
 
-class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
-    """
-    todo: support ibm_lsf over ssh using https://www.fabfile.org
-    """
-    ibm_lsf = enum.auto()
-    # todo: explore windows task scheduler
-    #    https://www.jcchouinard.com/python-automation-using-task-scheduler/
-    #    Or make custom bsub job scheduler for windows in python
-    local = enum.auto()
-
-
 class JobFlowId(t.NamedTuple):
     """
     A tuple that helps you find job in the Flow
@@ -661,6 +650,19 @@ class Job:
         return _command
 
     @property
+    def launch_lsf_parameters(self) -> t.Optional[t.Dict]:
+        """
+        Override this incase you want to supply parameters specific to job
+        """
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._launch_lsf_parameters
+        except AttributeError:
+            # noinspection PyAttributeOutsideInit
+            self._launch_lsf_parameters = None
+            return self._launch_lsf_parameters
+
+    @property
     @util.CacheResult
     def path(self) -> s.Path:
         """
@@ -746,6 +748,21 @@ class Job:
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
         return self
+
+    def set_launch_lsf_parameters(
+        self, email: bool = False, cpus: int = None, memory: int = None,
+    ):
+        if self.launch_lsf_parameters is None:
+            # noinspection PyAttributeOutsideInit
+            self._launch_lsf_parameters = {
+                'email': email, 'cpus': cpus, 'memory': memory,
+            }
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "Looks like launch_lsf_parameters are already set"
+                ]
+            )
 
     def check_health(self, is_on_main_machine: bool) -> t.Optional[str]:
         """
@@ -1462,7 +1479,7 @@ class Runner(m.HashableClass, abc.ABC):
         # return
         return _ret
 
-    def run(self, cluster_type: JobRunnerClusterType):
+    def run(self):
         from . import cli
         _sub_title = [f"command: {sys.argv[1]}"]
         if bool(sys.argv[2:]):
@@ -1473,7 +1490,7 @@ class Runner(m.HashableClass, abc.ABC):
             sub_title=_sub_title,
         ) as _rp:
             with self(richy_panel=_rp):
-                cli.get_app(runner=self, cluster_type=cluster_type)()
+                cli.get_app(runner=self)()
 
     def setup(self):
         _exps = self.registered_experiments
