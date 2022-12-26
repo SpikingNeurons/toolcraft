@@ -676,17 +676,7 @@ class Job:
         """
         _ret = self.runner.cwd
         _ret /= self.method.__func__.__name__
-        if self.experiment is not None:
-            # ----------------- remove later
-            if (_ret / self.experiment.hex_hash).exists():
-                _to_path = _ret
-                for _ in self.experiment.group_by:
-                    _to_path /= _
-                _to_path /= self.experiment.hex_hash
-                (_ret / self.experiment.hex_hash).move(to_path=_to_path, recursive=True)
-                if (_ret / self.experiment.hex_hash).isdir():
-                    (_ret / self.experiment.hex_hash).rmdir()
-            # --------------------------------------
+        if bool(self.experiment):
             for _ in self.experiment.group_by:
                 _ret /= _
             _ret /= self.experiment.hex_hash
@@ -1162,17 +1152,7 @@ class Monitor:
         return _ret
 
     def make_experiment_info_file(self, experiment: "Experiment"):
-        _file = self.experiments_folder_path
-        if bool(experiment.group_by):
-            # ----------------- remove later
-            if (_file / f"{experiment.hex_hash}.info").isfile():
-                (_file / f"{experiment.hex_hash}.info").rm()
-            # -----------------------------------------
-            for _ in experiment.group_by:
-                _file /= _
-            if not _file.exists():
-                _file.mkdir(create_parents=True)
-        _file /= f"{experiment.hex_hash}.info"
+        _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
         if not _file.exists():
             _LOGGER.info(
                 f"Creating experiment info file {_file.local_path.as_posix()}")
