@@ -1151,19 +1151,19 @@ class Monitor:
             _ret.mkdir(create_parents=True)
         return _ret
 
-    def make_experiment_info_file(self, experiment: "Experiment"):
-        _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
-        if not _file.exists():
-            _LOGGER.info(
-                f"Creating experiment info file {_file.local_path.as_posix()}")
-            _file.write_text(experiment.yaml())
-
     def make_runner_info_file(self):
         _file = self.path / f"{self.runner.hex_hash}.info"
         if not _file.exists():
             _LOGGER.info(
                 f"Creating runner info file {_file.local_path.as_posix()}")
             _file.write_text(self.runner.yaml())
+
+    def make_experiment_info_file(self, experiment: "Experiment"):
+        _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
+        if not _file.exists():
+            _LOGGER.info(
+                f"Creating experiment info file {_file.local_path.as_posix()}")
+            _file.write_text(experiment.yaml())
 
     def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
         """
