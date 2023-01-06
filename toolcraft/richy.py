@@ -48,7 +48,7 @@ if False:
     # noinspection PyUnresolvedReferences
     from . import marshalling as m
 
-T = t.TypeVar('T', bound="Widget")
+TWidget = t.TypeVar('TWidget', bound="Widget")
 
 # noinspection PyArgumentList
 class SpinnerType(enum.Enum):
@@ -233,7 +233,7 @@ class Widget(m.Checker, abc.ABC):
         self._live = None  # type: r_live.Live
         self.is_in_with_context = False
 
-    def __enter__(self: T) -> T:
+    def __enter__(self: TWidget) -> TWidget:
 
         if self.tc_log is not None:
             self.tc_log.info(msg=f"[{self.title}] started ...", msgs=self.sub_title)
@@ -998,7 +998,7 @@ class StatusPanel(Widget):
             )
         else:
             raise e.code.CodingError(
-                msgs=[f"Unexpected {_type=}"]
+                msgs=[f"Unexpected {option=}"]
             )
 
     def update(

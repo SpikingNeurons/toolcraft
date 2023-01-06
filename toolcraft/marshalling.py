@@ -32,8 +32,8 @@ if False:
     from . import gui, storage
     from . import richy
 
-T = t.TypeVar('T', bound='Tracker')
-YamlReprT = t.TypeVar('YamlReprT', bound='YamlRepr')
+TTracker = t.TypeVar('TTracker', bound='Tracker')
+TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
 _LOGGER = logger.get_logger()
 _LITERAL_CLASS_NAME = 'LITERAL'
 _RULE_CHECKER = "__rule_checker__"
@@ -952,7 +952,7 @@ class Tracker(Checker):
             #     tc_log=logger.get_logger(self.__module__)
             # )
 
-    def __call__(self: T, richy_panel: "richy.StatusPanel") -> T:
+    def __call__(self: TTracker, richy_panel: "richy.StatusPanel") -> TTracker:
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
 
@@ -1003,7 +1003,7 @@ class Tracker(Checker):
         # return
         return self
 
-    def __enter__(self: T) -> T:
+    def __enter__(self: TTracker) -> TTracker:
 
         # call on_enter
         self.on_enter()
@@ -1144,7 +1144,7 @@ class Tracker(Checker):
         ...
 
     @classmethod
-    def available_concrete_sub_classes(cls) -> t.List[t.Type[T]]:
+    def available_concrete_sub_classes(cls) -> t.List[t.Type[TTracker]]:
         """
         Return a subset of AvailableHashableClasses that are subclass of
         incoming argument hashable_type.
@@ -1242,7 +1242,7 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> t.Union[dict, YamlReprT]:
+    def load(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> t.Union[dict, TYamlRepr]:
         from . import storage
         # get text
         _text = file_or_text
@@ -1391,14 +1391,14 @@ class YamlRepr(Tracker):
         return YamlDumper.dump(self)
 
     @classmethod
-    def from_yaml(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> YamlReprT:
+    def from_yaml(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> TYamlRepr:
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
     @classmethod
     def get_class(
         cls, file_or_text: t.Union["storage.Path", str]
-    ) -> t.Type[YamlReprT]:
+    ) -> t.Type[TYamlRepr]:
         from . import storage
         _text = file_or_text
         if isinstance(file_or_text, storage.Path):

@@ -32,8 +32,8 @@ if False:
     from ..marshalling import HashableClass
 
 
-T = t.TypeVar('T', bound='Widget')
-YamlReprT = t.TypeVar('YamlReprT', bound='YamlRepr')
+TWidget = t.TypeVar('TWidget', bound='Widget')
+TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
 COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
@@ -966,7 +966,7 @@ class Widget(_WidgetDpg, abc.ABC):
         """
         return dpg.does_item_exist(item=self.guid)
 
-    def __enter__(self: T) -> T:
+    def __enter__(self: TWidget) -> TWidget:
 
         # call on_enter
         self.on_enter()
@@ -1520,7 +1520,7 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(cls, file_or_text: str, **kwargs) -> t.Union[dict, YamlReprT]:
+    def load(cls, file_or_text: str, **kwargs) -> t.Union[dict, TYamlRepr]:
         # get text
         _text = file_or_text
         if not isinstance(file_or_text, str):
@@ -1583,7 +1583,7 @@ class Hashable(abc.ABC):
             )
 
     @classmethod
-    def from_yaml(cls, file_or_text: str, **kwargs) -> YamlReprT:
+    def from_yaml(cls, file_or_text: str, **kwargs) -> TYamlRepr:
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 

@@ -21,7 +21,6 @@ import subprocess
 import dataclasses
 import abc
 import numpy as np
-import gc
 import datetime
 import io
 import hashlib
@@ -29,6 +28,12 @@ import zipfile
 import gcsfs
 import platform
 import random
+
+try:
+    import tensorflow as tf
+except ImportError:
+    ...
+
 _now = datetime.datetime.now
 
 from .. import util, logger, settings
@@ -44,7 +49,7 @@ if False:
     from . import folder
 
 
-T = t.TypeVar('T', bound='FileGroup')
+TFileGroup = t.TypeVar('TFileGroup', bound='FileGroup')
 
 _LOGGER = logger.get_logger()
 
@@ -327,7 +332,7 @@ class FileGroup(StorageHashable, abc.ABC):
         subprocess.Popen(f'explorer {self.path}')
 
     @classmethod
-    def make_possible_instances(cls) -> t.List[T]:
+    def make_possible_instances(cls) -> t.List[TFileGroup]:
         """
         Implement this method when you know that there are finite instances for class
         Useful for
