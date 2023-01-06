@@ -6,6 +6,9 @@ How to get readme
 + https://readme.so/editor
 + https://www.youtube.com/watch?v=K7jeBfiNqR4
 
+## ASGI server
+
+Use Uvicorn or more better Hypercorn
 
 ## Making things fast
 
