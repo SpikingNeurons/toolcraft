@@ -16,6 +16,7 @@ from .. import error as e
 from .. import logger
 from .. import settings
 from .__base__ import Runner, Job
+from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
 from . import cli_launch
 _now = datetime.datetime.now
 
@@ -25,7 +26,11 @@ _LOGGER = logger.get_logger()
 # noinspection PyTypeChecker
 _RUNNER: Runner = None
 
-_APP = typer.Typer(name="Toolcraft Job Runner", pretty_exceptions_show_locals=False)
+_APP = typer.Typer(
+    name="Toolcraft Job Runner",
+    pretty_exceptions_show_locals=PRETTY_EXCEPTIONS_SHOW_LOCALS,
+    pretty_exceptions_enable=PRETTY_EXCEPTIONS_ENABLE,
+)
 # noinspection PyProtectedMember
 _APP.add_typer(cli_launch._APP, name="launch")
 
@@ -288,7 +293,7 @@ def copy():
     """
     _rp = _RUNNER.richy_panel
     _rp.update("copying results from server to cwd ...")
-    _rp._live.stop()
+    _rp.stop()
     _cmd_tokens = [
         "ROBOCOPY",
         _RUNNER.copy_src_dst[1], _RUNNER.copy_src_dst[0],
@@ -298,7 +303,7 @@ def copy():
     subprocess.run(
         _cmd_tokens, shell=False
     )
-    _rp._live.start()
+    _rp.start()
     print(_cmd)
 
 

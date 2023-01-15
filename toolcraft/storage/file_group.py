@@ -1234,7 +1234,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
             # validate element spec
             e.validation.ShouldBeEqual(
-                value1=expected_element_spec, value2=_ds.element_spec,
+                value1=expected_element_spec, value2=_ds.batch_spec,
                 msgs=["Was expecting the element spec to be identical"]
             ).raise_if_failed()
 

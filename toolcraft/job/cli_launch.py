@@ -20,8 +20,10 @@ import typer
 import typing as t
 import subprocess
 
-from .. import logger
+from .. import logger, settings
+from .. import error as e
 from .__base__ import Runner, Job
+from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
 
 
 _LOGGER = logger.get_logger()
@@ -29,7 +31,10 @@ _LOGGER = logger.get_logger()
 
 # noinspection PyTypeChecker
 _RUNNER: Runner = None
-_APP = typer.Typer(pretty_exceptions_show_locals=False)
+_APP = typer.Typer(
+    pretty_exceptions_show_locals=PRETTY_EXCEPTIONS_SHOW_LOCALS,
+    pretty_exceptions_enable=PRETTY_EXCEPTIONS_ENABLE,
+)
 
 
 def _run_job(_job: Job, _cli_command: t.List[str], shell: bool = True):
@@ -123,14 +128,27 @@ def lsf(
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
-def local():
+def local(
+    single_cpu: bool = typer.Option(default=False, help="Launches on single CPU in sequence (good for debugging)")
+):
     """
     """
 
     # --------------------------------------------------------- 01
+    # some validation
+    if settings.PYC_DEBUGGING:
+        if not single_cpu:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "looks like you are in pycharm debug mode",
+                    "Make sure to set --single-cpu to enable full debugging inside jobs ... "
+                ]
+            )
     # get some vars
     _rp = _RUNNER.richy_panel
     _rp.update(f"launching jobs on LOCAL cluster ...")
+    if single_cpu:
+        _rp.stop()
     _flow = _RUNNER.flow
 
     # --------------------------------------------------------- 02
@@ -219,7 +237,10 @@ def local():
             # else:
             #     _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
             # _cli_command = ["start", "cmd", "/k", ] + _job.cli_command
-            _cli_command = ["start", "cmd", "/c", ] + _job.cli_command
+            if single_cpu:
+                _cli_command = _job.cli_command
+            else:
+                _cli_command = ["start", "cmd", "/c", ] + _job.cli_command
             # ------------------------------------------------- 04.07.02
             # for first job no need to check anything just launch
             if len(_jobs_running_in_parallel) == 0:
@@ -250,3 +271,7 @@ def local():
             # _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS
             # this allows the job to enter properly and get realistic ram usage
             time.sleep(_WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS)
+
+    # --------------------------------------------------------- 05
+    if single_cpu:
+        _rp.start()

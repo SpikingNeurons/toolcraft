@@ -1001,6 +1001,12 @@ class StatusPanel(Widget):
                 msgs=[f"Unexpected {option=}"]
             )
 
+    def stop(self):
+        self._live.stop()
+
+    def start(self, refresh: bool = False):
+        self._live.start(refresh=refresh)
+
     def update(
         self,
         status: t.Optional[r_console.RenderableType] = None,
