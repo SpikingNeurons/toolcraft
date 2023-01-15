@@ -1085,7 +1085,6 @@ class Tracker(Checker):
         You can also add any more code for performing prefetch
         Currently we do things like (mostly for foster data)
         + prefetch foster_data properties like shape dtype trace key ptx ...
-        + cache memmaps in `foster_data.all_npy_mem_maps_cache`
         + call foster_data and open up
 
         WARNING: Never have prefetch stuff depend on kwargs passed during
