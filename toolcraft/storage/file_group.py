@@ -29,13 +29,6 @@ import gcsfs
 import platform
 import random
 
-try:
-    import tensorflow as tf
-except ImportError:
-    ...
-
-_now = datetime.datetime.now
-
 from .. import util, logger, settings
 from .. import storage as s
 from .. import error as e
@@ -48,6 +41,7 @@ from .file_system import Path
 if False:
     from . import folder
 
+_now = datetime.datetime.now
 
 TFileGroup = t.TypeVar('TFileGroup', bound='FileGroup')
 
@@ -1213,37 +1207,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 continue
         return False
 
-    def get_tf_dataset(
-        self, batch_size: int, num_batches: int, memmap: bool,
-        expected_element_spec: t.Dict[str, "tf.TensorSpec"]
-    ) -> "tf.data.Dataset":
-        try:
-            # import
-            import tensorflow as tf
-
-            # get data
-            _data = self.load_as_dict(fix_all_lengths_same=True, memmap=memmap)
-
-            # skip some elements that are not needed
-            _elements_to_skip = [_ for _ in _data.keys() if _ not in expected_element_spec.keys()]
-            for _ in _elements_to_skip:
-                del _data[_]
-
-            # make dataset
-            _ds = tf.data.Dataset.from_tensor_slices(_data).batch(batch_size).take(num_batches)
-
-            # validate element spec
-            e.validation.ShouldBeEqual(
-                value1=expected_element_spec, value2=_ds.batch_spec,
-                msgs=["Was expecting the element spec to be identical"]
-            ).raise_if_failed()
-
-            # return
-            return _ds
-        except ImportError as _e:
-            raise e.code.CodingError(
-                msgs=["Cannot create tensorflow dataset as tensorflow is not available ..."]
-            )
+    @property
+    def has_singular_lengths(self) -> bool:
+        for _l in self.lengths.values():
+            if _l == 1:
+                return True
+        return False
 
     def load_as_dict(
         self,
