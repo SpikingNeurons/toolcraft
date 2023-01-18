@@ -17,4 +17,5 @@ from .__base__ import *
 from .symbol import Command, Glossary, Acronym, make_symbols_tex_file
 from . import beamer
 from . import tikz
+from . import tikz_cd
 from . import table
