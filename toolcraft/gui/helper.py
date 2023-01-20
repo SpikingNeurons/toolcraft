@@ -86,14 +86,14 @@ async def make_async_fn_runner(
                         # since there is exception calling result() on
                         # future will raise it with traceback
                         _result = _future.result()
-                    except Exception as _e:
+                    except Exception as __exp:
                         exc_type, exc_value, exc_tb = sys.exc_info()
                         _exp_strs = traceback.format_exception(exc_type, exc_value, exc_tb)
                         with receiver_grp:
                             widget.Text(default_value="\n".join(_exp_strs))
                         # both do same printing on sys.err
                         # traceback.print_exc()
-                        raise _exp
+                        raise __exp
 
     except Exception as _e:
         if receiver_grp.does_exist:
