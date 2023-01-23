@@ -2386,15 +2386,6 @@ class Path:
 
 @dataclasses.dataclass
 class TikZ(LaTeX):
-    positioning: Positioning = None
-    alignment: FloatObjAlignment = None
-    caption: str = None
-
-    # To scale tikz graphics ...
-    # https://tex.stackexchange.com/questions/13460/scalebox-knowing-how-much-it-scales
-    # https://tex.stackexchange.com/questions/4338/correctly-scaling-a-tikzpicture
-    # Other options adjustbox, resizebox
-    scale: t.Tuple[float, float] = None
 
     @property
     @util.CacheResult
@@ -2409,33 +2400,17 @@ class TikZ(LaTeX):
 
     @property
     def open_clause(self) -> str:
-        _ret = [
-            f"\\begin{{figure}}{'' if self.positioning is None else self.positioning}",
-        ]
-        if self.alignment is not None:
-            _ret.append(f"{self.alignment}")
+        _ret = []
         for _k, _s in self.styles.items():
             _ret.append(
                 f"\\tikzstyle{{{_k}}}=[{_s}]"
             )
-        # add scalebox
-        if self.scale is not None:
-            _ret.append(f"\\scalebox{{{self.scale[0]}}}[{self.scale[1]}]\n{{")
         _ret.append("\\begin{tikzpicture}")
         return "\n".join(_ret)
 
     @property
     def close_clause(self) -> str:
         _ret = ["\\end{tikzpicture}"]
-        if self.scale is not None:
-            _ret.append("}")
-        if self.caption is not None:
-            _ret.append(f"\\caption{{{self.caption}}}")
-        if self.label is not None:
-            _ret.append(f"\\label{{{self.label}}}")
-        _ret += [
-            "\\end{figure}"
-        ]
         return "\n".join(_ret)
 
     @property
@@ -2462,6 +2437,16 @@ class TikZ(LaTeX):
 
         # return
         return super().__str__()
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # more validations
+        if self.label is not None:
+            raise e.validation.NotAllowed(
+                msgs=["label field is not usable with TikZ so do not set it"]
+            )
 
     def add_path(self, path: Path) -> "TikZ":
         # when style key provided check if it is registered ...

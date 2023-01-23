@@ -12,10 +12,12 @@ from .. import util
 from .. import error as e
 
 _LOGGER = logger.get_logger()
+TLaTeX = t.TypeVar('TLaTeX', bound='LaTeX')
 
 # noinspection PyUnreachableCode
 if False:
     from . import beamer
+    from . import tikz
 
 
 class Font(enum.Enum):
@@ -421,7 +423,7 @@ class LaTeX(abc.ABC):
                    self.close_clause + \
                    _end
 
-    def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
+    def add_item(self, item: t.Union[str, "LaTeX"]) -> TLaTeX:
         if not self.allow_add_items:
             raise e.code.NotAllowed(
                 msgs=[f"You are not allowed to use `add_items` method for class "
@@ -552,6 +554,9 @@ class Document(LaTeX):
             (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
         )
 
+    def add_item(self, item: t.Union[str, "LaTeX"]) -> "Document":
+        return super().add_item(item)
+
     def write(
         self,
         save_to_file: str,
@@ -594,6 +599,56 @@ class Document(LaTeX):
                 clean=clean,
             )
 
+
+@dataclasses.dataclass
+class Figure(LaTeX):
+    positioning: Positioning = None
+    alignment: FloatObjAlignment = None
+    caption: str = None
+
+    # To scale graphics ...
+    # https://tex.stackexchange.com/questions/13460/scalebox-knowing-how-much-it-scales
+    # https://tex.stackexchange.com/questions/4338/correctly-scaling-a-tikzpicture
+    # Other options adjustbox, resizebox
+    scale: t.Tuple[float, float] = None
+
+    @property
+    def open_clause(self) -> str:
+        _ret = [
+            f"\\begin{{figure}}{'' if self.positioning is None else self.positioning}",
+        ]
+        if self.alignment is not None:
+            _ret.append(f"{self.alignment}")
+        # add scalebox
+        if self.scale is not None:
+            _ret.append(f"\\scalebox{{{self.scale[0]}}}[{self.scale[1]}]\n{{")
+        return "\n".join(_ret)
+
+    @property
+    def close_clause(self) -> str:
+        _ret = []
+        if self.scale is not None:
+            _ret.append("}")
+        if self.caption is not None:
+            _ret.append(f"\\caption{{{self.caption}}}")
+        if self.label is not None:
+            _ret.append(f"\\label{{{self.label}}}")
+        _ret += [
+            "\\end{figure}"
+        ]
+        return "\n".join(_ret)
+
+    def add_item(self, item: "tikz.TikZ") -> "Figure":
+        from . import tikz
+
+        # test item
+        e.validation.ShouldBeInstanceOf(
+            value=item, value_types=(tikz.TikZ, ),
+            msgs=[f"Only certain item types are allowed in {Figure}"],
+        ).raise_if_failed()
+
+        # call super to add item
+        return super().add_item(item=item)
 
 @dataclasses.dataclass
 class List(LaTeX):
