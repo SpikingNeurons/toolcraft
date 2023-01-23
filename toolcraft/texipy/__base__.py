@@ -581,6 +581,7 @@ class Document(LaTeX):
         ]
 
         # ----------------------------------------------- 02
+        _save_to_file.parent.mkdir(exist_ok=True)
         _save_to_file.write_text("\n".join(_all_lines))
 
         # ----------------------------------------------- 03

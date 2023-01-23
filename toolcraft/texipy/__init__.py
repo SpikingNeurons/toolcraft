@@ -10,6 +10,8 @@ Aim:
 + Get these tutorials covered
   https://www.overleaf.com/learn/latex/Tutorials
   + Priority figures and tables
++ Nice pdf for NN figures
+  https://mkofinas.github.io/tikz_tutorial.pdf
 """
 
 from . import helper
