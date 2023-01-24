@@ -13,7 +13,6 @@ from .. import error as e
 
 _LOGGER = logger.get_logger()
 TLaTeX = t.TypeVar('TLaTeX', bound='LaTeX')
-TFigure = t.TypeVar('TFigure', bound='Figure')
 
 # noinspection PyUnreachableCode
 if False:
@@ -614,13 +613,9 @@ class Figure(LaTeX):
     scale: t.Tuple[float, float] = None
 
     @property
-    def command(self) -> str:
-        return self.__class__.__name__.lower()
-
-    @property
     def open_clause(self) -> str:
         _ret = [
-            f"\\begin{{{self.command}}}{'' if self.positioning is None else self.positioning}",
+            f"\\begin{{figure}}{'' if self.positioning is None else self.positioning}",
         ]
         if self.alignment is not None:
             _ret.append(f"{self.alignment}")
@@ -639,11 +634,11 @@ class Figure(LaTeX):
         if self.label is not None:
             _ret.append(f"\\label{{{self.label}}}")
         _ret += [
-            f"\\end{{{self.command}}}"
+            f"\\end{{figure}}"
         ]
         return "\n".join(_ret)
 
-    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure"]) -> TFigure:
+    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure"]) -> "Figure":
         from . import tikz
 
         # test item
@@ -657,8 +652,54 @@ class Figure(LaTeX):
 
 
 @dataclasses.dataclass
-class SubFigure(Figure):
-    ...
+class SubFigure(LaTeX):
+    positioning: Positioning = None
+    alignment: FloatObjAlignment = None
+    caption: str = None
+    width: float = None
+
+    @property
+    def open_clause(self) -> str:
+        _ret = [
+            f"\\begin{{subfigure}}{'' if self.positioning is None else self.positioning}{{{self.width}\\textwidth}}",
+        ]
+        if self.alignment is not None:
+            _ret.append(f"{self.alignment}")
+        return "\n".join(_ret)
+
+    @property
+    def close_clause(self) -> str:
+        _ret = []
+        if self.caption is not None:
+            _ret.append(f"\\caption{{{self.caption}}}")
+        if self.label is not None:
+            _ret.append(f"\\label{{{self.label}}}")
+        _ret += [
+            f"\\end{{subfigure}}"
+        ]
+        return "\n".join(_ret)
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check
+        if self.width is None:
+            raise e.validation.NotAllowed(msgs=["Please supply value for width field"])
+
+    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure"]) -> "SubFigure":
+        from . import tikz
+
+        # test item
+        e.validation.ShouldBeInstanceOf(
+            value=item, value_types=(tikz.TikZ, SubFigure),
+            msgs=[f"Only certain item types are allowed in {SubFigure}"],
+        ).raise_if_failed()
+
+        # call super to add item
+        return super().add_item(item=item)
+
+
 
 
 @dataclasses.dataclass
