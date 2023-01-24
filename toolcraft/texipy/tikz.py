@@ -1295,7 +1295,7 @@ class Label:
         if self.anchor is not None:
             if not self.anchor.is_intuitive:
                 raise e.code.CodingError(
-                    msgs=["Only non-intuitive anchors are supported"]
+                    msgs=["Only intuitive anchors are supported"]
                 )
 
     def __str__(self):
@@ -2448,6 +2448,11 @@ class TikZ(LaTeX):
                 msgs=["label field is not usable with TikZ so do not set it"]
             )
 
+    def add_paths(self, paths: t.List[Path]) -> "TikZ":
+        for _p in paths:
+            self.add_path(_p)
+        return self
+
     def add_path(self, path: Path) -> "TikZ":
         # when style key provided check if it is registered ...
         if isinstance(path.style, str):
@@ -2486,7 +2491,12 @@ class TikZ(LaTeX):
                 msgs=[f"Style with key {key} is already registered ..."]
             )
 
-    def show_debug_grid(self, width: Scalar, height: Scalar, step: Scalar):
+    def show_debug_grid(
+        self,
+        width: Scalar = Scalar(1, 'textwidth'),
+        height: Scalar = Scalar(1.5, 'textwidth'),
+        step: Scalar = Scalar(0.05, 'textwidth'),
+    ) -> "TikZ":
         _path = Path(
             style=Style(
                 draw=DrawOptions(
@@ -2498,8 +2508,12 @@ class TikZ(LaTeX):
         ).grid(
             corner=Point2D(width, height),
             step=step,
+        ).move_to(
+            Point2D(Scalar(0, 'cm'), Scalar(0, 'cm'))
         )
         self.add_path(_path)
+
+        return self
 
     def get_current_bounding_box(self) -> Node:
         """
