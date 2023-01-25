@@ -1796,6 +1796,10 @@ class Path:
         return _ret + ";"
 
     def add_node(self, node: Node) -> "Path":
+        if node in self.connectome:
+            raise e.validation.NotAllowed(
+                msgs=[f"Node {node} is already added, create new node instead ..."]
+            )
         self.connectome += [node]
         return self
 
