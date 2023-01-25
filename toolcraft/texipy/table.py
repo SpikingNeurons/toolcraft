@@ -8,7 +8,7 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Font, Scalar, Positioning, FloatObjAlignment
+from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment
 
 
 class ColumnFmt(enum.Enum):

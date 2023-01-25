@@ -20,12 +20,51 @@ if False:
     from . import tikz
 
 
+class TextFmt(enum.Enum):
+    strikeout = "\\sout"  # requires \usepackage[normalem]{ulem}
+    italic = "\\itshape"
+
+    def __str__(self) -> str:
+        return self.value
+
+    def __call__(self, text: str) -> str:
+        return f"{self}{{{text}}}"
+
+
+class Text:
+
+    def __init__(self, text: str):
+        self.text = text
+
+    def __str__(self) -> str:
+        return f"\\text{{{self.text}}}"
+
+    def strikeout(self) -> "Text":
+        self.text = f"\\sout{{{self.text}}}"
+        return self
+
+    def bold(self) -> "Text":
+        self.text = f"\\textbf{{{self.text}}}"
+        return self
+
+    def italic(self) -> "Text":
+        self.text = f"\\textit{{{self.text}}}"
+        return self
+
+    def emphasis(self) -> "Text":
+        self.text = f"\\emph{{{self.text}}}"
+        return self
+
+    def color(self, color: t.Union["Color", str]) -> "Text":
+        self.text = f"\\textcolor{{{color}}}{{{self.text}}}"
+        return self
+
+
 class Font(enum.Enum):
     """
     todo: figure out other options later
     """
     italic = "\\itshape"
-    footnotesize = "\\footnotesize"
 
     def __str__(self) -> str:
         return self.value
