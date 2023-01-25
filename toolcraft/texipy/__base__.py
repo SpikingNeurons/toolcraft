@@ -32,6 +32,10 @@ class TextFmt(enum.Enum):
 
 
 class Text:
+    """
+    Refer here for fonts and sizes
+    + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
+    """
 
     def __init__(self, text: str):
         self.text = text
