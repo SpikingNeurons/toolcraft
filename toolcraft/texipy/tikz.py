@@ -1063,6 +1063,10 @@ class Point(abc.ABC):
     def midway_point(self, other_point: "Point", ratio: float) -> str:
         return f"($ {self}!{ratio}!{other_point} $)"
 
+    @classmethod
+    def between_nodes(cls, node1: "Node", node2: "Node", ratio: float) -> str:
+        return node1.center.midway_point(node2.center, ratio=ratio)
+
     def shift(
             self,
             x: Scalar = Scalar(0),
@@ -1456,14 +1460,21 @@ class Node:
         """
         We use new @ operator for `at` tikz keyword
         """
-        _kwargs = {
-            _f.name: getattr(self, _f.name) for _f in dataclasses.fields(self)
-        }
-        # noinspection PyArgumentList
-        _ret = self.__class__(**_kwargs)
-        _ret._at = other
-        _ret.id = None  # as this is new Node
-        return _ret
+        if self._at is None:
+            self._at = other
+        else:
+            raise e.code.CodingError(
+                msgs=[f"This node {self} is already positioned at {self._at}"]
+            )
+        return self
+        # _kwargs = {
+        #     _f.name: getattr(self, _f.name) for _f in dataclasses.fields(self)
+        # }
+        # # noinspection PyArgumentList
+        # _ret = self.__class__(**_kwargs)
+        # _ret._at = other
+        # _ret.id = None  # as this is new Node
+        # return _ret
 
     def __str__(self):
         """
@@ -1646,6 +1657,10 @@ class Node:
     @property
     def text_lower(self) -> PointOnNode:
         return PointOnNode(node=self, anchor=Anchor.text_lower)
+
+    def position_at(self, other: t.Union[Point, str]) -> "Node":
+        self @ other  # check __matmul__
+        return self
 
     def point_at_angle(self, angle: t.Union[int, float]) -> PointOnNode:
         return PointOnNode(node=self, angle=angle)
