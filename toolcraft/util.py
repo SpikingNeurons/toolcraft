@@ -1541,6 +1541,7 @@ class HookUp:
                 )
         # -----------------------------------------------------------03.03
         # call actual method
+        print(self.method_self.__class__, id(self.method_self), "{{{{{{", id(self))
         _ret = self.method(self.method_self, **kwargs)
         # -----------------------------------------------------------03.04
         # if post_method not provided return what we have
