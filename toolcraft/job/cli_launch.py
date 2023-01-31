@@ -34,6 +34,7 @@ _RUNNER: Runner = None
 _APP = typer.Typer(
     pretty_exceptions_show_locals=PRETTY_EXCEPTIONS_SHOW_LOCALS,
     pretty_exceptions_enable=PRETTY_EXCEPTIONS_ENABLE,
+    help="Launch all the registered jobs in flow"
 )
 
 

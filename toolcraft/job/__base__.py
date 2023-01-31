@@ -1345,14 +1345,14 @@ class Runner(m.HashableClass, abc.ABC):
         _ = self.methods_to_be_used_in_jobs()
 
         # make sure that enough arguments are present
-        if len(sys.argv) not in [2, 3, 4]:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Inappropriate number of arguments specified on cli.",
-                    f"Can be 2, 3 or 4 but found {len(sys.argv)}.",
-                    sys.argv
-                ]
-            )
+        # if len(sys.argv) not in [2, 3, 4]:
+        #     raise e.validation.NotAllowed(
+        #         msgs=[
+        #             f"Inappropriate number of arguments specified on cli.",
+        #             f"Can be 2, 3 or 4 but found {len(sys.argv)}.",
+        #             sys.argv
+        #         ]
+        #     )
 
     def init(self):
         # call super
@@ -1461,9 +1461,11 @@ class Runner(m.HashableClass, abc.ABC):
 
     def run(self):
         from . import cli
-        _sub_title = [f"command: {sys.argv[1]}"]
-        if bool(sys.argv[2:]):
-            _sub_title += [f"args: {sys.argv[2:]}"]
+        _sub_title = ""
+        if len(sys.argv) > 1:
+            _sub_title = [f"command: {sys.argv[1]}"]
+            if bool(sys.argv[2:]):
+                _sub_title += [f"args: {sys.argv[2:]}"]
         with richy.StatusPanel(
             tc_log=_LOGGER,
             title=f"Running for py_script: {self.py_script.name!r}",
