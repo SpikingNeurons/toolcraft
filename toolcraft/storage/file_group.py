@@ -712,18 +712,22 @@ class FileGroup(StorageHashable, abc.ABC):
         # now check/compute hash
         _for_type = "computing" if compute else "checking"
         for fk in self.file_keys:
-            # based on provided hash str length select hashlib module
-            if bool(_correct_hashes):
-                _len = len(_correct_hashes[fk])
-            else:
-                # todo: if file is too large switch to sha1
+            # fetch length
+            _len = len(_correct_hashes.get(fk, ""))
+            # if nothing specified use 64
+            # todo: if file is too large switch to md5 ...
+            if _len == 0:
                 _len = 64
+            # based on provided hash str length select hashlib module
             if _len == 64:
                 _hash_module = hashlib.sha256()
                 _hash_type = "sha256"
             elif _len == 40:
                 _hash_module = hashlib.sha1()
                 _hash_type = "sha1"
+            elif _len == 32:
+                _hash_module = hashlib.md5()
+                _hash_type = "md5"
             else:
                 raise e.code.CodingError(
                     msgs=[
