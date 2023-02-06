@@ -96,7 +96,8 @@ class Tag:
             )
         data["time"] = _now()
         if exception is not None:
-            data['exception'] = "\n".join(["", ">>> EXCEPTION <<<", "", exception])
+            # data['exception'] = "\n".join(["", ">>> EXCEPTION <<<", "", exception])
+            data['exception'] = ["", ">>> EXCEPTION <<<", "", *exception.split("\n")]
         _LOGGER.info(msg=f"Creating tag {self.path}")
         _txt = yaml.safe_dump(data)
         self.path.write_text(text=_txt, encoding='utf-8')

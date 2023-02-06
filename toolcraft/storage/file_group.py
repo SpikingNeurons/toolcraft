@@ -1380,7 +1380,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # fine but state_manager files will be not on the disk and hence
             # we cannot use `self.get_files()`.
             # Note we read in memmap mode as we need only meta info
-            _npy_memmaps[file_key] = util.npy_load(self.path / file_key, memmap=True)
+            _npy_memmaps[file_key] = util.npy_load(
+                self.path / file_key, memmap=True,
+                shape=self.shape[file_key], dtype=self.dtype[file_key],
+            )
 
         # ----------------------------------------------------------------02
         # check shape, dtype
