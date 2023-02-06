@@ -1294,7 +1294,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Note that for npy record the type is t.Dict[str, np.ndarray]
         As we can treat it as dict of numpy arrays
         """
-        return util.npy_load(self.path / file_key, memmap=memmap)
+        return util.npy_load(self.path / file_key, memmap=memmap, shape=self.shape[file_key], dtype=self.dtype[file_key])
 
     def save_npy_data(
         self,
