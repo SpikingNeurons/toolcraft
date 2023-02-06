@@ -347,3 +347,16 @@ def unfinished():
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
                 _rp.log([_j.job_id])
+
+
+@_APP.command(help="Lists the jobs in runner that have failed.")
+def failed():
+    """
+    """
+    _rp = _RUNNER.richy_panel
+    for _stage_name, _stage in _rp.track(_RUNNER.flow.stages.items(), task_name="Scanning stages"):
+        _rp.update(f"Scanning stage {_stage_name} ...")
+        _j: Job
+        for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
+            if _j.is_failed:
+                _rp.log([_j.job_id])
