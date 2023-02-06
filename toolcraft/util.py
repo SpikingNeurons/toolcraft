@@ -1229,16 +1229,39 @@ def find_free_port(localhost: bool):
         return _socket.getsockname()[1]
 
 
-def npy_load(file: "s.Path", memmap: bool = False) -> np.ndarray:
-    if memmap:
-        # todo: doesn't support s.Path make it compatible and also see if npy_save methods
-        #  also work although they allow s.Path
-        # noinspection PyTypeChecker
-        _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
-    else:
-        with file.open(mode='rb') as f:
-            _ret = np.load(f, allow_pickle=False, fix_imports=False)
-            f.close()
+def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> np.ndarray:
+    """
+    Note that we assume that npy header is present in files
+    But in some cases the header is not saved then it will raise allow_pickle error
+    This can be misleading as this happens because the data is binary array with no numpy header
+    """
+    try:
+        if memmap:
+            # todo: doesn't support s.Path make it compatible and also see if npy_save methods
+            #  also work although they allow s.Path
+            try:
+                # noinspection PyTypeChecker
+                _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
+            except ValueError as __ve:
+                if shape is None and dtype is None:
+                    raise __ve
+                # noinspection PyTypeChecker
+                _ret = np.memmap(file.local_path, mode="r", shape=shape, dtype=dtype)
+        else:
+            with file.open(mode='rb') as f:
+                _ret = np.load(f, allow_pickle=False, fix_imports=False)
+                f.close()
+    except ValueError as _ve:
+        raise e.code.CodingError(
+            msgs=[
+                "If raised exception is `Cannot load file containing pickled data when allow_pickle=False` then that means you are loading binary data",
+                "May be that means the numpy header was not added while saving data, for example because of memmap save",
+                "Please supply dtype and shape to load binary blob as numpy array",
+                {
+                    "raise exception": str(_ve)
+                }
+            ]
+        )
     return _ret
 
 
