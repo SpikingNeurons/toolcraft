@@ -1298,28 +1298,10 @@ def npy_array_save(file: "s.Path", npy_array: np.ndarray):
         f.close()
 
 
-def npy_record_save(
-    file: "s.Path", npy_record_dict: t.Dict[str, np.ndarray]
+def dict_2_npy_record(
+    npy_record_dict: t.Dict[str, np.ndarray]
 ) -> np.ndarray:
-    """
-    todo: migrate to `np.core.records.fromarrays` if needed
-     ... maybe do not do this as we get more elaborate errors in our
-         implementation
-    There is already a method that does the same job:
-      r = np.core.records.fromarrays([x1,x2,x3],names='a,b,c')
-    """
     # ---------------------------------------------------------------01
-    # do some validations
-    if file.exists():
-        raise e.code.CodingError(
-            msgs=[f"The file {file} was already crated"]
-        )
-    e.validation.ShouldBeInstanceOf(
-        value=npy_record_dict, value_types=(dict,),
-        msgs=[
-            f"Was expecting dictionary of numpy arrays"
-        ]
-    ).raise_if_failed()
     _len = None
     for k, v in npy_record_dict.items():
         # key should be str
@@ -1383,12 +1365,42 @@ def npy_record_save(
         npy_record[k] = npy_record_dict[k]
 
     # ---------------------------------------------------------------04
+    return npy_record
+
+
+def npy_record_save(
+    file: "s.Path", npy_record_dict: t.Dict[str, np.ndarray]
+) -> np.ndarray:
+    """
+    todo: migrate to `np.core.records.fromarrays` if needed
+     ... maybe do not do this as we get more elaborate errors in our
+         implementation
+    There is already a method that does the same job:
+      r = np.core.records.fromarrays([x1,x2,x3],names='a,b,c')
+    """
+    # ---------------------------------------------------------------01
+    # do some validations
+    if file.exists():
+        raise e.code.CodingError(
+            msgs=[f"The file {file} was already crated"]
+        )
+    e.validation.ShouldBeInstanceOf(
+        value=npy_record_dict, value_types=(dict,),
+        msgs=[
+            f"Was expecting dictionary of numpy arrays"
+        ]
+    ).raise_if_failed()
+
+    # ---------------------------------------------------------------02
+    npy_record = dict_2_npy_record(npy_record_dict)
+
+    # ---------------------------------------------------------------03
     # save numpy record file
     with file.open(mode='wb') as f:
         np.save(f, npy_record, allow_pickle=False, fix_imports=False)
         f.close()
 
-    # ---------------------------------------------------------------05
+    # ---------------------------------------------------------------04
     # since we created record we can return if you want to use
     return npy_record
 
