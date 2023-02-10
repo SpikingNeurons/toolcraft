@@ -221,7 +221,7 @@ class TagManager:
                 gui.widget.Text(default_value=f"running from: {_running['time']}")
             if _failed:
                 gui.widget.Text(default_value=f"failed at: {_failed['time']}")
-                gui.widget.Text(default_value=f"{_failed['exception']}")
+                gui.widget.Text(default_value="\n".join(_failed['exception']))
             if _finished:
                 gui.widget.Text(default_value=f"finished at: {_finished['time']}")
 
