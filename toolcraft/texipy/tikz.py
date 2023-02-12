@@ -2377,15 +2377,20 @@ class Path:
                 )
 
         # select op
-        _op = "to"
+        _op = "to "
         if _is_loop_related or use_as_edge:
-            _op = "edge"
+            _op = "edge "
 
         # if _op is `to` then edge_style should be None
-        if _op == "to":
+        if _op == "to ":
             if edge_style is not None:
                 raise e.code.NotAllowed(
                     msgs=["Do not supply `edge_style` as `to` op cannot process it..."]
+                )
+        else:
+            if controls is not None:
+                raise e.code.NotAllowed(
+                    msgs=[]
                 )
 
         # add edge style as the above check is just done above
