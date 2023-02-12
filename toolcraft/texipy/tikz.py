@@ -256,8 +256,8 @@ class ArrowDef:
     end_arrow_kind: ArrowTip = None
     shorten_start: Scalar = None
     shorten_end: Scalar = None
-    start_tips: t.Union[ArrowTip, t.List[ArrowTip]] = None
-    end_tips: t.Union[ArrowTip, t.List[ArrowTip]] = None
+    start_tips: t.Union[ArrowTip, t.List[ArrowTip], str, t.List[str]] = None
+    end_tips: t.Union[ArrowTip, t.List[ArrowTip], str, t.List[str]] = None
 
     def __str__(self) -> str:
         _ret = []
