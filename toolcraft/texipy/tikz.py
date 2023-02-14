@@ -1065,7 +1065,7 @@ class Point(abc.ABC):
 
     @classmethod
     def between_nodes(cls, node1: "Node", node2: "Node", ratio: float) -> str:
-        return node1.center.midway_point(node2.center, ratio=ratio)
+        return node1.pt_center.midway_point(node2.pt_center, ratio=ratio)
 
     def shift(
             self,
@@ -1203,7 +1203,7 @@ class PointOnNode(Point):
     todo: When you do not supply node we assume it is previously defined shape on which
       you are requesting anchor ... as in (first node.south).
     """
-    node: "Node"
+    node: "_Node"
     anchor: Anchor = None
     angle: t.Union[int, float] = None
     side: int = None
@@ -1269,12 +1269,109 @@ class PointOnNode(Point):
 
 
 @dataclasses.dataclass
-class Label:
+class _Node(abc.ABC):
+
+    # id
+    # we are keeping this mandatory but latex does not need it
+    # having unique name allows debugging
+    # todo: add mechanism to auto generate id when made optional
+    id: str
+
+    # refer section 17.4: The Node Text
+    text: str
+
+    @property
+    def pt_center(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.center)
+
+    @property
+    def pt_east(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.east)
+
+    @property
+    def pt_west(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.west)
+
+    @property
+    def pt_north(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.north)
+
+    @property
+    def pt_north_east(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.north_east)
+
+    @property
+    def pt_north_west(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.north_west)
+
+    @property
+    def pt_south(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.south)
+
+    @property
+    def pt_south_east(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.south_east)
+
+    @property
+    def pt_south_west(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.south_west)
+
+    @property
+    def pt_text(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text)
+
+    @property
+    def pt_text_mid(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text_mid)
+
+    @property
+    def pt_text_mid_east(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text_mid_east)
+
+    @property
+    def pt_text_mid_west(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text_mid_west)
+
+    @property
+    def pt_text_base(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text_base)
+
+    @property
+    def pt_text_base_east(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text_base_east)
+
+    @property
+    def pt_text_base_west(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text_base_west)
+
+    @property
+    def pt_text_lower(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor=Anchor.text_lower)
+
+    def pt_at_angle(self, angle: t.Union[int, float]) -> PointOnNode:
+        return PointOnNode(node=self, angle=angle)
+
+    def pt_on_side(self, side: int) -> PointOnNode:
+        return PointOnNode(node=self, side=side)
+
+    def pt_on_corner(self, corner: int) -> PointOnNode:
+        return PointOnNode(node=self, corner=corner)
+
+    def pt_on_inner_point(self, inner_point: int) -> PointOnNode:
+        return PointOnNode(node=self, inner_point=inner_point)
+
+    def pt_on_outer_point(self, outer_point: int) -> PointOnNode:
+        return PointOnNode(node=self, outer_point=outer_point)
+
+
+
+@dataclasses.dataclass
+class Label(_Node):
     """
     Although not a subclass of Node this is still a Node in latex
 
-    Section 13.9 The Label and Pin Options
-    label=[⟨options⟩]⟨angle⟩:⟨text⟩
+    Section 17.10.2 The Label Option
+    /tikz/label=[〈options〉]〈angle〉:〈text〉
 
     Even you can name these nodes to be reused later
     \\begin{tikzpicture}
@@ -1282,13 +1379,14 @@ class Label:
     \\draw (label node) -- +(1,1);
     \\end{tikzpicture}
     """
-    text: str
-    id: str = None
+
     style: Style = None
     angle: t.Union[int, float] = None
     anchor: Anchor = None  # must be only intuitive anchors
     # todo: this also needs to go in tikz options global to tikz picture
     distance: Scalar = None
+
+    _node: "Node" = None
 
     def __post_init__(self):
         # validation
@@ -1303,10 +1401,15 @@ class Label:
                 )
 
     def __str__(self):
+        if self._node is None:
+            raise e.code.CodingError(
+                msgs=[
+                    "This label was never attached to any node"
+                ]
+            )
         _l = "label={"
         _options = []
-        if self.id is not None:
-            _options.append(f"name={self.id}")
+        _options.append(f"name={self.id}")
         if self.distance is not None:
             _options.append(f"label distance={self.distance}")
         if self.style is not None:
@@ -1322,21 +1425,22 @@ class Label:
 
 
 @dataclasses.dataclass
-class Pin:
+class Pin(_Node):
     """
     Although not a subclass of Node this is still a Node in latex
 
-    Section 13.9 The Label and Pin Options
-    pin=[⟨options⟩]⟨angle⟩:⟨text⟩
+    17.10.3 The Pin Option
+    /tikz/pin=[〈options〉]〈angle〉:〈text〉
     """
-    text: str
-    id: str = None
+
     style: Style = None
     angle: t.Union[int, float] = None
     anchor: Anchor = None
     # todo: this also needs to go in tikz options global to tikz picture
     distance: Scalar = None
     edge_style: Style = None
+
+    _node: "Node" = None
 
     def __post_init__(self):
         # validation
@@ -1351,10 +1455,15 @@ class Pin:
                 )
 
     def __str__(self):
+        if self._node is None:
+            raise e.code.CodingError(
+                msgs=[
+                    "This pin was never attached to any node"
+                ]
+            )
         _l = "pin={"
         _options = []
-        if self.id is not None:
-            _options.append(f"name={self.id}")
+        _options.append(f"name={self.id}")
         if self.distance is not None:
             _options.append(f"pin distance={self.distance}")
         if self.style is not None:
@@ -1372,8 +1481,30 @@ class Pin:
 
 
 @dataclasses.dataclass
-class Node:
+class Node(_Node):
     """
+
+    14.17 The Node and Edge Operations
+    17 Nodes and Edges
+
+    The node operation adds a so-called node to a path. This operation is
+    special in the following sense: It does not change the current path
+    in any way. In other words, this operation is not really a path
+    operation, but has an effect that is “external” to the path.
+
+    The edge operation has similar effect in that it adds something after
+    the main path has been drawn. However, it works like the to operation,
+    that is, it adds a to path to the picture after the main path has been
+    drawn. Since these operations are quite complex, they are described
+    in the separate Section 17.
+
+    Note that the Node also can be used as coordinate ...
+    use it as it is smart than just using coordinate
+    + 17.11 Connecting Nodes: Using Nodes as Coordinates
+
+
+    https://tikz.dev/tikz-shapes
+    \path … node ⟨foreach statements⟩ [⟨options⟩] (⟨name⟩) at(⟨coordinate⟩) :⟨animation attribute⟩={⟨options⟩} {⟨node contents⟩} …;
 
     Understanding points on Node
       The properties/methods that return `PointOnNode` please refer section 49.6
@@ -1389,14 +1520,12 @@ class Node:
       for given shape
     """
 
-    # id
-    id: str = None
-
-    # refer section 13.4: Options for the Text in Nodes
-    text_to_display: str = None
+    # refer section 17.4: The Node Text
+    text: str = None  # optional for Node
 
     # style
     style: t.Union[str, Style] = None
+    # refer section 17.4: The Node Text
     o_text: TextOptions = None
     o_transform: TransformOptions = None
 
@@ -1493,14 +1622,13 @@ class Node:
             _style = self._tikz.styles[_style]
 
         # -------------------------------------------------------- 02
-        # if id is provided check that there is no conflict within current tikz_context
-        if self.id is not None:
-            e.validation.ShouldNotBeOneOf(
-                value=self.id, values=[_.id for _ in self._tikz.nodes],
-                msgs=[f"Node with id {self.id} is already registered in tikz_context"]
-            ).raise_if_failed()
-            # Register this new node
-            self._tikz.nodes.append(self)
+        # check that there is no conflict within current tikz_context
+        e.validation.ShouldNotBeOneOf(
+            value=self.id, values=[_.id for _ in self._tikz.nodes],
+            msgs=[f"Node with id {self.id} is already registered in tikz_context"]
+        ).raise_if_failed()
+        # Register this new node
+        self._tikz.nodes.append(self)
         # Also do the same for labels
         for _l in self.labels:
             e.validation.ShouldNotBeOneOf(
@@ -1509,8 +1637,7 @@ class Node:
                       f"is already registered in tikz_context"]
             ).raise_if_failed()
             # Register this new label as it is also a node ... but only if id is present
-            if _l.id is not None:
-                self._tikz.nodes.append(_l)
+            self._tikz.nodes.append(_l)
         # Also do the same for pins
         for _p in self.pins:
             e.validation.ShouldNotBeOneOf(
@@ -1519,8 +1646,7 @@ class Node:
                       f"is already registered in tikz_context"]
             ).raise_if_failed()
             # Register this new pin as it is also a node ... but only if id is present
-            if _p.id is not None:
-                self._tikz.nodes.append(_p)
+            self._tikz.nodes.append(_p)
 
         # -------------------------------------------------------- 03
         # the token to return
@@ -1563,8 +1689,8 @@ class Node:
 
         # -------------------------------------------------------- 05
         # finally, add text value if supplied
-        if self.text_to_display is not None:
-            _ret += "{" + self.text_to_display + "}"
+        if self.text is not None:
+            _ret += "{" + self.text + "}"
         else:
             _ret += "{}"
 
@@ -1590,98 +1716,22 @@ class Node:
         # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
         return []
 
-    @property
-    def center(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.center)
-
-    @property
-    def east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.east)
-
-    @property
-    def west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.west)
-
-    @property
-    def north(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.north)
-
-    @property
-    def north_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.north_east)
-
-    @property
-    def north_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.north_west)
-
-    @property
-    def south(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.south)
-
-    @property
-    def south_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.south_east)
-
-    @property
-    def south_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.south_west)
-
-    @property
-    def text(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text)
-
-    @property
-    def text_mid(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_mid)
-
-    @property
-    def text_mid_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_mid_east)
-
-    @property
-    def text_mid_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_mid_west)
-
-    @property
-    def text_base(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_base)
-
-    @property
-    def text_base_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_base_east)
-
-    @property
-    def text_base_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_base_west)
-
-    @property
-    def text_lower(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_lower)
-
     def position_at(self, other: t.Union[Point, str]) -> "Node":
         self @ other  # check __matmul__
         return self
-
-    def point_at_angle(self, angle: t.Union[int, float]) -> PointOnNode:
-        return PointOnNode(node=self, angle=angle)
-
-    def point_on_side(self, side: int) -> PointOnNode:
-        return PointOnNode(node=self, side=side)
-
-    def point_on_corner(self, corner: int) -> PointOnNode:
-        return PointOnNode(node=self, corner=corner)
-
-    def point_on_inner_point(self, inner_point: int) -> PointOnNode:
-        return PointOnNode(node=self, inner_point=inner_point)
-
-    def point_on_outer_point(self, outer_point: int) -> PointOnNode:
-        return PointOnNode(node=self, outer_point=outer_point)
 
     def add_label(self, label: Label) -> "Node":
         """
         Section 13.9 The Label and Pin Options
         label=[⟨options⟩]⟨angle⟩:⟨text⟩
         """
+        if label._node is not None:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"The label is already used by node {label._node.id}"
+                ]
+            )
+        label._node = self
         self.labels.append(label)
         return self
 
@@ -1690,6 +1740,13 @@ class Node:
         Section 13.9 The Label and Pin Options
         pin=[⟨options⟩]⟨angle⟩:⟨text⟩
         """
+        if pin._node is not None:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"The pin is already used by node {pin._node.id}"
+                ]
+            )
+        pin._node = self
         self.pins.append(pin)
         return self
 
@@ -1697,6 +1754,8 @@ class Node:
 @dataclasses.dataclass
 class Path:
     """
+    14: Syntax for Path Specifications
+
     Most important component for TikZ class.
     Path can have
       Point (i.e. tikz coordinate)
@@ -1810,18 +1869,18 @@ class Path:
         # ---------------------------------------------------------- 04
         return _ret + ";"
 
-    def add_node(self, node: Node) -> "Path":
-        if node in self.connectome:
-            raise e.validation.NotAllowed(
-                msgs=[f"Node {node} is already added, create new node instead ..."]
-            )
+    def add_node(self, node: _Node) -> "Path":
         self.connectome += [node]
         return self
 
-    def move_to(self, to: Point) -> "Path":
+    def add_point(self, point: Point) -> "Path":
+        self.connectome += [point]
+        return self
+
+    def move_to(self, to: t.Union[Point, _Node]) -> "Path":
         """
 
-        Section 11.1 The Move-To Operation
+        Section 14.1 The Move-To Operation
         \\path . . . ⟨coordinate⟩ . . . ;
         In the specification (0,0) --(2,0) (0,1) --(2,1) two move-to operations
           are specified: (0,0) and (0,1). The other two operations,
@@ -1831,9 +1890,29 @@ class Path:
         self.connectome += [to]
         return self
 
-    def line_to(self, to: Point, nodes: t.List[Node] = None) -> "Path":
+    def move_back(self) -> "Path":
         """
-        Section 11.2 The Line-To Operation
+        Section 14.1 The Move-To Operation
+
+        There is special coordinate called current subpath start that is
+        always at the position of the last move-to operation on the current path.
+
+        \tikz [line width=2mm] \draw (0,0) --(1,0) --(1,1) --(0,1) --(current subpath start) ;
+
+        Note how in the above example the path is not closed (as --cycle would do).
+        Rather, the line just starts and ends at the origin without being a closed path.
+        """
+        self.connectome += ["-- (current subpath start)"]
+        return self
+
+    def line_to(
+        self,
+        to: t.Union[Point, _Node],
+        connect_type: t.Literal['--', '|-', '-|'] = '--',
+        nodes: t.List[Node] = None
+    ) -> "Path":
+        """
+        Section 14.2 The Line-To Operation
         \\path . . . --⟨coordinate⟩ . . . ;  # straight lines
         \\tikz {\\draw (0,0) to[line to] (1,0);}
 
@@ -1849,97 +1928,38 @@ class Path:
                 and sets the nodes pos automatically and they get locked
 
         """
+        if isinstance(to, _Node):
+            to = f"({to.id})"
         if bool(nodes):
-            self.connectome += ["--", nodes, to]
+            self.connectome += [connect_type, nodes, to]
         else:
-            self.connectome += [f"--", to]
+            self.connectome += [connect_type, to]
         return self
 
-    def line_hv_to(self, to: Point, nodes: t.List[Node] = None) -> "Path":
+    def cycle(self) -> "Path":
         """
-        Section 11.2 The Line-To Operation
-        \\path . . . -|⟨coordinate⟩ . . . ;  # vertical horizontal lines
+        Section 14.2 The Line-To Operation
+        Cycles the path. Useful for closed figures
 
-        Automatic anchors are computed for the same ...
-        while center is used for other path commands like parabola, plot etc.
-
-        Note: the nodes options here ... todo: needs testing
-              they are more specifically to be used as labels on drawn path ...
-              todo: maybe we do not need nodes as we can add later and set pos=... on it
-                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
-                We might have limitations and also it places nodes not exactly at end
-                and sets the nodes pos automatically and they get locked
-
-        """
-        if bool(nodes):
-            self.connectome += ["-|", nodes, to]
-        else:
-            self.connectome += [f"-|", to]
-        return self
-
-    def line_vh_to(self, to: Point, nodes: t.List[Node] = None) -> "Path":
-        """
-        Section 11.2 The Line-To Operation
-        \\path . . . |-⟨coordinate⟩ . . . ;  # vertical horizontal lines
-
-        Automatic anchors are computed for the same ...
-        while center is used for other path commands like parabola, plot etc.
-
-        Note: the nodes options here ... todo: needs testing
-              they are more specifically to be used as labels on drawn path ...
-              todo: maybe we do not need nodes as we can add later and set pos=... on it
-                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
-                We might have limitations and also it places nodes not exactly at end
-                and sets the nodes pos automatically and they get locked
-
-        """
-        if bool(nodes):
-            self.connectome += ["|-", nodes, to]
-        else:
-            self.connectome += [f"|-", to]
-        return self
-
-    def line_snake_to(
-        self, to: Point, snake: t.Union[Snake, SnakeOptions],
-        nodes: t.List[Node] = None,
-    ) -> "Path":
-        """
-        Section 11.2 The Line-To Operation
-        \\draw[snake=zigzag] (0,2.5) -- (3,2.5);  # snaked lines
-
-        Automatic anchors are computed for the same ...
-        while center is used for other path commands like parabola, plot etc.
-
-        \\begin{tikzpicture}
-        \\filldraw[fill=blue!20]
-        (0,3) [snake=saw]
-        -- (3,3) [snake=coil,segment aspect=0]
-        -- (2,1) [snake=bumps]
-        -| (0,3);
+        \\begin{tikzpicture}[line width=10pt]
+        \\draw (0,0) --(1,1) --(1,0) --(0,0) (2,0) --(3,1) --(3,0) --(2,0) ;
+        \\draw (5,0) --(6,1) --(6,0) -- cycle (7,0) --(8,1) --(8,0) -- cycle;
+        \\useasboundingbox (0,1.5); % make bounding box higher
         \\end{tikzpicture}
 
-        Note: the nodes options here ... todo: needs testing
-              they are more specifically to be used as labels on drawn path ...
-              todo: maybe we do not need nodes as we can add later and set pos=... on it
-                Read: 13.8 Placing Nodes on a Line or Curve Implicitly
-                We might have limitations and also it places nodes not exactly at end
-                and sets the nodes pos automatically and they get locked
-
         """
-        if bool(nodes):
-            self.connectome += [f"{snake}]--", nodes, to]
-        else:
-            self.connectome += [f"[{snake}]--", to]
+        self.connectome += ["cycle"]
         return self
 
     def curve_to(
-        self, to: Point,
+        self,
+        to: t.Union[Point, _Node],
         control1: Point, control2: Point = None,
         nodes: t.List[Node] = None,
     ) -> "Path":
         """
-        Section 11.3 The Curve-To Operation
-        \\path . . . ..controls⟨c⟩and⟨d⟩..⟨y⟩ . . . ;
+        Section 14.3 The Curve-To Operation
+        \\path ... ..controls〈c〉and〈d〉..〈y or cycle〉 ...;
 
         The curve-to operation allows you to extend a path using a B´ezier curve.
 
@@ -1956,6 +1976,8 @@ class Path:
                 and sets the nodes pos automatically and they get locked
 
         """
+        if isinstance(to, _Node):
+            to = f"({to.id})"
         if control2 is None:
             _p = f"..controls{control1}.."
         else:
@@ -1966,25 +1988,23 @@ class Path:
             self.connectome += [_p, to]
         return self
 
-    def cycle(self) -> "Path":
+    def draw_rectangle(self, corner: t.Union[Point, _Node]) -> "Path":
         """
-        Section 11.4: The Cycle Operation
-        \\path . . . --cycle . . . ;
-        """
-        self.connectome += ["--cycle"]
-        return self
+        Section 14.4 The Rectangle Operation
+        \\path ... rectangle〈corner or cycle〉 ...;
 
-    def rectangle(self, corner: Point) -> "Path":
+        A rectangle can obviously be created using four straight lines and a
+        cycle operation. However, since rectangles are needed so often, a
+        special syntax is available for them.
         """
-        Section 11.5 The Rectangle Operation
-        \\path . . . rectangle⟨corner⟩ . . . ;
-        """
-        self.connectome += [f"rectangle{corner}"]
+        if isinstance(corner, _Node):
+            corner = f"({corner.id})"
+        self.connectome += [f"rectangle {corner}"]
         return self
 
     def set_rounded_corners(self, inset: Scalar = None) -> "Path":
         """
-        Section 11.6 Rounding corners
+        Section 14.5 Rounding corners
         """
         if inset is None:
             self.connectome += ["rounded corners"]
@@ -1994,7 +2014,9 @@ class Path:
 
     def set_sharp_corners(self) -> "Path":
         """
-        Section 11.6
+        Section 14.5
+        This options switches off any rounding on subsequent corners of the path.
+
         \\begin{tikzpicture}
         \\draw (0,0) [rounded corners=10pt]
         -- (1,1) -- (2,1) [sharp corners]
@@ -2004,69 +2026,107 @@ class Path:
         self.connectome += ["sharp corners"]
         return self
 
-    def circle(self, radius: Scalar) -> "Path":
+    def draw_circle(self, radius: Scalar, scale: t.Union[int, float] = None) -> "Path":
         """
-        Section 11.7 The Circle and Ellipse Operations
-        \\path . . . circle(⟨radius⟩) . . . ;
-
-        \\begin{tikzpicture}
-        \\draw (1,0) circle (.5cm);
-        \\draw (3,0) ellipse (1cm and .5cm) -- ++(3,0) circle (.5cm)
-        -- ++(2,-.5) circle (.25cm);
-        \\end{tikzpicture}
+        Section 14.6 The Circle and Ellipse Operations
+        \path ... circle[〈options〉] ...;
         """
-        self.connectome += [f"circle({radius})"]
+        _ops = [f"radius={radius}"]
+        if scale is not None:
+            _ops += [f"scale={scale}"]
+        self.connectome += [f"circle [" + ", ".join(_ops) + "]"]
         return self
 
-    def ellipse(self, half_width: Scalar, half_height: Scalar) -> "Path":
-        """
-        Section 11.7 The Circle and Ellipse Operations
-        \\path . . . ellipse(⟨half width⟩ and ⟨half height⟩) . . . ;
-        """
-        self.connectome += [f"ellipse({half_width} and {half_height})"]
-        return self
-
-    def arc(
-        self, start_angle: t.Union[int, float], end_angle: t.Union[int, float],
-        radius: Scalar, half_height: Scalar = None
+    def draw_ellipse(
+        self,
+        x_radius: Scalar, y_radius: Scalar,
+        scale: t.Union[int, float] = None, rotate: t.Union[int, float] = None
     ) -> "Path":
         """
-        Section 11.8 The Arc Operation
-        \\path . . . arc(⟨start angle⟩:⟨end angle⟩:⟨radius⟩ and ⟨half height⟩) . . . ;
-
-        \\begin{tikzpicture}
-        \\draw (0,0) arc (180:90:1cm) -- (2,.5) arc (90:0:1cm);
-        \\draw (4,0) -- +(30:1cm) arc (30:60:1cm) -- cycle;
-        \\draw (8,0) arc (0:270:1cm and .5cm) -- cycle;
-        \\end{tikzpicture}
+        Section 14.6 The Circle and Ellipse Operations
+        \\path ... ellipse[〈options〉] ...;
         """
-        if half_height is None:
-            self.connectome += \
-                [f"arc({start_angle}:{end_angle}:{radius})"]
-        else:
-            self.connectome += \
-                [f"arc({start_angle}:{end_angle}:{radius} and {half_height})"]
+        _ops = [f"x radius={x_radius}", f"y radius={y_radius}", ]
+        if scale is not None:
+            _ops += [f"scale={scale}"]
+        if rotate is not None:
+            _ops += [f"rotate={rotate}"]
+        self.connectome += [f"circle [" + ", ".join(_ops) + "]"]
         return self
 
-    def grid(
-        self, corner: Point,
+    def draw_arc(
+        self,
+        radius: Scalar = None,
+        x_radius: Scalar = None, y_radius: Scalar = None,
+        start_angle: t.Union[int, float] = None,
+        end_angle: t.Union[int, float] = None,
+        delta_angle: t.Union[int, float] = None,
+    ) -> "Path":
+        """
+        Section 14.7 The Arc Operation
+        \\path ... arc[〈options〉] ...;
+        """
+        # validations
+        if radius is not None:
+            if x_radius is not None or y_radius is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "If radius is specified do not specify x_radius and(or) y_radius"
+                    ]
+                )
+        else:
+            if x_radius is None or y_radius is None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "Please specify x_radius and y_radius or else specify radius"
+                    ]
+                )
+        if start_angle is None:
+            raise e.validation.NotAllowed(msgs=["Please specify start_angle"])
+        if not (end_angle is None ^ delta_angle is None):
+            raise e.validation.NotAllowed(msgs=["Specify one of end_angle or delta_angle"])
+
+        # bake options
+        _ops = []
+        if radius is not None:
+            _ops += [f"radius={radius}"]
+        if x_radius is not None:
+            _ops += [f"x radius={x_radius}"]
+        if y_radius is not None:
+            _ops += [f"y radius={y_radius}"]
+        if start_angle is not None:
+            _ops += [f"start angle={start_angle}"]
+        if end_angle is not None:
+            _ops += [f"end angle={end_angle}"]
+        if delta_angle is not None:
+            _ops += [f"delta angle={delta_angle}"]
+
+        # make connectome
+        self.connectome += [f"arc [{','.join(_ops)}]"]
+        return self
+
+    def draw_grid(
+        self,
+        corner: t.Union[Point, _Node],
         step: t.Union[int, float, Scalar, Point] = None,
         xstep: t.Union[int, float, Scalar] = None,
         ystep: t.Union[int, float, Scalar] = None,
+        rotate: t.Union[int, float] = None,
     ) -> "Path":
         """
-        Section 11.9 The Grid Operation
-        \\path . . . grid[⟨options⟩]⟨corner⟩ . . . ;
+        Section 14.8 The Grid Operation
+        \path ... grid[〈options〉]〈corner or cycle〉 ...;
 
-        \\begin{tikzpicture}[x=.5cm]
-        \\draw[thick] (0,0) grid [step=1](3,2);
-        \\draw[red](0,0) grid [step=.75cm] (3,2);
-        \\end{tikzpicture}
-        \\begin{tikzpicture}
-        \\draw(0,0) circle (1);
-        \\draw[blue](0,0) grid [step=(45:1)] (3,2);
-        \\end{tikzpicture}
+        todo: add support for help lines
+          \tikz \draw[help lines](0,0) grid (3,3);
         """
+        if step is not None:
+            if xstep is not None:
+                raise e.validation.NotAllowed(msgs=["Please do not use xstep as you are using step"])
+            if ystep is not None:
+                raise e.validation.NotAllowed(msgs=["Please do not use ystep as you are using step"])
+        if isinstance(corner, _Node):
+            corner = f"({corner.id})"
         _options = []
         if step is not None:
             _options.append(f"step={step}")
@@ -2074,7 +2134,10 @@ class Path:
             _options.append(f"xstep={xstep}")
         if ystep is not None:
             _options.append(f"ystep={ystep}")
-        self.connectome += [f"grid[{','.join(_options)}]{corner}"]
+        if rotate is not None:
+            _options.append(f"rotate={rotate}")
+
+        self.connectome += [f"grid [{','.join(_options)}] {corner}"]
         return self
 
     def parabola(
@@ -2083,7 +2146,8 @@ class Path:
         height: Scalar = None, bend_at_start: bool = False, bend_at_end: bool = False
     ) -> "Path":
         """
-        Section 11.10 The Parabola operation
+        todo: TBD ............. done until draw_grid
+        Section 14.9 The Parabola operation
         \\path . . . parabola[⟨options⟩]bend⟨bend coordinate⟩⟨coordinate⟩ . . . ;
         """
         _options = []
@@ -2111,7 +2175,7 @@ class Path:
 
     def sin(self, to: Point) -> "Path":
         """
-        Section 11.11 The Sine and Cosine Operation
+        Section 14.10 The Sine and Cosine Operation
         \\path . . . sin⟨coordinate⟩ . . . ;
         """
         self.connectome += [f"sin{to}"]
@@ -2119,11 +2183,17 @@ class Path:
 
     def cos(self, to: Point) -> "Path":
         """
-        Section 11.11 The Sine and Cosine Operation
+        Section 14.10 The Sine and Cosine Operation
         \\path . . . cos⟨coordinate⟩ . . . ;
         """
         self.connectome += [f"cos{to}"]
         return self
+
+    def svg(self):
+        """
+        Section 14.11 The SVG Operation
+        """
+        raise NotImplemented()
 
     def plot(
         self,
@@ -2134,8 +2204,8 @@ class Path:
         relative: t.Literal['+', '++', ''] = '',
     ) -> "Path":
         """
-        Section 11.12 The Plot Operations ... tells checking section 16
-        Section 16 Plots of Functions
+        Section 14.12 The Plot Operations ... tells checking section 22
+        Section 22 Plots of Functions
 
         Note that we will have `tikz.pgfplots` for having more complex plots.
         This plot is aimed at using plots inside tikz figure. So do expect this
@@ -2201,11 +2271,10 @@ class Path:
 
     def to(
         self,
-        to: t.Union[Point, str] = None,
+        to: t.Union[Point, str],
+        *,
         out_: t.Union[int, float] = None,
         in_: t.Union[int, float] = None,
-        use_as_edge: bool = False,  # todo: experimental
-        edge_style: Style = None,
         relative: bool = False,
         bend_left: t.Union[int, float] = None,
         bend_right: t.Union[int, float] = None,
@@ -2233,8 +2302,16 @@ class Path:
         nodes: t.List[Node] = None,
     ) -> "Path":
         """
-        Section 11.13 The To Path operation
-        \\path . . . to[⟨options⟩] ⟨nodes⟩ (⟨coordinate⟩) . . . ;
+        Section 14.13 The To Path operation
+        \path ... to[〈options〉] 〈nodes〉〈 coordinate or cycle〉 ...;
+
+        Note when we end to with ; then the arrow tip will be added and that
+        will be like drawing edge but with difference that the draw path will
+        have been moved.
+
+        My assumptions:
+        + Just like `edge()` to adds extra path while drawing with options to make curves rather than straight lines
+        + `connect()` can also work with Nodes but here we need Point
 
         Read section 32 To Path Library
         + This method can do all things for you
@@ -2378,24 +2455,6 @@ class Path:
 
         # select op
         _op = "to "
-        if _is_loop_related or use_as_edge:
-            _op = "edge "
-
-        # if _op is `to` then edge_style should be None
-        if _op == "to ":
-            if edge_style is not None:
-                raise e.code.NotAllowed(
-                    msgs=["Do not supply `edge_style` as `to` op cannot process it..."]
-                )
-        else:
-            if controls is not None:
-                raise e.code.NotAllowed(
-                    msgs=[]
-                )
-
-        # add edge style as the above check is just done above
-        if edge_style is not None:
-            _t.append(str(edge_style))
 
         # expand connectome
         _t_str = "[" + ",".join(_t) + "]"
@@ -2406,6 +2465,60 @@ class Path:
 
         # return
         return self
+
+    def edge(
+        self,
+        to: t.Union[Point, str],
+        # *,
+    ):
+        """
+        14.17 The Node and Edge Operations
+        17 Nodes and Edges
+
+        The node operation adds a so-called node to a path. This operation is
+        special in the following sense: It does not change the current path
+        in any way. In other words, this operation is not really a path
+        operation, but has an effect that is “external” to the path.
+
+        The edge operation has similar effect in that it adds something after
+        the main path has been drawn. However, it works like the to operation,
+        that is, it adds a to path to the picture after the main path has been
+        drawn. Since these operations are quite complex, they are described
+        in the separate Section 17.
+
+
+        \path ... edge[〈options〉] 〈nodes〉 (〈coordinate〉)
+
+        Read this answer to understand why edge is different from `to()`
+        https://tex.stackexchange.com/questions/314301/tikz-when-will-i-need-to-use-edge-and-how-does-it-differ-from-the-conventional/314306#314306
+
+        Note that this only draws edges with tips at end but does not move the path like `to()`
+
+        Section 17.12: Connecting Nodes: Using the Edge Operation
+        The edge operation works like a to operation that is added after the
+        main path has been drawn, much like a node is added after the main
+        path has been drawn. This allows each edge to have a different
+        appearance. As the node operation, an edge temporarily suspends the
+        construction of the current path and a new path p is constructed.
+        This new path p will be drawn after the main path has been drawn. Note
+        that p can be totally different from the main path with respect to
+        its options. Also note that if there are several edge and/or node
+        operations in the main path, each creates its own path(s) and they
+        are drawn in the order that they are encountered on the main path.
+
+        """
+        ...
+
+    def loop(
+        self,
+        to: t.Union[Point, str],
+        # *,
+    ):
+        """
+        We will have special method instead of using `to()` or `edge()` to draw loops on our nodes
+        This is just for convenience
+        """
+        ...
 
 
 @dataclasses.dataclass
@@ -2418,7 +2531,7 @@ class TikZ(LaTeX):
 
     @property
     @util.CacheResult
-    def nodes(self) -> t.List[t.Union[Node, Label, Pin]]:
+    def nodes(self) -> t.List[_Node]:
         # A cached container for nodes with id ...
         return []
 
