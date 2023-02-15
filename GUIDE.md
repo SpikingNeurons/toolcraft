@@ -6,6 +6,11 @@ How to get readme
 + https://readme.so/editor
 + https://www.youtube.com/watch?v=K7jeBfiNqR4
 
+## Visual Programming
+
++ [pygame based](https://github.com/IndiePython/nodezator)
++ [blender based](https://stackoverflow.com/questions/21859936/is-there-a-python-reusable-component-that-is-like-the-blender-node-editor)
+
 ## ASGI server
 
 Use Uvicorn or more better Hypercorn
