@@ -644,6 +644,42 @@ class Document(LaTeX):
 
 
 @dataclasses.dataclass
+class IncludeGraphics(LaTeX):
+    """
+    todo: Lot more options to be supported from here
+        https://latexref.xyz/_005cincludegraphics.html
+    """
+
+    width: Scalar = None
+    angle: t.Union[int, float] = None
+    image_path: str = None
+
+    @property
+    def use_single_line_repr(self) -> bool:
+        return True
+
+    @property
+    def open_clause(self) -> str:
+        _ops = []
+        if self.width is not None:
+            _ops += [f"width={self.width}"]
+        if self.angle is not None:
+            _ops += [f"angle={self.angle}"]
+        return f"\\includegraphics[{','.join(_ops)}]"
+
+    @property
+    def close_clause(self) -> str:
+        return f"{{{self.image_path}}}"
+
+    def init_validate(self):
+        super().init_validate()
+        if self.image_path is None:
+            raise e.validation.NotAllowed(
+                msgs=["Field image_path is mandatory"]
+            )
+
+
+@dataclasses.dataclass
 class Figure(LaTeX):
     positioning: Positioning = None
     alignment: FloatObjAlignment = None
@@ -681,12 +717,12 @@ class Figure(LaTeX):
         ]
         return "\n".join(_ret)
 
-    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure"]) -> "Figure":
+    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure", IncludeGraphics]) -> "Figure":
         from . import tikz
 
         # test item
         e.validation.ShouldBeInstanceOf(
-            value=item, value_types=(tikz.TikZ, SubFigure),
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
             msgs=[f"Only certain item types are allowed in {Figure}"],
         ).raise_if_failed()
 
@@ -730,12 +766,12 @@ class SubFigure(LaTeX):
         if self.width is None:
             raise e.validation.NotAllowed(msgs=["Please supply value for width field"])
 
-    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure"]) -> "SubFigure":
+    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure", IncludeGraphics]) -> "SubFigure":
         from . import tikz
 
         # test item
         e.validation.ShouldBeInstanceOf(
-            value=item, value_types=(tikz.TikZ, SubFigure),
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
             msgs=[f"Only certain item types are allowed in {SubFigure}"],
         ).raise_if_failed()
 
