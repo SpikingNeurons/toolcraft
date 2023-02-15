@@ -2140,16 +2140,21 @@ class Path:
         self.connectome += [f"grid [{','.join(_options)}] {corner}"]
         return self
 
-    def parabola(
-        self, to: Point,
-        bend: Point = None, bend_pos: float = None,
+    def draw_parabola(
+        self,
+        to: t.Union[Point, _Node],
+        bend: t.Union[Point, _Node] = None,
+        bend_pos: float = None,
         height: Scalar = None, bend_at_start: bool = False, bend_at_end: bool = False
     ) -> "Path":
         """
-        todo: TBD ............. done until draw_grid
         Section 14.9 The Parabola operation
-        \\path . . . parabola[⟨options⟩]bend⟨bend coordinate⟩⟨coordinate⟩ . . . ;
+        \path ... parabola[〈options〉]bend〈bend coordinate〉〈coordinate or cycle〉 ...;
         """
+        if isinstance(to, _Node):
+            to = f"({to.id})"
+        if isinstance(bend, _Node):
+            bend = f"({bend.id})"
         _options = []
         if bend_pos is not None:
             _options.append(f"bend pos={bend_pos}")
@@ -2173,29 +2178,40 @@ class Path:
 
         return self
 
-    def sin(self, to: Point) -> "Path":
+    def draw_sin(self, to: t.Union[Point, _Node]) -> "Path":
         """
         Section 14.10 The Sine and Cosine Operation
-        \\path . . . sin⟨coordinate⟩ . . . ;
+        \path ... sin〈coordinate or cycle〉 ...;
+
+        Note that there is no way to (conveniently) draw an interval on a sine
+        or cosine curve whose end points are not multiples of π/2.
         """
-        self.connectome += [f"sin{to}"]
+        if isinstance(to, _Node):
+            to = f"({to.id})"
+        self.connectome += [f"sin {to}"]
         return self
 
-    def cos(self, to: Point) -> "Path":
+    def draw_cos(self, to: Point) -> "Path":
         """
         Section 14.10 The Sine and Cosine Operation
-        \\path . . . cos⟨coordinate⟩ . . . ;
+        \path ... cos〈coordinate or cycle〉 ...;
+
+        Note that there is no way to (conveniently) draw an interval on a sine
+        or cosine curve whose end points are not multiples of π/2.
         """
-        self.connectome += [f"cos{to}"]
+        if isinstance(to, _Node):
+            to = f"({to.id})"
+        self.connectome += [f"cos {to}"]
         return self
 
-    def svg(self):
+    def draw_svg(self):
         """
         Section 14.11 The SVG Operation
         """
+        # todo: TBD later
         raise NotImplemented()
 
-    def plot(
+    def draw_plot(
         self,
         x: t.List[t.Union[int, float]], y: t.List[t.Union[int, float]],
         width: Scalar, height: Scalar,
@@ -2206,6 +2222,20 @@ class Path:
         """
         Section 14.12 The Plot Operations ... tells checking section 22
         Section 22 Plots of Functions
+
+        \path ... --plot〈further arguments〉 ...;
+        >> --plot[〈local options〉]coordinates{〈coordinate 1〉〈coordinate 2〉...〈coordinate n〉}
+           We are using this one
+        >> --plot[〈local options〉]file{〈filename〉}
+           Can be done by python i.e. we will read file or get data using python
+           So no need to implement this
+        >> --plot[〈local options〉]〈coordinate expression〉
+           Need to know PGF mathematical engine .... still we can do this in Python
+        >> --plot[〈local options〉]function{〈gnuplot formula〉}
+           todo: TBD later in draw_plot_fn
+           This is useful to draw some fix functions like horizontal vertical
+           threshold lines which are finite
+
 
         Note that we will have `tikz.pgfplots` for having more complex plots.
         This plot is aimed at using plots inside tikz figure. So do expect this
@@ -2269,9 +2299,35 @@ class Path:
         # return
         return self
 
+    def draw_plot_fn(
+        self,
+        fn: str,
+    ) -> "Path":
+        """
+
+        Section 14.12 The Plot Operations ... tells checking section 22
+        Section 22 Plots of Functions
+        Section 22.6 Plotting a Function Using Gnuplot
+
+        \path ... --plot〈further arguments〉 ...;
+        >> --plot[〈local options〉]coordinates{〈coordinate 1〉〈coordinate 2〉...〈coordinate n〉}
+           We are using this one
+        >> --plot[〈local options〉]file{〈filename〉}
+           Can be done by python i.e. we will read file or get data using python
+           So no need to implement this
+        >> --plot[〈local options〉]〈coordinate expression〉
+           Need to know PGF mathematical engine .... still we can do this in Python
+        >> --plot[〈local options〉]function{〈gnuplot formula〉}
+           todo: TBD later in draw_plot_fn
+           This is useful to draw some fix functions like horizontal vertical
+           threshold lines which are finite
+
+        """
+        raise NotImplementedError()
+
     def to(
         self,
-        to: t.Union[Point, str],
+        to: t.Union[Point, _Node],
         *,
         out_: t.Union[int, float] = None,
         in_: t.Union[int, float] = None,
@@ -2302,89 +2358,26 @@ class Path:
         nodes: t.List[Node] = None,
     ) -> "Path":
         """
-        Section 14.13 The To Path operation
+        Section 14.13 The To Path operation (notTo Path Library)
         \path ... to[〈options〉] 〈nodes〉〈 coordinate or cycle〉 ...;
 
-        Note when we end to with ; then the arrow tip will be added and that
-        will be like drawing edge but with difference that the draw path will
-        have been moved.
-
-        My assumptions:
-        + Just like `edge()` to adds extra path while drawing with options to make curves rather than straight lines
-        + `connect()` can also work with Nodes but here we need Point
-
-        Read section 32 To Path Library
-        + This method can do all things for you
-          - line to (32.1 just use to with no remaining options)
-          - curve to (32.2 if you use any other kwargs)
-          - loops (32.3 when loop is used)
-
-        todo: Also check
-            Section 13.11 Connecting Nodes: Using the Edge Operation
-            We just change _op from to to edge without enough testing
-            Note that edge is drawm after main path is drawn so the coordinate system
-            will differ ... only advantage with `use_as_edge` is that the style option
-            can be applied unlike to so use at your own risk ...
-
-        todo: implement these options
-            • to path=⟨path⟩
-              ...
-            • execute at begin to=⟨code⟩
-              The ⟨code⟩ is executed prior to the to. This can be used to draw
-              one or more additional paths or to do additional computations.
-            • executed at end to=⟨code⟩
-              Works like the previous option, only this code is executed after the
-              to path has been added.
-            • style=every to
-              This style is installed at the beginning of every to.
-              It is empty by default.
+        Section 74: To Path Library
+        This is library .... crate class ToPathOptions for this as it can be
+          applied to both to and edge operation
 
         The to operation is used to add a user-defined path from the previous
-        coordinate to the following coordinate.
+        coordinate to the following coordinate. When you write (a) to (b), a
+        straight line is added from a to b, exactly as if you had written
+        (a) -- (b). However, if you write (a) to [out=135,in=45] (b) a curve
+        is added to the path, which leaves at an angle of 135◦ at a and
+        arrives at an angle of 45◦ at b. This is because the options in and
+        out trigger a special path to be used instead of the straight line.
 
-        When you write (a) to (b), a straight line is added from a to b, exactly as
-        if you had written (a) -- (b).
-
-        However, if you write (a) to [out=135,in=45] (b) a curve is added to the path,
-        which leaves at an angle of 135◦ at a and arrives at an angle of 45◦ at b.
-        This is because the options in and out trigger a special path to be used
-        instead of the straight line.
-
-        When we write (a) to (b),
-          the ⟨path⟩ will expand to (a) -- (b),
-        When we write (a) to[red] node {x} (b)
-          the ⟨path⟩ will expand to (a) -- (b) node[pos] {x}
-
-        Note: the nodes options here ...
-              they are more specifically to be used as labels on drawn path ...
-
-        todo: See section 32 for number of predefined `to paths`
-
-
-        Loop <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-        Check section 32.3
-
-        Note that `edge` is used instead of `to`
-        When Node is used they have used `edge` while they have used `to` for
-        coordinates.
-        -----------------
-        \\begin{tikzpicture}
-        \\node [circle,draw] {a} edge [loop above] node {x} ();
-        \\end{tikzpicture}
-        ------------------
-        \\begin{tikzpicture}
-        \\tikzstyle{every loop}=[]
-        \\draw (0,0) to [loop above] () to [loop right] () to
-            [loop below] () to [loop left] ();
-        \\end{tikzpicture}
-        ------------------
-
-        We will use edge ... but note that unlike to edge is drawn after path is
-        rendered ... for loop it makes sense to not worry as we will return to
-        same coordinate/node
+        The above para can be done with `line_to()` and `curve_to()` methods.
 
         """
+        if isinstance(to, _Node):
+            to = f"({to.id})"
         _t = []
         if out_ is not None:
             _t.append(f"out={out_}")
