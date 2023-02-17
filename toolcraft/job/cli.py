@@ -346,7 +346,8 @@ def unfinished():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
-                _rp.log([_j.job_id])
+                _logs = _j.experiment.group_by + [_j.job_id]
+                _rp.log(_logs)
 
 
 @_APP.command(help="Lists the jobs in runner that have failed.")
