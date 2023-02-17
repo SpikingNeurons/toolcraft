@@ -51,8 +51,7 @@ class FileHash:
     # check over time so that there is no time slogging
     _MIN_HOURS = 10 * 24  # 10 days
     _MAX_HOURS = 15 * 24  # 15 days
-    CHECK_INTERVALS_IN_SEC = \
-        np.arange(_MIN_HOURS, _MAX_HOURS, 3) * 60 * 60
+    CHECK_INTERVALS_IN_SEC = list(np.arange(_MIN_HOURS, _MAX_HOURS, 3) * 60 * 60)
     # CHECK_INTERVALS_IN_SEC = [1]
 
     # when you want to debug if auto_hashing feature creates same files in
