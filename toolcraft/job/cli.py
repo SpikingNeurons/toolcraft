@@ -232,23 +232,25 @@ def view():
 
     @dataclasses.dataclass
     class RunnerDashboard(gui.dashboard.BasicDashboard):
-        theme_selector: gui.widget.Combo = gui.callback.SetThemeCallback.get_combo_widget()
-        title_text: gui.widget.Text = gui.widget.Text(default_value=f"Flow for {_RUNNER.py_script}")
-        job_status: gui.widget.Button = gui.widget.Button(
-            label=">>> Show Job Flow Status <<<", callback=ShowFlowStatusCallback(),
+        theme_selector: gui.widget.Combo = dataclasses.field(default_factory=gui.callback.SetThemeCallback.get_combo_widget)
+        title_text: gui.widget.Text = dataclasses.field(default_factory=lambda: gui.widget.Text(default_value=f"Flow for {_RUNNER.py_script}"))
+        job_status: gui.widget.Button = dataclasses.field(default_factory=lambda: gui.widget.Button(label=">>> Show Job Flow Status <<<", callback=ShowFlowStatusCallback(),))
+        hr1: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
+        hr2: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
+        runner_jobs_view: gui.form.ButtonBarForm = dataclasses.field(
+            default_factory=lambda: gui.form.ButtonBarForm(
+                label="Runner Jobs ...",
+                default_open=True,
+            )
         )
-        hr1: gui.widget.Separator = gui.widget.Separator()
-        hr2: gui.widget.Separator = gui.widget.Separator()
-        runner_jobs_view: gui.form.ButtonBarForm = gui.form.ButtonBarForm(
-            label="Runner Jobs ...",
-            default_open=True,
-        )
-        hr3: gui.widget.Separator = gui.widget.Separator()
-        hr4: gui.widget.Separator = gui.widget.Separator()
-        experiment_view: gui.form.DoubleSplitForm = gui.form.DoubleSplitForm(
-            label="Experiments ...",
-            callable_name="view",
-            default_open=True,
+        hr3: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
+        hr4: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
+        experiment_view: gui.form.DoubleSplitForm = dataclasses.field(
+            default_factory=lambda: gui.form.DoubleSplitForm(
+                label="Experiments ...",
+                callable_name="view",
+                default_open=True,
+            )
         )
 
     # ---------------------------------------------------------------- 03

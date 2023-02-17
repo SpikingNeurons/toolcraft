@@ -2130,15 +2130,16 @@ if settings.TF_KERAS_WORKS:
     # noinspection PyUnresolvedReferences,PyProtectedMember
     from keras.api._v2 import keras as tk
     # noinspection PyUnresolvedReferences
-    from keras.optimizers.optimizer_experimental import \
-        optimizer as optimizer_experimental
+    # from keras.optimizers.optimizer_experimental import \
+    #     optimizer as optimizer_experimental
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
         int, float, str, slice, list, dict, tuple,
         np.float32, np.int64, np.int32,
         datetime.datetime, None, FrozenEnum,
         HashableClass, pa.Schema,
         tk.losses.Loss, tk.layers.Layer,
-        tk.optimizers.Optimizer, optimizer_experimental.Optimizer,
+        tk.optimizers.Optimizer,
+        # optimizer_experimental.Optimizer,
     ]
 else:
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict, tuple,
