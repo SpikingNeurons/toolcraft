@@ -13,6 +13,7 @@ import datetime
 
 from toolcraft import error as e
 
+from . import Text
 
 @dataclasses.dataclass
 class Symbol(abc.ABC):
@@ -203,7 +204,7 @@ class Command(Symbol):
     long: bool = False
     num_args: int = 0
     default_value: str = None
-    latex: str = None
+    latex: t.Union[str, Text] = None
 
     def __post_init__(self):
         super().__post_init__()
@@ -272,7 +273,11 @@ class Command(Symbol):
             _cmd += f"[{self.num_args}]"
         if self.default_value is not None:
             _cmd += f"[{self.default_value}]"
-        _cmd += f"{{{self.latex}~}}"
+        _latex = self.latex
+        if isinstance(_latex, str):
+            _cmd += f"{{{_latex}~}}"
+        elif isinstance(_latex, Text):
+            _cmd += f"{{{str(_latex)}}}"
         return _cmd
 
 

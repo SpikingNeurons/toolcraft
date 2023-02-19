@@ -63,6 +63,10 @@ class Text:
         self.text = f"\\textcolor{{{color}}}{{{self.text}}}"
         return self
 
+    def size(self, size: "FontSize") -> "Text":
+        self.text = size(self.text)
+        return self
+
 
 class Font(enum.Enum):
     """
