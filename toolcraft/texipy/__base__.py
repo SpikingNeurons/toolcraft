@@ -656,6 +656,7 @@ class IncludeGraphics(LaTeX):
 
     width: Scalar = None
     angle: t.Union[int, float] = None
+    # todo: add check for image present on disk
     image_path: str = None
 
     @property
