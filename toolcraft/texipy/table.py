@@ -8,7 +8,7 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment
+from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment, Text
 
 
 class ColumnFmt(enum.Enum):
@@ -88,7 +88,7 @@ class ColumnFmt(enum.Enum):
             self.stretched,
         ]
 
-    def __call__(self, width: Scalar = None, insert: str = None):
+    def __call__(self, width: Scalar = None, insert: str = None) -> str:
         # if vertical line's no kwargs will be used
         if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
             if width is not None or insert is not None:
@@ -189,7 +189,7 @@ class MultiRowCell(LaTeX):
 
     num_rows: int = None
     width: Scalar = None
-    value: t.Union[LaTeX, str] = None
+    value: t.Union[LaTeX, str, Text] = None
     no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
@@ -239,8 +239,8 @@ class MultiRowCell(LaTeX):
 class MultiColumnCell(LaTeX):
 
     num_cols: int = None
-    t_col_fmt: t.Union[ColumnFmt, str] = None
-    value: t.Union[LaTeX, str] = None
+    t_cols_def: "TableColsDef" = None
+    value: t.Union[LaTeX, str, Text] = None
     no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
@@ -264,18 +264,10 @@ class MultiColumnCell(LaTeX):
             raise e.validation.NotAllowed(
                 msgs=[f"please provide mandatory field num_cols"]
             )
-        if self.t_col_fmt is None:
+        if self.t_cols_def is None:
             raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field t_col_fmt"]
+                msgs=[f"please provide mandatory field t_cols_def"]
             )
-
-        # validate t_col_fmt
-        if isinstance(self.t_col_fmt, ColumnFmt):
-            if not self.t_col_fmt.is_legit_column:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Only legit column format can be specified ... "
-                          f"found {self.t_col_fmt}"]
-                )
 
     def generate(self) -> str:
         if bool(self._items):
@@ -285,7 +277,7 @@ class MultiColumnCell(LaTeX):
                 ]
             )
 
-        _ret = f"\\multicolumn{{{self.num_cols}}}{{{self.t_col_fmt}}}{{{self.value}}}"
+        _ret = f"\\multicolumn{{{self.num_cols}}}{{{self.t_cols_def}}}{{{self.value}}}"
 
         return _ret
 
@@ -320,7 +312,7 @@ class Row(LaTeX):
 
     @classmethod
     def from_list(
-        cls, items: t.List[t.Union[str, LaTeX]], height: Scalar = None
+        cls, items: t.List[t.Union[str, LaTeX, Text]], height: Scalar = None
     ) -> "Row":
         _ret = Row(height=height)
         for _ in items:

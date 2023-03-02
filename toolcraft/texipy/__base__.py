@@ -423,7 +423,7 @@ class LaTeX(abc.ABC):
     def __str__(self) -> str:
         # assign _doc to any items first ...
         for _ in self._items:
-            if not isinstance(_, str):
+            if not isinstance(_, (str, Text)):
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
                         value=_.label, values=self.doc.labels,
@@ -470,7 +470,7 @@ class LaTeX(abc.ABC):
                    self.close_clause + \
                    _end
 
-    def add_item(self, item: t.Union[str, "LaTeX"]) -> TLaTeX:
+    def add_item(self, item: t.Union[str, "LaTeX", Text]) -> TLaTeX:
         if not self.allow_add_items:
             raise e.code.NotAllowed(
                 msgs=[f"You are not allowed to use `add_items` method for class "
@@ -601,7 +601,7 @@ class Document(LaTeX):
             (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
         )
 
-    def add_item(self, item: t.Union[str, "LaTeX"]) -> "Document":
+    def add_item(self, item: t.Union[str, "LaTeX", Text]) -> "Document":
         return super().add_item(item)
 
     def write(
