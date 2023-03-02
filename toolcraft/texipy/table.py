@@ -277,7 +277,7 @@ class MultiColumnCell(LaTeX):
                 ]
             )
 
-        _ret = f"\\multicolumn{{{self.num_cols}}}{{{self.t_cols_def}}}{{{self.value}}}"
+        _ret = f"\\multicolumn{{{self.num_cols}}}\n{self.t_cols_def}\n{{{self.value}}}"
 
         return _ret
 
@@ -332,11 +332,11 @@ class TableColsDef(LaTeX):
 
     @property
     def open_clause(self) -> str:
-        return "{"
+        return "{\n"
 
     @property
     def close_clause(self) -> str:
-        return "}"
+        return "\n}"
 
     def init(self):
         # call super
@@ -351,7 +351,7 @@ class TableColsDef(LaTeX):
         self.num_cols = 0
 
     def generate(self) -> str:
-        return "".join([str(_) for _ in self._items])
+        return "\n".join("    " + str(_) for _ in self._items)
 
     def add_item(self, item: t.Union[str, ColumnFmt]) -> "TableColsDef":
         # get vars for current
@@ -386,6 +386,7 @@ class TableColsDef(LaTeX):
 
         # increment col count
         if _current_fmt.is_legit_column:
+            super().add_item(f"% Column {self.num_cols:03d} Def")
             self.num_cols += 1
 
         # return ... note that we convert to str as Enums are not acceptable
