@@ -458,7 +458,7 @@ class Table(LaTeX):
     caption: str = None
     type: t.Literal['normal', 'array', '*', 'X'] = 'X'
     t_pos: TablePos = TablePos.centered
-    t_width: Scalar = None
+    t_width: t.Optional[Scalar] = None
     t_cols_def: TableColsDef = None
 
     # https://tex.stackexchange.com/questions/10863/is-there-a-way-to-slightly-shrink-a-table-including-font-size-to-fit-within-th
