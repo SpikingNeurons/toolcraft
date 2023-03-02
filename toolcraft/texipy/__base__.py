@@ -6,10 +6,12 @@ import datetime
 import abc
 import enum
 
-from . import helper
 from .. import logger
 from .. import util
 from .. import error as e
+
+from . import helper
+from . import symbol
 
 _LOGGER = logger.get_logger()
 TLaTeX = t.TypeVar('TLaTeX', bound='LaTeX')
@@ -177,6 +179,7 @@ class Fa(enum.Enum):
     arrow_alt_circle_down = "\\faArrowAltCircleDown"
 
     # not part of fontawesome but still makes sense here
+    dots = "\\dots"  # ... https://tex.stackexchange.com/questions/66365/using-cdots-in-table-error-missing-inserted
     ldots = "\\ldots"  # for horizontal dots on the line
     cdots = "\\cdots"  # for horizontal dots above the line
     vdots = "\\vdots"  # for vertical dots
@@ -423,7 +426,7 @@ class LaTeX(abc.ABC):
     def __str__(self) -> str:
         # assign _doc to any items first ...
         for _ in self._items:
-            if not isinstance(_, (str, Text)):
+            if not isinstance(_, (str, Text, Fa, symbol.Symbol)):
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
                         value=_.label, values=self.doc.labels,

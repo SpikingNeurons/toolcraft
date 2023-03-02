@@ -13,7 +13,10 @@ import datetime
 
 from toolcraft import error as e
 
-from . import Text
+# noinspection PyUnreachableCode
+if False:
+    from . import Text
+
 
 @dataclasses.dataclass
 class Symbol(abc.ABC):
@@ -204,7 +207,7 @@ class Command(Symbol):
     long: bool = False
     num_args: int = 0
     default_value: str = None
-    latex: t.Union[str, Text] = None
+    latex: t.Union[str, "Text"] = None
 
     def __post_init__(self):
         super().__post_init__()
@@ -265,6 +268,7 @@ class Command(Symbol):
         return _ret
 
     def latex_def(self) -> str:
+        from . import Text
         _cmd = "\\newcommand"
         if not self.long:
             _cmd += "*"
