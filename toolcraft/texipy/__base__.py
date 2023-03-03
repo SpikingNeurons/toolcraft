@@ -70,6 +70,16 @@ class Text:
         return self
 
 
+class Fa5:
+    """
+    Check zotero or online pdf at https://ctan.org/pkg/fontawesome5
+    Click "Package Documentation"
+    """
+
+    hammer = Text("\\faHammer")
+
+
+
 class Font(enum.Enum):
     """
     todo: figure out other options later
