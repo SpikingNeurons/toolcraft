@@ -41,6 +41,10 @@ class ColumnFmt(enum.Enum):
     # stretched are identified by the alignment command X. This package requires the
     # array package.
     stretched = "X"
+
+    # todo: https://texblog.org/2019/06/03/control-the-width-of-table-columns-tabular-in-latex/
+    #   get rid of insert, insert_after, insert_before ... make them kwargs of __call__
+    #   as this is defination of column .... thus we do not need property `is_legit_column`
     # @{text}
     #   - Insert the text `text` in every line of the table between the columns
     #     where it appears.
@@ -88,7 +92,12 @@ class ColumnFmt(enum.Enum):
             self.stretched,
         ]
 
-    def __call__(self, width: Scalar = None, insert: str = None) -> str:
+    def __call__(
+        self,
+        width: Scalar = None,
+        insert: str = None
+    ) -> str:
+        # if stretched i.e. X cannot use any __call__
         # if vertical line's no kwargs will be used
         if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
             if width is not None or insert is not None:
