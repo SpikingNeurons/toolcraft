@@ -196,6 +196,10 @@ class ColumnFmt(enum.Enum):
     @classmethod
     def enum_from_value(cls, _str: str) -> "ColumnFmt":
         for _s in _str.split("\n"):
+            # handle || separately
+            if _s[0:2] == "||":
+                return cls.double_vertical_line
+            # get start token
             _ss = _s[0:1]
             # this addresses tokes for insert before and after
             if _ss in [">", "<"]:
@@ -415,9 +419,9 @@ class TableColsDef(LaTeX):
             ColumnFmt.vertical_line, ColumnFmt.double_vertical_line,
             ColumnFmt.insert, ColumnFmt.insert_1
         ]:
-            super().add_item(f"% Column Def for {_current_fmt} (pseudo)")
+            super().add_item(f"% [---]: Column Def for {_current_fmt}")
         else:
-            super().add_item(f"% Column {self._num_cols:03d} Def")
+            super().add_item(f"% [{self._num_cols:03d}]: Column Def for {_current_fmt}")
             self._num_cols += 1
 
         # if str has \n then make multiple add items
@@ -618,7 +622,7 @@ class Table(LaTeX):
             if self.type != 'X':
                 raise e.validation.NotAllowed(
                     msgs=[
-                        f"YThe t_cols_def uses one or more {ColumnFmt.stretched}",
+                        f"The t_cols_def uses one or more {ColumnFmt.stretched}",
                         f"This is only allowed when table type is 'X' i.e. tabularx",
                     ]
                 )
