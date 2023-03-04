@@ -419,9 +419,9 @@ class TableColsDef(LaTeX):
             ColumnFmt.vertical_line, ColumnFmt.double_vertical_line,
             ColumnFmt.insert, ColumnFmt.insert_1
         ]:
-            super().add_item(f"% [---]: Column Def for {_current_fmt}")
+            super().add_item(f"% Column Def [---] for {_current_fmt}")
         else:
-            super().add_item(f"% [{self._num_cols:03d}]: Column Def for {_current_fmt}")
+            super().add_item(f"% Column Def [{self._num_cols:03d}] for {_current_fmt}")
             self._num_cols += 1
 
         # if str has \n then make multiple add items
