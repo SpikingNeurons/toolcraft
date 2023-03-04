@@ -8,18 +8,28 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment, Text
+from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment, Text, ParaPos, ParaBox
 
 
 class ColumnFmt(enum.Enum):
     """
+    https://en.wikibooks.org/wiki/LaTeX/Tables
+
     https://www.overleaf.com/learn/latex/Tables
 
-    \\begin{tabular}[pos]{cols}
-     table content
+    \\begin{tabular}[pos]{table spec}
+       table content
     \\end{tabular}
 
     Deals with cols which defines the alignment and the borders of each column
+
+    Tips:
+    [1] In para mode you can use newline command
+        \begin{tabular}{|p{2cm}|p{2cm}|}
+        \hline
+        Test & foo \newline bar \\
+        ...
+
     """
     # left-justified column
     left_justified = "l"
@@ -35,6 +45,11 @@ class ColumnFmt(enum.Enum):
     # paragraph column with text vertically aligned at the bottom
     # (requires array package)
     para_bottom = "b"
+    # vertical line
+    vertical_line = "|"
+    # double vertical line
+    double_vertical_line = "||"
+
     # The tabularx package requires the same arguments of tabular* but, in order to
     # let the table have the width specified by the user, it modifies the width of
     # certain columns instead of the space between columns. The columns that can be
@@ -42,61 +57,53 @@ class ColumnFmt(enum.Enum):
     # array package.
     stretched = "X"
 
-    # todo: https://texblog.org/2019/06/03/control-the-width-of-table-columns-tabular-in-latex/
-    #   get rid of insert, insert_after, insert_before ... make them kwargs of __call__
-    #   as this is defination of column .... thus we do not need property `is_legit_column`
-    # @{text}
-    #   - Insert the text `text` in every line of the table between the columns
-    #     where it appears.
-    #   - This command eliminates the space that is automatically inserted between
-    #     the columns.
-    #   - If some horizontal space is needed between text and the columns, it can be
-    #     inserted with the command \hspace{}.
-    #   - The command \extraspace\fill in a tabular* environment extends the space
-    #     between the columns where it appears in order to let the table have the
-    #     width defined by the user.
-    #   - In order to eliminate the space that is automatically inserted between two
-    #     columns it is possible to use the empty command @{}.
-    #   - This might help for working with tabular*
-    #     @{\extracolsep{\fill}}
-    #   - To eliminate space on left of first column or right of last column
-    #     @{} can be useful.
-    #     \\begin{tabular}{@{}lp{6cm}@{}}
-    #        ...
-    #     \\end{tabular}
-    insert = "@"
-    # insert before
-    # - can be placed before a command l, r, c, p, m or b and inserts ins before
-    #   the content of the cell;
-    # - can also be used to format certain columns:
-    #   it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-    #   \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
-    insert_before = ">"
-    # insert after
-    # - can be placed before a command l, r, c, p, m or b and inserts ins before
-    #   the content of the cell;
-    # - can also be used to format certain columns:
-    #   it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-    #   \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
-    insert_after = "<"
-    # vertical line
-    vertical_line = "|"
-    # double vertical line
-    double_vertical_line = "||"
-
-    @property
-    def is_legit_column(self) -> bool:
-        return self in [
-            self.left_justified, self.centered, self.right_justified,
-            self.para_top, self.para_middle, self.para_bottom,
-            self.stretched,
-        ]
-
     def __call__(
         self,
         width: Scalar = None,
-        insert: str = None
+        insert: str = None,
+        insert_before: str = None,
+        insert_after: str = None,
     ) -> str:
+        """
+
+        insert = "@"
+        @{text}
+          - Insert the text `text` in every line of the table between the columns
+            where it appears.
+          - This command eliminates the space that is automatically inserted between
+            the columns.
+          - If some horizontal space is needed between text and the columns, it can be
+            inserted with the command \hspace{}.
+          - The command \extraspace\fill in a tabular* environment extends the space
+            between the columns where it appears in order to let the table have the
+            width defined by the user.
+          - In order to eliminate the space that is automatically inserted between two
+            columns it is possible to use the empty command @{}.
+          - This might help for working with tabular*
+            @{\extracolsep{\fill}}
+          - To eliminate space on left of first column or right of last column
+            @{} can be useful.
+            \\begin{tabular}{@{}lp{6cm}@{}}
+               ...
+            \\end{tabular}
+
+        insert_before = ">"
+        - can be placed before a command l, r, c, p, m or b and inserts ins before
+          the content of the cell;
+        - can also be used to format certain columns:
+          it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+          \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+
+        insert_after = "<"
+        - can be placed before a command l, r, c, p, m or b and inserts ins before
+          the content of the cell;
+        - can also be used to format certain columns:
+          it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+          \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+        """
+        # ------------------------------------------------------- 01
+        # validation
+        # ------------------------------------------------------- 01.01
         # if stretched i.e. X cannot use any __call__
         # if vertical line's no kwargs will be used
         if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
@@ -107,6 +114,16 @@ class ColumnFmt(enum.Enum):
                         f"as we need not parametrize it"
                     ]
                 )
+        # ------------------------------------------------------- 01.02
+        # width can only be used with only para columns
+        if width is not None:
+            if self not in [self.para_top, self.para_bottom, self.para_middle]:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"The width kwarg cannot be used with {self}"
+                    ]
+                )
+
 
         # for inserts ...
         if self in [self.insert, self.insert_before, self.insert_after]:
@@ -126,25 +143,22 @@ class ColumnFmt(enum.Enum):
                 msgs=[f"insert kwarg is usable only for insert related stuff"]
             )
 
+        # ------------------------------------------------------- 02
+        # cook return
+        _ret = ""
+        # ------------------------------------------------------- 02.01
         # for width ...
         if width is None:
-            return self.value
+            _ret += self.value
         else:
-            if self in [self.para_top, self.para_middle, self.para_bottom]:
-                return f"{self.value}{{{width}}}"
-            else:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"The width kwarg cannot be used with {self}"
-                    ]
-                )
+            _ret += f"{self.value}{{{width}}}"
+        # ------------------------------------------------------- 02.02
+
+        # ------------------------------------------------------- 03
+        # return
+        return _ret
 
     def __str__(self) -> str:
-        if self in [self.insert, self.insert_after, self.insert_before]:
-            raise e.validation.NotAllowed(
-                msgs=[f"When using tabular column {self} please specify `insert` kwarg "
-                      f"by using __call__"]
-            )
         return self.__call__()
 
     @classmethod
@@ -159,27 +173,6 @@ class ColumnFmt(enum.Enum):
                 [_.value for _ in cls]
             ]
         )
-
-
-class TablePos(enum.Enum):
-    """
-    https://www.overleaf.com/learn/latex/Tables
-
-    \\begin{tabular}[pos]{cols}
-     table content
-    \\end{tabular}
-
-    Deals with pos which handles Vertical position od table
-    """
-    # the line at the top is aligned with the text baseline
-    top = "t"
-    # the line at the bottom is aligned with the text baseline
-    bottom = "b"
-    # the table is centred to the text baseline
-    centered = "c"  # also default
-
-    def __str__(self) -> str:
-        return self.value
 
 
 @dataclasses.dataclass
@@ -294,6 +287,7 @@ class MultiColumnCell(LaTeX):
 @dataclasses.dataclass
 class Row(LaTeX):
 
+    # start new row (additional space may be specified after \\ using square brackets, such as \\[6pt])
     height: Scalar = None
 
     @property
@@ -321,7 +315,9 @@ class Row(LaTeX):
 
     @classmethod
     def from_list(
-        cls, items: t.List[t.Union[str, LaTeX, Text]], height: Scalar = None
+        cls,
+        items: t.List[t.Union[str, LaTeX, Text, ParaBox]],
+        height: Scalar = None
     ) -> "Row":
         _ret = Row(height=height)
         for _ in items:
@@ -347,56 +343,36 @@ class TableColsDef(LaTeX):
     def close_clause(self) -> str:
         return "\n}"
 
+    @property
+    def uses_stretched_fmt(self) -> bool:
+        for _ in self._items:
+            _current_fmt = ColumnFmt.enum_from_value(str(_))
+            if _current_fmt is ColumnFmt.stretched:
+                return True
+        return False
+
     def init(self):
         # call super
         super().init()
 
         # some vars to track previous items
-        # noinspection PyAttributeOutsideInit,PyTypeChecker
-        self._previous_fmt = None  # type: ColumnFmt
         # noinspection PyAttributeOutsideInit
-        self.uses_stretched_fmt = False
-        # noinspection PyAttributeOutsideInit
-        self.num_cols = 0
+        self._num_cols = 0
 
     def generate(self) -> str:
         return "\n".join("    " + str(_) for _ in self._items)
 
     def add_item(self, item: t.Union[str, ColumnFmt]) -> "TableColsDef":
-        # get vars for current
+
+        # this will end up testing if tem is legit
         _current_fmt = ColumnFmt.enum_from_value(str(item))
 
-        # if there were some items already added then do some validations
-        if bool(self._items):
-            if self._previous_fmt is ColumnFmt.insert_before:
-                if not _current_fmt.is_legit_column:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Previous item added was for {ColumnFmt.insert_before}",
-                            f"So we expect it to follow with legit column"
-                        ]
-                    )
-            if _current_fmt is ColumnFmt.insert_after:
-                if not self._previous_fmt.is_legit_column:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Current item is for {ColumnFmt.insert_after} so we "
-                            f"expect the previous item to be legit column",
-                        ]
-                    )
-
-        # assign internal vars
-        # noinspection PyAttributeOutsideInit
-        self._previous_fmt = _current_fmt
-
-        # set uses_stretched_fmt
-        # noinspection PyAttributeOutsideInit
-        self.uses_stretched_fmt = _current_fmt is ColumnFmt.stretched
-
         # increment col count
-        if _current_fmt.is_legit_column:
-            super().add_item(f"% Column {self.num_cols:03d} Def")
-            self.num_cols += 1
+        if _current_fmt in [ColumnFmt.vertical_line, ColumnFmt.double_vertical_line]:
+            super().add_item(f"% Column Def for {_current_fmt.double_vertical_line} (pseudo)")
+        else:
+            super().add_item(f"% Column {self._num_cols:03d} Def")
+            self._num_cols += 1
 
         # return ... note that we convert to str as Enums are not acceptable
         # noinspection PyTypeChecker
@@ -466,7 +442,7 @@ class Table(LaTeX):
     alignment: FloatObjAlignment = None
     caption: str = None
     type: t.Literal['normal', 'array', '*', 'X'] = 'X'
-    t_pos: TablePos = TablePos.centered
+    t_pos: ParaPos = ParaPos.centered
     t_width: t.Optional[Scalar] = None
     t_cols_def: TableColsDef = None
 
@@ -554,7 +530,7 @@ class Table(LaTeX):
         super().init()
 
         # there should be minimum one col present
-        if self.t_cols_def.num_cols < 1:
+        if self.t_cols_def._num_cols < 1:
             raise e.validation.NotAllowed(
                 msgs=[
                     "Please specify at-least one legit column in `self.t_cols_def` ...",
@@ -606,9 +582,9 @@ class Table(LaTeX):
                 )
 
     def add_row(self, row: Row):
-        if len(row) != self.t_cols_def.num_cols:
+        if len(row) != self.t_cols_def._num_cols:
             raise e.validation.NotAllowed(
-                msgs=[f"We only expect to have {self.t_cols_def.num_cols} items in "
+                msgs=[f"We only expect to have {self.t_cols_def._num_cols} items in "
                       f"row but instead we found {len(row)}"]
             )
         self.add_item(item=row)

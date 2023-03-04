@@ -33,6 +33,52 @@ class TextFmt(enum.Enum):
         return f"{self}{{{text}}}"
 
 
+class ParaPos(enum.Enum):
+    """
+    https://www.overleaf.com/learn/latex/Tables
+
+    \\begin{tabular}[pos]{cols}
+     table content
+    \\end{tabular}
+
+    Also used by
+    https://en.wikibooks.org/wiki/LaTeX/Tables
+    \\parbox[position]{width}{text}
+
+    Deals with pos which handles Vertical position od table
+    """
+    # the line at the top is aligned with the text baseline
+    top = "t"
+    # the line at the bottom is aligned with the text baseline
+    bottom = "b"
+    # the table is centred to the text baseline
+    centered = "c"  # also default
+
+    def __str__(self) -> str:
+        return self.value
+
+
+@dataclasses.dataclass
+class ParaBox:
+    """
+    \\parbox[position]{width}{text}
+
+    The newlines n para box can be achieved via \\
+    """
+    text: str
+    width: "Scalar" = None
+    position: ParaPos = None
+
+    def __str__(self) -> str:
+        _ret = "\\parabox"
+        if self.position is not None:
+            _ret += f"[{self.position}]"
+        if self.width is not None:
+            _ret += f"{{{self.width}}}"
+        _ret += f"{{{self.text}}}"
+        return _ret
+
+
 class Text:
     """
     Refer here for fonts and sizes
