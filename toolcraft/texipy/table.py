@@ -57,35 +57,43 @@ class ColumnFmt(enum.Enum):
     # array package.
     stretched = "X"
 
+    # check; https://en.wikibooks.org/wiki/LaTeX/Tables
+    #        @ and ! expressions
+    # @{text}
+    #   - Insert the text `text` in every line of the table between the columns
+    #     where it appears.
+    #   - This command eliminates the space that is automatically inserted between
+    #     the columns.
+    #   - If some horizontal space is needed between text and the columns, it can be
+    #     inserted with the command \hspace{}.
+    #   - The command \extraspace\fill in a tabular* environment extends the space
+    #     between the columns where it appears in order to let the table have the
+    #     width defined by the user.
+    #   - In order to eliminate the space that is automatically inserted between two
+    #     columns it is possible to use the empty command @{}.
+    #   - This might help for working with tabular*
+    #     @{\extracolsep{\fill}}
+    #   - To eliminate space on left of first column or right of last column
+    #     @{} can be useful.
+    #     \\begin{tabular}{@{}lp{6cm}@{}}
+    #        ...
+    #     \\end{tabular}
+    #
+    # Difference between @ and !
+    #   The @{...} command kills the inter-column space and replaces it
+    #   with whatever is between the curly braces. To keep the initial space,
+    #   use !{...}. To add space, use @{\hspace{''width''}}
+    insert = '@'
+    insert_1 = '!'
+
     def __call__(
         self,
         width: Scalar = None,
-        insert: str = None,
         insert_before: str = None,
         insert_after: str = None,
+        insert_text: str = None,
     ) -> str:
         """
-
-        insert = "@"
-        @{text}
-          - Insert the text `text` in every line of the table between the columns
-            where it appears.
-          - This command eliminates the space that is automatically inserted between
-            the columns.
-          - If some horizontal space is needed between text and the columns, it can be
-            inserted with the command \hspace{}.
-          - The command \extraspace\fill in a tabular* environment extends the space
-            between the columns where it appears in order to let the table have the
-            width defined by the user.
-          - In order to eliminate the space that is automatically inserted between two
-            columns it is possible to use the empty command @{}.
-          - This might help for working with tabular*
-            @{\extracolsep{\fill}}
-          - To eliminate space on left of first column or right of last column
-            @{} can be useful.
-            \\begin{tabular}{@{}lp{6cm}@{}}
-               ...
-            \\end{tabular}
 
         insert_before = ">"
         - can be placed before a command l, r, c, p, m or b and inserts ins before
@@ -106,14 +114,15 @@ class ColumnFmt(enum.Enum):
         # ------------------------------------------------------- 01.01
         # if stretched i.e. X cannot use any __call__
         # if vertical line's no kwargs will be used
-        if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
-            if width is not None or insert is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"no use for pass kwargs while using `ColumnFmt.{self.name}` "
-                        f"as we need not parametrize it"
-                    ]
-                )
+        e.validation.ShouldNotBeOneOf(
+            value=self,
+            values=[
+                self.vertical_line, self.double_vertical_line,
+            ],
+            msgs=[
+                "Do not use __call__ for this ColumnFmt"
+            ]
+        ).raise_if_failed()
         # ------------------------------------------------------- 01.02
         # width can only be used with only para columns
         if width is not None:
@@ -123,49 +132,78 @@ class ColumnFmt(enum.Enum):
                         f"The width kwarg cannot be used with {self}"
                     ]
                 )
-
-
-        # for inserts ...
-        if self in [self.insert, self.insert_before, self.insert_after]:
-            if insert is None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply value for kwarg `text` while using {self}"]
+        # ------------------------------------------------------- 01.03
+        # check if insert_before or insert_after allowed
+        if insert_after is not None or insert_before is not None:
+            _allowed_insert_before_after = self in [
+                self.centered, self.left_justified, self.right_justified,
+                self.para_middle, self.para_top, self.para_bottom,
+                self.stretched,
+            ]
+            if not _allowed_insert_before_after:
+                raise e.code.NotAllowed(
+                    msgs=[
+                        f"Do not use kwargs `insert_before` or `insert_after` with {self}",
+                        f"It can only be used with l, c, r, p, m, b (and even X)"
+                    ]
                 )
-            if width is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please do not supply kwarg `width` while using {self}"]
+        # ------------------------------------------------------- 01.04
+        # insert_text is to be used only for special inset and insert_1 column fmts
+        if self in [self.insert, self.insert_1]:
+            if insert_text is None:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"When using {self.insert} and {self.insert_1} please supply kwarg `insert_text`"
+                    ]
                 )
-            return f"{self.value}{{{insert}}}"
-
-        # since self is not for `self.insert` we expect `insert` kwarg to be None
-        if insert is not None:
-            raise e.validation.NotAllowed(
-                msgs=[f"insert kwarg is usable only for insert related stuff"]
-            )
 
         # ------------------------------------------------------- 02
         # cook return
         _ret = ""
         # ------------------------------------------------------- 02.01
+        # if insert_text
+        # note this only triggers for inset and insert_1 based on above validation
+        if insert_text is not None:
+            return f"{self.value}{{{insert_text}}}"
+        # ------------------------------------------------------- 02.02
         # for width ...
         if width is None:
             _ret += self.value
         else:
             _ret += f"{self.value}{{{width}}}"
-        # ------------------------------------------------------- 02.02
+        # ------------------------------------------------------- 02.03
+        # insert_after and insert_before
+        _insert_before = ""
+        if insert_before is not None:
+            _insert_before += f">{{{insert_before}}}\n"
+        _insert_after = ""
+        if insert_after is not None:
+            _insert_after += f"\n<{{{insert_after}}}"
+        _ret = _insert_before + _ret + _insert_after
 
         # ------------------------------------------------------- 03
         # return
         return _ret
 
     def __str__(self) -> str:
-        return self.__call__()
+        if self in [
+            self.vertical_line, self.double_vertical_line,
+        ]:
+            return self.value
+        else:
+            return self.__call__()
 
     @classmethod
     def enum_from_value(cls, _str: str) -> "ColumnFmt":
-        for _ in cls:
-            if _.value == _str[0:1]:
-                return _
+        for _s in _str.split("\n"):
+            _ss = _s[0:1]
+            # this addresses tokes for insert before and after
+            if _ss in [">", "<"]:
+                continue
+            else:
+                for _ in cls:
+                    if _.value == _ss:
+                        return _
         raise e.validation.NotAllowed(
             msgs=[
                 f"Cannot recognize string `{_str}`",
@@ -345,11 +383,11 @@ class TableColsDef(LaTeX):
 
     @property
     def uses_stretched_fmt(self) -> bool:
-        for _ in self._items:
-            _current_fmt = ColumnFmt.enum_from_value(str(_))
-            if _current_fmt is ColumnFmt.stretched:
-                return True
-        return False
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._uses_stretched_fmt
+        except AttributeError:
+            return False
 
     def init(self):
         # call super
@@ -367,16 +405,29 @@ class TableColsDef(LaTeX):
         # this will end up testing if tem is legit
         _current_fmt = ColumnFmt.enum_from_value(str(item))
 
+        # if stretched set internal var
+        if _current_fmt is ColumnFmt.stretched:
+            # noinspection PyAttributeOutsideInit
+            self._uses_stretched_fmt = True
+
         # increment col count
-        if _current_fmt in [ColumnFmt.vertical_line, ColumnFmt.double_vertical_line]:
-            super().add_item(f"% Column Def for {_current_fmt.double_vertical_line} (pseudo)")
+        if _current_fmt in [
+            ColumnFmt.vertical_line, ColumnFmt.double_vertical_line,
+            ColumnFmt.insert, ColumnFmt.insert_1
+        ]:
+            super().add_item(f"% Column Def for {_current_fmt} (pseudo)")
         else:
             super().add_item(f"% Column {self._num_cols:03d} Def")
             self._num_cols += 1
 
-        # return ... note that we convert to str as Enums are not acceptable
-        # noinspection PyTypeChecker
-        return super().add_item(str(item))
+        # if str has \n then make multiple add items
+        # this is helpful for insert_before and insert_after
+        _str_item = str(item)
+        for _s in _str_item.split("\n"):
+            super().add_item(_s)
+
+        # return
+        return self
 
     @classmethod
     def from_list(cls, items: t.List[t.Union[str, ColumnFmt]]) -> "TableColsDef":
