@@ -90,7 +90,7 @@ glbacc = Glossary(
     description="$Acc_{base}$ is the accuracy of the "
                 "\\texttt{tensorflow.estimator.BaselineClassifier} "
                 "provided in tensorflow software "
-                "\\cite{abadiTensorFlowLargeScaleMachine2016}. Note that such "
+                "\\cite{DBLP:journals/corr/AbadiABBCCCDDDG16}. Note that such "
                 "classifier ignores input data and will learn to predict the average "
                 "value of each label. In short it will predict the probability "
                 "distribution of the classes as seen in the labels. These numbers "
