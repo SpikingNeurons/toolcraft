@@ -47,8 +47,8 @@ class Acronym(Symbol):
     """
     Refer: https://www.overleaf.com/learn/latex/Glossaries
     """
-    short_name: str
-    full_name: str
+    short_name: t.Union[str, "Text"]
+    full_name: t.Union[str, "Text"]
 
     @property
     def short(self) -> str:
@@ -204,10 +204,13 @@ class Command(Symbol):
       use newcommandx ot python in latex
       https://tex.stackexchange.com/questions/29973/more-than-one-optional-argument-for-newcommand
     """
-    long: bool = False
     num_args: int = 0
     default_value: str = None
     latex: t.Union[str, "Text"] = None
+    # https://tug.org/mail-archives/texhax/2005-March/003732.html
+    # starred newcommand
+    # setting this to True will not allow newlines and \\par
+    long: bool = False
 
     def __post_init__(self):
         super().__post_init__()
@@ -279,9 +282,11 @@ class Command(Symbol):
             _cmd += f"[{self.default_value}]"
         _latex = self.latex
         if isinstance(_latex, str):
-            _cmd += f"{{{_latex}~}}"
-        elif isinstance(_latex, Text):
+            _latex = Text(_latex)
+        if isinstance(_latex, Text):
             _cmd += f"{{{str(_latex)}}}"
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
         return _cmd
 
 
