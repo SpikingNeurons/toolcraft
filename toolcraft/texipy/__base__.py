@@ -65,7 +65,7 @@ class ParaBox:
 
     The newlines n para box can be achieved via \\
     """
-    text: str
+    text: t.Union[str, "Text"]
     width: "Scalar" = None
     position: ParaPos = None
 
@@ -85,11 +85,15 @@ class Text:
     + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
     """
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, no_text_cmd: bool = False):
+        self.no_text_cmd = no_text_cmd
         self.text = text
 
     def __str__(self) -> str:
-        return f"\\text{{{self.text}}}"
+        if self.no_text_cmd:
+            return str(self.text)
+        else:
+            return f"\\text{{{self.text}}}"
 
     def strikeout(self) -> "Text":
         self.text = f"\\sout{{{self.text}}}"
