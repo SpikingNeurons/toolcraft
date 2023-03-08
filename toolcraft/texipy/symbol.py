@@ -281,9 +281,7 @@ class Command(Symbol):
         if self.default_value is not None:
             _cmd += f"[{self.default_value}]"
         _latex = self.latex
-        if isinstance(_latex, str):
-            _latex = Text(_latex)
-        if isinstance(_latex, Text):
+        if isinstance(_latex, (Text, str)):
             _cmd += f"{{{str(_latex)}}}"
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
