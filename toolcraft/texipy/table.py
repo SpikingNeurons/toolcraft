@@ -233,7 +233,7 @@ class MultiRowCell(LaTeX):
 
     num_rows: int = None
     width: Scalar = None
-    value: t.Union[LaTeX, str, Text] = None
+    value: t.Union[LaTeX, str, Text, ParaBox] = None
     no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
@@ -284,7 +284,7 @@ class MultiColumnCell(LaTeX):
 
     num_cols: int = None
     t_cols_def: "TableColsDef" = None
-    value: t.Union[LaTeX, str, Text] = None
+    value: t.Union[LaTeX, str, Text, ParaBox] = None
     no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
@@ -332,6 +332,8 @@ class Row(LaTeX):
     # start new row (additional space may be specified after \\ using square brackets, such as \\[6pt])
     height: Scalar = None
 
+    color: t.Union[Color, str] = None
+
     @property
     def use_single_line_repr(self) -> bool:
         return True
@@ -359,15 +361,20 @@ class Row(LaTeX):
     def from_list(
         cls,
         items: t.List[t.Union[str, LaTeX, Text, ParaBox]],
-        height: Scalar = None
+        height: Scalar = None,
+        color: t.Union[str, Color] = None,
     ) -> "Row":
-        _ret = Row(height=height)
+        _ret = Row(height=height, color=color)
         for _ in items:
             _ret.add_item(_)
         return _ret
 
     def generate(self) -> str:
-        return " & ".join([str(_) for _ in self._items])
+        _ret = ""
+        if self.color is not None:
+            _ret += f"\\rowcolor{{{self.color}}}  % color for row\n"
+        _ret += " & ".join([str(_) for _ in self._items])
+        return _ret
 
 
 @dataclasses.dataclass

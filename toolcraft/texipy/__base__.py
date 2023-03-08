@@ -70,7 +70,7 @@ class ParaBox:
     position: ParaPos = None
 
     def __str__(self) -> str:
-        _ret = "\\parabox"
+        _ret = "\\parbox"
         if self.position is not None:
             _ret += f"[{self.position}]"
         if self.width is not None:
@@ -116,14 +116,56 @@ class Text:
         return self
 
 
-class Fa5:
+class Icon(enum.Enum):
     """
     Check zotero or online pdf at https://ctan.org/pkg/fontawesome5
     Click "Package Documentation"
+
+    Options supported by \\usepackage{fontawesome5}
+    All fonts: http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
+
+    Section 5: Dingbats: Useful for making bullets in itemized list
+    https://math.uoregon.edu/wp-content/uploads/2014/12/compsymb-1qyb3zd.pdf
     """
 
-    hammer = Text("\\faHammer")
+    fa_hammer = enum.auto()
+    fa_check = enum.auto()
+    fa_times = enum.auto()
+    fa_check_circle = enum.auto()
+    fa_times_circle = enum.auto()
+    fa_thumbs_down = enum.auto()
+    fa_thumbs_up = enum.auto()
+    fa_meh = enum.auto()
+    fa_pen = enum.auto()
+    fa_seedling = enum.auto()
+    fa_arrow_alt_circle_down = enum.auto()
 
+    dots = enum.auto()
+    ldots = enum.auto()
+    cdots = enum.auto()
+    vdots = enum.auto()
+    ddots = enum.auto()
+
+    @property
+    def latex_cmd(self) -> str:
+        _cmd = self.name
+        if _cmd.startswith("fa_"):
+            _new_cmd = "fa"
+            for _ in _cmd.split("_")[1:]:
+                _new_cmd += _.capitalize()
+            _cmd = _new_cmd
+        else:
+            ...
+        return "\\" + _cmd
+
+    def as_text(self) -> Text:
+        return Text(self.latex_cmd)
+
+    def __str__(self) -> str:
+        return self.latex_cmd
+
+    def __call__(self, color: "Color") -> str:
+        return f"{{\\color{{{color}}} {self}}}"
 
 
 class Font(enum.Enum):
@@ -213,41 +255,6 @@ class FontSize(enum.Enum):
 
     def __call__(self, text: str) -> str:
         return f"{{{self} {text}}}"
-
-
-class Fa(enum.Enum):
-    """
-    Options supported by \\usepackage{fontawesome5}
-    All fonts: http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
-
-    Section 5: Dingbats: Useful for making bullets in itemized list
-    https://math.uoregon.edu/wp-content/uploads/2014/12/compsymb-1qyb3zd.pdf
-    """
-    check = "\\faCheck"
-    times = "\\faTimes"
-    check_circle = "\\faCheckCircle"
-    times_circle = "\\faTimesCircle"
-    thumbs_down = "\\faThumbsDown"
-    thumbs_up = "\\faThumbsUp"
-    meh = "\\faMeh"
-    pen = "\\faPen"
-    seedling = "\\faSeedling"
-    arrow_alt_circle_down = "\\faArrowAltCircleDown"
-
-    # not part of fontawesome but still makes sense here
-    dots = "\\dots"  # ... https://tex.stackexchange.com/questions/66365/using-cdots-in-table-error-missing-inserted
-    ldots = "\\ldots"  # for horizontal dots on the line
-    cdots = "\\cdots"  # for horizontal dots above the line
-    vdots = "\\vdots"  # for vertical dots
-    ddots = "\\ddots"  # for diagonal dots
-
-    # Dingbats
-
-    def __str__(self):
-        return self.value
-
-    def __call__(self, color: Color) -> str:
-        return f"{{\\color{{{color}}} {self}}}"
 
 
 class Scalar(t.NamedTuple):
@@ -482,7 +489,7 @@ class LaTeX(abc.ABC):
     def __str__(self) -> str:
         # assign _doc to any items first ...
         for _ in self._items:
-            if not isinstance(_, (str, Text, Fa, symbol.Symbol)):
+            if not isinstance(_, (str, Text, ParaBox, Icon, symbol.Symbol)):
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
                         value=_.label, values=self.doc.labels,
