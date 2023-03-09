@@ -150,6 +150,12 @@ class Icon(enum.Enum):
     vdots = enum.auto()
     ddots = enum.auto()
 
+    # https://mirror.informatik.hs-fulda.de/tex-archive/macros/latex/required/psnfss/psnfss2e.pdf
+    ding_cmark = enum.auto()
+    ding_xmark = enum.auto()
+    ding_cmarkb = enum.auto()
+    ding_xmarkb = enum.auto()
+
     @property
     def latex_cmd(self) -> str:
         _cmd = self.name
@@ -158,18 +164,26 @@ class Icon(enum.Enum):
             for _ in _cmd.split("_")[1:]:
                 _new_cmd += _.capitalize()
             _cmd = _new_cmd
+        elif _cmd.startswith("ding_"):
+            if _cmd == "ding_cmark":
+                _cmd = "ding{51}"
+            elif _cmd == "ding_cmarkb":
+                _cmd = "ding{52}"
+            elif _cmd == "ding_xmark":
+                _cmd = "ding{55}"
+            elif _cmd == "ding_xmarkb":
+                _cmd = "ding{56}"
+            else:
+                raise e.code.CodingError(msgs=[f"Unknown {_cmd}"])
         else:
             ...
         return "\\" + _cmd
 
-    def as_text(self) -> Text:
-        return Text(self.latex_cmd)
+    def as_text(self, no_text_cmd: bool = True) -> Text:
+        return Text(self.latex_cmd, no_text_cmd=no_text_cmd)
 
     def __str__(self) -> str:
         return self.latex_cmd
-
-    def __call__(self, color: "Color") -> str:
-        return f"{{\\color{{{color}}} {self}}}"
 
 
 class Font(enum.Enum):

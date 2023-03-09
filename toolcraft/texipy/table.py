@@ -100,14 +100,14 @@ class ColumnFmt(enum.Enum):
           the content of the cell;
         - can also be used to format certain columns:
           it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-          \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+          \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
 
         insert_after = "<"
         - can be placed before a command l, r, c, p, m or b and inserts ins before
           the content of the cell;
         - can also be used to format certain columns:
           it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-          \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+          \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
         """
         # ------------------------------------------------------- 01
         # validation
