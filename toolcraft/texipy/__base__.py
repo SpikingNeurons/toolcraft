@@ -66,6 +66,7 @@ class ParaBox:
     The newlines n para box can be achieved via \\
     """
     text: t.Union[str, "Text"]
+    centering: bool = False
     width: "Scalar" = None
     position: ParaPos = None
 
@@ -75,7 +76,10 @@ class ParaBox:
             _ret += f"[{self.position}]"
         if self.width is not None:
             _ret += f"{{{self.width}}}"
-        _ret += f"{{{self.text}}}"
+        _text = str(self.text)
+        if self.centering:
+            _text = "\\centering " + _text
+        _ret += f"{{{_text}}}"
         return _ret
 
 
@@ -85,7 +89,7 @@ class Text:
     + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
     """
 
-    def __init__(self, text: str, no_text_cmd: bool = False):
+    def __init__(self, text: t.Union[str, symbol.Command], no_text_cmd: bool = False):
         self.no_text_cmd = no_text_cmd
         self.text = text
 
