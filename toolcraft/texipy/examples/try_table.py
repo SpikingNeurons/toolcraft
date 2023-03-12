@@ -55,7 +55,7 @@ def make_table(scale: t.Tuple[float, float] = None):
     _table = table.Table(
         type='X',
         scale=scale,
-        caption="Results for standard and \\mtovc classifier",
+        caption="Results for standard and \\mtovc\ classifier",
         label="table:results",
         positioning=Positioning(here=True, top=True, special_float_page=True),
         alignment=FloatObjAlignment.centering,

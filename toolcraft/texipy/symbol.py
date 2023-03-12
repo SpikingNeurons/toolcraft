@@ -93,9 +93,9 @@ class Acronym(Symbol):
         _lines = [
             f"\\newacronym"
             f"{{{self._var_name}}}{{{self.short_name}}}{{{self.full_name}}}",
-            f"\\newcommand*{{\\{self._var_name}}}{{{self.short}~}}",
-            f"\\newcommand*{{\\{self._var_name + 'F'}}}{{{self.full}~}}",
-            f"\\newcommand*{{\\{self._var_name + 'L'}}}{{{self.long}~}}",
+            f"\\newcommand*{{\\{self._var_name}}}{{{self.short}}}",
+            f"\\newcommand*{{\\{self._var_name + 'F'}}}{{{self.full}}}",
+            f"\\newcommand*{{\\{self._var_name + 'L'}}}{{{self.long}}}",
         ]
         return "\n".join(_lines)
 
@@ -177,19 +177,19 @@ class Glossary(Symbol):
             f"    name={self.name},",
             f"    description={{{self.description}}}",
             "}",
-            f"\\newcommand*{{\\{self._var_name}}}{{{self.normal}~}}",
-            f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.desc}~}}",
+            f"\\newcommand*{{\\{self._var_name}}}{{{self.normal}}}",
+            f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.desc}}}",
         ]
         if self.make_cap:
             _lines += \
-                [f"\\newcommand*{{\\{self._var_name.capitalize()}}}{{{self.cap}~}}"]
+                [f"\\newcommand*{{\\{self._var_name.capitalize()}}}{{{self.cap}}}"]
         if self.make_pl:
             _lines += \
-                [f"\\newcommand*{{\\{self._var_name + 'Pl'}}}{{{self.pl}~}}"]
+                [f"\\newcommand*{{\\{self._var_name + 'Pl'}}}{{{self.pl}}}"]
         if self.make_cappl:
             _lines += \
                 [f"\\newcommand*"
-                 f"{{\\{self._var_name.capitalize() + 'Pl'}}}{{{self.cappl}~}}"]
+                 f"{{\\{self._var_name.capitalize() + 'Pl'}}}{{{self.cappl}}}"]
         return "\n".join(_lines)
 
 
