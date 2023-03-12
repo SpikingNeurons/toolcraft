@@ -9,6 +9,7 @@ import typing as t
 import pathlib
 import inspect
 import abc
+import re
 import datetime
 
 from toolcraft import error as e
@@ -313,11 +314,20 @@ def make_symbols_tex_file():
                 if _.find("_") != -1:
                     raise e.code.CodingError(
                         msgs=[
-                            f"We do not support _ as latex does not allow that i"
-                            f"n command names rename the module variable "
+                            f"We do not support _ as latex does not allow that "
+                            f"in command names rename the module variable "
                             f"{_} in module {_mod}"
                         ]
                     )
+                if bool(re.search(r'\d', _)):
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"We do not support numbers as latex does not "
+                            f"allow that in command names rename the module "
+                            f"variable {_} in module {_mod}"
+                        ]
+                    )
+
                 _v._var_name = _
                 if _.lower() != _:
                     raise e.code.CodingError(
