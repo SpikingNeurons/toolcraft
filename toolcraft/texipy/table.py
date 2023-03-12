@@ -89,6 +89,7 @@ class ColumnFmt(enum.Enum):
     def __call__(
         self,
         width: Scalar = None,
+        # for 'X' mostly use "\\centering\\arraybackslash"
         insert_before: str = None,
         insert_after: str = None,
         insert_text: str = None,
