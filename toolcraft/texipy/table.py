@@ -57,8 +57,7 @@ class ColumnFmt(enum.Enum):
     # array package.
     stretched = "X"
 
-    # check; https://en.wikibooks.org/wiki/LaTeX/Tables
-    #        @ and ! expressions
+    # check; https://en.wikibooks.org/wiki/LaTeX/Tables#@_and_!_expressions
     # @{text}
     #   - Insert the text `text` in every line of the table between the columns
     #     where it appears.
@@ -144,17 +143,17 @@ class ColumnFmt(enum.Enum):
             if not _allowed_insert_before_after:
                 raise e.code.NotAllowed(
                     msgs=[
-                        f"Do not use kwargs `insert_before` or `insert_after` with {self}",
+                        f"Do not use kwargs `insert_before` or `insert_after` with {self.name} ({self.value})",
                         f"It can only be used with l, c, r, p, m, b (and even X)"
                     ]
                 )
         # ------------------------------------------------------- 01.04
-        # insert_text is to be used only for special inset and insert_1 column fmts
+        # insert_text is to be used only for special insert and insert_1 column fmts
         if self in [self.insert, self.insert_1]:
             if insert_text is None:
                 raise e.code.CodingError(
                     msgs=[
-                        f"When using {self.insert} and {self.insert_1} please supply kwarg `insert_text`"
+                        f"When using {self.insert.name} ({self.insert.value}) and {self.insert_1.name} ({self.insert_1.value}) please supply kwarg `insert_text`"
                     ]
                 )
 
@@ -427,7 +426,7 @@ class TableColsDef(LaTeX):
             ColumnFmt.vertical_line, ColumnFmt.double_vertical_line,
             ColumnFmt.insert, ColumnFmt.insert_1
         ]:
-            super().add_item(f"% Column Def [---] for {_current_fmt}")
+            super().add_item(f"% Column Def [---] for {_current_fmt.name}  ({_current_fmt.value})")
         else:
             super().add_item(f"% Column Def [{self._num_cols:03d}] for {_current_fmt}")
             self._num_cols += 1
