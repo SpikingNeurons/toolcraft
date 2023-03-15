@@ -327,8 +327,16 @@ class Scalar(t.NamedTuple):
         'tabcolsep', 'textheight', 'textwidth', 'topmargin',
     ] = ''
 
+    @property
+    def is_special_length(self) -> bool:
+        return self.unit in [
+            'baselineskip', 'columnsep', 'columnwidth', 'evensidemargin', 'linewidth',
+            'oddsidemargin', 'paperwidth', 'paperheight', 'parindent', 'parskip',
+            'tabcolsep', 'textheight', 'textwidth', 'topmargin',
+        ]
+
     def __str__(self):
-        if self.unit == 'textwidth':
+        if self.is_special_length:
             if self.value in [1, 1.0]:
                 return f"\\{self.unit}"
             else:
