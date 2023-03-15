@@ -38,12 +38,8 @@
 % \RequirePackage{ctable}%
 \RequirePackage{tabularx}%
 \RequirePackage{makecell}%
-%\PassOptionsToPackage{table}{xcolor}
-%\RequirePackage[table]{xcolor}% ... lead to option class error as xcolor alrady used above
-% For vertical centering text in X column
-% This is because the default is bottom ..
-% todo: find better ways later ... this doesen't seem to work though
-%\renewcommand\tabularxcolumn[1]{m{#1}}%
+% note that if this fails add `\PassOptionsToPackage{table}{xcolor}` before documentclass in main file
+\RequirePackage[table]{xcolor}
 
 % pgfplots
 \RequirePackage{pgfplots}%
