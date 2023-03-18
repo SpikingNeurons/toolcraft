@@ -269,7 +269,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             # look inside path dir
-            for _path in self.path.find(maxdepth=0, detail=False, withdirs=True):
+            for _path in self.path.find(maxdepth=1, detail=False, withdirs=True):
                 if _path.name in self.file_keys and _path.isfile():
                     continue
                 # anything starting with `_` will be ignored
