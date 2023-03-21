@@ -16,6 +16,8 @@ from . import symbol
 _LOGGER = logger.get_logger()
 TLaTeX = t.TypeVar('TLaTeX', bound='LaTeX')
 
+TextType = t.Union[str, "Text", "Icon"]
+
 # noinspection PyUnreachableCode
 if False:
     from . import beamer
@@ -89,7 +91,7 @@ class Text:
     + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
     """
 
-    def __init__(self, text: t.Union[str, symbol.Command], no_text_cmd: bool = False):
+    def __init__(self, text: t.Union[str, symbol.Command, "Icon"], no_text_cmd: bool = False):
         self.no_text_cmd = no_text_cmd
         self.text = text
 
@@ -892,8 +894,8 @@ class List(LaTeX):
     """
     type: t.Literal['itemize', 'enumerate', 'description'] = 'itemize'
     items: t.Union[
-        t.List[t.Union[str, "List"]],
-        t.List[t.Tuple[str, str]]
+        t.List[t.Union[TextType, "List"]],
+        t.List[t.Tuple[TextType, TextType]]
     ] = None
 
     @property

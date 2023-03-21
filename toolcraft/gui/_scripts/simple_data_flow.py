@@ -180,7 +180,7 @@ class NodeEditor:
 
     def on_drop(self, sender, app_data, user_data):
         source, generator, data = app_data
-        node = generator(source.label, data)
+        node = generator(source.targetlabel, data)
         node.submit(self.uuid)
         self.add_node(node)
 

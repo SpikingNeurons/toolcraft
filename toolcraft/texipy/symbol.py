@@ -1,7 +1,7 @@
 """
 This module will hold thing like
 \\newcommand
-\\glossary
+\\ossary
 """
 
 import dataclasses
@@ -104,13 +104,18 @@ class Acronym(Symbol):
 @dataclasses.dataclass
 class Glossary(Symbol):
     """
+    http://tug.ctan.org/macros/latex/contrib/glossaries/glossariesbegin.pdf
     Refer: https://www.overleaf.com/learn/latex/Glossaries
     """
+    # the name key indicates how the term should appear in the list of entries (glossary)
     name: str
+    # description of glossary
     description: str
-    make_cap: bool = False
-    make_pl: bool = False
-    make_cappl: bool = False
+    # default uses name ... but if you want it to be different in text then change this
+    text: str = None
+    # This defaults to the value of the text key with an “s” appended,
+    # but if this is incorrect, just use the plural key to override it
+    plural: str = None
 
     @property
     def normal(self) -> str:
@@ -120,7 +125,7 @@ class Glossary(Symbol):
                       f"Did you forgot to call {make_symbols_tex_file}"]
             )
         # to be used by python code ...
-        return f"\\gls{{{self._var_name}}}"
+        return f"\\gls{{ge{self._var_name}}}"
 
     @property
     def cap(self) -> str:
@@ -130,7 +135,7 @@ class Glossary(Symbol):
                       f"Did you forgot to call {make_symbols_tex_file}"]
             )
         # to be used by python code ...
-        return f"\\Gls{{{self._var_name}}}"
+        return f"\\Gls{{ge{self._var_name}}}"
 
     @property
     def pl(self) -> str:
@@ -140,7 +145,7 @@ class Glossary(Symbol):
                       f"Did you forgot to call {make_symbols_tex_file}"]
             )
         # to be used by python code ...
-        return f"\\glspl{{{self._var_name}}}"
+        return f"\\spl{{ge{self._var_name}}}"
 
     @property
     def cappl(self) -> str:
@@ -150,7 +155,7 @@ class Glossary(Symbol):
                       f"Did you forgot to call {make_symbols_tex_file}"]
             )
         # to be used by python code ...
-        return f"\\Glspl{{{self._var_name}}}"
+        return f"\\Glspl{{ge{self._var_name}}}"
 
     @property
     def desc(self) -> str:
@@ -160,7 +165,7 @@ class Glossary(Symbol):
                       f"Did you forgot to call {make_symbols_tex_file}"]
             )
         # to be used by python code ...
-        return f"\\glsdesc{{{self._var_name}}}"
+        return f"\\glsdesc{{ge{self._var_name}}}"
 
     def __str__(self):
         # to be used by python code ...
@@ -173,24 +178,27 @@ class Glossary(Symbol):
                       f"Did you forgot to call {make_symbols_tex_file}"]
             )
         _lines = [
-            f"\\newglossaryentry{{{self._var_name}}}",
+            f"\\newglossaryentry{{ge{self._var_name}}}",
             "{",
             f"    name={self.name},",
             f"    description={{{self.description}}}",
+        ]
+        if self.text is not None:
+            _lines += [
+                f"    text={{{self.text}}}",
+            ]
+        if self.plural is not None:
+            _lines += [
+                f"    plural={{{self.plural}}}",
+            ]
+        _lines += [
             "}",
             f"\\newcommand*{{\\{self._var_name}}}{{{self.normal}}}",
             f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.desc}}}",
+            f"\\newcommand*{{\\{self._var_name.capitalize()}}}{{{self.cap}}}",
+            f"\\newcommand*{{\\{self._var_name + 's'}}}{{{self.pl}}}",
+            f"\\newcommand*{{\\{self._var_name.capitalize() + 's'}}}{{{self.cappl}}}",
         ]
-        if self.make_cap:
-            _lines += \
-                [f"\\newcommand*{{\\{self._var_name.capitalize()}}}{{{self.cap}}}"]
-        if self.make_pl:
-            _lines += \
-                [f"\\newcommand*{{\\{self._var_name + 'Pl'}}}{{{self.pl}}}"]
-        if self.make_cappl:
-            _lines += \
-                [f"\\newcommand*"
-                 f"{{\\{self._var_name.capitalize() + 'Pl'}}}{{{self.cappl}}}"]
         return "\n".join(_lines)
 
 
@@ -307,6 +315,14 @@ def make_symbols_tex_file():
         "",
     ]
     for _ in dir(_mod):
+        if _ in [
+            "label",
+        ]:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Symbol {_!r} cannot be used as it is reserved by latex system"
+                ]
+            )
         _v = getattr(_mod, _)
         if isinstance(_v, Symbol):
             # noinspection PyProtectedMember
