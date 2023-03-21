@@ -16,7 +16,7 @@ from toolcraft import error as e
 
 # noinspection PyUnreachableCode
 if False:
-    from . import Text
+    from . import TextType
 
 
 @dataclasses.dataclass
@@ -48,8 +48,8 @@ class Acronym(Symbol):
     """
     Refer: https://www.overleaf.com/learn/latex/Glossaries
     """
-    short_name: t.Union[str, "Text"]
-    full_name: t.Union[str, "Text"]
+    short_name: "TextType"
+    full_name: "TextType"
 
     @property
     def short(self) -> str:
@@ -108,14 +108,14 @@ class Glossary(Symbol):
     Refer: https://www.overleaf.com/learn/latex/Glossaries
     """
     # the name key indicates how the term should appear in the list of entries (glossary)
-    name: str
+    name: "TextType"
     # description of glossary
-    description: str
+    description: "TextType"
     # default uses name ... but if you want it to be different in text then change this
-    text: str = None
+    text: "TextType" = None
     # This defaults to the value of the text key with an “s” appended,
     # but if this is incorrect, just use the plural key to override it
-    plural: str = None
+    plural: "TextType" = None
 
     @property
     def normal(self) -> str:
@@ -145,7 +145,7 @@ class Glossary(Symbol):
                       f"Did you forgot to call {make_symbols_tex_file}"]
             )
         # to be used by python code ...
-        return f"\\spl{{ge{self._var_name}}}"
+        return f"\\glspl{{ge{self._var_name}}}"
 
     @property
     def cappl(self) -> str:
@@ -215,7 +215,7 @@ class Command(Symbol):
     """
     num_args: int = 0
     default_value: str = None
-    latex: t.Union[str, "Text"] = None
+    latex: "TextType" = None
     # https://tug.org/mail-archives/texhax/2005-March/003732.html
     # starred newcommand
     # setting this to True will not allow newlines and \\par
