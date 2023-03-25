@@ -189,7 +189,7 @@ class Glossary(Symbol):
             ]
         if self.plural is not None:
             _lines += [
-                f"    plural={{{self.plural}}}",
+                f"    plural={self.plural}",
             ]
         _lines += [
             "}",
