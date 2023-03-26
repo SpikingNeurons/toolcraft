@@ -16,7 +16,7 @@ Aim:
 
 from . import helper
 from .__base__ import *
-from .symbol import Command, Glossary, Acronym, make_symbols_tex_file
+from .base import Command, Glossary, Acronym, Symbol, make_symbols_tex_file
 from . import beamer
 from . import tikz
 from . import tikz_cd

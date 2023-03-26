@@ -20,7 +20,7 @@ if False:
 
 
 @dataclasses.dataclass
-class Symbol(abc.ABC):
+class Base(abc.ABC):
 
     def __post_init__(self):
         self._var_name = None
@@ -44,7 +44,7 @@ class Symbol(abc.ABC):
 
 
 @dataclasses.dataclass
-class Acronym(Symbol):
+class Acronym(Base):
     """
     Refer: https://www.overleaf.com/learn/latex/Glossaries
     """
@@ -102,7 +102,7 @@ class Acronym(Symbol):
 
 
 @dataclasses.dataclass
-class Glossary(Symbol):
+class Glossary(Base):
     """
     http://tug.ctan.org/macros/latex/contrib/glossaries/glossariesbegin.pdf
     Refer: https://www.overleaf.com/learn/latex/Glossaries
@@ -110,7 +110,7 @@ class Glossary(Symbol):
     # the name key indicates how the term should appear in the list of entries (glossary)
     name: "TextType"
     # description of glossary
-    description: "TextType"
+    description: "TextType" = None
     # default uses name ... but if you want it to be different in text then change this
     text: "TextType" = None
     # This defaults to the value of the text key with an “s” appended,
@@ -193,8 +193,17 @@ class Glossary(Symbol):
             ]
         _lines += [
             "}",
+        ]
+
+        # todo: remove eventually
+        if self.description == "":
+            raise Exception("do not set description to empty string ")
+
+        if self.description is not None:
+            _lines += [f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.desc}}}", ]
+
+        _lines += [
             f"\\newcommand*{{\\{self._var_name}}}{{{self.normal}}}",
-            f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.desc}}}",
             f"\\newcommand*{{\\{self._var_name.capitalize()}}}{{{self.cap}}}",
             f"\\newcommand*{{\\{self._var_name + 's'}}}{{{self.pl}}}",
             f"\\newcommand*{{\\{self._var_name.capitalize() + 's'}}}{{{self.cappl}}}",
@@ -203,7 +212,7 @@ class Glossary(Symbol):
 
 
 @dataclasses.dataclass
-class Command(Symbol):
+class Command(Base):
     """
     Refer: https://en.wikibooks.org/wiki/LaTeX/Macros
     \\newcommand{name}[num_args][default]{definition}
@@ -279,7 +288,11 @@ class Command(Symbol):
         # return
         return _ret
 
-    def latex_def(self) -> str:
+    @property
+    def latex_in_math(self) -> str:
+        return f"\\({str(self.latex)}\\)"
+
+    def latex_def(self, math_mode: bool = False) -> str:
         from . import Text
         _cmd = "\\newcommand"
         if not self.long:
@@ -289,12 +302,38 @@ class Command(Symbol):
             _cmd += f"[{self.num_args}]"
         if self.default_value is not None:
             _cmd += f"[{self.default_value}]"
-        _latex = self.latex
+        _latex = self.latex_in_math if math_mode else self.latex
         if isinstance(_latex, (Text, str)):
             _cmd += f"{{{str(_latex)}}}"
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
         return _cmd
+
+
+@dataclasses.dataclass
+class Symbol(Command):
+    """
+    It is just a command with description tag generated like Glossary
+    """
+    # description of Symbol
+    description: "TextType" = None
+
+    def init_validate(self):
+        if self.latex.startswith("\\(") or self.latex.startswith("$"):
+            raise e.code.NotAllowed(
+                msgs=[f"This is {Symbol} class do not use the latex field in math mode"]
+            )
+        return super().init_validate()
+
+    # noinspection PyMethodOverriding
+    def latex_def(self) -> str:
+        _lines = [
+            super().latex_def(math_mode=True),
+            super().latex_def(math_mode=False).replace("\\" + self._var_name, "\\" + self._var_name + "NM"),
+        ]
+        if self.description is not None:
+            _lines += [f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.description}}}"]
+        return "\n".join(_lines)
 
 
 def make_symbols_tex_file():
@@ -324,7 +363,7 @@ def make_symbols_tex_file():
                 ]
             )
         _v = getattr(_mod, _)
-        if isinstance(_v, Symbol):
+        if isinstance(_v, Base):
             # noinspection PyProtectedMember
             if _v._var_name is None:
                 if _.find("_") != -1:

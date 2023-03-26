@@ -11,7 +11,7 @@ from .. import util
 from .. import error as e
 
 from . import helper
-from . import symbol
+from . import base
 
 _LOGGER = logger.get_logger()
 TLaTeX = t.TypeVar('TLaTeX', bound='LaTeX')
@@ -91,7 +91,7 @@ class Text:
     + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
     """
 
-    def __init__(self, text: t.Union[str, symbol.Command, "Icon"], no_text_cmd: bool = False):
+    def __init__(self, text: t.Union[str, base.Base, "Icon"], no_text_cmd: bool = False):
         self.no_text_cmd = no_text_cmd
         self.text = text
 
@@ -521,7 +521,7 @@ class LaTeX(abc.ABC):
     def __str__(self) -> str:
         # assign _doc to any items first ...
         for _ in self._items:
-            if not isinstance(_, (str, Text, ParaBox, Icon, symbol.Symbol)):
+            if not isinstance(_, (str, Text, ParaBox, Icon, base.Base)):
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
                         value=_.label, values=self.doc.labels,
