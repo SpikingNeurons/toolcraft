@@ -230,6 +230,10 @@ class Command(Base):
     # setting this to True will not allow newlines and \\par
     long: bool = False
 
+    @property
+    def latex_in_math(self) -> str:
+        return f"\\({str(self.latex)}\\)"
+
     def __post_init__(self):
         super().__post_init__()
 
@@ -288,10 +292,6 @@ class Command(Base):
         # return
         return _ret
 
-    @property
-    def latex_in_math(self) -> str:
-        return f"\\({str(self.latex)}\\)"
-
     def latex_def(self, math_mode: bool = False) -> str:
         from . import Text
         _cmd = "\\newcommand"
@@ -317,6 +317,26 @@ class Symbol(Command):
     """
     # description of Symbol
     description: "TextType" = None
+
+    @property
+    def desc(self) -> str:
+        if self._var_name is None:
+            raise e.code.CodingError(
+                msgs=["Should be assigned by now ...",
+                      f"Did you forgot to call {make_symbols_tex_file}"]
+            )
+        # to be used by python code ...
+        return f"\\{self._var_name+'Desc'}"
+
+    @property
+    def nm(self) -> str:
+        if self._var_name is None:
+            raise e.code.CodingError(
+                msgs=["Should be assigned by now ...",
+                      f"Did you forgot to call {make_symbols_tex_file}"]
+            )
+        # to be used by python code ...
+        return f"\\{self._var_name+'NM'}"
 
     def init_validate(self):
         if self.latex.startswith("\\(") or self.latex.startswith("$"):
