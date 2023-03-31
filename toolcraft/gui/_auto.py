@@ -2,7 +2,7 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.8.0
+>> DearPyGui: 1.9.0
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -751,7 +751,7 @@ class Button(MovableWidget):
     # arrow (bool, optional): Displays an arrow in place of the text string. This requires the direction keyword.
     arrow: bool = False
 
-    # direction (int, optional): Sets the cardinal direction for the arrow buy using constants mvDir_Left, mvDir_Up, mvDir_Down, mvDir_Right, mvDir_None. Arrow keyword must be set to True.
+    # direction (int, optional): Sets the cardinal direction for the arrow by using constants mvDir_Left, mvDir_Up, mvDir_Down, mvDir_Right, mvDir_None. Arrow keyword must be set to True.
     direction: EnDir = EnDir.Left
 
     def build(self) -> int:
@@ -5025,6 +5025,63 @@ class WidgetDeactivatedHandler(WidgetHandler):
 
 
 @dataclasses.dataclass(repr=False)
+class WidgetDoubleClickedHandler(WidgetHandler):
+    """
+    Refer:
+    >>> dpg.add_item_double_clicked_handler
+
+     Adds a double click handler.
+
+    """
+
+    # button (int, optional): Submits callback for all mouse buttons
+    button: EnMouseButton = EnMouseButton.Any
+
+    # label (str, optional): Overrides 'name' as label.
+    label: str = None
+
+    # user_data (Any, optional): User data for callbacks
+    user_data: USER_DATA = None
+
+    # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
+    use_internal_label: bool = True
+
+    # callback (Callable, optional): Registers a callback.
+    callback: Callback = None
+
+    # show (bool, optional): Attempt to render widget.
+    show: bool = True
+
+    def build(self) -> int:
+
+        _parent_guid = self.parent.guid
+
+        _ret = internal_dpg.add_item_double_clicked_handler(
+            tag=self.guid,
+            parent=_parent_guid,
+            button=self.button.value,
+            label=self.label,
+            user_data=self.user_data,
+            use_internal_label=self.use_internal_label,
+            callback=self.callback_fn,
+            show=self.show,
+        )
+        
+        return _ret
+
+    def callback_fn(self, sender_guid: int):
+        # eventually remove this sanity check in (dpg_widgets_generator.py)...
+        assert sender_guid == self.guid, \
+            'was expecting the guid to match ...'
+
+        # logic ...
+        if self.callback is None:
+            return None
+        else:
+            return self.callback.fn(sender=self)
+
+
+@dataclasses.dataclass(repr=False)
 class WidgetEditedHandler(WidgetHandler):
     """
     Refer:
@@ -5758,7 +5815,7 @@ class Listbox(MovableWidget):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
-    # default_value (str, optional): String value fo the item that will be selected by default.
+    # default_value (str, optional): String value of the item that will be selected by default.
     default_value: str = ''
 
     # num_items (int, optional): Expands the height of the listbox to show specified number of items.
@@ -11299,35 +11356,44 @@ class Plot(MovableContainerWidget):
     # track_offset (float, optional): 0.0f
     track_offset: float = 0.5
 
-    # no_title (bool, optional): ...
+    # no_title (bool, optional): the plot title will not be displayed
     no_title: bool = False
 
-    # no_menus (bool, optional): ...
+    # no_menus (bool, optional): the user will not be able to open context menus with right-click
     no_menus: bool = False
 
-    # no_box_select (bool, optional): ...
+    # no_box_select (bool, optional): the user will not be able to box-select with right-click drag
     no_box_select: bool = False
 
-    # no_mouse_pos (bool, optional): ...
+    # no_mouse_pos (bool, optional): the mouse position, in plot coordinates, will not be displayed inside of the plot
     no_mouse_pos: bool = False
 
-    # no_highlight (bool, optional): ...
+    # no_highlight (bool, optional): plot items will not be highlighted when their legend entry is hovered
     no_highlight: bool = False
 
-    # no_child (bool, optional): ...
+    # no_child (bool, optional): a child window region will not be used to capture mouse scroll (can boost performance for single ImGui window applications)
     no_child: bool = False
 
-    # query (bool, optional): ...
+    # query (bool, optional): the user will be able to draw query rects with middle - mouse or CTRL + right - click drag
     query: bool = False
 
-    # crosshairs (bool, optional): ...
+    # crosshairs (bool, optional): the default mouse cursor will be replaced with a crosshair when hovered
     crosshairs: bool = False
 
-    # anti_aliased (bool, optional): ...
+    # anti_aliased (bool, optional): plot lines will be software anti-aliased (not recommended for high density plots, prefer MSAA)
     anti_aliased: bool = False
 
-    # equal_aspects (bool, optional): ...
+    # equal_aspects (bool, optional): primary x and y axes will be constrained to have the same units/pixel (does not apply to auxiliary y-axes)
     equal_aspects: bool = False
+
+    # use_local_time (bool, optional): axis labels will be formatted for your timezone when
+    use_local_time: bool = False
+
+    # use_ISO8601 (bool, optional): dates will be formatted according to ISO 8601 where applicable (e.g. YYYY-MM-DD, YYYY-MM, --MM-DD, etc.)
+    use_ISO8601: bool = False
+
+    # use_24hour_clock (bool, optional): times will be formatted using a 24 hour clock
+    use_24hour_clock: bool = False
 
     # pan_button (int, optional): enables panning when held
     pan_button: int = 0
@@ -11398,6 +11464,9 @@ class Plot(MovableContainerWidget):
             crosshairs=self.crosshairs,
             anti_aliased=self.anti_aliased,
             equal_aspects=self.equal_aspects,
+            use_local_time=self.use_local_time,
+            use_ISO8601=self.use_ISO8601,
+            use_24hour_clock=self.use_24hour_clock,
             pan_button=self.pan_button,
             pan_mod=self.pan_mod,
             fit_button=self.fit_button,
