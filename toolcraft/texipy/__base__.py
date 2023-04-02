@@ -125,6 +125,10 @@ class Text:
         self.text = size(self.text)
         return self
 
+    def in_math(self) -> "Text":
+        self.text = "\\(" + str(self.text) + "\\)"
+        return self
+
 
 class Icon(enum.Enum):
     """
