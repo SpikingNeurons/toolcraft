@@ -1182,6 +1182,10 @@ class NpyFileGroupConfig(FileGroupConfig):
     # but this gives nice way to save it in config state file ... so that users can read it without code
     shape: dict = None
     dtype: dict = None
+    min: dict = None
+    max: dict = None
+    median: dict = None
+    mean: dict = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1430,8 +1434,38 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # collection
         # Note this info can be extract from properties shape and dtype but we get it from memmap for pretty print
         # and so that python classes related to numpy do not populate yaml
-        _shape = {_k: str(list(_v.shape)) for _k, _v in _npy_memmaps.items()}
-        _dtype = {_k: str(_v.dtype) for _k, _v in _npy_memmaps.items()}
+        _shape = {}
+        _dtype = {}
+        _min = {}
+        _max = {}
+        _median = {}
+        _mean = {}
+        for _k, _v in _npy_memmaps.items():
+            _shape[_k] = str(list(_v.shape))
+            _dtype[_k] = str(_v.dtype)
+            if _v.ndim == 1:
+                _min[_k] = str(np.min(_v))
+                _max[_k] = str(np.max(_v))
+                _median[_k] = str(np.median(_v))
+                _mean[_k] = str(np.mean(_v))
+            elif _v.ndim == 2:
+                if _v.shape[1] <= 16:
+                    _min[_k] = str(list(np.min(_v, axis=0)))
+                    _max[_k] = str(list(np.max(_v, axis=0)))
+                    _median[_k] = str(list(np.median(_v, axis=0)))
+                    _mean[_k] = str(list(np.mean(_v, axis=0)))
+                else:
+                    _ = f"second dim={_v.shape[1]} is greater than 16"
+                    _min[_k] = _
+                    _max[_k] = _
+                    _median[_k] = _
+                    _mean[_k] = _
+            else:
+                _ = f"ndim={_v.ndim} is greater than 2"
+                _min[_k] = _
+                _max[_k] = _
+                _median[_k] = _
+                _mean[_k] = _
         del _npy_memmaps
 
         # ----------------------------------------------------------------04
@@ -1454,8 +1488,40 @@ class NpyFileGroup(FileGroup, abc.ABC):
                     f"to be present in the config"
                 ]
             )
+        if self.config.min is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `min` "
+                    f"to be present in the config"
+                ]
+            )
+        if self.config.max is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `max` "
+                    f"to be present in the config"
+                ]
+            )
+        if self.config.median is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `median` "
+                    f"to be present in the config"
+                ]
+            )
+        if self.config.mean is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `mean` "
+                    f"to be present in the config"
+                ]
+            )
         self.config.shape = _shape
         self.config.dtype = _dtype
+        self.config.min = _min
+        self.config.max = _max
+        self.config.median = _median
+        self.config.mean = _mean
 
         # ----------------------------------------------------------------06
         # finally return
