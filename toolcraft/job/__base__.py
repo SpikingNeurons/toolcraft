@@ -1493,6 +1493,13 @@ class Experiment(m.HashableClass, abc.ABC):
     """
     Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
     be stored in same folder hierarchy if some portion of first strs of group_by matches...
+
+    todo: support tensorboard
+      https://www.tensorflow.org/tensorboard/get_started
+    todo: support tensorboard.dev
+      https://tensorboard.dev/experiments/
+    todo: tensorboard projector any common methods
+      https://www.tensorflow.org/tensorboard/tensorboard_projector_plugin
     """
 
     # runner
