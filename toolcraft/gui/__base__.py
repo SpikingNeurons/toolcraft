@@ -1362,7 +1362,7 @@ class UseMethodInForm:
         label_fmt: str = None,
         run_async: bool = False,
         display_in_form: bool = True,
-        tag_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
+        tag_for_caching_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
         hide_previously_opened: bool = True,
     ):
         """
@@ -1374,7 +1374,7 @@ class UseMethodInForm:
               call it to get label
             run_async: can call method in async task ...
             display_in_form:
-            tag_in_receiver:
+            tag_for_caching_in_receiver:
                 When set to None the widget generated will not be cached.
                 When 'auto' (i.e. default) automatic unique tag for given hashable and method name will be
                   generated and that tag will be used to cache
@@ -1387,7 +1387,7 @@ class UseMethodInForm:
         self.label_fmt = label_fmt
         self.run_async = run_async
         self.display_in_form = display_in_form
-        self.tag_in_receiver = tag_in_receiver
+        self.tag_for_caching_in_receiver = tag_for_caching_in_receiver
         self.hide_previously_opened = hide_previously_opened
 
     def __call__(self, fn: t.Callable):
