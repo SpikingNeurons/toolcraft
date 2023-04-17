@@ -140,7 +140,6 @@ class HashableMethodRunnerCallback(Callback):
             raise Exception("We expect that you set user_data to dict in receiver ...")
 
     def fn(self, sender: widget.Widget):
-        print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
         # ------------------------------------------------------------------ 01
         # initial stuff
         # ------------------------------------------------------------------ 01.01
@@ -212,7 +211,6 @@ class HashableMethodRunnerCallback(Callback):
         # if above steps results in widget then that means there is a cached widget which we can reuse or overwrite
         # but in case of `tag_for_caching_in_receiver` is not `auto` then that means that user wants to overwrite previous tag
         if _widget is not None:
-            print(_tag_for_caching_in_receiver, _actual_tag, "<<<<<<<<<<<<<<<<<<<<")
             # -------------------------------------------------------------- 06.01
             # if `self.tag_for_caching_in_receiver` is `auto` than show widget that was hidden in step 05
             if _tag_for_caching_in_receiver == 'auto':

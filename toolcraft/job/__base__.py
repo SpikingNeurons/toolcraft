@@ -742,38 +742,79 @@ class Job:
 
     def get_launch_local_gui(
         self,
-        label: str,
         # this might freeze UI but makes it easy to debug the code
         single_cpu: bool = False,
     ) -> "gui.widget.Group":
         """
         Note code is borrowed from `cli_launch.local`
+
+        Aim of this method is to present a gui for calling methods that we
+        generally call using cli option
+
+        Some methods we don't want to run on server but locally then we
+        present this gui which can do it
         """
+        # ---------------------------------------------------- 01
+        # import
         from .cli_launch import _run_job
-        from ..gui.widget import Button, Group
-        if single_cpu:
-            _cli_command = self.cli_command
-            _shell = False
-        else:
-            _cli_command = ["start", "cmd", "/c", ] + self.cli_command
-            _shell = True
+        from ..gui.widget import Button, Group, Text
 
-        with Group() as _ret:
-            def _fn():
-                if self.is_finished:
-                    ...
-                _run_job(self, _cli_command)
-            Button(label=label, callback=_fn)
+        # ---------------------------------------------------- 02
+        # make return stuff
+        _ret = Group()
 
-        # gui.form.HashableMethodsRunnerForm(
-        #     label=self.view_gui_label.split("\n")[0],
-        #     hashable=self,
-        #     close_button=True,
-        #     info_button=True,
-        #     callable_names=self.view_callable_names,
-        #     default_open=True,
-        # )
+        # ---------------------------------------------------- 03
+        # based on job status return
+        with _ret:
+            if self.is_finished:
+                Text("Nothing to run as job is already finished ...")
+                return _ret
+            if self.is_running:
+                Text("The job is already running you need to wait  ...")
+                return _ret
+            if self.is_failed:
+                Text("Previous run of job has failed ...")
+                Text("-----------------------------------")
+                Text("\n".join(self.tag_manager.failed.read()['exception']))
+                return _ret
+            _one_or_more_failed = False
+            for _wait_job in self.wait_on_jobs:
+                if _wait_job.is_failed:
+                    _one_or_more_failed = True
+                    break
+            if _one_or_more_failed:
+                Text("One or more wait on jobs have failed ...")
+                Text("So cannot proceed with calling this job ...")
+                return _ret
+            _all_finished = True
+            for _wait_job in self.wait_on_jobs:
+                if not _wait_job.is_finished:
+                    _all_finished = False
+                    break
+            if not _all_finished:
+                Text("One or more wait on jobs have not finished yet ...")
+                Text("So cannot proceed with calling this job ...")
+                return _ret
 
+        # ---------------------------------------------------- 04
+        # launch job function
+        def _fn():
+            _ret.clear()
+            with _ret:
+                if single_cpu:
+                    _cli_command = self.cli_command
+                    _shell = False
+                else:
+                    _cli_command = ["start", "cmd", "/c", ] + self.cli_command
+                    _shell = True
+                _run_job(self, _cli_command, shell=_shell)
+                Text("We have launched the job ... please wait and refresh ")
+
+        # ---------------------------------------------------- 05
+        with _ret:
+            Button(label="Launch Job", callback=_fn)
+
+        # ---------------------------------------------------- 06
         return _ret
 
     def set_launch_lsf_parameters(

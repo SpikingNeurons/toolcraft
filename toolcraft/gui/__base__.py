@@ -1467,6 +1467,9 @@ class UseMethodInForm:
         # ---------------------------------------------------- 04
         # create and return button
         from . import widget
+        # this indicates that this button can be refreshed (as things are not caches)
+        if self.tag_for_caching_in_receiver is None:
+            _button_label += " (*)"
         return widget.Button(
             label=_button_label,
             callback=_callback,
