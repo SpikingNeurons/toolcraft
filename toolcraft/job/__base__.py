@@ -772,6 +772,10 @@ class Job:
             if self.is_running:
                 Text("The job is already running you need to wait  ...")
                 return _ret
+            if self.is_launched or self.is_started:
+                Text("The job is already launched or/and started but it is not running  ...")
+                Text("If something is wrong delete files on the disk  ...")
+                return _ret
             if self.is_failed:
                 Text("Previous run of job has failed ...")
                 Text("-----------------------------------")
