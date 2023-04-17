@@ -53,7 +53,7 @@ def _run_job(_job: Job, _cli_command: t.List[str], shell: bool = True):
 
     # ------------------------------------------------------------- 03
     # run in subprocess
-    _ret = subprocess.run(_cli_command, shell=shell)
+    _ret = subprocess.run(_cli_command, shell=shell, env=os.environ.copy())
 
 
 @_APP.command(help="Launches all the jobs in runner on lsf infrastructure.")

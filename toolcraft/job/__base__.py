@@ -740,6 +740,42 @@ class Job:
         self._wait_on.append(wait_on)
         return self
 
+    def get_launch_local_gui(
+        self,
+        label: str,
+        # this might freeze UI but makes it easy to debug the code
+        single_cpu: bool = False,
+    ) -> "gui.widget.Group":
+        """
+        Note code is borrowed from `cli_launch.local`
+        """
+        from .cli_launch import _run_job
+        from ..gui.widget import Button, Group
+        if single_cpu:
+            _cli_command = self.cli_command
+            _shell = False
+        else:
+            _cli_command = ["start", "cmd", "/c", ] + self.cli_command
+            _shell = True
+
+        with Group() as _ret:
+            def _fn():
+                if self.is_finished:
+                    ...
+                _run_job(self, _cli_command)
+            Button(label=label, callback=_fn)
+
+        # gui.form.HashableMethodsRunnerForm(
+        #     label=self.view_gui_label.split("\n")[0],
+        #     hashable=self,
+        #     close_button=True,
+        #     info_button=True,
+        #     callable_names=self.view_callable_names,
+        #     default_open=True,
+        # )
+
+        return _ret
+
     def set_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
     ):

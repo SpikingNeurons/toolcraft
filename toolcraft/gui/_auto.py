@@ -415,13 +415,13 @@ class Slider3D(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -506,8 +506,10 @@ class Slider3D(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -517,8 +519,10 @@ class Slider3D(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -528,8 +532,10 @@ class Slider3D(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -719,13 +725,13 @@ class Button(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -792,8 +798,10 @@ class Button(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -803,8 +811,10 @@ class Button(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -814,8 +824,10 @@ class Button(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -927,13 +939,13 @@ class CheckBox(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -992,8 +1004,10 @@ class CheckBox(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1003,8 +1017,10 @@ class CheckBox(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1014,8 +1030,10 @@ class CheckBox(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -1053,13 +1071,13 @@ class ColorButton(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -1127,8 +1145,10 @@ class ColorButton(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1138,8 +1158,10 @@ class ColorButton(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1149,8 +1171,10 @@ class ColorButton(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -1277,13 +1301,13 @@ class ColormapButton(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -1339,8 +1363,10 @@ class ColormapButton(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1350,8 +1376,10 @@ class ColormapButton(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1361,8 +1389,10 @@ class ColormapButton(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -1400,7 +1430,7 @@ class ColormapScale(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -1451,8 +1481,10 @@ class ColormapScale(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -1487,10 +1519,10 @@ class ColormapSlider(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -1544,8 +1576,10 @@ class ColormapSlider(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1555,8 +1589,10 @@ class ColormapSlider(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -1594,13 +1630,13 @@ class Combo(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -1677,8 +1713,10 @@ class Combo(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1688,8 +1726,10 @@ class Combo(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1699,8 +1739,10 @@ class Combo(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -1729,13 +1771,13 @@ class DatePicker(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -1792,8 +1834,10 @@ class DatePicker(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1803,8 +1847,10 @@ class DatePicker(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -1814,8 +1860,10 @@ class DatePicker(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -1936,13 +1984,13 @@ class DragDouble(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2026,8 +2074,10 @@ class DragDouble(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2037,8 +2087,10 @@ class DragDouble(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2048,8 +2100,10 @@ class DragDouble(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -2084,13 +2138,13 @@ class DragDoublex(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2178,8 +2232,10 @@ class DragDoublex(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2189,8 +2245,10 @@ class DragDoublex(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2200,8 +2258,10 @@ class DragDoublex(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -2236,13 +2296,13 @@ class DragFloat(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2326,8 +2386,10 @@ class DragFloat(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2337,8 +2399,10 @@ class DragFloat(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2348,8 +2412,10 @@ class DragFloat(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -2384,13 +2450,13 @@ class DragFloatX(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2478,8 +2544,10 @@ class DragFloatX(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2489,8 +2557,10 @@ class DragFloatX(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2500,8 +2570,10 @@ class DragFloatX(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -2536,13 +2608,13 @@ class DragInt(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2626,8 +2698,10 @@ class DragInt(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2637,8 +2711,10 @@ class DragInt(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2648,8 +2724,10 @@ class DragInt(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -2684,13 +2762,13 @@ class DragIntX(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2778,8 +2856,10 @@ class DragIntX(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2789,8 +2869,10 @@ class DragIntX(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -2800,8 +2882,10 @@ class DragIntX(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -2824,7 +2908,7 @@ class PlotDragLine(PlotItem):
     source: t.Optional[Widget] = None
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2875,8 +2959,10 @@ class PlotDragLine(PlotItem):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -2899,7 +2985,7 @@ class PlotDragPoint(PlotItem):
     source: t.Optional[Widget] = None
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -2946,8 +3032,10 @@ class PlotDragPoint(PlotItem):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -3589,13 +3677,13 @@ class InputDouble(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -3691,8 +3779,10 @@ class InputDouble(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -3702,8 +3792,10 @@ class InputDouble(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -3713,8 +3805,10 @@ class InputDouble(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -3749,13 +3843,13 @@ class InputDoublex(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -3847,8 +3941,10 @@ class InputDoublex(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -3858,8 +3954,10 @@ class InputDoublex(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -3869,8 +3967,10 @@ class InputDoublex(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -3905,13 +4005,13 @@ class InputFloat(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4007,8 +4107,10 @@ class InputFloat(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4018,8 +4120,10 @@ class InputFloat(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4029,8 +4133,10 @@ class InputFloat(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4065,13 +4171,13 @@ class InputFloatX(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4163,8 +4269,10 @@ class InputFloatX(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4174,8 +4282,10 @@ class InputFloatX(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4185,8 +4295,10 @@ class InputFloatX(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4221,13 +4333,13 @@ class InputInt(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4319,8 +4431,10 @@ class InputInt(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4330,8 +4444,10 @@ class InputInt(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4341,8 +4457,10 @@ class InputInt(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4377,13 +4495,13 @@ class InputIntX(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4471,8 +4589,10 @@ class InputIntX(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4482,8 +4602,10 @@ class InputIntX(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4493,8 +4615,10 @@ class InputIntX(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4532,13 +4656,13 @@ class InputText(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4643,8 +4767,10 @@ class InputText(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4654,8 +4780,10 @@ class InputText(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -4665,8 +4793,10 @@ class InputText(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4775,7 +4905,7 @@ class WidgetActivatedHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4804,8 +4934,10 @@ class WidgetActivatedHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4828,7 +4960,7 @@ class WidgetActiveHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4857,8 +4989,10 @@ class WidgetActiveHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4884,7 +5018,7 @@ class WidgetClickedHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4914,8 +5048,10 @@ class WidgetClickedHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4938,7 +5074,7 @@ class WidgetDeactivatedAfterEditHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -4967,8 +5103,10 @@ class WidgetDeactivatedAfterEditHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -4991,7 +5129,7 @@ class WidgetDeactivatedHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5020,8 +5158,10 @@ class WidgetDeactivatedHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5047,7 +5187,7 @@ class WidgetDoubleClickedHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5077,8 +5217,10 @@ class WidgetDoubleClickedHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5101,7 +5243,7 @@ class WidgetEditedHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5130,8 +5272,10 @@ class WidgetEditedHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5154,7 +5298,7 @@ class WidgetFocusHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5183,8 +5327,10 @@ class WidgetFocusHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5207,7 +5353,7 @@ class WidgetHoverHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5236,8 +5382,10 @@ class WidgetHoverHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5260,7 +5408,7 @@ class WidgetResizeHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5289,8 +5437,10 @@ class WidgetResizeHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5313,7 +5463,7 @@ class WidgetToggledOpenHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5342,8 +5492,10 @@ class WidgetToggledOpenHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5366,7 +5518,7 @@ class WidgetVisibleHandler(WidgetHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5395,8 +5547,10 @@ class WidgetVisibleHandler(WidgetHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5422,7 +5576,7 @@ class KeyDownHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5452,8 +5606,10 @@ class KeyDownHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5479,7 +5635,7 @@ class KeyPressHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5509,8 +5665,10 @@ class KeyPressHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5536,7 +5694,7 @@ class KeyReleaseHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5566,8 +5724,10 @@ class KeyReleaseHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5605,13 +5765,13 @@ class KnobFloat(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5680,8 +5840,10 @@ class KnobFloat(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -5691,8 +5853,10 @@ class KnobFloat(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -5702,8 +5866,10 @@ class KnobFloat(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5789,13 +5955,13 @@ class Listbox(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5860,8 +6026,10 @@ class Listbox(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -5871,8 +6039,10 @@ class Listbox(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -5882,8 +6052,10 @@ class Listbox(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -5918,7 +6090,7 @@ class LoadingIndicator(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -5983,8 +6155,10 @@ class LoadingIndicator(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6013,10 +6187,10 @@ class MenuItem(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6076,8 +6250,10 @@ class MenuItem(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -6087,8 +6263,10 @@ class MenuItem(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6114,7 +6292,7 @@ class MouseClickHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6144,8 +6322,10 @@ class MouseClickHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6171,7 +6351,7 @@ class MouseDoubleClickHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6201,8 +6381,10 @@ class MouseDoubleClickHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6228,7 +6410,7 @@ class MouseDownHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6258,8 +6440,10 @@ class MouseDownHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6288,7 +6472,7 @@ class MouseDragHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6319,8 +6503,10 @@ class MouseDragHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6343,7 +6529,7 @@ class MouseMoveHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6372,8 +6558,10 @@ class MouseMoveHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6399,7 +6587,7 @@ class MouseReleaseHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6429,8 +6617,10 @@ class MouseReleaseHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6453,7 +6643,7 @@ class MouseWheelHandler(GlobalHandler):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6482,8 +6672,10 @@ class MouseWheelHandler(GlobalHandler):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6634,7 +6826,7 @@ class PlotLegend(Widget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6676,8 +6868,10 @@ class PlotLegend(Widget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6715,10 +6909,10 @@ class ProgressBar(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6778,8 +6972,10 @@ class ProgressBar(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -6789,8 +6985,10 @@ class ProgressBar(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -6825,13 +7023,13 @@ class RadioButton(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -6895,8 +7093,10 @@ class RadioButton(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -6906,8 +7106,10 @@ class RadioButton(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -6917,8 +7119,10 @@ class RadioButton(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -7054,13 +7258,13 @@ class Selectable(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -7129,8 +7333,10 @@ class Selectable(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7140,8 +7346,10 @@ class Selectable(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7151,8 +7359,10 @@ class Selectable(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -7331,10 +7541,10 @@ class SimplePlot(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -7406,8 +7616,10 @@ class SimplePlot(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7417,8 +7629,10 @@ class SimplePlot(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -7456,13 +7670,13 @@ class SliderDouble(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -7547,8 +7761,10 @@ class SliderDouble(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7558,8 +7774,10 @@ class SliderDouble(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7569,8 +7787,10 @@ class SliderDouble(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -7605,13 +7825,13 @@ class SliderDoublex(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -7695,8 +7915,10 @@ class SliderDoublex(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7706,8 +7928,10 @@ class SliderDoublex(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7717,8 +7941,10 @@ class SliderDoublex(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -7756,13 +7982,13 @@ class SliderFloat(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -7847,8 +8073,10 @@ class SliderFloat(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7858,8 +8086,10 @@ class SliderFloat(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -7869,8 +8099,10 @@ class SliderFloat(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -7905,13 +8137,13 @@ class SliderFloatX(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -7995,8 +8227,10 @@ class SliderFloatX(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8006,8 +8240,10 @@ class SliderFloatX(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8017,8 +8253,10 @@ class SliderFloatX(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -8056,13 +8294,13 @@ class SliderInt(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -8147,8 +8385,10 @@ class SliderInt(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8158,8 +8398,10 @@ class SliderInt(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8169,8 +8411,10 @@ class SliderInt(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -8205,13 +8449,13 @@ class SliderIntX(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -8295,8 +8539,10 @@ class SliderIntX(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8306,8 +8552,10 @@ class SliderIntX(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8317,8 +8565,10 @@ class SliderIntX(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -8590,13 +8840,13 @@ class TabButton(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -8657,8 +8907,10 @@ class TabButton(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8668,8 +8920,10 @@ class TabButton(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8679,8 +8933,10 @@ class TabButton(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -8829,10 +9085,10 @@ class Text(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -8899,8 +9155,10 @@ class Text(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -8910,8 +9168,10 @@ class Text(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -9099,13 +9359,13 @@ class TimePicker(MovableWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -9162,8 +9422,10 @@ class TimePicker(MovableWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -9173,8 +9435,10 @@ class TimePicker(MovableWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -9184,8 +9448,10 @@ class TimePicker(MovableWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -9264,7 +9530,7 @@ class ChildWindow(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -9341,8 +9607,10 @@ class ChildWindow(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -9421,10 +9689,10 @@ class CollapsingHeader(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -9500,8 +9768,10 @@ class CollapsingHeader(MovableContainerWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -9511,8 +9781,10 @@ class CollapsingHeader(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -9582,7 +9854,7 @@ class CustomSeries(MovableContainerWidget):
     source: t.Optional[Widget] = None
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -9632,8 +9904,10 @@ class CustomSeries(MovableContainerWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -10536,7 +10810,7 @@ class DrawList(MovableContainerWidget):
     use_internal_label: bool = True
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -10587,8 +10861,10 @@ class DrawList(MovableContainerWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -10617,7 +10893,7 @@ class FileDialog(ContainerWidget):
     height: int = 0
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -10644,7 +10920,7 @@ class FileDialog(ContainerWidget):
     max_size: t.Union[t.List[int], t.Tuple[int, ...]] = dataclasses.field(default_factory=lambda: [30000, 30000])
 
     # cancel_callback (Callable, optional): Callback called when cancel button is clicked.
-    cancel_callback: Callback = None
+    cancel_callback: t.Union[Callback, t.Callable] = None
 
     def build(self) -> int:
 
@@ -10677,8 +10953,10 @@ class FileDialog(ContainerWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def cancel_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -10688,8 +10966,10 @@ class FileDialog(ContainerWidget):
         # logic ...
         if self.cancel_callback is None:
             return None
-        else:
+        elif isinstance(self.cancel_callback, Callback):
             return self.cancel_callback.fn(sender=self)
+        else:
+            return self.cancel_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -10848,10 +11128,10 @@ class Group(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -10916,8 +11196,10 @@ class Group(MovableContainerWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -10927,8 +11209,10 @@ class Group(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11035,7 +11319,7 @@ class Menu(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -11086,8 +11370,10 @@ class Menu(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11159,10 +11445,10 @@ class Node(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -11217,8 +11503,10 @@ class Node(MovableContainerWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -11228,8 +11516,10 @@ class Node(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11330,13 +11620,13 @@ class Plot(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -11491,8 +11781,10 @@ class Plot(MovableContainerWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
     def drag_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -11502,8 +11794,10 @@ class Plot(MovableContainerWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -11513,8 +11807,10 @@ class Plot(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11537,7 +11833,7 @@ class PlotXAxis(Widget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -11600,8 +11896,10 @@ class PlotXAxis(Widget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11624,7 +11922,7 @@ class PlotYAxis(ContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -11687,8 +11985,10 @@ class PlotYAxis(ContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11726,7 +12026,7 @@ class SubPlots(MovableContainerWidget):
     indent: int = -1
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -11824,8 +12124,10 @@ class SubPlots(MovableContainerWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11854,7 +12156,7 @@ class Tab(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -11917,8 +12219,10 @@ class Tab(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -11944,7 +12248,7 @@ class TabBar(MovableContainerWidget):
     indent: int = -1
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -12002,8 +12306,10 @@ class TabBar(MovableContainerWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -12038,7 +12344,7 @@ class Table(MovableContainerWidget):
     source: t.Optional[Widget] = None
 
     # callback (Callable, optional): Registers a callback.
-    callback: Callback = None
+    callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -12200,8 +12506,10 @@ class Table(MovableContainerWidget):
         # logic ...
         if self.callback is None:
             return None
-        else:
+        elif isinstance(self.callback, Callback):
             return self.callback.fn(sender=self)
+        else:
+            return self.callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -12468,10 +12776,10 @@ class TreeNode(MovableContainerWidget):
     payload_type: str = '$$DPG_PAYLOAD'
 
     # drag_callback (Callable, optional): Registers a drag callback for drag and drop.
-    drag_callback: Callback = None
+    drag_callback: t.Union[Callback, t.Callable] = None
 
     # drop_callback (Callable, optional): Registers a drop callback for drag and drop.
-    drop_callback: Callback = None
+    drop_callback: t.Union[Callback, t.Callable] = None
 
     # show (bool, optional): Attempt to render widget.
     show: bool = True
@@ -12547,8 +12855,10 @@ class TreeNode(MovableContainerWidget):
         # logic ...
         if self.drag_callback is None:
             return None
-        else:
+        elif isinstance(self.drag_callback, Callback):
             return self.drag_callback.fn(sender=self)
+        else:
+            return self.drag_callback()
 
     def drop_callback_fn(self, sender_guid: int):
         # eventually remove this sanity check in (dpg_widgets_generator.py)...
@@ -12558,8 +12868,10 @@ class TreeNode(MovableContainerWidget):
         # logic ...
         if self.drop_callback is None:
             return None
-        else:
+        elif isinstance(self.drop_callback, Callback):
             return self.drop_callback.fn(sender=self)
+        else:
+            return self.drop_callback()
 
 
 @dataclasses.dataclass(repr=False)
@@ -12734,7 +13046,7 @@ class Window(ContainerWidget):
     no_open_over_existing_popup: bool = True
 
     # on_close (Callable, optional): Callback ran when window is closed.
-    on_close: Callback = None
+    on_close: t.Union[Callback, t.Callable] = None
 
     def build(self) -> int:
 
@@ -12781,5 +13093,7 @@ class Window(ContainerWidget):
         # logic ...
         if self.on_close is None:
             return None
-        else:
+        elif isinstance(self.on_close, Callback):
             return self.on_close.fn(sender=self)
+        else:
+            return self.on_close()

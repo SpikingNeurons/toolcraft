@@ -552,7 +552,7 @@ class DpgDef:
             ).replace(
                 "'>", ""
             ).replace(
-                "t.Callable", "Callback"
+                "t.Callable", "t.Union[Callback, t.Callable]"
             )
 
             # if below type then it is PLOT_DATA_TYPE
@@ -780,8 +780,10 @@ class DpgDef:
                 "\t\t# logic ...",
                 f"\t\tif self.{_pd.name} is None:",
                 f"\t\t\treturn None",
-                f"\t\telse:",
+                f"\t\telif isinstance(self.{_pd.name}, Callback):",
                 f"\t\t\treturn self.{_pd.name}.fn(sender=self)",
+                f"\t\telse:",
+                f"\t\t\treturn self.{_pd.name}()",
             ]
 
         # ------------------------------------------------------- 04
