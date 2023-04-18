@@ -25,6 +25,7 @@ from .. import marshalling as m
 from .. import util
 from .. import storage as s
 from .. import richy
+from .. import settings
 from ..gui import UseMethodInForm
 
 _now = datetime.datetime.now
@@ -643,7 +644,8 @@ class Job:
         #     "run", self.method.__func__.__name__,
         # ]
         _command = [
-            'python', self.runner.py_script.name,
+            (settings.ENV_DIR / 'python').as_posix(),  # can also use sys.executable
+            self.runner.py_script.name,
             "run", self.method.__func__.__name__,
         ]
         if self.experiment is not None:
@@ -758,6 +760,12 @@ class Job:
         # import
         from .cli_launch import _run_job
         from ..gui.widget import Button, Group, Text
+        # create folder for job if not present
+        # this is needed as when we create gui for job to be run locally
+        # sometimes the job dir and the child dirs for tag manager wont exist
+        # so we need to create it
+        if not self.tag_manager.path.exists():
+            self.tag_manager.path.mkdir(create_parents=True)
 
         # ---------------------------------------------------- 02
         # make return stuff

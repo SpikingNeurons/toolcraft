@@ -13,6 +13,8 @@ import __main__ as main
 
 DO_RULE_CHECK = True
 
+ENV_DIR = pathlib.Path(sys.exec_prefix)
+
 
 # check if debugger is used
 PYC_DEBUGGING = False
