@@ -766,6 +766,15 @@ class Job:
         # so we need to create it
         if not self.tag_manager.path.exists():
             self.tag_manager.path.mkdir(create_parents=True)
+        # check this if you use debugger
+        if settings.PYC_DEBUGGING:
+            if not single_cpu:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "looks like you are in pycharm debug mode",
+                        "Make sure to set --single-cpu to enable full debugging inside jobs ... "
+                    ]
+                )
 
         # ---------------------------------------------------- 02
         # make return stuff
