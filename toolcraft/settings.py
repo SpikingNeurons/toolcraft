@@ -16,6 +16,14 @@ DO_RULE_CHECK = True
 
 ENV_DIR = pathlib.Path(sys.exec_prefix)
 
+try:
+    import dearpygui.dearpygui as dpg
+    DPG_WORKS = True
+    # todo: instead of import call some code in dearpygui to raise errors ... so that in except block
+    #   we can set `DPG_WORKS = False`
+except ImportError:
+    DPG_WORKS = False
+
 
 # platform
 PLATFORM = platform.uname()  # type: platform.uname_result
