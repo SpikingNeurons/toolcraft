@@ -208,6 +208,14 @@ def view():
     """
 
     # ---------------------------------------------------------------- 01
+    # That is do not call view when not on main machine
+    # todo: check if on server
+    if settings.PLATFORM.system != "Windows":
+        raise e.code.NotAllowed(
+            msgs=["looks like you are on linux system i.e. dearpygui might nor work ..."]
+        )
+
+    # ---------------------------------------------------------------- 02
     # define dashboard
     from .. import gui
 
@@ -245,12 +253,12 @@ def view():
             )
         )
 
-    # ---------------------------------------------------------------- 02
+    # ---------------------------------------------------------------- 03
     # make dashboard
     _dashboard = RunnerDashboard(title="Runner Dashboard")
     _rp = _RUNNER.richy_panel
 
-    # ---------------------------------------------------------------- 03
+    # ---------------------------------------------------------------- 04
     # register jobs for runner
     def _j_view(_j: Job) -> gui.widget.Widget:
         return _j.view()
@@ -262,7 +270,7 @@ def view():
             fn_kwargs={"_j": _job}
         )
 
-    # ---------------------------------------------------------------- 04
+    # ---------------------------------------------------------------- 05
     # add experiments
     for _experiment in _rp.track(_RUNNER.registered_experiments, task_name="Register views for Experiments"):
         _group_key = None
@@ -272,11 +280,11 @@ def view():
             hashable=_experiment, group_key=_group_key,
         )
 
-    # ---------------------------------------------------------------- 05
+    # ---------------------------------------------------------------- 06
     # log
     _rp.update("The view is now opened in external window. Close it to terminate.")
 
-    # ---------------------------------------------------------------- 06
+    # ---------------------------------------------------------------- 07
     # run
     gui.Engine.run(_dashboard)
 
