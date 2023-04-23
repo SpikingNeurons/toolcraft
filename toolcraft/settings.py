@@ -5,6 +5,7 @@ todo: Formalize with a parent Settings class which will store settings in
 import numpy as np
 import pyarrow as pa  # do not comment this as on unix it causes seg fault
 import pathlib
+import platform
 import toml
 import typing as t
 import sys
@@ -14,6 +15,10 @@ import __main__ as main
 DO_RULE_CHECK = True
 
 ENV_DIR = pathlib.Path(sys.exec_prefix)
+
+
+# platform
+PLATFORM = platform.uname()  # type: platform.uname_result
 
 
 # check if debugger is used
