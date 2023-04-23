@@ -64,6 +64,8 @@ def lsf(
 ):
     """
 
+    todo: see if wsl can be used to submit job queue from windows to lsf https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
+
     Returns:
 
     """
@@ -126,6 +128,18 @@ def lsf(
             # ------------------------------------------------- 02.03
             # run job
             _run_job(_job, _cli_command, shell=False)
+
+
+@_APP.command(help="Launches all the jobs in runner on local or remote wsl.")
+def wsl():
+    """
+    todo: support local wsl and use parameters like user, password and conda environment to initiate
+    todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
+      decide parameters by arguments to this method
+
+    Note that this does not replace lsf .... but we can have launch use wsl execute jobs on server
+    """
+    ...
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
