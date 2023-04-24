@@ -644,7 +644,7 @@ class Job:
         #     "run", self.method.__func__.__name__,
         # ]
         _command = [
-            (settings.ENV_DIR / 'python').as_posix(),  # can also use sys.executable
+            sys.executable,
             self.runner.py_script.name,
             "run", self.method.__func__.__name__,
         ]
@@ -827,7 +827,8 @@ class Job:
                     _shell = False
                 else:
                     if 'WSL2' in settings.PLATFORM.release:
-                        _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
+                        # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
+                        _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
                     else:
                         _cli_command = ["start", "cmd", "/c", ] + _cli_command
                     _shell = True
