@@ -243,7 +243,6 @@ def local(
             else:
                 if 'WSL2' in settings.PLATFORM.release:
                     _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
-                    print(_cli_command)
                 else:
                     _cli_command = ["start", "cmd", "/c", ] + _cli_command
                 _shell = True
