@@ -210,9 +210,9 @@ def view():
     # ---------------------------------------------------------------- 01
     # That is do not call view when not on main machine
     # todo: check if on server
-    if settings.PLATFORM.system != "Windows":
+    if not settings.DPG_WORKS:
         raise e.code.NotAllowed(
-            msgs=["looks like you are on linux system i.e. dearpygui might nor work ..."]
+            msgs=["looks like dearpygui is not available ..."]
         )
 
     # ---------------------------------------------------------------- 02

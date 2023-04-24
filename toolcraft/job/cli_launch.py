@@ -130,23 +130,13 @@ def lsf(
             _run_job(_job, _cli_command, shell=False)
 
 
-@_APP.command(help="Launches all the jobs in runner on local or remote wsl.")
-def wsl():
-    """
-    todo: support local wsl and use parameters like user, password and conda environment to initiate
-    todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
-      decide parameters by arguments to this method
-
-    Note that this does not replace lsf .... but we can have launch use wsl execute jobs on server
-    """
-    ...
-
-
 @_APP.command(help="Launches all the jobs in runner on local machine.")
 def local(
     single_cpu: bool = typer.Option(default=False, help="Launches on single CPU in sequence (good for debugging)")
 ):
     """
+    todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
+      decide parameters by arguments to this method
     """
 
     # --------------------------------------------------------- 01
@@ -247,16 +237,14 @@ def local(
             # but before launching make sure that memory and cpus are available
             # ------------------------------------------------- 04.07.01
             # make cli command
-            # if settings.PYC_DEBUGGING:
-            #     _cli_command = _job.cli_command
-            # else:
-            #     _cli_command = ["start", "/wait", "cmd", "/c", ] + _job.cli_command
-            # _cli_command = ["start", "cmd", "/k", ] + _job.cli_command
+            _cli_command = _job.cli_command
             if single_cpu:
-                _cli_command = _job.cli_command
                 _shell = False
             else:
-                _cli_command = ["start", "cmd", "/c", ] + _job.cli_command
+                if 'WSL2' in settings.PLATFORM.release:
+                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
+                else:
+                    _cli_command = ["start", "cmd", "/c", ] + _cli_command
                 _shell = True
             # ------------------------------------------------- 04.07.02
             # for first job no need to check anything just launch
@@ -279,7 +267,7 @@ def local(
                     _rp.update(f"⏰ {_job.job_id} :: postponed not enough memory")
                     continue
                 # all is well launch
-                _run_job(_job, _cli_command)
+                _run_job(_job, _cli_command, shell=_shell)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job.job_id} :: launching"])
                 del _all_jobs[_job_flow_id]

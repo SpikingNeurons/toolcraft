@@ -822,11 +822,14 @@ class Job:
         def _fn():
             _ret.clear()
             with _ret:
+                _cli_command = self.cli_command
                 if single_cpu:
-                    _cli_command = self.cli_command
                     _shell = False
                 else:
-                    _cli_command = ["start", "cmd", "/c", ] + self.cli_command
+                    if 'WSL2' in settings.PLATFORM.release:
+                        _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
+                    else:
+                        _cli_command = ["start", "cmd", "/c", ] + _cli_command
                     _shell = True
                 _run_job(self, _cli_command, shell=_shell)
                 Text("We have launched the job ... please wait and refresh ")
