@@ -8,6 +8,7 @@ import typing as t
 from .. import marshalling as m
 from .. import error as e
 from .. import logger
+from .. import util
 from . import invoke
 from .__base__ import DaprMode
 
@@ -20,6 +21,7 @@ class Server(m.HashableClass):
     Use this class to query or retrieve any stats from server ...
     """
     @property
+    @util.CacheResult
     def group_by(self) -> t.List[str]:
         return ["server"]
 

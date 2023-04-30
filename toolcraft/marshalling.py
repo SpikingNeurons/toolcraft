@@ -1688,7 +1688,7 @@ class FrozenEnum(YamlRepr):
 # @dataclasses.dataclass(eq=True, frozen=True)
 @dataclasses.dataclass(frozen=True)
 @RuleChecker(
-    things_to_be_cached=['hex_hash', 'rich_panel'],
+    things_to_be_cached=['hex_hash', 'rich_panel', 'group_by'],
     things_not_to_be_overridden=['hex_hash'],
     # todo: any method or property that returns storage.FileSystem,
     #  Table FileGroup, Folder must be cached
@@ -1733,6 +1733,7 @@ class HashableClass(YamlRepr, abc.ABC):
         return self.hex_hash
 
     @property
+    @util.CacheResult
     def group_by(self) -> t.List[str]:
         """
         As self.name is hex_hash or else a name which is unique to all
