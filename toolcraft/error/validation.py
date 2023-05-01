@@ -45,15 +45,18 @@ class ShouldBeEqual(_CustomException):
                 return
         if value1 == value2:
             return
+        _msgs_dict = {
+            "value1": f"{value1}",
+            "value2": f"{value2}",
+        }
+        if isinstance(value1, dict) and isinstance(value2, dict):
+            _msgs_dict["keys"] = f"{value1.keys()}, {value2.keys()}"
         if _in_npy_test:
+            _msgs_dict["shape"] = f"{value1.shape}, {value2.shape}"
+            _msgs_dict["dtype"] = f"{value1.dtype}, {value2.dtype}"
             _msgs = [
                 f"The numpy arrays are not equal:",
-                {
-                    "shape": f"{value1.shape}, {value2.shape}",
-                    "dtype": f"{value1.dtype}, {value2.dtype}",
-                    "value1": f"{value1}",
-                    "value2": f"{value2}",
-                },
+                _msgs_dict,
             ]
         else:
             _msgs = [

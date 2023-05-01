@@ -103,7 +103,6 @@ class CloseWidgetCallback(Callback):
     def fn(self, sender: widget.Widget):
         _user_data = sender.get_user_data()
         if 'widget_to_delete' in _user_data.keys():
-            print("Deleting via Close [X]", sender.get_user_data()['widget_to_delete'])
             sender.get_user_data()['widget_to_delete'].delete()
         else:
             raise KeyError(
@@ -151,7 +150,7 @@ class HashableMethodRunnerCallback(Callback):
         _callable_name = self.callable_name
         _user_data = _receiver.get_user_data()
         _use_method_in_form_obj = self._use_method_in_form_obj
-        _tag_in_receiver = _use_method_in_form_obj.tag_in_receiver
+        _tag_for_caching_in_receiver = _use_method_in_form_obj.tag_for_caching_in_receiver
         _run_async = _use_method_in_form_obj.run_async
         _hide_previously_opened = _use_method_in_form_obj.hide_previously_opened
         # ------------------------------------------------------------------ 01.02
@@ -172,7 +171,7 @@ class HashableMethodRunnerCallback(Callback):
 
         # ------------------------------------------------------------------ 03
         # create tag
-        _actual_tag = _tag_in_receiver
+        _actual_tag = _tag_for_caching_in_receiver
         if _actual_tag == 'auto':
             _actual_tag = f"{_hashable.hex_hash}.{_callable_name}"
         if _actual_tag is None:
@@ -210,15 +209,15 @@ class HashableMethodRunnerCallback(Callback):
 
         # ------------------------------------------------------------------ 06
         # if above steps results in widget then that means there is a cached widget which we can reuse or overwrite
-        # but in case of `tag_in_receiver` is not `auto` then that means that user wants to overwrite previous tag
+        # but in case of `tag_for_caching_in_receiver` is not `auto` then that means that user wants to overwrite previous tag
         if _widget is not None:
             # -------------------------------------------------------------- 06.01
-            # if `self.tag_in_receiver` is `auto` than show widget that was hidden in step 05
-            if _tag_in_receiver == 'auto':
+            # if `self.tag_for_caching_in_receiver` is `auto` than show widget that was hidden in step 05
+            if _tag_for_caching_in_receiver == 'auto':
                 _widget.show_widget()
             # -------------------------------------------------------------- 06.02
-            # if `self.tag_in_receiver` is None or some `str` that means we want to overwrite
-            elif _tag_in_receiver is None or _tag_in_receiver != 'auto':
+            # if `self.tag_for_caching_in_receiver` is None or some `str` that means we want to overwrite
+            elif _tag_for_caching_in_receiver is None or _tag_for_caching_in_receiver != 'auto':
                 # delete tag from receiver
                 del _user_data[_actual_tag]
                 # delete widget
@@ -231,7 +230,7 @@ class HashableMethodRunnerCallback(Callback):
             # -------------------------------------------------------------- 06.03
             # else raise exception
             else:
-                raise Exception(f"Unknown {_tag_in_receiver}")
+                raise Exception(f"Unknown {_tag_for_caching_in_receiver}")
 
         # ------------------------------------------------------------------ 07
         # if _widget is None generate it and then tag it

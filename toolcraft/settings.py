@@ -5,6 +5,7 @@ todo: Formalize with a parent Settings class which will store settings in
 import numpy as np
 import pyarrow as pa  # do not comment this as on unix it causes seg fault
 import pathlib
+import platform
 import toml
 import typing as t
 import sys
@@ -12,6 +13,20 @@ import sys
 import __main__ as main
 
 DO_RULE_CHECK = True
+
+ENV_DIR = pathlib.Path(sys.exec_prefix)
+
+try:
+    import dearpygui.dearpygui as dpg
+    DPG_WORKS = True
+    # todo: instead of import call some code in dearpygui to raise errors ... so that in except block
+    #   we can set `DPG_WORKS = False`
+except ImportError:
+    DPG_WORKS = False
+
+
+# platform
+PLATFORM = platform.uname()  # type: platform.uname_result
 
 
 # check if debugger is used
@@ -51,8 +66,7 @@ class FileHash:
     # check over time so that there is no time slogging
     _MIN_HOURS = 10 * 24  # 10 days
     _MAX_HOURS = 15 * 24  # 15 days
-    CHECK_INTERVALS_IN_SEC = \
-        np.arange(_MIN_HOURS, _MAX_HOURS, 3) * 60 * 60
+    CHECK_INTERVALS_IN_SEC = list(np.arange(_MIN_HOURS, _MAX_HOURS, 3) * 60 * 60)
     # CHECK_INTERVALS_IN_SEC = [1]
 
     # when you want to debug if auto_hashing feature creates same files in

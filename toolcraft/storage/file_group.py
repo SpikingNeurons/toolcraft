@@ -21,7 +21,6 @@ import subprocess
 import dataclasses
 import abc
 import numpy as np
-import gc
 import datetime
 import io
 import hashlib
@@ -29,7 +28,6 @@ import zipfile
 import gcsfs
 import platform
 import random
-_now = datetime.datetime.now
 
 from .. import util, logger, settings
 from .. import storage as s
@@ -43,8 +41,9 @@ from .file_system import Path
 if False:
     from . import folder
 
+_now = datetime.datetime.now
 
-T = t.TypeVar('T', bound='FileGroup')
+TFileGroup = t.TypeVar('TFileGroup', bound='FileGroup')
 
 _LOGGER = logger.get_logger()
 
@@ -270,7 +269,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             # look inside path dir
-            for _path in self.path.find(maxdepth=0, detail=False, withdirs=True):
+            for _path in self.path.find(maxdepth=1, detail=False, withdirs=True):
                 if _path.name in self.file_keys and _path.isfile():
                     continue
                 # anything starting with `_` will be ignored
@@ -327,7 +326,7 @@ class FileGroup(StorageHashable, abc.ABC):
         subprocess.Popen(f'explorer {self.path}')
 
     @classmethod
-    def make_possible_instances(cls) -> t.List[T]:
+    def make_possible_instances(cls) -> t.List[TFileGroup]:
         """
         Implement this method when you know that there are finite instances for class
         Useful for
@@ -711,8 +710,32 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ------------------------------------------------------ 03
         # now check/compute hash
+        _for_type = "computing" if compute else "checking"
         for fk in self.file_keys:
-            _hash_module = hashlib.sha256()
+            # fetch length
+            _len = len(_correct_hashes.get(fk, ""))
+            # if nothing specified use 64
+            # todo: if file is too large switch to md5 ...
+            if _len == 0:
+                _len = 64
+            # based on provided hash str length select hashlib module
+            if _len == 64:
+                _hash_module = hashlib.sha256()
+                _hash_type = "sha256"
+            elif _len == 40:
+                _hash_module = hashlib.sha1()
+                _hash_type = "sha1"
+            elif _len == 32:
+                _hash_module = hashlib.md5()
+                _hash_type = "md5"
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Should not happen found unsupported hash length {_len}"
+                    ]
+                )
+            # status update
+            _rp.update(f"{fk}: {_for_type} {_hash_type} hash")
             # get task id
             with _file_paths[fk].open(mode='rb') as fb:
                 # compute
@@ -1159,6 +1182,10 @@ class NpyFileGroupConfig(FileGroupConfig):
     # but this gives nice way to save it in config state file ... so that users can read it without code
     shape: dict = None
     dtype: dict = None
+    min: dict = None
+    max: dict = None
+    median: dict = None
+    mean: dict = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1208,37 +1235,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 continue
         return False
 
-    def get_tf_dataset(
-        self, batch_size: int, num_batches: int, memmap: bool,
-        expected_element_spec: t.Dict[str, "tf.TensorSpec"]
-    ) -> "tf.data.Dataset":
-        try:
-            # import
-            import tensorflow as tf
-
-            # get data
-            _data = self.load_as_dict(fix_all_lengths_same=True, memmap=memmap)
-
-            # skip some elements that are not needed
-            _elements_to_skip = [_ for _ in _data.keys() if _ not in expected_element_spec.keys()]
-            for _ in _elements_to_skip:
-                del _data[_]
-
-            # make dataset
-            _ds = tf.data.Dataset.from_tensor_slices(_data).batch(batch_size).take(num_batches)
-
-            # validate element spec
-            e.validation.ShouldBeEqual(
-                value1=expected_element_spec, value2=_ds.element_spec,
-                msgs=["Was expecting the element spec to be identical"]
-            ).raise_if_failed()
-
-            # return
-            return _ds
-        except ImportError as _e:
-            raise e.code.CodingError(
-                msgs=["Cannot create tensorflow dataset as tensorflow is not available ..."]
-            )
+    @property
+    def has_singular_lengths(self) -> bool:
+        for _l in self.lengths.values():
+            if _l == 1:
+                return True
+        return False
 
     def load_as_dict(
         self,
@@ -1296,7 +1298,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Note that for npy record the type is t.Dict[str, np.ndarray]
         As we can treat it as dict of numpy arrays
         """
-        return util.npy_load(self.path / file_key, memmap=memmap)
+        return util.npy_load(self.path / file_key, memmap=memmap, shape=self.shape[file_key], dtype=self.dtype[file_key])
 
     def save_npy_data(
         self,
@@ -1382,7 +1384,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # fine but state_manager files will be not on the disk and hence
             # we cannot use `self.get_files()`.
             # Note we read in memmap mode as we need only meta info
-            _npy_memmaps[file_key] = util.npy_load(self.path / file_key, memmap=True)
+            _npy_memmaps[file_key] = util.npy_load(
+                self.path / file_key, memmap=True,
+                shape=self.shape[file_key], dtype=self.dtype[file_key],
+            )
 
         # ----------------------------------------------------------------02
         # check shape, dtype
@@ -1429,8 +1434,38 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # collection
         # Note this info can be extract from properties shape and dtype but we get it from memmap for pretty print
         # and so that python classes related to numpy do not populate yaml
-        _shape = {_k: str(list(_v.shape)) for _k, _v in _npy_memmaps.items()}
-        _dtype = {_k: str(_v.dtype) for _k, _v in _npy_memmaps.items()}
+        _shape = {}
+        _dtype = {}
+        _min = {}
+        _max = {}
+        _median = {}
+        _mean = {}
+        for _k, _v in _npy_memmaps.items():
+            _shape[_k] = str(list(_v.shape))
+            _dtype[_k] = str(_v.dtype)
+            if _v.ndim == 1:
+                _min[_k] = str(np.min(_v))
+                _max[_k] = str(np.max(_v))
+                _median[_k] = str(np.median(_v))
+                _mean[_k] = str(np.mean(_v))
+            elif _v.ndim == 2:
+                if _v.shape[1] <= 16:
+                    _min[_k] = str(list(np.min(_v, axis=0)))
+                    _max[_k] = str(list(np.max(_v, axis=0)))
+                    _median[_k] = str(list(np.median(_v, axis=0)))
+                    _mean[_k] = str(list(np.mean(_v, axis=0)))
+                else:
+                    _ = f"second dim={_v.shape[1]} is greater than 16"
+                    _min[_k] = _
+                    _max[_k] = _
+                    _median[_k] = _
+                    _mean[_k] = _
+            else:
+                _ = f"ndim={_v.ndim} is greater than 2"
+                _min[_k] = _
+                _max[_k] = _
+                _median[_k] = _
+                _mean[_k] = _
         del _npy_memmaps
 
         # ----------------------------------------------------------------04
@@ -1453,8 +1488,40 @@ class NpyFileGroup(FileGroup, abc.ABC):
                     f"to be present in the config"
                 ]
             )
+        if self.config.min is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `min` "
+                    f"to be present in the config"
+                ]
+            )
+        if self.config.max is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `max` "
+                    f"to be present in the config"
+                ]
+            )
+        if self.config.median is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `median` "
+                    f"to be present in the config"
+                ]
+            )
+        if self.config.mean is not None:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We just generated files so we do not expect `mean` "
+                    f"to be present in the config"
+                ]
+            )
         self.config.shape = _shape
         self.config.dtype = _dtype
+        self.config.min = _min
+        self.config.max = _max
+        self.config.median = _median
+        self.config.mean = _mean
 
         # ----------------------------------------------------------------06
         # finally return

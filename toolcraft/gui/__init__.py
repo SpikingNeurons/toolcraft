@@ -4,16 +4,9 @@ todo: Separate gui module in new package so that
   + can be deployed as exe using pyinstaller, Nuitka
 """
 import typing as t
+from .. import settings
 
-try:
-    import dearpygui.dearpygui as dpg
-    DPG_WORKS = True
-    # todo: instead of import call some code in dearpygui to raise errors ... so that in except block
-    #   we can set `DPG_WORKS = False`
-except ImportError:
-    DPG_WORKS = False
-
-if DPG_WORKS:
+if settings.DPG_WORKS:
     from .__base__ import COLOR_TYPE, PLOT_DATA_TYPE, USER_DATA, Engine, AwaitableTask, BlockingTask, \
         Hashable, UseMethodInForm, EscapeWithContext
     from ._enum import *
@@ -45,8 +38,9 @@ else:
             label_fmt: str = None,
             run_async: bool = False,
             display_in_form: bool = True,
-            tag_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
+            tag_for_caching_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
             hide_previously_opened: bool = True,
+            tooltip: str = None,
         ):
             ...
 

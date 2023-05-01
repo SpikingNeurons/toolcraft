@@ -1,18 +1,25 @@
 % >> preambles
 \RequirePackage{subfiles}%
+\RequirePackage[utf8]{inputenc}
 \RequirePackage{cite}%
 \RequirePackage{float}%
 \RequirePackage{enumitem}%
 \RequirePackage[acronym]{glossaries}%
 \RequirePackage{fontawesome5}%
 \RequirePackage{xcolor}%
+\RequirePackage{nameref}%
 \RequirePackage{url} % for "\url" and "\urlstyle" macros
 \RequirePackage{hyperref} % for "\href" macro
 \RequirePackage{enumitem}  % for lists with differnt numbering https://latex-tutorial.com/tutorials/lists/
+\RequirePackage{caption} %
+\RequirePackage{subcaption} %
+\RequirePackage{ulem} %
+\RequirePackage{ragged2e} % https://www.overleaf.com/learn/latex/Text_alignment
 
 % reguired for mathbb
 \RequirePackage{amsmath}
-\RequirePackage{amssymb}
+\RequirePackage{amssymb}  % http://ctan.org/pkg/amssymb
+\RequirePackage{pifont}  % http://ctan.org/pkg/pifont
 
 \RequirePackage{tikz}%
 \usetikzlibrary{topaths}%
@@ -23,17 +30,16 @@
 \usetikzlibrary{shapes.misc}%
 
 % Used to size table columns
+%\RequirePackage{colortbl}%
+\RequirePackage{multicol}%
 \RequirePackage{multirow}%
 \RequirePackage{array}%
 \RequirePackage{booktabs}%
 % \RequirePackage{ctable}%
 \RequirePackage{tabularx}%
 \RequirePackage{makecell}%
-%\RequirePackage[table]{xcolor}% ... lead to option clas error as xcolor alrady used above
-% For vertical centering text in X column
-% This is because the default is bottom ..
-% todo: find better ways later ... this doesen't seem to work though
-%\renewcommand\tabularxcolumn[1]{m{#1}}%
+% note that if this fails add `\PassOptionsToPackage{table}{xcolor}` before documentclass in main file
+\RequirePackage[table]{xcolor}
 
 % pgfplots
 \RequirePackage{pgfplots}%

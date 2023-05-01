@@ -41,83 +41,83 @@ def make_label_nodes(_tikz: tikz.TikZ) -> t.Dict[str, t.Dict[int, tikz.Node]]:
 
     # ----------------------------------------- hw
     _ret['hw'] = {}
-    _path.move_to(_hw_hidden_node.center)
+    _path.move_to(_hw_hidden_node.pt_center)
     _ret['hw'][1] = tikz.Node(
-        id="hw01", text_to_display=symbols.labelwithlk('hw', '1')
+        id="hw01", text=symbols.labelwithlk('hw', '1')
     )
     _path.add_node(_ret['hw'][1])
     _ret['hw'][0] = tikz.Node(
         id="hw00",
-        text_to_display=symbols.labelwithlk('hw', '0'),
+        text=symbols.labelwithlk('hw', '0'),
         anchor=tikz.Anchor.left(offset=_WIDTH * 0.15),
     )
     _path.add_node(_ret['hw'][0])
     _ret['hw'][2] = tikz.Node(
         id="hw02",
-        text_to_display=symbols.labelwithlk('hw', '2'),
+        text=symbols.labelwithlk('hw', '2'),
         anchor=tikz.Anchor.right(offset=_WIDTH * 0.15),
     )
     _path.add_node(_ret['hw'][2])
 
     # ----------------------------------------- lsb
     _ret['lsb'] = {}
-    _path.move_to(_lsb_hidden_node.center)
+    _path.move_to(_lsb_hidden_node.pt_center)
     _ret['lsb'][1] = tikz.Node(
         id="lsb01",
-        text_to_display=symbols.labelwithlk('lsb', '1'),
+        text=symbols.labelwithlk('lsb', '1'),
         anchor=tikz.Anchor.below(offset=_WIDTH * 0.1),
     )
     _path.add_node(_ret['lsb'][1])
     _ret['lsb'][0] = tikz.Node(
         id="lsb00",
-        text_to_display=symbols.labelwithlk('lsb', '0'),
+        text=symbols.labelwithlk('lsb', '0'),
         anchor=tikz.Anchor.above(offset=_WIDTH * 0.1),
     )
     _path.add_node(_ret['lsb'][0])
 
     # ----------------------------------------- id
     _ret['id'] = {}
-    _path.move_to(_id_hidden_node.center)
+    _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][0] = tikz.Node(
         id="id00",
-        text_to_display=symbols.labelwithlk('id', '0'),
+        text=symbols.labelwithlk('id', '0'),
         anchor=tikz.Anchor.left(offset=_WIDTH * 0.2),
     )
     _path.add_node(_ret['id'][0])
-    _path.move_to(_id_hidden_node.center)
+    _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][1] = tikz.Node(
         id="id01",
-        text_to_display=symbols.labelwithlk('id', '1'),
+        text=symbols.labelwithlk('id', '1'),
         anchor=tikz.Anchor.left(offset=_WIDTH * 0.2 / 5),
     )
     _path.add_node(_ret['id'][1])
-    _path.move_to(_id_hidden_node.center)
+    _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][2] = tikz.Node(
         id="id02",
-        text_to_display=symbols.labelwithlk('id', '2'),
+        text=symbols.labelwithlk('id', '2'),
         anchor=tikz.Anchor.right(offset=_WIDTH * 0.2 / 5),
     )
     _path.add_node(_ret['id'][2])
-    _path.move_to(_id_hidden_node.center)
+    _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][3] = tikz.Node(
         id="id03",
-        text_to_display=symbols.labelwithlk('id', '3'),
+        text=symbols.labelwithlk('id', '3'),
         anchor=tikz.Anchor.right(offset=_WIDTH * 0.2),
     )
     _path.add_node(_ret['id'][3])
 
     # ----------------------------------------- msb
     _ret['msb'] = {}
-    _path.move_to(_msb_hidden_node.center)
+    _path.move_to(_msb_hidden_node.pt_center)
     _ret['msb'][1] = tikz.Node(
         id="msb01",
-        text_to_display=symbols.labelwithlk('msb', '1'),
+        text=symbols.labelwithlk('msb', '1'),
         anchor=tikz.Anchor.below(offset=_WIDTH * 0.1),
     )
     _path.add_node(_ret['msb'][1])
     _ret['msb'][0] = tikz.Node(
         id="msb00",
-        text_to_display=symbols.labelwithlk('msb', '0'),
+        text=symbols.labelwithlk('msb', '0'),
         anchor=tikz.Anchor.above(offset=_WIDTH * 0.1),
     )
     _path.add_node(_ret['msb'][0])
@@ -152,21 +152,21 @@ def make_shaded_clusters(
     _cluster_3_nodes = _point_nodes[3]
 
     # ----------------------------------------------- cluster 1
-    _path.move_to(_cluster_1_nodes[0].center)
+    _path.move_to(_cluster_1_nodes[0].pt_center)
     for _index in [1, 3, 2]:
-        _path.to(_cluster_1_nodes[_index].center)
+        _path.to(_cluster_1_nodes[_index].pt_center)
     _path.cycle()
 
     # ----------------------------------------------- cluster 2
-    _path.move_to(_cluster_2_nodes[0].center)
+    _path.move_to(_cluster_2_nodes[0].pt_center)
     for _index in [3, 6, 1, 5, 2, 7, 4]:
-        _path.to(_cluster_2_nodes[_index].center)
+        _path.to(_cluster_2_nodes[_index].pt_center)
     _path.cycle()
 
     # ----------------------------------------------- cluster 2
-    _path.move_to(_cluster_3_nodes[0].center)
+    _path.move_to(_cluster_3_nodes[0].pt_center)
     for _index in [1, 3, 2]:
-        _path.to(_cluster_3_nodes[_index].center)
+        _path.to(_cluster_3_nodes[_index].pt_center)
     _path.cycle()
 
     _tikz.add_path(_path)
@@ -222,7 +222,7 @@ def make_point_nodes(
             _node = tikz.Node(
                 style=_point_style,
                 id=f"point{_label}x{_p}" + ("xS" if apply_style else ""),
-                text_to_display=f"\\footnotesize{{{_node_text}}}"
+                text=f"\\footnotesize{{{_node_text}}}"
             )
             _path.add_node(_node)
             _ret[_label].append(_node)
@@ -294,21 +294,21 @@ def make_edges(
                     if _lk == "hw":
                         _label_anchor = _label_node.north
                     elif _lk == "lsb":
-                        _label_anchor = _label_node.west
+                        _label_anchor = _label_node.pt_west
                     elif _lk == "id":
                         _label_anchor = _label_node.south
                     elif _lk == "msb":
-                        _label_anchor = _label_node.east
+                        _label_anchor = _label_node.pt_east
                     else:
                         raise e.code.ShouldNeverHappen(msgs=[])
-                    _path.move_to(_point_node.center).line_to(_label_anchor)
+                    _path.move_to(_point_node.pt_center).line_to(_label_anchor)
                 _tikz.add_path(_path)
 
     # make legend
     _legend_path = tikz.Path()
     _ambig_legend_node = tikz.Node(
         id="ambignode", anchor=tikz.Anchor.below(offset=_HEIGHT * 0.01),
-        text_to_display=FontSize.scriptsize("Ambiguous labels"),
+        text=FontSize.scriptsize("Ambiguous labels"),
         style=tikz.Style(
             shape=tikz.Rectangle(
                 minimum_height=_HEIGHT * 0.05
@@ -319,7 +319,7 @@ def make_edges(
     _legend_path.add_node(_ambig_legend_node)
     _nonambig_legend_node = tikz.Node(
         id="nonambignode", anchor=tikz.Anchor.below(offset=_HEIGHT * 0.01),
-        text_to_display=FontSize.scriptsize("Learnable labels"),
+        text=FontSize.scriptsize("Learnable labels"),
         style=tikz.Style(
             shape=tikz.Rectangle(
                 minimum_height=_HEIGHT * 0.05

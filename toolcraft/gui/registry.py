@@ -14,6 +14,8 @@ from ._auto import WidgetDeactivatedAfterEditHandler
 # noinspection PyUnresolvedReferences
 from ._auto import WidgetDeactivatedHandler
 # noinspection PyUnresolvedReferences
+from ._auto import WidgetDoubleClickedHandler
+# noinspection PyUnresolvedReferences
 from ._auto import WidgetEditedHandler
 # noinspection PyUnresolvedReferences
 from ._auto import WidgetFocusHandler

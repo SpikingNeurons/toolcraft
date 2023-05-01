@@ -25,6 +25,7 @@ from .. import marshalling as m
 from .. import util
 from .. import storage as s
 from .. import richy
+from .. import settings
 from ..gui import UseMethodInForm
 
 _now = datetime.datetime.now
@@ -44,17 +45,6 @@ if False:
 
 _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
-
-
-class JobRunnerClusterType(m.FrozenEnum, enum.Enum):
-    """
-    todo: support ibm_lsf over ssh using https://www.fabfile.org
-    """
-    ibm_lsf = enum.auto()
-    # todo: explore windows task scheduler
-    #    https://www.jcchouinard.com/python-automation-using-task-scheduler/
-    #    Or make custom bsub job scheduler for windows in python
-    local = enum.auto()
 
 
 class JobFlowId(t.NamedTuple):
@@ -107,7 +97,8 @@ class Tag:
             )
         data["time"] = _now()
         if exception is not None:
-            data['exception'] = "\n".join(["", ">>> EXCEPTION <<<", "", exception])
+            # data['exception'] = "\n".join(["", ">>> EXCEPTION <<<", "", exception])
+            data['exception'] = ["", ">>> EXCEPTION <<<", "", *exception.split("\n")]
         _LOGGER.info(msg=f"Creating tag {self.path}")
         _txt = yaml.safe_dump(data)
         self.path.write_text(text=_txt, encoding='utf-8')
@@ -231,7 +222,7 @@ class TagManager:
                 gui.widget.Text(default_value=f"running from: {_running['time']}")
             if _failed:
                 gui.widget.Text(default_value=f"failed at: {_failed['time']}")
-                gui.widget.Text(default_value=f"{_failed['exception']}")
+                gui.widget.Text(default_value="\n".join(_failed['exception']))
             if _finished:
                 gui.widget.Text(default_value=f"finished at: {_finished['time']}")
 
@@ -653,12 +644,26 @@ class Job:
         #     "run", self.method.__func__.__name__,
         # ]
         _command = [
-            'python', self.runner.py_script.name,
+            sys.executable,
+            self.runner.py_script.name,
             "run", self.method.__func__.__name__,
         ]
         if self.experiment is not None:
             _command += [self.experiment.hex_hash]
         return _command
+
+    @property
+    def launch_lsf_parameters(self) -> t.Optional[t.Dict]:
+        """
+        Override this incase you want to supply parameters specific to job
+        """
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._launch_lsf_parameters
+        except AttributeError:
+            # noinspection PyAttributeOutsideInit
+            self._launch_lsf_parameters = None
+            return self._launch_lsf_parameters
 
     @property
     @util.CacheResult
@@ -674,7 +679,7 @@ class Job:
         """
         _ret = self.runner.cwd
         _ret /= self.method.__func__.__name__
-        if self.experiment is not None:
+        if bool(self.experiment):
             for _ in self.experiment.group_by:
                 _ret /= _
             _ret /= self.experiment.hex_hash
@@ -736,6 +741,121 @@ class Job:
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
         return self
+
+    def get_launch_local_gui(
+        self,
+        # this might freeze UI but makes it easy to debug the code
+        single_cpu: bool = False,
+    ) -> "gui.widget.Group":
+        """
+        Note code is borrowed from `cli_launch.local`
+
+        Aim of this method is to present a gui for calling methods that we
+        generally call using cli option
+
+        Some methods we don't want to run on server but locally then we
+        present this gui which can do it
+        """
+        # ---------------------------------------------------- 01
+        # import
+        from .cli_launch import _run_job
+        from ..gui.widget import Button, Group, Text
+        # create folder for job if not present
+        # this is needed as when we create gui for job to be run locally
+        # sometimes the job dir and the child dirs for tag manager wont exist
+        # so we need to create it
+        if not self.tag_manager.path.exists():
+            self.tag_manager.path.mkdir(create_parents=True)
+        # check this if you use debugger
+        if settings.PYC_DEBUGGING:
+            if not single_cpu:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "looks like you are in pycharm debug mode",
+                        "Make sure to set --single-cpu to enable full debugging inside jobs ... "
+                    ]
+                )
+
+        # ---------------------------------------------------- 02
+        # make return stuff
+        _ret = Group()
+
+        # ---------------------------------------------------- 03
+        # based on job status return
+        with _ret:
+            if self.is_finished:
+                Text("Nothing to run as job is already finished ...")
+                return _ret
+            if self.is_running:
+                Text("The job is already running you need to wait  ...")
+                return _ret
+            if self.is_launched or self.is_started:
+                Text("The job is already launched or/and started but it is not running  ...")
+                Text("If something is wrong delete files on the disk  ...")
+                return _ret
+            if self.is_failed:
+                Text("Previous run of job has failed ...")
+                Text("-----------------------------------")
+                Text("\n".join(self.tag_manager.failed.read()['exception']))
+                return _ret
+            _one_or_more_failed = False
+            for _wait_job in self.wait_on_jobs:
+                if _wait_job.is_failed:
+                    _one_or_more_failed = True
+                    break
+            if _one_or_more_failed:
+                Text("One or more wait on jobs have failed ...")
+                Text("So cannot proceed with calling this job ...")
+                return _ret
+            _all_finished = True
+            for _wait_job in self.wait_on_jobs:
+                if not _wait_job.is_finished:
+                    _all_finished = False
+                    break
+            if not _all_finished:
+                Text("One or more wait on jobs have not finished yet ...")
+                Text("So cannot proceed with calling this job ...")
+                return _ret
+
+        # ---------------------------------------------------- 04
+        # launch job function
+        def _fn():
+            _ret.clear()
+            with _ret:
+                _cli_command = self.cli_command
+                if single_cpu:
+                    _shell = False
+                else:
+                    if 'WSL2' in settings.PLATFORM.release:
+                        # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
+                        _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
+                    else:
+                        _cli_command = ["start", "cmd", "/c", ] + _cli_command
+                    _shell = True
+                _run_job(self, _cli_command, shell=_shell)
+                Text("We have launched the job ... please wait and refresh ")
+
+        # ---------------------------------------------------- 05
+        with _ret:
+            Button(label="Launch Job", callback=_fn)
+
+        # ---------------------------------------------------- 06
+        return _ret
+
+    def set_launch_lsf_parameters(
+        self, email: bool = False, cpus: int = None, memory: int = None,
+    ):
+        if self.launch_lsf_parameters is None:
+            # noinspection PyAttributeOutsideInit
+            self._launch_lsf_parameters = {
+                'email': email, 'cpus': cpus, 'memory': memory,
+            }
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "Looks like launch_lsf_parameters are already set"
+                ]
+            )
 
     def check_health(self, is_on_main_machine: bool) -> t.Optional[str]:
         """
@@ -1134,19 +1254,19 @@ class Monitor:
             _ret.mkdir(create_parents=True)
         return _ret
 
-    def make_experiment_info_file(self, experiment: "Experiment"):
-        _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
-        if not _file.exists():
-            _LOGGER.info(
-                f"Creating experiment info file {_file.local_path.as_posix()}")
-            _file.write_text(experiment.yaml())
-
     def make_runner_info_file(self):
         _file = self.path / f"{self.runner.hex_hash}.info"
         if not _file.exists():
             _LOGGER.info(
                 f"Creating runner info file {_file.local_path.as_posix()}")
             _file.write_text(self.runner.yaml())
+
+    def make_experiment_info_file(self, experiment: "Experiment"):
+        _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
+        if not _file.exists():
+            _LOGGER.info(
+                f"Creating experiment info file {_file.local_path.as_posix()}")
+            _file.write_text(experiment.yaml())
 
     def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
         """
@@ -1272,9 +1392,10 @@ class Runner(m.HashableClass, abc.ABC):
         }
 
     @property
-    @abc.abstractmethod
     def copy_src_dst(self) -> t.Tuple[str, str]:
-        ...
+        raise e.code.NotYetImplemented(
+            msgs=["Cannot use copy cli command", "Please implement property copy_src_dst to use copy cli command"]
+        )
 
     @property
     @util.CacheResult
@@ -1327,14 +1448,14 @@ class Runner(m.HashableClass, abc.ABC):
         _ = self.methods_to_be_used_in_jobs()
 
         # make sure that enough arguments are present
-        if len(sys.argv) not in [2, 3, 4]:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"Inappropriate number of arguments specified on cli.",
-                    f"Can be 2, 3 or 4 but found {len(sys.argv)}.",
-                    sys.argv
-                ]
-            )
+        # if len(sys.argv) not in [2, 3, 4]:
+        #     raise e.validation.NotAllowed(
+        #         msgs=[
+        #             f"Inappropriate number of arguments specified on cli.",
+        #             f"Can be 2, 3 or 4 but found {len(sys.argv)}.",
+        #             sys.argv
+        #         ]
+        #     )
 
     def init(self):
         # call super
@@ -1441,18 +1562,20 @@ class Runner(m.HashableClass, abc.ABC):
         # return
         return _ret
 
-    def run(self, cluster_type: JobRunnerClusterType):
+    def run(self):
         from . import cli
-        _sub_title = [f"command: {sys.argv[1]}"]
-        if bool(sys.argv[2:]):
-            _sub_title += [f"args: {sys.argv[2:]}"]
+        _sub_title = ""
+        if len(sys.argv) > 1:
+            _sub_title = [f"command: {sys.argv[1]}"]
+            if bool(sys.argv[2:]):
+                _sub_title += [f"args: {sys.argv[2:]}"]
         with richy.StatusPanel(
             tc_log=_LOGGER,
             title=f"Running for py_script: {self.py_script.name!r}",
             sub_title=_sub_title,
         ) as _rp:
             with self(richy_panel=_rp):
-                cli.get_app(runner=self, cluster_type=cluster_type)()
+                cli.get_app(runner=self)()
 
     def setup(self):
         _exps = self.registered_experiments
@@ -1466,12 +1589,19 @@ class Runner(m.HashableClass, abc.ABC):
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=["associated_jobs"],
+    things_to_be_cached=["associated_jobs", "view_gui_label", "view_gui_label_tooltip"],
 )
 class Experiment(m.HashableClass, abc.ABC):
     """
     Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
     be stored in same folder hierarchy if some portion of first strs of group_by matches...
+
+    todo: support tensorboard
+      https://www.tensorflow.org/tensorboard/get_started
+    todo: support tensorboard.dev
+      https://tensorboard.dev/experiments/
+    todo: tensorboard projector any common methods
+      https://www.tensorflow.org/tensorboard/tensorboard_projector_plugin
     """
 
     # runner
@@ -1487,8 +1617,14 @@ class Experiment(m.HashableClass, abc.ABC):
         }
 
     @property
+    @util.CacheResult
     def view_gui_label(self) -> str:
-        return f"{self.__class__.__module__}:{self.hex_hash[:10]}"
+        return f"{self.__class__.__module__}:{self.mini_hex_hash}"
+
+    @property
+    @util.CacheResult
+    def view_gui_label_tooltip(self) -> str:
+        return f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
 
     @property
     def view_callable_names(self) -> t.List[str]:
@@ -1507,14 +1643,14 @@ class Experiment(m.HashableClass, abc.ABC):
         self.runner.registered_experiments.append(self)
 
         # ------------------------------------------------------------------ 03
-        # make sure that it is not s.StorageHashable or any of its fields are
-        # not s.StorageHashable
+        # Make sure that it is not s.StorageHashable or any of its fields are not s.StorageHashable
         # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
-        # use with storage ... this will avoid creating files/folders and doing any IO
+        #   use with storage ...
+        # This will avoid creating files/folders and doing any IO
         # todo: we disable this as now instance creation of StorageHashable's do not cause IO
         #   confirm this behaviour and delete this code .... the check is commented for now as we
-        #   want to allow StorageHashable's to work example with
-        #   `experiment/downloads.py` and `experiment/prepared_datas.py`
+        #   want to allow StorageHashable's to work example with `experiment/downloads.py`
+        #   and `experiment/prepared_datas.py`
         # self.check_for_storage_hashable(
         #     field_key=f"{self.experiment.__class__.__name__}"
         # )
@@ -1537,7 +1673,7 @@ class Experiment(m.HashableClass, abc.ABC):
                 gui.widget.Text(default_value="There are no jobs for this experiment ...")
         return _ret
 
-    @UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False)
+    @UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
         return gui.form.HashableMethodsRunnerForm(

@@ -1229,16 +1229,39 @@ def find_free_port(localhost: bool):
         return _socket.getsockname()[1]
 
 
-def npy_load(file: "s.Path", memmap: bool = False) -> np.ndarray:
-    if memmap:
-        # todo: doesn't support s.Path make it compatible and also see if npy_save methods
-        #  also work although they allow s.Path
-        # noinspection PyTypeChecker
-        _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
-    else:
-        with file.open(mode='rb') as f:
-            _ret = np.load(f, allow_pickle=False, fix_imports=False)
-            f.close()
+def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> np.ndarray:
+    """
+    Note that we assume that npy header is present in files
+    But in some cases the header is not saved then it will raise allow_pickle error
+    This can be misleading as this happens because the data is binary array with no numpy header
+    """
+    try:
+        if memmap:
+            # todo: doesn't support s.Path make it compatible and also see if npy_save methods
+            #  also work although they allow s.Path
+            try:
+                # noinspection PyTypeChecker
+                _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
+            except ValueError as __ve:
+                if shape is None and dtype is None:
+                    raise __ve
+                # noinspection PyTypeChecker
+                _ret = np.memmap(file.local_path, mode="r", shape=shape, dtype=dtype)
+        else:
+            with file.open(mode='rb') as f:
+                _ret = np.load(f, allow_pickle=False, fix_imports=False)
+                f.close()
+    except ValueError as _ve:
+        raise e.code.CodingError(
+            msgs=[
+                "If raised exception is `Cannot load file containing pickled data when allow_pickle=False` then that means you are loading binary data",
+                "May be that means the numpy header was not added while saving data, for example because of memmap save",
+                "Please supply dtype and shape to load binary blob as numpy array",
+                {
+                    "raise exception": str(_ve)
+                }
+            ]
+        )
     return _ret
 
 
@@ -1275,28 +1298,10 @@ def npy_array_save(file: "s.Path", npy_array: np.ndarray):
         f.close()
 
 
-def npy_record_save(
-    file: "s.Path", npy_record_dict: t.Dict[str, np.ndarray]
+def dict_2_npy_record(
+    npy_record_dict: t.Dict[str, np.ndarray]
 ) -> np.ndarray:
-    """
-    todo: migrate to `np.core.records.fromarrays` if needed
-     ... maybe do not do this as we get more elaborate errors in our
-         implementation
-    There is already a method that does the same job:
-      r = np.core.records.fromarrays([x1,x2,x3],names='a,b,c')
-    """
     # ---------------------------------------------------------------01
-    # do some validations
-    if file.exists():
-        raise e.code.CodingError(
-            msgs=[f"The file {file} was already crated"]
-        )
-    e.validation.ShouldBeInstanceOf(
-        value=npy_record_dict, value_types=(dict,),
-        msgs=[
-            f"Was expecting dictionary of numpy arrays"
-        ]
-    ).raise_if_failed()
     _len = None
     for k, v in npy_record_dict.items():
         # key should be str
@@ -1360,12 +1365,42 @@ def npy_record_save(
         npy_record[k] = npy_record_dict[k]
 
     # ---------------------------------------------------------------04
+    return npy_record
+
+
+def npy_record_save(
+    file: "s.Path", npy_record_dict: t.Dict[str, np.ndarray]
+) -> np.ndarray:
+    """
+    todo: migrate to `np.core.records.fromarrays` if needed
+     ... maybe do not do this as we get more elaborate errors in our
+         implementation
+    There is already a method that does the same job:
+      r = np.core.records.fromarrays([x1,x2,x3],names='a,b,c')
+    """
+    # ---------------------------------------------------------------01
+    # do some validations
+    if file.exists():
+        raise e.code.CodingError(
+            msgs=[f"The file {file} was already crated"]
+        )
+    e.validation.ShouldBeInstanceOf(
+        value=npy_record_dict, value_types=(dict,),
+        msgs=[
+            f"Was expecting dictionary of numpy arrays"
+        ]
+    ).raise_if_failed()
+
+    # ---------------------------------------------------------------02
+    npy_record = dict_2_npy_record(npy_record_dict)
+
+    # ---------------------------------------------------------------03
     # save numpy record file
     with file.open(mode='wb') as f:
         np.save(f, npy_record, allow_pickle=False, fix_imports=False)
         f.close()
 
-    # ---------------------------------------------------------------05
+    # ---------------------------------------------------------------04
     # since we created record we can return if you want to use
     return npy_record
 

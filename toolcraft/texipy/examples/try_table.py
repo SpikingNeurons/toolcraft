@@ -55,7 +55,7 @@ def make_table(scale: t.Tuple[float, float] = None):
     _table = table.Table(
         type='X',
         scale=scale,
-        caption="Results for standard and \\mtovc classifier",
+        caption="Results for standard and \\mtovc\ classifier",
         label="table:results",
         positioning=Positioning(here=True, top=True, special_float_page=True),
         alignment=FloatObjAlignment.centering,
@@ -131,14 +131,14 @@ def make_table(scale: t.Tuple[float, float] = None):
         table.Row.from_list(
             items=[
                 table.MultiRowCell(num_rows=4, value=f"{symbols.gldsascadvonefk}"),
-                "Standard \\cite{zaidMethodologyEfficientCNN2020}", "0.39", "---", "191"
+                "Standard \\cite{DBLP:journals/tches/ZaidBHV20}", "0.39", "---", "191"
             ],
         )
     )
     _table.add_row(
         table.Row.from_list(
             items=[
-                "", "Standard \\cite{wuChooseYouAutomated2020}", "0.39", "---", "160"
+                "", "Standard \\cite{DBLP:journals/iacr/WuPP20}", "0.39", "---", "160"
             ],
         )
     )
@@ -162,14 +162,14 @@ def make_table(scale: t.Tuple[float, float] = None):
         table.Row.from_list(
             items=[
                 table.MultiRowCell(num_rows=4, value=f"{symbols.gldsascadvonevk}"),
-                "Standard  \\cite{zaidMethodologyEfficientCNN2020}", "0.39", "---", "---"
+                "Standard  \\cite{DBLP:journals/tches/ZaidBHV20}", "0.39", "---", "---"
             ],
         )
     )
     _table.add_row(
         table.Row.from_list(
             items=[
-                "", "Standard \\cite{wuChooseYouAutomated2020}", "0.39", "---", "3144"
+                "", "Standard \\cite{DBLP:journals/iacr/WuPP20}", "0.39", "---", "3144"
             ],
         )
     )

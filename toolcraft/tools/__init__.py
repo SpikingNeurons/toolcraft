@@ -1,4 +1,9 @@
 """
+
+todo: ***NEW***
+  We are already using typer also typer uses rich (toolcraft.job)
+  So we will implement all things here by looking at toolcraft.job
+
 typer library has lot of things I want
 todo: read typer docs
   https://typer.tiangolo.com/tutorial/launch/

@@ -28,7 +28,8 @@ from .state import Info, Config, Suffix
 from .folder import Folder
 from .file_group import FileGroup, FileGroupFromPaths, USE_ALL, \
     SELECT_TYPE, FileGroupConfig
-from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup
+from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup, \
+    NpyFileGroupConfig
 from .table import Table, Filter, make_expression
 
 

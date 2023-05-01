@@ -1,6 +1,8 @@
 import asyncio
 import itertools
 import typing as t
+import traceback
+import sys
 
 from . import widget, Hashable, EscapeWithContext
 
@@ -80,9 +82,18 @@ async def make_async_fn_runner(
                     break
                 else:
                     _blink_widget.default_value = "Failed ..."
-                    with receiver_grp:
-                        widget.Text(default_value=str(_exp))
-                    raise _exp
+                    try:
+                        # since there is exception calling result() on
+                        # future will raise it with traceback
+                        _result = _future.result()
+                    except Exception as __exp:
+                        exc_type, exc_value, exc_tb = sys.exc_info()
+                        _exp_strs = traceback.format_exception(exc_type, exc_value, exc_tb)
+                        with receiver_grp:
+                            widget.Text(default_value="\n".join(_exp_strs))
+                        # both do same printing on sys.err
+                        # traceback.print_exc()
+                        raise __exp
 
     except Exception as _e:
         if receiver_grp.does_exist:

@@ -32,8 +32,8 @@ if False:
     from ..marshalling import HashableClass
 
 
-T = t.TypeVar('T', bound='Widget')
-YamlReprT = t.TypeVar('YamlReprT', bound='YamlRepr')
+TWidget = t.TypeVar('TWidget', bound='Widget')
+TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
 COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
@@ -966,7 +966,7 @@ class Widget(_WidgetDpg, abc.ABC):
         """
         return dpg.does_item_exist(item=self.guid)
 
-    def __enter__(self: T) -> T:
+    def __enter__(self: TWidget) -> TWidget:
 
         # call on_enter
         self.on_enter()
@@ -1060,6 +1060,31 @@ class Widget(_WidgetDpg, abc.ABC):
 
         # call super
         return super().delete()
+
+    def add_tooltip(self, tooltip: t.Union[str, "gui.widget.Tooltip"]):
+        """
+        Some widgets that are not containes can still have tooltip
+        So we hack it here ....
+
+        Note that when we use this method to add tooltip in ContainerWidget
+          it cannot be accessed via children
+
+        """
+        from .. import gui
+
+        if isinstance(tooltip, str):
+            with EscapeWithContext():
+                tooltip = gui.widget.Text(default_value=tooltip)
+        if tooltip._parent is None:
+            # todo: this still does not work we also need to build
+            #  tooltip widget .... figure out later .... need to pipe things
+            #  so that there is delayed build
+            tooltip._parent = self
+        else:
+            raise Exception(
+                "The tooltip instance provided is already set to some parent. "
+                f"You can also avoid this error by using {EscapeWithContext} if already in with context."
+            )
 
 
 USER_DATA = t.Dict[
@@ -1238,6 +1263,7 @@ class ContainerWidget(Widget, abc.ABC):
                 raise Exception("Do not supply `before` as `widget` is not movable")
 
     def _add_child(self, _widget: Widget):
+        from .. import gui
         # -------------------------------------------------- 01
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
@@ -1267,6 +1293,11 @@ class ContainerWidget(Widget, abc.ABC):
             for _k, _v in self._children.items():
                 print(">>", _k, _v.guid, _v)
             raise Exception("This widget was already added")
+        # do not allow tooltip to be child
+        if isinstance(_widget, gui.widget.Tooltip):
+            raise Exception(
+                f"To add tooltip rely on {Widget.add_tooltip} method ..."
+            )
 
         # -------------------------------------------------- 02
         # set internals
@@ -1362,8 +1393,9 @@ class UseMethodInForm:
         label_fmt: str = None,
         run_async: bool = False,
         display_in_form: bool = True,
-        tag_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
+        tag_for_caching_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
         hide_previously_opened: bool = True,
+        tooltip: str = None,
     ):
         """
         Check usage in below places
@@ -1374,7 +1406,7 @@ class UseMethodInForm:
               call it to get label
             run_async: can call method in async task ...
             display_in_form:
-            tag_in_receiver:
+            tag_for_caching_in_receiver:
                 When set to None the widget generated will not be cached.
                 When 'auto' (i.e. default) automatic unique tag for given hashable and method name will be
                   generated and that tag will be used to cache
@@ -1387,8 +1419,9 @@ class UseMethodInForm:
         self.label_fmt = label_fmt
         self.run_async = run_async
         self.display_in_form = display_in_form
-        self.tag_in_receiver = tag_in_receiver
+        self.tag_for_caching_in_receiver = tag_for_caching_in_receiver
         self.hide_previously_opened = hide_previously_opened
+        self.tooltip = tooltip
 
     def __call__(self, fn: t.Callable):
         """
@@ -1467,10 +1500,16 @@ class UseMethodInForm:
         # ---------------------------------------------------- 04
         # create and return button
         from . import widget
-        return widget.Button(
+        # this indicates that this button can be refreshed (as things are not caches)
+        if self.tag_for_caching_in_receiver is None:
+            _button_label += " (*)"
+        _ret = widget.Button(
             label=_button_label,
             callback=_callback,
         )
+        if self.tooltip is not None:
+            _ret.add_tooltip(tooltip=self.tooltip)
+        return _ret
 
 
 class YamlDumper(yaml.Dumper):
@@ -1520,7 +1559,7 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(cls, file_or_text: str, **kwargs) -> t.Union[dict, YamlReprT]:
+    def load(cls, file_or_text: str, **kwargs) -> t.Union[dict, TYamlRepr]:
         # get text
         _text = file_or_text
         if not isinstance(file_or_text, str):
@@ -1583,7 +1622,7 @@ class Hashable(abc.ABC):
             )
 
     @classmethod
-    def from_yaml(cls, file_or_text: str, **kwargs) -> YamlReprT:
+    def from_yaml(cls, file_or_text: str, **kwargs) -> TYamlRepr:
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 

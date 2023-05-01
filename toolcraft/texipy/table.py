@@ -8,18 +8,28 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Font, Scalar, Positioning, FloatObjAlignment
+from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment, Text, ParaPos, ParaBox
 
 
 class ColumnFmt(enum.Enum):
     """
+    https://en.wikibooks.org/wiki/LaTeX/Tables
+
     https://www.overleaf.com/learn/latex/Tables
 
-    \\begin{tabular}[pos]{cols}
-     table content
+    \\begin{tabular}[pos]{table spec}
+       table content
     \\end{tabular}
 
     Deals with cols which defines the alignment and the borders of each column
+
+    Tips:
+    [1] In para mode you can use newline command
+        \begin{tabular}{|p{2cm}|p{2cm}|}
+        \hline
+        Test & foo \newline bar \\
+        ...
+
     """
     # left-justified column
     left_justified = "l"
@@ -35,12 +45,19 @@ class ColumnFmt(enum.Enum):
     # paragraph column with text vertically aligned at the bottom
     # (requires array package)
     para_bottom = "b"
+    # vertical line
+    vertical_line = "|"
+    # double vertical line
+    double_vertical_line = "||"
+
     # The tabularx package requires the same arguments of tabular* but, in order to
     # let the table have the width specified by the user, it modifies the width of
     # certain columns instead of the space between columns. The columns that can be
     # stretched are identified by the alignment command X. This package requires the
     # array package.
     stretched = "X"
+
+    # check; https://en.wikibooks.org/wiki/LaTeX/Tables#@_and_!_expressions
     # @{text}
     #   - Insert the text `text` in every line of the table between the columns
     #     where it appears.
@@ -60,89 +77,137 @@ class ColumnFmt(enum.Enum):
     #     \\begin{tabular}{@{}lp{6cm}@{}}
     #        ...
     #     \\end{tabular}
-    insert = "@"
-    # insert before
-    # - can be placed before a command l, r, c, p, m or b and inserts ins before
-    #   the content of the cell;
-    # - can also be used to format certain columns:
-    #   it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-    #   \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
-    insert_before = ">"
-    # insert after
-    # - can be placed before a command l, r, c, p, m or b and inserts ins before
-    #   the content of the cell;
-    # - can also be used to format certain columns:
-    #   it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-    #   \\mdseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
-    insert_after = "<"
-    # vertical line
-    vertical_line = "|"
-    # double vertical line
-    double_vertical_line = "||"
+    #
+    # Difference between @ and !
+    #   The @{...} command kills the inter-column space and replaces it
+    #   with whatever is between the curly braces. To keep the initial space,
+    #   use !{...}. To add space, use @{\hspace{''width''}}
+    insert = '@'
+    insert_1 = '!'
 
-    @property
-    def is_legit_column(self) -> bool:
-        return self in [
-            self.left_justified, self.centered, self.right_justified,
-            self.para_top, self.para_middle, self.para_bottom,
-            self.stretched,
-        ]
+    def __call__(
+        self,
+        width: Scalar = None,
+        # for 'X' mostly use "\\centering\\arraybackslash"
+        insert_before: str = None,
+        insert_after: str = None,
+        insert_text: str = None,
+    ) -> str:
+        """
 
-    def __call__(self, width: Scalar = None, insert: str = None):
+        insert_before = ">"
+        - can be placed before a command l, r, c, p, m or b and inserts ins before
+          the content of the cell;
+        - can also be used to format certain columns:
+          it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+          \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+
+        insert_after = "<"
+        - can be placed before a command l, r, c, p, m or b and inserts ins before
+          the content of the cell;
+        - can also be used to format certain columns:
+          it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+          \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+        """
+        # ------------------------------------------------------- 01
+        # validation
+        # ------------------------------------------------------- 01.01
+        # if stretched i.e. X cannot use any __call__
         # if vertical line's no kwargs will be used
-        if self in [self.vertical_line, self.double_vertical_line, self.stretched]:
-            if width is not None or insert is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        f"no use for pass kwargs while using `ColumnFmt.{self.name}` "
-                        f"as we need not parametrize it"
-                    ]
-                )
-
-        # for inserts ...
-        if self in [self.insert, self.insert_before, self.insert_after]:
-            if insert is None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please supply value for kwarg `text` while using {self}"]
-                )
-            if width is not None:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Please do not supply kwarg `width` while using {self}"]
-                )
-            return f"{self.value}{{{insert}}}"
-
-        # since self is not for `self.insert` we expect `insert` kwarg to be None
-        if insert is not None:
-            raise e.validation.NotAllowed(
-                msgs=[f"insert kwarg is usable only for insert related stuff"]
-            )
-
-        # for width ...
-        if width is None:
-            return self.value
-        else:
-            if self in [self.para_top, self.para_middle, self.para_bottom]:
-                return f"{self.value}{{{width}}}"
-            else:
+        e.validation.ShouldNotBeOneOf(
+            value=self,
+            values=[
+                self.vertical_line, self.double_vertical_line,
+            ],
+            msgs=[
+                "Do not use __call__ for this ColumnFmt"
+            ]
+        ).raise_if_failed()
+        # ------------------------------------------------------- 01.02
+        # width can only be used with only para columns
+        if width is not None:
+            if self not in [self.para_top, self.para_bottom, self.para_middle]:
                 raise e.validation.NotAllowed(
                     msgs=[
                         f"The width kwarg cannot be used with {self}"
                     ]
                 )
+        # ------------------------------------------------------- 01.03
+        # check if insert_before or insert_after allowed
+        if insert_after is not None or insert_before is not None:
+            _allowed_insert_before_after = self in [
+                self.centered, self.left_justified, self.right_justified,
+                self.para_middle, self.para_top, self.para_bottom,
+                self.stretched,
+            ]
+            if not _allowed_insert_before_after:
+                raise e.code.NotAllowed(
+                    msgs=[
+                        f"Do not use kwargs `insert_before` or `insert_after` with {self.name} ({self.value})",
+                        f"It can only be used with l, c, r, p, m, b (and even X)"
+                    ]
+                )
+        # ------------------------------------------------------- 01.04
+        # insert_text is to be used only for special insert and insert_1 column fmts
+        if self in [self.insert, self.insert_1]:
+            if insert_text is None:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"When using {self.insert.name} ({self.insert.value}) and {self.insert_1.name} ({self.insert_1.value}) please supply kwarg `insert_text`"
+                    ]
+                )
+
+        # ------------------------------------------------------- 02
+        # cook return
+        _ret = ""
+        # ------------------------------------------------------- 02.01
+        # if insert_text
+        # note this only triggers for inset and insert_1 based on above validation
+        if insert_text is not None:
+            return f"{self.value}{{{insert_text}}}"
+        # ------------------------------------------------------- 02.02
+        # for width ...
+        if width is None:
+            _ret += self.value
+        else:
+            _ret += f"{self.value}{{{width}}}"
+        # ------------------------------------------------------- 02.03
+        # insert_after and insert_before
+        _insert_before = ""
+        if insert_before is not None:
+            _insert_before += f">{{{insert_before}}}\n"
+        _insert_after = ""
+        if insert_after is not None:
+            _insert_after += f"\n<{{{insert_after}}}"
+        _ret = _insert_before + _ret + _insert_after
+
+        # ------------------------------------------------------- 03
+        # return
+        return _ret
 
     def __str__(self) -> str:
-        if self in [self.insert, self.insert_after, self.insert_before]:
-            raise e.validation.NotAllowed(
-                msgs=[f"When using tabular column {self} please specify `insert` kwarg "
-                      f"by using __call__"]
-            )
-        return self.__call__()
+        if self in [
+            self.vertical_line, self.double_vertical_line,
+        ]:
+            return self.value
+        else:
+            return self.__call__()
 
     @classmethod
     def enum_from_value(cls, _str: str) -> "ColumnFmt":
-        for _ in cls:
-            if _.value == _str[0:1]:
-                return _
+        for _s in _str.split("\n"):
+            # handle || separately
+            if _s[0:2] == "||":
+                return cls.double_vertical_line
+            # get start token
+            _ss = _s[0:1]
+            # this addresses tokes for insert before and after
+            if _ss in [">", "<"]:
+                continue
+            else:
+                for _ in cls:
+                    if _.value == _ss:
+                        return _
         raise e.validation.NotAllowed(
             msgs=[
                 f"Cannot recognize string `{_str}`",
@@ -150,27 +215,6 @@ class ColumnFmt(enum.Enum):
                 [_.value for _ in cls]
             ]
         )
-
-
-class TablePos(enum.Enum):
-    """
-    https://www.overleaf.com/learn/latex/Tables
-
-    \\begin{tabular}[pos]{cols}
-     table content
-    \\end{tabular}
-
-    Deals with pos which handles Vertical position od table
-    """
-    # the line at the top is aligned with the text baseline
-    top = "t"
-    # the line at the bottom is aligned with the text baseline
-    bottom = "b"
-    # the table is centred to the text baseline
-    centered = "c"  # also default
-
-    def __str__(self) -> str:
-        return self.value
 
 
 @dataclasses.dataclass
@@ -189,7 +233,7 @@ class MultiRowCell(LaTeX):
 
     num_rows: int = None
     width: Scalar = None
-    value: t.Union[LaTeX, str] = None
+    value: t.Union[LaTeX, str, Text, ParaBox] = None
     no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
@@ -239,8 +283,8 @@ class MultiRowCell(LaTeX):
 class MultiColumnCell(LaTeX):
 
     num_cols: int = None
-    t_col_fmt: t.Union[ColumnFmt, str] = None
-    value: t.Union[LaTeX, str] = None
+    t_cols_def: "TableColsDef" = None
+    value: t.Union[LaTeX, str, Text, ParaBox] = None
     no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
     @property
@@ -264,18 +308,10 @@ class MultiColumnCell(LaTeX):
             raise e.validation.NotAllowed(
                 msgs=[f"please provide mandatory field num_cols"]
             )
-        if self.t_col_fmt is None:
+        if self.t_cols_def is None:
             raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field t_col_fmt"]
+                msgs=[f"please provide mandatory field t_cols_def"]
             )
-
-        # validate t_col_fmt
-        if isinstance(self.t_col_fmt, ColumnFmt):
-            if not self.t_col_fmt.is_legit_column:
-                raise e.validation.NotAllowed(
-                    msgs=[f"Only legit column format can be specified ... "
-                          f"found {self.t_col_fmt}"]
-                )
 
     def generate(self) -> str:
         if bool(self._items):
@@ -285,7 +321,7 @@ class MultiColumnCell(LaTeX):
                 ]
             )
 
-        _ret = f"\\multicolumn{{{self.num_cols}}}{{{self.t_col_fmt}}}{{{self.value}}}"
+        _ret = f"\\multicolumn{{{self.num_cols}}}\n{self.t_cols_def}\n{{{self.value}}}"
 
         return _ret
 
@@ -293,7 +329,10 @@ class MultiColumnCell(LaTeX):
 @dataclasses.dataclass
 class Row(LaTeX):
 
+    # start new row (additional space may be specified after \\ using square brackets, such as \\[6pt])
     height: Scalar = None
+
+    color: t.Union[Color, str] = None
 
     @property
     def use_single_line_repr(self) -> bool:
@@ -320,15 +359,22 @@ class Row(LaTeX):
 
     @classmethod
     def from_list(
-        cls, items: t.List[t.Union[str, LaTeX]], height: Scalar = None
+        cls,
+        items: t.List[t.Union[str, LaTeX, Text, ParaBox]],
+        height: Scalar = None,
+        color: t.Union[str, Color] = None,
     ) -> "Row":
-        _ret = Row(height=height)
+        _ret = Row(height=height, color=color)
         for _ in items:
             _ret.add_item(_)
         return _ret
 
     def generate(self) -> str:
-        return " & ".join([str(_) for _ in self._items])
+        _ret = ""
+        if self.color is not None:
+            _ret += f"\\rowcolor{{{self.color}}}  % color for row\n"
+        _ret += " & ".join([str(_) for _ in self._items])
+        return _ret
 
 
 @dataclasses.dataclass
@@ -340,65 +386,59 @@ class TableColsDef(LaTeX):
 
     @property
     def open_clause(self) -> str:
-        return "{"
+        return "{\n"
 
     @property
     def close_clause(self) -> str:
-        return "}"
+        return "\n}"
+
+    @property
+    def uses_stretched_fmt(self) -> bool:
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._uses_stretched_fmt
+        except AttributeError:
+            return False
 
     def init(self):
         # call super
         super().init()
 
         # some vars to track previous items
-        # noinspection PyAttributeOutsideInit,PyTypeChecker
-        self._previous_fmt = None  # type: ColumnFmt
         # noinspection PyAttributeOutsideInit
-        self.uses_stretched_fmt = False
-        # noinspection PyAttributeOutsideInit
-        self.num_cols = 0
+        self._num_cols = 0
 
     def generate(self) -> str:
-        return "".join([str(_) for _ in self._items])
+        return "\n".join("    " + str(_) for _ in self._items)
 
     def add_item(self, item: t.Union[str, ColumnFmt]) -> "TableColsDef":
-        # get vars for current
+
+        # this will end up testing if tem is legit
         _current_fmt = ColumnFmt.enum_from_value(str(item))
 
-        # if there were some items already added then do some validations
-        if bool(self._items):
-            if self._previous_fmt is ColumnFmt.insert_before:
-                if not _current_fmt.is_legit_column:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Previous item added was for {ColumnFmt.insert_before}",
-                            f"So we expect it to follow with legit column"
-                        ]
-                    )
-            if _current_fmt is ColumnFmt.insert_after:
-                if not self._previous_fmt.is_legit_column:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Current item is for {ColumnFmt.insert_after} so we "
-                            f"expect the previous item to be legit column",
-                        ]
-                    )
-
-        # assign internal vars
-        # noinspection PyAttributeOutsideInit
-        self._previous_fmt = _current_fmt
-
-        # set uses_stretched_fmt
-        # noinspection PyAttributeOutsideInit
-        self.uses_stretched_fmt = _current_fmt is ColumnFmt.stretched
+        # if stretched set internal var
+        if _current_fmt is ColumnFmt.stretched:
+            # noinspection PyAttributeOutsideInit
+            self._uses_stretched_fmt = True
 
         # increment col count
-        if _current_fmt.is_legit_column:
-            self.num_cols += 1
+        if _current_fmt in [
+            ColumnFmt.vertical_line, ColumnFmt.double_vertical_line,
+            ColumnFmt.insert, ColumnFmt.insert_1
+        ]:
+            super().add_item(f"% Column Def [---] for {_current_fmt.name}  ({_current_fmt.value})")
+        else:
+            super().add_item(f"% Column Def [{self._num_cols:03d}] for {_current_fmt}")
+            self._num_cols += 1
 
-        # return ... note that we convert to str as Enums are not acceptable
-        # noinspection PyTypeChecker
-        return super().add_item(str(item))
+        # if str has \n then make multiple add items
+        # this is helpful for insert_before and insert_after
+        _str_item = str(item)
+        for _s in _str_item.split("\n"):
+            super().add_item(_s)
+
+        # return
+        return self
 
     @classmethod
     def from_list(cls, items: t.List[t.Union[str, ColumnFmt]]) -> "TableColsDef":
@@ -464,8 +504,8 @@ class Table(LaTeX):
     alignment: FloatObjAlignment = None
     caption: str = None
     type: t.Literal['normal', 'array', '*', 'X'] = 'X'
-    t_pos: TablePos = TablePos.centered
-    t_width: Scalar = None
+    t_pos: ParaPos = ParaPos.centered
+    t_width: t.Optional[Scalar] = None
     t_cols_def: TableColsDef = None
 
     # https://tex.stackexchange.com/questions/10863/is-there-a-way-to-slightly-shrink-a-table-including-font-size-to-fit-within-th
@@ -552,7 +592,7 @@ class Table(LaTeX):
         super().init()
 
         # there should be minimum one col present
-        if self.t_cols_def.num_cols < 1:
+        if self.t_cols_def._num_cols < 1:
             raise e.validation.NotAllowed(
                 msgs=[
                     "Please specify at-least one legit column in `self.t_cols_def` ...",
@@ -589,7 +629,7 @@ class Table(LaTeX):
             if self.type != 'X':
                 raise e.validation.NotAllowed(
                     msgs=[
-                        f"YThe t_cols_def uses one or more {ColumnFmt.stretched}",
+                        f"The t_cols_def uses one or more {ColumnFmt.stretched}",
                         f"This is only allowed when table type is 'X' i.e. tabularx",
                     ]
                 )
@@ -604,9 +644,9 @@ class Table(LaTeX):
                 )
 
     def add_row(self, row: Row):
-        if len(row) != self.t_cols_def.num_cols:
+        if len(row) != self.t_cols_def._num_cols:
             raise e.validation.NotAllowed(
-                msgs=[f"We only expect to have {self.t_cols_def.num_cols} items in "
+                msgs=[f"We only expect to have {self.t_cols_def._num_cols} items in "
                       f"row but instead we found {len(row)}"]
             )
         self.add_item(item=row)

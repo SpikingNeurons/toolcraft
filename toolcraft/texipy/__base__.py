@@ -1,20 +1,199 @@
 import dataclasses
+import os
 import typing as t
 import pathlib
 import datetime
 import abc
 import enum
 
-from . import helper
 from .. import logger
 from .. import util
 from .. import error as e
 
+from . import helper
+from . import base
+
 _LOGGER = logger.get_logger()
+TLaTeX = t.TypeVar('TLaTeX', bound='LaTeX')
+
+TextType = t.Union[str, "Text", "Icon"]
 
 # noinspection PyUnreachableCode
 if False:
     from . import beamer
+    from . import tikz
+
+
+class TextFmt(enum.Enum):
+    strikeout = "\\sout"  # requires \usepackage[normalem]{ulem}
+    italic = "\\itshape"
+
+    def __str__(self) -> str:
+        return self.value
+
+    def __call__(self, text: str) -> str:
+        return f"{self}{{{text}}}"
+
+
+class ParaPos(enum.Enum):
+    """
+    https://www.overleaf.com/learn/latex/Tables
+
+    \\begin{tabular}[pos]{cols}
+     table content
+    \\end{tabular}
+
+    Also used by
+    https://en.wikibooks.org/wiki/LaTeX/Tables
+    \\parbox[position]{width}{text}
+
+    Deals with pos which handles Vertical position od table
+    """
+    # the line at the top is aligned with the text baseline
+    top = "t"
+    # the line at the bottom is aligned with the text baseline
+    bottom = "b"
+    # the table is centred to the text baseline
+    centered = "c"  # also default
+
+    def __str__(self) -> str:
+        return self.value
+
+
+@dataclasses.dataclass
+class ParaBox:
+    """
+    \\parbox[position]{width}{text}
+
+    The newlines n para box can be achieved via \\
+    """
+    text: t.Union[str, "Text"]
+    centering: bool = False
+    width: "Scalar" = None
+    position: ParaPos = None
+
+    def __str__(self) -> str:
+        _ret = "\\parbox"
+        if self.position is not None:
+            _ret += f"[{self.position}]"
+        if self.width is not None:
+            _ret += f"{{{self.width}}}"
+        _text = str(self.text)
+        if self.centering:
+            _text = "\\centering " + _text
+        _ret += f"{{{_text}}}"
+        return _ret
+
+
+class Text:
+    """
+    Refer here for fonts and sizes
+    + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
+    """
+
+    def __init__(self, text: t.Union[str, base.Base, "Icon"], no_text_cmd: bool = False):
+        self.no_text_cmd = no_text_cmd
+        self.text = text
+
+    def __str__(self) -> str:
+        if self.no_text_cmd:
+            return str(self.text)
+        else:
+            return f"\\text{{{self.text}}}"
+
+    def strikeout(self) -> "Text":
+        self.text = f"\\sout{{{self.text}}}"
+        return self
+
+    def bold(self) -> "Text":
+        self.text = f"\\textbf{{{self.text}}}"
+        return self
+
+    def italic(self) -> "Text":
+        self.text = f"\\textit{{{self.text}}}"
+        return self
+
+    def emphasis(self) -> "Text":
+        self.text = f"\\emph{{{self.text}}}"
+        return self
+
+    def color(self, color: t.Union["Color", str]) -> "Text":
+        self.text = f"\\textcolor{{{color}}}{{{self.text}}}"
+        return self
+
+    def size(self, size: "FontSize") -> "Text":
+        self.text = size(self.text)
+        return self
+
+    def in_math(self) -> "Text":
+        self.text = "\\(" + str(self.text) + "\\)"
+        return self
+
+
+class Icon(enum.Enum):
+    """
+    Check zotero or online pdf at https://ctan.org/pkg/fontawesome5
+    Click "Package Documentation"
+
+    Options supported by \\usepackage{fontawesome5}
+    All fonts: http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
+
+    Section 5: Dingbats: Useful for making bullets in itemized list
+    https://math.uoregon.edu/wp-content/uploads/2014/12/compsymb-1qyb3zd.pdf
+    """
+
+    fa_hammer = enum.auto()
+    fa_check = enum.auto()
+    fa_times = enum.auto()
+    fa_check_circle = enum.auto()
+    fa_times_circle = enum.auto()
+    fa_thumbs_down = enum.auto()
+    fa_thumbs_up = enum.auto()
+    fa_meh = enum.auto()
+    fa_pen = enum.auto()
+    fa_seedling = enum.auto()
+    fa_arrow_alt_circle_down = enum.auto()
+
+    dots = enum.auto()
+    ldots = enum.auto()
+    cdots = enum.auto()
+    vdots = enum.auto()
+    ddots = enum.auto()
+
+    # https://mirror.informatik.hs-fulda.de/tex-archive/macros/latex/required/psnfss/psnfss2e.pdf
+    ding_cmark = enum.auto()
+    ding_xmark = enum.auto()
+    ding_cmarkb = enum.auto()
+    ding_xmarkb = enum.auto()
+
+    @property
+    def latex_cmd(self) -> str:
+        _cmd = self.name
+        if _cmd.startswith("fa_"):
+            _new_cmd = "fa"
+            for _ in _cmd.split("_")[1:]:
+                _new_cmd += _.capitalize()
+            _cmd = _new_cmd
+        elif _cmd.startswith("ding_"):
+            if _cmd == "ding_cmark":
+                _cmd = "ding{51}"
+            elif _cmd == "ding_cmarkb":
+                _cmd = "ding{52}"
+            elif _cmd == "ding_xmark":
+                _cmd = "ding{55}"
+            elif _cmd == "ding_xmarkb":
+                _cmd = "ding{56}"
+            else:
+                raise e.code.CodingError(msgs=[f"Unknown {_cmd}"])
+        else:
+            ...
+        return "\\" + _cmd
+
+    def as_text(self, no_text_cmd: bool = True) -> Text:
+        return Text(self.latex_cmd, no_text_cmd=no_text_cmd)
+
+    def __str__(self) -> str:
+        return self.latex_cmd
 
 
 class Font(enum.Enum):
@@ -22,7 +201,6 @@ class Font(enum.Enum):
     todo: figure out other options later
     """
     italic = "\\itshape"
-    footnotesize = "\\footnotesize"
 
     def __str__(self) -> str:
         return self.value
@@ -107,40 +285,6 @@ class FontSize(enum.Enum):
         return f"{{{self} {text}}}"
 
 
-class Fa(enum.Enum):
-    """
-    Options supported by \\usepackage{fontawesome5}
-    All fonts: http://mirrors.ibiblio.org/CTAN/fonts/fontawesome5/doc/fontawesome5.pdf
-
-    Section 5: Dingbats: Useful for making bullets in itemized list
-    https://math.uoregon.edu/wp-content/uploads/2014/12/compsymb-1qyb3zd.pdf
-    """
-    check = "\\faCheck"
-    times = "\\faTimes"
-    check_circle = "\\faCheckCircle"
-    times_circle = "\\faTimesCircle"
-    thumbs_down = "\\faThumbsDown"
-    thumbs_up = "\\faThumbsUp"
-    meh = "\\faMeh"
-    pen = "\\faPen"
-    seedling = "\\faSeedling"
-    arrow_alt_circle_down = "\\faArrowAltCircleDown"
-
-    # not part of fontawesome but still makes sense here
-    ldots = "\\ldots"  # for horizontal dots on the line
-    cdots = "\\cdots"  # for horizontal dots above the line
-    vdots = "\\vdots"  # for vertical dots
-    ddots = "\\ddots"  # for diagonal dots
-
-    # Dingbats
-
-    def __str__(self):
-        return self.value
-
-    def __call__(self, color: Color) -> str:
-        return f"{{\\color{{{color}}} {self}}}"
-
-
 class Scalar(t.NamedTuple):
     """
     Also referred as <dimension> in latex docs
@@ -189,8 +333,16 @@ class Scalar(t.NamedTuple):
         'tabcolsep', 'textheight', 'textwidth', 'topmargin',
     ] = ''
 
+    @property
+    def is_special_length(self) -> bool:
+        return self.unit in [
+            'baselineskip', 'columnsep', 'columnwidth', 'evensidemargin', 'linewidth',
+            'oddsidemargin', 'paperwidth', 'paperheight', 'parindent', 'parskip',
+            'tabcolsep', 'textheight', 'textwidth', 'topmargin',
+        ]
+
     def __str__(self):
-        if self.unit == 'textwidth':
+        if self.is_special_length:
             if self.value in [1, 1.0]:
                 return f"\\{self.unit}"
             else:
@@ -373,7 +525,7 @@ class LaTeX(abc.ABC):
     def __str__(self) -> str:
         # assign _doc to any items first ...
         for _ in self._items:
-            if not isinstance(_, str):
+            if not isinstance(_, (str, Text, ParaBox, Icon, base.Base)):
                 if _.label is not None:
                     e.validation.ShouldNotBeOneOf(
                         value=_.label, values=self.doc.labels,
@@ -420,7 +572,7 @@ class LaTeX(abc.ABC):
                    self.close_clause + \
                    _end
 
-    def add_item(self, item: t.Union[str, "LaTeX"]) -> "LaTeX":
+    def add_item(self, item: t.Union[str, "LaTeX", Text]) -> TLaTeX:
         if not self.allow_add_items:
             raise e.code.NotAllowed(
                 msgs=[f"You are not allowed to use `add_items` method for class "
@@ -551,12 +703,21 @@ class Document(LaTeX):
             (pathlib.Path(__file__).parent / "usepackage.sty").read_text()
         )
 
+    def add_item(self, item: t.Union[str, "LaTeX", Text]) -> "Document":
+        return super().add_item(item)
+
     def write(
         self,
         save_to_file: str,
         make_pdf: bool = False,
+        clean: bool = False,
     ):
         # ----------------------------------------------- 01
+        # save to file
+        _save_to_file = pathlib.Path(save_to_file)
+        # dot dot token
+        _num_save_to_file_parents = len(save_to_file.split("/")) - 1
+        _dot_dot_token = "//".join([".."]*_num_save_to_file_parents) + "//"
         # make document
         _all_lines = [
             # f"% Generated on {datetime.datetime.now().ctime()}",
@@ -565,16 +726,16 @@ class Document(LaTeX):
             if self.main_tex_file is None else
             f"\\documentclass[{self.main_tex_file}]{{subfiles}}",
             ("" if self.main_tex_file is None else "% ") +
-            f"\\usepackage{{{self.usepackage_file.split('.')[0]}}}",
+            f"\\usepackage{{{_dot_dot_token + self.usepackage_file.split('.')[0]}}}",
             ("" if self.main_tex_file is None else "% ") +
-            f"\\input{{{self.symbols_file.split('.')[0]}}}",
+            f"\\input{{{_dot_dot_token + self.symbols_file.split('.')[0]}}}",
             "",
             str(self),
             "",
         ]
 
         # ----------------------------------------------- 02
-        _save_to_file = pathlib.Path(save_to_file)
+        _save_to_file.parent.mkdir(exist_ok=True)
         _save_to_file.write_text("\n".join(_all_lines))
 
         # ----------------------------------------------- 03
@@ -584,7 +745,147 @@ class Document(LaTeX):
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
                          (_save_to_file.name.split(".")[0] + ".pdf"),
+                clean=clean,
             )
+
+
+@dataclasses.dataclass
+class IncludeGraphics(LaTeX):
+    """
+    todo: Lot more options to be supported from here
+        https://latexref.xyz/_005cincludegraphics.html
+    """
+
+    width: Scalar = None
+    angle: t.Union[int, float] = None
+    # todo: add check for image present on disk
+    image_path: str = None
+
+    @property
+    def use_single_line_repr(self) -> bool:
+        return True
+
+    @property
+    def open_clause(self) -> str:
+        _ops = []
+        if self.width is not None:
+            _ops += [f"width={self.width}"]
+        if self.angle is not None:
+            _ops += [f"angle={self.angle}"]
+        return f"\\includegraphics[{','.join(_ops)}]"
+
+    @property
+    def close_clause(self) -> str:
+        return f"{{{self.image_path}}}"
+
+    def init_validate(self):
+        super().init_validate()
+        if self.image_path is None:
+            raise e.validation.NotAllowed(
+                msgs=["Field image_path is mandatory"]
+            )
+
+
+@dataclasses.dataclass
+class Figure(LaTeX):
+    positioning: Positioning = None
+    alignment: FloatObjAlignment = None
+    caption: str = None
+
+    # To scale graphics ...
+    # https://tex.stackexchange.com/questions/13460/scalebox-knowing-how-much-it-scales
+    # https://tex.stackexchange.com/questions/4338/correctly-scaling-a-tikzpicture
+    # Other options adjustbox, resizebox
+    scale: t.Tuple[float, float] = None
+
+    @property
+    def open_clause(self) -> str:
+        _ret = [
+            f"\\begin{{figure}}{'' if self.positioning is None else self.positioning}",
+        ]
+        if self.alignment is not None:
+            _ret.append(f"{self.alignment}")
+        # add scalebox
+        if self.scale is not None:
+            _ret.append(f"\\scalebox{{{self.scale[0]}}}[{self.scale[1]}]\n{{")
+        return "\n".join(_ret)
+
+    @property
+    def close_clause(self) -> str:
+        _ret = []
+        if self.scale is not None:
+            _ret.append("}")
+        if self.caption is not None:
+            _ret.append(f"\\caption{{{self.caption}}}")
+        if self.label is not None:
+            _ret.append(f"\\label{{{self.label}}}")
+        _ret += [
+            f"\\end{{figure}}"
+        ]
+        return "\n".join(_ret)
+
+    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure", IncludeGraphics]) -> "Figure":
+        from . import tikz
+
+        # test item
+        e.validation.ShouldBeInstanceOf(
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
+            msgs=[f"Only certain item types are allowed in {Figure}"],
+        ).raise_if_failed()
+
+        # call super to add item
+        return super().add_item(item=item)
+
+
+@dataclasses.dataclass
+class SubFigure(LaTeX):
+    positioning: Positioning = None
+    alignment: FloatObjAlignment = None
+    caption: str = None
+    width: float = None
+
+    @property
+    def open_clause(self) -> str:
+        _ret = [
+            f"\\begin{{subfigure}}{'' if self.positioning is None else self.positioning}{{{self.width}\\textwidth}}",
+        ]
+        if self.alignment is not None:
+            _ret.append(f"{self.alignment}")
+        return "\n".join(_ret)
+
+    @property
+    def close_clause(self) -> str:
+        _ret = []
+        if self.caption is not None:
+            _ret.append(f"\\caption{{{self.caption}}}")
+        if self.label is not None:
+            _ret.append(f"\\label{{{self.label}}}")
+        _ret += [
+            f"\\end{{subfigure}}"
+        ]
+        return "\n".join(_ret)
+
+    def init_validate(self):
+        # call super
+        super().init_validate()
+
+        # check
+        if self.width is None:
+            raise e.validation.NotAllowed(msgs=["Please supply value for width field"])
+
+    def add_item(self, item: t.Union["tikz.TikZ", "SubFigure", IncludeGraphics]) -> "SubFigure":
+        from . import tikz
+
+        # test item
+        e.validation.ShouldBeInstanceOf(
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
+            msgs=[f"Only certain item types are allowed in {SubFigure}"],
+        ).raise_if_failed()
+
+        # call super to add item
+        return super().add_item(item=item)
+
+
 
 
 @dataclasses.dataclass
@@ -597,8 +898,8 @@ class List(LaTeX):
     """
     type: t.Literal['itemize', 'enumerate', 'description'] = 'itemize'
     items: t.Union[
-        t.List[t.Union[str, "List"]],
-        t.List[t.Tuple[str, str]]
+        t.List[t.Union[TextType, "List"]],
+        t.List[t.Tuple[TextType, TextType]]
     ] = None
 
     @property

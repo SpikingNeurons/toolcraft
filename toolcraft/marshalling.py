@@ -32,8 +32,8 @@ if False:
     from . import gui, storage
     from . import richy
 
-T = t.TypeVar('T', bound='Tracker')
-YamlReprT = t.TypeVar('YamlReprT', bound='YamlRepr')
+TTracker = t.TypeVar('TTracker', bound='Tracker')
+TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
 _LOGGER = logger.get_logger()
 _LITERAL_CLASS_NAME = 'LITERAL'
 _RULE_CHECKER = "__rule_checker__"
@@ -952,7 +952,7 @@ class Tracker(Checker):
             #     tc_log=logger.get_logger(self.__module__)
             # )
 
-    def __call__(self: T, richy_panel: "richy.StatusPanel") -> T:
+    def __call__(self: TTracker, richy_panel: "richy.StatusPanel") -> TTracker:
         """
         We use __call__ with __enter__ and __exit__ as context manager ...
 
@@ -1003,7 +1003,7 @@ class Tracker(Checker):
         # return
         return self
 
-    def __enter__(self: T) -> T:
+    def __enter__(self: TTracker) -> TTracker:
 
         # call on_enter
         self.on_enter()
@@ -1085,7 +1085,6 @@ class Tracker(Checker):
         You can also add any more code for performing prefetch
         Currently we do things like (mostly for foster data)
         + prefetch foster_data properties like shape dtype trace key ptx ...
-        + cache memmaps in `foster_data.all_npy_mem_maps_cache`
         + call foster_data and open up
 
         WARNING: Never have prefetch stuff depend on kwargs passed during
@@ -1144,7 +1143,7 @@ class Tracker(Checker):
         ...
 
     @classmethod
-    def available_concrete_sub_classes(cls) -> t.List[t.Type[T]]:
+    def available_concrete_sub_classes(cls) -> t.List[t.Type[TTracker]]:
         """
         Return a subset of AvailableHashableClasses that are subclass of
         incoming argument hashable_type.
@@ -1242,7 +1241,7 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> t.Union[dict, YamlReprT]:
+    def load(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> t.Union[dict, TYamlRepr]:
         from . import storage
         # get text
         _text = file_or_text
@@ -1391,14 +1390,14 @@ class YamlRepr(Tracker):
         return YamlDumper.dump(self)
 
     @classmethod
-    def from_yaml(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> YamlReprT:
+    def from_yaml(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> TYamlRepr:
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
     @classmethod
     def get_class(
         cls, file_or_text: t.Union["storage.Path", str]
-    ) -> t.Type[YamlReprT]:
+    ) -> t.Type[TYamlRepr]:
         from . import storage
         _text = file_or_text
         if isinstance(file_or_text, storage.Path):
@@ -1689,7 +1688,7 @@ class FrozenEnum(YamlRepr):
 # @dataclasses.dataclass(eq=True, frozen=True)
 @dataclasses.dataclass(frozen=True)
 @RuleChecker(
-    things_to_be_cached=['hex_hash', 'rich_panel'],
+    things_to_be_cached=['hex_hash', 'rich_panel', 'group_by'],
     things_not_to_be_overridden=['hex_hash'],
     # todo: any method or property that returns storage.FileSystem,
     #  Table FileGroup, Folder must be cached
@@ -1734,6 +1733,7 @@ class HashableClass(YamlRepr, abc.ABC):
         return self.hex_hash
 
     @property
+    @util.CacheResult
     def group_by(self) -> t.List[str]:
         """
         As self.name is hex_hash or else a name which is unique to all
@@ -2131,15 +2131,16 @@ if settings.TF_KERAS_WORKS:
     # noinspection PyUnresolvedReferences,PyProtectedMember
     from keras.api._v2 import keras as tk
     # noinspection PyUnresolvedReferences
-    from keras.optimizers.optimizer_experimental import \
-        optimizer as optimizer_experimental
+    # from keras.optimizers.optimizer_experimental import \
+    #     optimizer as optimizer_experimental
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
         int, float, str, slice, list, dict, tuple,
         np.float32, np.int64, np.int32,
         datetime.datetime, None, FrozenEnum,
         HashableClass, pa.Schema,
         tk.losses.Loss, tk.layers.Layer,
-        tk.optimizers.Optimizer, optimizer_experimental.Optimizer,
+        tk.optimizers.Optimizer,
+        # optimizer_experimental.Optimizer,
     ]
 else:
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict, tuple,
