@@ -40,6 +40,7 @@ else:
             display_in_form: bool = True,
             tag_for_caching_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
             hide_previously_opened: bool = True,
+            tooltip: str = None,
         ):
             ...
 

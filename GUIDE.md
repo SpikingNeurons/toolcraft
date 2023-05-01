@@ -152,7 +152,7 @@ https://hypothesis.readthedocs.io/en/latest/numpy.html#array-api
 #### Docusauraus
 Docusauraus will be great
 Discussion to get sphinx inside it are going on
-https://github.com/facebook/docusaurus/issues/1059
+https://github.com/${organizationName}/${projectName}/issues/1059
 
 #### mkdocs
 https://www.mkdocs.org
@@ -264,7 +264,7 @@ https://github.com/KarmaComputing/Github-Trigger-workflow-from-another-workflow/
 
 ### Netlify
 
-We will use this as [facebook](https://github.com/facebook/docusaurus/edit/main/README.md) uses it
+We will use this as [facebook](https://github.com/${organizationName}/${projectName}/edit/main/README.md) uses it
 
 
 #### Cloud functions

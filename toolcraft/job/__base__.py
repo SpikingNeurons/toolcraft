@@ -1589,7 +1589,7 @@ class Runner(m.HashableClass, abc.ABC):
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=["associated_jobs"],
+    things_to_be_cached=["associated_jobs", "view_gui_label", "view_gui_label_tooltip"],
 )
 class Experiment(m.HashableClass, abc.ABC):
     """
@@ -1617,8 +1617,14 @@ class Experiment(m.HashableClass, abc.ABC):
         }
 
     @property
+    @util.CacheResult
     def view_gui_label(self) -> str:
         return f"{self.__class__.__module__}:{self.mini_hex_hash}"
+
+    @property
+    @util.CacheResult
+    def view_gui_label_tooltip(self) -> str:
+        return f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
 
     @property
     def view_callable_names(self) -> t.List[str]:
@@ -1667,7 +1673,7 @@ class Experiment(m.HashableClass, abc.ABC):
                 gui.widget.Text(default_value="There are no jobs for this experiment ...")
         return _ret
 
-    @UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False)
+    @UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
         return gui.form.HashableMethodsRunnerForm(

@@ -1061,6 +1061,30 @@ class Widget(_WidgetDpg, abc.ABC):
         # call super
         return super().delete()
 
+    def add_tooltip(self, tooltip: t.Union[str, "gui.widget.Tooltip"]):
+        """
+        Some widgets that are not containes can still have tooltip
+        So we hack it here ....
+
+        Note that when we use this method to add tooltip in ContainerWidget
+          it cannot be accessed via children
+
+        """
+        from .. import gui
+
+        if isinstance(tooltip, str):
+            with EscapeWithContext():
+                tooltip = gui.widget.Text(default_value=tooltip)
+        if tooltip._parent is None:
+            # todo: this still does not work we also need to build
+            #  tooltip widget .... figure out later
+            tooltip._parent = self
+        else:
+            raise Exception(
+                "The tooltip instance provided is already set to some parent. "
+                f"You can also avoid this error by using {EscapeWithContext} if already in with context."
+            )
+
 
 USER_DATA = t.Dict[
     str, t.Union[
@@ -1238,6 +1262,7 @@ class ContainerWidget(Widget, abc.ABC):
                 raise Exception("Do not supply `before` as `widget` is not movable")
 
     def _add_child(self, _widget: Widget):
+        from .. import gui
         # -------------------------------------------------- 01
         # if widget is already built then raise error
         # Note that this will also check if parent and root were not set already ;)
@@ -1267,6 +1292,11 @@ class ContainerWidget(Widget, abc.ABC):
             for _k, _v in self._children.items():
                 print(">>", _k, _v.guid, _v)
             raise Exception("This widget was already added")
+        # do not allow tooltip to be child
+        if isinstance(_widget, gui.widget.Tooltip):
+            raise Exception(
+                f"To add tooltip rely on {Widget.add_tooltip} method ..."
+            )
 
         # -------------------------------------------------- 02
         # set internals
@@ -1364,6 +1394,7 @@ class UseMethodInForm:
         display_in_form: bool = True,
         tag_for_caching_in_receiver: t.Optional[t.Union[str, t.Literal['auto']]] = 'auto',
         hide_previously_opened: bool = True,
+        tooltip: str = None,
     ):
         """
         Check usage in below places
@@ -1389,6 +1420,7 @@ class UseMethodInForm:
         self.display_in_form = display_in_form
         self.tag_for_caching_in_receiver = tag_for_caching_in_receiver
         self.hide_previously_opened = hide_previously_opened
+        self.tooltip = tooltip
 
     def __call__(self, fn: t.Callable):
         """
@@ -1470,10 +1502,13 @@ class UseMethodInForm:
         # this indicates that this button can be refreshed (as things are not caches)
         if self.tag_for_caching_in_receiver is None:
             _button_label += " (*)"
-        return widget.Button(
+        _ret = widget.Button(
             label=_button_label,
             callback=_callback,
         )
+        if self.tooltip is not None:
+            _ret.add_tooltip(tooltip=self.tooltip)
+        return _ret
 
 
 class YamlDumper(yaml.Dumper):
