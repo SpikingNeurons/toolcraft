@@ -1077,7 +1077,8 @@ class Widget(_WidgetDpg, abc.ABC):
                 tooltip = gui.widget.Text(default_value=tooltip)
         if tooltip._parent is None:
             # todo: this still does not work we also need to build
-            #  tooltip widget .... figure out later
+            #  tooltip widget .... figure out later .... need to pipe things
+            #  so that there is delayed build
             tooltip._parent = self
         else:
             raise Exception(
