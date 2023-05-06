@@ -2,7 +2,7 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.9.0
+>> DearPyGui: 1.9.1
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -11121,6 +11121,9 @@ class Group(MovableContainerWidget):
     # width (int, optional): Width of the item.
     width: int = 0
 
+    # height (int, optional): Height of the item.
+    height: int = 0
+
     # indent (int, optional): Offsets the widget to the right the specified number multiplied by the indent style.
     indent: int = -1
 
@@ -11171,6 +11174,7 @@ class Group(MovableContainerWidget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             width=self.width,
+            height=self.height,
             indent=self.indent,
             payload_type=self.payload_type,
             drag_callback=self.drag_callback_fn,
