@@ -738,6 +738,22 @@ class Job:
                 ]
             ).raise_if_failed()
 
+    def __call__(self, shell: bool = True):
+        """
+        Launches job locally ... to be used from GUI
+
+        Set shell=False when in single cpu mode generally useful for debugging
+        """
+        from .cli_launch import _run_job
+        _cli_command = self.cli_command
+        if 'WSL2' in settings.PLATFORM.release:
+            # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
+            _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
+        else:
+            _cli_command = ["start", "cmd", "/c", ] + _cli_command
+        _shell = True
+        _run_job(self, _cli_command, shell=shell)
+
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
         return self
@@ -758,7 +774,6 @@ class Job:
         """
         # ---------------------------------------------------- 01
         # import
-        from .cli_launch import _run_job
         from ..gui.widget import Button, Group, Text
         # create folder for job if not present
         # this is needed as when we create gui for job to be run locally
@@ -822,17 +837,7 @@ class Job:
         def _fn():
             _ret.clear()
             with _ret:
-                _cli_command = self.cli_command
-                if single_cpu:
-                    _shell = False
-                else:
-                    if 'WSL2' in settings.PLATFORM.release:
-                        # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
-                        _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
-                    else:
-                        _cli_command = ["start", "cmd", "/c", ] + _cli_command
-                    _shell = True
-                _run_job(self, _cli_command, shell=_shell)
+                self()
                 Text("We have launched the job ... please wait and refresh ")
 
         # ---------------------------------------------------- 05
