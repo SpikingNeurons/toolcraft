@@ -101,6 +101,9 @@ class Tag:
             data['exception'] = ["", ">>> EXCEPTION <<<", "", *exception.split("\n")]
         _LOGGER.info(msg=f"Creating tag {self.path}")
         _txt = yaml.safe_dump(data)
+        _parent_dir = self.path.parent
+        if not _parent_dir.exists():
+            _parent_dir.mkdir(create_parents=True)
         self.path.write_text(text=_txt, encoding='utf-8')
 
     def read(self) -> t.Optional[t.Dict[str, t.Any]]:
@@ -752,6 +755,8 @@ class Job:
         else:
             _cli_command = ["start", "cmd", "/c", ] + _cli_command
         _shell = True
+        if not self.path.exists():
+            self.path.mkdir(create_parents=True)
         _run_job(self, _cli_command, shell=shell)
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
