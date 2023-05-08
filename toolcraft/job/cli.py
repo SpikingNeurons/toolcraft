@@ -206,16 +206,6 @@ def view():
     """
     Views all the jobs in runner.
     """
-
-    # ---------------------------------------------------------------- 01
-    # That is do not call view when not on main machine
-    # todo: check if on server
-    if not settings.DPG_WORKS:
-        raise e.code.NotAllowed(
-            msgs=["looks like dearpygui is not available ..."]
-        )
-
-    # ---------------------------------------------------------------- 02
     # define dashboard
     from .. import gui
 
