@@ -1446,6 +1446,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _median = {}
         _mean = {}
         for _k, _v in _npy_memmaps.items():
+            # todo: currently shape is str ... find way to get list of int to be saved in yaml in one line
             _shape[_k] = str(list(_v.shape))
             _dtype[_k] = str(_v.dtype)
             if _v.ndim == 1:
