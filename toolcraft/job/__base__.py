@@ -213,6 +213,7 @@ class TagManager:
                 else:
                     _show_log = False
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
+                    gui.widget.Button(label="Run", callback=lambda: self.job())
                 if _show_log:
                     self.job.log_file.webbrowser_open_button(label="Show Full Log")
             if _description:
@@ -741,23 +742,28 @@ class Job:
                 ]
             ).raise_if_failed()
 
-    def __call__(self, shell: bool = True):
+    def __call__(self):
         """
         Launches job locally ... to be used from GUI
 
         Set shell=False when in single cpu mode generally useful for debugging
+
+        Refer `cli_launch.local` where we use same logic to call local
+        job in debug and non-debug mode
         """
         from .cli_launch import _run_job
         _cli_command = self.cli_command
-        if 'WSL2' in settings.PLATFORM.release:
-            # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
-            _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
-        else:
-            _cli_command = ["start", "cmd", "/c", ] + _cli_command
-        _shell = True
+        _py_debug = settings.PYC_DEBUGGING
+        _shell = not _py_debug
+        if not _py_debug:
+            if 'WSL2' in settings.PLATFORM.release:
+                # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
+                _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
+            else:
+                _cli_command = ["start", "cmd", "/c", ] + _cli_command
         if not self.path.exists():
             self.path.mkdir(create_parents=True)
-        _run_job(self, _cli_command, shell=shell)
+        _run_job(self, _cli_command, shell=_shell)
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
