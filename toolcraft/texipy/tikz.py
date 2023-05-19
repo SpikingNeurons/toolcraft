@@ -1364,11 +1364,13 @@ class _Node(abc.ABC):
         return PointOnNode(node=self, outer_point=outer_point)
 
 
-
 @dataclasses.dataclass
 class Label(_Node):
     """
     Although not a subclass of Node this is still a Node in latex
+
+    Section 13.9 The Label and Pin Options
+    label=[⟨options⟩]⟨angle⟩:⟨text⟩
 
     Section 17.10.2 The Label Option
     /tikz/label=[〈options〉]〈angle〉:〈text〉
@@ -1428,6 +1430,9 @@ class Label(_Node):
 class Pin(_Node):
     """
     Although not a subclass of Node this is still a Node in latex
+
+    Section 13.9 The Label and Pin Options
+    pin=[⟨options⟩]⟨angle⟩:⟨text⟩
 
     17.10.3 The Pin Option
     /tikz/pin=[〈options〉]〈angle〉:〈text〉
@@ -1567,6 +1572,9 @@ class Node(_Node):
     # todo: may be must go in tikzpicture options
     allow_upside_down: bool = False
 
+    labels: t.List[Label] = dataclasses.field(default_factory=list)
+    pins: t.List[Label] = dataclasses.field(default_factory=list)
+
     def __post_init__(self):
 
         # please refer section 49.6 to see what anchors are available on node ...
@@ -1584,6 +1592,26 @@ class Node(_Node):
         # set var
         # noinspection PyTypeChecker
         self._tikz = None  # type: TikZ
+
+        # test labels and pins and set _node
+        if bool(self.labels):
+            for _l in self.labels:
+                if _l._node is not None:
+                    raise e.validation.NotAllowed(
+                        msgs=[
+                            f"The label is already used by node {_l._node.id}"
+                        ]
+                    )
+                _l._node = self
+        if bool(self.pins):
+            for _p in self.pins:
+                if _p._node is not None:
+                    raise e.validation.NotAllowed(
+                        msgs=[
+                            f"The pin is already used by node {_p._node.id}"
+                        ]
+                    )
+                _p._node = self
 
     def __matmul__(self, other: Point) -> "Node":
         """
@@ -1622,33 +1650,6 @@ class Node(_Node):
             _style = self._tikz.styles[_style]
 
         # -------------------------------------------------------- 02
-        # check that there is no conflict within current tikz_context
-        e.validation.ShouldNotBeOneOf(
-            value=self.id, values=[_.id for _ in self._tikz.nodes],
-            msgs=[f"Node with id {self.id} is already registered in tikz_context"]
-        ).raise_if_failed()
-        # Register this new node
-        self._tikz.nodes.append(self)
-        # Also do the same for labels
-        for _l in self.labels:
-            e.validation.ShouldNotBeOneOf(
-                value=_l.id, values=[_.id for _ in self._tikz.nodes],
-                msgs=[f"Label with id {_l.id} "
-                      f"is already registered in tikz_context"]
-            ).raise_if_failed()
-            # Register this new label as it is also a node ... but only if id is present
-            self._tikz.nodes.append(_l)
-        # Also do the same for pins
-        for _p in self.pins:
-            e.validation.ShouldNotBeOneOf(
-                value=_p.id, values=[_.id for _ in self._tikz.nodes],
-                msgs=[f"Pin with id {_p.id} "
-                      f"is already registered in tikz_context"]
-            ).raise_if_failed()
-            # Register this new pin as it is also a node ... but only if id is present
-            self._tikz.nodes.append(_p)
-
-        # -------------------------------------------------------- 03
         # the token to return
         if self._at is None:
             _ret = "node "
@@ -1659,7 +1660,7 @@ class Node(_Node):
         if self.id is not None:
             _ret += f"({self.id})"
 
-        # -------------------------------------------------------- 04
+        # -------------------------------------------------------- 03
         # make options
         _options = []
         if self.pos_on_last_path is not None:
@@ -1687,67 +1688,19 @@ class Node(_Node):
             _options.append(str(_p))
         _ret += "[" + ",".join(_options) + "] "
 
-        # -------------------------------------------------------- 05
+        # -------------------------------------------------------- 04
         # finally, add text value if supplied
         if self.text is not None:
             _ret += "{" + self.text + "}"
         else:
             _ret += "{}"
 
-        # -------------------------------------------------------- 06
+        # -------------------------------------------------------- 05
         # return
         return _ret
 
-    @property
-    @util.CacheResult
-    def labels(self) -> t.List[Label]:
-        # labels and pins
-        # Section 13.9 The Label and Pin Options
-        # label=[⟨options⟩]⟨angle⟩:⟨text⟩
-        # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
-        return []
-
-    @property
-    @util.CacheResult
-    def pins(self) -> t.List[Pin]:
-        # labels and pins
-        # Section 13.9 The Label and Pin Options
-        # label=[⟨options⟩]⟨angle⟩:⟨text⟩
-        # pin=[⟨options⟩]⟨angle⟩:⟨text⟩
-        return []
-
     def position_at(self, other: t.Union[Point, str]) -> "Node":
         self @ other  # check __matmul__
-        return self
-
-    def add_label(self, label: Label) -> "Node":
-        """
-        Section 13.9 The Label and Pin Options
-        label=[⟨options⟩]⟨angle⟩:⟨text⟩
-        """
-        if label._node is not None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The label is already used by node {label._node.id}"
-                ]
-            )
-        label._node = self
-        self.labels.append(label)
-        return self
-
-    def add_pin(self, pin: Pin) -> "Node":
-        """
-        Section 13.9 The Label and Pin Options
-        pin=[⟨options⟩]⟨angle⟩:⟨text⟩
-        """
-        if pin._node is not None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    f"The pin is already used by node {pin._node.id}"
-                ]
-            )
-        pin._node = self
-        self.pins.append(pin)
         return self
 
 
@@ -1870,8 +1823,15 @@ class Path:
         return _ret + ";"
 
     def add_node(self, node: _Node) -> "Path":
-        self.connectome += [node]
-        return self
+        # todo: if not needed remove this method
+        raise e.code.CodingError(
+            msgs=["Although adding nodes in path is possible but for now we block it",
+                  "Prefer registering nodes directly with TikZ"]
+        )
+        # the below code works and new nodes to path
+        # for now we comment it
+        # self.connectome += [node]
+        # return self
 
     def add_point(self, point: Point) -> "Path":
         self.connectome += [point]
@@ -2517,15 +2477,11 @@ class Path:
 @dataclasses.dataclass
 class TikZ(LaTeX):
 
-    @property
-    @util.CacheResult
-    def paths(self) -> t.List[Path]:
-        return []
+    nodes: t.List[Node] = dataclasses.field(default_factory=list)
 
     @property
     @util.CacheResult
-    def nodes(self) -> t.List[_Node]:
-        # A cached container for nodes with id ...
+    def paths(self) -> t.List[Path]:
         return []
 
     @property
@@ -2558,6 +2514,20 @@ class TikZ(LaTeX):
                 msgs=["Do not call this twice as self.items will be populated again"]
             )
 
+        # process all nodes and add them at start
+        _nodes_def = []
+        for _n in self.nodes:
+            _pins_or_labels = []
+            if bool(_n.labels):
+                _pins_or_labels.extend(_n.labels)
+            if bool(_n.pins):
+                _pins_or_labels.extend(_n.pins)
+            for _p_or_l in _pins_or_labels:
+                if _p_or_l.id is not None:
+                    _nodes_def.append(str(_p_or_l))
+            _nodes_def.append(str(_n))
+        _nodes_def = "\n".join(_nodes_def) + "\n"
+
         # keep reference for _tikz ...
         # __str__ is like build, so we do these assignments here
         for _p in self.paths:
@@ -2566,7 +2536,7 @@ class TikZ(LaTeX):
             self._items.append(str(_p))
 
         # return
-        return super().__str__()
+        return _nodes_def + super().__str__()
 
     def init_validate(self):
         # call super
@@ -2577,6 +2547,36 @@ class TikZ(LaTeX):
             raise e.validation.NotAllowed(
                 msgs=["label field is not usable with TikZ so do not set it"]
             )
+
+        # check if id provided .... and also detect if duplicate
+        _n_ids = []
+        for _n in self.nodes:
+            _n_id = _n.id
+            if _n_id is None:
+                raise e.code.NotAllowed(
+                    msgs=["Please supply id for node as this will be declared globally to be used by TikZ",
+                          "Only nodes that are declared on path or as pin or label can be used without id"]
+                )
+            e.validation.ShouldNotBeOneOf(
+                value=_n_id, values=_n_ids,
+                msgs=["The node id is already taken"]
+            ).raise_if_failed()
+            _n_ids.append(_n_id)
+            # this is because node can have pin and labels which also happen to be special nodes
+            _pins_or_labels = []
+            if bool(_n.pins):
+                _pins_or_labels.extend(_n.pins)
+            if bool(_n.labels):
+                _pins_or_labels.extend(_n.labels)
+            for _p_or_l in _pins_or_labels:
+                _p_or_l_id = _p_or_l.id
+                if _p_or_l_id is None:
+                    continue
+                e.validation.ShouldNotBeOneOf(
+                    value=_p_or_l_id, values=_n_ids,
+                    msgs=["The pin/label node id is already taken"]
+                ).raise_if_failed()
+                _n_ids.append(_p_or_l_id)
 
     def add_paths(self, paths: t.List[Path]) -> "TikZ":
         for _p in paths:
