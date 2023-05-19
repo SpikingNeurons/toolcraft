@@ -909,7 +909,7 @@ class Anchor(enum.Enum):
                 )
         # if node is provided make sure that id is available
         if node is not None:
-            if node.id is None:
+            if node.name is None:
                 e.code.CodingError(
                     msgs=["Please use node's that have id defined ..."]
                 )
@@ -928,7 +928,7 @@ class Anchor(enum.Enum):
                 if node is None:
                     return f"anchor={angle}"
                 else:
-                    return f"{node.id}.{angle}"
+                    return f"{node.name}.{angle}"
             if self is self.side:
                 if side is None:
                     raise e.validation.NotAllowed(
@@ -940,7 +940,7 @@ class Anchor(enum.Enum):
                 if node is None:
                     return f"anchor=side {side}"
                 else:
-                    return f"{node.id}.side {side}"
+                    return f"{node.name}.side {side}"
             if self is self.corner:
                 if corner is None:
                     raise e.validation.NotAllowed(
@@ -952,7 +952,7 @@ class Anchor(enum.Enum):
                 if node is None:
                     return f"anchor=corner {corner}"
                 else:
-                    return f"{node.id}.corner {corner}"
+                    return f"{node.name}.corner {corner}"
             if self is self.inner_point:
                 if inner_point is None:
                     raise e.validation.NotAllowed(
@@ -964,7 +964,7 @@ class Anchor(enum.Enum):
                 if node is None:
                     return f"anchor=inner point {inner_point}"
                 else:
-                    return f"{node.id}.inner point {inner_point}"
+                    return f"{node.name}.inner point {inner_point}"
             if self is self.outer_point:
                 if outer_point is None:
                     raise e.validation.NotAllowed(
@@ -976,7 +976,7 @@ class Anchor(enum.Enum):
                 if node is None:
                     return f"anchor=outer point {inner_point}"
                 else:
-                    return f"{node.id}.outer point {inner_point}"
+                    return f"{node.name}.outer point {inner_point}"
 
         # ----------------------------------------------------- 03
         # _is_non_intuitive
@@ -1009,7 +1009,7 @@ class Anchor(enum.Enum):
             if node is None:
                 return f"anchor={self.value}"
             else:
-                return f"{node.id}.{self.value}"
+                return f"{node.name}.{self.value}"
 
         # ----------------------------------------------------- 04
         # if `node` is not provided then do not use `of` behaviour and use kwarg
@@ -1024,9 +1024,9 @@ class Anchor(enum.Enum):
             # provided as `node distance`
             else:
                 if offset is None:
-                    return f"{self.value} of={node.id}"
+                    return f"{self.value} of={node.name}"
                 else:
-                    return f"{self.value} of={node.id}, node distance={offset}"
+                    return f"{self.value} of={node.name}, node distance={offset}"
 
         # ----------------------------------------------------- 05
         raise e.code.CodingError(
@@ -1228,7 +1228,7 @@ class PointOnNode(Point):
             )
 
         # expecting node id to be available
-        if self.node.id is None:
+        if self.node.name is None:
             raise e.validation.NotAllowed(
                 msgs=[
                     "Cannot provide point on this node as it does not have "
@@ -1275,10 +1275,10 @@ class _Node(abc.ABC):
     # we are keeping this mandatory but latex does not need it
     # having unique name allows debugging
     # todo: add mechanism to auto generate id when made optional
-    id: str
+    name: str = None
 
     # refer section 17.4: The Node Text
-    text: str
+    text: str = None
 
     @property
     def pt_center(self) -> PointOnNode:
@@ -1411,7 +1411,8 @@ class Label(_Node):
             )
         _l = "label={"
         _options = []
-        _options.append(f"name={self.id}")
+        if bool(self.name):
+            _options.append(f"name={self.name}")
         if self.distance is not None:
             _options.append(f"label distance={self.distance}")
         if self.style is not None:
@@ -1422,7 +1423,10 @@ class Label(_Node):
             _l += str(self.anchor.value)
         if self.angle is not None:
             _l += str(self.angle)
-        _l += f":{self.text}" + "}"
+        if bool(self.text):
+            _l += f":{self.text}" + "}"
+        else:
+            _l += "}"
         return _l
 
 
@@ -1468,7 +1472,8 @@ class Pin(_Node):
             )
         _l = "pin={"
         _options = []
-        _options.append(f"name={self.id}")
+        if bool(self.name):
+            _options.append(f"name={self.name}")
         if self.distance is not None:
             _options.append(f"pin distance={self.distance}")
         if self.style is not None:
@@ -1481,7 +1486,10 @@ class Pin(_Node):
             _l += str(self.anchor.value)
         if self.angle is not None:
             _l += str(self.angle)
-        _l += f":{self.text}" + "}"
+        if bool(self.text):
+            _l += f":{self.text}" + "}"
+        else:
+            _l += "}"
         return _l
 
 
@@ -1573,7 +1581,7 @@ class Node(_Node):
     allow_upside_down: bool = False
 
     labels: t.List[Label] = dataclasses.field(default_factory=list)
-    pins: t.List[Label] = dataclasses.field(default_factory=list)
+    pins: t.List[Pin] = dataclasses.field(default_factory=list)
 
     def __post_init__(self):
 
@@ -1599,7 +1607,7 @@ class Node(_Node):
                 if _l._node is not None:
                     raise e.validation.NotAllowed(
                         msgs=[
-                            f"The label is already used by node {_l._node.id}"
+                            f"The label is already used by node {_l._node.name}"
                         ]
                     )
                 _l._node = self
@@ -1608,7 +1616,7 @@ class Node(_Node):
                 if _p._node is not None:
                     raise e.validation.NotAllowed(
                         msgs=[
-                            f"The pin is already used by node {_p._node.id}"
+                            f"The pin is already used by node {_p._node.name}"
                         ]
                     )
                 _p._node = self
@@ -1657,8 +1665,8 @@ class Node(_Node):
             _ret = f"node at {self._at} "
 
         # add id if specified
-        if self.id is not None:
-            _ret += f"({self.id})"
+        if bool(self.name):
+            _ret += f"({self.name})"
 
         # -------------------------------------------------------- 03
         # make options
@@ -1889,7 +1897,7 @@ class Path:
 
         """
         if isinstance(to, _Node):
-            to = f"({to.id})"
+            to = f"({to.name})"
         if bool(nodes):
             self.connectome += [connect_type, nodes, to]
         else:
@@ -1937,7 +1945,7 @@ class Path:
 
         """
         if isinstance(to, _Node):
-            to = f"({to.id})"
+            to = f"({to.name})"
         if control2 is None:
             _p = f"..controls{control1}.."
         else:
@@ -1958,7 +1966,7 @@ class Path:
         special syntax is available for them.
         """
         if isinstance(corner, _Node):
-            corner = f"({corner.id})"
+            corner = f"({corner.name})"
         self.connectome += [f"rectangle {corner}"]
         return self
 
@@ -2086,7 +2094,7 @@ class Path:
             if ystep is not None:
                 raise e.validation.NotAllowed(msgs=["Please do not use ystep as you are using step"])
         if isinstance(corner, _Node):
-            corner = f"({corner.id})"
+            corner = f"({corner.name})"
         _options = []
         if step is not None:
             _options.append(f"step={step}")
@@ -2112,9 +2120,9 @@ class Path:
         \path ... parabola[〈options〉]bend〈bend coordinate〉〈coordinate or cycle〉 ...;
         """
         if isinstance(to, _Node):
-            to = f"({to.id})"
+            to = f"({to.name})"
         if isinstance(bend, _Node):
-            bend = f"({bend.id})"
+            bend = f"({bend.name})"
         _options = []
         if bend_pos is not None:
             _options.append(f"bend pos={bend_pos}")
@@ -2147,7 +2155,7 @@ class Path:
         or cosine curve whose end points are not multiples of π/2.
         """
         if isinstance(to, _Node):
-            to = f"({to.id})"
+            to = f"({to.name})"
         self.connectome += [f"sin {to}"]
         return self
 
@@ -2160,7 +2168,7 @@ class Path:
         or cosine curve whose end points are not multiples of π/2.
         """
         if isinstance(to, _Node):
-            to = f"({to.id})"
+            to = f"({to.name})"
         self.connectome += [f"cos {to}"]
         return self
 
@@ -2337,7 +2345,7 @@ class Path:
 
         """
         if isinstance(to, _Node):
-            to = f"({to.id})"
+            to = f"({to.name})"
         _t = []
         if out_ is not None:
             _t.append(f"out={out_}")
@@ -2492,6 +2500,12 @@ class TikZ(LaTeX):
                 f"\\tikzstyle{{{_k}}}=[{_s}]"
             )
         _ret.append("\\begin{tikzpicture}")
+
+        # process all nodes and add them at start
+        for _n in self.nodes:
+            _ret.append("\\" + str(_n) + " ;")
+
+        # return
         return "\n".join(_ret)
 
     @property
@@ -2514,20 +2528,6 @@ class TikZ(LaTeX):
                 msgs=["Do not call this twice as self.items will be populated again"]
             )
 
-        # process all nodes and add them at start
-        _nodes_def = []
-        for _n in self.nodes:
-            _pins_or_labels = []
-            if bool(_n.labels):
-                _pins_or_labels.extend(_n.labels)
-            if bool(_n.pins):
-                _pins_or_labels.extend(_n.pins)
-            for _p_or_l in _pins_or_labels:
-                if _p_or_l.id is not None:
-                    _nodes_def.append(str(_p_or_l))
-            _nodes_def.append(str(_n))
-        _nodes_def = "\n".join(_nodes_def) + "\n"
-
         # keep reference for _tikz ...
         # __str__ is like build, so we do these assignments here
         for _p in self.paths:
@@ -2536,7 +2536,7 @@ class TikZ(LaTeX):
             self._items.append(str(_p))
 
         # return
-        return _nodes_def + super().__str__()
+        return super().__str__()
 
     def init_validate(self):
         # call super
@@ -2551,7 +2551,7 @@ class TikZ(LaTeX):
         # check if id provided .... and also detect if duplicate
         _n_ids = []
         for _n in self.nodes:
-            _n_id = _n.id
+            _n_id = _n.name
             if _n_id is None:
                 raise e.code.NotAllowed(
                     msgs=["Please supply id for node as this will be declared globally to be used by TikZ",
@@ -2569,7 +2569,7 @@ class TikZ(LaTeX):
             if bool(_n.labels):
                 _pins_or_labels.extend(_n.labels)
             for _p_or_l in _pins_or_labels:
-                _p_or_l_id = _p_or_l.id
+                _p_or_l_id = _p_or_l.name
                 if _p_or_l_id is None:
                     continue
                 e.validation.ShouldNotBeOneOf(
@@ -2652,7 +2652,7 @@ class TikZ(LaTeX):
         Check section 49.4 Predefined Nodes
         """
         # bounding box of the current picture
-        _node = Node(id="current bounding box")
+        _node = Node(name="current bounding box")
         # noinspection PyProtectedMember
         _node._tikz = self
         return _node
@@ -2663,7 +2663,7 @@ class TikZ(LaTeX):
         Check section 49.4 Predefined Nodes
         """
         # bounding box of the current path
-        _node = Node(id="current path bounding box")
+        _node = Node(name="current path bounding box")
         # noinspection PyProtectedMember
         _node._tikz = self
         return _node
@@ -2674,7 +2674,7 @@ class TikZ(LaTeX):
         Check section 49.4 Predefined Nodes
         """
         # ...
-        _node = Node(id="current page")
+        _node = Node(name="current page")
         # noinspection PyProtectedMember
         _node._tikz = self
         return _node

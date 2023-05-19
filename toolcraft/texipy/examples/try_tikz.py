@@ -24,16 +24,16 @@ def make_label_nodes(_tikz: tikz.TikZ) -> t.Dict[str, t.Dict[int, tikz.Node]]:
     _path = tikz.Path()
 
     _path.move_to(tikz.Point2D(_WIDTH * 0.5, _HEIGHT * 0.05))
-    _hw_hidden_node = tikz.Node(id="hw")
+    _hw_hidden_node = tikz.Node(name="hw")
     _path.add_node(_hw_hidden_node)
     _path.move_to(tikz.Point2D(_WIDTH * 0.95, _HEIGHT * 0.5))
-    _lsb_hidden_node = tikz.Node(id="lsb")
+    _lsb_hidden_node = tikz.Node(name="lsb")
     _path.add_node(_lsb_hidden_node)
     _path.move_to(tikz.Point2D(_WIDTH * 0.5, _HEIGHT * 0.95))
-    _id_hidden_node = tikz.Node(id="id")
+    _id_hidden_node = tikz.Node(name="id")
     _path.add_node(_id_hidden_node)
     _path.move_to(tikz.Point2D(_WIDTH * 0.05, _HEIGHT * 0.5))
-    _msb_hidden_node = tikz.Node(id="msb")
+    _msb_hidden_node = tikz.Node(name="msb")
     _path.add_node(_msb_hidden_node)
 
     # make nodes
@@ -43,17 +43,17 @@ def make_label_nodes(_tikz: tikz.TikZ) -> t.Dict[str, t.Dict[int, tikz.Node]]:
     _ret['hw'] = {}
     _path.move_to(_hw_hidden_node.pt_center)
     _ret['hw'][1] = tikz.Node(
-        id="hw01", text=symbols.labelwithlk('hw', '1')
+        name="hw01", text=symbols.labelwithlk('hw', '1')
     )
     _path.add_node(_ret['hw'][1])
     _ret['hw'][0] = tikz.Node(
-        id="hw00",
+        name="hw00",
         text=symbols.labelwithlk('hw', '0'),
         anchor=tikz.Anchor.left(offset=_WIDTH * 0.15),
     )
     _path.add_node(_ret['hw'][0])
     _ret['hw'][2] = tikz.Node(
-        id="hw02",
+        name="hw02",
         text=symbols.labelwithlk('hw', '2'),
         anchor=tikz.Anchor.right(offset=_WIDTH * 0.15),
     )
@@ -63,13 +63,13 @@ def make_label_nodes(_tikz: tikz.TikZ) -> t.Dict[str, t.Dict[int, tikz.Node]]:
     _ret['lsb'] = {}
     _path.move_to(_lsb_hidden_node.pt_center)
     _ret['lsb'][1] = tikz.Node(
-        id="lsb01",
+        name="lsb01",
         text=symbols.labelwithlk('lsb', '1'),
         anchor=tikz.Anchor.below(offset=_WIDTH * 0.1),
     )
     _path.add_node(_ret['lsb'][1])
     _ret['lsb'][0] = tikz.Node(
-        id="lsb00",
+        name="lsb00",
         text=symbols.labelwithlk('lsb', '0'),
         anchor=tikz.Anchor.above(offset=_WIDTH * 0.1),
     )
@@ -79,28 +79,28 @@ def make_label_nodes(_tikz: tikz.TikZ) -> t.Dict[str, t.Dict[int, tikz.Node]]:
     _ret['id'] = {}
     _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][0] = tikz.Node(
-        id="id00",
+        name="id00",
         text=symbols.labelwithlk('id', '0'),
         anchor=tikz.Anchor.left(offset=_WIDTH * 0.2),
     )
     _path.add_node(_ret['id'][0])
     _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][1] = tikz.Node(
-        id="id01",
+        name="id01",
         text=symbols.labelwithlk('id', '1'),
         anchor=tikz.Anchor.left(offset=_WIDTH * 0.2 / 5),
     )
     _path.add_node(_ret['id'][1])
     _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][2] = tikz.Node(
-        id="id02",
+        name="id02",
         text=symbols.labelwithlk('id', '2'),
         anchor=tikz.Anchor.right(offset=_WIDTH * 0.2 / 5),
     )
     _path.add_node(_ret['id'][2])
     _path.move_to(_id_hidden_node.pt_center)
     _ret['id'][3] = tikz.Node(
-        id="id03",
+        name="id03",
         text=symbols.labelwithlk('id', '3'),
         anchor=tikz.Anchor.right(offset=_WIDTH * 0.2),
     )
@@ -110,13 +110,13 @@ def make_label_nodes(_tikz: tikz.TikZ) -> t.Dict[str, t.Dict[int, tikz.Node]]:
     _ret['msb'] = {}
     _path.move_to(_msb_hidden_node.pt_center)
     _ret['msb'][1] = tikz.Node(
-        id="msb01",
+        name="msb01",
         text=symbols.labelwithlk('msb', '1'),
         anchor=tikz.Anchor.below(offset=_WIDTH * 0.1),
     )
     _path.add_node(_ret['msb'][1])
     _ret['msb'][0] = tikz.Node(
-        id="msb00",
+        name="msb00",
         text=symbols.labelwithlk('msb', '0'),
         anchor=tikz.Anchor.above(offset=_WIDTH * 0.1),
     )
@@ -221,7 +221,7 @@ def make_point_nodes(
                 str(_iths[_label * 4 + _p]), str(_label))
             _node = tikz.Node(
                 style=_point_style,
-                id=f"point{_label}x{_p}" + ("xS" if apply_style else ""),
+                name=f"point{_label}x{_p}" + ("xS" if apply_style else ""),
                 text=f"\\footnotesize{{{_node_text}}}"
             )
             _path.add_node(_node)
@@ -307,7 +307,7 @@ def make_edges(
     # make legend
     _legend_path = tikz.Path()
     _ambig_legend_node = tikz.Node(
-        id="ambignode", anchor=tikz.Anchor.below(offset=_HEIGHT * 0.01),
+        name="ambignode", anchor=tikz.Anchor.below(offset=_HEIGHT * 0.01),
         text=FontSize.scriptsize("Ambiguous labels"),
         style=tikz.Style(
             shape=tikz.Rectangle(
@@ -318,7 +318,7 @@ def make_edges(
     _legend_path.move_to(_label_nodes['hw'][2].south)
     _legend_path.add_node(_ambig_legend_node)
     _nonambig_legend_node = tikz.Node(
-        id="nonambignode", anchor=tikz.Anchor.below(offset=_HEIGHT * 0.01),
+        name="nonambignode", anchor=tikz.Anchor.below(offset=_HEIGHT * 0.01),
         text=FontSize.scriptsize("Learnable labels"),
         style=tikz.Style(
             shape=tikz.Rectangle(
