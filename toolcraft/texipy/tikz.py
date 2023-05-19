@@ -2625,17 +2625,18 @@ class TikZ(LaTeX):
         self,
         width: Scalar = Scalar(1, 'textwidth'),
         height: Scalar = Scalar(1.5, 'textwidth'),
-        step: Scalar = Scalar(0.05, 'textwidth'),
+        step: Scalar = Scalar((1-0.05)/20, 'textwidth'),
+        color: Color = Color.yellow,
     ) -> "TikZ":
         _path = Path(
             style=Style(
                 draw=DrawOptions(
-                    color=Color.yellow,
+                    color=color,
                 )
             )
         ).move_to(
             Point2D(Scalar(0, 'cm'), Scalar(0, 'cm'))
-        ).grid(
+        ).draw_grid(
             corner=Point2D(width, height),
             step=step,
         ).move_to(
