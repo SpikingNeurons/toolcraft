@@ -160,11 +160,15 @@ class Icon(enum.Enum):
     vdots = enum.auto()
     ddots = enum.auto()
 
-    # https://mirror.informatik.hs-fulda.de/tex-archive/macros/latex/required/psnfss/psnfss2e.pdf
-    ding_cmark = enum.auto()
-    ding_xmark = enum.auto()
-    ding_cmarkb = enum.auto()
-    ding_xmarkb = enum.auto()
+    # https://ctan.kako-dev.de/macros/latex/required/psnfss/psnfss2e.pdf
+    ding_cmark = enum.auto()  # ✓
+    ding_cmarkb = enum.auto()  # ✔
+    ding_xmark = enum.auto()  # ✗
+    ding_xmarkb = enum.auto()  # ✘
+    ding_club = enum.auto()  # ♣
+    ding_diamond = enum.auto()  # ♦
+    ding_heart = enum.auto()  # ♥
+    ding_spade = enum.auto()  # ♠
 
     @property
     def latex_cmd(self) -> str:
@@ -175,16 +179,20 @@ class Icon(enum.Enum):
                 _new_cmd += _.capitalize()
             _cmd = _new_cmd
         elif _cmd.startswith("ding_"):
-            if _cmd == "ding_cmark":
-                _cmd = "ding{51}"
-            elif _cmd == "ding_cmarkb":
-                _cmd = "ding{52}"
-            elif _cmd == "ding_xmark":
-                _cmd = "ding{55}"
-            elif _cmd == "ding_xmarkb":
-                _cmd = "ding{56}"
-            else:
-                raise e.code.CodingError(msgs=[f"Unknown {_cmd}"])
+            _dict = {
+                "ding_cmark": 51,
+                "ding_cmarkb": 52,
+                "ding_xmark": 55,
+                "ding_xmarkb": 56,
+                "ding_club": 168,
+                "ding_diamond": 169,
+                "ding_heart": 170,
+                "ding_spade": 171,
+            }
+            try:
+                _cmd = f"ding{{{_dict[_cmd]}}}"
+            except KeyError:
+                raise e.code.CodingError(msgs=[f"Unknown ding {_cmd}"])
         else:
             ...
         return "\\" + _cmd
@@ -787,9 +795,21 @@ class IncludeGraphics(LaTeX):
 
 
 @dataclasses.dataclass
+class FBox(LaTeX):
+
+    @property
+    def open_clause(self) -> str:
+        return "\\fbox{"
+
+    @property
+    def close_clause(self) -> str:
+        return "}"
+
+
+@dataclasses.dataclass
 class Figure(LaTeX):
     positioning: Positioning = None
-    alignment: FloatObjAlignment = None
+    alignment: FloatObjAlignment = FloatObjAlignment.centering
     caption: str = None
 
     # To scale graphics ...
@@ -829,7 +849,7 @@ class Figure(LaTeX):
 
         # test item
         e.validation.ShouldBeInstanceOf(
-            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
             msgs=[f"Only certain item types are allowed in {Figure}"],
         ).raise_if_failed()
 
@@ -840,7 +860,7 @@ class Figure(LaTeX):
 @dataclasses.dataclass
 class SubFigure(LaTeX):
     positioning: Positioning = None
-    alignment: FloatObjAlignment = None
+    alignment: FloatObjAlignment = FloatObjAlignment.centering
     caption: str = None
     width: float = None
 
@@ -878,7 +898,7 @@ class SubFigure(LaTeX):
 
         # test item
         e.validation.ShouldBeInstanceOf(
-            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
             msgs=[f"Only certain item types are allowed in {SubFigure}"],
         ).raise_if_failed()
 
