@@ -623,13 +623,17 @@ class ArrowSpec:
             _start_tips = []
         if _end_tips is None:
             _end_tips = []
-        if not isinstance(_start_tips, list):
+        if isinstance(_start_tips, (str, ArrowTip)):
             _start_tips = [_start_tips]
-        if not isinstance(_end_tips, list):
+        if isinstance(_end_tips, (str, ArrowTip)):
             _end_tips = [_end_tips]
 
         # ------------------------------------------------ 02
-        return f"arrows={{{' '.join(_start_tips)}-{' '.join(_end_tips)}}}"
+        return f"arrows={{" \
+               f"{' '.join([str(_) for _ in _start_tips])}" \
+               f"-" \
+               f"{' '.join([str(_) for _ in _end_tips])}" \
+               f"}}"
 
 
 class Cap(enum.Enum):
@@ -2831,17 +2835,17 @@ class TikZ(LaTeX):
       but this will make tex file verbose :(
       Need to do in TikZ class .... this cannot be done in ArrowSpec
       We need this to define globally and can be achieved via fields here
-        \documentclass{article}
-        \usepackage{tikz}
-        \usetikzlibrary{arrows.meta}
-        \begin{document}
-            \begin{tikzpicture}[scale=2,ultra thick, >=Latex, shorten <=-1cm]
-            \draw[>->] (0pt,3ex) --(1cm,3ex) ;
-            \draw[|<->>|](0pt,2ex) --(1cm,2ex) ;
-            \draw[>->] (0pt,1ex) --(1cm,1ex) ;
-            \draw[|<<.<->|](0pt,0ex) --(1cm,0ex) ;
-            \end{tikzpicture}
-        \end{document}
+        \\documentclass{article}
+        \\usepackage{tikz}
+        \\usetikzlibrary{arrows.meta}
+        \\begin{document}
+            \\begin{tikzpicture}[scale=2,ultra thick, >=Latex, shorten <=-1cm]
+            \\draw[>->] (0pt,3ex) --(1cm,3ex) ;
+            \\draw[|<->>|](0pt,2ex) --(1cm,2ex) ;
+            \\draw[>->] (0pt,1ex) --(1cm,1ex) ;
+            \\draw[|<<.<->|](0pt,0ex) --(1cm,0ex) ;
+            \\end{tikzpicture}
+        \\end{document}
     """
 
     scale: float = None
