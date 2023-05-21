@@ -1212,7 +1212,7 @@ class Anchor(enum.Enum):
 
     def __call__(
         self,
-        node: "Node" = None, offset: Scalar = None,
+        node: "_Node" = None, offset: Scalar = None,
         angle: t.Union[int, float] = None,
         side: int = None, corner: int = None,
         inner_point: int = None, outer_point: int = None,
