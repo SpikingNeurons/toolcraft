@@ -138,7 +138,7 @@ def make_shaded_clusters(
                 color=Color.gray(intensity=30),
                 thickness=_WIDTH * 0.11,
                 rounded_corners=_WIDTH * 0.01,
-                arrow_def=tikz.ArrowDef(
+                arrow_def=tikz.ArrowSpec(
                     start_tips=tikz.ArrowTip.round_cap,
                     end_tips=tikz.ArrowTip.round_cap,
                 )
@@ -241,7 +241,7 @@ def make_edges(
         draw=tikz.DrawOptions(
             color=Color.green,
             thickness=tikz.Thickness.thin,
-            arrow_def=tikz.ArrowDef(
+            arrow_def=tikz.ArrowSpec(
                 end_tips=tikz.ArrowTip.latex,
             )
         )
@@ -251,7 +251,7 @@ def make_edges(
             color=Color.red,
             dash_pattern=tikz.DashPattern.dashed,
             thickness=tikz.Thickness.thin,
-            arrow_def=tikz.ArrowDef(
+            arrow_def=tikz.ArrowSpec(
                 end_tips=tikz.ArrowTip.latex,
             )
         )

@@ -165,9 +165,275 @@ class SnakeOptions(t.NamedTuple):
         return ",".join(_options)
 
 
+@dataclasses.dataclass
+class WidthFactor:
+
+    dimension: Scalar
+    line_width_factor: t.Union[int, float] = None
+    outer_factor: t.Union[int, float] = None
+
+    def __post_init__(self):
+        # validate
+        if self.outer_factor is not None:
+            if self.line_width_factor is None:
+                raise e.validation.NotAllowed(
+                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                )
+
+    def __str__(self):
+        _ret = f"{self.dimension}"
+        if self.line_width_factor is not None:
+            _ret += f" {self.line_width_factor}"
+            if self.outer_factor is not None:
+                _ret += f" {self.outer_factor}"
+        else:
+            if self.outer_factor is not None:
+                raise e.validation.NotAllowed(
+                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                )
+        return _ret
+
+
+@dataclasses.dataclass
+class AngleWidthFactor:
+    angle: t.Union[int, float]
+    dimension: Scalar
+    line_width_factor: t.Union[int, float] = None
+    outer_factor: t.Union[int, float] = None
+
+    def __post_init__(self):
+        # validate
+        if self.outer_factor is not None:
+            if self.line_width_factor is None:
+                raise e.validation.NotAllowed(
+                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                )
+
+    def __str__(self):
+        _ret = f"{self.angle}:{self.dimension}"
+        if self.line_width_factor is not None:
+            _ret += f" {self.line_width_factor}"
+            if self.outer_factor is not None:
+                _ret += f" {self.outer_factor}"
+        else:
+            if self.outer_factor is not None:
+                raise e.validation.NotAllowed(
+                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                )
+        return _ret
+
+
+@dataclasses.dataclass
+class LengthFactor:
+
+    dimension: Scalar
+    length_factor: t.Union[int, float] = None
+    line_width_factor: t.Union[int, float] = None
+
+    def __post_init__(self):
+        # validate
+        if self.line_width_factor is not None:
+            if self.length_factor is None:
+                raise e.validation.NotAllowed(
+                    msgs=["You supplied line_width_factor so make sure to supply length_factor"]
+                )
+
+    def __str__(self):
+        _ret = f"{self.dimension}"
+        if self.length_factor is not None:
+            _ret += f" {self.length_factor}"
+            if self.line_width_factor is not None:
+                _ret += f" {self.line_width_factor}"
+        else:
+            if self.line_width_factor is not None:
+                raise e.validation.NotAllowed(
+                    msgs=["You supplied line_width_factor so make sure to supply length_factor"]
+                )
+        return _ret
+
+
+@dataclasses.dataclass
+class ArrowTipScale:
+    """
+    Section 16.3.2 Scaling
+    /pgf/arrows keys/scale=〈factor〉 (no default, initially 1)
+    /pgf/arrows keys/scale length=〈factor〉 (no default, initially 1)
+    /pgf/arrows keys/scale width=〈factor〉 (no default, initially 1)
+    """
+    scale: t.Union[int, float]
+    length: bool = True
+    width: bool = True
+
+    def __post_init__(self):
+        if not self.length and not self.width:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "Either one or both length and width should be True"
+                ]
+            )
+
+    def __str__(self):
+        _ret = "scale"
+        if self.length:
+            _ret += " length"
+        if self.width:
+            _ret += " width"
+        _ret += f"={self.scale}"
+        return _ret
+
+
+@dataclasses.dataclass
+class ArrowTipSize:
+    """
+    Section 16.3.1 Size
+    /pgf/arrow keys/length=〈dimension〉〈 line width factor〉〈 outer factor〉 (no default)
+    /pgf/arrow keys/width=〈dimension〉〈 line width factor〉〈 outer factor〉 (no default)
+    /pgf/arrow keys/width'=〈dimension〉〈 length factor〉〈 line width factor〉 (no default)
+    /pgf/arrow keys/inset=〈dimension〉〈 line width factor〉〈 outer factor〉 (no default)
+    /pgf/arrow keys/inset'=〈dimension〉〈 length factor〉〈 line width factor〉 (no default)
+    /pgf/arrow keys/angle=〈angle〉:〈dimension〉〈 line width factor〉〈 outer factor〉 (no default)
+    /pgf/arrow keys/angle'=〈angle〉 (no default)
+    """
+    length: WidthFactor = None
+    width: WidthFactor = None
+    width_: LengthFactor = None
+    inset: WidthFactor = None
+    inset_: LengthFactor = None
+    angle: AngleWidthFactor = None
+    angle_: t.Union[int, float] = None
+
+    def __post_init__(self):
+        if self.width is not None:
+            if self.width_ is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "We assume that either width or width_ can be used. But they cannot be used simultaneously."
+                    ]
+                )
+        if self.inset is not None:
+            if self.inset_ is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "We assume that either inset or inset_ can be used. But they cannot be used simultaneously."
+                    ]
+                )
+        if self.angle is not None:
+            if self.angle_ is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "We assume that either angle or angle_ can be used. But they cannot be used simultaneously."
+                    ]
+                )
+
+    def __str__(self) -> str:
+        _options = []
+        if self.length is not None:
+            _options.append(f"length={self.length}")
+        if self.width is not None:
+            _options.append(f"width={self.width}")
+        if self.width_ is not None:
+            _options.append(f"width'={self.width_}")
+        if self.inset is not None:
+            _options.append(f"inset={self.inset}")
+        if self.inset_ is not None:
+            _options.append(f"inset'={self.inset_}")
+        if self.angle is not None:
+            _options.append(f"angle={self.angle}")
+        if self.angle_ is not None:
+            _options.append(f"angle'={self.angle_}")
+        return ", ".join(_options)
+
+
+@dataclasses.dataclass
+class ArrowTipLineStyle:
+    """
+    The arrow tip is made up of line ..... this decides the end style of that line
+
+    Section 16.3.7 Line Styling
+    /pgf/arrow keys/line cap=〈round or butt〉 (no default)
+    /pgf/arrow keys/line join=〈round or miter〉 (no default)
+    /pgf/arrow keys/round (no value)
+    /pgf/arrow keys/sharp (no value)
+    /pgf/arrow keys/line width=〈dimension〉〈 line width factor〉〈 outer factor〉 (no default)
+    /pgf/arrow keys/line width'=〈dimension〉〈 length factor〉 (no default)
+    """
+
+    # round means ArrowTipLineStyle(cap='round', join='round')
+    # sharp means ArrowTipLineStyle(cap='butt', join='miter')
+    cap_join: t.Union[
+        t.Literal['sharp', 'round'],
+        t.Tuple[t.Optional[t.Literal['round', 'butt']], t.Optional[t.Literal['round', 'miter']]],
+    ] = None
+    line_width: WidthFactor = None
+    line_width_: LengthFactor = None
+
+    def __post_init__(self):
+        if self.line_width is not None and self.line_width_ is not None:
+            raise e.validation.NotAllowed(
+                msgs=["Both line_width and line_width_ cannot be supplied simultaneously"]
+            )
+        if self.line_width_ is not None:
+            if self.line_width_.line_width_factor is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "arrow tip line_width_ does not support line_width_factor"]
+                )
+
+    def __str__(self):
+        _ret = []
+        if self.cap_join is not None:
+            if self.cap_join in ['sharp', 'round']:
+                _ret.append(self.cap_join)
+            else:
+                _cap, _join = self.cap_join
+                if _cap is not None:
+                    _ret.append(f"line cap={_cap}")
+                if _join is not None:
+                    _ret.append(f"line join={_join}")
+        if bool(self.line_width):
+            _ret.append(f"line width={self.line_width}")
+        if bool(self.line_width_):
+            _ret.append(f"line width'={self.line_width_}")
+        return ", ".join(_ret)
+
+
+class ArrowTipBending(enum.Enum):
+    """
+    Section 16.3.8 Bending and Flexing
+
+    /pgf/arrow keys/quick (no value)
+    /pgf/arrow keys/flex=〈factor〉 (default 1)
+    /pgf/arrow keys/flex'=〈factor〉 (default 1)
+    /pgf/arrow keys/bend (no value)
+    """
+
+    quick = enum.auto()
+    flex = enum.auto()
+    flex_ = enum.auto()
+    bend = enum.auto()
+
+    def __call__(self, factor: t.Union[int, float] = None):
+        if self in [self.quick, self.bend]:
+            if factor is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[f"Do not use factor argument for tip {self.name}"]
+                )
+            return self.name
+        else:
+            _ret = 'flex'
+            if self is self.flex_:
+                _ret += "'"
+            if factor is not None:
+                _ret += f"={factor}"
+            return _ret
+
+    def __str__(self):
+        return self()
+
+
 class ArrowTip(enum.Enum):
     """
-    Check section 18: Arrow Tip Library
+    Section 16.5 Reference: Arrow Tips
     """
     # special i.e. no arrow tip
     none = ""
@@ -175,33 +441,26 @@ class ArrowTip(enum.Enum):
     end_arrow = '>'  # defined/redefined through ArrowDef.end_arrow_kind
     start_arrow = '<'  # used swapped version of ArrowDef.end_arrow_kind
 
+    # Section 16.4.2 Specifying Paddings
+    sep = "_"
+    # Section 16.4.3 Specifying the Line End
+    line_end = '.'
+
     # 18.1: Triangular Arrow Tips
-    latex = "latex'"
-    latex_reversed = "latex' reversed"
-    stealth = "stealth'"
-    stealth_reversed = "stealth' reversed"
+    latex = "Latex"
+    stealth = "Stealth"
     triangle_90 = 'triangle 90'
-    triangle_90_reversed = 'triangle 90 reversed'
     triangle_60 = 'triangle 60'
-    triangle_60_reversed = 'triangle 60 reversed'
     triangle_45 = 'triangle 45'
-    triangle_45_reversed = 'triangle 45 reversed'
     open_triangle_90 = 'open triangle 90'
-    open_triangle_90_reversed = 'open triangle 90 reversed'
     open_triangle_60 = 'open triangle 60'
-    open_triangle_60_reversed = 'open triangle 60 reversed'
     open_triangle_45 = 'open triangle 45'
-    open_triangle_45_reversed = 'open triangle 45 reversed'
 
     # 18.2: Barbed Arrow Tips
     angle_90 = 'angle 90'
-    angle_90_reversed = 'angle 90 reversed'
     angle_60 = 'angle 60'
-    angle_60_reversed = 'angle 60 reversed'
     angle_45 = 'angle 45'
-    angle_45_reversed = 'angle 45 reversed'
     hooks = 'hooks'
-    hooks_reversed = 'hooks reversed'
 
     # 18.3: Bracket-Like Arrow Tips
     square_bracket_open = '['
@@ -220,85 +479,157 @@ class ArrowTip(enum.Enum):
 
     # 18.6: Partial Arrow Tips
     left_to = "left to"
-    left_to_reversed = "left to reversed"
     right_to = "right to"
-    right_to_reversed = "right to reversed"
     left_hook = "left hook"
-    left_hook_reversed = "left hook reversed"
     right_hook = "right hook"
-    right_hook_reversed = "right hook reversed"
 
     # 18.7: Line Caps
     # only visible when line width is too big i.e. say <line width=1ex>
     round_cap = "round cap"
     butt_cap = "butt cap"
     triangle_90_cap = "triangle 90 cap"
-    triangle_90_cap_reversed = "triangle 90 cap reversed"
     fast_cap = "fast cap"
-    fast_cap_reversed = "fast cap reversed"
+
+    def __call__(
+        self,
+        # Section 16.3.1 Size
+        size: ArrowTipSize = None,
+
+        # Section 16.3.2 Scaling
+        scale: ArrowTipScale = None,
+
+        # Section 16.3.3 Arc Angles
+        arc: t.Union[int, float] = None,
+
+        # Section 16.3.4 Slanting
+        slant: t.Union[int, float] = None,
+
+        # Section 16.3.5 Reversing, Halving, Swapping
+        reversed_: bool = False,
+        harpoon: bool = False,
+        swap: bool = False,
+        left: bool = False,  # A shorthand for harpoon.
+        right: bool = False,  # A shorthand for harpoon, swap.
+
+        # Section 16.3.6 Coloring
+        color: Color = None,
+        fill: Color = None,
+        open_: bool = False,  # A shorthand for fill=Color.none.
+
+        # Section 16.3.7 Line Styling
+        line_style: ArrowTipLineStyle = None,
+
+        # Section 16.3.8 Bending and Flexing
+        bending: ArrowTipBending = None,
+
+        # 16.4.2 Specifying Paddings
+        sep: t.Union[WidthFactor, True] = False
+
+    ) -> str:
+        # --------------------------------------
+        # args will not have any effect for sep and line_end
+        if self in [self.sep, self.line_end]:
+            return self.value
+
+        # --------------------------------------
+        # tip
+        _tip = self.value
+
+        # --------------------------------------
+        # options
+        _options = []
+        if bool(size):
+            _options.append(f"{size}")
+        if bool(scale):
+            _options.append(f"{scale}")
+        if arc is not None:
+            _options.append(f"arc={arc}")
+        if slant is not None:
+            _options.append(f"slant={slant}")
+        if reversed_:
+            _options.append("reversed")
+        if harpoon:
+            _options.append("harpoon")
+        if swap:
+            _options.append("swap")
+        if left:
+            _options.append("left")
+        if right:
+            _options.append("right")
+        if bool(color):
+            _options.append(f"color={color}")
+        if bool(fill):
+            _options.append(f"fill={fill}")
+        if open_:
+            _options.append("open")
+        if bool(line_style):
+            _options.append(line_style)
+        if bool(bending):
+            _options.append(str(bending))
+        if bool(sep):
+            if isinstance(sep, WidthFactor):
+                _options.append(f"sep={sep}")
+            else:
+                _options.append("sep")
+
+        # --------------------------------------
+        # return
+        _ret = _tip
+        if bool(_options):
+            _ret += f"[{', '.join(_options)}]"
+        return _ret
 
     def __str__(self) -> str:
-        return self.value
+        return self()
 
 
 @dataclasses.dataclass
-class ArrowDef:
+class ArrowSpec:
     """
-    todo: currently multiple arrows at start and end tip is not supported
-          we need to implement redefining arrow syntax `>=⟨end arrow kind⟩` but that
-          will force to have same repetitive symbol ... also note that arrow enum
-          values that are of length more than 1 cannot be chained ... so only one tip
-          can be used and multiple is possible by syntax `>=⟨end arrow kind⟩` but then
-          we lose having various symbols
+    Section 16.4 Arrow Tip Specifications
+            16.4.1 Syntax
+            16.4.2 Specifying Paddings
+            16.4.3 Specifying the Line End
+            16.4.4 Defining Shorthands
+            16.4.5 Scoping of Arrow Keys
+
+    todo: we still have not supported Section 16.4.4 Defining Shorthands
+      most likely we cannot and dont want to as we will use python lambdas instead
+      but this will make tex file verbose :(
+      Need to do in TikZ class
     """
-    # tikz does not support start arrow kind, but you get swapped version of
-    # this when used `<` instead of `>`
-    end_arrow_kind: ArrowTip = None
-    shorten_start: Scalar = None
-    shorten_end: Scalar = None
-    start_tips: t.Union[ArrowTip, t.List[ArrowTip], str, t.List[str]] = None
-    end_tips: t.Union[ArrowTip, t.List[ArrowTip], str, t.List[str]] = None
+    start_tips: t.Union[
+        str, ArrowTip, t.List[t.Union[str, ArrowTip]],
+    ] = None
+    end_tips: t.Union[
+        str, ArrowTip, t.List[t.Union[str, ArrowTip]],
+    ] = None
+
+    def __post_init__(self):
+        # validation
+        if self.start_tips is None and self.end_tips is None:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "Either one of start or end tips should be provided"
+                ]
+            )
 
     def __str__(self) -> str:
-        _ret = []
-
         # ------------------------------------------------ 01
-        # end_arrow_kind
-        # todo: currently we are adding this to path options but we might
-        #   also want only this part in scope options (\\begin{scope}[>=latex])
-        #   and not the entire arrow defination
-        if self.end_arrow_kind is not None:
-            _ret.append(f">={self.end_arrow_kind}")
+        _ret = []
+        _start_tips = self.start_tips
+        _end_tips = self.end_tips
+        if _start_tips is None:
+            _start_tips = []
+        if _end_tips is None:
+            _end_tips = []
+        if not isinstance(_start_tips, list):
+            _start_tips = [_start_tips]
+        if not isinstance(_end_tips, list):
+            _end_tips = [_end_tips]
 
         # ------------------------------------------------ 02
-        # shorten the start and end of arrow ... with tips provided this will already
-        # shorten automatically bit you can control it further even when tips are
-        # not provided
-        if self.shorten_start is not None:
-            _ret.append(f"shorten <={self.shorten_start}")
-        if self.shorten_end is not None:
-            _ret.append(f"shorten >={self.shorten_end}")
-
-        # ------------------------------------------------ 03
-        # make tip formatter
-        _tip_format = ""
-        if self.start_tips is not None:
-            _tips = [self.start_tips] if isinstance(self.start_tips, ArrowTip) \
-                else self.start_tips
-            for _t in _tips:
-                _tip_format += str(_t)
-        _tip_format += '-'
-        if self.end_tips is not None:
-            _tips = [self.end_tips] if isinstance(self.end_tips, ArrowTip) \
-                else self.end_tips
-            for _t in _tips:
-                _tip_format += str(_t)
-        # i.e. when either start or end tips was provided
-        if _tip_format != '-':
-            _ret.append(_tip_format)
-
-        # ------------------------------------------------ 04
-        return ",".join(_ret)
+        return f"arrows={{{' '.join(_start_tips)}-{' '.join(_end_tips)}}}"
 
 
 class Cap(enum.Enum):
@@ -486,11 +817,12 @@ class DrawOptions(t.NamedTuple):
     color: t.Union[Color, str] = None
     opacity: t.Union[int, float] = None
     thickness: t.Union[Thickness, Scalar] = None
+    double_distance: Scalar = None
     cap: Cap = None
     join: Join = None
     dash_pattern: t.Union[DashPattern, t.List[t.Tuple[bool, Scalar]]] = None
     dash_phase: Scalar = None
-    arrow_def: ArrowDef = None
+    arrow_def: ArrowSpec = None
     rounded_corners: Scalar = None
     # switches off any rounding on subsequent corners of the path
     sharp_corners: bool = False
@@ -519,6 +851,8 @@ class DrawOptions(t.NamedTuple):
                 _options.append(str(self.thickness))
             else:
                 _options.append(f"line width={self.thickness}")
+        if self.double_distance is not None:
+            _options.append(f"double distance={self.double_distance}")
         if self.cap is not None:
             _options.append(str(self.cap))
         if self.join is not None:
@@ -1535,6 +1869,7 @@ class Node(_Node):
 
     # refer section 17.4: The Node Text
     text: str = None  # optional for Node
+    text_width: Scalar = None
 
     # style
     style: t.Union[str, Style] = None
@@ -1690,6 +2025,8 @@ class Node(_Node):
             _options.append(str(self.o_transform))
         if self.anchor is not None:
             _options.append(str(self.anchor))
+        if self.text_width is not None:
+            _options.append(f"text width={self.text_width}")
         for _l in self.labels:
             _options.append(str(_l))
         for _p in self.pins:
@@ -2433,6 +2770,9 @@ class Path:
         # *,
     ):
         """
+        Also read https://tex.stackexchange.com/questions/314301/tikz-when-will-i-need-to-use-edge-and-how-does-it-differ-from-the-conventional
+        for difference between edge and path draw
+
         14.17 The Node and Edge Operations
         17 Nodes and Edges
 
@@ -2484,6 +2824,28 @@ class Path:
 
 @dataclasses.dataclass
 class TikZ(LaTeX):
+    """
+
+    todo: we still have not supported Section 16.4.4 Defining Shorthands
+      most likely we cannot and dont want to as we will use python lambdas instead
+      but this will make tex file verbose :(
+      Need to do in TikZ class .... this cannot be done in ArrowSpec
+      We need this to define globally and can be achieved via fields here
+        \documentclass{article}
+        \usepackage{tikz}
+        \usetikzlibrary{arrows.meta}
+        \begin{document}
+            \begin{tikzpicture}[scale=2,ultra thick, >=Latex, shorten <=-1cm]
+            \draw[>->] (0pt,3ex) --(1cm,3ex) ;
+            \draw[|<->>|](0pt,2ex) --(1cm,2ex) ;
+            \draw[>->] (0pt,1ex) --(1cm,1ex) ;
+            \draw[|<<.<->|](0pt,0ex) --(1cm,0ex) ;
+            \end{tikzpicture}
+        \end{document}
+    """
+
+    scale: float = None
+    show_background_rectangle: bool = False
 
     nodes: t.List[Node] = dataclasses.field(default_factory=list)
 
@@ -2494,17 +2856,31 @@ class TikZ(LaTeX):
 
     @property
     def open_clause(self) -> str:
+        # ----------------------------------------
         _ret = []
+
+        # ----------------------------------------
+        # style defs
         for _k, _s in self.styles.items():
             _ret.append(
                 f"\\tikzstyle{{{_k}}}=[{_s}]"
             )
-        _ret.append("\\begin{tikzpicture}")
 
+        # ----------------------------------------
+        # tikz options
+        _options = []
+        if self.scale is not None:
+            _options.append(f"scale={self.scale}")
+        if self.show_background_rectangle:
+            _options.append("show background rectangle")
+        _ret.append(f"\\begin{{tikzpicture}}[{', '.join(_options)}]")
+
+        # ----------------------------------------
         # process all nodes and add them at start
         for _n in self.nodes:
             _ret.append("\\" + str(_n) + " ;")
 
+        # ----------------------------------------
         # return
         return "\n".join(_ret)
 

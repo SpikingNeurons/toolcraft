@@ -236,6 +236,9 @@ class Color(enum.Enum):
     # setting ⟨color⟩ to none disables filling/drawing locally
     none = "none"
 
+    # This special color is always available and always set to the current filling color of the graphic state.
+    pgffillcolor = "pgffillcolor"
+
     red = "red"
     green = "green"
     blue = "blue"
