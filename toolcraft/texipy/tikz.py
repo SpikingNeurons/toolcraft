@@ -1159,9 +1159,8 @@ class Anchor:
     we will assume use of positioning library ... so that offset becomes specification
     /tikz/above=〈specification〉 (default 0pt)
 
-    todo: We are ignoring this ... add support if needed
-    # 17.5.1 Positioning Nodes Using Anchors
-    # /tikz/anchor=〈anchor name〉 (no default)
+    17.5.1 Positioning Nodes Using Anchors (Check PointOnNode)
+    /tikz/anchor=〈anchor name〉 (no default)
     # base = "base"
     # mid = "mid"
     # center = "center"
@@ -1174,13 +1173,13 @@ class Anchor:
     # south_east = "south east"
     # south_west = "south west"
     # text = "text"
-    # text_mid = "mid"
-    # text_mid_east = "mid east"
-    # text_mid_west = "mid west"
-    # text_base = "base"
-    # text_base_east = "base east"
-    # text_base_west = "base west"
-    # text_lower = "lower"  # available when node has shape CircleSplit
+    # mid = "mid"
+    # mid_east = "mid east"
+    # mid_west = "mid west"
+    # base = "base"
+    # base_east = "base east"
+    # base_west = "base west"
+    # lower = "lower"  # available when node has shape CircleSplit
 
     Reason for allowing shit_x and shift_y for above
     -   It can be of the form 〈number or dimension 1〉 and 〈number or dimension 2.
@@ -1340,177 +1339,6 @@ class Anchor:
 
 
 @dataclasses.dataclass
-class NodePosition:
-
-    """
-    17.5 Positioning Nodes
-    """
-
-    # 17.5.1 Positioning Nodes Using Anchors
-    # 17.5.2 Basic Placement Options
-    # anchors
-    anchor: Anchor = None
-
-    # special anchors
-    # when any one of this field is specified we do not need type
-    angle: t.Union[int, float] = None  # available with any shape
-    side: int = None                   # available when node has shape regular polygon
-    corner: int = None                 # available when node has shape regular polygon
-    inner_point: int = None            # available when node has shape star
-    outer_point: int = None            # available when node has shape star
-
-    # node
-    node: "_Node" = None
-
-    def __post_init__(self):
-
-        # only one of this six should be specified
-        if sum(
-            [
-                self.angle is None,
-                self.side is None,
-                self.corner is None,
-                self.inner_point is None,
-                self.outer_point is None,
-                self.anchor is None,
-            ]
-        ) != 1:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "only one out of six fields should be specified",
-                    [
-                        'angle', 'side', 'corner', 'inner_point', 'outer_point', 'anchor'
-                    ]
-                ]
-            )
-
-        # if node is provided make sure that id is available
-        if self.node is not None:
-            if self.node.name is None:
-                e.code.CodingError(
-                    msgs=["Please use node's that have id defined ..."]
-                )
-
-    def __str__(self) -> str:
-        """
-
-        When node is supplied we will use `of` keyword
-
-        If `offset` is supplied
-          If node is supplied will be used as `node_distance`
-            [above of=<node>, node distance=<offset>]
-          Else will be used as above=<offset>
-        """
-        # ----------------------------------------------------- 01
-        # some vars
-        _type = self.type
-        _is_special = self.type.is_special
-        _is_non_intuitive = self.type.is_non_intuitive
-        _is_intuitive = self.type.is_intuitive
-
-        # ----------------------------------------------------- 02
-        # for special anchors
-        if _is_special:
-            if _type is AnchorType.angle:
-                if self.node is None:
-                    return f"anchor={self.angle}"
-                else:
-                    return f"{self.node.name}.{self.angle}"
-            if _type is AnchorType.side:
-                if self.node is None:
-                    return f"anchor=side {self.side}"
-                else:
-                    return f"{self.node.name}.side {self.side}"
-            if _type is AnchorType.corner:
-                if self.node is None:
-                    return f"anchor=corner {self.corner}"
-                else:
-                    return f"{self.node.name}.corner {self.corner}"
-            if self is self.inner_point:
-                if inner_point is None:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Please specify `inner_point` kwarg as you are using "
-                            f"special anchor {self}"
-                        ]
-                    )
-                if node is None:
-                    return f"anchor=inner point {inner_point}"
-                else:
-                    return f"{node.name}.inner point {inner_point}"
-            if self is self.outer_point:
-                if outer_point is None:
-                    raise e.validation.NotAllowed(
-                        msgs=[
-                            f"Please specify `outer_point` kwarg as you are using "
-                            f"special anchor {self}"
-                        ]
-                    )
-                if node is None:
-                    return f"anchor=outer point {inner_point}"
-                else:
-                    return f"{node.name}.outer point {inner_point}"
-
-        # ----------------------------------------------------- 03
-        # _is_non_intuitive
-        if _is_non_intuitive:
-            if angle is not None:
-                raise e.code.CodingError(
-                    msgs=[f"Please so not supply kwarg `angle` for non-intuitive "
-                          f"anchor {self}"]
-                )
-            if side is not None:
-                raise e.code.CodingError(
-                    msgs=[f"Please so not supply kwarg `side` for non-intuitive "
-                          f"anchor {self}"]
-                )
-            if corner is not None:
-                raise e.code.CodingError(
-                    msgs=[f"Please so not supply kwarg `corner` for non-intuitive "
-                          f"anchor {self}"]
-                )
-            if inner_point is not None:
-                raise e.code.CodingError(
-                    msgs=[f"Please so not supply kwarg `inner_point` for non-intuitive "
-                          f"anchor {self}"]
-                )
-            if outer_point is not None:
-                raise e.code.CodingError(
-                    msgs=[f"Please so not supply kwarg `outer_point` for non-intuitive "
-                          f"anchor {self}"]
-                )
-            if node is None:
-                return f"anchor={self.value}"
-            else:
-                return f"{node.name}.{self.value}"
-
-        # ----------------------------------------------------- 04
-        # if `node` is not provided then do not use `of` behaviour and use kwarg
-        # `offset` as `offset`
-        if _is_intuitive:
-            if node is None:
-                if offset is None:
-                    return f"{self.value}"
-                else:
-                    return f"{self.value}={offset}"
-            # if `node` is provided then use `of` and use kwarg `offset` if
-            # provided as `node distance`
-            else:
-                if offset is None:
-                    return f"{self.value} of={node.name}"
-                else:
-                    return f"{self.value} of={node.name}, node distance={offset}"
-
-        # ----------------------------------------------------- 05
-        raise e.code.CodingError(
-            msgs=[
-                f"Anchor {self} is neither intuitive, non-intuitive nor special ..."
-            ]
-        )
-
-
-
-@dataclasses.dataclass
 class Point(abc.ABC):
     """
     Point are like coordinate that are lightweight nodes without shape and `at` part
@@ -1520,11 +1348,6 @@ class Point(abc.ABC):
     This is same as
     node[shape=coordinate][⟨options⟩](⟨name⟩)at(⟨coordinate⟩){},
     """
-
-    def __post_init__(self):
-        # set var
-        # noinspection PyTypeChecker
-        self._tikz = None  # type: TikZ
 
     def __str__(self):
         raise e.code.NotAllowed(
@@ -1661,85 +1484,86 @@ class PointPolar(Point):
 @dataclasses.dataclass
 class PointOnNode(Point):
     """
-    Coordinate system: node cs (section 10.2.3)
-
-    Helps you get coordinates around/on Node with similar syntax as that of
-    <Point*> classes
-
-    Explicit:
-      \\node (shape) at (0,2) [draw] {|class Shape|};
-      \\draw (node cs:name=shape,anchor=north) |- (0,1);
-      \\draw (node cs:name=shape,angle=90) |- (0,1);
-    Implicit:
-      \\draw (shape.north) |- (0,1);
-      \\draw (shape.90) |- (0,1);
-
-    todo: When you do not supply node we assume it is previously defined shape on which
-      you are requesting anchor ... as in (first node.south).
+    17.5.1 Positioning Nodes Using Anchors (Check PointOnNode)
+    /tikz/anchor=〈anchor name〉 (no default)
+    # center = "center"
+    # east = "east"
+    # west = "west"
+    # north = "north"
+    # north_east = "north east"
+    # north_west = "north west"
+    # south = "south"
+    # south_east = "south east"
+    # south_west = "south west"
+    # mid = "mid"
+    # mid_east = "mid east"
+    # mid_west = "mid west"
+    # base = "base"
+    # base_east = "base east"
+    # base_west = "base west"
+    # text = "text"
+    # lower = "lower"  # available when node has shape CircleSplit
     """
     node: "_Node"
-    anchor: Anchor = None
-    angle: t.Union[int, float] = None
-    side: int = None
-    corner: int = None
-    inner_point: int = None
-    outer_point: int = None
+
+    anchor: t.Literal[
+        'center',
+        'east', 'west',
+        'north', 'north east', 'north west',
+        'south', 'south east', 'south west',
+        'mid', 'mid east', 'mid west',
+        'base', 'base east', 'base west',
+        'text', 'lower',
+    ] = None
+    angle: t.Union[int, float] = None  # available with any shape
+    side: int = None                   # available when node has shape regular polygon
+    corner: int = None                 # available when node has shape regular polygon
+    inner_point: int = None            # available when node has shape star
+    outer_point: int = None            # available when node has shape star
 
     def __post_init__(self):
-        # call super
-        super().__post_init__()
 
-        # test if one of four file is supplied
+        # only one of this six should be specified
         if sum(
-            [self.anchor is None, self.angle is None,
-             self.side is None, self.corner is None,
-             self.inner_point is None, self.outer_point is None]
-        ) == 3:
+            [
+                self.anchor is not None,
+                self.angle is not None,
+                self.side is not None,
+                self.corner is not None,
+                self.inner_point is not None,
+                self.outer_point is not None,
+            ]
+        ) != 1:
             raise e.validation.NotAllowed(
                 msgs=[
-                    f"Only supply only one of the six fields ..."
+                    "only one out of six fields should be specified",
+                    [
+                        'angle', 'side', 'corner', 'inner_point', 'outer_point', 'anchor'
+                    ]
                 ]
             )
 
-        # expecting node id to be available
-        if self.node.name is None:
-            raise e.validation.NotAllowed(
-                msgs=[
-                    "Cannot provide point on this node as it does not have "
-                    "`id` specified ..."
-                ]
-            )
-
-        # expecting anchor used to be non-intuitive
-        if self.anchor is not None:
-            if not self.anchor.is_non_intuitive:
-                raise e.validation.NotAllowed(
-                    msgs=["Only use non-intuitive anchor ... for special anchors use "
-                          "other fields of this dataclass"]
+        # if node is provided make sure that id is available
+        if self.node is not None:
+            if self.node.name is None:
+                e.code.CodingError(
+                    msgs=["Please use node's that have id defined ..."]
                 )
 
     def __str__(self) -> str:
         if self.anchor is not None:
-            # Note that if Anchor then __str__ can handle
-            # only if using non-intuitive anchors
-            return f"({self.anchor(node=self.node)})"
-        elif self.angle is not None:
-            # noinspection PyCallingNonCallable
-            return f"({Anchor.angle(node=self.node)})"
-        elif self.side is not None:
-            # noinspection PyCallingNonCallable
-            return f"({Anchor.side(node=self.node)})"
-        elif self.corner is not None:
-            # noinspection PyCallingNonCallable
-            return f"({Anchor.corner(node=self.node)})"
-        elif self.inner_point is not None:
-            # noinspection PyCallingNonCallable
-            return f"({Anchor.inner_point(node=self.node)})"
-        elif self.outer_point is not None:
-            # noinspection PyCallingNonCallable
-            return f"({Anchor.outer_point(node=self.node)})"
-        else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown {self}"])
+            return f"({self.node.name}.{self.anchor})"
+        if self.angle is not None:
+            return f"({self.node.name}.{self.angle})"
+        if self.side is not None:
+            return f"({self.node.name}.side {self.side})"
+        if self.corner is not None:
+            return f"({self.node.name}.corner {self.corner})"
+        if self.inner_point is not None:
+            return f"({self.node.name}.inner point {self.inner_point})"
+        if self.outer_point is not None:
+            return f"({self.node.name}.outer point {self.outer_point})"
+        raise e.code.ShouldNeverHappen(msgs=[f"Unknown {self}"])
 
 
 @dataclasses.dataclass
@@ -1759,71 +1583,71 @@ class _Node(abc.ABC):
 
     @property
     def pt_center(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.center)
+        return PointOnNode(node=self, anchor='center')
 
     @property
     def pt_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.east)
+        return PointOnNode(node=self, anchor='east')
 
     @property
     def pt_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.west)
+        return PointOnNode(node=self, anchor='west')
 
     @property
     def pt_north(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.north)
+        return PointOnNode(node=self, anchor='north')
 
     @property
     def pt_north_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.north_east)
+        return PointOnNode(node=self, anchor='north east')
 
     @property
     def pt_north_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.north_west)
+        return PointOnNode(node=self, anchor='north west')
 
     @property
     def pt_south(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.south)
+        return PointOnNode(node=self, anchor='south')
 
     @property
     def pt_south_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.south_east)
+        return PointOnNode(node=self, anchor='south east')
 
     @property
     def pt_south_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.south_west)
+        return PointOnNode(node=self, anchor='south west')
+
+    @property
+    def pt_mid(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor='mid')
+
+    @property
+    def pt_mid_east(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor='mid east')
+
+    @property
+    def pt_mid_west(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor='mid west')
+
+    @property
+    def pt_base(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor='base')
+
+    @property
+    def pt_base_east(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor='base east')
+
+    @property
+    def pt_base_west(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor='base west')
 
     @property
     def pt_text(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text)
+        return PointOnNode(node=self, anchor='text')
 
     @property
-    def pt_text_mid(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_mid)
-
-    @property
-    def pt_text_mid_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_mid_east)
-
-    @property
-    def pt_text_mid_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_mid_west)
-
-    @property
-    def pt_text_base(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_base)
-
-    @property
-    def pt_text_base_east(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_base_east)
-
-    @property
-    def pt_text_base_west(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_base_west)
-
-    @property
-    def pt_text_lower(self) -> PointOnNode:
-        return PointOnNode(node=self, anchor=Anchor.text_lower)
+    def pt_lower(self) -> PointOnNode:
+        return PointOnNode(node=self, anchor='lower')
 
     def pt_at_angle(self, angle: t.Union[int, float]) -> PointOnNode:
         return PointOnNode(node=self, angle=angle)
@@ -1859,11 +1683,7 @@ class _Node(abc.ABC):
         self.init()
 
     def init_validate(self):
-        if self.anchor is not None:
-            if not self.anchor.is_intuitive:
-                raise e.code.CodingError(
-                    msgs=["Only intuitive anchors are supported"]
-                )
+        ...
 
     def init(self):
         ...
@@ -1942,7 +1762,7 @@ class Label(_LabelPin):
         _l += "[" + ",".join(_options) + "]"
         if self.anchor is not None:
             # as the __str__ is formatted for normal options use self.anchor.value
-            _l += str(self.anchor.value)
+            _l += str(self.anchor)
         if self.angle is not None:
             _l += str(self.angle)
         if bool(self.text):
@@ -2323,7 +2143,7 @@ class Path:
             _options.append("use as bounding box")
         if self.clip:
             _options.append("clip")
-        _ret += "[" + ",".join(_options) + "] "
+        _ret += "[" + ", ".join(_options) + "] "
 
         # ---------------------------------------------------------- 03
         # process connectome
@@ -2578,11 +2398,10 @@ class Path:
 
     def draw_grid(
         self,
-        corner: t.Union[Point, _Node],
-        step: t.Union[int, float, Scalar, Point] = None,
-        xstep: t.Union[int, float, Scalar] = None,
-        ystep: t.Union[int, float, Scalar] = None,
-        rotate: t.Union[int, float] = None,
+        corner: t.Union[Point, _Node, t.Literal['cycle']],
+        step: t.Union[Scalar, Point] = None,
+        xstep: t.Union[Scalar] = None,
+        ystep: t.Union[Scalar] = None,
     ) -> "Path":
         """
         Section 14.8 The Grid Operation
@@ -2596,8 +2415,7 @@ class Path:
                 raise e.validation.NotAllowed(msgs=["Please do not use xstep as you are using step"])
             if ystep is not None:
                 raise e.validation.NotAllowed(msgs=["Please do not use ystep as you are using step"])
-        if isinstance(corner, _Node):
-            corner = f"({corner.name})"
+
         _options = []
         if step is not None:
             _options.append(f"step={step}")
@@ -2605,8 +2423,9 @@ class Path:
             _options.append(f"xstep={xstep}")
         if ystep is not None:
             _options.append(f"ystep={ystep}")
-        if rotate is not None:
-            _options.append(f"rotate={rotate}")
+
+        if isinstance(corner, _Node):
+            corner = f"({corner.name})"
 
         self._connectome += [f"grid [{','.join(_options)}] {corner}"]
         return self
@@ -3100,6 +2919,8 @@ class TikZ(LaTeX):
 
         _TIKZ_IN_WITH_CONTEXT = self
 
+        return self
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         global _TIKZ_IN_WITH_CONTEXT
 
@@ -3212,12 +3033,13 @@ class TikZ(LaTeX):
                 msgs=[f"Style with key {key} is already registered ..."]
             )
 
-    def show_debug_grid(
+    def add_debug_grid(
         self,
-        width: Scalar = Scalar(1, 'textwidth'),
-        height: Scalar = Scalar(1.5, 'textwidth'),
-        step: Scalar = Scalar((1-0.05)/20, 'textwidth'),
-        color: Color = Color.yellow,
+        corner1: Point2D = Point2D(Scalar(0), Scalar(0)),
+        corner2: Point2D = Point2D(Scalar(1, 'textwidth'), Scalar(1, 'textwidth')),
+        xstep: Scalar = Scalar(1, 'textwidth') / 10,
+        ystep: Scalar = Scalar(1, 'textwidth') / 10,
+        color: Color = Color.yellow(),
     ) -> "TikZ":
         _path = Path(
             style=Style(
@@ -3226,15 +3048,12 @@ class TikZ(LaTeX):
                 )
             )
         ).move_to(
-            Point2D(Scalar(0, 'cm'), Scalar(0, 'cm'))
+            corner1
         ).draw_grid(
-            corner=Point2D(width, height),
-            step=step,
+            corner=corner2, xstep=xstep, ystep=ystep,
         ).move_to(
-            Point2D(Scalar(0, 'cm'), Scalar(0, 'cm'))
+            corner1
         )
-        self.add_path(_path)
-
         return self
 
     def get_current_bounding_box(self) -> Node:
