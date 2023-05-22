@@ -1239,7 +1239,7 @@ class Anchor:
                 raise e.validation.NotAllowed(
                     msgs=["Since shift_x is not supplied please do not supply shift_y"]
                 )
-        if isinstance(self.of, _Node):
+        if isinstance(self.of, BaseNode):
             if self.of.name is None:
                 raise e.validation.NotAllowed(
                     msgs=[
@@ -1268,7 +1268,7 @@ class Anchor:
             _spec += f" and {self.shift_y}"
         if self.of is not None:
             _spec += " of "
-            if isinstance(self.of, _Node):
+            if isinstance(self.of, BaseNode):
                 _spec += f"{self.of.name}"
             elif isinstance(self.of, PointOnNode):
                 _spec += f"{self.of}"
@@ -1281,61 +1281,61 @@ class Anchor:
         return _ret
 
     @classmethod
-    def above(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="above", shift_x=shift_x, shift_y=shift_y, of=of)
+    def above(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="above", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def below(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="below", shift_x=shift_x, shift_y=shift_y, of=of)
+    def below(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="below", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="left", shift_x=shift_x, shift_y=shift_y, of=of)
+    def left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="left", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="right", shift_x=shift_x, shift_y=shift_y, of=of)
+    def right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="right", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def above_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="above left", shift_x=shift_x, shift_y=shift_y, of=of)
+    def above_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="above left", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def above_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="above right", shift_x=shift_x, shift_y=shift_y, of=of)
+    def above_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="above right", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def below_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="below left", shift_x=shift_x, shift_y=shift_y, of=of)
+    def below_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="below left", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def below_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="below right", shift_x=shift_x, shift_y=shift_y, of=of)
+    def below_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="below right", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def base_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="base left", shift_x=shift_x, shift_y=shift_y, of=of)
+    def base_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="base left", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def base_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="base right", shift_x=shift_x, shift_y=shift_y, of=of)
+    def base_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="base right", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def mid_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="mid left", shift_x=shift_x, shift_y=shift_y, of=of)
+    def mid_left(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="mid left", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def mid_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
-        return Anchor(name="mid right", shift_x=shift_x, shift_y=shift_y, of=of)
+    def mid_right(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
+        return Anchor(name="mid right", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
     @classmethod
-    def centered(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None) -> "Anchor":
+    def centered(cls, shift_x: Scalar = None, shift_y: Scalar = None, of: _ANCHOR_OF_TYPE = None, on_grid: bool = False) -> "Anchor":
         """
         shorthand for anchor=center ... i.e. above center anchor
         """
         raise e.code.CodingError(msgs=["needs testing ... not sure if shift and of options allowed"])
         # noinspection PyUnreachableCode
-        return Anchor(name="centered", shift_x=shift_x, shift_y=shift_y, of=of)
+        return Anchor(name="centered", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
 
 @dataclasses.dataclass
@@ -1504,7 +1504,7 @@ class PointOnNode(Point):
     # text = "text"
     # lower = "lower"  # available when node has shape CircleSplit
     """
-    node: "_Node"
+    node: "BaseNode"
 
     anchor: t.Literal[
         'center',
@@ -1567,7 +1567,7 @@ class PointOnNode(Point):
 
 
 @dataclasses.dataclass
-class _Node(abc.ABC):
+class BaseNode(abc.ABC):
 
     # id
     # we are keeping this mandatory but latex does not need it
@@ -1690,7 +1690,7 @@ class _Node(abc.ABC):
 
 
 @dataclasses.dataclass
-class _LabelPin(_Node):
+class _LabelPin(BaseNode):
 
     angle: t.Union[int, float] = None
     # todo: this also needs to go in tikz options global to tikz picture
@@ -1817,7 +1817,7 @@ class Pin(_LabelPin):
 
 
 @dataclasses.dataclass
-class Node(_Node):
+class Node(BaseNode):
     """
 
     14.17 The Node and Edge Operations
@@ -2153,7 +2153,7 @@ class Path:
         # ---------------------------------------------------------- 04
         return _ret + ";"
 
-    def add_node(self, node: _Node) -> "Path":
+    def add_node(self, node: BaseNode) -> "Path":
         # todo: if not needed remove this method
         raise e.code.CodingError(
             msgs=["Although adding nodes in path is possible but for now we block it",
@@ -2168,7 +2168,7 @@ class Path:
         self._connectome += [point]
         return self
 
-    def move_to(self, to: t.Union[Point, _Node]) -> "Path":
+    def move_to(self, to: t.Union[Point, BaseNode]) -> "Path":
         """
 
         Section 14.1 The Move-To Operation
@@ -2198,7 +2198,7 @@ class Path:
 
     def line_to(
         self,
-        to: t.Union[Point, _Node],
+        to: t.Union[Point, BaseNode],
         connect_type: t.Literal['--', '|-', '-|'] = '--',
         nodes: t.List[Node] = None
     ) -> "Path":
@@ -2219,7 +2219,7 @@ class Path:
                 and sets the nodes pos automatically and they get locked
 
         """
-        if isinstance(to, _Node):
+        if isinstance(to, BaseNode):
             to = f"({to.name})"
         if bool(nodes):
             self._connectome += [connect_type, nodes, to]
@@ -2244,7 +2244,7 @@ class Path:
 
     def curve_to(
         self,
-        to: t.Union[Point, _Node],
+        to: t.Union[Point, BaseNode],
         control1: Point, control2: Point = None,
         nodes: t.List[Node] = None,
     ) -> "Path":
@@ -2267,7 +2267,7 @@ class Path:
                 and sets the nodes pos automatically and they get locked
 
         """
-        if isinstance(to, _Node):
+        if isinstance(to, BaseNode):
             to = f"({to.name})"
         if control2 is None:
             _p = f"..controls{control1}.."
@@ -2279,7 +2279,7 @@ class Path:
             self._connectome += [_p, to]
         return self
 
-    def draw_rectangle(self, corner: t.Union[Point, _Node]) -> "Path":
+    def draw_rectangle(self, corner: t.Union[Point, BaseNode]) -> "Path":
         """
         Section 14.4 The Rectangle Operation
         \\path ... rectangle〈corner or cycle〉 ...;
@@ -2288,7 +2288,7 @@ class Path:
         cycle operation. However, since rectangles are needed so often, a
         special syntax is available for them.
         """
-        if isinstance(corner, _Node):
+        if isinstance(corner, BaseNode):
             corner = f"({corner.name})"
         self._connectome += [f"rectangle {corner}"]
         return self
@@ -2398,7 +2398,7 @@ class Path:
 
     def draw_grid(
         self,
-        corner: t.Union[Point, _Node, t.Literal['cycle']],
+        corner: t.Union[Point, BaseNode, t.Literal['cycle']],
         step: t.Union[Scalar, Point] = None,
         xstep: t.Union[Scalar] = None,
         ystep: t.Union[Scalar] = None,
@@ -2424,7 +2424,7 @@ class Path:
         if ystep is not None:
             _options.append(f"ystep={ystep}")
 
-        if isinstance(corner, _Node):
+        if isinstance(corner, BaseNode):
             corner = f"({corner.name})"
 
         self._connectome += [f"grid [{','.join(_options)}] {corner}"]
@@ -2432,8 +2432,8 @@ class Path:
 
     def draw_parabola(
         self,
-        to: t.Union[Point, _Node],
-        bend: t.Union[Point, _Node] = None,
+        to: t.Union[Point, BaseNode],
+        bend: t.Union[Point, BaseNode] = None,
         bend_pos: float = None,
         height: Scalar = None, bend_at_start: bool = False, bend_at_end: bool = False
     ) -> "Path":
@@ -2441,9 +2441,9 @@ class Path:
         Section 14.9 The Parabola operation
         \path ... parabola[〈options〉]bend〈bend coordinate〉〈coordinate or cycle〉 ...;
         """
-        if isinstance(to, _Node):
+        if isinstance(to, BaseNode):
             to = f"({to.name})"
-        if isinstance(bend, _Node):
+        if isinstance(bend, BaseNode):
             bend = f"({bend.name})"
         _options = []
         if bend_pos is not None:
@@ -2468,7 +2468,7 @@ class Path:
 
         return self
 
-    def draw_sin(self, to: t.Union[Point, _Node]) -> "Path":
+    def draw_sin(self, to: t.Union[Point, BaseNode]) -> "Path":
         """
         Section 14.10 The Sine and Cosine Operation
         \path ... sin〈coordinate or cycle〉 ...;
@@ -2476,7 +2476,7 @@ class Path:
         Note that there is no way to (conveniently) draw an interval on a sine
         or cosine curve whose end points are not multiples of π/2.
         """
-        if isinstance(to, _Node):
+        if isinstance(to, BaseNode):
             to = f"({to.name})"
         self._connectome += [f"sin {to}"]
         return self
@@ -2489,7 +2489,7 @@ class Path:
         Note that there is no way to (conveniently) draw an interval on a sine
         or cosine curve whose end points are not multiples of π/2.
         """
-        if isinstance(to, _Node):
+        if isinstance(to, BaseNode):
             to = f"({to.name})"
         self._connectome += [f"cos {to}"]
         return self
@@ -2617,7 +2617,7 @@ class Path:
 
     def to(
         self,
-        to: t.Union[Point, _Node],
+        to: t.Union[Point, BaseNode],
         *,
         out_: t.Union[int, float] = None,
         in_: t.Union[int, float] = None,
@@ -2666,7 +2666,7 @@ class Path:
         The above para can be done with `line_to()` and `curve_to()` methods.
 
         """
-        if isinstance(to, _Node):
+        if isinstance(to, BaseNode):
             to = f"({to.name})"
         _t = []
         if out_ is not None:
@@ -2869,6 +2869,8 @@ class TikZ(LaTeX):
         # ----------------------------------------
         # process all nodes and add them at start
         for _n in self._nodes:
+            if isinstance(_n, (Label, Pin)):
+                continue
             _ret.append("\\" + str(_n) + " ;")
 
         # ----------------------------------------
@@ -2933,7 +2935,7 @@ class TikZ(LaTeX):
 
         _TIKZ_IN_WITH_CONTEXT = None
 
-    def __getitem__(self, node_name: str) -> _Node:
+    def __getitem__(self, node_name: str) -> BaseNode:
         if node_name is None:
             raise e.validation.NotAllowed(
                 msgs=["item=None is not supported ..."]
@@ -2970,15 +2972,15 @@ class TikZ(LaTeX):
         # noinspection PyAttributeOutsideInit
         self._paths = []  # type: t.List[Path]
         # noinspection PyAttributeOutsideInit
-        self._nodes = []  # type: t.List[_Node]
+        self._nodes = []  # type: t.List[BaseNode]
 
-    def add_node(self, node: _Node) -> "TikZ":
+    def add_node(self, node: BaseNode) -> "TikZ":
         # -------------------------------------------------------
         # validate node
         if isinstance(node, Node):
             if node.name is None:
                 raise e.code.NotAllowed(
-                    msgs=["Please supply id for node as this will be declared globally to be used by TikZ",
+                    msgs=["Please supply name for node as this will be declared globally to be used by TikZ",
                           "Only nodes that are declared on path or as pin or label can be used without id"]
                 )
         e.validation.ShouldNotBeOneOf(
