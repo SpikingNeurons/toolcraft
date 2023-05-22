@@ -24,17 +24,6 @@ if False:
     from . import tikz
 
 
-class TextFmt(enum.Enum):
-    strikeout = "\\sout"  # requires \usepackage[normalem]{ulem}
-    italic = "\\itshape"
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __call__(self, text: str) -> str:
-        return f"{self}{{{text}}}"
-
-
 class ParaPos(enum.Enum):
     """
     https://www.overleaf.com/learn/latex/Tables
@@ -85,6 +74,27 @@ class ParaBox:
         return _ret
 
 
+class FontSize(enum.Enum):
+    """
+    Refer https://texblog.org/2012/08/29/changing-the-font-size-in-latex/
+
+    todo: currently inline is implemented ... later implement as environment too
+    """
+    Huge = "\\Huge"
+    huge = "\\huge"
+    LARGE = "\\LARGE"
+    Large = "\\Large"
+    large = "\\large"
+    normalsize = "\\normalsize"  # (default)
+    small = "\\small"
+    footnotesize = "\\footnotesize"
+    scriptsize = "\\scriptsize"
+    tiny = "\\tiny"
+
+    def __str__(self):
+        return self.value
+
+
 class Text:
     """
     Refer here for fonts and sizes
@@ -117,12 +127,16 @@ class Text:
         self.text = f"\\emph{{{self.text}}}"
         return self
 
-    def color(self, color: t.Union["Color", str]) -> "Text":
+    def color(self, color: "Color") -> "Text":
+        if color.intensity is not None:
+            raise e.validation.NotAllowed(
+                msgs=["Intensity use needs to be tested ... comment this check and test"]
+            )
         self.text = f"\\textcolor{{{color}}}{{{self.text}}}"
         return self
 
     def size(self, size: "FontSize") -> "Text":
-        self.text = size(self.text)
+        self.text = f"{{{size} {self.text}}}"
         return self
 
     def in_math(self) -> "Text":
@@ -214,7 +228,7 @@ class Font(enum.Enum):
         return self.value
 
 
-class Color(enum.Enum):
+class Color:
     """
 
     Refer:
@@ -233,67 +247,106 @@ class Color(enum.Enum):
         we have 19 colors below available
 
     """
-    # setting ⟨color⟩ to none disables filling/drawing locally
-    none = "none"
 
-    # This special color is always available and always set to the current filling color of the graphic state.
-    pgffillcolor = "pgffillcolor"
-
-    red = "red"
-    green = "green"
-    blue = "blue"
-    cyan = "cyan"
-    magenta = "magenta"
-
-    yellow = "yellow"
-    black = "black"
-    gray = "gray"
-    white = "white"
-    darkgray = "darkgray"
-
-    lightgray = "lightgray"
-    brown = "brown"
-    lime = "lime"
-    olive = "olive"
-    orange = "orange"
-
-    pink = "pink"
-    purple = "purple"
-    teal = "teal"
-    violet = "violet"
+    def __init__(self, name: str, intensity: t.Union[int, float] = None):
+        self.name = name
+        self.intensity = intensity
 
     def __str__(self) -> str:
-        return self.__call__()
-
-    def __call__(self, intensity: t.Union[int, float] = None) -> str:
-        if intensity is None:
-            return self.value
+        if self.intensity is None:
+            return self.name
         else:
-            return f"{self.value}!{intensity}"
+            return f"{self.name}!{self.intensity}"
 
+    @classmethod
+    def none(cls) -> "Color":
+        """
+        setting ⟨color⟩ to none disables filling/drawing locally
+        """
+        return Color("none")
 
-class FontSize(enum.Enum):
-    """
-    Refer https://texblog.org/2012/08/29/changing-the-font-size-in-latex/
+    @classmethod
+    def pgffillcolor(cls, intensity: t.Union[int, float] = None) -> "Color":
+        """
+        This special color is always available and always set to the current filling color of the graphic state.
+        """
+        return Color("pgffillcolor", intensity=intensity)
 
-    todo: currently inline is implemented ... later implement as environment too
-    """
-    Huge = "\\Huge"
-    huge = "\\huge"
-    LARGE = "\\LARGE"
-    Large = "\\Large"
-    large = "\\large"
-    normalsize = "\\normalsize"  # (default)
-    small = "\\small"
-    footnotesize = "\\footnotesize"
-    scriptsize = "\\scriptsize"
-    tiny = "\\tiny"
+    @classmethod
+    def red(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("red", intensity=intensity)
 
-    def __str__(self):
-        return self.value
+    @classmethod
+    def green(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("green", intensity=intensity)
 
-    def __call__(self, text: str) -> str:
-        return f"{{{self} {text}}}"
+    @classmethod
+    def blue(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("blue", intensity=intensity)
+
+    @classmethod
+    def cyan(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("cyan", intensity=intensity)
+
+    @classmethod
+    def magenta(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("magenta", intensity=intensity)
+
+    @classmethod
+    def yellow(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("yellow", intensity=intensity)
+
+    @classmethod
+    def black(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("black", intensity=intensity)
+
+    @classmethod
+    def gray(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("gray", intensity=intensity)
+
+    @classmethod
+    def white(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("white", intensity=intensity)
+
+    @classmethod
+    def darkgray(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("darkgray", intensity=intensity)
+
+    @classmethod
+    def lightgray(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("lightgray", intensity=intensity)
+
+    @classmethod
+    def brown(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("brown", intensity=intensity)
+
+    @classmethod
+    def lime(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("lime", intensity=intensity)
+
+    @classmethod
+    def olive(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("olive", intensity=intensity)
+
+    @classmethod
+    def orange(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("orange", intensity=intensity)
+
+    @classmethod
+    def pink(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("pink", intensity=intensity)
+
+    @classmethod
+    def purple(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("purple", intensity=intensity)
+
+    @classmethod
+    def teal(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("teal", intensity=intensity)
+
+    @classmethod
+    def violet(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("violet", intensity=intensity)
 
 
 class Scalar(t.NamedTuple):
