@@ -95,53 +95,56 @@ class FontSize(enum.Enum):
         return self.value
 
 
+@dataclasses.dataclass
 class Text:
     """
     Refer here for fonts and sizes
     + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
     """
+    text: t.Union[str, base.Base, "Icon"]
+    in_math: bool = False
+    size: "FontSize" = None
+    strikeout: bool = False
+    bold: bool = False
+    italic: bool = False
+    emphasis: bool = False
+    color: "Color" = None
+    use_text_cmd: bool = True
 
-    def __init__(self, text: t.Union[str, base.Base, "Icon"], no_text_cmd: bool = False):
-        self.no_text_cmd = no_text_cmd
-        self.text = text
+    def __post_init__(self):
+        if self.color is not None:
+            if self.color.intensity is not None:
+                raise e.validation.NotAllowed(
+                    msgs=["Intensity use needs to be tested ... comment this check and test"]
+                )
 
     def __str__(self) -> str:
-        if self.no_text_cmd:
-            return str(self.text)
+        _use_text_cmd = self.use_text_cmd
+        _ret = self.text
+        if self.in_math:
+            _ret = "\\(" + str(_ret) + "\\)"
+        if self.size is not None:
+            _ret = f"{self.size} {_ret}"
+        if self.strikeout:
+            _use_text_cmd = False
+            _ret = f"\\sout{{{_ret}}}"
+        if self.bold:
+            _use_text_cmd = False
+            _ret = f"\\textbf{{{_ret}}}"
+        if self.italic:
+            _use_text_cmd = False
+            _ret = f"\\textit{{{_ret}}}"
+        if self.emphasis:
+            _use_text_cmd = False
+            _ret = f"\\emph{{{_ret}}}"
+        if self.color is not None:
+            _use_text_cmd = False
+            _ret = f"\\textcolor{{{self.color}}}{{{_ret}}}"
+        if _use_text_cmd:
+            _ret = f"\\text{{{_ret}}}"
         else:
-            return f"\\text{{{self.text}}}"
-
-    def strikeout(self) -> "Text":
-        self.text = f"\\sout{{{self.text}}}"
-        return self
-
-    def bold(self) -> "Text":
-        self.text = f"\\textbf{{{self.text}}}"
-        return self
-
-    def italic(self) -> "Text":
-        self.text = f"\\textit{{{self.text}}}"
-        return self
-
-    def emphasis(self) -> "Text":
-        self.text = f"\\emph{{{self.text}}}"
-        return self
-
-    def color(self, color: "Color") -> "Text":
-        if color.intensity is not None:
-            raise e.validation.NotAllowed(
-                msgs=["Intensity use needs to be tested ... comment this check and test"]
-            )
-        self.text = f"\\textcolor{{{color}}}{{{self.text}}}"
-        return self
-
-    def size(self, size: "FontSize") -> "Text":
-        self.text = f"{{{size} {self.text}}}"
-        return self
-
-    def in_math(self) -> "Text":
-        self.text = "\\(" + str(self.text) + "\\)"
-        return self
+            _ret = f"{{{_ret}}}"
+        return _ret
 
 
 class Icon(enum.Enum):
@@ -211,8 +214,8 @@ class Icon(enum.Enum):
             ...
         return "\\" + _cmd
 
-    def as_text(self, no_text_cmd: bool = True) -> Text:
-        return Text(self.latex_cmd, no_text_cmd=no_text_cmd)
+    def as_text(self, use_text_cmd: bool = False) -> Text:
+        return Text(self.latex_cmd, use_text_cmd=use_text_cmd)
 
     def __str__(self) -> str:
         return self.latex_cmd

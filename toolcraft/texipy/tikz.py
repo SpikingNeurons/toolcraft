@@ -22,7 +22,7 @@ import numpy as np
 
 from .. import error as e
 from .. import util
-from .__base__ import LaTeX, Color, Font, Scalar, Positioning, FloatObjAlignment
+from .__base__ import LaTeX, Color, Font, Scalar, Positioning, FloatObjAlignment, Text
 
 _ANCHOR_OF_TYPE = t.Union["_Node", "PointOnNode", "Point2D"]
 
@@ -1857,7 +1857,7 @@ class Node(BaseNode):
     """
 
     # refer section 17.4: The Node Text
-    text: str = None  # optional for Node
+    text: t.Union[str, Text] = None  # optional for Node
     text_width: Scalar = None
 
     # style
@@ -1987,7 +1987,7 @@ class Node(BaseNode):
         # -------------------------------------------------------- 04
         # finally, add text value if supplied
         if self.text is not None:
-            _ret += "{" + self.text + "}"
+            _ret += "{" + f"{self.text}" + "}"
         else:
             _ret += "{}"
 

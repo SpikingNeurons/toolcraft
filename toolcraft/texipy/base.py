@@ -303,8 +303,10 @@ class Command(Base):
         if self.default_value is not None:
             _cmd += f"[{self.default_value}]"
         _latex = self.latex_in_math if math_mode else self.latex
-        if isinstance(_latex, (Text, str)):
+        if isinstance(_latex, str):
             _cmd += f"{{{str(_latex)}}}"
+        elif isinstance(_latex, Text):
+            _cmd += f"{str(_latex)}"
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
         return _cmd
