@@ -1,5 +1,6 @@
 import dataclasses
 import os
+import types
 import typing as t
 import pathlib
 import datetime
@@ -9,8 +10,6 @@ import enum
 from .. import logger
 from .. import util
 from .. import error as e
-
-from . import helper
 from . import base
 
 _LOGGER = logger.get_logger()
@@ -808,6 +807,7 @@ class Document(LaTeX):
         # ----------------------------------------------- 03
         # make pdf if requested
         if make_pdf:
+            from . import helper
             helper.make_pdf_with_pdflatex(
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /

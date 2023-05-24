@@ -11,6 +11,7 @@ import inspect
 import abc
 import re
 import datetime
+import inspect
 
 from toolcraft import error as e
 
@@ -23,12 +24,49 @@ if False:
 class Base(abc.ABC):
 
     def __post_init__(self):
-        self._var_name = None
+        _stack = inspect.stack()
+        self._var_name = _stack[2].code_context[0].split("=")[0].replace(" ", "")
         self.init_validate()
         self.init()
 
     def init_validate(self):
-        ...
+
+        _var_name = self._var_name
+
+        if _var_name in [
+            "label",
+        ]:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Symbol {_var_name!r} cannot be used as it is reserved "
+                    f"by latex system"
+                ]
+            )
+
+        if _var_name.find("_") != -1:
+            raise e.code.CodingError(
+                msgs=[
+                    f"We do not support _ in command name as latex does not "
+                    f"allow that in command names rename the module variable "
+                    f"{_var_name!r}."
+                ]
+            )
+        if bool(re.search(r'\d', _var_name)):
+            raise e.code.CodingError(
+                msgs=[
+                    f"We do not support numbers as latex does not "
+                    f"allow that in command names rename the module "
+                    f"variable {_var_name}."
+                ]
+            )
+
+        if _var_name.lower() != _var_name:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Please do not use capital letters",
+                    f"Rename {_var_name} to {_var_name.lower()}"
+                ]
+            )
 
     def init(self):
         ...
@@ -53,31 +91,16 @@ class Acronym(Base):
 
     @property
     def short(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\acrshort{{{self._var_name}}}"
 
     @property
     def long(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\acrlong{{{self._var_name}}}"
 
     @property
     def full(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\acrfull{{{self._var_name}}}"
 
@@ -86,11 +109,6 @@ class Acronym(Base):
         return self.short
 
     def latex_def(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         _lines = [
             f"\\newacronym"
             f"{{{self._var_name}}}{{{self.short_name}}}{{{self.full_name}}}",
@@ -119,51 +137,26 @@ class Glossary(Base):
 
     @property
     def normal(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\gls{{ge{self._var_name}}}"
 
     @property
     def cap(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\Gls{{ge{self._var_name}}}"
 
     @property
     def pl(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\glspl{{ge{self._var_name}}}"
 
     @property
     def cappl(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\Glspl{{ge{self._var_name}}}"
 
     @property
     def desc(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\glsdesc{{ge{self._var_name}}}"
 
@@ -172,11 +165,6 @@ class Glossary(Base):
         return self.normal
 
     def latex_def(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         _lines = [
             f"\\newglossaryentry{{ge{self._var_name}}}",
             "{",
@@ -234,8 +222,9 @@ class Command(Base):
     def latex_in_math(self) -> str:
         return f"\\({str(self.latex)}\\)"
 
-    def __post_init__(self):
-        super().__post_init__()
+    def init_validate(self):
+
+        super().init_validate()
 
         if self.latex is None:
             raise e.validation.NotAllowed(
@@ -249,11 +238,6 @@ class Command(Base):
                 )
 
     def __str__(self):
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\{self._var_name}"
 
@@ -322,21 +306,11 @@ class Symbol(Command):
 
     @property
     def desc(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\{self._var_name+'Desc'}"
 
     @property
     def nm(self) -> str:
-        if self._var_name is None:
-            raise e.code.CodingError(
-                msgs=["Should be assigned by now ...",
-                      f"Did you forgot to call {make_symbols_tex_file}"]
-            )
         # to be used by python code ...
         return f"\\{self._var_name+'NM'}"
 
@@ -356,68 +330,3 @@ class Symbol(Command):
         if self.description is not None:
             _lines += [f"\\newcommand*{{\\{self._var_name+'Desc'}}}{{{self.description}}}"]
         return "\n".join(_lines)
-
-
-def make_symbols_tex_file():
-    _frame = inspect.stack()[1]
-    _mod = inspect.getmodule(_frame[0])
-    _tex_file = pathlib.Path(_frame.filename)
-    _tex_file = _tex_file.parent / _tex_file.name.replace(".py", ".tex")
-
-    _tex_lines = [
-        # f"% >> generated on {datetime.datetime.now().ctime()}",
-        "% Remember to add this before \\begin{document}..",
-        "% \\usepackage[acronym]{glossaries}%",
-        "% \\makeglossaries%",
-        "% Remember to add this before \\end{document}..",
-        "% \\clearpage",
-        "% \\printglossary[type=\\acronymtype]",
-        "% \\printglossary",
-        "",
-    ]
-    for _ in dir(_mod):
-        if _ in [
-            "label",
-        ]:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Symbol {_!r} cannot be used as it is reserved by latex system"
-                ]
-            )
-        _v = getattr(_mod, _)
-        if isinstance(_v, Base):
-            # noinspection PyProtectedMember
-            if _v._var_name is None:
-                if _.find("_") != -1:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"We do not support _ as latex does not allow that "
-                            f"in command names rename the module variable "
-                            f"{_} in module {_mod}"
-                        ]
-                    )
-                if bool(re.search(r'\d', _)):
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"We do not support numbers as latex does not "
-                            f"allow that in command names rename the module "
-                            f"variable {_} in module {_mod}"
-                        ]
-                    )
-
-                _v._var_name = _
-                if _.lower() != _:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Please do not use capital letters",
-                            f"Rename {_} to {_.lower()}"
-                        ]
-                    )
-            _tex_lines.append(
-                _v.latex_def()
-            )
-            _tex_lines.append("")
-
-    _tex_file.write_text(
-        "\n".join(_tex_lines)
-    )

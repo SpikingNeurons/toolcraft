@@ -14,10 +14,10 @@ Aim:
   https://mkofinas.github.io/tikz_tutorial.pdf
 """
 
-from . import helper
 from .__base__ import *
-from .base import Command, Glossary, Acronym, Symbol, make_symbols_tex_file
+from .base import Command, Glossary, Acronym, Symbol
 from . import beamer
 from . import tikz
 from . import tikz_cd
 from . import table
+from . import helper
