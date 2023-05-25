@@ -178,7 +178,7 @@ class Glossary(Base):
             f"\\newglossaryentry{{ge{self._var_name}}}",
             "{",
             f"    name={self.name},",
-            f"    description={{{self.description}}}",
+            f"    description={self.description}",
         ]
         if self.text is not None:
             _lines += [
