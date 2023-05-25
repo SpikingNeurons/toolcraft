@@ -19,13 +19,22 @@ from toolcraft import error as e
 if False:
     from . import TextType
 
+_ALL_VAR_NAMES = []
+
 
 @dataclasses.dataclass
 class Base(abc.ABC):
 
     def __post_init__(self):
+        global _ALL_VAR_NAMES
         _stack = inspect.stack()
         self._var_name = _stack[2].code_context[0].split("=")[0].replace(" ", "")
+        if self._var_name in _ALL_VAR_NAMES:
+            raise e.code.CodingError(
+                msgs=[f"Should never happen there is already a latex symbol with name {self._var_name}"]
+            )
+        else:
+            _ALL_VAR_NAMES.append(self._var_name)
         self.init_validate()
         self.init()
 
