@@ -11,7 +11,8 @@ from .. import util
 from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment, Text, ParaPos, ParaBox
 
 
-class ColumnFmt(enum.Enum):
+@dataclasses.dataclass
+class ColumnFmt(LaTeX):
     """
     https://en.wikibooks.org/wiki/LaTeX/Tables
 
@@ -30,191 +31,209 @@ class ColumnFmt(enum.Enum):
         Test & foo \newline bar \\
         ...
 
+    insert_before = ">"
+    - can be placed before a command l, r, c, p, m or b and inserts ins before
+      the content of the cell;
+    - can also be used to format certain columns:
+      it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+      \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+
+    insert_after = "<"
+    - can be placed before a command l, r, c, p, m or b and inserts ins before
+      the content of the cell;
+    - can also be used to format certain columns:
+      it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
+      \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
     """
-    # left-justified column
-    left_justified = "l"
-    # centred column
-    centered = "c"
-    # right-justified column
-    right_justified = "r"
-    # paragraph column with text vertically aligned at the top
-    para_top = "p"
-    # paragraph column with text vertically aligned in the middle
-    # (requires array package)
-    para_middle = "m"
-    # paragraph column with text vertically aligned at the bottom
-    # (requires array package)
-    para_bottom = "b"
-    # vertical line
-    vertical_line = "|"
-    # double vertical line
-    double_vertical_line = "||"
 
-    # The tabularx package requires the same arguments of tabular* but, in order to
-    # let the table have the width specified by the user, it modifies the width of
-    # certain columns instead of the space between columns. The columns that can be
-    # stretched are identified by the alignment command X. This package requires the
-    # array package.
-    stretched = "X"
+    @property
+    def open_clause(self) -> str:
+        return ""
 
-    # check; https://en.wikibooks.org/wiki/LaTeX/Tables#@_and_!_expressions
-    # @{text}
-    #   - Insert the text `text` in every line of the table between the columns
-    #     where it appears.
-    #   - This command eliminates the space that is automatically inserted between
-    #     the columns.
-    #   - If some horizontal space is needed between text and the columns, it can be
-    #     inserted with the command \hspace{}.
-    #   - The command \extraspace\fill in a tabular* environment extends the space
-    #     between the columns where it appears in order to let the table have the
-    #     width defined by the user.
-    #   - In order to eliminate the space that is automatically inserted between two
-    #     columns it is possible to use the empty command @{}.
-    #   - This might help for working with tabular*
-    #     @{\extracolsep{\fill}}
-    #   - To eliminate space on left of first column or right of last column
-    #     @{} can be useful.
-    #     \\begin{tabular}{@{}lp{6cm}@{}}
-    #        ...
-    #     \\end{tabular}
-    #
-    # Difference between @ and !
-    #   The @{...} command kills the inter-column space and replaces it
-    #   with whatever is between the curly braces. To keep the initial space,
-    #   use !{...}. To add space, use @{\hspace{''width''}}
-    insert = '@'
-    insert_1 = '!'
+    @property
+    def close_clause(self) -> str:
+        return ""
 
-    def __call__(
-        self,
-        width: Scalar = None,
-        # for 'X' mostly use "\\centering\\arraybackslash"
-        insert_before: str = None,
-        insert_after: str = None,
-        insert_text: str = None,
-    ) -> str:
+    type: t.Literal['|', '||', 'l', 'c', 'r', 'p', 'm', 'b', 'X', '@', '!', ] = None
+    width: Scalar = None
+    # for 'X' mostly use "\\centering\\arraybackslash"
+    insert_before: str = None
+    insert_after: str = None
+    insert_text: str = None
+
+    def __str__(self):
         """
-
-        insert_before = ">"
-        - can be placed before a command l, r, c, p, m or b and inserts ins before
-          the content of the cell;
-        - can also be used to format certain columns:
-          it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-          \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
-
-        insert_after = "<"
-        - can be placed before a command l, r, c, p, m or b and inserts ins before
-          the content of the cell;
-        - can also be used to format certain columns:
-          it is possible to use LATEX commands \\upshape, \\itshape, \\slshape, \\scshape,
-          \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
+        for 'X' mostly use "\\centering\\arraybackslash"
         """
+        # ------------------------------------------------------- 01
+        # cook return
+        _ret = ""
+        # ------------------------------------------------------- 01.01
+        if self.type in ['|', '||', ]:
+            return self.type
+        # ------------------------------------------------------- 01.01
+        # if insert_text
+        # note this only triggers for insert and insert_1 based on above validation
+        if self.insert_text is not None:
+            return f"{self.type}{{{self.insert_text}}}"
+        # ------------------------------------------------------- 01.02
+        # for width ...
+        if self.width is None:
+            _ret += self.type
+        else:
+            _ret += f"{self.type}{{{self.width}}}"
+        # ------------------------------------------------------- 01.03
+        # insert_after and insert_before
+        _insert_before = ""
+        if self.insert_before is not None:
+            _insert_before += f">{{{self.insert_before}}}"
+        _insert_after = ""
+        if self.insert_after is not None:
+            _insert_after += f"<{{{self.insert_after}}}"
+        _ret = _insert_before + _ret + _insert_after
+
+        # ------------------------------------------------------- 02
+        # return
+        return _ret
+
+    def init_validate(self):
+
         # ------------------------------------------------------- 01
         # validation
         # ------------------------------------------------------- 01.01
         # if stretched i.e. X cannot use any __call__
         # if vertical line's no kwargs will be used
-        e.validation.ShouldNotBeOneOf(
-            value=self,
-            values=[
-                self.vertical_line, self.double_vertical_line,
-            ],
-            msgs=[
-                "Do not use __call__ for this ColumnFmt"
-            ]
-        ).raise_if_failed()
+        if self.type in ['|', '||', ]:
+            if self.width is not None or self.insert_before is not None or self.insert_after is not None or self.insert_text is not None:
+                raise e.validation.NotAllowed(
+                    msgs=[f"While using column fmt {self.type} special options are not available"]
+                )
+        if self.type is None:
+            raise e.validation.NotAllowed(msgs=["Field type is mandatory please supply"])
         # ------------------------------------------------------- 01.02
         # width can only be used with only para columns
-        if width is not None:
-            if self not in [self.para_top, self.para_bottom, self.para_middle]:
+        if self.width is not None:
+            if self.type not in ['p', 'm', 'b', ]:
                 raise e.validation.NotAllowed(
                     msgs=[
-                        f"The width kwarg cannot be used with {self}"
+                        f"The width kwarg cannot be used with Column fmt {self.type}"
                     ]
                 )
         # ------------------------------------------------------- 01.03
         # check if insert_before or insert_after allowed
-        if insert_after is not None or insert_before is not None:
-            _allowed_insert_before_after = self in [
-                self.centered, self.left_justified, self.right_justified,
-                self.para_middle, self.para_top, self.para_bottom,
-                self.stretched,
+        if self.insert_after is not None or self.insert_before is not None:
+            _allowed_insert_before_after = self.type in [
+                'c', 'l', 'r', 'p', 'm', 'b', 'X',
             ]
             if not _allowed_insert_before_after:
                 raise e.code.NotAllowed(
                     msgs=[
-                        f"Do not use kwargs `insert_before` or `insert_after` with {self.name} ({self.value})",
+                        f"Do not use fields `insert_before` or `insert_after` with column fmt {self.type}",
                         f"It can only be used with l, c, r, p, m, b (and even X)"
                     ]
                 )
         # ------------------------------------------------------- 01.04
         # insert_text is to be used only for special insert and insert_1 column fmts
-        if self in [self.insert, self.insert_1]:
-            if insert_text is None:
+        if self.type in ['@', '!']:
+            if self.insert_text is None:
                 raise e.code.CodingError(
                     msgs=[
-                        f"When using {self.insert.name} ({self.insert.value}) and {self.insert_1.name} ({self.insert_1.value}) please supply kwarg `insert_text`"
+                        f"When using column fmt type {['@', '!']} please supply kwarg `insert_text`"
+                    ]
+                )
+        else:
+            if self.insert_text is not None:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Field insert_text can only be used with column fmt type {['@', '!']}"
                     ]
                 )
 
-        # ------------------------------------------------------- 02
-        # cook return
-        _ret = ""
-        # ------------------------------------------------------- 02.01
-        # if insert_text
-        # note this only triggers for inset and insert_1 based on above validation
-        if insert_text is not None:
-            return f"{self.value}{{{insert_text}}}"
-        # ------------------------------------------------------- 02.02
-        # for width ...
-        if width is None:
-            _ret += self.value
-        else:
-            _ret += f"{self.value}{{{width}}}"
-        # ------------------------------------------------------- 02.03
-        # insert_after and insert_before
-        _insert_before = ""
-        if insert_before is not None:
-            _insert_before += f">{{{insert_before}}}\n"
-        _insert_after = ""
-        if insert_after is not None:
-            _insert_after += f"\n<{{{insert_after}}}"
-        _ret = _insert_before + _ret + _insert_after
-
-        # ------------------------------------------------------- 03
-        # return
-        return _ret
-
-    def __str__(self) -> str:
-        if self in [
-            self.vertical_line, self.double_vertical_line,
-        ]:
-            return self.value
-        else:
-            return self.__call__()
+    @classmethod
+    def vertical_line(cls) -> "ColumnFmt":
+        # vertical line
+        return ColumnFmt(type="|")
 
     @classmethod
-    def enum_from_value(cls, _str: str) -> "ColumnFmt":
-        for _s in _str.split("\n"):
-            # handle || separately
-            if _s[0:2] == "||":
-                return cls.double_vertical_line
-            # get start token
-            _ss = _s[0:1]
-            # this addresses tokes for insert before and after
-            if _ss in [">", "<"]:
-                continue
-            else:
-                for _ in cls:
-                    if _.value == _ss:
-                        return _
-        raise e.validation.NotAllowed(
-            msgs=[
-                f"Cannot recognize string `{_str}`",
-                "Should be one of:",
-                [_.value for _ in cls]
-            ]
-        )
+    def double_vertical_line(cls) -> "ColumnFmt":
+        # double vertical line
+        return ColumnFmt(type="||")
+
+    @classmethod
+    def left_justified(cls,  insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+        # left-justified column
+        return ColumnFmt(type='l', insert_before=insert_before, insert_after=insert_after)
+
+    @classmethod
+    def centered(cls,  insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+        # centred column
+        return ColumnFmt(type='c', insert_before=insert_before, insert_after=insert_after)
+
+    @classmethod
+    def right_justified(cls,  insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+        # right-justified column
+        return ColumnFmt(type='r', insert_before=insert_before, insert_after=insert_after)
+
+    @classmethod
+    def para_top(cls,  width: Scalar = None, insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+        # paragraph column with text vertically aligned at the top
+        return ColumnFmt(type='p', width=width, insert_before=insert_before, insert_after=insert_after)
+
+    @classmethod
+    def para_middle(cls,  width: Scalar = None, insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+        # paragraph column with text vertically aligned in the middle (requires array package)
+        return ColumnFmt(type='m', width=width, insert_before=insert_before, insert_after=insert_after)
+
+    @classmethod
+    def para_bottom(cls,  width: Scalar = None, insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+        # paragraph column with text vertically aligned at the bottom (requires array package)
+        return ColumnFmt(type='b', width=width, insert_before=insert_before, insert_after=insert_after)
+
+    @classmethod
+    def stretched(cls, insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+        # The tabularx package requires the same arguments of tabular* but, in order to
+        # let the table have the width specified by the user, it modifies the width of
+        # certain columns instead of the space between columns. The columns that can be
+        # stretched are identified by the alignment command X. This package requires the
+        # array package.
+        return ColumnFmt(type="X", insert_before=insert_before, insert_after=insert_after)
+
+    @classmethod
+    def insert(cls, insert_text: str = None) -> "ColumnFmt":
+        # check; https://en.wikibooks.org/wiki/LaTeX/Tables#@_and_!_expressions
+        # @{text}
+        #   - Insert the text `text` in every line of the table between the columns
+        #     where it appears.
+        #   - This command eliminates the space that is automatically inserted between
+        #     the columns.
+        #   - If some horizontal space is needed between text and the columns, it can be
+        #     inserted with the command \hspace{}.
+        #   - The command \extraspace\fill in a tabular* environment extends the space
+        #     between the columns where it appears in order to let the table have the
+        #     width defined by the user.
+        #   - In order to eliminate the space that is automatically inserted between two
+        #     columns it is possible to use the empty command @{}.
+        #   - This might help for working with tabular*
+        #     @{\extracolsep{\fill}}
+        #   - To eliminate space on left of first column or right of last column
+        #     @{} can be useful.
+        #     \\begin{tabular}{@{}lp{6cm}@{}}
+        #        ...
+        #     \\end{tabular}
+        #
+        # Difference between @ and !
+        #   The @{...} command kills the inter-column space and replaces it
+        #   with whatever is between the curly braces. To keep the initial space,
+        #   use !{...}. To add space, use @{\hspace{''width''}}
+        return ColumnFmt(type='@', insert_text=insert_text)
+
+    @classmethod
+    def insert_1(cls, insert_text: str = None) -> "ColumnFmt":
+        # Difference between @ and !
+        #   The @{...} command kills the inter-column space and replaces it
+        #   with whatever is between the curly braces. To keep the initial space,
+        #   use !{...}. To add space, use @{\hspace{''width''}}
+        return ColumnFmt(type='!', insert_text=insert_text)
 
 
 @dataclasses.dataclass
@@ -321,7 +340,7 @@ class MultiColumnCell(LaTeX):
                 ]
             )
 
-        _ret = f"\\multicolumn{{{self.num_cols}}}\n{self.t_cols_def}\n{{{self.value}}}"
+        _ret = f"\\multicolumn{{{self.num_cols}}}{self.t_cols_def.single_line_repr_for_use_in_multi_col_cell()}{{{self.value}}}"
 
         return _ret
 
@@ -380,6 +399,8 @@ class Row(LaTeX):
 @dataclasses.dataclass
 class TableColsDef(LaTeX):
 
+    list: t.List[ColumnFmt] = None
+
     @property
     def use_single_line_repr(self) -> bool:
         return True
@@ -394,58 +415,44 @@ class TableColsDef(LaTeX):
 
     @property
     def uses_stretched_fmt(self) -> bool:
-        try:
-            # noinspection PyUnresolvedReferences
-            return self._uses_stretched_fmt
-        except AttributeError:
-            return False
+        for _fmt in self.list:
+            if _fmt.type == 'X':
+                return True
+        return False
 
-    def init(self):
-        # call super
-        super().init()
+    def allow_add_items(self) -> bool:
+        return False
 
-        # some vars to track previous items
-        # noinspection PyAttributeOutsideInit
-        self._num_cols = 0
+    def init_validate(self):
+        if self.list is None:
+            raise e.validation.NotAllowed(msgs=["Field list is mandatory ..."])
+
+    def single_line_repr_for_use_in_multi_col_cell(self):
+        _cen = ""
+        _i: ColumnFmt
+        for _i in self._items:
+            _cen += _i.value
+
+        return "{" + "".join(self._items) + "}"
 
     def generate(self) -> str:
         return "\n".join("    " + str(_) for _ in self._items)
 
-    def add_item(self, item: t.Union[str, ColumnFmt]) -> "TableColsDef":
+    def __str__(self):
 
-        # this will end up testing if tem is legit
-        _current_fmt = ColumnFmt.enum_from_value(str(item))
+        _ret = []
+        _num_cols = 0
 
-        # if stretched set internal var
-        if _current_fmt is ColumnFmt.stretched:
-            # noinspection PyAttributeOutsideInit
-            self._uses_stretched_fmt = True
+        for _fmt in self.list:
+            if _fmt.type in ['|', '||', '@', '!', ]:
+                _ret.append(f"% Column Def [---] for {_fmt.type}")
+            else:
+                _ret.append(f"% Column Def [{_num_cols:03d}] for {_fmt.type}")
+                _num_cols += 1
+            _ret.append(str(_fmt))
 
-        # increment col count
-        if _current_fmt in [
-            ColumnFmt.vertical_line, ColumnFmt.double_vertical_line,
-            ColumnFmt.insert, ColumnFmt.insert_1
-        ]:
-            super().add_item(f"% Column Def [---] for {_current_fmt.name}  ({_current_fmt.value})")
-        else:
-            super().add_item(f"% Column Def [{self._num_cols:03d}] for {_current_fmt}")
-            self._num_cols += 1
+        return "\n".join(_ret)
 
-        # if str has \n then make multiple add items
-        # this is helpful for insert_before and insert_after
-        _str_item = str(item)
-        for _s in _str_item.split("\n"):
-            super().add_item(_s)
-
-        # return
-        return self
-
-    @classmethod
-    def from_list(cls, items: t.List[t.Union[str, ColumnFmt]]) -> "TableColsDef":
-        _ret = TableColsDef()
-        for _ in items:
-            _ret.add_item(_)
-        return _ret
 
 
 @dataclasses.dataclass
