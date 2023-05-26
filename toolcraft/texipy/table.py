@@ -373,7 +373,7 @@ class Row(LaTeX):
         _ret = ""
         if self.color is not None:
             _ret += f"\\rowcolor{{{self.color}}}  % color for row\n"
-        _ret += " & ".join([str(_) for _ in self._items])
+        _ret += " &\n".join([f"     {_}" for _ in self._items])
         return _ret
 
 
