@@ -12,7 +12,7 @@ from .__base__ import LaTeX, Color, Scalar, Positioning, FloatObjAlignment, Text
 
 
 @dataclasses.dataclass
-class ColumnFmt(LaTeX):
+class ColumnFmt:
     """
     https://en.wikibooks.org/wiki/LaTeX/Tables
 
@@ -46,14 +46,6 @@ class ColumnFmt(LaTeX):
       \\mgseries, \\bfseries, \\rmfamily, \\sffamily, and \\ttfamily
     """
 
-    @property
-    def open_clause(self) -> str:
-        return ""
-
-    @property
-    def close_clause(self) -> str:
-        return ""
-
     type: t.Literal['|', '||', 'l', 'c', 'r', 'p', 'm', 'b', 'X', '@', '!', ] = None
     width: Scalar = None
     # for 'X' mostly use "\\centering\\arraybackslash"
@@ -61,42 +53,7 @@ class ColumnFmt(LaTeX):
     insert_after: str = None
     insert_text: str = None
 
-    def __str__(self):
-        """
-        for 'X' mostly use "\\centering\\arraybackslash"
-        """
-        # ------------------------------------------------------- 01
-        # cook return
-        _ret = ""
-        # ------------------------------------------------------- 01.01
-        if self.type in ['|', '||', ]:
-            return self.type
-        # ------------------------------------------------------- 01.01
-        # if insert_text
-        # note this only triggers for insert and insert_1 based on above validation
-        if self.insert_text is not None:
-            return f"{self.type}{{{self.insert_text}}}"
-        # ------------------------------------------------------- 01.02
-        # for width ...
-        if self.width is None:
-            _ret += self.type
-        else:
-            _ret += f"{self.type}{{{self.width}}}"
-        # ------------------------------------------------------- 01.03
-        # insert_after and insert_before
-        _insert_before = ""
-        if self.insert_before is not None:
-            _insert_before += f">{{{self.insert_before}}}"
-        _insert_after = ""
-        if self.insert_after is not None:
-            _insert_after += f"<{{{self.insert_after}}}"
-        _ret = _insert_before + _ret + _insert_after
-
-        # ------------------------------------------------------- 02
-        # return
-        return _ret
-
-    def init_validate(self):
+    def __post_init__(self):
 
         # ------------------------------------------------------- 01
         # validation
@@ -148,6 +105,41 @@ class ColumnFmt(LaTeX):
                         f"Field insert_text can only be used with column fmt type {['@', '!']}"
                     ]
                 )
+
+    def __str__(self):
+        """
+        for 'X' mostly use "\\centering\\arraybackslash"
+        """
+        # ------------------------------------------------------- 01
+        # cook return
+        _ret = ""
+        # ------------------------------------------------------- 01.01
+        if self.type in ['|', '||', ]:
+            return self.type
+        # ------------------------------------------------------- 01.01
+        # if insert_text
+        # note this only triggers for insert and insert_1 based on above validation
+        if self.insert_text is not None:
+            return f"{self.type}{{{self.insert_text}}}"
+        # ------------------------------------------------------- 01.02
+        # for width ...
+        if self.width is None:
+            _ret += self.type
+        else:
+            _ret += f"{self.type}{{{self.width}}}"
+        # ------------------------------------------------------- 01.03
+        # insert_after and insert_before
+        _insert_before = ""
+        if self.insert_before is not None:
+            _insert_before += f">{{{self.insert_before}}}"
+        _insert_after = ""
+        if self.insert_after is not None:
+            _insert_after += f"<{{{self.insert_after}}}"
+        _ret = _insert_before + _ret + _insert_after
+
+        # ------------------------------------------------------- 02
+        # return
+        return _ret
 
     @classmethod
     def vertical_line(cls) -> "ColumnFmt":
@@ -237,7 +229,7 @@ class ColumnFmt(LaTeX):
 
 
 @dataclasses.dataclass
-class MultiRowCell(LaTeX):
+class MultiRowCell:
     """
     NOTE: you need to have `multirow` package
     As \\multicolumn allows to have cells on more than one column, the \\multirow
@@ -250,107 +242,79 @@ class MultiRowCell(LaTeX):
         extends on `row` rows and has a width equal to `larg`;
     """
 
-    num_rows: int = None
+    num_rows: int
     width: Scalar = None
     value: t.Union[LaTeX, str, Text, ParaBox] = None
-    no_comments: bool = True  # this will avoid problems when in use_single_line_repr
 
-    @property
-    def allow_add_items(self) -> bool:
-        return False
-
-    @property
-    def open_clause(self) -> str:
-        return ""
-
-    @property
-    def close_clause(self) -> str:
-        # to avoid but when adding multi-row cell in a row
-        if self.no_comments:
-            return ""
-        else:
-            return "\n"
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # validate
-        if self.num_rows is None:
-            raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field num_rows"]
-            )
-
-    def generate(self) -> str:
-        if bool(self._items):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting this to be empty ..."
-                ]
-            )
-
+    def __str__(self) -> str:
         _width = ""
         if self.width is not None:
             _width = f"{{{self.width}}}"
-
         _ret = f"\\multirow{{{self.num_rows}}}{_width}*{{{self.value}}}"
-
         return _ret
 
 
 @dataclasses.dataclass
-class MultiColumnCell(LaTeX):
+class MultiColumnCell:
+    num_cols: int
+    t_cols_def: "TableColsDef"
+    value: t.Union[LaTeX, str, Text, ParaBox] = ""
 
-    num_cols: int = None
-    t_cols_def: "TableColsDef" = None
-    value: t.Union[LaTeX, str, Text, ParaBox] = None
-    no_comments: bool = True  # this will avoid problems when in use_single_line_repr
+    def __str__(self) -> str:
+        _ret = f"\\multicolumn{{{self.num_cols}}}{self.t_cols_def.single_line_repr_for_use_in_multi_col_cell()}{{{self.value}}}"
+        return _ret
+
+
+@dataclasses.dataclass
+class TableColsDef:
+
+    items: t.List[ColumnFmt] = None
 
     @property
-    def allow_add_items(self) -> bool:
+    def uses_stretched_fmt(self) -> bool:
+        for _fmt in self.items:
+            if _fmt.type == 'X':
+                return True
         return False
 
-    @property
-    def open_clause(self) -> str:
-        return ""
+    def __post_init__(self):
+        if self.items is None:
+            raise e.validation.NotAllowed(msgs=["Field list is mandatory ..."])
 
-    @property
-    def close_clause(self) -> str:
-        return ""
+    def __str__(self):
+        _ret = []
+        _num_cols = 0
+        for _fmt in self.items:
+            if _fmt.type in ['|', '||', '@', '!', ]:
+                _ret.append(f"% Column Def [---] for {_fmt.type}")
+            else:
+                _ret.append(f"% Column Def [{_num_cols:03d}] for {_fmt.type}")
+                _num_cols += 1
+            _ret.append(str(_fmt))
+        _ret = [f"     {_}" for _ in _ret]
+        return "{\n" + "\n".join(_ret) + "\n}"
 
-    def init_validate(self):
-        # call super
-        super().init_validate()
+    def __len__(self):
+        _num_cols = 0
+        for _fmt in self.items:
+            if _fmt.type in ['|', '||', '@', '!', ]:
+                continue
+            _num_cols += 1
+        return _num_cols
 
-        # validate
-        if self.num_cols is None:
-            raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field num_cols"]
-            )
-        if self.t_cols_def is None:
-            raise e.validation.NotAllowed(
-                msgs=[f"please provide mandatory field t_cols_def"]
-            )
 
-    def generate(self) -> str:
-        if bool(self._items):
-            raise e.code.CodingError(
-                msgs=[
-                    f"Was expecting this to be empty ..."
-                ]
-            )
-
-        _ret = f"\\multicolumn{{{self.num_cols}}}{self.t_cols_def.single_line_repr_for_use_in_multi_col_cell()}{{{self.value}}}"
-
-        return _ret
+    def single_line_repr_for_use_in_multi_col_cell(self):
+        _ret = []
+        for _fmt in self.items:
+            _ret.append(str(_fmt))
+        return "{" + "".join(_ret) + "}"
 
 
 @dataclasses.dataclass
 class Row(LaTeX):
-
+    items: t.List[t.Union[str, LaTeX, Text, ParaBox]] = None
     # start new row (additional space may be specified after \\ using square brackets, such as \\[6pt])
     height: Scalar = None
-
     color: t.Union[Color, str] = None
 
     @property
@@ -370,89 +334,25 @@ class Row(LaTeX):
         return _ret
 
     def __len__(self):
-        _ret = len(self._items)
-        for _ in self._items:
+        _ret = len(self.items)
+        for _ in self.items:
             if isinstance(_, MultiColumnCell):
                 _ret += (_.num_cols - 1)
         return _ret
 
-    @classmethod
-    def from_list(
-        cls,
-        items: t.List[t.Union[str, LaTeX, Text, ParaBox]],
-        height: Scalar = None,
-        color: t.Union[str, Color] = None,
-    ) -> "Row":
-        _ret = Row(height=height, color=color)
-        for _ in items:
-            _ret.add_item(_)
-        return _ret
+    def init_validate(self):
+        super().init_validate()
+        if self.items is None:
+            raise e.validation.NotAllowed(
+                msgs=["items field is mandatory, please supply"]
+            )
 
-    def generate(self) -> str:
+    def generate(self):
         _ret = ""
         if self.color is not None:
             _ret += f"\\rowcolor{{{self.color}}}  % color for row\n"
-        _ret += " &\n".join([f"     {_}" for _ in self._items])
+        _ret += " &\n".join([f"{_}" for _ in self.items])
         return _ret
-
-
-@dataclasses.dataclass
-class TableColsDef(LaTeX):
-
-    list: t.List[ColumnFmt] = None
-
-    @property
-    def use_single_line_repr(self) -> bool:
-        return True
-
-    @property
-    def open_clause(self) -> str:
-        return "{\n"
-
-    @property
-    def close_clause(self) -> str:
-        return "\n}"
-
-    @property
-    def uses_stretched_fmt(self) -> bool:
-        for _fmt in self.list:
-            if _fmt.type == 'X':
-                return True
-        return False
-
-    def allow_add_items(self) -> bool:
-        return False
-
-    def init_validate(self):
-        if self.list is None:
-            raise e.validation.NotAllowed(msgs=["Field list is mandatory ..."])
-
-    def single_line_repr_for_use_in_multi_col_cell(self):
-        _cen = ""
-        _i: ColumnFmt
-        for _i in self._items:
-            _cen += _i.value
-
-        return "{" + "".join(self._items) + "}"
-
-    def generate(self) -> str:
-        return "\n".join("    " + str(_) for _ in self._items)
-
-    def __str__(self):
-
-        _ret = []
-        _num_cols = 0
-
-        for _fmt in self.list:
-            if _fmt.type in ['|', '||', '@', '!', ]:
-                _ret.append(f"% Column Def [---] for {_fmt.type}")
-            else:
-                _ret.append(f"% Column Def [{_num_cols:03d}] for {_fmt.type}")
-                _num_cols += 1
-            _ret.append(str(_fmt))
-
-        return "\n".join(_ret)
-
 
 
 @dataclasses.dataclass
@@ -599,11 +499,10 @@ class Table(LaTeX):
         super().init()
 
         # there should be minimum one col present
-        if self.t_cols_def._num_cols < 1:
+        if len(self.t_cols_def) < 1:
             raise e.validation.NotAllowed(
                 msgs=[
-                    "Please specify at-least one legit column in `self.t_cols_def` ...",
-                    "Did you miss to add items to it ???"
+                    "Please specify at-least one legit column in `self.t_cols_def.items` ...",
                 ]
             )
 
@@ -651,9 +550,9 @@ class Table(LaTeX):
                 )
 
     def add_row(self, row: Row):
-        if len(row) != self.t_cols_def._num_cols:
+        if len(row) != len(self.t_cols_def):
             raise e.validation.NotAllowed(
-                msgs=[f"We only expect to have {self.t_cols_def._num_cols} items in "
+                msgs=[f"We only expect to have {len(self.t_cols_def)} items in "
                       f"row but instead we found {len(row)}"]
             )
         self.add_item(item=row)
