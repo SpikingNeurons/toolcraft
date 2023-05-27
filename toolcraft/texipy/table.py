@@ -595,7 +595,7 @@ class Table(LaTeX):
             _thickness = f"[{thickness}]"
         self.add_item(item=f"\\midrule{_thickness}")
 
-    def add_cmidrule(self, n: int, m: int, thickness: Scalar = None):
+    def add_cmidrule(self, n: int, m: int, thickness: Scalar = None, left_trim: Scalar = None, right_trim: Scalar = None):
         """
         Offered by packages `booktabs` and `ctable`
         To be used instead of `add_cline`
@@ -610,7 +610,15 @@ class Table(LaTeX):
         _thickness = ""
         if thickness is not None:
             _thickness = f"[{thickness}]"
-        self.add_item(item=f"\\cmidrule{{{n}-{m}}}{_thickness}")
+        _trim = ""
+        if left_trim is not None or right_trim is not None:
+            _trim = "("
+            if left_trim is not None:
+                _trim += f"l{{{left_trim}}}"
+            if right_trim is not None:
+                _trim += f"r{{{right_trim}}}"
+            _trim += ")"
+        self.add_item(item=f"\\cmidrule{_thickness}{_trim}{{{n}-{m}}}")
 
     def add_bottomrule(self, thickness: Scalar = None):
         """
