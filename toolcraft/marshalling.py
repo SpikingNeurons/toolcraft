@@ -178,6 +178,9 @@ class Internal:
         # also store owner instance reference
         self.__owner__ = owner
 
+        # store vars that can be overwritten
+        self.__vars_that_can_be_overwritten__ = self.vars_that_can_be_overwritten()
+
         # dynamic container to track locked fields
         self.__locked_fields__ = []  # type: t.List[str]
 
@@ -219,7 +222,7 @@ class Internal:
 
         # if item is allowed to be set only once then do not allow it to be
         # set again
-        if key not in self.vars_that_can_be_overwritten():
+        if key not in self.__vars_that_can_be_overwritten__:
             if self.has(key):
                 if isinstance(value, HashableClass):
                     _str_value = value.yaml()
