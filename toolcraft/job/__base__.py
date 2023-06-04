@@ -742,7 +742,7 @@ class Job:
                 ]
             ).raise_if_failed()
 
-    def __call__(self):
+    def __call__(self, run_locally: bool = False):
         """
         Launches job locally ... to be used from GUI
 
@@ -751,6 +751,12 @@ class Job:
         Refer `cli_launch.local` where we use same logic to call local
         job in debug and non-debug mode
         """
+        if run_locally:
+            if self.experiment is None:
+                return self.method()
+            else:
+                return self.method(self.experiment)
+
         from .cli_launch import _run_job
         _cli_command = self.cli_command
         _py_debug = settings.PYC_DEBUGGING

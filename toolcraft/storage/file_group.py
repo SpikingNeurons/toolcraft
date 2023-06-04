@@ -1221,9 +1221,6 @@ class NpyFileGroup(FileGroup, abc.ABC):
             return {
                 k: _shape[k][0] for k in self.file_keys
             }
-        print(self.yaml())
-        print(self.path)
-        print(self.path.local_path.as_posix())
         raise e.code.CodingError(
             msgs=["You have not created files yet so you cannot use this property"]
         )

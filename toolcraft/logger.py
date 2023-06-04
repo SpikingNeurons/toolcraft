@@ -1,4 +1,7 @@
 """
+
+Read: https://docs.python.org/2/howto/logging.html#logging-flow
+
 Main aim of new logger lib
 + get rid of typer/tqdm/yaspin
 + keep main interface standard
@@ -146,7 +149,7 @@ class LoggingMeta:
             raise Exception("Not yet supported ...")
 
 
-class AddLoggingMetaFilter(logging.Filter):
+class CustomLoggingFilter(logging.Filter):
     """
     This adds logging meta info to record ... so that formatter can consume it
     todo: this filter when added to root logger is not used by other loggers ..
@@ -154,6 +157,12 @@ class AddLoggingMetaFilter(logging.Filter):
     """
 
     def filter(self, record):
+        # -------------------------------------------------------------- 01
+        # reject some records
+        # return False
+
+        # -------------------------------------------------------------- 02
+        # add short name to record
         try:
             _meta = _ALL_LOGGERS_META[record.name]  # type: LoggingMeta
             record.short_name = _meta.short_name
@@ -190,29 +199,29 @@ def get_formatter_for_file_handler() -> logging.Formatter:
     )
 
 
-# def get_stream_handler() -> logging.StreamHandler:
-#
-#     # -------------------------------------------------------- 01
-#     # get handler
-#     # this can make multiple log files for now stick up with simple things
-#     # _h = logging.handlers.RotatingFileHandler()
-#     _h = logging.StreamHandler(stream=sys.stdout)
-#
-#     # -------------------------------------------------------- 02
-#     # set level
-#     _h.setLevel(level=logging.NOTSET)
-#
-#     # -------------------------------------------------------- 03
-#     # set formatter
-#     _h.setFormatter(fmt=get_formatter_for_stream_handler())
-#
-#     # -------------------------------------------------------- 04
-#     # add filters
-#     _h.addFilter(AddLoggingMetaFilter())
-#
-#     # -------------------------------------------------------- 05
-#     # return
-#     return _h
+def get_stream_handler() -> logging.StreamHandler:
+
+    # -------------------------------------------------------- 01
+    # get handler
+    # this can make multiple log files for now stick up with simple things
+    # _h = logging.handlers.RotatingFileHandler()
+    _h = logging.StreamHandler(stream=sys.stdout)
+
+    # -------------------------------------------------------- 02
+    # set level
+    _h.setLevel(level=logging.NOTSET)
+
+    # -------------------------------------------------------- 03
+    # set formatter
+    # _h.setFormatter(fmt=get_formatter_for_stream_handler())
+
+    # -------------------------------------------------------- 04
+    # add filters
+    _h.addFilter(CustomLoggingFilter())
+
+    # -------------------------------------------------------- 05
+    # return
+    return _h
 
 
 def get_rich_handler() -> RichHandler:
@@ -247,7 +256,7 @@ def get_rich_handler() -> RichHandler:
 
     # -------------------------------------------------------- 04
     # add filters
-    _h.addFilter(AddLoggingMetaFilter())
+    _h.addFilter(CustomLoggingFilter())
 
     # -------------------------------------------------------- 05
     # return
@@ -285,7 +294,7 @@ def get_file_handler(log_file: pathlib.Path) -> logging.FileHandler:
 
     # -------------------------------------------------------- 04
     # add filters
-    _h.addFilter(AddLoggingMetaFilter())
+    _h.addFilter(CustomLoggingFilter())
 
     # -------------------------------------------------------- 05
     # return
