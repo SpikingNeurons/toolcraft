@@ -742,7 +742,7 @@ class Job:
                 ]
             ).raise_if_failed()
 
-    def __call__(self, run_locally: bool = False):
+    def _call__(self, run_locally: bool = False):
         """
         Launches job locally ... to be used from GUI
 

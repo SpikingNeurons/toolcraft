@@ -53,13 +53,16 @@ def _run_job(_job: Job, _cli_command: t.List[str], single_cpu: bool):
 
     # ------------------------------------------------------------- 03
     # run in subprocess
-    if single_cpu:
-        if _job.experiment is None:
-            return _job.method()
-        else:
-            return  _job.method(experiment=_job.experiment)
-    else:
-        _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
+    # do not tempt to use this as it adds dead lock
+    # todo: debug only possible on windows not on wsl linux
+    # if single_cpu:
+    #     if _job.experiment is None:
+    #         return _job.method()
+    #     else:
+    #         return _job.method(experiment=_job.experiment)
+    # else:
+    #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
+    _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
 
 
 @_APP.command(help="Launches all the jobs in runner on lsf infrastructure.")
