@@ -5,7 +5,7 @@ Eventually we need to call this from toolcraft cli i.e. when we install it via p
 import dataclasses
 import sys
 import numpy as np
-sys.path.append("..\\..")
+sys.path.append(os.path.join("..", ".."))
 from toolcraft import marshalling as m
 from toolcraft import dapr, logger
 
