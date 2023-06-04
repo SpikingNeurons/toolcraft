@@ -34,7 +34,7 @@ INTERACTIVE = not hasattr(main, '__file__')
 LOGGER_USE_FILE_HANDLER = False
 
 try:
-    from keras.api._v2 import keras as tk
+    import keras as ke
     import tensorflow as tf
     TF_KERAS_WORKS = True
 except ImportError:

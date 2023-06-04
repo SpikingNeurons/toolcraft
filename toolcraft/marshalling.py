@@ -65,7 +65,7 @@ NOT_PROVIDED = "__NOT_PROVIDED__"
 if settings.TF_KERAS_WORKS:
     # Handle serialization for keras loss, optimizer and layer
     # noinspection PyUnresolvedReferences
-    from keras.api._v2 import keras as tk
+    import keras as ke
     import tensorflow as tf
 
     def _tf_serialize(_data):
@@ -74,16 +74,16 @@ if settings.TF_KERAS_WORKS:
             for _k, _v in _data.items():
                 _r[_k] = _tf_serialize(_v)
             return _r
-        elif isinstance(_data, tk.losses.Loss):
-            _data = tk.losses.serialize(_data)
+        elif isinstance(_data, ke.losses.Loss):
+            _data = ke.losses.serialize(_data)
             _data['__keras_instance__'] = "loss"
             return _data
-        elif isinstance(_data, tk.layers.Layer):
-            _data = tk.layers.serialize(_data)
+        elif isinstance(_data, ke.layers.Layer):
+            _data = ke.layers.serialize(_data)
             _data['__keras_instance__'] = "layer"
             return _data
-        elif isinstance(_data, tk.optimizers.Optimizer):
-            _data = tk.optimizers.serialize(_data)
+        elif isinstance(_data, ke.optimizers.Optimizer):
+            _data = ke.optimizers.serialize(_data)
             _data['__keras_instance__'] = "optimizer"
             return _data
         elif isinstance(_data, tf.TensorSpec):
@@ -103,11 +103,11 @@ if settings.TF_KERAS_WORKS:
                 _keras_instance_type = _data['__keras_instance__']
                 del _data['__keras_instance__']
                 if _keras_instance_type == "loss":
-                    return tk.losses.deserialize(_data, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
+                    return ke.losses.deserialize(_data, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
                 elif _keras_instance_type == "layer":
-                    return tk.layers.deserialize(_data)
+                    return ke.layers.deserialize(_data)
                 elif _keras_instance_type == "optimizer":
-                    return tk.optimizers.deserialize(_data)
+                    return ke.optimizers.deserialize(_data)
                 elif _keras_instance_type == "tf_spec":
                     return tf.TensorSpec(**_data)
                 else:
@@ -1951,9 +1951,9 @@ class HashableClass(YamlRepr, abc.ABC):
                 # makes sures that the items are sorted
                 _sorted_keys = list(_dict.keys())
                 _sorted_keys.sort()
-                for k in _sorted_keys:
-                    v = _dict[k]
-                    _copy_dict[k] = v
+                for _k in _sorted_keys:
+                    v = _dict[_k]
+                    _copy_dict[_k] = v
                 _dict.clear()
                 _dict.update(_copy_dict)
         # ---------------------------------------------------------- 03
@@ -1981,19 +1981,19 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         if settings.TF_KERAS_WORKS:
             # Handle deserialization for keras loss, optimizer and layer
-            # noinspection PyUnresolvedReferences,PyProtectedMember
-            from keras.api._v2 import keras as tk
+            # noinspection PyUnresolvedReferences,PyProtectedMember,PyShadowingNames
+            import keras as ke
             for _n in state.keys():
                 _v = state[_n]
                 if isinstance(_v, dict) and '__keras_instance__' in _v.keys():
                     _keras_instance_type = _v['__keras_instance__']
                     del _v['__keras_instance__']
                     if _keras_instance_type == "loss":
-                        state[_n] = tk.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
+                        state[_n] = ke.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
                     elif _keras_instance_type == "layer":
-                        state[_n] = tk.layers.deserialize(_v)
+                        state[_n] = ke.layers.deserialize(_v)
                     elif _keras_instance_type == "optimizer":
-                        state[_n] = tk.optimizers.deserialize(_v)
+                        state[_n] = ke.optimizers.deserialize(_v)
                     else:
                         raise e.code.CodingError(
                             msgs=[
@@ -2158,7 +2158,7 @@ class HashableClass(YamlRepr, abc.ABC):
 
 if settings.TF_KERAS_WORKS:
     # noinspection PyUnresolvedReferences,PyProtectedMember
-    from keras.api._v2 import keras as tk
+    import keras as ke
     import tensorflow as tf
     # noinspection PyUnresolvedReferences
     # from keras.optimizers.optimizer_experimental import \
@@ -2168,8 +2168,8 @@ if settings.TF_KERAS_WORKS:
         np.float32, np.int64, np.int32,
         datetime.datetime, None, FrozenEnum,
         HashableClass, pa.Schema,
-        tk.losses.Loss, tk.layers.Layer,
-        tk.optimizers.Optimizer,
+        ke.losses.Loss, ke.layers.Layer,
+        ke.optimizers.Optimizer,
         # optimizer_experimental.Optimizer,
         tf.TensorSpec, tf.DType,
     ]
