@@ -26,7 +26,6 @@ from .. import util
 from .. import storage as s
 from .. import richy
 from .. import settings
-from ..gui import UseMethodInForm
 
 _now = datetime.datetime.now
 
@@ -1592,7 +1591,7 @@ class Experiment(m.HashableClass, abc.ABC):
         # make <hex_hash>.info for experiment if not present
         self.runner.monitor.make_experiment_info_file(experiment=self)
 
-    @UseMethodInForm(label_fmt="Job's")
+    @m.UseMethodInForm(label_fmt="Job's")
     def associated_jobs_view(self) -> "gui.widget.Group":
         from .. import gui
         _ret = gui.widget.Group()
@@ -1606,7 +1605,7 @@ class Experiment(m.HashableClass, abc.ABC):
                 gui.widget.Text(default_value="There are no jobs for this experiment ...")
         return _ret
 
-    @UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
+    @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
         return gui.form.HashableMethodsRunnerForm(
