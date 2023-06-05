@@ -22,8 +22,14 @@ import yaml
 
 from . import error as e
 from . import logger, settings, util
-from .gui import UseMethodInForm
 
+
+if settings.DPG_WORKS:
+    from .gui import UseMethodInForm
+else:
+    class UseMethodInForm:
+        def __init__(self, *args, **kwargs):
+            ...
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
@@ -31,6 +37,7 @@ if False:
     # noinspection PyUnresolvedReferences
     from . import gui, storage
     from . import richy
+
 
 TTracker = t.TypeVar('TTracker', bound='Tracker')
 TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
