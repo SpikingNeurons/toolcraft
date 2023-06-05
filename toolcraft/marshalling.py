@@ -31,6 +31,9 @@ else:
         def __init__(self, *args, **kwargs):
             ...
 
+    def __call__(self, fn: t.Callable):
+        return fn
+
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
 if False:
