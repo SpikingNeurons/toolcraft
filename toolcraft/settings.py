@@ -24,6 +24,8 @@ try:
     DPG_WORKS = True
 except ImportError:
     DPG_WORKS = False
+except ModuleNotFoundError:
+    DPG_WORKS = False
 
 
 # platform
