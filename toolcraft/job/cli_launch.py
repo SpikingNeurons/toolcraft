@@ -136,7 +136,7 @@ def lsf(
 
             # ------------------------------------------------- 02.03
             # run job
-            _run_job(_job, _cli_command, shell=False)
+            _run_job(_job, _cli_command, single_cpu=False)
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
