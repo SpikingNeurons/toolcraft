@@ -240,6 +240,12 @@ def local(
                     _rp.update(f"✅ {_job.job_id} :: completed")
                     del _jobs_running_in_parallel[_k]
                     _job_track_task.update(advance=1)
+                    continue
+                if _jobs_running_in_parallel[_k].is_failed:
+                    _rp.update(f"❌ {_job.job_id} :: failed")
+                    del _jobs_running_in_parallel[_k]
+                    _job_track_task.update(advance=1)
+                    continue
 
             # ------------------------------------------------- 04.07
             # if we reach here that means all jobs are over and current job is eligible to execute
