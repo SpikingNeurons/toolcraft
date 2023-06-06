@@ -338,7 +338,10 @@ def unfinished():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
-                _logs = _j.experiment.group_by + [_j.job_id]
+                _logs = []
+                if _j.experiment is not None:
+                    _logs += _j.experiment.group_by
+                _logs += [_j.job_id]
                 _rp.log(_logs)
 
 
@@ -352,5 +355,8 @@ def failed():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if _j.is_failed:
-                _logs = _j.experiment.group_by + [_j.job_id]
+                _logs = []
+                if _j.experiment is not None:
+                    _logs += _j.experiment.group_by
+                _logs += [_j.job_id]
                 _rp.log(_logs)
