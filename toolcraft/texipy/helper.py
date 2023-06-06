@@ -1,3 +1,4 @@
+import types
 import typing as t
 import pathlib
 import subprocess
@@ -5,12 +6,47 @@ import errno
 
 from .. import logger
 from .. import error as e
+from . import base
 
 _LOGGER = logger.get_logger()
 
 
+def _make_symbols_tex_file():
+    _frame = inspect.stack()[1]
+    _mod = inspect.getmodule(_frame[0])
+    _tex_file = pathlib.Path(_frame.filename)
+    _tex_file = _tex_file.parent / _tex_file.name.replace(".py", ".tex")
+
+    for _ in dir(_mod):
+        if isinstance(_v, Base):
+            _tex_lines.append(
+                _v.latex_def()
+            )
+            _tex_lines.append("")
+
+    _tex_file.write_text(
+        "\n".join(_tex_lines)
+    )
+
+
+def make_symbols_file(
+    symbols_module: types.ModuleType, symbols_tex_file: pathlib.Path,
+):
+    _tex_lines = []
+    for _ in dir(symbols_module):
+        _v = getattr(symbols_module, _)
+        if isinstance(_v, base.Base):
+            _tex_lines.append(
+                _v.latex_def()
+            )
+            _tex_lines.append("")
+    symbols_tex_file.write_text(
+        "\n".join(_tex_lines)
+    )
+
+
 def make_pdf_with_pdflatex(
-    tex_file: pathlib.Path,
+    main_tex_file: pathlib.Path,
     pdf_file: pathlib.Path,
     clean: bool = False,
 ):
@@ -25,27 +61,38 @@ def make_pdf_with_pdflatex(
     Refer:
     >>> import pylatex
     >>> pylatex.Document.generate_pdf
+
+
+    Remember to add this before \\begin{document}..
+      \\usepackage[acronym]{glossaries}%
+      \\makeglossaries%
+
+    Remember to add this before \\end{document}..
+      \\clearpage
+      \\printglossary[type=\acronymtype]
+      \\printglossary
     """
 
     try:
+
         # note that cwd will change dir to folder where tex file is present for subprocess.run
         # this helps pdflatex
-        _check_output_kwargs = {'cwd': tex_file.parent.as_posix()}
+        _check_output_kwargs = {'cwd': main_tex_file.parent.as_posix()}
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", main_tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running bibtex")
         _output = subprocess.run(
-            ["bibtex", tex_file.name.replace("tex", "aux")], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["bibtex", main_tex_file.name.replace("tex", "aux")], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", main_tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
         print(">>>>>>>>>>>>>>>>>>>>>>>> Running pdflatex")
         _output = subprocess.run(
-            ["pdflatex", tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
+            ["pdflatex", main_tex_file.name], stderr=subprocess.STDOUT, **_check_output_kwargs)
         print(">>>>>>>>>>>>>>>>>>>>>>>>", _output)
 
         if clean:

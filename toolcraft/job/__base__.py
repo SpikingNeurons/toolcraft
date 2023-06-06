@@ -26,7 +26,6 @@ from .. import util
 from .. import storage as s
 from .. import richy
 from .. import settings
-from ..gui import UseMethodInForm
 
 _now = datetime.datetime.now
 
@@ -101,6 +100,9 @@ class Tag:
             data['exception'] = ["", ">>> EXCEPTION <<<", "", *exception.split("\n")]
         _LOGGER.info(msg=f"Creating tag {self.path}")
         _txt = yaml.safe_dump(data)
+        _parent_dir = self.path.parent
+        if not _parent_dir.exists():
+            _parent_dir.mkdir(create_parents=True)
         self.path.write_text(text=_txt, encoding='utf-8')
 
     def read(self) -> t.Optional[t.Dict[str, t.Any]]:
@@ -210,6 +212,7 @@ class TagManager:
                 else:
                     _show_log = False
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
+                    gui.widget.Button(label="Run", callback=lambda: self.job())
                 if _show_log:
                     self.job.log_file.webbrowser_open_button(label="Show Full Log")
             if _description:
@@ -738,109 +741,38 @@ class Job:
                 ]
             ).raise_if_failed()
 
+    def _call__(self, run_locally: bool = False):
+        """
+        Launches job locally ... to be used from GUI
+
+        Set shell=False when in single cpu mode generally useful for debugging
+
+        Refer `cli_launch.local` where we use same logic to call local
+        job in debug and non-debug mode
+        """
+        if run_locally:
+            if self.experiment is None:
+                return self.method()
+            else:
+                return self.method(self.experiment)
+
+        from .cli_launch import _run_job
+        _cli_command = self.cli_command
+        _py_debug = settings.PYC_DEBUGGING
+        _shell = not _py_debug
+        if not _py_debug:
+            if 'WSL2' in settings.PLATFORM.release:
+                # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
+                _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
+            else:
+                _cli_command = ["start", "cmd", "/c", ] + _cli_command
+        if not self.path.exists():
+            self.path.mkdir(create_parents=True)
+        _run_job(self, _cli_command, shell=_shell)
+
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
         return self
-
-    def get_launch_local_gui(
-        self,
-        # this might freeze UI but makes it easy to debug the code
-        single_cpu: bool = False,
-    ) -> "gui.widget.Group":
-        """
-        Note code is borrowed from `cli_launch.local`
-
-        Aim of this method is to present a gui for calling methods that we
-        generally call using cli option
-
-        Some methods we don't want to run on server but locally then we
-        present this gui which can do it
-        """
-        # ---------------------------------------------------- 01
-        # import
-        from .cli_launch import _run_job
-        from ..gui.widget import Button, Group, Text
-        # create folder for job if not present
-        # this is needed as when we create gui for job to be run locally
-        # sometimes the job dir and the child dirs for tag manager wont exist
-        # so we need to create it
-        if not self.tag_manager.path.exists():
-            self.tag_manager.path.mkdir(create_parents=True)
-        # check this if you use debugger
-        if settings.PYC_DEBUGGING:
-            if not single_cpu:
-                raise e.validation.NotAllowed(
-                    msgs=[
-                        "looks like you are in pycharm debug mode",
-                        "Make sure to set --single-cpu to enable full debugging inside jobs ... "
-                    ]
-                )
-
-        # ---------------------------------------------------- 02
-        # make return stuff
-        _ret = Group()
-
-        # ---------------------------------------------------- 03
-        # based on job status return
-        with _ret:
-            if self.is_finished:
-                Text("Nothing to run as job is already finished ...")
-                return _ret
-            if self.is_running:
-                Text("The job is already running you need to wait  ...")
-                return _ret
-            if self.is_launched or self.is_started:
-                Text("The job is already launched or/and started but it is not running  ...")
-                Text("If something is wrong delete files on the disk  ...")
-                return _ret
-            if self.is_failed:
-                Text("Previous run of job has failed ...")
-                Text("-----------------------------------")
-                Text("\n".join(self.tag_manager.failed.read()['exception']))
-                return _ret
-            _one_or_more_failed = False
-            for _wait_job in self.wait_on_jobs:
-                if _wait_job.is_failed:
-                    _one_or_more_failed = True
-                    break
-            if _one_or_more_failed:
-                Text("One or more wait on jobs have failed ...")
-                Text("So cannot proceed with calling this job ...")
-                return _ret
-            _all_finished = True
-            for _wait_job in self.wait_on_jobs:
-                if not _wait_job.is_finished:
-                    _all_finished = False
-                    break
-            if not _all_finished:
-                Text("One or more wait on jobs have not finished yet ...")
-                Text("So cannot proceed with calling this job ...")
-                return _ret
-
-        # ---------------------------------------------------- 04
-        # launch job function
-        def _fn():
-            _ret.clear()
-            with _ret:
-                _cli_command = self.cli_command
-                if single_cpu:
-                    _shell = False
-                else:
-                    if 'WSL2' in settings.PLATFORM.release:
-                        # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
-                        _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
-                    else:
-                        _cli_command = ["start", "cmd", "/c", ] + _cli_command
-                    _shell = True
-                _run_job(self, _cli_command, shell=_shell)
-                Text("We have launched the job ... please wait and refresh ")
-
-        # ---------------------------------------------------- 05
-        with _ret:
-            Button(label="Launch Job", callback=_fn)
-
-        # ---------------------------------------------------- 06
-        return _ret
 
     def set_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
@@ -1659,7 +1591,7 @@ class Experiment(m.HashableClass, abc.ABC):
         # make <hex_hash>.info for experiment if not present
         self.runner.monitor.make_experiment_info_file(experiment=self)
 
-    @UseMethodInForm(label_fmt="Job's")
+    @m.UseMethodInForm(label_fmt="Job's")
     def associated_jobs_view(self) -> "gui.widget.Group":
         from .. import gui
         _ret = gui.widget.Group()
@@ -1673,7 +1605,7 @@ class Experiment(m.HashableClass, abc.ABC):
                 gui.widget.Text(default_value="There are no jobs for this experiment ...")
         return _ret
 
-    @UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
+    @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
         return gui.form.HashableMethodsRunnerForm(

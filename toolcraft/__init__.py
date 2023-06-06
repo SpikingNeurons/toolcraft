@@ -54,7 +54,12 @@ from . import server
 from . import job
 from . import richy
 from . import texipy
-from . import gui
+
+try:
+    import dearpygui.dearpygui as _dpg
+    from . import gui
+except ImportError:
+    ...
 
 # decorate undecorated and hence rule check
 

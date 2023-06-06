@@ -16,11 +16,12 @@ DO_RULE_CHECK = True
 
 ENV_DIR = pathlib.Path(sys.exec_prefix)
 
+
+# dpg works
+DPG_WORKS = False
 try:
-    import dearpygui.dearpygui as dpg
+    import dearpygui.dearpygui as _dpg
     DPG_WORKS = True
-    # todo: instead of import call some code in dearpygui to raise errors ... so that in except block
-    #   we can set `DPG_WORKS = False`
 except ImportError:
     DPG_WORKS = False
 
@@ -42,7 +43,7 @@ INTERACTIVE = not hasattr(main, '__file__')
 LOGGER_USE_FILE_HANDLER = False
 
 try:
-    from keras.api._v2 import keras as tk
+    import keras as ke
     import tensorflow as tf
     TF_KERAS_WORKS = True
 except ImportError:

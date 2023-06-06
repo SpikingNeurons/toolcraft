@@ -637,33 +637,6 @@ class FileGroup(StorageHashable, abc.ABC):
             self.create()
             self.check()
 
-    def check_pre_runner(self, *, force: bool):
-        # ~~~~~~~~~~~~ special check ~~~~~~~~~ to avoid coding bugs
-        # Although redundant it helps avoid unnecessary calls to check ...
-        # Example in case of FileGroup we can avoid long time consuming checks.
-        # The check() must be called only needed to catch some coding errors we
-        # do this
-        if not self.is_created:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Do not try to check until all files are created, "
-                    f"make sure to call {self.__class__.__name__}.create()",
-                    f"Also make sure that you are first checking property "
-                    f"`file_creation_needed` before calling check()"
-                ]
-            )
-        # do not check for period if force check
-        if not force:
-            if not self.periodic_check_needed:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Find the bug in the code, you need to make sure if "
-                        f"periodic check is needed using property "
-                        f"self.periodic_check_needed then only call this "
-                        f"function"
-                    ]
-                )
-
     def do_hash_check(self, compute: bool) -> t.Dict:
         """
         When compute returns computed hashes else returns failed hashes if any ...
@@ -764,6 +737,33 @@ class FileGroup(StorageHashable, abc.ABC):
             return _computed_hashes
         else:
             return _failed_hashes
+
+    def check_pre_runner(self, *, force: bool):
+        # ~~~~~~~~~~~~ special check ~~~~~~~~~ to avoid coding bugs
+        # Although redundant it helps avoid unnecessary calls to check ...
+        # Example in case of FileGroup we can avoid long time consuming checks.
+        # The check() must be called only needed to catch some coding errors we
+        # do this
+        if not self.is_created:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Do not try to check until all files are created, "
+                    f"make sure to call {self.__class__.__name__}.create()",
+                    f"Also make sure that you are first checking property "
+                    f"`file_creation_needed` before calling check()"
+                ]
+            )
+        # do not check for period if force check
+        if not force:
+            if not self.periodic_check_needed:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Find the bug in the code, you need to make sure if "
+                        f"periodic check is needed using property "
+                        f"self.periodic_check_needed then only call this "
+                        f"function"
+                    ]
+                )
 
     # noinspection PyUnusedLocal
     def check(self, *, force: bool = False):
@@ -1216,9 +1216,14 @@ class NpyFileGroup(FileGroup, abc.ABC):
     @property
     @util.CacheResult
     def lengths(self) -> t.Dict[str, int]:
-        return {
-            k: len(util.npy_load(p, memmap=True)) for k, p in self.get_files(file_keys=self.file_keys).items()
-        }
+        if self.is_created:
+            _shape = self.config.shape
+            return {
+                k: _shape[k][0] for k in self.file_keys
+            }
+        raise e.code.CodingError(
+            msgs=["You have not created files yet so you cannot use this property"]
+        )
 
     @property
     def has_arbitrary_lengths(self) -> bool:
@@ -1441,6 +1446,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _median = {}
         _mean = {}
         for _k, _v in _npy_memmaps.items():
+            # todo: currently shape is str ... find way to get list of int to be saved in yaml in one line
             _shape[_k] = str(list(_v.shape))
             _dtype[_k] = str(_v.dtype)
             if _v.ndim == 1:

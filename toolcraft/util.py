@@ -1584,6 +1584,9 @@ class HookUp:
             # spinner.info(msg=f"pre: {pre_method}")
             # spinner.info(msg=f"{method}")
             # spinner.info(msg=f"post: {post_method}")
+            # todo: any updates to _ret to post_method will be lost if _ret is not updated inplace
+            #   be careful ...
+            #   may be return _ret in post_method and check if id(_ret) == id(_post_ret)
             _post_ret = self.post_method(
                 self.method_self, hooked_method_return_value=_ret, **kwargs)
             # post_method should not return anything

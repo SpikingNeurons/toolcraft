@@ -77,7 +77,10 @@ from .. import logger
 from .. import settings
 from .. import marshalling as m
 from .. import util
-from .. import gui
+
+# noinspection PyUnreachableCode
+if False:
+    from .. import gui
 
 
 _LOGGER = logger.get_logger()
@@ -492,6 +495,7 @@ class Path:
         """
         todo: Add `window.PopUp` UI later
         """
+        from .. import gui
         if not self.isdir():
             raise e.code.CodingError(
                 msgs=[f"There is no dir so cannot create the delete folder button, check path {self}"]
@@ -502,12 +506,14 @@ class Path:
         )
 
     def webbrowser_open_button(self, label: str) -> "gui.widget.Widget":
+        from .. import gui
         # NOTE: the returned widget of `self.webbrowser_open` has no effect ...
         return gui.callback.CallFnCallback().get_button_widget(
             label=label, call_fn=self.webbrowser_open,
         )
 
     def webbrowser_open(self) -> "gui.widget.Text":
+        from .. import gui
         if not self.exists():
             return gui.widget.Text(f"Image does not exist in path \n - {self}")
 
@@ -534,6 +540,7 @@ class Path:
         from tensorflow.python.framework import ops
         from tensorflow.python.platform import gfile
         from tensorflow.python.summary import summary
+        from .. import gui
 
         if not self.exists():
             return gui.widget.Text(f"graph *.pb file does not exist in path \n - {self}")

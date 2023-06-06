@@ -38,7 +38,7 @@ _APP = typer.Typer(
 )
 
 
-def _run_job(_job: Job, _cli_command: t.List[str], shell: bool = True):
+def _run_job(_job: Job, _cli_command: t.List[str], single_cpu: bool):
     # ------------------------------------------------------------- 01
     # check health
     _ret = _job.check_health(is_on_main_machine=True)
@@ -53,7 +53,16 @@ def _run_job(_job: Job, _cli_command: t.List[str], shell: bool = True):
 
     # ------------------------------------------------------------- 03
     # run in subprocess
-    _ret = subprocess.run(_cli_command, shell=shell, env=os.environ.copy())
+    # do not tempt to use this as it adds dead lock
+    # todo: debug only possible on windows not on wsl linux
+    # if single_cpu:
+    #     if _job.experiment is None:
+    #         return _job.method()
+    #     else:
+    #         return _job.method(experiment=_job.experiment)
+    # else:
+    #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
+    _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
 
 
 @_APP.command(help="Launches all the jobs in runner on lsf infrastructure.")
@@ -127,7 +136,7 @@ def lsf(
 
             # ------------------------------------------------- 02.03
             # run job
-            _run_job(_job, _cli_command, shell=False)
+            _run_job(_job, _cli_command, single_cpu=False)
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
@@ -231,6 +240,12 @@ def local(
                     _rp.update(f"✅ {_job.job_id} :: completed")
                     del _jobs_running_in_parallel[_k]
                     _job_track_task.update(advance=1)
+                    continue
+                if _jobs_running_in_parallel[_k].is_failed:
+                    _rp.update(f"❌ {_job.job_id} :: failed")
+                    del _jobs_running_in_parallel[_k]
+                    _job_track_task.update(advance=1)
+                    continue
 
             # ------------------------------------------------- 04.07
             # if we reach here that means all jobs are over and current job is eligible to execute
@@ -238,18 +253,15 @@ def local(
             # ------------------------------------------------- 04.07.01
             # make cli command
             _cli_command = _job.cli_command
-            if single_cpu:
-                _shell = False
-            else:
+            if not single_cpu:
                 if 'WSL2' in settings.PLATFORM.release:
                     _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
                 else:
                     _cli_command = ["start", "cmd", "/c", ] + _cli_command
-                _shell = True
             # ------------------------------------------------- 04.07.02
             # for first job no need to check anything just launch
             if len(_jobs_running_in_parallel) == 0:
-                _run_job(_job, _cli_command, shell=_shell)
+                _run_job(_job, _cli_command, single_cpu=single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job.job_id} :: launching"])
                 del _all_jobs[_job_flow_id]
@@ -267,7 +279,7 @@ def local(
                     _rp.update(f"⏰ {_job.job_id} :: postponed not enough memory")
                     continue
                 # all is well launch
-                _run_job(_job, _cli_command, shell=_shell)
+                _run_job(_job, _cli_command, single_cpu=single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job.job_id} :: launching"])
                 del _all_jobs[_job_flow_id]

@@ -1,5 +1,6 @@
 import dataclasses
 import os
+import types
 import typing as t
 import pathlib
 import datetime
@@ -9,8 +10,6 @@ import enum
 from .. import logger
 from .. import util
 from .. import error as e
-
-from . import helper
 from . import base
 
 _LOGGER = logger.get_logger()
@@ -22,17 +21,6 @@ TextType = t.Union[str, "Text", "Icon"]
 if False:
     from . import beamer
     from . import tikz
-
-
-class TextFmt(enum.Enum):
-    strikeout = "\\sout"  # requires \usepackage[normalem]{ulem}
-    italic = "\\itshape"
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __call__(self, text: str) -> str:
-        return f"{self}{{{text}}}"
 
 
 class ParaPos(enum.Enum):
@@ -85,49 +73,77 @@ class ParaBox:
         return _ret
 
 
+class FontSize(enum.Enum):
+    """
+    Refer https://texblog.org/2012/08/29/changing-the-font-size-in-latex/
+
+    todo: currently inline is implemented ... later implement as environment too
+    """
+    Huge = "\\Huge"
+    huge = "\\huge"
+    LARGE = "\\LARGE"
+    Large = "\\Large"
+    large = "\\large"
+    normalsize = "\\normalsize"  # (default)
+    small = "\\small"
+    footnotesize = "\\footnotesize"
+    scriptsize = "\\scriptsize"
+    tiny = "\\tiny"
+
+    def __str__(self):
+        return self.value
+
+
+@dataclasses.dataclass
 class Text:
     """
     Refer here for fonts and sizes
     + https://www.overleaf.com/learn/latex/Font_sizes%2C_families%2C_and_styles
     """
+    text: t.Union[str, base.Base, "Icon"]
+    in_math: bool = False
+    size: "FontSize" = None
+    strikeout: bool = False
+    bold: bool = False
+    italic: bool = False
+    emphasis: bool = False
+    color: "Color" = None
+    use_text_cmd: bool = True
 
-    def __init__(self, text: t.Union[str, base.Base, "Icon"], no_text_cmd: bool = False):
-        self.no_text_cmd = no_text_cmd
-        self.text = text
+    def __post_init__(self):
+        if self.color is not None:
+            if self.color.intensity is not None:
+                raise e.validation.NotAllowed(
+                    msgs=["Intensity use needs to be tested ... comment this check and test"]
+                )
 
     def __str__(self) -> str:
-        if self.no_text_cmd:
-            return str(self.text)
+        _use_text_cmd = self.use_text_cmd
+        _ret = self.text
+        if self.in_math:
+            _ret = "\\(" + str(_ret) + "\\)"
+        if self.size is not None:
+            _ret = f"{self.size} {_ret}"
+        if self.strikeout:
+            _use_text_cmd = False
+            _ret = f"\\sout{{{_ret}}}"
+        if self.bold:
+            _use_text_cmd = False
+            _ret = f"\\textbf{{{_ret}}}"
+        if self.italic:
+            _use_text_cmd = False
+            _ret = f"\\textit{{{_ret}}}"
+        if self.emphasis:
+            _use_text_cmd = False
+            _ret = f"\\emph{{{_ret}}}"
+        if self.color is not None:
+            _use_text_cmd = False
+            _ret = f"\\textcolor{{{self.color}}}{{{_ret}}}"
+        if _use_text_cmd:
+            _ret = f"\\text{{{_ret}}}"
         else:
-            return f"\\text{{{self.text}}}"
-
-    def strikeout(self) -> "Text":
-        self.text = f"\\sout{{{self.text}}}"
-        return self
-
-    def bold(self) -> "Text":
-        self.text = f"\\textbf{{{self.text}}}"
-        return self
-
-    def italic(self) -> "Text":
-        self.text = f"\\textit{{{self.text}}}"
-        return self
-
-    def emphasis(self) -> "Text":
-        self.text = f"\\emph{{{self.text}}}"
-        return self
-
-    def color(self, color: t.Union["Color", str]) -> "Text":
-        self.text = f"\\textcolor{{{color}}}{{{self.text}}}"
-        return self
-
-    def size(self, size: "FontSize") -> "Text":
-        self.text = size(self.text)
-        return self
-
-    def in_math(self) -> "Text":
-        self.text = "\\(" + str(self.text) + "\\)"
-        return self
+            _ret = f"{{{_ret}}}"
+        return _ret
 
 
 class Icon(enum.Enum):
@@ -160,11 +176,15 @@ class Icon(enum.Enum):
     vdots = enum.auto()
     ddots = enum.auto()
 
-    # https://mirror.informatik.hs-fulda.de/tex-archive/macros/latex/required/psnfss/psnfss2e.pdf
-    ding_cmark = enum.auto()
-    ding_xmark = enum.auto()
-    ding_cmarkb = enum.auto()
-    ding_xmarkb = enum.auto()
+    # https://ctan.kako-dev.de/macros/latex/required/psnfss/psnfss2e.pdf
+    ding_cmark = enum.auto()  # ✓
+    ding_cmarkb = enum.auto()  # ✔
+    ding_xmark = enum.auto()  # ✗
+    ding_xmarkb = enum.auto()  # ✘
+    ding_club = enum.auto()  # ♣
+    ding_diamond = enum.auto()  # ♦
+    ding_heart = enum.auto()  # ♥
+    ding_spade = enum.auto()  # ♠
 
     @property
     def latex_cmd(self) -> str:
@@ -175,22 +195,26 @@ class Icon(enum.Enum):
                 _new_cmd += _.capitalize()
             _cmd = _new_cmd
         elif _cmd.startswith("ding_"):
-            if _cmd == "ding_cmark":
-                _cmd = "ding{51}"
-            elif _cmd == "ding_cmarkb":
-                _cmd = "ding{52}"
-            elif _cmd == "ding_xmark":
-                _cmd = "ding{55}"
-            elif _cmd == "ding_xmarkb":
-                _cmd = "ding{56}"
-            else:
-                raise e.code.CodingError(msgs=[f"Unknown {_cmd}"])
+            _dict = {
+                "ding_cmark": 51,
+                "ding_cmarkb": 52,
+                "ding_xmark": 55,
+                "ding_xmarkb": 56,
+                "ding_club": 168,
+                "ding_diamond": 169,
+                "ding_heart": 170,
+                "ding_spade": 171,
+            }
+            try:
+                _cmd = f"ding{{{_dict[_cmd]}}}"
+            except KeyError:
+                raise e.code.CodingError(msgs=[f"Unknown ding {_cmd}"])
         else:
             ...
         return "\\" + _cmd
 
-    def as_text(self, no_text_cmd: bool = True) -> Text:
-        return Text(self.latex_cmd, no_text_cmd=no_text_cmd)
+    def as_text(self, use_text_cmd: bool = False) -> Text:
+        return Text(self.latex_cmd, use_text_cmd=use_text_cmd)
 
     def __str__(self) -> str:
         return self.latex_cmd
@@ -206,7 +230,7 @@ class Font(enum.Enum):
         return self.value
 
 
-class Color(enum.Enum):
+class Color:
     """
 
     Refer:
@@ -225,64 +249,106 @@ class Color(enum.Enum):
         we have 19 colors below available
 
     """
-    # setting ⟨color⟩ to none disables filling/drawing locally
-    none = "none"
 
-    red = "red"
-    green = "green"
-    blue = "blue"
-    cyan = "cyan"
-    magenta = "magenta"
-
-    yellow = "yellow"
-    black = "black"
-    gray = "gray"
-    white = "white"
-    darkgray = "darkgray"
-
-    lightgray = "lightgray"
-    brown = "brown"
-    lime = "lime"
-    olive = "olive"
-    orange = "orange"
-
-    pink = "pink"
-    purple = "purple"
-    teal = "teal"
-    violet = "violet"
+    def __init__(self, name: str, intensity: t.Union[int, float] = None):
+        self.name = name
+        self.intensity = intensity
 
     def __str__(self) -> str:
-        return self.__call__()
-
-    def __call__(self, intensity: t.Union[int, float] = None) -> str:
-        if intensity is None:
-            return self.value
+        if self.intensity is None:
+            return self.name
         else:
-            return f"{self.value}!{intensity}"
+            return f"{self.name}!{self.intensity}"
 
+    @classmethod
+    def none(cls) -> "Color":
+        """
+        setting ⟨color⟩ to none disables filling/drawing locally
+        """
+        return Color("none")
 
-class FontSize(enum.Enum):
-    """
-    Refer https://texblog.org/2012/08/29/changing-the-font-size-in-latex/
+    @classmethod
+    def pgffillcolor(cls, intensity: t.Union[int, float] = None) -> "Color":
+        """
+        This special color is always available and always set to the current filling color of the graphic state.
+        """
+        return Color("pgffillcolor", intensity=intensity)
 
-    todo: currently inline is implemented ... later implement as environment too
-    """
-    Huge = "\\Huge"
-    huge = "\\huge"
-    LARGE = "\\LARGE"
-    Large = "\\Large"
-    large = "\\large"
-    normalsize = "\\normalsize"  # (default)
-    small = "\\small"
-    footnotesize = "\\footnotesize"
-    scriptsize = "\\scriptsize"
-    tiny = "\\tiny"
+    @classmethod
+    def red(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("red", intensity=intensity)
 
-    def __str__(self):
-        return self.value
+    @classmethod
+    def green(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("green", intensity=intensity)
 
-    def __call__(self, text: str) -> str:
-        return f"{{{self} {text}}}"
+    @classmethod
+    def blue(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("blue", intensity=intensity)
+
+    @classmethod
+    def cyan(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("cyan", intensity=intensity)
+
+    @classmethod
+    def magenta(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("magenta", intensity=intensity)
+
+    @classmethod
+    def yellow(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("yellow", intensity=intensity)
+
+    @classmethod
+    def black(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("black", intensity=intensity)
+
+    @classmethod
+    def gray(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("gray", intensity=intensity)
+
+    @classmethod
+    def white(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("white", intensity=intensity)
+
+    @classmethod
+    def darkgray(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("darkgray", intensity=intensity)
+
+    @classmethod
+    def lightgray(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("lightgray", intensity=intensity)
+
+    @classmethod
+    def brown(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("brown", intensity=intensity)
+
+    @classmethod
+    def lime(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("lime", intensity=intensity)
+
+    @classmethod
+    def olive(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("olive", intensity=intensity)
+
+    @classmethod
+    def orange(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("orange", intensity=intensity)
+
+    @classmethod
+    def pink(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("pink", intensity=intensity)
+
+    @classmethod
+    def purple(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("purple", intensity=intensity)
+
+    @classmethod
+    def teal(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("teal", intensity=intensity)
+
+    @classmethod
+    def violet(cls, intensity: t.Union[int, float] = None) -> "Color":
+        return Color("violet", intensity=intensity)
 
 
 class Scalar(t.NamedTuple):
@@ -741,6 +807,7 @@ class Document(LaTeX):
         # ----------------------------------------------- 03
         # make pdf if requested
         if make_pdf:
+            from . import helper
             helper.make_pdf_with_pdflatex(
                 tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
@@ -787,9 +854,21 @@ class IncludeGraphics(LaTeX):
 
 
 @dataclasses.dataclass
+class FBox(LaTeX):
+
+    @property
+    def open_clause(self) -> str:
+        return "\\fbox{"
+
+    @property
+    def close_clause(self) -> str:
+        return "}"
+
+
+@dataclasses.dataclass
 class Figure(LaTeX):
     positioning: Positioning = None
-    alignment: FloatObjAlignment = None
+    alignment: FloatObjAlignment = FloatObjAlignment.centering
     caption: str = None
 
     # To scale graphics ...
@@ -829,7 +908,7 @@ class Figure(LaTeX):
 
         # test item
         e.validation.ShouldBeInstanceOf(
-            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
             msgs=[f"Only certain item types are allowed in {Figure}"],
         ).raise_if_failed()
 
@@ -840,7 +919,7 @@ class Figure(LaTeX):
 @dataclasses.dataclass
 class SubFigure(LaTeX):
     positioning: Positioning = None
-    alignment: FloatObjAlignment = None
+    alignment: FloatObjAlignment = FloatObjAlignment.centering
     caption: str = None
     width: float = None
 
@@ -878,7 +957,7 @@ class SubFigure(LaTeX):
 
         # test item
         e.validation.ShouldBeInstanceOf(
-            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics),
+            value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
             msgs=[f"Only certain item types are allowed in {SubFigure}"],
         ).raise_if_failed()
 

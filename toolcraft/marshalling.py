@@ -22,8 +22,17 @@ import yaml
 
 from . import error as e
 from . import logger, settings, util
-from .gui import UseMethodInForm
 
+
+if settings.DPG_WORKS:
+    from .gui import UseMethodInForm
+else:
+    class UseMethodInForm:
+        def __init__(self, *args, **kwargs):
+            ...
+
+        def __call__(self, fn: t.Callable):
+            return fn
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
@@ -31,6 +40,7 @@ if False:
     # noinspection PyUnresolvedReferences
     from . import gui, storage
     from . import richy
+
 
 TTracker = t.TypeVar('TTracker', bound='Tracker')
 TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
@@ -61,6 +71,68 @@ NOT_PROVIDED = "__NOT_PROVIDED__"
 # HASH_Suffix.INFO = ".hashinfo"
 # HASH_Suffix.CONFIG = ".hashconfig"
 # META_Suffix.INFO = ".metainfo"
+
+if settings.TF_KERAS_WORKS:
+    # Handle serialization for keras loss, optimizer and layer
+    # noinspection PyUnresolvedReferences
+    import keras as ke
+    import tensorflow as tf
+
+    def _tf_serialize(_data):
+        if isinstance(_data, dict):
+            _r = {}
+            for _k, _v in _data.items():
+                _r[_k] = _tf_serialize(_v)
+            return _r
+        elif isinstance(_data, ke.losses.Loss):
+            _data = ke.losses.serialize(_data)
+            _data['__keras_instance__'] = "loss"
+            return _data
+        elif isinstance(_data, ke.layers.Layer):
+            _data = ke.layers.serialize(_data)
+            _data['__keras_instance__'] = "layer"
+            return _data
+        elif isinstance(_data, ke.optimizers.Optimizer):
+            _data = ke.optimizers.serialize(_data)
+            _data['__keras_instance__'] = "optimizer"
+            return _data
+        elif isinstance(_data, tf.TensorSpec):
+            _data = {
+                "__keras_instance__": "tf_spec",
+                "shape": _data.shape.as_list(),
+                "dtype": _data.dtype.name,
+                "name": _data.name,
+            }
+            return _data
+        else:
+            return _data
+
+    def _tf_deserialize(_data):
+        if isinstance(_data, dict):
+            if '__keras_instance__' in _data.keys():
+                _keras_instance_type = _data['__keras_instance__']
+                del _data['__keras_instance__']
+                if _keras_instance_type == "loss":
+                    return ke.losses.deserialize(_data, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
+                elif _keras_instance_type == "layer":
+                    return ke.layers.deserialize(_data)
+                elif _keras_instance_type == "optimizer":
+                    return ke.optimizers.deserialize(_data)
+                elif _keras_instance_type == "tf_spec":
+                    return tf.TensorSpec(**_data)
+                else:
+                    raise e.code.CodingError(
+                        msgs=[
+                            f"Unknown keras instance type {_keras_instance_type!r}"
+                        ]
+                    )
+            else:
+                _r = {}
+                for _k, _v in _data.items():
+                    _r[_k] = _tf_deserialize(_v)
+                return _r
+        else:
+            return _data
 
 
 class _ReadOnlyClass(type):
@@ -116,6 +188,9 @@ class Internal:
         # also store owner instance reference
         self.__owner__ = owner
 
+        # store vars that can be overwritten
+        self.__vars_that_can_be_overwritten__ = self.vars_that_can_be_overwritten()
+
         # dynamic container to track locked fields
         self.__locked_fields__ = []  # type: t.List[str]
 
@@ -157,7 +232,7 @@ class Internal:
 
         # if item is allowed to be set only once then do not allow it to be
         # set again
-        if key not in self.vars_that_can_be_overwritten():
+        if key not in self.__vars_that_can_be_overwritten__:
             if self.has(key):
                 if isinstance(value, HashableClass):
                     _str_value = value.yaml()
@@ -1218,7 +1293,7 @@ class YamlDumper(yaml.Dumper):
         return yaml.dump(
             item,
             Dumper=YamlDumper,
-            sort_keys=False,
+            sort_keys=True,
             default_flow_style=False,
         )
 
@@ -1360,8 +1435,7 @@ class YamlRepr(Tracker):
         return dumper.represent_mapping(cls.yaml_tag(), _yaml_state)
 
     @classmethod
-    def _yaml_constructor(cls, loader: YamlLoader,
-                          node: yaml.Node) -> "YamlRepr":
+    def _yaml_constructor(cls, loader: YamlLoader, node: yaml.Node) -> "YamlRepr":
         """
         From the SO discussion here
         https://stackoverflow.com/questions/43812020/what-does-deep-true-do-in-pyyaml-loader-construct-mapping
@@ -1887,9 +1961,9 @@ class HashableClass(YamlRepr, abc.ABC):
                 # makes sures that the items are sorted
                 _sorted_keys = list(_dict.keys())
                 _sorted_keys.sort()
-                for k in _sorted_keys:
-                    v = _dict[k]
-                    _copy_dict[k] = v
+                for _k in _sorted_keys:
+                    v = _dict[_k]
+                    _copy_dict[_k] = v
                 _dict.clear()
                 _dict.update(_copy_dict)
         # ---------------------------------------------------------- 03
@@ -1917,19 +1991,19 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         if settings.TF_KERAS_WORKS:
             # Handle deserialization for keras loss, optimizer and layer
-            # noinspection PyUnresolvedReferences,PyProtectedMember
-            from keras.api._v2 import keras as tk
+            # noinspection PyUnresolvedReferences,PyProtectedMember,PyShadowingNames
+            import keras as ke
             for _n in state.keys():
                 _v = state[_n]
                 if isinstance(_v, dict) and '__keras_instance__' in _v.keys():
                     _keras_instance_type = _v['__keras_instance__']
                     del _v['__keras_instance__']
                     if _keras_instance_type == "loss":
-                        state[_n] = tk.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
+                        state[_n] = ke.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
                     elif _keras_instance_type == "layer":
-                        state[_n] = tk.layers.deserialize(_v)
+                        state[_n] = ke.layers.deserialize(_v)
                     elif _keras_instance_type == "optimizer":
-                        state[_n] = tk.optimizers.deserialize(_v)
+                        state[_n] = ke.optimizers.deserialize(_v)
                     else:
                         raise e.code.CodingError(
                             msgs=[
@@ -1998,25 +2072,8 @@ class HashableClass(YamlRepr, abc.ABC):
         _ret = {}
         _field_names = self.dataclass_field_names
         if settings.TF_KERAS_WORKS:
-            # Handle serialization for keras loss, optimizer and layer
-            # noinspection PyUnresolvedReferences
-            from keras.api._v2 import keras as tk
             for f_name in _field_names:
-                _v = getattr(self, f_name)
-                if isinstance(_v, tk.losses.Loss):
-                    _v = tk.losses.serialize(_v)
-                    _v['__keras_instance__'] = "loss"
-                if isinstance(_v, tk.layers.Layer):
-                    _v = tk.layers.serialize(_v)
-                    _v['__keras_instance__'] = "layer"
-                if isinstance(_v, tk.optimizers.Optimizer):
-                    _v = tk.optimizers.serialize(_v)
-                    _v['__keras_instance__'] = "optimizer"
-                # this need not be handled as it is automatically handled by optimizer
-                # if isinstance(_v, tk.optimizers.schedules.LearningRateSchedule):
-                #     _v = tk.optimizers.schedules.serialize(_v)
-                #     _v['__keras_instance__'] = "learning_rate_schedule"
-                _ret[f_name] = _v
+                _ret[f_name] = _tf_serialize(getattr(self, f_name))
         else:
             for f_name in _field_names:
                 _ret[f_name] = getattr(self, f_name)
@@ -2028,26 +2085,8 @@ class HashableClass(YamlRepr, abc.ABC):
         cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
     ) -> "HashableClass":
         if settings.TF_KERAS_WORKS:
-            # Handle deserialization for keras loss, optimizer and layer
-            # noinspection PyUnresolvedReferences,PyProtectedMember
-            from keras.api._v2 import keras as tk
-            for _n in yaml_state.keys():
-                _v = yaml_state[_n]
-                if isinstance(_v, dict) and '__keras_instance__' in _v.keys():
-                    _keras_instance_type = _v['__keras_instance__']
-                    del _v['__keras_instance__']
-                    if _keras_instance_type == "loss":
-                        yaml_state[_n] = tk.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
-                    elif _keras_instance_type == "layer":
-                        yaml_state[_n] = tk.layers.deserialize(_v)
-                    elif _keras_instance_type == "optimizer":
-                        yaml_state[_n] = tk.optimizers.deserialize(_v)
-                    else:
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"Unknown keras instance type {_keras_instance_type!r}"
-                            ]
-                        )
+            for _n in list(yaml_state.keys()):
+                yaml_state[_n] = _tf_deserialize(yaml_state[_n])
         # noinspection PyTypeChecker
         return super().from_dict(yaml_state=yaml_state, **kwargs)
 
@@ -2129,7 +2168,8 @@ class HashableClass(YamlRepr, abc.ABC):
 
 if settings.TF_KERAS_WORKS:
     # noinspection PyUnresolvedReferences,PyProtectedMember
-    from keras.api._v2 import keras as tk
+    import keras as ke
+    import tensorflow as tf
     # noinspection PyUnresolvedReferences
     # from keras.optimizers.optimizer_experimental import \
     #     optimizer as optimizer_experimental
@@ -2138,9 +2178,10 @@ if settings.TF_KERAS_WORKS:
         np.float32, np.int64, np.int32,
         datetime.datetime, None, FrozenEnum,
         HashableClass, pa.Schema,
-        tk.losses.Loss, tk.layers.Layer,
-        tk.optimizers.Optimizer,
+        ke.losses.Loss, ke.layers.Layer,
+        ke.optimizers.Optimizer,
         # optimizer_experimental.Optimizer,
+        tf.TensorSpec, tf.DType,
     ]
 else:
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict, tuple,
