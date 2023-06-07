@@ -314,7 +314,7 @@ class TableColsDef:
 
 @dataclasses.dataclass
 class Row(LaTeX):
-    items: t.List[t.Union[str, LaTeX, Text, ParaBox]] = None
+    items: t.List[t.Union[str, LaTeX, Text, ParaBox, MultiColumnCell, MultiRowCell]] = None
     # start new row (additional space may be specified after \\ using square brackets, such as \\[6pt])
     height: Scalar = None
     color: t.Union[Color, str] = None
