@@ -104,6 +104,7 @@ class Text:
     in_math: bool = False
     size: "FontSize" = None
     strikeout: bool = False
+    texttt: bool = False
     bold: bool = False
     italic: bool = False
     emphasis: bool = False
@@ -130,6 +131,9 @@ class Text:
         if self.bold:
             _use_text_cmd = False
             _ret = f"\\textbf{{{_ret}}}"
+        if self.texttt:
+            _use_text_cmd = False
+            _ret = f"\\texttt{{{_ret}}}"
         if self.italic:
             _use_text_cmd = False
             _ret = f"\\textit{{{_ret}}}"
