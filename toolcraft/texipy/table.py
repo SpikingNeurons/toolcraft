@@ -182,7 +182,9 @@ class ColumnFmt:
         return ColumnFmt(type='b', width=width, insert_before=insert_before, insert_after=insert_after)
 
     @classmethod
-    def stretched(cls, insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+    def stretched(
+        cls, insert_before: str = None, insert_after: str = None
+    ) -> "ColumnFmt":
         # The tabularx package requires the same arguments of tabular* but, in order to
         # let the table have the width specified by the user, it modifies the width of
         # certain columns instead of the space between columns. The columns that can be
