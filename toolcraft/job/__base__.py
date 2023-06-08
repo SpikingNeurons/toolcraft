@@ -661,7 +661,8 @@ class Job:
         _command = [
             sys.executable,
             self.runner.py_script.name,
-            "run", self.method.__func__.__name__,
+            "run",
+            self.method.__func__.__name__,
         ]
         if self.experiment is not None:
             _command += [self.experiment.hex_hash]
@@ -752,35 +753,6 @@ class Job:
                     f"Method {method} is not recognized as a method that can be used with experiment level Job's"
                 ]
             ).raise_if_failed()
-
-    def _call__(self, run_locally: bool = False):
-        """
-        Launches job locally ... to be used from GUI
-
-        Set shell=False when in single cpu mode generally useful for debugging
-
-        Refer `cli_launch.local` where we use same logic to call local
-        job in debug and non-debug mode
-        """
-        if run_locally:
-            if self.experiment is None:
-                return self.method()
-            else:
-                return self.method(self.experiment)
-
-        from .cli_launch import _run_job
-        _cli_command = self.cli_command
-        _py_debug = settings.PYC_DEBUGGING
-        _shell = not _py_debug
-        if not _py_debug:
-            if 'WSL2' in settings.PLATFORM.release:
-                # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
-                _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
-            else:
-                _cli_command = ["start", "cmd", "/c", ] + _cli_command
-        if not self.path.exists():
-            self.path.mkdir(create_parents=True)
-        _run_job(self, _cli_command, shell=_shell)
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
