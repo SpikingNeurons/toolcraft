@@ -1637,7 +1637,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
         # ------------------------------------------------------ 04
         # now download files
-        # todo: can we do hash check while downloading is undergoing ???
+        # todo: launch all file downloads in async ;)
         for fk in self.file_keys:
             # get the task
             _task = _download_progress.tasks[fk]
@@ -1646,6 +1646,9 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                 _task.already_finished()
                 continue
             try:
+                # todo: can we do hash check while download is undergoing ???
+                #   we can have two async tasks one which downloads chunk and
+                #   other which computes hash
                 with _file_paths[fk].open('wb') as _f:
                     _response = requests.get(_urls[fk], stream=True)
                     try:

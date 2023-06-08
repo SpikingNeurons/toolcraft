@@ -313,13 +313,13 @@ def clean():
                 _j.path.delete(recursive=True)
 
 
-@_APP.command(help="Deletes the job in runner (use carefully).")
+@_APP.command(help="Deletes the job in runner even successfully finished runs (use carefully).")
 def delete():
     """
     """
     _rp = _RUNNER.richy_panel
     # todo: support asking prompts later ...
-    # _delete = _rp.ask(prompt="Are you sure you want to delete? It will delete even complted runs!!", option='confirm')
+    # _delete = _rp.ask(prompt="Are you sure you want to delete? It will delete even completed runs!!", option='confirm')
     for _stage_name, _stage in _rp.track(_RUNNER.flow.stages.items(), task_name="Scanning stages"):
         _rp.update(f"Scanning stage {_stage_name} ...")
         _j: Job
