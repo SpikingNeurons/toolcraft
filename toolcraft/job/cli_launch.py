@@ -101,10 +101,10 @@ def lsf(
         ):
             # ------------------------------------------------- 02.01
             if _job.is_finished:
-                _rp.update(f"skipping {_stage_key}:{_job.job_id}")
+                _rp.update(f"skipping {_stage_key}:{_job.short_name}")
                 continue
             else:
-                _rp.update(f"launching {_stage_key}:{_job.job_id}")
+                _rp.update(f"launching {_stage_key}:{_job.short_name}")
 
             # ------------------------------------------------- 02.02
             # make cli command
@@ -190,11 +190,12 @@ def local(
             # ------------------------------------------------- 04.01
             # get job
             _job = _all_jobs[_job_flow_id]
+            _job_short_name = _job.short_name
 
             # ------------------------------------------------- 04.02
             # if finished skip
             if _job.is_finished:
-                _rp.log([f"✅ {_job_flow_id} :: skipping already finished"])
+                _rp.log([f"✅ {_job_short_name} :: skipping already finished"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
@@ -202,7 +203,7 @@ def local(
             # ------------------------------------------------- 04.03
             # if failed skip
             if _job.is_failed:
-                _rp.log([f"❌ {_job_flow_id} :: skipping as it is failed"])
+                _rp.log([f"❌ {_job_short_name} :: skipping as it is failed"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
@@ -216,7 +217,7 @@ def local(
                     _one_or_more_failed = True
                     break
             if _one_or_more_failed:
-                _rp.log([f"❌ {_job_flow_id} :: skipping as one or more wait_on job failed"])
+                _rp.log([f"❌ {_job_short_name} :: skipping as one or more wait_on job failed"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
@@ -230,19 +231,19 @@ def local(
                     _all_finished = False
                     break
             if not _all_finished:
-                _rp.update(f"⏰ {_job.job_id} :: postponed wait_on jobs not completed")
+                _rp.update(f"⏰ {_job_short_name} :: postponed wait_on jobs not completed")
                 continue
 
             # ------------------------------------------------- 04.06
             # if any already launched job is finished then remove from dict _jobs_running_in_parallel
             for _k in list(_jobs_running_in_parallel.keys()):
                 if _jobs_running_in_parallel[_k].is_finished:
-                    _rp.update(f"✅ {_job.job_id} :: completed")
+                    _rp.update(f"✅ {_job_short_name} :: completed")
                     del _jobs_running_in_parallel[_k]
                     _job_track_task.update(advance=1)
                     continue
                 if _jobs_running_in_parallel[_k].is_failed:
-                    _rp.update(f"❌ {_job.job_id} :: failed")
+                    _rp.update(f"❌ {_job_short_name} :: failed")
                     del _jobs_running_in_parallel[_k]
                     _job_track_task.update(advance=1)
                     continue
@@ -263,7 +264,7 @@ def local(
             if len(_jobs_running_in_parallel) == 0:
                 _run_job(_job, _cli_command, single_cpu=single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
-                _rp.log([f"🏁 {_job.job_id} :: launching"])
+                _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
@@ -272,16 +273,16 @@ def local(
             else:
                 # if not enough cpus then skip
                 if len(_jobs_running_in_parallel) >= _MAX_JOBS:
-                    _rp.update(f"⏰ {_job.job_id} :: postponed not enough cpu's")
+                    _rp.update(f"⏰ {_job_short_name} :: postponed not enough cpu's")
                     continue
                 # if enough memory not available then skip
                 if psutil.virtual_memory()[2] > _MAX_MEMORY_USAGE_IN_PERCENT:
-                    _rp.update(f"⏰ {_job.job_id} :: postponed not enough memory")
+                    _rp.update(f"⏰ {_job_short_name} :: postponed not enough memory")
                     continue
                 # all is well launch
                 _run_job(_job, _cli_command, single_cpu=single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
-                _rp.log([f"🏁 {_job.job_id} :: launching"])
+                _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
             # ------------------------------------------------- 04.07.04

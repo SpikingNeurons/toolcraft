@@ -605,20 +605,32 @@ class Job:
         return self.tag_manager.failed.exists()
 
     @property
+    def short_name(self) -> str:
+        _job_id = self.job_id[:-20] + "..."
+        if self.experiment is None:
+            return _job_id
+        else:
+            return ":".join(self.experiment.group_by + [_job_id])
+
+    @property
     def job_id(self) -> str:
         """
-        Note that the job is made up of three unique things namely experiment, method and runner.
-        We assume that the runner is constant per file so to make job id unique we compose it with method name
-        and `experiment.hex_hash`.
-        Note that experiment has runner as dataclass field so we really need not worry uniqueness of our job :)
-        But when experiment is None we need to use runner hex_hash :(
+        Note that the job is made up of three unique things namely experiment,
+        method and runner.
+
+        We assume that the runner is constant per file so to make job id unique
+        we compose it with method name and `experiment.hex_hash`.
+
+        Note that experiment has runner as dataclass field so we really
+        need not worry uniqueness of our job :) But when experiment is None we
+        need to use runner hex_hash :(
         """
         _ret = self.method.__name__
         if self.experiment is None:
-            # we have to use runner hex has as the job will not be unique on cluster
+            # we have to use runner hex as the job will not be unique on cluster
             _ret += ":" + self.runner.hex_hash
         else:
-            # NOte we do not consider runner as it is dataclass field of experiment :)
+            # Note we do not consider runner as it is dataclass field of experiment :)
             _ret += ":" + self.experiment.hex_hash
         return _ret
 

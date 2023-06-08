@@ -309,7 +309,7 @@ def clean():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             if not _j.is_finished:
-                _rp.update(f"Deleting job {_j.job_id}")
+                _rp.update(f"Deleting job {_j.short_name}")
                 _j.path.delete(recursive=True)
 
 
@@ -324,7 +324,7 @@ def delete():
         _rp.update(f"Scanning stage {_stage_name} ...")
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
-            _rp.update(f"Deleting job {_j.job_id}")
+            _rp.update(f"Deleting job {_j.short_name}")
             _j.path.delete(recursive=True)
 
 
@@ -338,11 +338,7 @@ def unfinished():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
-                _logs = []
-                if _j.experiment is not None:
-                    _logs += _j.experiment.group_by
-                _logs += [_j.job_id]
-                _rp.log(_logs)
+                _rp.log([_j.short_name])
 
 
 @_APP.command(help="Lists the jobs in runner that have failed.")
@@ -355,8 +351,4 @@ def failed():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if _j.is_failed:
-                _logs = []
-                if _j.experiment is not None:
-                    _logs += _j.experiment.group_by
-                _logs += [_j.job_id]
-                _rp.log(_logs)
+                _rp.log([_j.short_name])
