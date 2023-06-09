@@ -14,7 +14,6 @@ import traceback
 
 from .. import error as e
 from .. import logger
-from .. import settings
 from .__base__ import Runner, Job
 from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
 from . import cli_launch
@@ -73,6 +72,7 @@ def nxdi():
 
 @_APP.command(help="Run the job")
 def run(
+    runner: str = typer.Argument(..., help="Runner used by running script.", show_default=False, ),
     method: str = typer.Argument(..., help="Method to execute in runner.", show_default=False, ),
     experiment: t.Optional[str] = typer.Argument(None, help="Experiment which will be used by method in runner."),
 ):
@@ -82,18 +82,10 @@ def run(
 
     # ------------------------------------------------------------ 01
     # get respective job
-    try:
-        _method = getattr(_RUNNER, method)
-    except AttributeError as _ae:
-        raise e.code.NotAllowed(
-            msgs=[f"The method with name {method} is not available in runner class {_RUNNER.__class__}"]
-        )
-    if experiment is None:
-        _experiment = None
-        _job = _RUNNER.associated_jobs[_method]
-    else:
-        _experiment = _RUNNER.monitor.get_experiment_from_hex_hash(hex_hash=experiment)
-        _job = _experiment.associated_jobs[_method]
+    # note that it also does validations
+    _job, _experiment = _RUNNER.get_job_and_experi_from_strs(
+        runner=runner, method=method, experiment=experiment,
+    )
 
     # ------------------------------------------------------------ 02
     # set job in runner

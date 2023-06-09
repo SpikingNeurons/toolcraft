@@ -662,6 +662,7 @@ class Job:
             sys.executable,
             self.runner.py_script.name,
             "run",
+            self.runner.hex_hash,
             self.method.__func__.__name__,
         ]
         if self.experiment is not None:
@@ -1405,7 +1406,7 @@ class Runner(m.HashableClass, abc.ABC):
         _ret = {'runner': [], 'experiment': []}
         # methods to skip
         _methods_to_skip = [
-            self.run, self.methods_to_be_used_in_jobs
+            self.run, self.methods_to_be_used_in_jobs, self.get_job_and_experi_from_strs,
         ]
         # attrs to ignore that come from parent class
         _hashable_class_attrs = dir(m.HashableClass)
@@ -1478,13 +1479,61 @@ class Runner(m.HashableClass, abc.ABC):
         # return
         return _ret
 
+    def get_job_and_experi_from_strs(
+        self,
+        runner: str, method: str, experiment: t.Optional[str] = None,
+    ) -> (Job, t.Optional["Experiment"]):
+        # ------------------------------------------------------------ 01
+        # validations
+        # ------------------------------------------------------------ 01.01
+        # the runner hash should always match
+        e.code.AssertError(
+            value1=runner, value2=self.hex_hash,
+            msgs=[
+                "The runner used is not exactly same"
+            ]
+        ).raise_if_failed()
+        # ------------------------------------------------------------ 01.02
+        # check if method available and fetch it
+        try:
+            _method = getattr(self, method)
+        except AttributeError as _ae:
+            raise e.code.NotAllowed(
+                msgs=[
+                    f"The method with name {method} "
+                    f"is not available in runner class {self.__class__}"]
+            )
+
+        # ------------------------------------------------------------ 02
+        # get job and experiment if available
+        if experiment is None:
+            _experiment = None
+            _job = self.associated_jobs[_method]
+        else:
+            _experiment = self.monitor.get_experiment_from_hex_hash(
+                hex_hash=experiment)
+            _job = _experiment.associated_jobs[_method]
+
+        # ------------------------------------------------------------ 03
+        # return
+        return _job, _experiment
+
     def run(self):
         from . import cli
-        _sub_title = ""
+
+        # make sub_title
+        _sub_title = None
         if len(sys.argv) > 1:
             _sub_title = [f"command: {sys.argv[1]}"]
-            if bool(sys.argv[2:]):
-                _sub_title += [f"args: {sys.argv[2:]}"]
+            if sys.argv[1] == "run":
+                # this means the arg represent a job
+                _job, _ = self.get_job_and_experi_from_strs(*sys.argv[2:])
+                _sub_title += [_job.short_name]
+            else:
+                if bool(sys.argv[2:]):
+                    _sub_title += [f"args: {sys.argv[2:]}"]
+
+        # launch
         with richy.StatusPanel(
             tc_log=_LOGGER,
             title=f"Running for py_script: {self.py_script.name!r}",
