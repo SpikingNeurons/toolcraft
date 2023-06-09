@@ -1554,7 +1554,7 @@ class Runner(m.HashableClass, abc.ABC):
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=["associated_jobs", "view_gui_label", "view_gui_label_tooltip"],
+    things_to_be_cached=["associated_jobs", "view_gui_label", "view_gui_label_tooltip", ],
 )
 class Experiment(m.HashableClass, abc.ABC):
     """
