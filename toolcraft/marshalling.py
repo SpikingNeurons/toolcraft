@@ -2132,7 +2132,7 @@ class HashableClass(YamlRepr, abc.ABC):
         ...
 
     @UseMethodInForm(label_fmt="Info")
-    def info_widget(self) -> "gui.widget.Text":
+    def info_widget(self) -> "gui.widget.Widget":
         # import
         from . import gui
         # make

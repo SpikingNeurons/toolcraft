@@ -234,113 +234,113 @@ class TagManager:
         return _ret
 
 
-class JobViewerInternal(m.Internal):
-    job: "Job"
+# class JobViewerInternal(m.Internal):
+#     job: "Job"
 
 
-@dataclasses.dataclass(frozen=True)
-class JobViewer(m.HashableClass):
-
-    method_name: str
-    experiment: t.Optional["Experiment"]
-
-    @property
-    @util.CacheResult
-    def internal(self) -> JobViewerInternal:
-        return JobViewerInternal(owner=self)
-
-    @property
-    @util.CacheResult
-    def job(self) -> "Job":
-        _ret = self.internal.job
-        if _ret.experiment != self.experiment:
-            raise e.code.CodingError(
-                msgs=["Job set to this JobViewer is not correct ..."]
-            )
-        if _ret.method.__name__ != self.method_name:
-            raise e.code.CodingError(
-                msgs=[f"The method name set is not correct"]
-            )
-        return _ret
-
-    @property
-    @util.CacheResult
-    def button_label(self) -> str:
-        if self.experiment is None:
-            return self.method_name
-        _title, _args = self.experiment.view_gui_label
-        return "\n".join([_title, *_args])
-
-    @m.UseMethodInForm(label_fmt="button_label")
-    def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
-        # import
-        from .. import gui
-
-        # if finished return
-        _job = self.job
-        if _job.is_finished or _job.is_failed:
-            return self.job_gui()
-
-        _ret = gui.form.HashableMethodsRunnerForm(
-            label=self.button_label.split("\n")[0],
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=["tags_gui", "artifacts_gui", "run_gui"],
-            default_open=True,
-        )
-
-        with _ret._button_bar:
-            _txt = gui.widget.Text(default_value="<-- please run")
-            # _txt.move_up()
-
-        return _ret
-
-    @m.UseMethodInForm(label_fmt="button_label")
-    def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
-        from .. import gui
-
-        _ret = gui.form.HashableMethodsRunnerForm(
-            label=self.button_label.split("\n")[0] + f" : {self.method_name}",
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=["tags_gui", "artifacts_gui", ],
-            default_open=True,
-        )
-
-        _job = self.job
-        with _ret._button_bar:
-            if _job.is_failed:
-                gui.widget.Text(default_value="--- FAILED ---")
-            elif _job.is_finished:
-                gui.widget.Text(default_value="--- FINISHED ---")
-            else:
-                raise e.code.ShouldNeverHappen(msgs=[])
-
-        return _ret
-
-    @m.UseMethodInForm(label_fmt="Info")
-    def info_widget(self) -> "gui.widget.Text":
-        """
-        We override as we are interested in field `experiment` and not `self` ...
-        """
-        # import
-        from .. import gui
-        # make
-        _experiment = self.experiment
-        _text = f"job-id: {self.job.job_id}\n\n"
-        if _experiment is not None:
-            _text += f"hex-hash: {_experiment.hex_hash}\n" \
-                    f"{_experiment.yaml()}"
-        # noinspection PyUnresolvedReferences
-        _ret_widget = gui.widget.Text(default_value=_text)
-        # return
-        return _ret_widget
-
-    @m.UseMethodInForm(label_fmt="tags")
-    def tags_gui(self) -> "gui.widget.Widget":
-        return self.job.tag_manager.view()
+# @dataclasses.dataclass(frozen=True)
+# class JobViewer(m.HashableClass):
+#
+#     method_name: str
+#     experiment: t.Optional["Experiment"]
+#
+#     @property
+#     @util.CacheResult
+#     def internal(self) -> JobViewerInternal:
+#         return JobViewerInternal(owner=self)
+#
+#     @property
+#     @util.CacheResult
+#     def job(self) -> "Job":
+#         _ret = self.internal.job
+#         if _ret.experiment != self.experiment:
+#             raise e.code.CodingError(
+#                 msgs=["Job set to this JobViewer is not correct ..."]
+#             )
+#         if _ret.method.__name__ != self.method_name:
+#             raise e.code.CodingError(
+#                 msgs=[f"The method name set is not correct"]
+#             )
+#         return _ret
+#
+#     @property
+#     @util.CacheResult
+#     def button_label(self) -> str:
+#         if self.experiment is None:
+#             return self.method_name
+#         _title, _args = self.experiment.view_gui_label
+#         return "\n".join([_title, *_args])
+#
+#     @m.UseMethodInForm(label_fmt="button_label")
+#     def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
+#         # import
+#         from .. import gui
+#
+#         # if finished return
+#         _job = self.job
+#         if _job.is_finished or _job.is_failed:
+#             return self.job_gui()
+#
+#         _ret = gui.form.HashableMethodsRunnerForm(
+#             label=self.button_label.split("\n")[0],
+#             hashable=self,
+#             close_button=True,
+#             info_button=True,
+#             callable_names=["tags_gui", "artifacts_gui", "run_gui"],
+#             default_open=True,
+#         )
+#
+#         with _ret._button_bar:
+#             _txt = gui.widget.Text(default_value="<-- please run")
+#             # _txt.move_up()
+#
+#         return _ret
+#
+#     @m.UseMethodInForm(label_fmt="button_label")
+#     def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
+#         from .. import gui
+#
+#         _ret = gui.form.HashableMethodsRunnerForm(
+#             label=self.button_label.split("\n")[0] + f" : {self.method_name}",
+#             hashable=self,
+#             close_button=True,
+#             info_button=True,
+#             callable_names=["tags_gui", "artifacts_gui", ],
+#             default_open=True,
+#         )
+#
+#         _job = self.job
+#         with _ret._button_bar:
+#             if _job.is_failed:
+#                 gui.widget.Text(default_value="--- FAILED ---")
+#             elif _job.is_finished:
+#                 gui.widget.Text(default_value="--- FINISHED ---")
+#             else:
+#                 raise e.code.ShouldNeverHappen(msgs=[])
+#
+#         return _ret
+#
+#     @m.UseMethodInForm(label_fmt="Info")
+#     def info_widget(self) -> "gui.widget.Text":
+#         """
+#         We override as we are interested in field `experiment` and not `self` ...
+#         """
+#         # import
+#         from .. import gui
+#         # make
+#         _experiment = self.experiment
+#         _text = f"job-id: {self.job.job_id}\n\n"
+#         if _experiment is not None:
+#             _text += f"hex-hash: {_experiment.hex_hash}\n" \
+#                     f"{_experiment.yaml()}"
+#         # noinspection PyUnresolvedReferences
+#         _ret_widget = gui.widget.Text(default_value=_text)
+#         # return
+#         return _ret_widget
+#
+#     @m.UseMethodInForm(label_fmt="tags")
+#     def tags_gui(self) -> "gui.widget.Widget":
+#         return self.job.tag_manager.view()
 
 
 @dataclasses.dataclass
@@ -562,12 +562,12 @@ class Job:
     Note this can read cli args and construct `method` and `method_kwargs` fields
     """
 
-    @property
-    @util.CacheResult
-    def viewer(self) -> JobViewer:
-        _ret = JobViewer(experiment=self.experiment, method_name=self.method.__name__)
-        _ret.internal.job = self
-        return _ret
+    # @property
+    # @util.CacheResult
+    # def viewer(self) -> JobViewer:
+    #     _ret = JobViewer(experiment=self.experiment, method_name=self.method.__name__)
+    #     _ret.internal.job = self
+    #     return _ret
 
     @property
     @util.CacheResult
