@@ -4,6 +4,7 @@ todo: deprecate in favour of dapr module
 import abc
 import datetime
 import enum
+import os
 import inspect
 import pathlib
 import shutil
@@ -630,6 +631,41 @@ class Job:
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
         return self
+
+    def launch_as_subprocess(self, single_cpu: bool = False):
+        # ------------------------------------------------------------- 01
+        # make cli command
+        _cli_command = self.cli_command
+        if not single_cpu:
+            if 'WSL2' in settings.PLATFORM.release:
+                _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
+            else:
+                _cli_command = ["start", "cmd", "/c", ] + _cli_command
+
+        # ------------------------------------------------------------- 02
+        # check health
+        _ret = self.check_health(is_on_main_machine=True)
+        if _ret is not None:
+            _LOGGER.error(msg=_ret)
+            return
+
+        # ------------------------------------------------------------- 03
+        # create tag so that worker machine knows that the client has
+        # launched it
+        self.tag_manager.launched.create()
+
+        # ------------------------------------------------------------- 04
+        # run in subprocess
+        # do not tempt to use this as it adds dead lock
+        # todo: debug only possible on windows not on wsl linux
+        # if single_cpu:
+        #     if _job.experiment is None:
+        #         return _job.method()
+        #     else:
+        #         return _job.method(experiment=_job.experiment)
+        # else:
+        #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
+        _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
 
     def set_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
@@ -1267,7 +1303,6 @@ class _Common(m.HashableClass, abc.ABC):
     @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
-        print(self.view_callable_names, "???????????????????????????")
         if isinstance(self, Experiment):
             return gui.form.HashableMethodsRunnerForm(
                 label=self.view_gui_label.split("\n")[0],
