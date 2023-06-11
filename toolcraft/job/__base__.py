@@ -1120,6 +1120,104 @@ class Monitor:
         )
 
 
+@dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=[
+        'view_gui_label', 'view_gui_label_tooltip', 'associated_jobs'
+    ],
+)
+class _Common(m.HashableClass, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
+        if isinstance(self, Runner):
+            _methods = self.methods_to_be_used_in_jobs()["runner"]
+            return {
+                _m: Job(method=_m, runner=self, experiment=None)
+                for _m in _methods
+            }
+        elif isinstance(self, Experiment):
+            _runner = self.runner
+            _methods = _runner.methods_to_be_used_in_jobs()["experiment"]
+            return {
+                _m: Job(method=_m, runner=_runner, experiment=self)
+                for _m in _methods
+            }
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+
+    @property
+    @util.CacheResult
+    def view_gui_label(self) -> str:
+        if isinstance(self, Runner):
+            return f"{self.__class__.__module__}.{self.__class__.__name__}"
+        elif isinstance(self, Experiment):
+            return f"{self.__class__.__module__}:{self.mini_hex_hash}"
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+
+    @property
+    @util.CacheResult
+    def view_gui_label_tooltip(self) -> str:
+        return f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
+
+    @property
+    def view_callable_names(self) -> t.List[str]:
+        _ret = self.methods_to_be_used_in_gui_form()
+        # skip info_widget as that is controlled by `Experiment.view()` method
+        # Skip view as that makes the main form in which the remaining methods are shown
+        return [_ for _ in _ret if _ not in ["info_widget", "view"]]
+
+    @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
+    def view(self) -> "gui.form.HashableMethodsRunnerForm":
+        from .. import gui
+        if isinstance(self, Experiment):
+            return gui.form.HashableMethodsRunnerForm(
+                label=self.view_gui_label.split("\n")[0],
+                hashable=self,
+                close_button=True,
+                info_button=True,
+                callable_names=self.view_callable_names,
+                default_open=True,
+            )
+        elif isinstance(self, Runner):
+            return gui.form.HashableMethodsRunnerForm(
+                label=self.view_gui_label.split("\n")[0],
+                hashable=self,
+                close_button=False,
+                info_button=True,
+                callable_names=self.view_callable_names,
+                default_open=True,
+            )
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+
+    @m.UseMethodInForm(label_fmt="Job's")
+    def associated_jobs_view(self) -> "gui.widget.Widget":
+        from .. import gui
+        _jobs = self.associated_jobs
+        if isinstance(self, Runner):
+            _type = "runner"
+        elif isinstance(self, Experiment):
+            _type = "experiment"
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+        if bool(_jobs):
+            _form = gui.form.ButtonBarForm(
+                label=f"Jobs for this {_type} ...",
+                default_open=True,
+            )
+            for _k, _j in _jobs.items():
+                _form.register(
+                    key=_k.__name__, fn=lambda _j=_j: _j.view()
+                )
+            return _form
+        else:
+            return gui.widget.Text(
+                default_value=f"There are no jobs for this {_type} ...")
+
+
 class RunnerInternal(m.Internal):
     job: Job
 
@@ -1128,13 +1226,13 @@ class RunnerInternal(m.Internal):
 @m.RuleChecker(
     things_to_be_cached=[
         'cwd', 'flow', 'monitor', 'registered_experiments',
-        'associated_jobs', 'methods_to_be_used_in_jobs',
+        'methods_to_be_used_in_jobs',
     ],
     things_not_to_be_overridden=['cwd', 'py_script', 'monitor', 'methods_to_be_used_in_jobs'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
-class Runner(m.HashableClass, abc.ABC):
+class Runner(_Common, abc.ABC):
     """
     Can use click or pyinvoke also but not bothered about it as we don't intend to
     call ourselves from cli ... todo: check and do if it is interesting
@@ -1189,14 +1287,6 @@ class Runner(m.HashableClass, abc.ABC):
     @util.CacheResult
     def monitor(self) -> Monitor:
         return Monitor(runner=self)
-
-    @property
-    @util.CacheResult
-    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
-        _methods = self.methods_to_be_used_in_jobs()["runner"]
-        return {
-            _m: Job(method=_m, runner=self, experiment=None) for _m in _methods
-        }
 
     @property
     def copy_src_dst(self) -> t.Tuple[str, str]:
@@ -1302,6 +1392,7 @@ class Runner(m.HashableClass, abc.ABC):
         _hashable_class_attrs = dir(m.HashableClass)
         # other vars
         _cls = self.__class__
+        _methods_to_be_used_in_gui_form = self.methods_to_be_used_in_gui_form()
 
         # ------------------------------------------------------- 02
         # test fn signature
@@ -1309,26 +1400,31 @@ class Runner(m.HashableClass, abc.ABC):
         for _attr in [_ for _ in dir(_cls) if _ not in _hashable_class_attrs]:
 
             # --------------------------------------------------- 02.01
+            # skip methods that are used to create GUI
+            if _attr in _methods_to_be_used_in_gui_form:
+                continue
+
+            # --------------------------------------------------- 02.02
             # get cls attr value
             _cls_val = getattr(_cls, _attr)
 
-            # --------------------------------------------------- 02.02
+            # --------------------------------------------------- 02.03
             # if not method skip
             if not inspect.isfunction(_cls_val):
                 continue
 
-            # --------------------------------------------------- 02.03
+            # --------------------------------------------------- 02.04
             # ignore some special methods
             _val = getattr(self, _attr)
             if _val in _methods_to_skip:
                 continue
 
-            # --------------------------------------------------- 02.04
+            # --------------------------------------------------- 02.05
             # get signature
             _signature = inspect.signature(_cls_val)
             _parameter_keys = list(_signature.parameters.keys())
 
-            # --------------------------------------------------- 02.05
+            # --------------------------------------------------- 02.06
             # you must have self
             if "self" not in _parameter_keys:
                 raise e.code.CodingError(
@@ -1340,7 +1436,7 @@ class Runner(m.HashableClass, abc.ABC):
                     ]
                 )
 
-            # --------------------------------------------------- 02.06
+            # --------------------------------------------------- 02.07
             # if no other kwarg it's okay
             if len(_parameter_keys) == 1:
                 _ret["runner"].append(_val)
@@ -1444,9 +1540,9 @@ class Runner(m.HashableClass, abc.ABC):
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
-    things_to_be_cached=["associated_jobs", "view_gui_label", "view_gui_label_tooltip", ],
+    things_to_be_cached=[],
 )
-class Experiment(m.HashableClass, abc.ABC):
+class Experiment(_Common, abc.ABC):
     """
     Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
     be stored in same folder hierarchy if some portion of first strs of group_by matches...
@@ -1461,32 +1557,6 @@ class Experiment(m.HashableClass, abc.ABC):
 
     # runner
     runner: Runner
-
-    @property
-    @util.CacheResult
-    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
-        _runner = self.runner
-        _methods = _runner.methods_to_be_used_in_jobs()["experiment"]
-        return {
-            _m: Job(method=_m, runner=_runner, experiment=self) for _m in _methods
-        }
-
-    @property
-    @util.CacheResult
-    def view_gui_label(self) -> str:
-        return f"{self.__class__.__module__}:{self.mini_hex_hash}"
-
-    @property
-    @util.CacheResult
-    def view_gui_label_tooltip(self) -> str:
-        return f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
-
-    @property
-    def view_callable_names(self) -> t.List[str]:
-        _ret = self.methods_to_be_used_in_gui_form()
-        # skip info_widget as that is controlled by `Experiment.view()` method
-        # Skip view as that makes the main form in which the remaining methods are shown
-        return [_ for _ in _ret if _ not in ["info_widget", "view"]]
 
     def init(self):
         # ------------------------------------------------------------------ 01
@@ -1513,33 +1583,3 @@ class Experiment(m.HashableClass, abc.ABC):
         # ------------------------------------------------------------------ 04
         # make <hex_hash>.info for experiment if not present
         self.runner.monitor.make_experiment_info_file(experiment=self)
-
-    @m.UseMethodInForm(label_fmt="Job's")
-    def associated_jobs_view(self) -> "gui.widget.Widget":
-        from .. import gui
-        _jobs = self.associated_jobs
-        if bool(_jobs):
-            _form = gui.form.ButtonBarForm(
-                label="Jobs for this Experiment ...",
-                default_open=True,
-            )
-            for _k, _j in _jobs.items():
-                _form.register(
-                    key=_k.__name__, fn=lambda _j=_j: _j.view()
-                )
-            return _form
-        else:
-            return gui.widget.Text(
-                default_value="There are no jobs for this experiment ...")
-
-    @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
-    def view(self) -> "gui.form.HashableMethodsRunnerForm":
-        from .. import gui
-        return gui.form.HashableMethodsRunnerForm(
-            label=self.view_gui_label.split("\n")[0],
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=self.view_callable_names,
-            default_open=True,
-        )

@@ -220,10 +220,7 @@ def view():
         hr1: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
         hr2: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
         runner_jobs_view: gui.form.ButtonBarForm = dataclasses.field(
-            default_factory=lambda: gui.form.ButtonBarForm(
-                label="Runner Jobs ...",
-                default_open=True,
-            )
+            default_factory=lambda: _RUNNER.view()
         )
         hr3: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
         hr4: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
@@ -245,12 +242,12 @@ def view():
     def _j_view(_j: Job) -> gui.widget.Widget:
         return _j.view()
 
-    for _method, _job in _rp.track(_RUNNER.associated_jobs.items(), task_name="Register views for Runner"):
-        _dashboard.runner_jobs_view.register(
-            key=_method.__name__, gui_name=_method.__name__,
-            fn=_j_view,
-            fn_kwargs={"_j": _job}
-        )
+    # for _method, _job in _rp.track(_RUNNER.associated_jobs.items(), task_name="Register views for Runner"):
+    #     _dashboard.runner_jobs_view.register(
+    #         key=_method.__name__, gui_name=_method.__name__,
+    #         fn=_j_view,
+    #         fn_kwargs={"_j": _job}
+    #     )
 
     # ---------------------------------------------------------------- 05
     # add experiments
