@@ -88,14 +88,10 @@ def run(
     )
 
     # ------------------------------------------------------------ 02
-    # set job in runner
-    _RUNNER.internal.job = _job
-
-    # ------------------------------------------------------------ 03
     # get some vars
     _rp = _RUNNER.richy_panel
 
-    # ------------------------------------------------------------ 04
+    # ------------------------------------------------------------ 03
     # reconfig logger to change log file for job
     import logging
     _log = _job.log_file
@@ -121,7 +117,7 @@ def run(
         ]
     )
 
-    # ------------------------------------------------------------ 05
+    # ------------------------------------------------------------ 04
     # check if launcher client machine has created launched tag
     if not _job.tag_manager.launched.exists():
         raise e.code.CodingError(
@@ -130,17 +126,17 @@ def run(
             ]
         )
 
-    # ------------------------------------------------------------ 06
+    # ------------------------------------------------------------ 05
     # indicates that job is started
     _job.tag_manager.started.create()
 
-    # ------------------------------------------------------------ 07
+    # ------------------------------------------------------------ 06
     # indicate that job will now be running
     # also note this acts as semaphore and is deleted when job is finished
     # ... hence started tag is important
     _job.tag_manager.running.create()
 
-    # ------------------------------------------------------------ 08
+    # ------------------------------------------------------------ 07
     try:
         for _wj in _job.wait_on_jobs:
             if not _wj.is_finished:
@@ -151,7 +147,8 @@ def run(
         if _experiment is None:
             _job.method()
         else:
-            _job.method(experiment=_experiment)
+            with _experiment(richy_panel=_rp):
+                _job.method()
         _job.tag_manager.running.delete()
         _job.tag_manager.finished.create()
         _end = _now()
@@ -251,7 +248,7 @@ def view():
 
     # ---------------------------------------------------------------- 05
     # add experiments
-    for _experiment in _rp.track(_RUNNER.registered_experiments, task_name="Register views for Experiments"):
+    for _experiment in _rp.track(_RUNNER.registered_experiments.values(), task_name="Register views for Experiments"):
         _group_key = None
         if bool(_experiment.group_by):
             _group_key = " > ".join(_experiment.group_by)
