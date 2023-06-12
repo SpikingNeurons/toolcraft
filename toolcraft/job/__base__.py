@@ -673,6 +673,7 @@ class Job:
         # _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
         print("???", _cli_command)
         _ret = subprocess.run(_cli_command, shell=not single_cpu)
+        print(">XXXXXXXXXXXXXXXXX")
 
     def set_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
