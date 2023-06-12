@@ -632,15 +632,20 @@ class Job:
         self._wait_on.append(wait_on)
         return self
 
-    def launch_as_subprocess(self, single_cpu: bool = False):
+    def launch_as_subprocess(self, single_cpu: bool = False, cli_command: t.List[str] = None):
         # ------------------------------------------------------------- 01
         # make cli command
-        _cli_command = self.cli_command
-        if not single_cpu:
-            if 'WSL2' in settings.PLATFORM.release:
-                _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
-            else:
-                _cli_command = ["start", "cmd", "/c", ] + _cli_command
+        if cli_command is not None:
+            _cli_command = self.cli_command
+            if not single_cpu:
+                if 'WSL2' in settings.PLATFORM.release:
+                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
+                else:
+                    _cli_command = ["start", "cmd", "/c", ] + _cli_command
+        else:
+            _cli_command = cli_command
+            assert single_cpu is False, \
+                "single_cpu must be false as cli_command is supplied ... as this might be lsf job"
 
         # ------------------------------------------------------------- 02
         # check health

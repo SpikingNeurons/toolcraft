@@ -109,7 +109,7 @@ def lsf(
 
             # ------------------------------------------------- 02.03
             # run job
-            _job.launch_as_subprocess(single_cpu=False)
+            _job.launch_as_subprocess(single_cpu=False, cli_command=_cli_command)
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
