@@ -671,6 +671,7 @@ class Job:
         # else:
         #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
         # _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
+        print("???", _cli_command)
         _ret = subprocess.run(_cli_command, shell=not single_cpu)
 
     def set_launch_lsf_parameters(
