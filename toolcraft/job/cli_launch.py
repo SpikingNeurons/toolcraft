@@ -104,7 +104,7 @@ def lsf(
                     " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
                 _nxdi_prefix += ["-w", f"{_wait_on}"]
             _cli_command = _nxdi_prefix + _job.cli_command
-            print(" ".join(_cli_command))
+            print(">> ", " ".join(_cli_command))
             # _rp.log([" ".join(_cli_command)])
 
             # ------------------------------------------------- 02.03

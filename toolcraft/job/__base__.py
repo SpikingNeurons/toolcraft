@@ -670,7 +670,8 @@ class Job:
         #         return _job.method(experiment=_job.experiment)
         # else:
         #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
-        _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
+        # _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
+        _ret = subprocess.run(_cli_command, shell=not single_cpu)
 
     def set_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
