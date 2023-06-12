@@ -635,7 +635,7 @@ class Job:
     def launch_as_subprocess(self, single_cpu: bool = False, cli_command: t.List[str] = None):
         # ------------------------------------------------------------- 01
         # make cli command
-        if cli_command is not None:
+        if cli_command is None:
             _cli_command = self.cli_command
             if not single_cpu:
                 if 'WSL2' in settings.PLATFORM.release:
