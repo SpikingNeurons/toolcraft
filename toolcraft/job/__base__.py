@@ -493,30 +493,29 @@ class Job:
     def short_name(self) -> str:
         _job_id = self.job_id[:-20] + "..."
         if self.experiment is None:
-            return _job_id
+            return f"runner:{self.method.__name__}"
         else:
-            return ":".join(self.experiment.group_by + [_job_id])
+            _exp_short = self.experiment.hex_hash
+            _exp_short = f"{_exp_short[:4]}...{_exp_short[-4:]}"
+            return ":".join(self.experiment.group_by + [_exp_short, self.method.__name__, ])
 
     @property
+    @util.CacheResult
     def job_id(self) -> str:
         """
         Note that the job is made up of three unique things namely experiment,
         method and runner.
 
-        We assume that the runner is constant per file so to make job id unique
-        we compose it with method name and `experiment.hex_hash`.
-
         Note that experiment has runner as dataclass field so we really
         need not worry uniqueness of our job :) But when experiment is None we
         need to use runner hex_hash :(
         """
-        _ret = self.method.__name__
+        _ret = self.runner.hex_hash
         if self.experiment is None:
-            # we have to use runner hex as the job will not be unique on cluster
-            _ret += ":" + self.runner.hex_hash
+            _ret += f':{self.method.__name__}'
         else:
-            # Note we do not consider runner as it is dataclass field of experiment :)
-            _ret += ":" + self.experiment.hex_hash
+            assert _ret == self.experiment.runner.hex_hash, "some coding error"
+            _ret += f':{self.experiment.hex_hash}:{self.method.__name__}'
         return _ret
 
     @property
@@ -538,20 +537,14 @@ class Job:
         return _wait_on_jobs
 
     @property
+    @util.CacheResult
     def cli_command(self) -> t.List[str]:
-        # _command = [
-        #     shutil.which('python'), self.runner.py_script.absolute().as_posix(),
-        #     "run", self.method.__func__.__name__,
-        # ]
         _command = [
             sys.executable,
             self.runner.py_script.name,
             "run",
-            self.runner.hex_hash,
-            self.method.__func__.__name__,
+            self.job_id,
         ]
-        if self.experiment is not None:
-            _command += [self.experiment.hex_hash]
         return _command
 
     @property
@@ -1229,7 +1222,7 @@ class _Common(m.HashableClass, abc.ABC):
             _methods_to_skip = [
                 cls.methods_that_can_be_used_by_jobs,
                 cls.run,
-                cls.get_job_and_experi_from_strs,
+                cls.get_job_from_cli_run_arg,
             ]
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
@@ -1523,36 +1516,35 @@ class Runner(_Common, abc.ABC):
         # make <hex_hash>.info for runner if not present
         self.monitor.make_runner_info_file()
 
-    def get_job_and_experi_from_strs(
-        self,
-        runner: str, method: str, experiment: t.Optional[str] = None,
-    ) -> (Job, t.Optional["Experiment"]):
+    def get_job_from_cli_run_arg(self, job: str) -> Job:
         # ------------------------------------------------------------ 01
-        # validations
-        # ------------------------------------------------------------ 01.01
-        # the runner hash should always match
-        e.code.AssertError(
-            value1=runner, value2=self.hex_hash,
-            msgs=[
-                "The runner used is not exactly same"
-            ]
-        ).raise_if_failed()
-
-        # ------------------------------------------------------------ 02
-        # get job and experiment if available
-        if experiment is None:
-            _experiment = None
-            _method = getattr(self.__class__, method)
-            _job = self.associated_jobs[_method]
+        # read args and validate
+        _split_strs = job.split(":")
+        if len(_split_strs) in [2, 3]:
+            # -------------------------------------------------------- 01.01
+            # the runner hash should always match
+            e.code.AssertError(
+                value1=_split_strs[0], value2=self.hex_hash,
+                msgs=[
+                    "The runner used is not exactly same"
+                ]
+            ).raise_if_failed()
+            # -------------------------------------------------------- 01.02
+            if len(_split_strs) == 2:
+                _method = getattr(self.__class__, _split_strs[1])
+                return self.associated_jobs[_method]
+            else:
+                _experiment = self.monitor.get_experiment_from_hex_hash(hex_hash=_split_strs[1])
+                _method = getattr(_experiment.__class__, _split_strs[2])
+                return _experiment.associated_jobs[_method]
         else:
-            _experiment = self.monitor.get_experiment_from_hex_hash(
-                hex_hash=experiment)
-            _method = getattr(_experiment.__class__, method)
-            _job = _experiment.associated_jobs[_method]
-
-        # ------------------------------------------------------------ 03
-        # return
-        return _job, _experiment
+            raise e.code.CodingError(
+                msgs=[
+                    "The job str should have format "
+                    "<runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>",
+                    f"Found unknown str {job}"
+                ]
+            )
 
     def run(self):
         from . import cli
@@ -1563,7 +1555,7 @@ class Runner(_Common, abc.ABC):
             _sub_title = [f"command: {sys.argv[1]}"]
             if sys.argv[1] == "run":
                 # this means the arg represent a job
-                _job, _ = self.get_job_and_experi_from_strs(*sys.argv[2:])
+                _job = self.get_job_from_cli_run_arg(job=sys.argv[2])
                 _sub_title += [_job.short_name]
             else:
                 if bool(sys.argv[2:]):

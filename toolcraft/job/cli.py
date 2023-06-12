@@ -72,9 +72,7 @@ def nxdi():
 
 @_APP.command(help="Run the job")
 def run(
-    runner: str = typer.Argument(..., help="Runner used by running script.", show_default=False, ),
-    method: str = typer.Argument(..., help="Method to execute in runner.", show_default=False, ),
-    experiment: t.Optional[str] = typer.Argument(None, help="Experiment which will be used by method in runner."),
+    job: str = typer.Argument(..., help="Job ID in format <runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>", show_default=False, ),
 ):
     """
     Run a job in runner.
@@ -83,9 +81,7 @@ def run(
     # ------------------------------------------------------------ 01
     # get respective job
     # note that it also does validations
-    _job, _experiment = _RUNNER.get_job_and_experi_from_strs(
-        runner=runner, method=method, experiment=experiment,
-    )
+    _job = _RUNNER.get_job_from_cli_run_arg(job=job)
 
     # ------------------------------------------------------------ 02
     # get some vars
@@ -144,10 +140,10 @@ def run(
                     msgs=[f"Wait-on job with job-id "
                           f"{_wj.job_id} is supposed to be finished ..."]
                 )
-        if _experiment is None:
+        if _job.experiment is None:
             _job.method()
         else:
-            with _experiment(richy_panel=_rp):
+            with _job.experiment(richy_panel=_rp):
                 _job.method()
         _job.tag_manager.running.delete()
         _job.tag_manager.finished.create()
