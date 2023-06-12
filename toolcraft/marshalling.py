@@ -1868,8 +1868,8 @@ class HashableClass(YamlRepr, abc.ABC):
     @property
     def mini_hex_hash(self) -> str:
         _hex_hash = self.hex_hash
-        _hex_hash = _hex_hash[len(_hex_hash)-12:]
-        return _hex_hash
+        # _hex_hash = _hex_hash[len(_hex_hash)-12:]
+        return f"{_hex_hash[:6]}...{_hex_hash[-6:]}"
 
     @property
     @util.CacheResult
