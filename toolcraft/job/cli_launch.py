@@ -109,7 +109,8 @@ def lsf(
 
             # ------------------------------------------------- 02.03
             # run job
-            _job.launch_as_subprocess(single_cpu=False, cli_command=_cli_command)
+            # for bsub shell should be False
+            _job.launch_as_subprocess(shell=False, cli_command=_cli_command)
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
@@ -227,7 +228,7 @@ def local(
             # ------------------------------------------------- 04.07.01
             # for first job no need to check anything just launch
             if len(_jobs_running_in_parallel) == 0:
-                _job.launch_as_subprocess(single_cpu=single_cpu)
+                _job.launch_as_subprocess(shell=not single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]
@@ -245,7 +246,7 @@ def local(
                     _rp.update(f"⏰ {_job_short_name} :: postponed not enough memory")
                     continue
                 # all is well launch
-                _job.launch_as_subprocess(single_cpu=single_cpu)
+                _job.launch_as_subprocess(shell=not single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]

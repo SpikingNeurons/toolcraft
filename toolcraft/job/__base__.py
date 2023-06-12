@@ -632,20 +632,18 @@ class Job:
         self._wait_on.append(wait_on)
         return self
 
-    def launch_as_subprocess(self, single_cpu: bool = False, cli_command: t.List[str] = None):
+    def launch_as_subprocess(self, shell: bool = True, cli_command: t.List[str] = None):
         # ------------------------------------------------------------- 01
         # make cli command
         if cli_command is None:
             _cli_command = self.cli_command
-            if not single_cpu:
+            if shell:
                 if 'WSL2' in settings.PLATFORM.release:
                     _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
                 else:
                     _cli_command = ["start", "cmd", "/c", ] + _cli_command
         else:
             _cli_command = cli_command
-            assert single_cpu is False, \
-                "single_cpu must be false as cli_command is supplied ... as this might be lsf job"
 
         # ------------------------------------------------------------- 02
         # check health
@@ -670,10 +668,7 @@ class Job:
         #         return _job.method(experiment=_job.experiment)
         # else:
         #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
-        # _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
-        print("???", _cli_command)
-        _ret = subprocess.run(_cli_command, shell=not single_cpu)
-        print(">XXXXXXXXXXXXXXXXX")
+        _ret = subprocess.run(_cli_command, shell=shell, env=os.environ.copy())
 
     def set_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
