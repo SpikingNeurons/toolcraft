@@ -68,3 +68,14 @@
     colorlinks = false,
     linkbordercolor = {white},
 }
+
+%# >> predefined environments
+% Conditions for equations: https://tex.stackexchange.com/questions/95838/how-to-write-a-perfect-equation-parameters-description
+\newenvironment{conditions}
+  {\par\vspace{\abovedisplayskip}\noindent
+   \begin{tabular}{>{$}l<{$} @{} >{${}}c<{{}$} @{} l}}
+  {\end{tabular}\par\vspace{\belowdisplayskip}}
+\newenvironment{conditions*}
+  {\par\vspace{\abovedisplayskip}\noindent
+   \tabularx{\columnwidth}{>{$}l<{$} @{}>{${}}c<{{}$}@{} >{\raggedright\arraybackslash}X}}
+  {\endtabularx\par\vspace{\belowdisplayskip}}
