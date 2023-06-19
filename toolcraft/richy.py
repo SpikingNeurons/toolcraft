@@ -747,6 +747,9 @@ class StatusPanel(Widget):
     stages: t.Optional[
         t.Union[t.Sequence[t.Any], t.Iterable[t.Any]]
     ] = None
+
+    # this fild is to handle logging when log_task_progress is called
+    # note that we will write to log only when timer is elapsed
     log_task_progress_after: int = None
 
     @property
@@ -1026,14 +1029,17 @@ class StatusPanel(Widget):
                 msgs=[f"Unexpected {option=}"]
             )
 
-    def log_tasks_progress(self):
+    def log_tasks_progress(self, force: bool = False):
         if self.tc_log is None:
             raise e.code.CodingError(
                 msgs=[
                     "This method is only supported when tc_log field is supplied"
                 ]
             )
-        if (_now() - self._log_task_progress_after_track).seconds > self.log_task_progress_after_track:
+        if force:
+            self.generic_progress.log_tasks_progress()
+            return
+        if (_now() - self._log_task_progress_after_track).seconds > self.log_task_progress_after:
             # noinspection PyAttributeOutsideInit
             self._log_task_progress_after_track = _now()
             self.generic_progress.log_tasks_progress()
