@@ -264,6 +264,20 @@ def view():
 @_APP.command(help="Copies from server to cwd.")
 def copy():
     """
+    todo: Add support for more switches
+      https://superuser.com/questions/314503/what-does-robocopy-mean-by-tweaked-lonely-and-extra
+
+    Switch   Function
+    ======== =====================
+    /XL      eXclude Lonely files and directories.
+    /IT      Include Tweaked files.
+    /IS      Include Same files.
+    /XC      eXclude Changed files.
+    /XN      eXclude Newer files.
+    /XO      eXclude Older files.
+
+    Use the following switch to suppress the reporting and processing of Extra files:
+    /XX      eXclude eXtra files
     """
     _rp = _RUNNER.richy_panel
     _rp.update("copying results from server to cwd ...")
