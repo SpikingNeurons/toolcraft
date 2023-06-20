@@ -1566,6 +1566,7 @@ class Runner(_Common, abc.ABC):
             tc_log=_LOGGER,
             title=f"Running for py_script: {self.py_script.name!r}",
             sub_title=_sub_title,
+            log_task_progress_after=10*60,
         ) as _rp:
             with self(richy_panel=_rp):
                 cli.get_app(runner=self)()
