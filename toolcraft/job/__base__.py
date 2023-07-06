@@ -213,7 +213,7 @@ class TagManager:
                 else:
                     _show_log = False
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
-                    gui.widget.Button(label="Run", callback=lambda: self.job.method())
+                    gui.widget.Button(label="Run", callback=lambda: self.job.launch_as_subprocess())
                 if _show_log:
                     self.job.log_file.webbrowser_open_button(label="Show Full Log")
             if _description:
