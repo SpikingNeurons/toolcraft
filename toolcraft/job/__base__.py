@@ -1172,7 +1172,8 @@ class _Common(m.HashableClass, abc.ABC):
         _ret = self.methods_to_be_used_in_gui_form()
         # skip info_widget as that is controlled by `Experiment.view()` method
         # Skip view as that makes the main form in which the remaining methods are shown
-        return [_ for _ in _ret if _ not in ["info_widget", "view"]]
+        _ret = [_ for _ in _ret if _ not in ["info_widget", "view"]]
+        return _ret
 
     @property
     @util.CacheResult

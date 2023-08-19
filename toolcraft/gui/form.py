@@ -268,9 +268,10 @@ class HashableMethodsRunnerForm(Form):
         _button_bar = self._button_bar
         _receiver = self._receiver
         _hashable = self.hashable
-        _callable_names = self.callable_names
+        _callable_names = self.callable_names.copy()
         if self.info_button:
-            _callable_names.append("info_widget")
+            if "info_widget" not in _callable_names:
+                _callable_names.append("info_widget")
 
         # make buttons for callable names
         for _callable_name in _callable_names:
