@@ -1461,11 +1461,11 @@ class NpyFileGroup(FileGroup, abc.ABC):
                     _median[_k] = str(list(np.median(_v, axis=0)))
                     _mean[_k] = str(list(np.mean(_v, axis=0)))
                 else:
-                    _ = f"second dim={_v.shape[1]} is greater than 16"
-                    _min[_k] = _
-                    _max[_k] = _
-                    _median[_k] = _
-                    _mean[_k] = _
+                    _ = f"second dim={_v.shape[1]} is greater than 16 ... "
+                    _min[_k] = _ + f"({np.min(_v)})"
+                    _max[_k] = _ + f"({np.max(_v)})"
+                    _median[_k] = _ + f"({np.median(_v)})"
+                    _mean[_k] = _ + f"({np.mean(_v)})"
             else:
                 _ = f"ndim={_v.ndim} is greater than 2"
                 _min[_k] = _
