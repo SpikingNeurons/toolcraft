@@ -844,13 +844,12 @@ class FileGroup(StorageHashable, abc.ABC):
         # --------------------------------------------------------------03
         # if periodic check needed
         if self.periodic_check_needed:
-            self.check()
-            # raise e.validation.NotAllowed(
-            #     msgs=[
-            #         f"Make sure to perform check before using `get_files()` "
-            #         f"for class {self.__class__}"
-            #     ]
-            # )
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"Make sure to perform check before using `get_files()` "
+                    f"for class {self.__class__}"
+                ]
+            )
 
         # --------------------------------------------------------------04
         # delete if outdated
