@@ -65,8 +65,8 @@ class FileHash:
     # note that this is a list ... any one of the values in list will be picked
     # for determining if to do hash check or not ... this distributes the hash
     # check over time so that there is no time slogging
-    _MIN_HOURS = 10 * 24  # 10 days
-    _MAX_HOURS = 15 * 24  # 15 days
+    _MIN_HOURS = 100 * 24  # 100 days
+    _MAX_HOURS = 200 * 24  # 200 days
     CHECK_INTERVALS_IN_SEC = list(np.arange(_MIN_HOURS, _MAX_HOURS, 3) * 60 * 60)
     # CHECK_INTERVALS_IN_SEC = [1]
 
