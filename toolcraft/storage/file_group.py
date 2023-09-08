@@ -926,6 +926,8 @@ class FileGroup(StorageHashable, abc.ABC):
         _ret = []
         for k in _iterable:
 
+            _rp.update(f"creating file: {k}")
+
             # get expected file from key
             _expected_file = self.path / k
 
@@ -965,6 +967,8 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # append
             _ret.append(_expected_file)
+
+        _rp.update(f"finished creating files ... post runner will be called")
 
         # return list of created files
         return _ret
@@ -1455,17 +1459,17 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 _median[_k] = str(np.median(_v))
                 _mean[_k] = str(np.mean(_v))
             elif _v.ndim == 2:
-                if _v.shape[1] <= 16:
+                if _v.shape[1] <= 32:
                     _min[_k] = str(list(np.min(_v, axis=0)))
                     _max[_k] = str(list(np.max(_v, axis=0)))
                     _median[_k] = str(list(np.median(_v, axis=0)))
                     _mean[_k] = str(list(np.mean(_v, axis=0)))
                 else:
-                    _ = f"second dim={_v.shape[1]} is greater than 16 ... "
-                    _min[_k] = _ + f"({np.min(_v)})"
-                    _max[_k] = _ + f"({np.max(_v)})"
-                    _median[_k] = _ + f"({np.median(_v)})"
-                    _mean[_k] = _ + f"({np.mean(_v)})"
+                    _ = f"second dim={_v.shape[1]} is greater than 32 ... "
+                    _min[_k] = _
+                    _max[_k] = _
+                    _median[_k] = _
+                    _mean[_k] = _
             else:
                 _ = f"ndim={_v.ndim} is greater than 2"
                 _min[_k] = _
