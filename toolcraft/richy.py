@@ -10,6 +10,7 @@ todo: add terminal plotting support
     this is possible as terminals can display raster images
     Extend StatusPanel for this
 """
+import code
 import time
 from collections.abc import Sized
 import dataclasses
@@ -503,6 +504,20 @@ class Progress(Widget):
         # return
         return self.tasks[task_name]
 
+    def log_tasks_progress(self):
+        if self.tc_log is None:
+            raise e.code.CodingError(
+                msgs=[
+                    "This method is only supported when tc_log field is supplied"
+                ]
+            )
+        _msgs = []
+        for _k, _v in self.tasks.items():
+            _msgs.append(
+                f"  >> {_k:30s} ... {_v.rich_task.percentage} % ..."
+            )
+        self.tc_log.info(msg=f"[{self.title}] tasks progress ...", msgs=_msgs)
+
     def update(
         self,
         task_name: str = None, advance: float = None,
@@ -733,6 +748,10 @@ class StatusPanel(Widget):
         t.Union[t.Sequence[t.Any], t.Iterable[t.Any]]
     ] = None
 
+    # this fild is to handle logging when log_task_progress is called
+    # note that we will write to log only when timer is elapsed
+    log_task_progress_after: int = None
+
     @property
     @util.CacheResult
     def generic_progress(self) -> Progress:
@@ -782,6 +801,15 @@ class StatusPanel(Widget):
     def __post_init__(self):
         # noinspection PyTypeChecker
         self.current_stage = None  # type: str
+        if self.log_task_progress_after is not None:
+            if self.tc_log is None:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "You have supplied field `log_task_progress_after` "
+                        "so please make sure to supply field `tc_log`"
+                    ]
+                )
+            self._log_task_progress_after_track = _now()  # type: datetime.datetime
         super().__post_init__()
 
     def __setitem__(self, key: str, value: t.Union[rich.jupyter.JupyterMixin, Widget, r_console.Group]):
@@ -1000,6 +1028,21 @@ class StatusPanel(Widget):
             raise e.code.CodingError(
                 msgs=[f"Unexpected {option=}"]
             )
+
+    def log_tasks_progress(self, force: bool = False):
+        if self.tc_log is None:
+            raise e.code.CodingError(
+                msgs=[
+                    "This method is only supported when tc_log field is supplied"
+                ]
+            )
+        if force:
+            self.generic_progress.log_tasks_progress()
+            return
+        if (_now() - self._log_task_progress_after_track).seconds > self.log_task_progress_after:
+            # noinspection PyAttributeOutsideInit
+            self._log_task_progress_after_track = _now()
+            self.generic_progress.log_tasks_progress()
 
     def stop(self):
         self._live.stop()

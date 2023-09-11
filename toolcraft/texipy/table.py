@@ -182,7 +182,9 @@ class ColumnFmt:
         return ColumnFmt(type='b', width=width, insert_before=insert_before, insert_after=insert_after)
 
     @classmethod
-    def stretched(cls, insert_before: str = None, insert_after: str = None) -> "ColumnFmt":
+    def stretched(
+        cls, insert_before: str = None, insert_after: str = None
+    ) -> "ColumnFmt":
         # The tabularx package requires the same arguments of tabular* but, in order to
         # let the table have the width specified by the user, it modifies the width of
         # certain columns instead of the space between columns. The columns that can be
@@ -312,7 +314,7 @@ class TableColsDef:
 
 @dataclasses.dataclass
 class Row(LaTeX):
-    items: t.List[t.Union[str, LaTeX, Text, ParaBox]] = None
+    items: t.List[t.Union[str, LaTeX, Text, ParaBox, MultiColumnCell, MultiRowCell]] = None
     # start new row (additional space may be specified after \\ using square brackets, such as \\[6pt])
     height: Scalar = None
     color: t.Union[Color, str] = None

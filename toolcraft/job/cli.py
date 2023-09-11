@@ -14,7 +14,6 @@ import traceback
 
 from .. import error as e
 from .. import logger
-from .. import settings
 from .__base__ import Runner, Job
 from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
 from . import cli_launch
@@ -73,8 +72,7 @@ def nxdi():
 
 @_APP.command(help="Run the job")
 def run(
-    method: str = typer.Argument(..., help="Method to execute in runner.", show_default=False, ),
-    experiment: t.Optional[str] = typer.Argument(None, help="Experiment which will be used by method in runner."),
+    job: str = typer.Argument(..., help="Job ID in format <runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>", show_default=False, ),
 ):
     """
     Run a job in runner.
@@ -82,28 +80,14 @@ def run(
 
     # ------------------------------------------------------------ 01
     # get respective job
-    try:
-        _method = getattr(_RUNNER, method)
-    except AttributeError as _ae:
-        raise e.code.NotAllowed(
-            msgs=[f"The method with name {method} is not available in runner class {_RUNNER.__class__}"]
-        )
-    if experiment is None:
-        _experiment = None
-        _job = _RUNNER.associated_jobs[_method]
-    else:
-        _experiment = _RUNNER.monitor.get_experiment_from_hex_hash(hex_hash=experiment)
-        _job = _experiment.associated_jobs[_method]
+    # note that it also does validations
+    _job = _RUNNER.get_job_from_cli_run_arg(job=job)
 
     # ------------------------------------------------------------ 02
-    # set job in runner
-    _RUNNER.internal.job = _job
-
-    # ------------------------------------------------------------ 03
     # get some vars
     _rp = _RUNNER.richy_panel
 
-    # ------------------------------------------------------------ 04
+    # ------------------------------------------------------------ 03
     # reconfig logger to change log file for job
     import logging
     _log = _job.log_file
@@ -129,7 +113,7 @@ def run(
         ]
     )
 
-    # ------------------------------------------------------------ 05
+    # ------------------------------------------------------------ 04
     # check if launcher client machine has created launched tag
     if not _job.tag_manager.launched.exists():
         raise e.code.CodingError(
@@ -138,17 +122,17 @@ def run(
             ]
         )
 
-    # ------------------------------------------------------------ 06
+    # ------------------------------------------------------------ 05
     # indicates that job is started
     _job.tag_manager.started.create()
 
-    # ------------------------------------------------------------ 07
+    # ------------------------------------------------------------ 06
     # indicate that job will now be running
     # also note this acts as semaphore and is deleted when job is finished
     # ... hence started tag is important
     _job.tag_manager.running.create()
 
-    # ------------------------------------------------------------ 08
+    # ------------------------------------------------------------ 07
     try:
         for _wj in _job.wait_on_jobs:
             if not _wj.is_finished:
@@ -156,10 +140,11 @@ def run(
                     msgs=[f"Wait-on job with job-id "
                           f"{_wj.job_id} is supposed to be finished ..."]
                 )
-        if _experiment is None:
+        if _job.experiment is None:
             _job.method()
         else:
-            _job.method(experiment=_experiment)
+            with _job.experiment(richy_panel=_rp):
+                _job.method()
         _job.tag_manager.running.delete()
         _job.tag_manager.finished.create()
         _end = _now()
@@ -228,10 +213,7 @@ def view():
         hr1: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
         hr2: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
         runner_jobs_view: gui.form.ButtonBarForm = dataclasses.field(
-            default_factory=lambda: gui.form.ButtonBarForm(
-                label="Runner Jobs ...",
-                default_open=True,
-            )
+            default_factory=lambda: _RUNNER.view()
         )
         hr3: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
         hr4: gui.widget.Separator = dataclasses.field(default_factory=gui.widget.Separator)
@@ -253,16 +235,16 @@ def view():
     def _j_view(_j: Job) -> gui.widget.Widget:
         return _j.view()
 
-    for _method, _job in _rp.track(_RUNNER.associated_jobs.items(), task_name="Register views for Runner"):
-        _dashboard.runner_jobs_view.register(
-            key=_method.__name__, gui_name=_method.__name__,
-            fn=_j_view,
-            fn_kwargs={"_j": _job}
-        )
+    # for _method, _job in _rp.track(_RUNNER.associated_jobs.items(), task_name="Register views for Runner"):
+    #     _dashboard.runner_jobs_view.register(
+    #         key=_method.__name__, gui_name=_method.__name__,
+    #         fn=_j_view,
+    #         fn_kwargs={"_j": _job}
+    #     )
 
     # ---------------------------------------------------------------- 05
     # add experiments
-    for _experiment in _rp.track(_RUNNER.registered_experiments, task_name="Register views for Experiments"):
+    for _experiment in _rp.track(_RUNNER.registered_experiments.values(), task_name="Register views for Experiments"):
         _group_key = None
         if bool(_experiment.group_by):
             _group_key = " > ".join(_experiment.group_by)
@@ -282,6 +264,20 @@ def view():
 @_APP.command(help="Copies from server to cwd.")
 def copy():
     """
+    todo: Add support for more switches
+      https://superuser.com/questions/314503/what-does-robocopy-mean-by-tweaked-lonely-and-extra
+
+    Switch   Function
+    ======== =====================
+    /XL      eXclude Lonely files and directories.
+    /IT      Include Tweaked files.
+    /IS      Include Same files.
+    /XC      eXclude Changed files.
+    /XN      eXclude Newer files.
+    /XO      eXclude Older files.
+
+    Use the following switch to suppress the reporting and processing of Extra files:
+    /XX      eXclude eXtra files
     """
     _rp = _RUNNER.richy_panel
     _rp.update("copying results from server to cwd ...")
@@ -309,22 +305,22 @@ def clean():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             if not _j.is_finished:
-                _rp.update(f"Deleting job {_j.job_id}")
+                _rp.update(f"Deleting job {_j.short_name}")
                 _j.path.delete(recursive=True)
 
 
-@_APP.command(help="Deletes the job in runner (use carefully).")
+@_APP.command(help="Deletes the job in runner even successfully finished runs (use carefully).")
 def delete():
     """
     """
     _rp = _RUNNER.richy_panel
     # todo: support asking prompts later ...
-    # _delete = _rp.ask(prompt="Are you sure you want to delete? It will delete even complted runs!!", option='confirm')
+    # _delete = _rp.ask(prompt="Are you sure you want to delete? It will delete even completed runs!!", option='confirm')
     for _stage_name, _stage in _rp.track(_RUNNER.flow.stages.items(), task_name="Scanning stages"):
         _rp.update(f"Scanning stage {_stage_name} ...")
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
-            _rp.update(f"Deleting job {_j.job_id}")
+            _rp.update(f"Deleting job {_j.short_name}")
             _j.path.delete(recursive=True)
 
 
@@ -338,11 +334,7 @@ def unfinished():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if not _j.is_finished:
-                _logs = []
-                if _j.experiment is not None:
-                    _logs += _j.experiment.group_by
-                _logs += [_j.job_id]
-                _rp.log(_logs)
+                _rp.log([_j.short_name])
 
 
 @_APP.command(help="Lists the jobs in runner that have failed.")
@@ -355,8 +347,4 @@ def failed():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Scanning for stage {_stage_name}"):
             if _j.is_failed:
-                _logs = []
-                if _j.experiment is not None:
-                    _logs += _j.experiment.group_by
-                _logs += [_j.job_id]
-                _rp.log(_logs)
+                _rp.log([_j.short_name])

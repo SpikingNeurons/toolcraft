@@ -38,33 +38,6 @@ _APP = typer.Typer(
 )
 
 
-def _run_job(_job: Job, _cli_command: t.List[str], single_cpu: bool):
-    # ------------------------------------------------------------- 01
-    # check health
-    _ret = _job.check_health(is_on_main_machine=True)
-    if _ret is not None:
-        _LOGGER.error(msg=_ret)
-        return
-
-    # ------------------------------------------------------------- 02
-    # create tag so that worker machine knows that the client has
-    # launched it
-    _job.tag_manager.launched.create()
-
-    # ------------------------------------------------------------- 03
-    # run in subprocess
-    # do not tempt to use this as it adds dead lock
-    # todo: debug only possible on windows not on wsl linux
-    # if single_cpu:
-    #     if _job.experiment is None:
-    #         return _job.method()
-    #     else:
-    #         return _job.method(experiment=_job.experiment)
-    # else:
-    #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
-    _ret = subprocess.run(_cli_command, shell=not single_cpu, env=os.environ.copy())
-
-
 @_APP.command(help="Launches all the jobs in runner on lsf infrastructure.")
 def lsf(
     email: bool = typer.Option(default=False, help="Set this if you want to receive email after lsf job completion."),
@@ -101,10 +74,10 @@ def lsf(
         ):
             # ------------------------------------------------- 02.01
             if _job.is_finished:
-                _rp.update(f"skipping {_stage_key}:{_job.job_id}")
+                _rp.update(f"skipping {_stage_key}:{_job.short_name}")
                 continue
             else:
-                _rp.update(f"launching {_stage_key}:{_job.job_id}")
+                _rp.update(f"launching {_stage_key}:{_job.short_name}")
 
             # ------------------------------------------------- 02.02
             # make cli command
@@ -131,12 +104,13 @@ def lsf(
                     " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
                 _nxdi_prefix += ["-w", f"{_wait_on}"]
             _cli_command = _nxdi_prefix + _job.cli_command
-            print(" ".join(_cli_command))
+            print(">> ", " ".join(_cli_command))
             # _rp.log([" ".join(_cli_command)])
 
             # ------------------------------------------------- 02.03
             # run job
-            _run_job(_job, _cli_command, single_cpu=False)
+            # for bsub shell should be False
+            _job.launch_as_subprocess(shell=False, cli_command=_cli_command)
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
@@ -190,11 +164,12 @@ def local(
             # ------------------------------------------------- 04.01
             # get job
             _job = _all_jobs[_job_flow_id]
+            _job_short_name = _job.short_name
 
             # ------------------------------------------------- 04.02
             # if finished skip
             if _job.is_finished:
-                _rp.log([f"✅ {_job_flow_id} :: skipping already finished"])
+                _rp.log([f"✅ {_job_short_name} :: skipping already finished"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
@@ -202,7 +177,7 @@ def local(
             # ------------------------------------------------- 04.03
             # if failed skip
             if _job.is_failed:
-                _rp.log([f"❌ {_job_flow_id} :: skipping as it is failed"])
+                _rp.log([f"❌ {_job_short_name} :: skipping as it is failed"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
@@ -216,7 +191,7 @@ def local(
                     _one_or_more_failed = True
                     break
             if _one_or_more_failed:
-                _rp.log([f"❌ {_job_flow_id} :: skipping as one or more wait_on job failed"])
+                _rp.log([f"❌ {_job_short_name} :: skipping as one or more wait_on job failed"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
@@ -230,19 +205,19 @@ def local(
                     _all_finished = False
                     break
             if not _all_finished:
-                _rp.update(f"⏰ {_job.job_id} :: postponed wait_on jobs not completed")
+                _rp.update(f"⏰ {_job_short_name} :: postponed wait_on jobs not completed")
                 continue
 
             # ------------------------------------------------- 04.06
             # if any already launched job is finished then remove from dict _jobs_running_in_parallel
             for _k in list(_jobs_running_in_parallel.keys()):
                 if _jobs_running_in_parallel[_k].is_finished:
-                    _rp.update(f"✅ {_job.job_id} :: completed")
+                    _rp.update(f"✅ {_job_short_name} :: completed")
                     del _jobs_running_in_parallel[_k]
                     _job_track_task.update(advance=1)
                     continue
                 if _jobs_running_in_parallel[_k].is_failed:
-                    _rp.update(f"❌ {_job.job_id} :: failed")
+                    _rp.update(f"❌ {_job_short_name} :: failed")
                     del _jobs_running_in_parallel[_k]
                     _job_track_task.update(advance=1)
                     continue
@@ -251,40 +226,32 @@ def local(
             # if we reach here that means all jobs are over and current job is eligible to execute
             # but before launching make sure that memory and cpus are available
             # ------------------------------------------------- 04.07.01
-            # make cli command
-            _cli_command = _job.cli_command
-            if not single_cpu:
-                if 'WSL2' in settings.PLATFORM.release:
-                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
-                else:
-                    _cli_command = ["start", "cmd", "/c", ] + _cli_command
-            # ------------------------------------------------- 04.07.02
             # for first job no need to check anything just launch
             if len(_jobs_running_in_parallel) == 0:
-                _run_job(_job, _cli_command, single_cpu=single_cpu)
+                _job.launch_as_subprocess(shell=not single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
-                _rp.log([f"🏁 {_job.job_id} :: launching"])
+                _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
                 continue
-            # ------------------------------------------------- 04.07.03
+            # ------------------------------------------------- 04.07.02
             # else we need to do multiple things
             else:
                 # if not enough cpus then skip
                 if len(_jobs_running_in_parallel) >= _MAX_JOBS:
-                    _rp.update(f"⏰ {_job.job_id} :: postponed not enough cpu's")
+                    _rp.update(f"⏰ {_job_short_name} :: postponed not enough cpu's")
                     continue
                 # if enough memory not available then skip
                 if psutil.virtual_memory()[2] > _MAX_MEMORY_USAGE_IN_PERCENT:
-                    _rp.update(f"⏰ {_job.job_id} :: postponed not enough memory")
+                    _rp.update(f"⏰ {_job_short_name} :: postponed not enough memory")
                     continue
                 # all is well launch
-                _run_job(_job, _cli_command, single_cpu=single_cpu)
+                _job.launch_as_subprocess(shell=not single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
-                _rp.log([f"🏁 {_job.job_id} :: launching"])
+                _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]
                 _job_track_task.update(advance=1)
-            # ------------------------------------------------- 04.07.04
+            # ------------------------------------------------- 04.07.03
             # _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS
             # this allows the job to enter properly and get realistic ram usage
             time.sleep(_WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS)

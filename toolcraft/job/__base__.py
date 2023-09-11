@@ -4,6 +4,7 @@ todo: deprecate in favour of dapr module
 import abc
 import datetime
 import enum
+import os
 import inspect
 import pathlib
 import shutil
@@ -212,7 +213,7 @@ class TagManager:
                 else:
                     _show_log = False
                     gui.widget.Text(default_value=">> PLEASE RUN <<")
-                    gui.widget.Button(label="Run", callback=lambda: self.job())
+                    gui.widget.Button(label="Run", callback=lambda: self.job.launch_as_subprocess())
                 if _show_log:
                     self.job.log_file.webbrowser_open_button(label="Show Full Log")
             if _description:
@@ -232,115 +233,6 @@ class TagManager:
         # ----------------------------------------------------------------- 03
         # return
         return _ret
-
-
-class JobViewerInternal(m.Internal):
-    job: "Job"
-
-
-@dataclasses.dataclass(frozen=True)
-class JobViewer(m.HashableClass):
-
-    method_name: str
-    experiment: t.Optional["Experiment"]
-
-    @property
-    @util.CacheResult
-    def internal(self) -> JobViewerInternal:
-        return JobViewerInternal(owner=self)
-
-    @property
-    @util.CacheResult
-    def job(self) -> "Job":
-        _ret = self.internal.job
-        if _ret.experiment != self.experiment:
-            raise e.code.CodingError(
-                msgs=["Job set to this JobViewer is not correct ..."]
-            )
-        if _ret.method.__name__ != self.method_name:
-            raise e.code.CodingError(
-                msgs=[f"The method name set is not correct"]
-            )
-        return _ret
-
-    @property
-    @util.CacheResult
-    def button_label(self) -> str:
-        if self.experiment is None:
-            return self.method_name
-        _title, _args = self.experiment.view_gui_label
-        return "\n".join([_title, *_args])
-
-    @m.UseMethodInForm(label_fmt="button_label")
-    def job_gui_with_run(self) -> "gui.form.HashableMethodsRunnerForm":
-        # import
-        from .. import gui
-
-        # if finished return
-        _job = self.job
-        if _job.is_finished or _job.is_failed:
-            return self.job_gui()
-
-        _ret = gui.form.HashableMethodsRunnerForm(
-            label=self.button_label.split("\n")[0],
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=["tags_gui", "artifacts_gui", "run_gui"],
-            default_open=True,
-        )
-
-        with _ret._button_bar:
-            _txt = gui.widget.Text(default_value="<-- please run")
-            # _txt.move_up()
-
-        return _ret
-
-    @m.UseMethodInForm(label_fmt="button_label")
-    def job_gui(self) -> "gui.form.HashableMethodsRunnerForm":
-        from .. import gui
-
-        _ret = gui.form.HashableMethodsRunnerForm(
-            label=self.button_label.split("\n")[0] + f" : {self.method_name}",
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=["tags_gui", "artifacts_gui", ],
-            default_open=True,
-        )
-
-        _job = self.job
-        with _ret._button_bar:
-            if _job.is_failed:
-                gui.widget.Text(default_value="--- FAILED ---")
-            elif _job.is_finished:
-                gui.widget.Text(default_value="--- FINISHED ---")
-            else:
-                raise e.code.ShouldNeverHappen(msgs=[])
-
-        return _ret
-
-    @m.UseMethodInForm(label_fmt="Info")
-    def info_widget(self) -> "gui.widget.Text":
-        """
-        We override as we are interested in field `experiment` and not `self` ...
-        """
-        # import
-        from .. import gui
-        # make
-        _experiment = self.experiment
-        _text = f"job-id: {self.job.job_id}\n\n"
-        if _experiment is not None:
-            _text += f"hex-hash: {_experiment.hex_hash}\n" \
-                    f"{_experiment.yaml()}"
-        # noinspection PyUnresolvedReferences
-        _ret_widget = gui.widget.Text(default_value=_text)
-        # return
-        return _ret_widget
-
-    @m.UseMethodInForm(label_fmt="tags")
-    def tags_gui(self) -> "gui.widget.Widget":
-        return self.job.tag_manager.view()
 
 
 @dataclasses.dataclass
@@ -564,13 +456,6 @@ class Job:
 
     @property
     @util.CacheResult
-    def viewer(self) -> JobViewer:
-        _ret = JobViewer(experiment=self.experiment, method_name=self.method.__name__)
-        _ret.internal.job = self
-        return _ret
-
-    @property
-    @util.CacheResult
     def tag_manager(self) -> TagManager:
         return TagManager(job=self)
 
@@ -605,21 +490,32 @@ class Job:
         return self.tag_manager.failed.exists()
 
     @property
+    def short_name(self) -> str:
+        _job_id = self.job_id[:-20] + "..."
+        if self.experiment is None:
+            return f"runner:{self.method.__name__}"
+        else:
+            _exp_short = self.experiment.hex_hash
+            _exp_short = f"{_exp_short[:4]}...{_exp_short[-4:]}"
+            return ":".join(self.experiment.group_by + [_exp_short, self.method.__name__, ])
+
+    @property
+    @util.CacheResult
     def job_id(self) -> str:
         """
-        Note that the job is made up of three unique things namely experiment, method and runner.
-        We assume that the runner is constant per file so to make job id unique we compose it with method name
-        and `experiment.hex_hash`.
-        Note that experiment has runner as dataclass field so we really need not worry uniqueness of our job :)
-        But when experiment is None we need to use runner hex_hash :(
+        Note that the job is made up of three unique things namely experiment,
+        method and runner.
+
+        Note that experiment has runner as dataclass field so we really
+        need not worry uniqueness of our job :) But when experiment is None we
+        need to use runner hex_hash :(
         """
-        _ret = self.method.__name__
+        _ret = self.runner.hex_hash
         if self.experiment is None:
-            # we have to use runner hex has as the job will not be unique on cluster
-            _ret += ":" + self.runner.hex_hash
+            _ret += f':{self.method.__name__}'
         else:
-            # NOte we do not consider runner as it is dataclass field of experiment :)
-            _ret += ":" + self.experiment.hex_hash
+            assert _ret == self.experiment.runner.hex_hash, "some coding error"
+            _ret += f':{self.experiment.hex_hash}:{self.method.__name__}'
         return _ret
 
     @property
@@ -641,18 +537,14 @@ class Job:
         return _wait_on_jobs
 
     @property
+    @util.CacheResult
     def cli_command(self) -> t.List[str]:
-        # _command = [
-        #     shutil.which('python'), self.runner.py_script.absolute().as_posix(),
-        #     "run", self.method.__func__.__name__,
-        # ]
         _command = [
             sys.executable,
             self.runner.py_script.name,
-            "run", self.method.__func__.__name__,
+            "run",
+            self.job_id,
         ]
-        if self.experiment is not None:
-            _command += [self.experiment.hex_hash]
         return _command
 
     @property
@@ -700,79 +592,76 @@ class Job:
         method: t.Callable,
         experiment: t.Optional["Experiment"] = None,
     ):
+
         # ------------------------------------------------------------------ 01
-        # assign some vars
-        self.runner = runner
-        # noinspection PyTypeChecker
-        self.method = method  # type: types.MethodType
-        self.experiment = experiment
-        # container to save wait_on jobs
-        self._wait_on = []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
-
-        # ------------------------------------------------------------------ 02
-        # make sure that method is from same runner instance
-        try:
-            # noinspection PyTypeChecker
-            if id(self.method.__self__) != id(runner):
-                raise e.code.CodingError(
-                    msgs=["Was expecting them to be same instance"]
-                )
-        except Exception as _ex:
-            raise e.code.CodingError(
-                msgs=[
-                    f"Doesn't seem like a method of an instance ...", _ex
-                ]
-            )
-
-        # ------------------------------------------------------------------ 03
         # check if method supplies is available in runner
         if experiment is None:
             e.validation.ShouldBeOneOf(
-                value=method, values=runner.methods_to_be_used_in_jobs()["runner"],
+                value=method, values=runner.methods_that_can_be_used_by_jobs(),
                 msgs=[
                     f"Method {method} is not recognized as a method that can be used with runner level Job's"
                 ]
             ).raise_if_failed()
         else:
             e.validation.ShouldBeOneOf(
-                value=method, values=runner.methods_to_be_used_in_jobs()["experiment"],
+                value=method, values=experiment.methods_that_can_be_used_by_jobs(),
                 msgs=[
                     f"Method {method} is not recognized as a method that can be used with experiment level Job's"
                 ]
             ).raise_if_failed()
 
-    def _call__(self, run_locally: bool = False):
-        """
-        Launches job locally ... to be used from GUI
-
-        Set shell=False when in single cpu mode generally useful for debugging
-
-        Refer `cli_launch.local` where we use same logic to call local
-        job in debug and non-debug mode
-        """
-        if run_locally:
-            if self.experiment is None:
-                return self.method()
-            else:
-                return self.method(self.experiment)
-
-        from .cli_launch import _run_job
-        _cli_command = self.cli_command
-        _py_debug = settings.PYC_DEBUGGING
-        _shell = not _py_debug
-        if not _py_debug:
-            if 'WSL2' in settings.PLATFORM.release:
-                # _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)}; exec bash\""
-                _cli_command = f"gnome-terminal -- bash -c \"{' '.join(_cli_command)} \""
-            else:
-                _cli_command = ["start", "cmd", "/c", ] + _cli_command
-        if not self.path.exists():
-            self.path.mkdir(create_parents=True)
-        _run_job(self, _cli_command, shell=_shell)
+        # ------------------------------------------------------------------ 02
+        # assign some vars
+        self.runner = runner
+        self.experiment = experiment
+        if experiment is None:
+            self.method = getattr(runner, method.__name__)  # type: types.MethodType
+        else:
+            self.method = getattr(experiment, method.__name__)  # type: types.MethodType
+        # container to save wait_on jobs
+        self._wait_on = []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on.append(wait_on)
         return self
+
+    def launch_as_subprocess(self, shell: bool = True, cli_command: t.List[str] = None):
+        # ------------------------------------------------------------- 01
+        # make cli command
+        if cli_command is None:
+            _cli_command = self.cli_command
+            if shell:
+                if 'WSL2' in settings.PLATFORM.release:
+                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
+                else:
+                    _cli_command = ["start", "cmd", "/c", ] + _cli_command
+        else:
+            _cli_command = cli_command
+
+        # ------------------------------------------------------------- 02
+        # check health
+        _ret = self.check_health(is_on_main_machine=True)
+        if _ret is not None:
+            _LOGGER.error(msg=_ret)
+            return
+
+        # ------------------------------------------------------------- 03
+        # create tag so that worker machine knows that the client has
+        # launched it
+        self.tag_manager.launched.create()
+
+        # ------------------------------------------------------------- 04
+        # run in subprocess
+        # do not tempt to use this as it adds dead lock
+        # todo: debug only possible on windows not on wsl linux
+        # if single_cpu:
+        #     if _job.experiment is None:
+        #         return _job.method()
+        #     else:
+        #         return _job.method(experiment=_job.experiment)
+        # else:
+        #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
+        _ret = subprocess.run(_cli_command, shell=shell, env=os.environ.copy())
 
     def set_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
@@ -882,6 +771,12 @@ class Job:
             return None
 
     def view(self) -> "gui.widget.Widget":
+        """
+        todo: Add more views like
+          + artifact manager view
+          + live status
+          + log streams
+        """
         return self.tag_manager.view()
 
     # noinspection PyUnresolvedReferences
@@ -1214,7 +1109,7 @@ class Monitor:
 
         # ------------------------------------------------------------- 02
         # check if current runner instance has it
-        for _ in self.runner.registered_experiments:
+        for _ in self.runner.registered_experiments.values():
             if _.hex_hash == hex_hash:
                 # sanity check
                 assert _experiment_info_file.exists(), "was expecting this to be present"
@@ -1245,21 +1140,269 @@ class Monitor:
         )
 
 
-class RunnerInternal(m.Internal):
-    job: Job
+@dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=[
+        'view_gui_label', 'view_gui_label_tooltip', 'view_callable_names',
+        'associated_jobs'
+    ],
+    things_not_to_be_cached=['job'],
+    things_not_to_be_overridden=['job'],
+)
+class _Common(m.HashableClass, abc.ABC):
+
+    @property
+    @util.CacheResult
+    def view_gui_label(self) -> str:
+        if isinstance(self, Runner):
+            return f"{self.__class__.__module__}.{self.__class__.__name__}"
+        elif isinstance(self, Experiment):
+            return f"{self.__class__.__module__}:{self.mini_hex_hash}"
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+
+    @property
+    @util.CacheResult
+    def view_gui_label_tooltip(self) -> str:
+        return f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
+
+    @property
+    @util.CacheResult
+    def view_callable_names(self) -> t.List[str]:
+        _ret = self.methods_to_be_used_in_gui_form()
+        # skip info_widget as that is controlled by `Experiment.view()` method
+        # Skip view as that makes the main form in which the remaining methods are shown
+        _ret = [_ for _ in _ret if _ not in ["info_widget", "view"]]
+        return _ret
+
+    @property
+    @util.CacheResult
+    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
+        if isinstance(self, Runner):
+            return {
+                _m: Job(method=_m, runner=self, experiment=None)
+                for _m in self.methods_that_can_be_used_by_jobs()
+            }
+        elif isinstance(self, Experiment):
+            return {
+                _m: Job(method=_m, runner=self.runner, experiment=self)
+                for _m in self.methods_that_can_be_used_by_jobs()
+            }
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+
+    @property
+    def job(self) -> Job:
+        """
+        Shortcut for
+        self.associated_jobs[<caller class fn>]
+        """
+
+        _caller_name = inspect.stack()[1][3]
+
+        for _k, _v in self.associated_jobs.items():
+            if _k.__name__ == _caller_name:
+                return _v
+
+        raise e.code.CodingError(
+            msgs=[
+                f"You have called from method {_caller_name} which is not "
+                f"supported by associated jobs ..."
+            ]
+        )
+
+    @classmethod
+    def methods_that_can_be_used_by_jobs(cls) -> t.List[t.Callable]:
+        # ------------------------------------------------------ 01
+        # act based on type
+        if issubclass(cls, Experiment):
+            _methods_to_skip = [
+                cls.methods_that_can_be_used_by_jobs,
+            ]
+        elif issubclass(cls, Runner):
+            _methods_to_skip = [
+                cls.methods_that_can_be_used_by_jobs,
+                cls.run,
+                cls.get_job_from_cli_run_arg,
+            ]
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+
+        # ------------------------------------------------------ 02
+        # some vars
+        # attrs to ignore that come from parent class
+        _hashable_class_attrs = dir(m.HashableClass)
+        _gui_form_methods = cls.methods_to_be_used_in_gui_form()
+
+        # ------------------------------------------------------ 03
+        # Loop
+        _ret = []
+        for _attr in [_ for _ in dir(cls)]:
+            # -------------------------------------------------- 03.01
+            # ignore things from parent
+            if _attr in _hashable_class_attrs:
+                continue
+            # ignore private things
+            if _attr.startswith("_"):
+                continue
+            # ignore _gui_form_methods
+            if _attr in _gui_form_methods:
+                continue
+
+            # -------------------------------------------------- 03.02
+            # get value
+            _value = getattr(cls, _attr)
+
+            # -------------------------------------------------- 03.03
+            # if not method skip
+            if not inspect.isfunction(_value):
+                continue
+
+            # -------------------------------------------------- 03.04
+            # ignore some special methods
+            if _value in _methods_to_skip:
+                continue
+
+            # -------------------------------------------------- 03.05
+            # get signature
+            _signature = inspect.signature(_value)
+            _parameter_keys = list(_signature.parameters.keys())
+
+            # -------------------------------------------------- 03.06
+            # you must have self
+            if "self" not in _parameter_keys:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Any method defined in class {cls} is used for job ... ",
+                        f"So we expect it to have `self` i.e., it should be instance method",
+                        f"If you are using anything special either make it private with `_` or "
+                        f"update list `_methods_to_skip` above to skip it ..."
+                    ]
+                )
+
+            # -------------------------------------------------- 03.07
+            # if no other kwarg it's okay
+            if len(_parameter_keys) == 1:
+                _ret.append(_value)
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Any method defined in class {cls} can be used for job ... ",
+                        "We restrict you to have no kwarg ...",
+                        f"Check signature for {_value}"
+                    ]
+                )
+
+        # ------------------------------------------------------ 04
+        # return
+        return _ret
+
+    @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
+    def view(self) -> "gui.form.HashableMethodsRunnerForm":
+        from .. import gui
+        if isinstance(self, Experiment):
+            return gui.form.HashableMethodsRunnerForm(
+                label=self.view_gui_label.split("\n")[0],
+                hashable=self,
+                close_button=True,
+                info_button=True,
+                callable_names=self.view_callable_names,
+                default_open=True,
+            )
+        elif isinstance(self, Runner):
+            return gui.form.HashableMethodsRunnerForm(
+                label=self.view_gui_label.split("\n")[0],
+                hashable=self,
+                close_button=False,
+                info_button=True,
+                callable_names=self.view_callable_names,
+                default_open=True,
+            )
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+
+    @m.UseMethodInForm(label_fmt="Job's")
+    def associated_jobs_view(self) -> "gui.widget.Widget":
+        from .. import gui
+        _jobs = self.associated_jobs
+        if isinstance(self, Runner):
+            _type = "runner"
+        elif isinstance(self, Experiment):
+            _type = "experiment"
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+        if bool(_jobs):
+            _form = gui.form.ButtonBarForm(
+                label=f"Jobs for this {_type} ...",
+                default_open=True,
+            )
+            for _k, _j in _jobs.items():
+                _form.register(
+                    key=_k.__name__, fn=lambda _j=_j: _j.view()
+                )
+            return _form
+        else:
+            return gui.widget.Text(
+                default_value=f"There are no jobs for this {_type} ...")
+
+
+@dataclasses.dataclass(frozen=True)
+@m.RuleChecker(
+    things_to_be_cached=[],
+)
+class Experiment(_Common, abc.ABC):
+    """
+    Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
+    be stored in same folder hierarchy if some portion of first strs of group_by matches...
+
+    todo: support tensorboard
+      https://www.tensorflow.org/tensorboard/get_started
+    todo: support tensorboard.dev
+      https://tensorboard.dev/experiments/
+    todo: tensorboard projector any common methods
+      https://www.tensorflow.org/tensorboard/tensorboard_projector_plugin
+    """
+
+    # runner
+    runner: "Runner"
+
+    def init(self):
+        # ------------------------------------------------------------------ 01
+        # call super
+        super().init()
+
+        # ------------------------------------------------------------------ 02
+        # register self to runner
+        self.runner.registered_experiments[self.hex_hash] = self
+
+        # ------------------------------------------------------------------ 03
+        # Make sure that it is not s.StorageHashable or any of its fields are not s.StorageHashable
+        # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
+        #   use with storage ...
+        # This will avoid creating files/folders and doing any IO
+        # todo: we disable this as now instance creation of StorageHashable's do not cause IO
+        #   confirm this behaviour and delete this code .... the check is commented for now as we
+        #   want to allow StorageHashable's to work example with `experiment/downloads.py`
+        #   and `experiment/prepared_datas.py`
+        # self.check_for_storage_hashable(
+        #     field_key=f"{self.experiment.__class__.__name__}"
+        # )
+
+        # ------------------------------------------------------------------ 04
+        # make <hex_hash>.info for experiment if not present
+        self.runner.monitor.make_experiment_info_file(experiment=self)
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=[
         'cwd', 'flow', 'monitor', 'registered_experiments',
-        'associated_jobs', 'methods_to_be_used_in_jobs',
     ],
-    things_not_to_be_overridden=['cwd', 'py_script', 'monitor', 'methods_to_be_used_in_jobs'],
+    things_not_to_be_overridden=['cwd', 'py_script', 'monitor'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
-class Runner(m.HashableClass, abc.ABC):
+class Runner(_Common, abc.ABC):
     """
     Can use click or pyinvoke also but not bothered about it as we don't intend to
     call ourselves from cli ... todo: check and do if it is interesting
@@ -1307,21 +1450,8 @@ class Runner(m.HashableClass, abc.ABC):
 
     @property
     @util.CacheResult
-    def internal(self) -> RunnerInternal:
-        return RunnerInternal(self)
-
-    @property
-    @util.CacheResult
     def monitor(self) -> Monitor:
         return Monitor(runner=self)
-
-    @property
-    @util.CacheResult
-    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
-        _methods = self.methods_to_be_used_in_jobs()["runner"]
-        return {
-            _m: Job(method=_m, runner=self, experiment=None) for _m in _methods
-        }
 
     @property
     def copy_src_dst(self) -> t.Tuple[str, str]:
@@ -1358,36 +1488,9 @@ class Runner(m.HashableClass, abc.ABC):
         ...
 
     @property
-    def job(self) -> Job:
-        if self.internal.has("job"):
-            return self.internal.job
-        else:
-            raise e.code.CodingError(
-                msgs=["Before using this property we expect this to be set by "
-                      "`toolcraft.job.cli.run()`"]
-            )
-
-    @property
     @util.CacheResult
-    def registered_experiments(self) -> t.List["Experiment"]:
-        return []
-
-    def init_validate(self):
-        # call super
-        super().init_validate()
-
-        # call this property to test class methods
-        _ = self.methods_to_be_used_in_jobs()
-
-        # make sure that enough arguments are present
-        # if len(sys.argv) not in [2, 3, 4]:
-        #     raise e.validation.NotAllowed(
-        #         msgs=[
-        #             f"Inappropriate number of arguments specified on cli.",
-        #             f"Can be 2, 3 or 4 but found {len(sys.argv)}.",
-        #             sys.argv
-        #         ]
-        #     )
+    def registered_experiments(self) -> t.Dict[str, "Experiment"]:
+        return dict()
 
     def init(self):
         # call super
@@ -1414,97 +1517,57 @@ class Runner(m.HashableClass, abc.ABC):
         # make <hex_hash>.info for runner if not present
         self.monitor.make_runner_info_file()
 
-    @util.CacheResult
-    def methods_to_be_used_in_jobs(self) -> t.Dict[str, t.List[types.MethodType]]:
-        # ------------------------------------------------------- 01
-        # container to return
-        _ret = {'runner': [], 'experiment': []}
-        # methods to skip
-        _methods_to_skip = [
-            self.run, self.methods_to_be_used_in_jobs
-        ]
-        # attrs to ignore that come from parent class
-        _hashable_class_attrs = dir(m.HashableClass)
-        # other vars
-        _cls = self.__class__
-
-        # ------------------------------------------------------- 02
-        # test fn signature
-        # loop over attributes ... to find eligible methods for job
-        for _attr in [_ for _ in dir(_cls) if _ not in _hashable_class_attrs]:
-
-            # --------------------------------------------------- 02.01
-            # get cls attr value
-            _cls_val = getattr(_cls, _attr)
-
-            # --------------------------------------------------- 02.02
-            # if not method skip
-            if not inspect.isfunction(_cls_val):
-                continue
-
-            # --------------------------------------------------- 02.03
-            # ignore some special methods
-            _val = getattr(self, _attr)
-            if _val in _methods_to_skip:
-                continue
-
-            # --------------------------------------------------- 02.04
-            # get signature
-            _signature = inspect.signature(_cls_val)
-            _parameter_keys = list(_signature.parameters.keys())
-
-            # --------------------------------------------------- 02.05
-            # you must have self
-            if "self" not in _parameter_keys:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Any method defined in class {_cls} is used for job ... ",
-                        f"So we expect it to have `self` i.e., it should be instance method",
-                        f"If you are using anything special either make it private with `_` or "
-                        f"update code in {self.methods_to_be_used_in_jobs} to skip it ..."
-                    ]
-                )
-
-            # --------------------------------------------------- 02.06
-            # if no other kwarg it's okay
-            if len(_parameter_keys) == 1:
-                _ret["runner"].append(_val)
-            # if two keys then second kwarg must be "experiment"
-            elif len(_parameter_keys) == 2:
-                if _parameter_keys[1] != "experiment":
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Any method defined in class {_cls} can be used for job ... ",
-                            f"So if you are specifying any kwarg then it can only be `experiment` of type {Experiment}",
-                            f"Found {_parameter_keys[1]}"
-                        ]
-                    )
-                _ret["experiment"].append(_val)
+    def get_job_from_cli_run_arg(self, job: str) -> Job:
+        # ------------------------------------------------------------ 01
+        # read args and validate
+        _split_strs = job.split(":")
+        if len(_split_strs) in [2, 3]:
+            # -------------------------------------------------------- 01.01
+            # the runner hash should always match
+            e.code.AssertError(
+                value1=_split_strs[0], value2=self.hex_hash,
+                msgs=[
+                    "The runner used is not exactly same"
+                ]
+            ).raise_if_failed()
+            # -------------------------------------------------------- 01.02
+            if len(_split_strs) == 2:
+                _method = getattr(self.__class__, _split_strs[1])
+                return self.associated_jobs[_method]
             else:
-                raise e.code.CodingError(
-                    msgs=[
-                        f"Any method defined in class {_cls} can be used for job ... ",
-                        "We only restrict you to have one or no kwarg ... and if one kwarg is supplied "
-                        "then it can be only named `experiment`",
-                        f"Check signature for {_cls_val}"
-                    ]
-                )
-
-        # ------------------------------------------------------- 03
-        # return
-        return _ret
+                _experiment = self.monitor.get_experiment_from_hex_hash(hex_hash=_split_strs[1])
+                _method = getattr(_experiment.__class__, _split_strs[2])
+                return _experiment.associated_jobs[_method]
+        else:
+            raise e.code.CodingError(
+                msgs=[
+                    "The job str should have format "
+                    "<runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>",
+                    f"Found unknown str {job}"
+                ]
+            )
 
     def run(self):
         from . import cli
-        _sub_title = ""
+
+        # make sub_title
+        _sub_title = None
         if len(sys.argv) > 1:
             _sub_title = [f"command: {sys.argv[1]}"]
-            if bool(sys.argv[2:]):
-                _sub_title += [f"args: {sys.argv[2:]}"]
+            if sys.argv[1] == "run":
+                # this means the arg represent a job
+                _job = self.get_job_from_cli_run_arg(job=sys.argv[2])
+                _sub_title += [_job.short_name]
+            else:
+                if bool(sys.argv[2:]):
+                    _sub_title += [f"args: {sys.argv[2:]}"]
+
+        # launch
         with richy.StatusPanel(
             tc_log=_LOGGER,
             title=f"Running for py_script: {self.py_script.name!r}",
             sub_title=_sub_title,
+            log_task_progress_after=10*60,
         ) as _rp:
             with self(richy_panel=_rp):
                 cli.get_app(runner=self)()
@@ -1513,106 +1576,7 @@ class Runner(m.HashableClass, abc.ABC):
         _exps = self.registered_experiments
         _rp = self.richy_panel
         for _exp in _rp.track(
-            sequence=_exps, task_name=f"setup {len(_exps)} experiments",
+            sequence=_exps.values(), task_name=f"setup {len(_exps)} experiments",
         ):
             with _exp(richy_panel=_rp):
                 ...
-
-
-@dataclasses.dataclass(frozen=True)
-@m.RuleChecker(
-    things_to_be_cached=["associated_jobs", "view_gui_label", "view_gui_label_tooltip"],
-)
-class Experiment(m.HashableClass, abc.ABC):
-    """
-    Check `Job.path` ... define group_by to create nested folders. Also, instances of different Experiment classes can
-    be stored in same folder hierarchy if some portion of first strs of group_by matches...
-
-    todo: support tensorboard
-      https://www.tensorflow.org/tensorboard/get_started
-    todo: support tensorboard.dev
-      https://tensorboard.dev/experiments/
-    todo: tensorboard projector any common methods
-      https://www.tensorflow.org/tensorboard/tensorboard_projector_plugin
-    """
-
-    # runner
-    runner: Runner
-
-    @property
-    @util.CacheResult
-    def associated_jobs(self) -> t.Dict[t.Callable, Job]:
-        _runner = self.runner
-        _methods = _runner.methods_to_be_used_in_jobs()["experiment"]
-        return {
-            _m: Job(method=_m, runner=_runner, experiment=self) for _m in _methods
-        }
-
-    @property
-    @util.CacheResult
-    def view_gui_label(self) -> str:
-        return f"{self.__class__.__module__}:{self.mini_hex_hash}"
-
-    @property
-    @util.CacheResult
-    def view_gui_label_tooltip(self) -> str:
-        return f"Hex Hash: {self.hex_hash}\n\n{self.yaml()}"
-
-    @property
-    def view_callable_names(self) -> t.List[str]:
-        _ret = self.methods_to_be_used_in_gui_form()
-        # skip info_widget as that is controlled by `Experiment.view()` method
-        # Skip view as that makes the main form in which the remaining methods are shown
-        return [_ for _ in _ret if _ not in ["info_widget", "view"]]
-
-    def init(self):
-        # ------------------------------------------------------------------ 01
-        # call super
-        super().init()
-
-        # ------------------------------------------------------------------ 02
-        # register self to runner
-        self.runner.registered_experiments.append(self)
-
-        # ------------------------------------------------------------------ 03
-        # Make sure that it is not s.StorageHashable or any of its fields are not s.StorageHashable
-        # Very much necessary check as we are interested in having some Hashable for tracking jobs and not to
-        #   use with storage ...
-        # This will avoid creating files/folders and doing any IO
-        # todo: we disable this as now instance creation of StorageHashable's do not cause IO
-        #   confirm this behaviour and delete this code .... the check is commented for now as we
-        #   want to allow StorageHashable's to work example with `experiment/downloads.py`
-        #   and `experiment/prepared_datas.py`
-        # self.check_for_storage_hashable(
-        #     field_key=f"{self.experiment.__class__.__name__}"
-        # )
-
-        # ------------------------------------------------------------------ 04
-        # make <hex_hash>.info for experiment if not present
-        self.runner.monitor.make_experiment_info_file(experiment=self)
-
-    @m.UseMethodInForm(label_fmt="Job's")
-    def associated_jobs_view(self) -> "gui.widget.Group":
-        from .. import gui
-        _ret = gui.widget.Group()
-        with _ret:
-            _jobs = self.associated_jobs
-            if bool(_jobs):
-                for _k, _j in _jobs.items():
-                    gui.widget.Separator()
-                    _j.tag_manager.view()
-            else:
-                gui.widget.Text(default_value="There are no jobs for this experiment ...")
-        return _ret
-
-    @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
-    def view(self) -> "gui.form.HashableMethodsRunnerForm":
-        from .. import gui
-        return gui.form.HashableMethodsRunnerForm(
-            label=self.view_gui_label.split("\n")[0],
-            hashable=self,
-            close_button=True,
-            info_button=True,
-            callable_names=self.view_callable_names,
-            default_open=True,
-        )

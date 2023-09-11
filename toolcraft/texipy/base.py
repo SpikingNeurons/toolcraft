@@ -324,7 +324,8 @@ class Symbol(Command):
         return f"\\{self._var_name+'NM'}"
 
     def init_validate(self):
-        if self.latex.startswith("\\(") or self.latex.startswith("$"):
+        _str_latex = str(self.latex)
+        if _str_latex.startswith("\\(") or _str_latex.startswith("$"):
             raise e.code.NotAllowed(
                 msgs=[f"This is {Symbol} class do not use the latex field in math mode"]
             )

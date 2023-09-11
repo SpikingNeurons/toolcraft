@@ -11,12 +11,12 @@ _SEARCH_REGEX = "e\.io\.[\s\S]*?\)"
 _STR_OR_FILE_OR_FOLDER = """
 def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
-    e.io.FileMustNotBeOnDiskOrNetwork(
+    e.io.FileMustnotBeOnDiskOrNetwork(
         path=file_path, msgs=[]
     ).raise_if_failed()
 def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
-    e.io.FileMustNotBeOnDiskOrNetwork(
+    e.io.FileMustnotBeOnDiskOrNetwork(
         path=file_path, msgs=[]
     ).raise_if_failed()
 """

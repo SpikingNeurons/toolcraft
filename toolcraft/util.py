@@ -1068,7 +1068,7 @@ def pathlib_rmtree(
 
 def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
-    e.io.FileMustNotBeOnDiskOrNetwork(
+    e.io.FileMustnotBeOnDiskOrNetwork(
         path=file_path, msgs=[]
     ).raise_if_failed()
     # save
@@ -1237,8 +1237,7 @@ def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> 
     """
     try:
         if memmap:
-            # todo: doesn't support s.Path make it compatible and also see if npy_save methods
-            #  also work although they allow s.Path
+            # todo: see if npy_save method can work with s.Path
             try:
                 # noinspection PyTypeChecker
                 _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)

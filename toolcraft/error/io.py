@@ -64,7 +64,7 @@ class NotAllowed(_CustomException):
         )
 
 
-class FileMustNotBeOnDiskOrNetwork(_CustomException):
+class FileMustnotBeOnDiskOrNetwork(_CustomException):
     def __init__(
         self, *,
         path: pathlib.Path,
@@ -84,7 +84,7 @@ class FileMustNotBeOnDiskOrNetwork(_CustomException):
         )
 
 
-class FolderMustNotBeOnDiskOrNetwork(_CustomException):
+class FolderMustnotBeOnDiskOrNetwork(_CustomException):
     def __init__(
         self, *,
         path: pathlib.Path,

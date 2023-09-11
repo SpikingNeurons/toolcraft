@@ -270,6 +270,8 @@ class FileGroup(StorageHashable, abc.ABC):
                 )
             # look inside path dir
             for _path in self.path.find(maxdepth=1, detail=False, withdirs=True):
+                if _path == self.path:
+                    continue
                 if _path.name in self.file_keys and _path.isfile():
                     continue
                 # anything starting with `_` will be ignored
@@ -926,6 +928,8 @@ class FileGroup(StorageHashable, abc.ABC):
         _ret = []
         for k in _iterable:
 
+            _rp.update(f"creating file: {k}")
+
             # get expected file from key
             _expected_file = self.path / k
 
@@ -965,6 +969,8 @@ class FileGroup(StorageHashable, abc.ABC):
 
             # append
             _ret.append(_expected_file)
+
+        _rp.update(f"finished creating files ... post runner will be called")
 
         # return list of created files
         return _ret
@@ -1455,13 +1461,13 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 _median[_k] = str(np.median(_v))
                 _mean[_k] = str(np.mean(_v))
             elif _v.ndim == 2:
-                if _v.shape[1] <= 16:
+                if _v.shape[1] <= 32:
                     _min[_k] = str(list(np.min(_v, axis=0)))
                     _max[_k] = str(list(np.max(_v, axis=0)))
                     _median[_k] = str(list(np.median(_v, axis=0)))
                     _mean[_k] = str(list(np.mean(_v, axis=0)))
                 else:
-                    _ = f"second dim={_v.shape[1]} is greater than 16"
+                    _ = f"second dim={_v.shape[1]} is greater than 32 ... "
                     _min[_k] = _
                     _max[_k] = _
                     _median[_k] = _
@@ -1637,7 +1643,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
 
         # ------------------------------------------------------ 04
         # now download files
-        # todo: can we do hash check while downloading is undergoing ???
+        # todo: launch all file downloads in async ;)
         for fk in self.file_keys:
             # get the task
             _task = _download_progress.tasks[fk]
@@ -1646,6 +1652,9 @@ class DownloadFileGroup(FileGroup, abc.ABC):
                 _task.already_finished()
                 continue
             try:
+                # todo: can we do hash check while download is undergoing ???
+                #   we can have two async tasks one which downloads chunk and
+                #   other which computes hash
                 with _file_paths[fk].open('wb') as _f:
                     _response = requests.get(_urls[fk], stream=True)
                     try:
