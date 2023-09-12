@@ -337,7 +337,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"Looks like you have updated config before this parent "
                     f"create_post_runner was called.",
                     f"Try to make updates to config after the config is "
-                    f"created the parent create_post_runner by calling sync()"
+                    f"created by the parent create_post_runner by calling sync()"
                 ]
             )
         if self.info.is_available:
