@@ -775,6 +775,15 @@ class FileGroup(StorageHashable, abc.ABC):
           https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
 
         """
+        # check for unknown files
+        _unknown_paths = self.unknown_paths_on_disk
+        if bool(_unknown_paths):
+            raise e.validation.NotAllowed(
+                msgs=[
+                    "We found some unknown files/folders on disk",
+                    _unknown_paths
+                ]
+            )
         # get failed hashes
         _failed_hashes = self.do_hash_check(compute=False)
 
