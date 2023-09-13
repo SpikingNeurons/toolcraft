@@ -1393,8 +1393,8 @@ def main():
 
 
 def backup_to_scf():
-    _src = pathlib.Path.home() / "Github" / "toolcraft" / "toolcraft" / "gui"
-    _dst = pathlib.Path.home() / "Github" / "RU" / "scaffold" / "dl" / "examples" / "deep_learning" / "viewer"
+    _src = pathlib.Path("C:\\") / "Github" / "toolcraft" / "toolcraft" / "gui"
+    _dst = pathlib.Path("C:\\") / "Github" / "RU" / "scaffold" / "dl" / "examples" / "deep_learning" / "viewer"
     shutil.copytree(_src, _dst, dirs_exist_ok=True)
     shutil.rmtree(_dst / "_scripts")
 
