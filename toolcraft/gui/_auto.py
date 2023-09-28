@@ -2,7 +2,7 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.9.1
+>> DearPyGui: 1.10.0
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -9568,6 +9568,9 @@ class ChildWindow(MovableContainerWidget):
     # menubar (bool, optional): Shows/Hides the menubar at the top.
     menubar: bool = False
 
+    # no_scroll_with_mouse (bool, optional): Disable user vertically scrolling with mouse wheel.
+    no_scroll_with_mouse: bool = False
+
     def build(self) -> int:
 
         _parent_guid = self.parent.guid
@@ -9595,6 +9598,7 @@ class ChildWindow(MovableContainerWidget):
             no_scrollbar=self.no_scrollbar,
             horizontal_scrollbar=self.horizontal_scrollbar,
             menubar=self.menubar,
+            no_scroll_with_mouse=self.no_scroll_with_mouse,
         )
         
         return _ret
@@ -11047,6 +11051,9 @@ class Font(ContainerWidget):
     # use_internal_label (bool, optional): Use generated internal label instead of user specified (appends ### uuid).
     use_internal_label: bool = True
 
+    # pixel_snapH (bool, optional): Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font, or rendering text piece-by-piece (e.g. for coloring).
+    pixel_snapH: bool = False
+
     def build(self) -> int:
 
         _parent_guid = self.parent.guid
@@ -11059,6 +11066,7 @@ class Font(ContainerWidget):
             label=self.label,
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
+            pixel_snapH=self.pixel_snapH,
         )
         
         return _ret
@@ -12738,6 +12746,12 @@ class Tooltip(ContainerWidget):
     # show (bool, optional): Attempt to render widget.
     show: bool = True
 
+    # delay (float, optional): Activation delay
+    delay: float = 0.0
+
+    # hide_on_activity (bool, optional): Hide the tooltip if the user has moved the mouse.  If False, the tooltip will follow mouse pointer.
+    hide_on_activity: bool = False
+
     def build(self) -> int:
 
         _parent_guid = self.parent.guid
@@ -12749,6 +12763,8 @@ class Tooltip(ContainerWidget):
             user_data=self.user_data,
             use_internal_label=self.use_internal_label,
             show=self.show,
+            delay=self.delay,
+            hide_on_activity=self.hide_on_activity,
         )
         
         return _ret
@@ -13049,6 +13065,9 @@ class Window(ContainerWidget):
     # no_open_over_existing_popup (bool, optional): Don't open if there's already a popup
     no_open_over_existing_popup: bool = True
 
+    # no_scroll_with_mouse (bool, optional): Disable user vertically scrolling with mouse wheel.
+    no_scroll_with_mouse: bool = False
+
     # on_close (Callable, optional): Callback ran when window is closed.
     on_close: t.Union[Callback, t.Callable] = None
 
@@ -13084,6 +13103,7 @@ class Window(ContainerWidget):
             popup=self.popup,
             no_saved_settings=self.no_saved_settings,
             no_open_over_existing_popup=self.no_open_over_existing_popup,
+            no_scroll_with_mouse=self.no_scroll_with_mouse,
             on_close=self.on_close_fn,
         )
         
