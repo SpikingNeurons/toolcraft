@@ -12,7 +12,6 @@ import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
 
-DO_RULE_CHECK = False
 
 ENV_DIR = pathlib.Path(sys.exec_prefix)
 
@@ -40,8 +39,6 @@ if gettrace is not None:
 # detect if in interactive mode
 INTERACTIVE = not hasattr(main, '__file__')
 
-LOGGER_USE_FILE_HANDLER = False
-USE_NP_TF_KE_PA_MARSHALLING = False
 
 
 # make config
@@ -54,7 +51,7 @@ if not TC_CONFIG_FILE.exists():
 TC_CONFIG = toml.load(TC_CONFIG_FILE.as_posix())
 
 
-class FileHash:
+class Settings:
     # time interval between to check hashes on disk
     # note that this is a list ... any one of the values in list will be picked
     # for determining if to do hash check or not ... this distributes the hash
@@ -67,4 +64,9 @@ class FileHash:
     # when you want to debug if auto_hashing feature creates same files in
     # consecutive runs
     DEBUG_HASHABLE_STATE = False
+
+
+    DO_RULE_CHECK = False
+    LOGGER_USE_FILE_HANDLER = False
+    USE_NP_TF_KE_PA_MARSHALLING = False
 

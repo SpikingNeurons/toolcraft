@@ -68,7 +68,7 @@ class StateFile(m.YamlRepr, abc.ABC):
     @util.CacheResult
     def backup_path(self) -> Path:
         e.code.AssertError(
-            value1=settings.FileHash.DEBUG_HASHABLE_STATE, value2=True,
+            value1=settings.Settings.DEBUG_HASHABLE_STATE, value2=True,
             msgs=[
                 f"This property can be used only when you have configured "
                 f"`config.DEBUG_HASHABLE_STATE=True`"

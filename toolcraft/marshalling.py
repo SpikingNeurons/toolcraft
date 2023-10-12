@@ -11,6 +11,7 @@ import yaml
 
 from . import error as e
 from . import logger, settings, util
+from .settings import Settings
 
 
 if settings.DPG_WORKS:
@@ -61,67 +62,74 @@ NOT_PROVIDED = "__NOT_PROVIDED__"
 # HASH_Suffix.CONFIG = ".hashconfig"
 # META_Suffix.INFO = ".metainfo"
 
-if settings.USE_NP_TF_KE_PA_MARSHALLING:
-    # Handle serialization for keras loss, optimizer and layer
-    # noinspection PyUnresolvedReferences
+
+def _tf_serialize(_data):
+    """
+    Handle serialization for keras loss, optimizer and layer
+    """
+
     import keras as ke
     import tensorflow as tf
+    if isinstance(_data, dict):
+        _r = {}
+        for _k, _v in _data.items():
+            _r[_k] = _tf_serialize(_v)
+        return _r
+    elif isinstance(_data, ke.losses.Loss):
+        _data = ke.losses.serialize(_data)
+        _data['__keras_instance__'] = "loss"
+        return _data
+    elif isinstance(_data, ke.layers.Layer):
+        _data = ke.layers.serialize(_data)
+        _data['__keras_instance__'] = "layer"
+        return _data
+    elif isinstance(_data, ke.optimizers.Optimizer):
+        _data = ke.optimizers.serialize(_data)
+        _data['__keras_instance__'] = "optimizer"
+        return _data
+    elif isinstance(_data, tf.TensorSpec):
+        _data = {
+            "__keras_instance__": "tf_spec",
+            "shape": _data.shape.as_list(),
+            "dtype": _data.dtype.name,
+            "name": _data.name,
+        }
+        return _data
+    else:
+        return _data
 
-    def _tf_serialize(_data):
-        if isinstance(_data, dict):
+def _tf_deserialize(_data):
+    """
+    Handle deserialization for keras loss, optimizer and layer
+    """
+
+    import keras as ke
+    import tensorflow as tf
+    if isinstance(_data, dict):
+        if '__keras_instance__' in _data.keys():
+            _keras_instance_type = _data['__keras_instance__']
+            del _data['__keras_instance__']
+            if _keras_instance_type == "loss":
+                return ke.losses.deserialize(_data, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
+            elif _keras_instance_type == "layer":
+                return ke.layers.deserialize(_data)
+            elif _keras_instance_type == "optimizer":
+                return ke.optimizers.deserialize(_data)
+            elif _keras_instance_type == "tf_spec":
+                return tf.TensorSpec(**_data)
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Unknown keras instance type {_keras_instance_type!r}"
+                    ]
+                )
+        else:
             _r = {}
             for _k, _v in _data.items():
-                _r[_k] = _tf_serialize(_v)
+                _r[_k] = _tf_deserialize(_v)
             return _r
-        elif isinstance(_data, ke.losses.Loss):
-            _data = ke.losses.serialize(_data)
-            _data['__keras_instance__'] = "loss"
-            return _data
-        elif isinstance(_data, ke.layers.Layer):
-            _data = ke.layers.serialize(_data)
-            _data['__keras_instance__'] = "layer"
-            return _data
-        elif isinstance(_data, ke.optimizers.Optimizer):
-            _data = ke.optimizers.serialize(_data)
-            _data['__keras_instance__'] = "optimizer"
-            return _data
-        elif isinstance(_data, tf.TensorSpec):
-            _data = {
-                "__keras_instance__": "tf_spec",
-                "shape": _data.shape.as_list(),
-                "dtype": _data.dtype.name,
-                "name": _data.name,
-            }
-            return _data
-        else:
-            return _data
-
-    def _tf_deserialize(_data):
-        if isinstance(_data, dict):
-            if '__keras_instance__' in _data.keys():
-                _keras_instance_type = _data['__keras_instance__']
-                del _data['__keras_instance__']
-                if _keras_instance_type == "loss":
-                    return ke.losses.deserialize(_data, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
-                elif _keras_instance_type == "layer":
-                    return ke.layers.deserialize(_data)
-                elif _keras_instance_type == "optimizer":
-                    return ke.optimizers.deserialize(_data)
-                elif _keras_instance_type == "tf_spec":
-                    return tf.TensorSpec(**_data)
-                else:
-                    raise e.code.CodingError(
-                        msgs=[
-                            f"Unknown keras instance type {_keras_instance_type!r}"
-                        ]
-                    )
-            else:
-                _r = {}
-                for _k, _v in _data.items():
-                    _r[_k] = _tf_deserialize(_v)
-                return _r
-        else:
-            return _data
+    else:
+        return _data
 
 
 class _ReadOnlyClass(type):
@@ -1926,7 +1934,7 @@ class HashableClass(YamlRepr, abc.ABC):
         #    when converted to dataclass cannot clall __init__ you need to override __post_init__ to call
         #    Tracker.__init__ ...
         #    Temporary workaround is to create fake HashableClass instance once all modules are loaded in your library
-        if settings.DO_RULE_CHECK:
+        if Settings.DO_RULE_CHECK:
             from . import richy
             _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
             # _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
@@ -2060,7 +2068,7 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         _ret = {}
         _field_names = self.dataclass_field_names
-        if settings.USE_NP_TF_KE_PA_MARSHALLING:
+        if Settings.USE_NP_TF_KE_PA_MARSHALLING:
             for f_name in _field_names:
                 _ret[f_name] = _tf_serialize(getattr(self, f_name))
         else:
@@ -2155,7 +2163,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 _v.check_for_storage_hashable(field_key=f"{field_key}.{_f}")
 
 
-if settings.USE_NP_TF_KE_PA_MARSHALLING:
+if Settings.USE_NP_TF_KE_PA_MARSHALLING:
     # noinspection PyUnresolvedReferences,PyProtectedMember
     import keras as ke
     import tensorflow as tf

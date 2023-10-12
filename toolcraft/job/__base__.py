@@ -23,11 +23,12 @@ from .. import util
 from .. import storage as s
 from .. import richy
 from .. import settings
+from ..settings import Settings
 
 _now = datetime.datetime.now
 
 
-if settings.USE_NP_TF_KE_PA_MARSHALLING:
+if Settings.USE_NP_TF_KE_PA_MARSHALLING:
     import tensorflow as tf
     from tensorflow.python.training.tracking import util as tf_util
 else:
