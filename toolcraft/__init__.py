@@ -43,22 +43,35 @@ __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a23"
 
-
+import time
+_now = time.time()
 from . import settings
+print("settings", time.time() - _now)
 from . import logger
+print("logger", time.time() - _now)
 from . import error
+print("error", time.time() - _now)
 from . import util
+print("util", time.time() - _now)
 from . import marshalling
+print("marshalling", time.time() - _now)
 from . import parallel
+print("parallel", time.time() - _now)
 from . import storage
+print("storage", time.time() - _now)
 from . import server
+print("server", time.time() - _now)
 from . import job
+print("job", time.time() - _now)
 from . import richy
+print("richy", time.time() - _now)
 from . import texipy
+print("texipy", time.time() - _now)
 
 try:
     import dearpygui.dearpygui as _dpg
     from . import gui
+    print("gui", time.time() - _now)
 except ImportError:
     ...
 
