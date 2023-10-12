@@ -43,6 +43,10 @@ __author__ = """Praveen Kulkarni"""
 __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a23"
 
+
+# todo: make sure that dearpygui works and opens in windowed mode on ibm lsf
+# todo: improve load time ... move keras, tensorflow, pyarrow marshalling support setting to config file
+
 import time
 _now = time.time()
 from . import settings
