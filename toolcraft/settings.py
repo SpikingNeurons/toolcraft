@@ -12,7 +12,7 @@ import sys
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
 
-DO_RULE_CHECK = True
+DO_RULE_CHECK = False
 
 ENV_DIR = pathlib.Path(sys.exec_prefix)
 
@@ -41,13 +41,7 @@ if gettrace is not None:
 INTERACTIVE = not hasattr(main, '__file__')
 
 LOGGER_USE_FILE_HANDLER = False
-
-try:
-    import keras as ke
-    import tensorflow as tf
-    TF_KERAS_WORKS = True
-except ImportError:
-    TF_KERAS_WORKS = False
+USE_NP_TF_KE_PA_MARSHALLING = False
 
 
 # make config

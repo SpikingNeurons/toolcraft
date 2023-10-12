@@ -45,7 +45,10 @@ __version__ = "0.1.4a23"
 
 
 # todo: make sure that dearpygui works and opens in windowed mode on ibm lsf
-# todo: improve load time ... move keras, tensorflow, pyarrow marshalling support setting to config file
+# todo: improve load time ... have settings module overriden properly
+# todo: for each subproject have a prompt to override settings and save in config file only when updated
+#    while also allow to override in settings module of each subproject
+#    only when they override the settings with UI only then add to respective config file in project
 
 import time
 _now = time.time()

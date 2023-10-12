@@ -3,21 +3,17 @@ todo: deprecate in favour of dapr module
 """
 import abc
 import datetime
-import enum
 import os
 import inspect
 import pathlib
-import shutil
 import typing as t
 import dataclasses
 import subprocess
 import itertools
 
-import rich
 import yaml
 import sys
 import asyncio
-import hashlib
 import types
 
 from .. import logger
@@ -30,10 +26,11 @@ from .. import settings
 
 _now = datetime.datetime.now
 
-try:
+
+if settings.USE_NP_TF_KE_PA_MARSHALLING:
     import tensorflow as tf
     from tensorflow.python.training.tracking import util as tf_util
-except ImportError:
+else:
     tf = None
     tf_util = None
 

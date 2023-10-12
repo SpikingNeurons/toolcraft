@@ -2,22 +2,11 @@ import abc
 import dataclasses
 import datetime
 import hashlib
-import sys
 import inspect
-import time
 import types
-import pathlib
-import contextvars
 import enum
-import traceback
 import typing as t
 import rich
-import asyncio
-from rich import progress
-from rich import spinner
-from rich import columns
-import numpy as np
-import pyarrow as pa
 import yaml
 
 from . import error as e
@@ -72,7 +61,7 @@ NOT_PROVIDED = "__NOT_PROVIDED__"
 # HASH_Suffix.CONFIG = ".hashconfig"
 # META_Suffix.INFO = ".metainfo"
 
-if settings.TF_KERAS_WORKS:
+if settings.USE_NP_TF_KE_PA_MARSHALLING:
     # Handle serialization for keras loss, optimizer and layer
     # noinspection PyUnresolvedReferences
     import keras as ke
@@ -1989,7 +1978,7 @@ class HashableClass(YamlRepr, abc.ABC):
         Similar to ... used by pickle deserialization
         >>> self.from_dict
         """
-        if settings.TF_KERAS_WORKS:
+        if settings.USE_NP_TF_KE_PA_MARSHALLING:
             # Handle deserialization for keras loss, optimizer and layer
             # noinspection PyUnresolvedReferences,PyProtectedMember,PyShadowingNames
             import keras as ke
@@ -2071,7 +2060,7 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         _ret = {}
         _field_names = self.dataclass_field_names
-        if settings.TF_KERAS_WORKS:
+        if settings.USE_NP_TF_KE_PA_MARSHALLING:
             for f_name in _field_names:
                 _ret[f_name] = _tf_serialize(getattr(self, f_name))
         else:
@@ -2084,7 +2073,7 @@ class HashableClass(YamlRepr, abc.ABC):
     def from_dict(
         cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
     ) -> "HashableClass":
-        if settings.TF_KERAS_WORKS:
+        if settings.USE_NP_TF_KE_PA_MARSHALLING:
             for _n in list(yaml_state.keys()):
                 yaml_state[_n] = _tf_deserialize(yaml_state[_n])
         # noinspection PyTypeChecker
@@ -2166,18 +2155,20 @@ class HashableClass(YamlRepr, abc.ABC):
                 _v.check_for_storage_hashable(field_key=f"{field_key}.{_f}")
 
 
-if settings.TF_KERAS_WORKS:
+if settings.USE_NP_TF_KE_PA_MARSHALLING:
     # noinspection PyUnresolvedReferences,PyProtectedMember
     import keras as ke
     import tensorflow as tf
+    import numpy as np
+    import pyarrow as pa
     # noinspection PyUnresolvedReferences
     # from keras.optimizers.optimizer_experimental import \
     #     optimizer as optimizer_experimental
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
         int, float, str, slice, list, dict, tuple,
-        np.float32, np.int64, np.int32,
         datetime.datetime, None, FrozenEnum,
-        HashableClass, pa.Schema,
+        HashableClass,
+        np.float32, np.int64, np.int32, pa.Schema,
         ke.losses.Loss, ke.layers.Layer,
         ke.optimizers.Optimizer,
         # optimizer_experimental.Optimizer,
@@ -2185,8 +2176,7 @@ if settings.TF_KERAS_WORKS:
     ]
 else:
     SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict, tuple,
-                                              np.float32, np.int64, np.int32,
                                               datetime.datetime, None, FrozenEnum,
-                                              HashableClass, pa.Schema, ]
+                                              HashableClass, ]
 # noinspection PyUnresolvedReferences
 SUPPORTED_HASHABLE_OBJECTS = SUPPORTED_HASHABLE_OBJECTS_TYPE.__args__
