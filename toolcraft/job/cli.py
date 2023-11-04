@@ -279,9 +279,13 @@ def archive(
     #     _RUNNER.cwd.local_path.parent / "trans.log", _trans_log_file,
     # )
     _trans_file_keys = [
-        _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n")
+        _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if _ != ""
     ]
-    print(_trans_file_keys)
+    _ps1_script = [
+        f"transmft -g {_}" for _ in _trans_file_keys
+    ]
+    _ps1_script.append(f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -")
+    print(_ps1_script)
     raise
     # -------------------------------------------------------------- 01
     # start
