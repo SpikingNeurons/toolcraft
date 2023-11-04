@@ -282,7 +282,7 @@ def archive(
     else:
         _cmd_tokens = [
             "tar", "-cvf", "-", f"{_RUNNER.cwd.local_path.as_posix()}", "|",
-            "split", "--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "-",
+            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "-",
             f"{_RUNNER.cwd.local_path.as_posix()}.tar",
         ]
     _rp = _RUNNER.richy_panel
@@ -291,7 +291,6 @@ def archive(
         f"{'' if part_size is None else 'and making parts '} ... "
         f"{' '.join(_cmd_tokens)}"
     )
-    raise Exception(' '.join(_cmd_tokens))
     _rp.stop()
     subprocess.run(
         _cmd_tokens, shell=False
