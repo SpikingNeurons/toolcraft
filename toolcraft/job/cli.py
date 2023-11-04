@@ -261,6 +261,11 @@ def view():
     gui.Engine.run(_dashboard)
 
 
+@_APP.command(help="Archi")
+def archive():
+    ...
+
+
 @_APP.command(help="Copies from server to cwd.")
 def copy():
     """
