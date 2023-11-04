@@ -296,33 +296,33 @@ def archive(
     _rp.stop()
     _archive_base_name = _RUNNER.cwd.name
     _archive_folder = _RUNNER.cwd.local_path.parent / f"{_archive_base_name}_archive"
-    _archive_folder.mkdir(exist_ok=True)
+    _archive_folder.mkdir()
     _big_tar_file = _archive_folder / f"{_archive_base_name}.tar"
-    # _cmd_tokens = [
-    #     "tar", "-cvf",
-    #     f"{_big_tar_file.as_posix()}",
-    #     f"{_RUNNER.cwd.local_path.as_posix()}",
-    # ]
-    # subprocess.run(_cmd_tokens, shell=False)
-    # if part_size is not None:
-    #     _cmd_tokens = [
-    #         "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "--verbose",
-    #         f"{_big_tar_file.as_posix()}", f"{_big_tar_file.as_posix()}.",
-    #     ]
-    #     subprocess.run(_cmd_tokens, shell=False)
-    #     _big_tar_file.unlink()
+    _cmd_tokens = [
+        "tar", "-cvf",
+        f"{_big_tar_file.as_posix()}",
+        f"{_RUNNER.cwd.local_path.as_posix()}",
+    ]
+    subprocess.run(_cmd_tokens, shell=False)
+    if part_size is not None:
+        _cmd_tokens = [
+            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "--verbose",
+            f"{_big_tar_file.as_posix()}", f"{_big_tar_file.as_posix()}.",
+        ]
+        subprocess.run(_cmd_tokens, shell=False)
+        _big_tar_file.unlink()
     _rp.start()
 
     # -------------------------------------------------------------- 03
     # look for archives and upload them
     if transmft:
         _rp.stop()
-        # for _f in _archive_folder.glob(f"{_archive_base_name}.tar.*"):
-        #     print(f"Uploading file part {_f.as_posix()}")
-        #     _cmd_tokens = [
-        #         "transmft", "-p", f"{_f.as_posix()}",
-        #     ]
-        #     subprocess.run(_cmd_tokens, shell=False)
+        for _f in _archive_folder.glob(f"{_archive_base_name}.tar.*"):
+            print(f"Uploading file part {_f.as_posix()}")
+            _cmd_tokens = [
+                "transmft", "-p", f"{_f.as_posix()}",
+            ]
+            subprocess.run(_cmd_tokens, shell=False)
         _trans_log_file = _archive_folder / f"{_archive_base_name}.trans.log"
         os.rename(
             _archive_folder.parent / "trans.log", _trans_log_file,
@@ -335,7 +335,7 @@ def archive(
         _ps1_script_file.write_text(
             "\n".join(
                 [f"transmft -g {_}" for _ in _trans_file_keys] +
-                [f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -"]
+                [f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -", ""]
             )
         )
         print(_ps1_script_file.read_text())
