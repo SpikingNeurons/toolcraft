@@ -276,10 +276,13 @@ def archive(
     # -------------------------------------------------------------- 01
     # start
     _rp = _RUNNER.richy_panel
-
-    for _f in _RUNNER.cwd.local_path.parent.glob(f"{_RUNNER.cwd.name}.tar.*"):
-        print("...................", _f)
-    raise
+    # validation
+    if transmft:
+        if part_size is not None:
+            raise e.validation.NotAllowed(
+                msgs=["When using transmft do not supply part_size as we hardcode it to 399MB"]
+            )
+        part_size = 399
 
     # -------------------------------------------------------------- 02
     # make archive
@@ -305,10 +308,20 @@ def archive(
         ]
         subprocess.run(_cmd_tokens, shell=False)
     _rp.start()
-    # tar -cvf prepared_datas.tar prepared_datas
-    # tar -cvf - prepared_datas | split --bytes=399m --suffix-length=4 --numeric-suffix - prepared_datas.tar
-    # tar -cvf - <stuff to put in archive> | split --bytes=1m --suffix-length=4 --numeric-suffix - myarchive.tar.
-    # split --bytes=399m --suffix-length=4 --numeric-suffix prepared_datas.tar prepared_datas.tar.
+
+    # -------------------------------------------------------------- 03
+    # look for archives and upload them
+    if transmft:
+        _rp.stop()
+        for _f in _RUNNER.cwd.local_path.parent.glob(f"{_RUNNER.cwd.name}.tar.*"):
+            print(f"Uploading file part {_f.as_posix()}")
+            _cmd_tokens = [
+                "transmft", "-p", f"{_f.as_posix()}",
+            ]
+            subprocess.run(_cmd_tokens, shell=False)
+        _rp.start()
+
+
 
 
 
