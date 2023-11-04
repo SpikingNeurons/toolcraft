@@ -261,7 +261,7 @@ def view():
     gui.Engine.run(_dashboard)
 
 
-@_APP.command(help="Archi")
+@_APP.command(help="Archive/part/upload the results folder")
 def archive():
     ...
 
