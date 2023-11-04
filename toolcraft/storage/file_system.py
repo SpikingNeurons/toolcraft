@@ -420,6 +420,10 @@ class Path:
     HOME = pathlib.Path.home()
 
     @property
+    def name(self) -> str:
+        return self.local_path.name
+
+    @property
     def parent(self) -> "Path":
         _sep = self.sep
         _new_suffix_path = _sep.join(self.suffix_path.split(_sep)[:-1])

@@ -7,6 +7,7 @@ import psutil
 import typer
 from typing_extensions import Annotated
 import sys
+import os
 import dataclasses
 import typing as t
 import subprocess
@@ -273,6 +274,11 @@ def archive(
     part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
     transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
 ):
+    os.rename(
+        _RUNNER.cwd.local_path.parent / "trans.log",
+        _RUNNER.cwd.local_path.parent / f"{_RUNNER.cwd.name}.trans.log",
+    )
+    raise
     # -------------------------------------------------------------- 01
     # start
     _rp = _RUNNER.richy_panel
