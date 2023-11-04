@@ -273,32 +273,39 @@ def archive(
     part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
     transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
 ):
-    if part_size is None:
-        _cmd_tokens = [
-            "tar", "-cvf",
-            f"{_RUNNER.cwd.local_path.as_posix()}.tar",
-            f"{_RUNNER.cwd.local_path.as_posix()}"
-        ]
-    else:
-        _cmd_tokens = [
-            "tar", ' '.join(["-cvf", "-", f"{_RUNNER.cwd.local_path.as_posix()}", "|",
-            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "-",
-            f"{_RUNNER.cwd.local_path.as_posix()}.tar",])
-        ]
+    # -------------------------------------------------------------- 01
+    # start
     _rp = _RUNNER.richy_panel
+
+    # -------------------------------------------------------------- 02
+    # make archive
     _rp.update(
         f"archiving results dir {_RUNNER.cwd.local_path.as_posix()} "
-        f"{'' if part_size is None else 'and making parts '} ... "
-        f"{' '.join(_cmd_tokens)}"
+        f"{'' if part_size is None else 'and making parts '} ..."
     )
     _rp.stop()
-    subprocess.run(
-        _cmd_tokens, shell=False
-    )
+    _cmd_tokens = [
+        "tar", "-cvf",
+        f"{_RUNNER.cwd.local_path.as_posix()}.tar",
+        f"{_RUNNER.cwd.local_path.as_posix()}",
+    ]
+    subprocess.run(_cmd_tokens, shell=False)
+    if part_size is not None:
+        _cmd_tokens = [
+            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix",
+            f"{_RUNNER.cwd.local_path.as_posix()}.tar", f"{_RUNNER.cwd.local_path.as_posix()}.tar.",
+        ]
+        subprocess.run(_cmd_tokens, shell=False)
+        _cmd_tokens = [
+            "rm", f"{_RUNNER.cwd.local_path.as_posix()}.tar",
+        ]
+        subprocess.run(_cmd_tokens, shell=False)
     _rp.start()
     # tar -cvf prepared_datas.tar prepared_datas
     # tar -cvf - prepared_datas | split --bytes=399m --suffix-length=4 --numeric-suffix - prepared_datas.tar
     # tar -cvf - <stuff to put in archive> | split --bytes=1m --suffix-length=4 --numeric-suffix - myarchive.tar.
+    # split --bytes=399m --suffix-length=4 --numeric-suffix prepared_datas.tar prepared_datas.tar.
+
 
 
 @_APP.command(help="Copies from server to cwd.")
