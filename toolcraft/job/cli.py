@@ -277,16 +277,22 @@ def archive(
     _rp.update(f"archiving results dir {_RUNNER.cwd.local_path.as_posix()} {'' if part_size is None else 'and making parts '}...")
     _rp.stop()
     if part_size is None:
-        _archive_cmd = f"tar -cvf {_RUNNER.cwd.local_path.as_posix()}.tar {_RUNNER.cwd.local_path.as_posix()}"
+        _cmd_tokens = [
+            "tar", "-cvf",
+            f"{_RUNNER.cwd.local_path.as_posix()}.tar",
+            f"{_RUNNER.cwd.local_path.as_posix()}"
+        ]
     else:
-        _archive_cmd = (f"tar -cvf - {_RUNNER.cwd.local_path.as_posix()} | "
-                        f"split --bytes={part_size}m --suffix-length=4 --numeric-suffix - "
-                        f"{_RUNNER.cwd.local_path.as_posix()}.tar")
+        _cmd_tokens = [
+            "tar", "-cvf", "-", f"{_RUNNER.cwd.local_path.as_posix()}", "|",
+            "split", "--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "-",
+            f"{_RUNNER.cwd.local_path.as_posix()}.tar",
+        ]
+    print(" ".join(_cmd_tokens), part_size, transmft)
     subprocess.run(
-        _archive_cmd, shell=False
+        _cmd_tokens, shell=False
     )
     _rp.start()
-    print(_archive_cmd, part_size, transmft)
     # tar -cvf prepared_datas.tar prepared_datas
     # tar -cvf - prepared_datas | split --bytes=399m --suffix-length=4 --numeric-suffix - prepared_datas.tar
     # tar -cvf - <stuff to put in archive> | split --bytes=1m --suffix-length=4 --numeric-suffix - myarchive.tar.
