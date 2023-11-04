@@ -292,7 +292,7 @@ def archive(
     subprocess.run(_cmd_tokens, shell=False)
     if part_size is not None:
         _cmd_tokens = [
-            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix",
+            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "--verbose",
             f"{_RUNNER.cwd.local_path.as_posix()}.tar", f"{_RUNNER.cwd.local_path.as_posix()}.tar.",
         ]
         subprocess.run(_cmd_tokens, shell=False)
