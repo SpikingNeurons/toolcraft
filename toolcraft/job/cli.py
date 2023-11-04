@@ -296,7 +296,7 @@ def archive(
     _rp.stop()
     _archive_base_name = _RUNNER.cwd.name
     _archive_folder = _RUNNER.cwd.local_path.parent / f"{_archive_base_name}_archive"
-    _archive_folder.mkdir()
+    _archive_folder.mkdir(exist_ok=True)
     _big_tar_file = _archive_folder / f"{_archive_base_name}.tar"
     # _cmd_tokens = [
     #     "tar", "-cvf",
