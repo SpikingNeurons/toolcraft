@@ -323,7 +323,7 @@ def archive(
                 "transmft", "-p", f"{_f.as_posix()}",
             ]
             subprocess.run(_cmd_tokens, shell=False)
-        _trans_log_file = _archive_folder / f"{_archive_base_name}.trans.log"
+        _trans_log_file = _archive_folder / f"trans.log"
         os.rename(
             _archive_folder.parent / "trans.log", _trans_log_file,
         )
@@ -331,7 +331,7 @@ def archive(
             _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if
             _ != ""
         ]
-        _ps1_script_file = _archive_folder / f"{_archive_base_name}_get.ps1"
+        _ps1_script_file = _archive_folder / f"get.ps1"
         _ps1_script_file.write_text(
             "\n".join(
                 [f"transmft -g {_}" for _ in _trans_file_keys] +
