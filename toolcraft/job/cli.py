@@ -298,34 +298,34 @@ def archive(
     _archive_folder = _RUNNER.cwd.local_path.parent / f"{_archive_base_name}_archive"
     _archive_folder.mkdir()
     _big_tar_file = _archive_folder / f"{_archive_base_name}.tar"
-    _cmd_tokens = [
-        "tar", "-cvf",
-        f"{_big_tar_file.as_posix()}",
-        f"{_RUNNER.cwd.local_path.as_posix()}",
-    ]
-    subprocess.run(_cmd_tokens, shell=False)
-    if part_size is not None:
-        _cmd_tokens = [
-            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "--verbose",
-            f"{_big_tar_file.as_posix()}", f"{_big_tar_file.as_posix()}.",
-        ]
-        subprocess.run(_cmd_tokens, shell=False)
-        _big_tar_file.unlink()
+    # _cmd_tokens = [
+    #     "tar", "-cvf",
+    #     f"{_big_tar_file.as_posix()}",
+    #     f"{_RUNNER.cwd.local_path.as_posix()}",
+    # ]
+    # subprocess.run(_cmd_tokens, shell=False)
+    # if part_size is not None:
+    #     _cmd_tokens = [
+    #         "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "--verbose",
+    #         f"{_big_tar_file.as_posix()}", f"{_big_tar_file.as_posix()}.",
+    #     ]
+    #     subprocess.run(_cmd_tokens, shell=False)
+    #     _big_tar_file.unlink()
     _rp.start()
 
     # -------------------------------------------------------------- 03
     # look for archives and upload them
     if transmft:
         _rp.stop()
-        for _f in _archive_folder.glob(f"{_archive_base_name}.tar.*"):
-            print(f"Uploading file part {_f.as_posix()}")
-            _cmd_tokens = [
-                "transmft", "-p", f"{_f.as_posix()}",
-            ]
-            subprocess.run(_cmd_tokens, shell=False)
+        # for _f in _archive_folder.glob(f"{_archive_base_name}.tar.*"):
+        #     print(f"Uploading file part {_f.as_posix()}")
+        #     _cmd_tokens = [
+        #         "transmft", "-p", f"{_f.as_posix()}",
+        #     ]
+        #     subprocess.run(_cmd_tokens, shell=False)
         _trans_log_file = _archive_folder / f"{_archive_base_name}.trans.log"
         os.rename(
-            _archive_folder / "trans.log", _trans_log_file,
+            _archive_folder.parent / "trans.log", _trans_log_file,
         )
         _trans_file_keys = [
             _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if
