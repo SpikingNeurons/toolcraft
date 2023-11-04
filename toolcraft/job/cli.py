@@ -273,9 +273,6 @@ def archive(
     part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
     transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
 ):
-    _rp = _RUNNER.richy_panel
-    _rp.update(f"archiving results dir {_RUNNER.cwd.local_path.as_posix()} {'' if part_size is None else 'and making parts '}...")
-    _rp.stop()
     if part_size is None:
         _cmd_tokens = [
             "tar", "-cvf",
@@ -288,7 +285,13 @@ def archive(
             "split", "--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "-",
             f"{_RUNNER.cwd.local_path.as_posix()}.tar",
         ]
-    print(" ".join(_cmd_tokens), part_size, transmft, "???????????????????????????")
+    _rp = _RUNNER.richy_panel
+    _rp.update(
+        f"archiving results dir {_RUNNER.cwd.local_path.as_posix()} "
+        f"{'' if part_size is None else 'and making parts '} ... "
+        f"{' '.join(_cmd_tokens)}"
+    )
+    _rp.stop()
     subprocess.run(
         _cmd_tokens, shell=False
     )
