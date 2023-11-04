@@ -8,6 +8,7 @@ import typer
 from typing_extensions import Annotated
 import sys
 import os
+import shutil
 import dataclasses
 import typing as t
 import subprocess
@@ -274,21 +275,7 @@ def archive(
     part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
     transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
 ):
-    _trans_log_file = _RUNNER.cwd.local_path.parent / f"{_RUNNER.cwd.name}.trans.log"
-    # os.rename(
-    #     _RUNNER.cwd.local_path.parent / "trans.log", _trans_log_file,
-    # )
-    _trans_file_keys = [
-        _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if _ != ""
-    ]
-    _ps1_script_file = _RUNNER.cwd.local_path.parent / f"{_RUNNER.cwd.name}-get.ps1"
-    _ps1_script_file.write_text(
-        "\n".join(
-            [f"transmft -g {_}" for _ in _trans_file_keys] + [f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -"]
-        )
-    )
-    print(_ps1_script_file.read_text())
-    raise
+
     # -------------------------------------------------------------- 01
     # start
     _rp = _RUNNER.richy_panel
@@ -307,38 +294,52 @@ def archive(
         f"{'' if part_size is None else 'and making parts '} ..."
     )
     _rp.stop()
+    _archive_base_name = _RUNNER.cwd.name
+    _archive_folder = _RUNNER.cwd.local_path.parent / f"{_archive_base_name}_archive"
+    _archive_folder.mkdir()
+    _big_tar_file = _archive_folder / f"{_archive_base_name}.tar"
     _cmd_tokens = [
         "tar", "-cvf",
-        f"{_RUNNER.cwd.local_path.as_posix()}.tar",
+        f"{_big_tar_file.as_posix()}",
         f"{_RUNNER.cwd.local_path.as_posix()}",
     ]
     subprocess.run(_cmd_tokens, shell=False)
     if part_size is not None:
         _cmd_tokens = [
             "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "--verbose",
-            f"{_RUNNER.cwd.local_path.as_posix()}.tar", f"{_RUNNER.cwd.local_path.as_posix()}.tar.",
+            f"{_big_tar_file.as_posix()}", f"{_big_tar_file.as_posix()}.",
         ]
         subprocess.run(_cmd_tokens, shell=False)
-        _cmd_tokens = [
-            "rm", f"{_RUNNER.cwd.local_path.as_posix()}.tar",
-        ]
-        subprocess.run(_cmd_tokens, shell=False)
+        _big_tar_file.unlink()
     _rp.start()
 
     # -------------------------------------------------------------- 03
     # look for archives and upload them
     if transmft:
         _rp.stop()
-        for _f in _RUNNER.cwd.local_path.parent.glob(f"{_RUNNER.cwd.name}.tar.*"):
+        for _f in _archive_folder.glob(f"{_archive_base_name}.tar.*"):
             print(f"Uploading file part {_f.as_posix()}")
             _cmd_tokens = [
                 "transmft", "-p", f"{_f.as_posix()}",
             ]
             subprocess.run(_cmd_tokens, shell=False)
+        _trans_log_file = _archive_folder / f"{_archive_base_name}.trans.log"
+        os.rename(
+            _archive_folder / "trans.log", _trans_log_file,
+        )
+        _trans_file_keys = [
+            _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if
+            _ != ""
+        ]
+        _ps1_script_file = _archive_folder / f"{_archive_base_name}_get.ps1"
+        _ps1_script_file.write_text(
+            "\n".join(
+                [f"transmft -g {_}" for _ in _trans_file_keys] +
+                [f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -"]
+            )
+        )
+        print(_ps1_script_file.read_text())
         _rp.start()
-
-
-
 
 
 @_APP.command(help="Copies from server to cwd.")
