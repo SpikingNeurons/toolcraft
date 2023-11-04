@@ -277,6 +277,10 @@ def archive(
     # start
     _rp = _RUNNER.richy_panel
 
+    for _f in _RUNNER.cwd.local_path.parent.glob(f"{_RUNNER.cwd.name}.tar.*"):
+        print("...................", _f)
+    raise
+
     # -------------------------------------------------------------- 02
     # make archive
     _rp.update(
