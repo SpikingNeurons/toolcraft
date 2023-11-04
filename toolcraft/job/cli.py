@@ -281,9 +281,9 @@ def archive(
         ]
     else:
         _cmd_tokens = [
-            "tar", "-cvf", "-", f"{_RUNNER.cwd.local_path.as_posix()}", "|",
+            "tar", ' '.join(["-cvf", "-", f"{_RUNNER.cwd.local_path.as_posix()}", "|",
             "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "-",
-            f"{_RUNNER.cwd.local_path.as_posix()}.tar",
+            f"{_RUNNER.cwd.local_path.as_posix()}.tar",])
         ]
     _rp = _RUNNER.richy_panel
     _rp.update(
