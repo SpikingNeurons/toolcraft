@@ -291,6 +291,7 @@ def archive(
         f"{'' if part_size is None else 'and making parts '} ... "
         f"{' '.join(_cmd_tokens)}"
     )
+    raise Exception(' '.join(_cmd_tokens))
     _rp.stop()
     subprocess.run(
         _cmd_tokens, shell=False
