@@ -292,8 +292,8 @@ def archive(
         f"{' '.join(_cmd_tokens)}"
     )
     _rp.stop()
-    subprocess.call(
-        _cmd_tokens, shell=False
+    subprocess.run(
+        _cmd_tokens, shell=True
     )
     _rp.start()
     # tar -cvf prepared_datas.tar prepared_datas
