@@ -5,6 +5,7 @@ import time
 
 import psutil
 import typer
+from typing_extensions import Annotated
 import sys
 import dataclasses
 import typing as t
@@ -72,7 +73,13 @@ def nxdi():
 
 @_APP.command(help="Run the job")
 def run(
-    job: str = typer.Argument(..., help="Job ID in format <runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>", show_default=False, ),
+    job: Annotated[
+        str,
+        typer.Argument(
+            help="Job ID in format <runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>",
+            show_default=False,
+        )
+    ],
 ):
     """
     Run a job in runner.
@@ -262,8 +269,11 @@ def view():
 
 
 @_APP.command(help="Archive/part/upload the results folder")
-def archive():
-    ...
+def archive(
+    part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
+    transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
+):
+    print(part_size, transmft)
 
 
 @_APP.command(help="Copies from server to cwd.")

@@ -17,6 +17,7 @@ import os
 import time
 import psutil
 import typer
+from typing_extensions import Annotated
 import typing as t
 import subprocess
 
@@ -40,9 +41,9 @@ _APP = typer.Typer(
 
 @_APP.command(help="Launches all the jobs in runner on lsf infrastructure.")
 def lsf(
-    email: bool = typer.Option(default=False, help="Set this if you want to receive email after lsf job completion."),
-    cpus: int = typer.Option(default=None, help="Number of processors to use for lsf job."),
-    memory: int = typer.Option(default=None, help="Amount of memory to reserve for lsf job."),
+    email: Annotated[bool, typer.Option(help="Set this if you want to receive email after lsf job completion.")] = False,
+    cpus: Annotated[int, typer.Option(help="Number of processors to use for lsf job.")] = None,
+    memory: Annotated[int, typer.Option(help="Amount of memory to reserve for lsf job.")] = None,
 ):
     """
 
@@ -115,7 +116,7 @@ def lsf(
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
 def local(
-    single_cpu: bool = typer.Option(default=False, help="Launches on single CPU in sequence (good for debugging)")
+    single_cpu: Annotated[bool, typer.Option(help="Launches on single CPU in sequence (good for debugging)")] = False
 ):
     """
     todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
