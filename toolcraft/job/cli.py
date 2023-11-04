@@ -281,11 +281,13 @@ def archive(
     _trans_file_keys = [
         _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if _ != ""
     ]
-    _ps1_script = [
-        f"transmft -g {_}" for _ in _trans_file_keys
-    ]
-    _ps1_script.append(f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -")
-    print(_ps1_script)
+    _ps1_script_file = _RUNNER.cwd.local_path.parent / f"{_RUNNER.cwd.name}-get.ps1"
+    _ps1_script_file.write_text(
+        "\n".join(
+            [f"transmft -g {_}" for _ in _trans_file_keys] + [f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -"]
+        )
+    )
+    print(_ps1_script_file.read_text())
     raise
     # -------------------------------------------------------------- 01
     # start
