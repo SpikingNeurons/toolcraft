@@ -273,7 +273,23 @@ def archive(
     part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
     transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
 ):
-    print(part_size, transmft)
+    _rp = _RUNNER.richy_panel
+    _rp.update(f"archiving results dir {_RUNNER.cwd.local_path.as_posix()} {'' if part_size is None else 'and making parts '}...")
+    _rp.stop()
+    if part_size is None:
+        _archive_cmd = f"tar -cvf {_RUNNER.cwd.local_path.as_posix()}.tar {_RUNNER.cwd.local_path.as_posix()}"
+    else:
+        _archive_cmd = (f"tar -cvf - {_RUNNER.cwd.local_path.as_posix()} | "
+                        f"split --bytes={part_size}m --suffix-length=4 --numeric-suffix - "
+                        f"{_RUNNER.cwd.local_path.as_posix()}.tar")
+    subprocess.run(
+        _archive_cmd, shell=False
+    )
+    _rp.start()
+    print(_archive_cmd, part_size, transmft)
+    # tar -cvf prepared_datas.tar prepared_datas
+    # tar -cvf - prepared_datas | split --bytes=399m --suffix-length=4 --numeric-suffix - prepared_datas.tar
+    # tar -cvf - <stuff to put in archive> | split --bytes=1m --suffix-length=4 --numeric-suffix - myarchive.tar.
 
 
 @_APP.command(help="Copies from server to cwd.")
