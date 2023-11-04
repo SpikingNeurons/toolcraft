@@ -293,7 +293,7 @@ def archive(
     )
     raise Exception(' '.join(_cmd_tokens))
     _rp.stop()
-    subprocess.run(
+    subprocess.call(
         _cmd_tokens, shell=False
     )
     _rp.start()
