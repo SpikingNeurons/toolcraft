@@ -274,10 +274,14 @@ def archive(
     part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
     transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
 ):
-    os.rename(
-        _RUNNER.cwd.local_path.parent / "trans.log",
-        _RUNNER.cwd.local_path.parent / f"{_RUNNER.cwd.name}.trans.log",
-    )
+    _trans_log_file = _RUNNER.cwd.local_path.parent / f"{_RUNNER.cwd.name}.trans.log"
+    # os.rename(
+    #     _RUNNER.cwd.local_path.parent / "trans.log", _trans_log_file,
+    # )
+    _trans_file_keys = [
+        _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n")
+    ]
+    print(_trans_file_keys)
     raise
     # -------------------------------------------------------------- 01
     # start
