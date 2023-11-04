@@ -268,7 +268,7 @@ def view():
     gui.Engine.run(_dashboard)
 
 
-@_APP.command(help="Archive/part/upload the results folder")
+@_APP.command(help="Archive/partition/upload the results folder")
 def archive(
     part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
     transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
