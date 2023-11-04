@@ -293,7 +293,7 @@ def archive(
     )
     _rp.stop()
     subprocess.run(
-        _cmd_tokens, shell=True
+        _cmd_tokens, shell=False
     )
     _rp.start()
     # tar -cvf prepared_datas.tar prepared_datas
