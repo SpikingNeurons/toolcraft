@@ -335,7 +335,11 @@ def archive(
         _ps1_script_file.write_text(
             "\n".join(
                 [f"transmft -g {_}" for _ in _trans_file_keys] +
-                [f"cat {_RUNNER.cwd.name}.tar.* | tar xvf -", ""]
+                [
+                    f"cat {_RUNNER.cwd.name}.tar.* > {_RUNNER.cwd.name}.tar",
+                    f"Get-Content {_RUNNER.cwd.name}.tar.* | Set-Content {_RUNNER.cwd.name}.tar",
+                    f"Get-Content {_RUNNER.cwd.name}.tar.* | tar -xvf -", "",
+                ]
             )
         )
         print(_ps1_script_file.read_text())
