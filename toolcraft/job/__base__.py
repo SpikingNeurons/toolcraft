@@ -1465,17 +1465,8 @@ class Runner(_Common, abc.ABC):
         """
         _py_script = self.py_script
         _folder_name = _py_script.name.replace(".py", "")
-        _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
-        e.code.AssertError(
-            value1=_ret.local_path.absolute().as_posix(),
-            value2=(_py_script.parent / _folder_name).absolute().as_posix(),
-            msgs=[
-                f"This is unexpected ... ",
-                f"The cwd for job runner is {_ret.local_path.absolute().as_posix()}",
-                f"While the accompanying script is at {_py_script.as_posix()}",
-                f"Please debug ..."
-            ]
-        ).raise_if_failed()
+        _folder_name += f"_{self.hex_hash[:5]}"
+        _ret = s.Path(suffix_path=_folder_name, fs_name='RESULTS')
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
