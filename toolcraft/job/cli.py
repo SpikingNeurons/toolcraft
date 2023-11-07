@@ -348,9 +348,7 @@ def archive(
             ]
             subprocess.run(_cmd_tokens, shell=False)
         _trans_log_file = _archive_folder / f"trans.log"
-        print(">>>", _cwd / "trans.log")
-        print(">>>", _trans_log_file)
-        os.rename(_cwd / "trans.log", _trans_log_file)
+        shutil.move(_cwd / "trans.log", _trans_log_file)
         _trans_file_keys = [
             _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if
             _ != ""
