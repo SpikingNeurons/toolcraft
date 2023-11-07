@@ -291,14 +291,14 @@ def archive(
     # -------------------------------------------------------------- 02
     # make archive
     _rp.update(
-        f"archiving results dir {_RUNNER.cwd.local_path.as_posix()} "
+        f"archiving results dir {_RUNNER.wd.local_path.as_posix()} "
         f"{'' if part_size is None else 'and making parts '} ..."
     )
-    _zip_base_name = _RUNNER.cwd.name
-    _archive_folder = _RUNNER.cwd.local_path.parent / f"{_zip_base_name}_archive"
+    _zip_base_name = _RUNNER.wd.name
+    _archive_folder = _RUNNER.wd.local_path.parent / f"{_zip_base_name}_archive"
     _archive_folder.mkdir()
     _big_zip_file = _archive_folder / f"{_zip_base_name}.zip"
-    _src_dir = _RUNNER.cwd.local_path.expanduser().resolve(strict=True)
+    _src_dir = _RUNNER.wd.local_path.expanduser().resolve(strict=True)
     _files_and_folders_to_compress = 0
     for _file in _src_dir.rglob('*'):
         _files_and_folders_to_compress += 1
