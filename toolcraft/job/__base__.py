@@ -1495,7 +1495,7 @@ class Runner(_Common, abc.ABC):
             handlers=[
                 # logger.get_rich_handler(),
                 # logger.get_stream_handler(),
-                logger.get_file_handler(_log_file),
+                logger.get_file_handler(_log_file.local_path),
             ],
         )
 
