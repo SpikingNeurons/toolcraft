@@ -1,6 +1,7 @@
 import enum
 import os
 import pathlib
+import zipfile
 import time
 
 import psutil
@@ -294,30 +295,48 @@ def archive(
         f"{'' if part_size is None else 'and making parts '} ..."
     )
     _rp.stop()
-    _archive_base_name = _RUNNER.cwd.name
-    _archive_folder = _RUNNER.cwd.local_path.parent / f"{_archive_base_name}_archive"
+    _zip_base_name = _RUNNER.cwd.name
+    _archive_folder = _RUNNER.cwd.local_path.parent / f"{_zip_base_name}_archive"
     _archive_folder.mkdir()
-    _big_tar_file = _archive_folder / f"{_archive_base_name}.tar.gz"
-    _cmd_tokens = [
-        "tar", "-czvf",
-        f"{_big_tar_file.as_posix()}",
-        f"{_RUNNER.cwd.local_path.as_posix()}",
-    ]
-    subprocess.run(_cmd_tokens, shell=False)
+    _big_zip_file = _archive_folder / f"{_zip_base_name}.zip"
+    _src_dir = _RUNNER.cwd.local_path.expanduser().resolve(strict=True)
+    print("Zipping ....")
+    with zipfile.ZipFile(_big_zip_file, 'w', zipfile.ZIP_DEFLATED) as _zf:
+        for _file in _src_dir.rglob('*'):
+            __file = _file.relative_to(_src_dir.parent)
+            print("  >>", __file)
+            _zf.write(_file, __file)
     if part_size is not None:
-        _cmd_tokens = [
-            "split", f"--bytes={part_size}m", "--suffix-length=4", "--numeric-suffix", "--verbose",
-            f"{_big_tar_file.as_posix()}", f"{_big_tar_file.as_posix()}.",
-        ]
-        subprocess.run(_cmd_tokens, shell=False)
-        _big_tar_file.unlink()
+        print("Splitting ...")
+        _BUF = 10 * 1024 * 1024 * 1024  # 10GB     - max memory buffer size to use for read
+        _part_size_in_bytes = part_size * 1024 *1024
+        _chapters = 1
+        _ugly_buf = ''
+        with open(_big_zip_file, 'rb') as _src:
+            while True:
+                print("  >> making part:", _chapters)
+                _tgt = open(_big_zip_file.parent / f"{_big_zip_file.name}.{_chapters:03d}", 'wb')
+                _written = 0
+                while _written < _part_size_in_bytes:
+                    if len(_ugly_buf) > 0:
+                        _tgt.write(_ugly_buf)
+                    _tgt.write(_src.read(min(_BUF, _part_size_in_bytes - _written)))
+                    _written += min(_BUF, _part_size_in_bytes - _written)
+                    _ugly_buf = _src.read(1)
+                    if len(_ugly_buf) == 0:
+                        break
+                _tgt.close()
+                if len(_ugly_buf) == 0:
+                    break
+                _chapters += 1
+        _big_zip_file.unlink()
     _rp.start()
 
     # -------------------------------------------------------------- 03
     # look for archives and upload them
     if transmft:
         _rp.stop()
-        for _f in _archive_folder.glob(f"{_archive_base_name}.tar.gz.*"):
+        for _f in _archive_folder.glob(f"{_zip_base_name}.zip.*"):
             print(f"Uploading file part {_f.as_posix()}")
             _cmd_tokens = [
                 "transmft", "-p", f"{_f.as_posix()}",
@@ -334,15 +353,12 @@ def archive(
         _ps1_script_file = _archive_folder / f"get.ps1"
         _ps1_script_file.write_text(
             "\n".join(
-                [f"transmft -g {_}" for _ in _trans_file_keys] +
-                [
-                    f"cat {_RUNNER.cwd.name}.tar.gz.* > {_RUNNER.cwd.name}.tar.gz",
-                    f"Get-Content {_RUNNER.cwd.name}.tar.gz* | Set-Content {_RUNNER.cwd.name}.tar.gz",
-                    f"Get-Content {_RUNNER.cwd.name}.tar.gz.* | tar -xzvf -", "",
-                ]
+                [f"transmft -g {_}" for _ in _trans_file_keys]
             )
         )
+        print("*"*30)
         print(_ps1_script_file.read_text())
+        print("*"*30)
         _rp.start()
 
 
