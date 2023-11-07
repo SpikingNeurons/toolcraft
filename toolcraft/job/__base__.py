@@ -570,7 +570,7 @@ class Job:
 
         todo: integrate this with storage with partition_columns ... (not important do only if necessary)
         """
-        _ret = self.runner.cwd
+        _ret = self.runner.wd
         _ret /= self.method.__func__.__name__
         if bool(self.experiment):
             for _ in self.experiment.group_by:
@@ -1066,7 +1066,7 @@ class Monitor:
     @property
     @util.CacheResult
     def path(self) -> s.Path:
-        _ret = self.runner.cwd / _MONITOR_FOLDER
+        _ret = self.runner.wd / _MONITOR_FOLDER
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -1394,9 +1394,9 @@ class Experiment(_Common, abc.ABC):
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=[
-        'cwd', 'flow', 'monitor', 'registered_experiments',
+        'wd', 'flow', 'monitor', 'registered_experiments',
     ],
-    things_not_to_be_overridden=['cwd', 'py_script', 'monitor'],
+    things_not_to_be_overridden=['wd', 'py_script', 'monitor'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1459,9 +1459,9 @@ class Runner(_Common, abc.ABC):
 
     @property
     @util.CacheResult
-    def cwd(self) -> s.Path:
+    def wd(self) -> s.Path:
         """
-        todo: adapt code so that the cwd can be on any other file system instead of CWD
+        working dir where results will be stored for this runner
         """
         _py_script = self.py_script
         _folder_name = _py_script.name.replace(".py", "")
