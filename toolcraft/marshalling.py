@@ -8,6 +8,7 @@ import enum
 import typing as t
 import rich
 import yaml
+import os
 
 from . import error as e
 from . import logger, settings, util
@@ -1417,7 +1418,11 @@ class YamlRepr(Tracker):
         # this is needed as with multiprocessing the main module gets extra __mp_
         _module = cls.__module__
         if _module in ['__main__', '__mp_main__']:
-            _module = "_main_"
+            try:
+                _script_path = inspect.getfile(cls).split(os.sep)
+                _module = f"{_script_path[-2]}/{_script_path[-1]}"
+            except OSError:
+                _module = "_main_"
 
         # return
         return f"!{_module}:{cls.__name__}"
