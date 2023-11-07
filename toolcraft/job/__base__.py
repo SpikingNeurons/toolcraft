@@ -1394,9 +1394,9 @@ class Experiment(_Common, abc.ABC):
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=[
-        'wd', 'flow', 'monitor', 'registered_experiments',
+        'cwd', 'results_dir', 'flow', 'monitor', 'registered_experiments',
     ],
-    things_not_to_be_overridden=['wd', 'py_script', 'monitor'],
+    things_not_to_be_overridden=['cwd', 'results_dir', 'py_script', 'monitor'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
