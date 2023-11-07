@@ -295,7 +295,7 @@ def archive(
         f"{'' if part_size is None else 'and making parts '} ..."
     )
     _zip_base_name = _RUNNER.results_dir.name
-    _cwd = _RUNNER.cwd.local_path
+    _cwd = _RUNNER.cwd.local_path.resolve().absolute()
     _archive_folder = _RUNNER.results_dir.local_path.parent / f"{_zip_base_name}_archive"
     _archive_folder.mkdir()
     _big_zip_file = _archive_folder / f"{_zip_base_name}.zip"
