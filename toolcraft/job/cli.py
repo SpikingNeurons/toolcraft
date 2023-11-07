@@ -297,9 +297,9 @@ def archive(
     _archive_base_name = _RUNNER.cwd.name
     _archive_folder = _RUNNER.cwd.local_path.parent / f"{_archive_base_name}_archive"
     _archive_folder.mkdir()
-    _big_tar_file = _archive_folder / f"{_archive_base_name}.tar"
+    _big_tar_file = _archive_folder / f"{_archive_base_name}.tar.gz"
     _cmd_tokens = [
-        "tar", "-cvf",
+        "tar", "-czvf",
         f"{_big_tar_file.as_posix()}",
         f"{_RUNNER.cwd.local_path.as_posix()}",
     ]
@@ -317,7 +317,7 @@ def archive(
     # look for archives and upload them
     if transmft:
         _rp.stop()
-        for _f in _archive_folder.glob(f"{_archive_base_name}.tar.*"):
+        for _f in _archive_folder.glob(f"{_archive_base_name}.tar.gz.*"):
             print(f"Uploading file part {_f.as_posix()}")
             _cmd_tokens = [
                 "transmft", "-p", f"{_f.as_posix()}",
@@ -336,9 +336,9 @@ def archive(
             "\n".join(
                 [f"transmft -g {_}" for _ in _trans_file_keys] +
                 [
-                    f"cat {_RUNNER.cwd.name}.tar.* > {_RUNNER.cwd.name}.tar",
-                    f"Get-Content {_RUNNER.cwd.name}.tar.* | Set-Content {_RUNNER.cwd.name}.tar",
-                    f"Get-Content {_RUNNER.cwd.name}.tar.* | tar -xvf -", "",
+                    f"cat {_RUNNER.cwd.name}.tar.gz.* > {_RUNNER.cwd.name}.tar.gz",
+                    f"Get-Content {_RUNNER.cwd.name}.tar.gz* | Set-Content {_RUNNER.cwd.name}.tar.gz",
+                    f"Get-Content {_RUNNER.cwd.name}.tar.gz.* | tar -xzvf -", "",
                 ]
             )
         )
