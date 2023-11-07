@@ -308,6 +308,7 @@ def archive(
         for _file in _src_dir.rglob('*'):
             _zipping_track.update(advance=1)
             __file = _file.relative_to(_src_dir.parent)
+            _rp.update(f"zipping {__file} ...")
             _zf.write(_file, __file)
     if part_size is not None:
         _BUF = 10 * 1024 * 1024 * 1024  # 10GB     - max memory buffer size to use for read
