@@ -1488,7 +1488,7 @@ class Runner(_Common, abc.ABC):
         # setup logger
         import logging
         # note that this should always be local ... dont use `self.cwd`
-        _log_file = self.py_script.parent / self.py_script.name.replace(".py", "") / "runner.log"
+        _log_file = self.wd / "runner.log"
         _log_file.parent.mkdir(parents=True, exist_ok=True)
         logger.setup_logging(
             propagate=False,
