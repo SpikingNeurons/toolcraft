@@ -294,27 +294,29 @@ def archive(
         f"archiving results dir {_RUNNER.cwd.local_path.as_posix()} "
         f"{'' if part_size is None else 'and making parts '} ..."
     )
-    _rp.stop()
     _zip_base_name = _RUNNER.cwd.name
     _archive_folder = _RUNNER.cwd.local_path.parent / f"{_zip_base_name}_archive"
     _archive_folder.mkdir()
     _big_zip_file = _archive_folder / f"{_zip_base_name}.zip"
     _src_dir = _RUNNER.cwd.local_path.expanduser().resolve(strict=True)
-    print("Zipping ....")
+    _files_and_folders_to_compress = 0
+    for _file in _src_dir.rglob('*'):
+        _files_and_folders_to_compress += 1
+    _rp.update(f"zipping {_files_and_folders_to_compress} items")
+    _zipping_track = _rp.add_task(task_name="zipping", total=_files_and_folders_to_compress)
     with zipfile.ZipFile(_big_zip_file, 'w', zipfile.ZIP_DEFLATED) as _zf:
         for _file in _src_dir.rglob('*'):
+            _zipping_track.update(advance=1)
             __file = _file.relative_to(_src_dir.parent)
-            print("  >>", __file)
             _zf.write(_file, __file)
     if part_size is not None:
-        print("Splitting ...")
         _BUF = 10 * 1024 * 1024 * 1024  # 10GB     - max memory buffer size to use for read
         _part_size_in_bytes = part_size * 1024 *1024
         _chapters = 1
         _ugly_buf = ''
         with open(_big_zip_file, 'rb') as _src:
             while True:
-                print("  >> making part:", _chapters)
+                _rp.update(f"splitting large zip in part {_chapters}")
                 _tgt = open(_big_zip_file.parent / f"{_big_zip_file.name}.{_chapters:03d}", 'wb')
                 _written = 0
                 while _written < _part_size_in_bytes:
@@ -329,12 +331,13 @@ def archive(
                 if len(_ugly_buf) == 0:
                     break
                 _chapters += 1
+        _rp.update(f"removing large zip file")
         _big_zip_file.unlink()
-    _rp.start()
 
     # -------------------------------------------------------------- 03
     # look for archives and upload them
     if transmft:
+        _rp.update(f"performing uploads to transcend")
         _rp.stop()
         for _f in _archive_folder.glob(f"{_zip_base_name}.zip.*"):
             print(f"Uploading file part {_f.as_posix()}")
@@ -360,6 +363,7 @@ def archive(
         print(_ps1_script_file.read_text())
         print("*"*30)
         _rp.start()
+        _rp.set_final_message(_ps1_script_file.read_text())
 
 
 @_APP.command(help="Copies from server to cwd.")
