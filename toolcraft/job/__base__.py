@@ -570,7 +570,7 @@ class Job:
 
         todo: integrate this with storage with partition_columns ... (not important do only if necessary)
         """
-        _ret = self.runner.wd
+        _ret = self.runner.results_dir
         _ret /= self.method.__func__.__name__
         if bool(self.experiment):
             for _ in self.experiment.group_by:
@@ -1066,7 +1066,7 @@ class Monitor:
     @property
     @util.CacheResult
     def path(self) -> s.Path:
-        _ret = self.runner.wd / _MONITOR_FOLDER
+        _ret = self.runner.results_dir / _MONITOR_FOLDER
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -1459,14 +1459,36 @@ class Runner(_Common, abc.ABC):
 
     @property
     @util.CacheResult
-    def wd(self) -> s.Path:
+    def results_dir(self) -> s.Path:
         """
-        working dir where results will be stored for this runner
+        results dir where results will be stored for this runner
         """
         _py_script = self.py_script
         _folder_name = _py_script.name.replace(".py", "")
         _folder_name += f"_{self.hex_hash[:5]}"
         _ret = s.Path(suffix_path=_folder_name, fs_name='RESULTS')
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    @property
+    @util.CacheResult
+    def cwd(self) -> s.Path:
+        """
+        todo: adapt code so that the cwd can be on any other file system instead of CWD
+        """
+        _py_script = self.py_script
+        _ret = s.Path(suffix_path=".", fs_name='CWD')
+        e.code.AssertError(
+            value1=_ret.local_path.absolute().as_posix(),
+            value2=_py_script.parent.absolute().as_posix(),
+            msgs=[
+                f"This is unexpected ... ",
+                f"The cwd for job runner is {_ret.local_path.absolute().as_posix()}",
+                f"While the accompanying script is at {_py_script.as_posix()}",
+                f"Please debug ..."
+            ]
+        ).raise_if_failed()
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -1488,7 +1510,7 @@ class Runner(_Common, abc.ABC):
         # setup logger
         import logging
         # note that this should always be local ... dont use `self.cwd`
-        _log_file = self.wd / "runner.log"
+        _log_file = self.results_dir / "runner.log"
         logger.setup_logging(
             propagate=False,
             level=logging.NOTSET,
