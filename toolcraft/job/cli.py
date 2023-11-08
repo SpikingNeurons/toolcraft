@@ -242,9 +242,8 @@ def view():
 
     # ---------------------------------------------------------------- 04
     # register jobs for runner
-    def _j_view(_j: Job) -> gui.widget.Widget:
-        return _j.view()
-
+    # def _j_view(_j: Job) -> gui.widget.Widget:
+    #     return _j.view()
     # for _method, _job in _rp.track(_RUNNER.associated_jobs.items(), task_name="Register views for Runner"):
     #     _dashboard.runner_jobs_view.register(
     #         key=_method.__name__, gui_name=_method.__name__,

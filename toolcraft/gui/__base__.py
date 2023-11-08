@@ -712,6 +712,10 @@ class Engine:
     task_queue: asyncio.Queue = asyncio.Queue()
 
     # --------------------------------- 03
+    # save reference to dashboard
+    dashboard: t.Optional["Dashboard"] = None
+
+    # --------------------------------- 04
     # note we have kept worker=1 so that logs will not pollute
     # todo: increase number of workers when logging is done entirely to files so that stdout doesn't get polluted
     #   especially useful for process_pool_executor
@@ -893,7 +897,7 @@ class Engine:
 
     @classmethod
     def run(cls, dash: "Dashboard"):
-        # -------------------------------------------------- 02
+        # -------------------------------------------------- 01
         # setup dpg
         dpg.create_context()
         dpg.configure_app(manual_callback_management=PYC_DEBUGGING)
@@ -902,6 +906,15 @@ class Engine:
         dpg.show_viewport()
         if not internal_dpg.is_viewport_ok():
             raise RuntimeError("Viewport was not created and shown.")
+
+        # -------------------------------------------------- 02
+        # make sure that dashbord is not alread set
+        if cls.dashboard is None:
+            cls.dashboard = dash
+        else:
+            raise Exception(
+                "Was not expecting dashboard to be set already"
+            )
 
         # -------------------------------------------------- 03
         # call build and indicate build is done
