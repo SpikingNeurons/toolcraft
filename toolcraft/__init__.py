@@ -44,21 +44,41 @@ __email__ = "praveenneuron@gmail.com"
 __version__ = "0.1.4a23"
 
 
+# todo: make sure that dearpygui works and opens in windowed mode on ibm lsf
+# todo: improve load time ... have settings module overriden properly
+# todo: for each subproject have a prompt to override settings and save in config file only when updated
+#    while also allow to override in settings module of each subproject
+#    only when they override the settings with UI only then add to respective config file in project
+
+import time
+_now = time.time()
 from . import settings
+print("settings", time.time() - _now)
 from . import logger
+print("logger", time.time() - _now)
 from . import error
+print("error", time.time() - _now)
 from . import util
+print("util", time.time() - _now)
 from . import marshalling
+print("marshalling", time.time() - _now)
 from . import parallel
+print("parallel", time.time() - _now)
 from . import storage
+print("storage", time.time() - _now)
 from . import server
+print("server", time.time() - _now)
 from . import job
+print("job", time.time() - _now)
 from . import richy
+print("richy", time.time() - _now)
 from . import texipy
+print("texipy", time.time() - _now)
 
 try:
     import dearpygui.dearpygui as _dpg
     from . import gui
+    print("gui", time.time() - _now)
 except ImportError:
     ...
 

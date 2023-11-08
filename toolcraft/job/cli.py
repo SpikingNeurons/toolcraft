@@ -1,11 +1,15 @@
 import enum
 import os
 import pathlib
+import zipfile
 import time
 
 import psutil
 import typer
+from typing_extensions import Annotated
 import sys
+import os
+import shutil
 import dataclasses
 import typing as t
 import subprocess
@@ -72,7 +76,13 @@ def nxdi():
 
 @_APP.command(help="Run the job")
 def run(
-    job: str = typer.Argument(..., help="Job ID in format <runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>", show_default=False, ),
+    job: Annotated[
+        str,
+        typer.Argument(
+            help="Job ID in format <runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>",
+            show_default=False,
+        )
+    ],
 ):
     """
     Run a job in runner.
@@ -259,6 +269,113 @@ def view():
     # ---------------------------------------------------------------- 07
     # run
     gui.Engine.run(_dashboard)
+
+
+@_APP.command(help="Archive/partition/upload the results folder")
+def archive(
+    part_size: Annotated[int, typer.Option(help="Max part size in MB to break the resulting archive file.")] = None,
+    transmft: Annotated[bool, typer.Option(help="Upload resulting files to cloud drive and make script to download them.")] = False,
+):
+
+    # -------------------------------------------------------------- 01
+    # start
+    _rp = _RUNNER.richy_panel
+    # validation
+    if transmft:
+        if part_size is not None:
+            raise e.validation.NotAllowed(
+                msgs=["When using transmft do not supply part_size as we hardcode it to 399MB"]
+            )
+        part_size = 399
+
+    # -------------------------------------------------------------- 02
+    # make archive
+    _rp.update(
+        f"archiving results dir {_RUNNER.results_dir.local_path.as_posix()} "
+        f"{'' if part_size is None else 'and making parts '} ..."
+    )
+    _zip_base_name = _RUNNER.results_dir.name
+    _cwd = _RUNNER.cwd.local_path.resolve().absolute()
+    _archive_folder = _RUNNER.results_dir.local_path.parent / f"{_zip_base_name}_archive"
+    _archive_folder.mkdir()
+    _big_zip_file = _archive_folder / f"{_zip_base_name}.zip"
+    _src_dir = _RUNNER.results_dir.local_path.expanduser().resolve(strict=True)
+    _files_and_folders_to_compress = 0
+    for _file in _src_dir.rglob('*'):
+        _files_and_folders_to_compress += 1
+    _rp.update(f"zipping {_files_and_folders_to_compress} items")
+    _zipping_track = _rp.add_task(task_name="zipping", total=_files_and_folders_to_compress)
+    with zipfile.ZipFile(_big_zip_file, 'w', zipfile.ZIP_DEFLATED) as _zf:
+        for _file in _src_dir.rglob('*'):
+            _zipping_track.update(advance=1)
+            __file = _file.relative_to(_src_dir.parent)
+            _rp.update(f"zipping {__file} ...")
+            _zf.write(_file, __file)
+    _chapters = 1
+    if part_size is not None:
+        _BUF = 10 * 1024 * 1024 * 1024  # 10GB     - max memory buffer size to use for read
+        _part_size_in_bytes = part_size * 1024 *1024
+        _ugly_buf = ''
+        with open(_big_zip_file, 'rb') as _src:
+            while True:
+                _rp.update(f"splitting large zip in part {_chapters}")
+                _part_file = _big_zip_file.parent / f"{_big_zip_file.name}.{_chapters:03d}"
+                with open(_part_file, 'wb') as _tgt:
+                    _written = 0
+                    while _written < _part_size_in_bytes:
+                        if len(_ugly_buf) > 0:
+                            _tgt.write(_ugly_buf)
+                        _tgt.write(_src.read(min(_BUF, _part_size_in_bytes - _written)))
+                        _written += min(_BUF, _part_size_in_bytes - _written)
+                        _ugly_buf = _src.read(1)
+                        if len(_ugly_buf) == 0:
+                            break
+                if len(_ugly_buf) == 0:
+                    if _chapters == 1:
+                        _part_file.unlink()
+                    break
+                _chapters += 1
+        if _chapters > 1:
+            _rp.update(f"removing large zip file")
+            _big_zip_file.unlink()
+
+    # -------------------------------------------------------------- 03
+    # look for archives and upload them
+    if transmft:
+        _rp.update(f"performing uploads to transcend")
+        _rp.stop()
+        if _chapters == 1:
+            print(f"Uploading file part {_big_zip_file.as_posix()}")
+            _cmd_tokens = [
+                "transmft", "-p", f"{_big_zip_file.as_posix()}",
+            ]
+            subprocess.run(_cmd_tokens, shell=False)
+        elif _chapters > 1:
+            for _f in _archive_folder.glob(f"{_zip_base_name}.zip.*"):
+                print(f"Uploading file part {_f.as_posix()}")
+                _cmd_tokens = [
+                    "transmft", "-p", f"{_f.as_posix()}",
+                ]
+                subprocess.run(_cmd_tokens, shell=False)
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[f"unknown value -- {_chapters}"])
+        _trans_log_file = _archive_folder / f"trans.log"
+        shutil.move(_cwd / "trans.log", _trans_log_file)
+        _trans_file_keys = [
+            _.split(" ")[0] for _ in _trans_log_file.read_text().split("\n") if
+            _ != ""
+        ]
+        _ps1_script_file = _archive_folder / f"get.ps1"
+        _ps1_script_file.write_text(
+            "\n".join(
+                [f"transmft -g {_}" for _ in _trans_file_keys]
+            )
+        )
+        print("*"*30)
+        print(_ps1_script_file.read_text())
+        print("*"*30)
+        _rp.start()
+        _rp.set_final_message(_ps1_script_file.read_text())
 
 
 @_APP.command(help="Copies from server to cwd.")

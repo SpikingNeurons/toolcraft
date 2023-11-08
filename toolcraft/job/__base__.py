@@ -3,21 +3,17 @@ todo: deprecate in favour of dapr module
 """
 import abc
 import datetime
-import enum
 import os
 import inspect
 import pathlib
-import shutil
 import typing as t
 import dataclasses
 import subprocess
 import itertools
 
-import rich
 import yaml
 import sys
 import asyncio
-import hashlib
 import types
 
 from .. import logger
@@ -27,13 +23,15 @@ from .. import util
 from .. import storage as s
 from .. import richy
 from .. import settings
+from ..settings import Settings
 
 _now = datetime.datetime.now
 
-try:
+
+if Settings.USE_NP_TF_KE_PA_MARSHALLING:
     import tensorflow as tf
     from tensorflow.python.training.tracking import util as tf_util
-except ImportError:
+else:
     tf = None
     tf_util = None
 
@@ -572,7 +570,7 @@ class Job:
 
         todo: integrate this with storage with partition_columns ... (not important do only if necessary)
         """
-        _ret = self.runner.cwd
+        _ret = self.runner.results_dir
         _ret /= self.method.__func__.__name__
         if bool(self.experiment):
             for _ in self.experiment.group_by:
@@ -1068,7 +1066,7 @@ class Monitor:
     @property
     @util.CacheResult
     def path(self) -> s.Path:
-        _ret = self.runner.cwd / _MONITOR_FOLDER
+        _ret = self.runner.results_dir / _MONITOR_FOLDER
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -1396,9 +1394,9 @@ class Experiment(_Common, abc.ABC):
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=[
-        'cwd', 'flow', 'monitor', 'registered_experiments',
+        'cwd', 'results_dir', 'flow', 'monitor', 'registered_experiments',
     ],
-    things_not_to_be_overridden=['cwd', 'py_script', 'monitor'],
+    things_not_to_be_overridden=['cwd', 'results_dir', 'py_script', 'monitor'],
     # we do not want any fields for Runner class
     restrict_dataclass_fields_to=[],
 )
@@ -1461,16 +1459,29 @@ class Runner(_Common, abc.ABC):
 
     @property
     @util.CacheResult
+    def results_dir(self) -> s.Path:
+        """
+        results dir where results will be stored for this runner
+        """
+        _py_script = self.py_script
+        _folder_name = _py_script.name.replace(".py", "")
+        _folder_name += f"_{self.hex_hash[:5]}"
+        _ret = s.Path(suffix_path=_folder_name, fs_name='RESULTS')
+        if not _ret.exists():
+            _ret.mkdir(create_parents=True)
+        return _ret
+
+    @property
+    @util.CacheResult
     def cwd(self) -> s.Path:
         """
         todo: adapt code so that the cwd can be on any other file system instead of CWD
         """
         _py_script = self.py_script
-        _folder_name = _py_script.name.replace(".py", "")
-        _ret = s.Path(suffix_path=_folder_name, fs_name='CWD')
+        _ret = s.Path(suffix_path=".", fs_name='CWD')
         e.code.AssertError(
             value1=_ret.local_path.absolute().as_posix(),
-            value2=(_py_script.parent / _folder_name).absolute().as_posix(),
+            value2=_py_script.parent.absolute().as_posix(),
             msgs=[
                 f"This is unexpected ... ",
                 f"The cwd for job runner is {_ret.local_path.absolute().as_posix()}",
@@ -1499,15 +1510,14 @@ class Runner(_Common, abc.ABC):
         # setup logger
         import logging
         # note that this should always be local ... dont use `self.cwd`
-        _log_file = self.py_script.parent / self.py_script.name.replace(".py", "") / "runner.log"
-        _log_file.parent.mkdir(parents=True, exist_ok=True)
+        _log_file = self.results_dir / "runner.log"
         logger.setup_logging(
             propagate=False,
             level=logging.NOTSET,
             handlers=[
                 # logger.get_rich_handler(),
                 # logger.get_stream_handler(),
-                logger.get_file_handler(_log_file),
+                logger.get_file_handler(_log_file.local_path),
             ],
         )
 

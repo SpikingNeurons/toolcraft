@@ -101,7 +101,7 @@ class FileGroupConfig(s.Config):
         in different results ... this ensures that for instance the
         randomness is consistent ...
         """
-        return random.choice(settings.FileHash.CHECK_INTERVALS_IN_SEC)
+        return random.choice(settings.Settings.CHECK_INTERVALS_IN_SEC)
 
     @property
     def periodic_check_needed(self) -> bool:
@@ -595,7 +595,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # if config.DEBUG_HASHABLE_STATE we will create files two times
         # to confirm if states are consistent and hence it will help us to
         # debug DEBUG_HASHABLE_STATE
-        if settings.FileHash.DEBUG_HASHABLE_STATE:
+        if settings.Settings.DEBUG_HASHABLE_STATE:
             _info_backup_path = self.info.backup_path
             _config_backup_path = self.config.backup_path
             _info_backup_exists = _info_backup_path.exists()
@@ -1128,7 +1128,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ---------------------------------------------------------------01
         _rp = self.richy_panel
-        if settings.FileHash.DEBUG_HASHABLE_STATE:
+        if settings.Settings.DEBUG_HASHABLE_STATE:
             # if config.DEBUG_HASHABLE_STATE we know what we are doing ... we
             # are debugging and there will be one time programmatically delete
             # so set the response automatically for FileGroup
