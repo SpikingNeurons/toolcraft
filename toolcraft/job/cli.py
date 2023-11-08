@@ -375,7 +375,9 @@ def archive(
         print(_ps1_script_file.read_text())
         print("*"*30)
         _rp.start()
-        _rp.set_final_message(_ps1_script_file.read_text())
+        print("*"*30)
+        print(_ps1_script_file.read_text())
+        print("*"*30)
 
 
 @_APP.command(help="Copies from server to cwd.")
