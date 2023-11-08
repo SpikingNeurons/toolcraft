@@ -335,7 +335,6 @@ def archive(
                         _part_file.unlink()
                     break
                 _chapters += 1
-        print("cccccccccccccccccccccccccccc", _chapters)
         if _chapters > 1:
             _rp.update(f"removing large zip file")
             _big_zip_file.unlink()
