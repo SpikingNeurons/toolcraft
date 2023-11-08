@@ -311,42 +311,54 @@ def archive(
             __file = _file.relative_to(_src_dir.parent)
             _rp.update(f"zipping {__file} ...")
             _zf.write(_file, __file)
+    _chapters = 1
     if part_size is not None:
         _BUF = 10 * 1024 * 1024 * 1024  # 10GB     - max memory buffer size to use for read
         _part_size_in_bytes = part_size * 1024 *1024
-        _chapters = 1
         _ugly_buf = ''
         with open(_big_zip_file, 'rb') as _src:
             while True:
                 _rp.update(f"splitting large zip in part {_chapters}")
-                _tgt = open(_big_zip_file.parent / f"{_big_zip_file.name}.{_chapters:03d}", 'wb')
-                _written = 0
-                while _written < _part_size_in_bytes:
-                    if len(_ugly_buf) > 0:
-                        _tgt.write(_ugly_buf)
-                    _tgt.write(_src.read(min(_BUF, _part_size_in_bytes - _written)))
-                    _written += min(_BUF, _part_size_in_bytes - _written)
-                    _ugly_buf = _src.read(1)
-                    if len(_ugly_buf) == 0:
-                        break
-                _tgt.close()
+                _part_file = _big_zip_file.parent / f"{_big_zip_file.name}.{_chapters:03d}"
+                with open(_part_file, 'wb') as _tgt:
+                    _written = 0
+                    while _written < _part_size_in_bytes:
+                        if len(_ugly_buf) > 0:
+                            _tgt.write(_ugly_buf)
+                        _tgt.write(_src.read(min(_BUF, _part_size_in_bytes - _written)))
+                        _written += min(_BUF, _part_size_in_bytes - _written)
+                        _ugly_buf = _src.read(1)
+                        if len(_ugly_buf) == 0:
+                            break
                 if len(_ugly_buf) == 0:
+                    if _chapters == 1:
+                        _part_file.unlink()
                     break
                 _chapters += 1
         _rp.update(f"removing large zip file")
-        _big_zip_file.unlink()
+        if _chapters > 1:
+            _big_zip_file.unlink()
 
     # -------------------------------------------------------------- 03
     # look for archives and upload them
     if transmft:
         _rp.update(f"performing uploads to transcend")
         _rp.stop()
-        for _f in _archive_folder.glob(f"{_zip_base_name}.zip.*"):
-            print(f"Uploading file part {_f.as_posix()}")
+        if _chapters == 1:
+            print(f"Uploading file part {_big_zip_file.as_posix()}")
             _cmd_tokens = [
-                "transmft", "-p", f"{_f.as_posix()}",
+                "transmft", "-p", f"{_big_zip_file.as_posix()}",
             ]
             subprocess.run(_cmd_tokens, shell=False)
+        elif _chapters > 1:
+            for _f in _archive_folder.glob(f"{_zip_base_name}.zip.*"):
+                print(f"Uploading file part {_f.as_posix()}")
+                _cmd_tokens = [
+                    "transmft", "-p", f"{_f.as_posix()}",
+                ]
+                subprocess.run(_cmd_tokens, shell=False)
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[f"unknown value -- {_chapters}"])
         _trans_log_file = _archive_folder / f"trans.log"
         shutil.move(_cwd / "trans.log", _trans_log_file)
         _trans_file_keys = [
