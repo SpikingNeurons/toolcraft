@@ -13,17 +13,7 @@ import os
 from . import error as e
 from . import logger, settings, util
 from .settings import Settings
-
-
-if settings.DPG_WORKS:
-    from .gui import UseMethodInForm
-else:
-    class UseMethodInForm:
-        def __init__(self, *args, **kwargs):
-            ...
-
-        def __call__(self, fn: t.Callable):
-            return fn
+from .gui import UseMethodInForm
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
@@ -98,6 +88,7 @@ def _tf_serialize(_data):
         return _data
     else:
         return _data
+
 
 def _tf_deserialize(_data):
     """

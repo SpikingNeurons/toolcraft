@@ -10,11 +10,14 @@ import typing as t
 import dataclasses
 import subprocess
 import itertools
-
 import yaml
 import sys
 import asyncio
 import types
+
+if False:
+    import tensorflow as tf
+    from tensorflow.python.training.tracking import util as tf_util
 
 from .. import logger
 from .. import error as e
@@ -26,14 +29,6 @@ from .. import settings
 from ..settings import Settings
 
 _now = datetime.datetime.now
-
-
-if Settings.USE_NP_TF_KE_PA_MARSHALLING:
-    import tensorflow as tf
-    from tensorflow.python.training.tracking import util as tf_util
-else:
-    tf = None
-    tf_util = None
 
 
 # noinspection PyUnreachableCode
@@ -782,6 +777,7 @@ class Job:
         """
         todo: make this compatible for all type of path
         """
+        import tensorflow as tf
         # check if tensorflow available
         if tf is None:
             raise e.code.CodingError(
@@ -814,6 +810,7 @@ class Job:
         """
         todo: make this compatible for all type of path
         """
+        import tensorflow as tf
         # check if tensorflow available
         if tf is None:
             raise e.code.CodingError(
