@@ -58,5 +58,4 @@ class Settings:
 
     DO_RULE_CHECK = True
     LOGGER_USE_FILE_HANDLER = False
-    USE_NP_TF_KE_PA_MARSHALLING = True
 

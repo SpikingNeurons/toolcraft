@@ -274,7 +274,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     def as_dict(
         self
-    ) -> t.Dict[str, m.SUPPORTED_HASHABLE_OBJECTS_TYPE]:
+    ) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         # get dict from super
         _dict = super().as_dict()
 
