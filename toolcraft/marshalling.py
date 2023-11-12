@@ -8,7 +8,7 @@ import enum
 import typing as t
 import rich
 import yaml
-import os
+import pathlib
 
 from . import error as e
 from . import logger, settings, util
@@ -1457,8 +1457,8 @@ class YamlRepr(Tracker):
         _module = cls.__module__
         if _module in ['__main__', '__mp_main__']:
             try:
-                _script_path = inspect.getfile(cls).split(os.sep)
-                _module = f"{_script_path[-2]}/{_script_path[-1]}"
+                _script_path = pathlib.Path(inspect.getfile(cls)).absolute().resolve()
+                _module = f"{_script_path.parent.name}/{_script_path.name}"
             except OSError:
                 _module = "_main_"
 

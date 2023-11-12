@@ -37,6 +37,7 @@ from rich import panel as r_panel
 from rich import box as r_box
 from rich import markdown as r_markdown
 from rich import prompt as r_prompt
+from rich import print
 _now = datetime.datetime.now
 
 from . import logger
