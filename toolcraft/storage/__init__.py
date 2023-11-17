@@ -35,5 +35,6 @@ from .table import Table, Filter, make_expression
 
 # a call so that the CWD FileSystem is loaded if defined in config.toml or else it
 # will add default CWD FileSystem ... also it will save it to config.toml
-FileSystemConfig.get("CWD")
-assert "CWD" in file_system.available_file_systems(), "must be there by now ..."
+# todo: eventually remove this .... do not check for CWD as it triggers rule check
+# FileSystemConfig.get("CWD")
+# assert "CWD" in file_system.available_file_systems(), "must be there by now ..."
