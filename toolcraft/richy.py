@@ -52,6 +52,7 @@ if False:
 
 TWidget = t.TypeVar('TWidget', bound="Widget")
 
+
 # noinspection PyArgumentList
 class SpinnerType(enum.Enum):
     """

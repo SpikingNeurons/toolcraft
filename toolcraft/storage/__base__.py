@@ -4,21 +4,19 @@ These are special hashables whose state can be serialized on disk.
 """
 
 import typing as t
-import pathlib
 import datetime
 import dataclasses
 import abc
 _now = datetime.datetime.now
 
-from .. import util, logger, settings
+from .. import util, logger
 from .. import marshalling as m
 from .. import error as e
-from .. import richy
 from . import file_system as _fs
 
 # noinspection PyUnreachableCode
 if False:
-    from . import state, folder
+    from . import state
 
 _LOGGER = logger.get_logger()
 
