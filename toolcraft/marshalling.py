@@ -8,22 +8,12 @@ import enum
 import typing as t
 import rich
 import yaml
-import os
+import pathlib
 
 from . import error as e
 from . import logger, settings, util
 from .settings import Settings
-
-
-if settings.DPG_WORKS:
-    from .gui import UseMethodInForm
-else:
-    class UseMethodInForm:
-        def __init__(self, *args, **kwargs):
-            ...
-
-        def __call__(self, fn: t.Callable):
-            return fn
+from .gui import UseMethodInForm
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
@@ -32,7 +22,30 @@ if False:
     from . import gui, storage
     from . import richy
 
+# noinspection PyUnreachableCode
+if False:
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    import keras as ke
+    import tensorflow as tf
+    import numpy as np
+    import pyarrow as pa
 
+    # noinspection PyUnresolvedReferences
+    # from keras.optimizers.optimizer_experimental import \
+    #     optimizer as optimizer_experimental
+    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
+        int, float, str, slice, list, dict, tuple,
+        datetime.datetime, None, FrozenEnum,
+        HashableClass,
+        np.float32, np.int64, np.int32, pa.Schema,
+        ke.losses.Loss, ke.layers.Layer,
+        ke.optimizers.Optimizer,
+            # optimizer_experimental.Optimizer,
+        tf.TensorSpec, tf.DType,
+    ]
+
+# noinspection PyTypeChecker
+SUPPORTED_HASHABLE_OBJECTS = None  # type: t.Tuple
 TTracker = t.TypeVar('TTracker', bound='Tracker')
 TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
 _LOGGER = logger.get_logger()
@@ -68,46 +81,61 @@ def _tf_serialize(_data):
     """
     Handle serialization for keras loss, optimizer and layer
     """
-
-    import keras as ke
-    import tensorflow as tf
+    # ------------------------------------------------------- 01
+    # if dict do recursion
     if isinstance(_data, dict):
         _r = {}
         for _k, _v in _data.items():
             _r[_k] = _tf_serialize(_v)
         return _r
-    elif isinstance(_data, ke.losses.Loss):
-        _data = ke.losses.serialize(_data)
-        _data['__keras_instance__'] = "loss"
-        return _data
-    elif isinstance(_data, ke.layers.Layer):
-        _data = ke.layers.serialize(_data)
-        _data['__keras_instance__'] = "layer"
-        return _data
-    elif isinstance(_data, ke.optimizers.Optimizer):
-        _data = ke.optimizers.serialize(_data)
-        _data['__keras_instance__'] = "optimizer"
-        return _data
-    elif isinstance(_data, tf.TensorSpec):
-        _data = {
-            "__keras_instance__": "tf_spec",
-            "shape": _data.shape.as_list(),
-            "dtype": _data.dtype.name,
-            "name": _data.name,
-        }
-        return _data
-    else:
-        return _data
+
+    # ------------------------------------------------------- 02
+    # keras
+    try:
+        import keras as ke
+        if isinstance(_data, ke.losses.Loss):
+            _data = ke.losses.serialize(_data)
+            _data['__keras_instance__'] = "loss"
+            return _data
+        if isinstance(_data, ke.layers.Layer):
+            _data = ke.layers.serialize(_data)
+            _data['__keras_instance__'] = "layer"
+            return _data
+        if isinstance(_data, ke.optimizers.Optimizer):
+            _data = ke.optimizers.serialize(_data)
+            _data['__keras_instance__'] = "optimizer"
+            return _data
+    except ImportError:
+        ...
+
+    # ------------------------------------------------------- 03
+    # tensorflow
+    try:
+        import tensorflow as tf
+        if isinstance(_data, tf.TensorSpec):
+            _data = {
+                "__tf_instance__": "spec",
+                "shape": _data.shape.as_list(),
+                "dtype": _data.dtype.name,
+                "name": _data.name,
+            }
+            return _data
+    except ImportError:
+        ...
+
+    # ------------------------------------------------------- 04
+    # return
+    return _data
+
 
 def _tf_deserialize(_data):
     """
     Handle deserialization for keras loss, optimizer and layer
     """
 
-    import keras as ke
-    import tensorflow as tf
     if isinstance(_data, dict):
         if '__keras_instance__' in _data.keys():
+            import keras as ke
             _keras_instance_type = _data['__keras_instance__']
             del _data['__keras_instance__']
             if _keras_instance_type == "loss":
@@ -116,12 +144,22 @@ def _tf_deserialize(_data):
                 return ke.layers.deserialize(_data)
             elif _keras_instance_type == "optimizer":
                 return ke.optimizers.deserialize(_data)
-            elif _keras_instance_type == "tf_spec":
-                return tf.TensorSpec(**_data)
             else:
                 raise e.code.CodingError(
                     msgs=[
                         f"Unknown keras instance type {_keras_instance_type!r}"
+                    ]
+                )
+        elif '__tf_instance__' in _data.keys():
+            import tensorflow as tf
+            _tf_instance_type = _data['__tf_instance__']
+            del _data['__tf_instance__']
+            if _tf_instance_type == "spec":
+                return tf.TensorSpec(**_data)
+            else:
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Unknown tensorflow instance type {_tf_instance_type!r}"
                     ]
                 )
         else:
@@ -1419,8 +1457,8 @@ class YamlRepr(Tracker):
         _module = cls.__module__
         if _module in ['__main__', '__mp_main__']:
             try:
-                _script_path = inspect.getfile(cls).split(os.sep)
-                _module = f"{_script_path[-2]}/{_script_path[-1]}"
+                _script_path = pathlib.Path(inspect.getfile(cls)).absolute().resolve()
+                _module = f"{_script_path.parent.name}/{_script_path.name}"
             except OSError:
                 _module = "_main_"
 
@@ -2073,22 +2111,16 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         _ret = {}
         _field_names = self.dataclass_field_names
-        if Settings.USE_NP_TF_KE_PA_MARSHALLING:
-            for f_name in _field_names:
-                _ret[f_name] = _tf_serialize(getattr(self, f_name))
-        else:
-            for f_name in _field_names:
-                _ret[f_name] = getattr(self, f_name)
-
+        for f_name in _field_names:
+            _ret[f_name] = _tf_serialize(getattr(self, f_name))
         return _ret
 
     @classmethod
     def from_dict(
         cls, yaml_state: t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"], **kwargs
     ) -> "HashableClass":
-        if settings.USE_NP_TF_KE_PA_MARSHALLING:
-            for _n in list(yaml_state.keys()):
-                yaml_state[_n] = _tf_deserialize(yaml_state[_n])
+        for _n in list(yaml_state.keys()):
+            yaml_state[_n] = _tf_deserialize(yaml_state[_n])
         # noinspection PyTypeChecker
         return super().from_dict(yaml_state=yaml_state, **kwargs)
 
@@ -2098,6 +2130,42 @@ class HashableClass(YamlRepr, abc.ABC):
         memory is consumed while doing this
         """
         global SUPPORTED_HASHABLE_OBJECTS
+        if SUPPORTED_HASHABLE_OBJECTS is None:
+            SUPPORTED_HASHABLE_OBJECTS = [
+                int, float, str, slice, list, dict, tuple,
+                datetime.datetime, type(None), FrozenEnum,
+                HashableClass,
+            ]
+            try:
+                import numpy as np
+                SUPPORTED_HASHABLE_OBJECTS += [
+                    np.float32, np.int64, np.int32,
+                ]
+            except ImportError:
+                ...
+            try:
+                import pyarrow as pa
+                SUPPORTED_HASHABLE_OBJECTS += [
+                    pa.Schema,
+                ]
+            except ImportError:
+                ...
+            try:
+                import keras as ke
+                SUPPORTED_HASHABLE_OBJECTS += [
+                    ke.losses.Loss, ke.layers.Layer,
+                    ke.optimizers.Optimizer,
+                ]
+            except ImportError:
+                ...
+            try:
+                import tensorflow as tf
+                SUPPORTED_HASHABLE_OBJECTS += [
+                    tf.TensorSpec, tf.DType,
+                ]
+            except ImportError:
+                ...
+            SUPPORTED_HASHABLE_OBJECTS = tuple(SUPPORTED_HASHABLE_OBJECTS)
 
         # --------------------------------------------------------------01
         # loop over serialized version of field values to validate them
@@ -2168,28 +2236,3 @@ class HashableClass(YamlRepr, abc.ABC):
                 _v.check_for_storage_hashable(field_key=f"{field_key}.{_f}")
 
 
-if Settings.USE_NP_TF_KE_PA_MARSHALLING:
-    # noinspection PyUnresolvedReferences,PyProtectedMember
-    import keras as ke
-    import tensorflow as tf
-    import numpy as np
-    import pyarrow as pa
-    # noinspection PyUnresolvedReferences
-    # from keras.optimizers.optimizer_experimental import \
-    #     optimizer as optimizer_experimental
-    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[
-        int, float, str, slice, list, dict, tuple,
-        datetime.datetime, None, FrozenEnum,
-        HashableClass,
-        np.float32, np.int64, np.int32, pa.Schema,
-        ke.losses.Loss, ke.layers.Layer,
-        ke.optimizers.Optimizer,
-        # optimizer_experimental.Optimizer,
-        tf.TensorSpec, tf.DType,
-    ]
-else:
-    SUPPORTED_HASHABLE_OBJECTS_TYPE = t.Union[int, float, str, slice, list, dict, tuple,
-                                              datetime.datetime, None, FrozenEnum,
-                                              HashableClass, ]
-# noinspection PyUnresolvedReferences
-SUPPORTED_HASHABLE_OBJECTS = SUPPORTED_HASHABLE_OBJECTS_TYPE.__args__

@@ -13,7 +13,6 @@ todo: Lets figure out cloud hash mechanisms to confirm uploads or check download
 todo: in context to mlflow this will also be used as log_artifact ... where
   we store arbitrary files
 """
-import time
 
 import requests
 import typing as t
@@ -25,7 +24,6 @@ import datetime
 import io
 import hashlib
 import zipfile
-import gcsfs
 import platform
 import random
 
@@ -39,6 +37,7 @@ from .file_system import Path
 
 # noinspection PyUnreachableCode
 if False:
+    import gcsfs
     from . import folder
 
 _now = datetime.datetime.now
@@ -343,13 +342,14 @@ class FileGroup(StorageHashable, abc.ABC):
         )
 
     # noinspection PyMethodMayBeStatic
-    def get_gcp_file_system(self) -> gcsfs.GCSFileSystem:
+    def get_gcp_file_system(self) -> "gcsfs.GCSFileSystem":
         """
         Refer:
         https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login
         https://cloud.google.com/docs/authentication/getting-started#auth-cloud-implicit-python
         https://stackoverflow.com/questions/37003862/how-to-upload-a-file-to-google-cloud-storage-on-python-3
         """
+        import gcsfs
         if platform.system() != "Windows":
             raise e.code.CodingError(
                 msgs=[

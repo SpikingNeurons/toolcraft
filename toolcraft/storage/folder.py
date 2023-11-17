@@ -7,7 +7,6 @@ from .. import util
 from .. import marshalling as m
 from . import Suffix
 from . import Path
-from .. import richy
 from .. import logger
 
 _LOGGER = logger.get_logger()

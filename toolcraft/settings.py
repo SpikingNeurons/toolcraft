@@ -16,15 +16,6 @@ import __main__ as main
 ENV_DIR = pathlib.Path(sys.exec_prefix)
 
 
-# dpg works
-DPG_WORKS = False
-try:
-    import dearpygui.dearpygui as _dpg
-    DPG_WORKS = True
-except ImportError:
-    DPG_WORKS = False
-
-
 # platform
 PLATFORM = platform.uname()  # type: platform.uname_result
 
@@ -65,8 +56,6 @@ class Settings:
     # consecutive runs
     DEBUG_HASHABLE_STATE = False
 
-
-    DO_RULE_CHECK = False
+    DO_RULE_CHECK = True
     LOGGER_USE_FILE_HANDLER = False
-    USE_NP_TF_KE_PA_MARSHALLING = False
 

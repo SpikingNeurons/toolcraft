@@ -38,11 +38,9 @@ import pathlib
 import pickle
 import typing as t
 import webbrowser
-import blosc2
 import fsspec
 import os
 import toml
-import gcsfs
 import subprocess
 import io
 from fsspec.spec import AbstractBufferedFile
@@ -70,7 +68,6 @@ from fsspec.implementations.arrow import ArrowFSWrapper
 # from fsspec.implementations.sftp import SFTPFileSystem
 # from fsspec.implementations.zip import ZipFileSystem
 # from fsspec.implementations.tar import TarFileSystem
-from gcsfs import GCSFileSystem
 
 from .. import error as e
 from .. import logger
@@ -124,6 +121,7 @@ class FileSystemConfig(m.HashableClass):
         try:
             # --------------------------------------------------------- 02.01
             if self.protocol in ['gs', 'gcs']:
+                import gcsfs
                 # some vars
                 _credentials_file = settings.TC_HOME / self.kwargs['credentials']
                 _project = _kwargs['project']
@@ -154,6 +152,7 @@ class FileSystemConfig(m.HashableClass):
         # ------------------------------------------------------------- 03.01
         # for GCP
         if self.protocol in ['gs', 'gcs']:
+            import gcsfs
             _fs: gcsfs.GCSFileSystem
             # some vars
             _credentials_file = settings.TC_HOME / self.kwargs['credentials']
@@ -640,6 +639,7 @@ class Path:
             compression=compression)
 
     def save_compressed_pickle(self, data: t.Any):
+        import blosc2
         if self.exists():
             raise e.code.CodingError(
                 msgs=[
@@ -652,6 +652,7 @@ class Path:
             _file.write(_compressed_pickled_data)
 
     def load_compressed_pickle(self) -> t.Any:
+        import blosc2
         if not self.exists():
             raise e.code.CodingError(
                 msgs=[

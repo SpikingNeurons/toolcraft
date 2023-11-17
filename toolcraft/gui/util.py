@@ -2,11 +2,11 @@ import functools
 import typing as t
 import inspect
 import pathlib
-import blosc2
 import pickle
 
 
 def save_compressed_pickle(data: t.Any, file: pathlib.Path):
+    import blosc2
     if file.exists():
         raise Exception(
             f"file {file.name} already exists ... cannot over write"
@@ -18,6 +18,7 @@ def save_compressed_pickle(data: t.Any, file: pathlib.Path):
 
 
 def load_compressed_pickle(file: pathlib.Path) -> t.Any:
+    import blosc2
     if not file.exists():
         raise Exception(
             f"file {file.name} does not exist ... cannot load"
