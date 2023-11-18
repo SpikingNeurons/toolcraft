@@ -2029,28 +2029,7 @@ class HashableClass(YamlRepr, abc.ABC):
         Similar to ... used by pickle deserialization
         >>> self.from_dict
         """
-        if settings.USE_NP_TF_KE_PA_MARSHALLING:
-            # Handle deserialization for keras loss, optimizer and layer
-            # noinspection PyUnresolvedReferences,PyProtectedMember,PyShadowingNames
-            import keras as ke
-            for _n in state.keys():
-                _v = state[_n]
-                if isinstance(_v, dict) and '__keras_instance__' in _v.keys():
-                    _keras_instance_type = _v['__keras_instance__']
-                    del _v['__keras_instance__']
-                    if _keras_instance_type == "loss":
-                        state[_n] = ke.losses.deserialize(_v, custom_objects=CUSTOM_KERAS_CLASSES_MAP['loss'])
-                    elif _keras_instance_type == "layer":
-                        state[_n] = ke.layers.deserialize(_v)
-                    elif _keras_instance_type == "optimizer":
-                        state[_n] = ke.optimizers.deserialize(_v)
-                    else:
-                        raise e.code.CodingError(
-                            msgs=[
-                                f"Unknown keras instance type {_keras_instance_type!r}"
-                            ]
-                        )
-            self.__dict__.update(**state)
+        self.__dict__.update(**_tf_deserialize(state))
 
     def __str__(self) -> str:
         """
