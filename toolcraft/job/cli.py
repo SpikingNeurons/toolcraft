@@ -150,8 +150,7 @@ def run(
                     msgs=[f"Wait-on job with job-id "
                           f"{_wj.job_id} is supposed to be finished ..."]
                 )
-        # noinspection PyProtectedMember
-        _job_kwargs = {} if _job._with_kwargs is None else _job._with_kwargs
+        _job_kwargs = {} if _job.kwargs is None else _job.kwargs
         if _job.experiment is None:
             _job.method(**_job_kwargs)
         else:
