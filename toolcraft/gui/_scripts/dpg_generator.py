@@ -989,9 +989,13 @@ This code is auto-generated:
 ********************************************************************************
 """
 
-# noinspection PyProtectedMember
-import dearpygui._dearpygui as internal_dpg
-import dearpygui.dearpygui as dpg
+try:
+    import dearpygui.dearpygui as dpg
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    import dearpygui._dearpygui as internal_dpg
+except ImportError:
+    dpg = None
+    internal_dpg = None
 import dataclasses
 import enum
 import abc

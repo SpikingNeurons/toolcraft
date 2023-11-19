@@ -1,9 +1,16 @@
 import enum
 import pathlib
 import typing as t
+try:
+    import dearpygui.dearpygui as dpg
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    import dearpygui._dearpygui as internal_dpg
+    from dearpygui_ext import themes
+except ImportError:
+    dpg = None
+    internal_dpg = None
+    themes = None
 
-import dearpygui.dearpygui as dpg
-from dearpygui_ext import themes
 
 _ASSET_FOLDER = pathlib.Path(__file__).parent.resolve()
 

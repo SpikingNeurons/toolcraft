@@ -12,9 +12,13 @@ import sys
 import traceback
 import typing as t
 import enum
-import dearpygui.dearpygui as dpg
-# noinspection PyUnresolvedReferences,PyProtectedMember
-import dearpygui._dearpygui as internal_dpg
+try:
+    import dearpygui.dearpygui as dpg
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    import dearpygui._dearpygui as internal_dpg
+except ImportError:
+    dpg = None
+    internal_dpg = None
 import numpy as np
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, Future
 

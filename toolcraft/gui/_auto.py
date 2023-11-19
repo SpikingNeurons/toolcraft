@@ -2,14 +2,18 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.10.0
+>> DearPyGui: 1.10.1
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
 
-# noinspection PyProtectedMember
-import dearpygui._dearpygui as internal_dpg
-import dearpygui.dearpygui as dpg
+try:
+    import dearpygui.dearpygui as dpg
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    import dearpygui._dearpygui as internal_dpg
+except ImportError:
+    dpg = None
+    internal_dpg = None
 import dataclasses
 import enum
 import abc

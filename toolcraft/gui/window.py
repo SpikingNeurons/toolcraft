@@ -1,6 +1,11 @@
 import dataclasses
-import dearpygui.dearpygui as dpg
-
+try:
+    import dearpygui.dearpygui as dpg
+    # noinspection PyUnresolvedReferences,PyProtectedMember
+    import dearpygui._dearpygui as internal_dpg
+except ImportError:
+    dpg = None
+    internal_dpg = None
 from . import dashboard
 from . import _auto
 
