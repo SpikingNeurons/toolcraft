@@ -13,15 +13,7 @@ import pathlib
 from . import error as e
 from . import logger, settings, util
 from .settings import Settings
-try:
-    from .gui import UseMethodInForm
-except ImportError:
-    class UseMethodInForm:
-        def __init__(self, *args, **kwargs):
-            ...
-
-        def __call__(self, fn: t.Callable):
-            return fn
+from .gui import UseMethodInForm
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
