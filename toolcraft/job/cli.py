@@ -150,11 +150,13 @@ def run(
                     msgs=[f"Wait-on job with job-id "
                           f"{_wj.job_id} is supposed to be finished ..."]
                 )
+        # noinspection PyProtectedMember
+        _job_kwargs = {} if _job._with_kwargs is None else _job._with_kwargs
         if _job.experiment is None:
-            _job.method()
+            _job.method(**_job_kwargs)
         else:
             with _job.experiment(richy_panel=_rp):
-                _job.method()
+                _job.method(**_job_kwargs)
         _job.tag_manager.running.delete()
         _job.tag_manager.finished.create()
         _end = _now()
