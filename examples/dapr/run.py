@@ -4,15 +4,12 @@ Eventually we need to call this from toolcraft cli i.e. when we install it via p
 """
 import dataclasses
 import sys
+import os
 import numpy as np
 sys.path.append(os.path.join("..", ".."))
 from toolcraft import marshalling as m
 from toolcraft import dapr, logger
-
-try:
-    from toolcraft import gui
-except ImportError:
-    gui = None
+from toolcraft import gui
 
 
 _LOGGER = logger.get_logger()
@@ -28,7 +25,7 @@ class Test(m.HashableClass):
         return f"{self.__class__.__name__}.{self.hex_hash} (all_plots)\n" \
                f" >> some_value - {self.some_value}"
 
-    @m.UseMethodInForm(label_fmt="all_plots_gui_label")
+    @gui.UseMethodInForm(label_fmt="all_plots_gui_label")
     def all_plots(self) -> "gui.form.HashableMethodsRunnerForm":
         return gui.form.HashableMethodsRunnerForm(
             title=self.all_plots_gui_label,
@@ -39,7 +36,7 @@ class Test(m.HashableClass):
             collapsing_header_open=True,
         )
 
-    @m.UseMethodInForm(label_fmt="line")
+    @gui.UseMethodInForm(label_fmt="line")
     def some_line_plot(self) -> "gui.plot.Plot":
         _plot = gui.plot.Plot(
             label=f"This is line plot for {self.some_value}",
@@ -62,7 +59,7 @@ class Test(m.HashableClass):
         )
         return _plot
 
-    @m.UseMethodInForm(label_fmt="scatter")
+    @gui.UseMethodInForm(label_fmt="scatter")
     def some_scatter_plot(self) -> "gui.plot.Plot":
         _plot = gui.plot.Plot(
             label=f"This is scatter plot for {self.some_value}",

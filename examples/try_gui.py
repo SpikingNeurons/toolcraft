@@ -363,7 +363,7 @@ class SimpleHashableClass(gui.Hashable):
         time.sleep(10)
         return gui.widget.Text(default_value="done sleeping for 10 seconds")
 
-    # @m.UseMethodInForm(label_fmt="async_update", call_as_async=True)
+    # @gui.UseMethodInForm(label_fmt="async_update", call_as_async=True)
     # def async_update(self) -> gui.widget.Widget:
     #     time.sleep(5)
     #     return gui.widget.Text(default_value="I am done in 5 seconds ...")
