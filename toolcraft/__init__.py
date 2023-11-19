@@ -74,8 +74,11 @@ from . import richy
 print("richy", time.time() - _now)
 from . import texipy
 print("texipy", time.time() - _now)
-from . import gui
-print("gui", time.time() - _now)
+try:
+    from . import gui
+    print("gui", time.time() - _now)
+except ImportError:
+    ...
 
 
 # decorate undecorated and hence rule check
