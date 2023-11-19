@@ -79,11 +79,8 @@ class FileDialog(_auto.FileDialog):
 
     @property
     def parent(self) -> None:
-        raise e.code.CodingError(
-            msgs=[
-                "Use of `parent` for `Window` is not allowed.",
-                "Please use `dash_board` instead.",
-            ]
+        raise Exception(
+            "Use of `parent` for `Window` is not allowed. Please use `dash_board` instead."
         )
 
     @property
