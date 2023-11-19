@@ -1,13 +1,12 @@
 import asyncio
 import dataclasses
 import functools
-import time
 import traceback
 import typing as t
-import dearpygui.dearpygui as dpg
-# noinspection PyProtectedMember
-import dearpygui._dearpygui as internal_dpg
 import numpy as np
+import dearpygui.dearpygui as dpg
+# noinspection PyUnresolvedReferences,PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 
 from .__base__ import PlotSeries, PlotItem
 from . import _auto

@@ -1,4 +1,6 @@
 import dearpygui.dearpygui as dpg
+# noinspection PyUnresolvedReferences,PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 import math
 from math import sin, cos
 import random

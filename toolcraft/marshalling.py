@@ -13,7 +13,7 @@ import pathlib
 from . import error as e
 from . import logger, settings, util
 from .settings import Settings
-from .gui import UseMethodInForm
+from . import gui
 
 # to avoid cyclic imports
 # noinspection PyUnreachableCode
@@ -2076,9 +2076,9 @@ class HashableClass(YamlRepr, abc.ABC):
         for _ in dir(cls):
             _v = getattr(cls, _)
             if isinstance(_v, types.FunctionType):
-                if hasattr(_v, f"_{UseMethodInForm.__name__}"):
-                    _use_method_in_form: UseMethodInForm
-                    _use_method_in_form = getattr(_v, f"_{UseMethodInForm.__name__}")
+                if hasattr(_v, f"_{gui.UseMethodInForm.__name__}"):
+                    _use_method_in_form: gui.UseMethodInForm
+                    _use_method_in_form = getattr(_v, f"_{gui.UseMethodInForm.__name__}")
                     if _use_method_in_form.display_in_form:
                         _ret.append(_)
         return _ret
@@ -2180,7 +2180,7 @@ class HashableClass(YamlRepr, abc.ABC):
     def init(self):
         ...
 
-    @UseMethodInForm(label_fmt="Info")
+    @gui.UseMethodInForm(label_fmt="Info")
     def info_widget(self) -> "gui.widget.Widget":
         # import
         from . import gui

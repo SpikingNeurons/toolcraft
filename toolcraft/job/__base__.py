@@ -26,14 +26,9 @@ from .. import util
 from .. import storage as s
 from .. import richy
 from .. import settings
-from ..settings import Settings
+from .. import gui
 
 _now = datetime.datetime.now
-
-
-# noinspection PyUnreachableCode
-if False:
-    from .. import gui
 
 
 _LOGGER = logger.get_logger()
@@ -1356,7 +1351,7 @@ class _Common(m.HashableClass, abc.ABC):
         # return
         return _ret
 
-    @m.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
+    @gui.UseMethodInForm(label_fmt="view_gui_label", hide_previously_opened=False, tooltip="view_gui_label_tooltip")
     def view(self) -> "gui.form.HashableMethodsRunnerForm":
         from .. import gui
         if isinstance(self, Experiment):
@@ -1380,7 +1375,7 @@ class _Common(m.HashableClass, abc.ABC):
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
 
-    @m.UseMethodInForm(label_fmt="Job's")
+    @gui.UseMethodInForm(label_fmt="Job's")
     def associated_jobs_view(self) -> "gui.widget.Widget":
         from .. import gui
         _jobs = self.associated_jobs

@@ -1,6 +1,7 @@
 import dataclasses
 import dearpygui.dearpygui as dpg
-
+# noinspection PyUnresolvedReferences,PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 from . import dashboard
 from . import _auto
 
@@ -74,11 +75,8 @@ class FileDialog(_auto.FileDialog):
 
     @property
     def parent(self) -> None:
-        raise e.code.CodingError(
-            msgs=[
-                "Use of `parent` for `Window` is not allowed.",
-                "Please use `dash_board` instead.",
-            ]
+        raise Exception(
+            "Use of `parent` for `Window` is not allowed. Please use `dash_board` instead."
         )
 
     @property
