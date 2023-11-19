@@ -522,7 +522,7 @@ class Job:
     @property
     def wait_on_jobs(self) -> t.List["Job"]:
         _wait_on_jobs = []
-        for _j in self._wait_on:
+        for _j in self._wait_on_jobs:
             if isinstance(_j, Job):
                 _wait_on_jobs += [_j]
             else:
@@ -552,6 +552,23 @@ class Job:
             # noinspection PyAttributeOutsideInit
             self._launch_lsf_parameters = None
             return self._launch_lsf_parameters
+
+    @property
+    def kwargs(self) -> t.Optional[t.Dict]:
+        """
+        the container that stores kwargs that can be consumed by self.method
+
+        Container to that you can call job with kwargs
+        Note that the kwargs do not alter hash so use carefully
+        while when we call we will save the kwargs used in launched tag for future reference
+        """
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._kwargs
+        except AttributeError:
+            # noinspection PyAttributeOutsideInit
+            self._kwargs = None
+            return self._kwargs
 
     @property
     @util.CacheResult
@@ -611,12 +628,19 @@ class Job:
             self.method = getattr(runner, method.__name__)  # type: types.MethodType
         else:
             self.method = getattr(experiment, method.__name__)  # type: types.MethodType
-        # container to save wait_on jobs
-        self._wait_on = []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
+        # Container to save wait_on jobs
+        self._wait_on_jobs = []  # type: t.List[t.Union[Job, SequentialJobGroup, ParallelJobGroup]]
 
-    def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
-        self._wait_on.append(wait_on)
-        return self
+        # ------------------------------------------------------------------ 04
+        # validate self.method
+        _full_arg_spec = inspect.getfullargspec(self.method)
+        if _full_arg_spec.args != ['self']:
+            raise e.validation.NotAllowed(
+                msgs=[
+                    f"Only kwargs are allowed for job method {self.method} except for arg `self`",
+                    f"Invalid arg spec: {_full_arg_spec}",
+                ]
+            )
 
     def launch_as_subprocess(self, shell: bool = True, cli_command: t.List[str] = None):
         # ------------------------------------------------------------- 01
@@ -641,7 +665,10 @@ class Job:
         # ------------------------------------------------------------- 03
         # create tag so that worker machine knows that the client has
         # launched it
-        self.tag_manager.launched.create()
+        _data = None
+        if bool(self.kwargs):
+            _data = {'job_kwargs': self.kwargs}
+        self.tag_manager.launched.create(data=_data)
 
         # ------------------------------------------------------------- 04
         # run in subprocess
@@ -656,14 +683,41 @@ class Job:
         #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
         _ret = subprocess.run(_cli_command, shell=shell, env=os.environ.copy())
 
-    def set_launch_lsf_parameters(
+    def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
+        self._wait_on_jobs.append(wait_on)
+        return self
+
+    def with_kwargs(self, _dict: dict) -> "Job":
+        if self.kwargs is None:
+            _full_arg_spec = inspect.getfullargspec(self.method)
+            for _k in _dict.keys():
+                e.validation.ShouldBeOneOf(
+                    value=_k, values=_full_arg_spec.kwonlyargs,
+                    msgs=[f"One of the item in dict is not valid kwarg for method {self.method}"]
+                ).raise_if_failed()
+            for _k in _full_arg_spec.kwonlyargs:
+                if _k not in _full_arg_spec.kwonlydefaults.keys():
+                    if _k not in _dict.keys():
+                        raise e.validation.NotAllowed(
+                            msgs=[f"Please supply mandatory kwarg {_k}"]
+                        )
+            # noinspection PyAttributeOutsideInit
+            self._kwargs = _dict
+            return self
+        else:
+            raise e.code.CodingError(
+                msgs=["with_kwargs was already set ..."]
+            )
+
+    def with_launch_lsf_parameters(
         self, email: bool = False, cpus: int = None, memory: int = None,
-    ):
+    ) -> "Job":
         if self.launch_lsf_parameters is None:
             # noinspection PyAttributeOutsideInit
             self._launch_lsf_parameters = {
                 'email': email, 'cpus': cpus, 'memory': memory,
             }
+            return self
         else:
             raise e.code.CodingError(
                 msgs=[
@@ -857,10 +911,6 @@ class JobGroup(abc.ABC):
     """
 
     @property
-    def is_on_main_machine(self) -> bool:
-        return self.runner.is_on_main_machine
-
-    @property
     @util.CacheResult
     def all_jobs(self) -> t.List[Job]:
         _ret = []
@@ -889,6 +939,21 @@ class JobGroup(abc.ABC):
         # save vars
         self.runner = runner
         self.jobs = jobs
+
+        # validate
+        for _j in jobs:
+            if isinstance(_j, Job):
+                _full_arg_spec = inspect.getfullargspec(_j.method)
+                _supplied_kwargs = {} if _j.kwargs is None else _j.kwargs
+                for _k in _full_arg_spec.kwonlyargs:
+                    if _k not in _full_arg_spec.kwonlydefaults.keys():
+                        if _k not in _supplied_kwargs.keys():
+                            raise e.validation.NotAllowed(
+                                msgs=[
+                                    f"You need to supply mandatory kwarg {_k} for method {_j.method}",
+                                    f"Please use with_kwargs method on job instance to supply kwargs ..."
+                                ]
+                            )
 
         # call init
         self.init()
@@ -1260,12 +1325,13 @@ class _Common(m.HashableClass, abc.ABC):
 
             # -------------------------------------------------- 03.05
             # get signature
+            _full_arg_spec = inspect.getfullargspec(_value)
             _signature = inspect.signature(_value)
             _parameter_keys = list(_signature.parameters.keys())
 
             # -------------------------------------------------- 03.06
             # you must have self
-            if "self" not in _parameter_keys:
+            if _full_arg_spec.args[0] != 'self':
                 raise e.code.CodingError(
                     msgs=[
                         f"Any method defined in class {cls} is used for job ... ",
@@ -1274,19 +1340,17 @@ class _Common(m.HashableClass, abc.ABC):
                         f"update list `_methods_to_skip` above to skip it ..."
                     ]
                 )
-
-            # -------------------------------------------------- 03.07
-            # if no other kwarg it's okay
-            if len(_parameter_keys) == 1:
-                _ret.append(_value)
-            else:
+            if len(_full_arg_spec.args) > 1:
                 raise e.code.CodingError(
                     msgs=[
-                        f"Any method defined in class {cls} can be used for job ... ",
-                        "We restrict you to have no kwarg ...",
-                        f"Check signature for {_value}"
+                        "You are not allowed to use args ... only kwargs are "
+                        "allowed used special * notation to use kwargs"
                     ]
                 )
+
+            # -------------------------------------------------- 03.07
+            # if no other arg it's okay .... note that we allow kwargs
+            _ret.append(_value)
 
         # ------------------------------------------------------ 04
         # return
@@ -1565,9 +1629,11 @@ class Runner(_Common, abc.ABC):
                 # this means the arg represent a job
                 _job = self.get_job_from_cli_run_arg(job=sys.argv[2])
                 _sub_title += [_job.short_name]
+                if bool(_job.kwargs):
+                    _sub_title += [f"with kwargs: {_job.kwargs}"]
             else:
                 if bool(sys.argv[2:]):
-                    _sub_title += [f"args: {sys.argv[2:]}"]
+                    _sub_title += [f"cli args: {sys.argv[2:]}"]
 
         # launch
         with richy.StatusPanel(

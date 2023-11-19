@@ -5,6 +5,7 @@ todo: Formalize with a parent Settings class which will store settings in
 import numpy as np
 import pyarrow as pa  # do not comment this as on unix it causes seg fault
 import pathlib
+import shutil
 import platform
 import toml
 import typing as t
@@ -18,6 +19,7 @@ ENV_DIR = pathlib.Path(sys.exec_prefix)
 
 # platform
 PLATFORM = platform.uname()  # type: platform.uname_result
+IS_LSF = bool(shutil.which('bjobs'))
 
 
 # check if debugger is used

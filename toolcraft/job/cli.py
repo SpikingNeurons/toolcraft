@@ -18,6 +18,7 @@ import traceback
 
 from .. import error as e
 from .. import logger
+from .. import settings
 from .__base__ import Runner, Job
 from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
 from . import cli_launch
@@ -67,7 +68,7 @@ def get_app(runner: Runner):
 def nxdi():
     """
     """
-    print("__is_on_nxdi__", (pathlib.Path.home() / "__is_on_nxdi__").exists())
+    print("IS_LSF", settings.IS_LSF)
     # noinspection PyUnresolvedReferences
     import tensorflow as tf
     print("CUDA", tf.test.is_built_with_cuda())
@@ -150,11 +151,12 @@ def run(
                     msgs=[f"Wait-on job with job-id "
                           f"{_wj.job_id} is supposed to be finished ..."]
                 )
+        _job_kwargs = {} if _job.kwargs is None else _job.kwargs
         if _job.experiment is None:
-            _job.method()
+            _job.method(**_job_kwargs)
         else:
             with _job.experiment(richy_panel=_rp):
-                _job.method()
+                _job.method(**_job_kwargs)
         _job.tag_manager.running.delete()
         _job.tag_manager.finished.create()
         _end = _now()

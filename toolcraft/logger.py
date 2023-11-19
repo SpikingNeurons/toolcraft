@@ -342,6 +342,8 @@ def setup_logging(
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("h5py").setLevel(logging.WARNING)
     logging.getLogger("numexpr").setLevel(logging.WARNING)
+    logging.getLogger("fsspec").setLevel(logging.WARNING)
+    logging.getLogger("markdown_it").setLevel(logging.WARNING)
 
     # thread safety
     # noinspection PyUnresolvedReferences,PyProtectedMember
