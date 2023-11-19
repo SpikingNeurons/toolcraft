@@ -4,13 +4,9 @@ import functools
 import traceback
 import typing as t
 import numpy as np
-try:
-    import dearpygui.dearpygui as dpg
-    # noinspection PyUnresolvedReferences,PyProtectedMember
-    import dearpygui._dearpygui as internal_dpg
-except ImportError:
-    dpg = None
-    internal_dpg = None
+import dearpygui.dearpygui as dpg
+# noinspection PyUnresolvedReferences,PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 
 from .__base__ import PlotSeries, PlotItem
 from . import _auto

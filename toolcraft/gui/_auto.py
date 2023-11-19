@@ -7,13 +7,9 @@ This code is auto-generated:
 ********************************************************************************
 """
 
-try:
-    import dearpygui.dearpygui as dpg
-    # noinspection PyUnresolvedReferences,PyProtectedMember
-    import dearpygui._dearpygui as internal_dpg
-except ImportError:
-    dpg = None
-    internal_dpg = None
+import dearpygui.dearpygui as dpg
+# noinspection PyUnresolvedReferences,PyProtectedMember
+import dearpygui._dearpygui as internal_dpg
 import dataclasses
 import enum
 import abc
