@@ -557,6 +557,13 @@ class Job:
         """
         The args used by launch that resulted in calling this job via call to run
         """
+        if sys.argv[1] != 'run':
+            raise e.code.CodingError(
+                msgs=[
+                    "This property can only be accessed for run job ... "
+                    "where we pass launch time args as fourth argument"
+                ]
+            )
         try:
             # noinspection PyUnresolvedReferences
             return self._launch_args
@@ -570,7 +577,7 @@ class Job:
         if self.launch_args is None:
             raise e.code.CodingError(
                 msgs=[
-                    "Do not call ... as we do not have access to launch args yet",
+                    "Do not call ... as we do not have access to launch args",
                     "Did you make sure to pass it to cli `run` command"
                 ]
             )
