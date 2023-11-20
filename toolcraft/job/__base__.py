@@ -527,11 +527,15 @@ class Job:
     @property
     @util.CacheResult
     def cli_command(self) -> t.List[str]:
+        _launch_args = ' '.join(sys.argv).split(' launch ')
+        assert len(_launch_args) == 2, "must be split in two parts ... looks like ` launch ` missing"
         _command = [
             sys.executable,
             self.runner.py_script.name,
             "run",
             self.job_id,
+            # args used by launch to run this job
+            f"'{_launch_args[1]}'",
         ]
         return _command
 
@@ -547,6 +551,31 @@ class Job:
             # noinspection PyAttributeOutsideInit
             self._launch_lsf_parameters = None
             return self._launch_lsf_parameters
+
+    @property
+    def launch_args(self) -> t.Optional[str]:
+        """
+        The args used by launch that resulted in calling this job via call to run
+        """
+        try:
+            # noinspection PyUnresolvedReferences
+            return self._launch_args
+        except AttributeError:
+            # noinspection PyAttributeOutsideInit
+            self._launch_args = None
+            return self._launch_args
+
+    @property
+    def is_single_cpu(self) -> bool:
+        if self.launch_args is None:
+            raise e.code.CodingError(
+                msgs=[
+                    "Do not call ... as we do not have access to launch args yet",
+                    "Did you make sure to pass it to cli `run` command"
+                ]
+            )
+        else:
+            return self.launch_args.find("--single-cpu") != -1
 
     @property
     def kwargs(self) -> t.Optional[t.Dict]:
@@ -719,6 +748,27 @@ class Job:
                     "Looks like launch_lsf_parameters are already set"
                 ]
             )
+
+    def with_launch_args(
+        self, _launch_args: t.Optional[str],
+    ) -> "Job":
+        """
+        The args used by launch that resulted in calling this job via call to run
+        """
+        if self.launch_args is None:
+            # noinspection PyAttributeOutsideInit
+            self._launch_args = _launch_args
+        else:
+            # There are chances that this method is called
+            # multiple times on same job ... in that case make sure that it is same
+            if self.launch_args != _launch_args:
+                raise e.code.CodingError(
+                    msgs=[
+                        "Looks like launch_args are already set and hence we expect it to match with previously set value",
+                        f"{self.launch_args=} != {_launch_args=}"
+                    ]
+                )
+        return self
 
     def check_health(self, is_on_main_machine: bool) -> t.Optional[str]:
         """
@@ -1583,7 +1633,7 @@ class Runner(_Common, abc.ABC):
         # make <hex_hash>.info for runner if not present
         self.monitor.make_runner_info_file()
 
-    def get_job_from_cli_run_arg(self, job: str) -> Job:
+    def get_job_from_cli_run_arg(self, job: str, launch_args: t.Optional[str]) -> Job:
         # ------------------------------------------------------------ 01
         # read args and validate
         _split_strs = job.split(":")
@@ -1599,11 +1649,11 @@ class Runner(_Common, abc.ABC):
             # -------------------------------------------------------- 01.02
             if len(_split_strs) == 2:
                 _method = getattr(self.__class__, _split_strs[1])
-                return self.associated_jobs[_method]
+                return self.associated_jobs[_method].with_launch_args(launch_args)
             else:
                 _experiment = self.monitor.get_experiment_from_hex_hash(hex_hash=_split_strs[1])
                 _method = getattr(_experiment.__class__, _split_strs[2])
-                return _experiment.associated_jobs[_method]
+                return _experiment.associated_jobs[_method].with_launch_args(launch_args)
         else:
             raise e.code.CodingError(
                 msgs=[
@@ -1622,10 +1672,15 @@ class Runner(_Common, abc.ABC):
             _sub_title = [f"command: {sys.argv[1]}"]
             if sys.argv[1] == "run":
                 # this means the arg represent a job
-                _job = self.get_job_from_cli_run_arg(job=sys.argv[2])
+                _launch_args = None
+                if len(sys.argv) == 4:
+                    _launch_args = sys.argv[3]
+                _job = self.get_job_from_cli_run_arg(job=sys.argv[2], launch_args=_launch_args)
                 _sub_title += [_job.short_name]
                 if bool(_job.kwargs):
                     _sub_title += [f"with kwargs: {_job.kwargs}"]
+                if _launch_args is not None:
+                    _sub_title += [f"with launch args: {_launch_args}"]
             else:
                 if bool(sys.argv[2:]):
                     _sub_title += [f"cli args: {sys.argv[2:]}"]

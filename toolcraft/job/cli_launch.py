@@ -54,6 +54,11 @@ def lsf(
     """
 
     # --------------------------------------------------------- 01
+    # validate
+    if not settings.IS_LSF:
+        raise e.validation.NotAllowed(
+            msgs=["This is not LSF environment so cannot launch lsf jobs ..."]
+        )
     # get some vars
     _rp = _RUNNER.richy_panel
     _rp.update(f"launching jobs on LSF cluster ...")

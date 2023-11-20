@@ -56,6 +56,8 @@ def get_app(runner: Runner):
     global _RUNNER, _APP
     if _RUNNER is None:
         _RUNNER = runner
+        # noinspection PyProtectedMember
+        assert cli_launch._RUNNER is None, "was expecting this to be None"
         cli_launch._RUNNER = runner
     else:
         raise e.code.CodingError(
@@ -84,6 +86,13 @@ def run(
             show_default=False,
         )
     ],
+    launch_args: Annotated[
+        str,
+        typer.Argument(
+            help="args used by launch which resulted in calling this run job",
+            show_default=False,
+        )
+    ] = None
 ):
     """
     Run a job in runner.
@@ -92,7 +101,7 @@ def run(
     # ------------------------------------------------------------ 01
     # get respective job
     # note that it also does validations
-    _job = _RUNNER.get_job_from_cli_run_arg(job=job)
+    _job = _RUNNER.get_job_from_cli_run_arg(job=job, launch_args=launch_args)
 
     # ------------------------------------------------------------ 02
     # get some vars
