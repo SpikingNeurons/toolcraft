@@ -535,7 +535,7 @@ class Job:
             "run",
             self.job_id,
             # args used by launch to run this job
-            f"'{_launch_args[1]}'",
+            f"{_launch_args[1]}",
         ]
         return _command
 
