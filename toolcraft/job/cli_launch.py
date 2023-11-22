@@ -12,7 +12,7 @@ todo: add richy tracking panel ...that makes a layout for all stages and
  IMP: see docstring we can even have dearpygui client if we can submit jobs
    and track jobs via ssh
 """
-
+import datetime
 import os
 import time
 import psutil
@@ -162,6 +162,7 @@ def local(
 
     # --------------------------------------------------------- 04
     # loop infinitely until all jobs complete
+    _start_time = datetime.datetime.now()
     while bool(_all_jobs):
 
         # loop over _all_jobs
@@ -211,7 +212,9 @@ def local(
                     _all_finished = False
                     break
             if not _all_finished:
-                _rp.update(f"⏰ {_job_short_name} :: postponed wait_on jobs not completed")
+                if (datetime.datetime.now() - _start_time).total_seconds() > 10:
+                    _rp.update(f"⏰ {_job_short_name} :: postponed wait_on jobs not completed")
+                    _start_time = datetime.datetime.now()
                 continue
 
             # ------------------------------------------------- 04.06
