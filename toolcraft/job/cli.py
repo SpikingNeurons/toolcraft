@@ -86,13 +86,6 @@ def run(
             show_default=False,
         )
     ],
-    launch_args: Annotated[
-        str,
-        typer.Argument(
-            help="args used by launch which resulted in calling this run job",
-            show_default=False,
-        )
-    ] = None
 ):
     """
     Run a job in runner.
@@ -101,7 +94,7 @@ def run(
     # ------------------------------------------------------------ 01
     # get respective job
     # note that it also does validations
-    _job = _RUNNER.get_job_from_cli_run_arg(job=job, launch_args=launch_args)
+    _job = _RUNNER.get_job_from_cli_run_arg(job=job)
 
     # ------------------------------------------------------------ 02
     # get some vars
