@@ -49,12 +49,14 @@ def is_single_cpu():
     elif 'launch' in sys.argv:
         return "--single-cpu" in sys.argv
     else:
-        raise e.code.CodingError(
-            msgs=[
-                "This method can only be used for run and launch jobs",
-                f"Please check {sys.argv=}"
-            ]
-        )
+        # rest all commands are single cpu
+        return True
+        # raise e.code.CodingError(
+        #     msgs=[
+        #         "This method can only be used for run and launch jobs",
+        #         f"Please check {sys.argv=}"
+        #     ]
+        # )
 
 
 class JobFlowId(t.NamedTuple):
