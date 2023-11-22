@@ -35,6 +35,28 @@ _LOGGER = logger.get_logger()
 _MONITOR_FOLDER = "monitor"
 
 
+def is_single_cpu():
+    if 'run' in sys.argv:
+        if len(sys.argv) != 4:
+            raise e.code.CodingError(
+                msgs=[
+                    "Do not call ... as we do not have access to launch args in run job",
+                    "Did you make sure to pass it to cli `run` command"
+                ]
+            )
+        else:
+            return sys.argv[3].find("--single-cpu") != -1
+    elif 'launch' in sys.argv:
+        return "--single-cpu" in sys.argv
+    else:
+        raise e.code.CodingError(
+            msgs=[
+                "This method can only be used for run and launch jobs",
+                f"Please check {sys.argv=}"
+            ]
+        )
+
+
 class JobFlowId(t.NamedTuple):
     """
     A tuple that helps you find job in the Flow
@@ -571,18 +593,6 @@ class Job:
             # noinspection PyAttributeOutsideInit
             self._launch_args = None
             return self._launch_args
-
-    @property
-    def is_single_cpu(self) -> bool:
-        if self.launch_args is None:
-            raise e.code.CodingError(
-                msgs=[
-                    "Do not call ... as we do not have access to launch args",
-                    "Did you make sure to pass it to cli `run` command"
-                ]
-            )
-        else:
-            return self.launch_args.find("--single-cpu") != -1
 
     @property
     def kwargs(self) -> t.Optional[t.Dict]:
