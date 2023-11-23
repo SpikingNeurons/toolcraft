@@ -110,13 +110,11 @@ def lsf(
                     " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
                 _nxdi_prefix += ["-w", f"{_wait_on}"]
             _cli_command = _nxdi_prefix + _job.cli_command
-            print(">> ", " ".join(_cli_command))
             # _rp.log([" ".join(_cli_command)])
 
             # ------------------------------------------------- 02.03
             # run job
-            # for bsub shell should be False
-            _job.launch_as_subprocess(shell=False, cli_command=_cli_command)
+            _job.launch_as_subprocess(cli_command=_cli_command)
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
@@ -172,6 +170,14 @@ def local(
             # get job
             _job = _all_jobs[_job_flow_id]
             _job_short_name = _job.short_name
+            # make cli command
+            _cli_command = _job.cli_command
+            if not single_cpu:
+                if 'WSL2' in settings.PLATFORM.release:
+                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
+                        '"' + ' '.join(_cli_command) + '"']
+                else:
+                    _cli_command = ["start", "cmd", "/c", ] + _cli_command
 
             # ------------------------------------------------- 04.02
             # if finished skip
@@ -237,7 +243,7 @@ def local(
             # ------------------------------------------------- 04.07.01
             # for first job no need to check anything just launch
             if len(_jobs_running_in_parallel) == 0:
-                _job.launch_as_subprocess(shell=not single_cpu)
+                _job.launch_as_subprocess(cli_command=_cli_command)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]
@@ -255,7 +261,7 @@ def local(
                     _rp.update(f"⏰ {_job_short_name} :: postponed not enough memory")
                     continue
                 # all is well launch
-                _job.launch_as_subprocess(shell=not single_cpu)
+                _job.launch_as_subprocess(cli_command=_cli_command)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]

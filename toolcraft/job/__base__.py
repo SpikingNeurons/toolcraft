@@ -637,18 +637,11 @@ class Job:
                 ]
             )
 
-    def launch_as_subprocess(self, shell: bool = True, cli_command: t.List[str] = None):
+    def launch_as_subprocess(self, cli_command: t.List[str] = None):
         # ------------------------------------------------------------- 01
-        # make cli command
+        # make cli command if None
         if cli_command is None:
-            _cli_command = self.cli_command
-            if shell:
-                if 'WSL2' in settings.PLATFORM.release:
-                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + ['"' + ' '.join(_cli_command) + '"']
-                else:
-                    _cli_command = ["start", "cmd", "/c", ] + _cli_command
-        else:
-            _cli_command = cli_command
+            cli_command = self.cli_command
 
         # ------------------------------------------------------------- 02
         # check health
@@ -676,7 +669,7 @@ class Job:
         #         return _job.method(experiment=_job.experiment)
         # else:
         #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
-        _ret = subprocess.run(_cli_command, shell=shell, env=os.environ.copy())
+        _ret = subprocess.run(cli_command, env=os.environ.copy())
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on_jobs.append(wait_on)
