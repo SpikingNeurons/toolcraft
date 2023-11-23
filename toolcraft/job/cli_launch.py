@@ -172,7 +172,9 @@ def local(
             _job_short_name = _job.short_name
             # make cli command
             _cli_command = _job.cli_command
-            if not single_cpu:
+            if single_cpu:
+                _cli_command += ["--single-cpu"]
+            else:
                 if 'WSL2' in settings.PLATFORM.release:
                     _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
                         '"' + ' '.join(_cli_command) + '"']

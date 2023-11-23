@@ -86,6 +86,12 @@ def run(
             show_default=False,
         )
     ],
+    single_cpu: Annotated[
+        bool, typer.Option(
+            help="This `run` job was launched by `launch` with single cpu mode on (good for debugging). "
+                 "This will be set only by `launch` command automatically."
+        )
+    ] = False
 ):
     """
     Run a job in runner.

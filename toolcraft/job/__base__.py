@@ -660,15 +660,7 @@ class Job:
 
         # ------------------------------------------------------------- 04
         # run in subprocess
-        # do not tempt to use this as it adds dead lock
-        # todo: debug only possible on windows not on wsl linux
-        # if single_cpu:
-        #     if _job.experiment is None:
-        #         return _job.method()
-        #     else:
-        #         return _job.method(experiment=_job.experiment)
-        # else:
-        #     _ret = subprocess.run(_cli_command, shell=True, env=os.environ.copy())
+        print(cli_command, "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
         _ret = subprocess.run(cli_command, env=os.environ.copy())
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
@@ -1412,6 +1404,14 @@ class Experiment(_Common, abc.ABC):
 
     # runner
     runner: "Runner"
+
+    @property
+    def is_on_single_cpu(self) -> bool:
+        """
+        Note that both `run` and `launch` can take `--single-cpu` arg
+        Also note that `launch` passes --single-cpu` arg to `run` automatically.
+        """
+        return '--single-cpu' in sys.argv
 
     def init(self):
         # ------------------------------------------------------------------ 01
