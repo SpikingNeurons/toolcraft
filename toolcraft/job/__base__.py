@@ -637,7 +637,7 @@ class Job:
                 ]
             )
 
-    def launch_as_subprocess(self, cli_command: t.List[str] = None):
+    def launch_as_subprocess(self, cli_command: t.List[str] = None, shell: bool = False):
         # ------------------------------------------------------------- 01
         # make cli command if None
         if cli_command is None:
@@ -660,8 +660,7 @@ class Job:
 
         # ------------------------------------------------------------- 04
         # run in subprocess
-        print(cli_command, "PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP")
-        _ret = subprocess.run(cli_command, env=os.environ.copy())
+        _ret = subprocess.run(cli_command, env=os.environ.copy(), shell=shell)
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on_jobs.append(wait_on)
