@@ -10,8 +10,6 @@ todo: add terminal plotting support
     this is possible as terminals can display raster images
     Extend StatusPanel for this
 """
-import code
-import time
 from collections.abc import Sized
 import dataclasses
 import typing as t

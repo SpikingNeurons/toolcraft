@@ -6,6 +6,7 @@ import datetime
 import os
 import inspect
 import pathlib
+import socket
 import typing as t
 import dataclasses
 import subprocess
@@ -79,28 +80,30 @@ class Tag:
             )
         if data is None:
             data = {}
-        if "time" in data.keys():
-            raise e.code.CodingError(
-                msgs=[
-                    f"Do not supply key time in data dict we will add it ..."
-                ]
-            )
+        for _k in ['time', 'hostname', 'ip_address']:
+            if _k in data.keys():
+                raise e.code.CodingError(
+                    msgs=[
+                        f"Do not supply key {_k} in data dict we will add it ..."
+                    ]
+                )
         data["time"] = _now()
+        data["hostname"] = socket.gethostname()
+        data["ip_address"] = socket.gethostbyname(data["hostname"])
         if exception is not None:
             # data['exception'] = "\n".join(["", ">>> EXCEPTION <<<", "", exception])
             data['exception'] = ["", ">>> EXCEPTION <<<", "", *exception.split("\n")]
         _LOGGER.info(msg=f"Creating tag {self.path}")
-        _txt = yaml.safe_dump(data)
         _parent_dir = self.path.parent
         if not _parent_dir.exists():
             _parent_dir.mkdir(create_parents=True)
-        self.path.write_text(text=_txt, encoding='utf-8')
+        self.path.write_yaml(data=data)
 
     def read(self) -> t.Optional[t.Dict[str, t.Any]]:
         if not self.path.exists():
             return None
         _LOGGER.info(msg=f"Reading tag {self.path}")
-        return yaml.safe_load(self.path.read_text())
+        return self.path.read_yaml()
 
     def exists(self) -> bool:
         return self.path.exists()
@@ -436,6 +439,124 @@ class SubProcessManager:
         return _grp
 
 
+@dataclasses.dataclass
+class JobLaunchParameters:
+
+    # Set this if you want to receive email after lsf job completion.
+    lsf_email: bool = False
+    # Number of processors to use for lsf job.
+    lsf_cpus: int = None
+    # Amount of memory in MB to reserve for lsf job.
+    lsf_memory: int = None
+
+    def __setattr__(self, key, value):
+        if key.startswith("lsf_"):
+            if not settings.IS_LSF:
+                raise e.code.CodingError(
+                    msgs=["Do not try to set LSF launch parameters as this is not LSF environment."]
+                )
+        # noinspection PyUnresolvedReferences
+        _default_value = self.__class__.__dataclass_fields__[key].default
+        if _default_value == value:
+            raise e.code.CodingError(
+                msgs=[f"The launch parameter {key} cannot be set to default value {_default_value}"]
+            )
+        else:
+            if getattr(self, key) == value:
+                raise e.code.CodingError(
+                    msgs=[f"The launch parameter {key} is already set to {value} and you cannot set it again"]
+                )
+            super().__setattr__(key, value)
+
+
+@dataclasses.dataclass
+class JobOsEnvVars:
+
+    IS_ON_SINGLE_CPU: bool = False
+    IS_LSF_JOB: bool = False
+    IS_LOCAL_JOB: bool = False
+
+    def __post_init__(self):
+        for _f in dataclasses.fields(self):
+            if not _f.name.isupper():
+                raise e.code.CodingError(
+                    msgs=[f"All the fields in this class must be upper case. Found {_f.name} !!!"]
+                )
+
+
+    def __setattr__(self, key, value):
+        # ------------------------------------------- 01
+        # validation
+        # ------------------------------------------- 01.01
+        # check IS_ON_SINGLE_CPU
+        if key == 'IS_ON_SINGLE_CPU':
+            if settings.IS_LSF:
+                raise e.code.CodingError(
+                    msgs=["You cannot set IS_ON_SINGLE_CPU on LSF platform"]
+                )
+        # ------------------------------------------- 01.02
+        # check IS_LSF_JOB
+        if key == 'IS_LSF_JOB':
+            if getattr(self, 'IS_LOCAL_JOB'):
+                raise e.code.CodingError(
+                    msgs=["You cannot set IS_LSF_JOB as you have already set IS_LOCAL_JOB"]
+                )
+        # ------------------------------------------- 01.03
+        # check IS_LSF_JOB
+        if key == 'IS_LOCAL_JOB':
+            if getattr(self, 'IS_LSF_JOB'):
+                raise e.code.CodingError(
+                    msgs=["You cannot set IS_LOCAL_JOB as you have already set IS_LSF_JOB"]
+                )
+        # ------------------------------------------- 01.04
+        # check if value is set multiple times
+        # noinspection PyUnresolvedReferences,DuplicatedCode
+        _default_value = self.__class__.__dataclass_fields__[key].default
+        _current_value = getattr(self, key)
+        # this means incoming value is not default
+        if _default_value != value:
+            # this means that current value is already updated
+            if _current_value != _default_value:
+                raise e.code.CodingError(
+                    msgs=[f"The env var {key} is already set to non default value {_current_value}",
+                          f"You cannot update it again with new value {value}"]
+                )
+
+        # ------------------------------------------- 02
+        super().__setattr__(key, value)
+
+    def get_environ_dict(self) -> t.Dict[str, str]:
+        _ret = {}
+        for _f in dataclasses.fields(self):
+            _env_name = f"TC_{_f.name}"
+            if _env_name in os.environ.keys():
+                raise e.code.CodingError(
+                    msgs=[
+                        f"The env var {_env_name} is already set to {os.environ[_env_name]}.",
+                    ]
+                )
+            # noinspection PyUnresolvedReferences
+            _default_value = self.__class__.__dataclass_fields__[_f.name].default
+            _value = getattr(self, _f.name)
+            if _default_value != _value:
+                _ret[_env_name] = str(_value)
+        return _ret
+
+    @classmethod
+    def make_instance_from_environ(cls) -> "JobOsEnvVars":
+        _ret = JobOsEnvVars()
+        for _f in dataclasses.fields(cls):
+            _env_name = f"TC_{_f.name}"
+            try:
+                setattr(_ret, _f.name, eval(os.environ[_env_name]))
+            except KeyError:
+                ...
+        return _ret
+
+
+
+
+
 class Job:
     """
     Note that this job is available only on server i.e. to the submitted job on
@@ -458,6 +579,31 @@ class Job:
     @util.CacheResult
     def sub_process_manager(self) -> SubProcessManager:
         return SubProcessManager(job=self)
+
+    @property
+    def num_keras_tuners(self) -> int:
+        return int(os.environ['TC_NUM_KERAS_TUNERS'])
+
+    @property
+    def is_on_single_cpu(self) -> bool:
+        if 'launch' in sys.argv and 'local' in sys.argv and '--single-cpu' in sys.argv:
+            return True
+        else:
+            return self.os_env_vars.IS_ON_SINGLE_CPU
+
+    @property
+    def is_lsf_job(self) -> bool:
+        if 'launch' in sys.argv and 'lsf' in sys.argv:
+            return True
+        else:
+            return self.os_env_vars.IS_LSF_JOB
+
+    @property
+    def is_local_job(self) -> bool:
+        if 'launch' in sys.argv and 'local' in sys.argv:
+            return True
+        else:
+            return self.os_env_vars.IS_LOCAL_JOB
 
     @property
     def is_launched(self) -> bool:
@@ -538,17 +684,20 @@ class Job:
         return _command
 
     @property
-    def launch_lsf_parameters(self) -> t.Optional[t.Dict]:
+    @util.CacheResult
+    def os_env_vars(self) -> JobOsEnvVars:
         """
-        Override this incase you want to supply parameters specific to job
+        The environment vars you want to see when job is actually running
         """
-        try:
-            # noinspection PyUnresolvedReferences
-            return self._launch_lsf_parameters
-        except AttributeError:
-            # noinspection PyAttributeOutsideInit
-            self._launch_lsf_parameters = None
-            return self._launch_lsf_parameters
+        return JobOsEnvVars.make_instance_from_environ()
+
+    @property
+    @util.CacheResult
+    def launch_parameters(self) -> JobLaunchParameters:
+        """
+        The parameters that can be accessed when job is launched from main machine
+        """
+        return JobLaunchParameters()
 
     @property
     def kwargs(self) -> t.Optional[t.Dict]:
@@ -601,7 +750,9 @@ class Job:
     ):
 
         # ------------------------------------------------------------------ 01
-        # check if method supplies is available in runner
+        # validations
+        # ------------------------------------------------------------------ 01.01
+        # check if method supplied is available in runner
         if experiment is None:
             e.validation.ShouldBeOneOf(
                 value=method, values=runner.methods_that_can_be_used_by_jobs(),
@@ -616,6 +767,31 @@ class Job:
                     f"Method {method} is not recognized as a method that can be used with experiment level Job's"
                 ]
             ).raise_if_failed()
+        # ------------------------------------------------------------------ 01.02
+        # check environments
+        if self.is_lsf_job:
+            if not settings.IS_LSF:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "Please run lsf job on LSF environment"
+                    ]
+                )
+        elif self.is_local_job:
+            if settings.IS_LSF:
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        "This is lsf environment and you are trying to run local job"
+                    ]
+                )
+        else:
+            raise e.code.ShouldNeverHappen(msgs=[])
+        # ------------------------------------------------------------------ 01.03
+        # check single cpu
+        if self.is_on_single_cpu:
+            if not self.is_local_job:
+                raise e.validation.NotAllowed(
+                    msgs=["This is not local job so you cannot have single cpu mode"]
+                )
 
         # ------------------------------------------------------------------ 02
         # assign some vars
@@ -644,7 +820,6 @@ class Job:
         cli_command: t.List[str] = None,
         shell: bool = False,
         use_current_env_vars: bool = True,
-        extra_env_vars: dict = None,
     ):
         # ------------------------------------------------------------- 01
         # make cli command if None
@@ -671,8 +846,7 @@ class Job:
         _env_vars = {}
         if use_current_env_vars:
             _env_vars.update(os.environ.copy())
-        if bool(extra_env_vars):
-            _env_vars.update(extra_env_vars)
+        _env_vars.update(self.os_env_vars.get_environ_dict())
         _ret = subprocess.run(cli_command, env=_env_vars, shell=shell)
         if _ret.returncode != 0:
             warnings.warn(
@@ -703,22 +877,6 @@ class Job:
         else:
             raise e.code.CodingError(
                 msgs=["with_kwargs was already set ..."]
-            )
-
-    def with_launch_lsf_parameters(
-        self, email: bool = False, cpus: int = None, memory: int = None,
-    ) -> "Job":
-        if self.launch_lsf_parameters is None:
-            # noinspection PyAttributeOutsideInit
-            self._launch_lsf_parameters = {
-                'email': email, 'cpus': cpus, 'memory': memory,
-            }
-            return self
-        else:
-            raise e.code.CodingError(
-                msgs=[
-                    "Looks like launch_lsf_parameters are already set"
-                ]
             )
 
     def check_health(self, is_on_main_machine: bool) -> t.Optional[str]:
@@ -1420,14 +1578,6 @@ class Experiment(_Common, abc.ABC):
 
     # runner
     runner: "Runner"
-
-    @property
-    def is_on_single_cpu(self) -> bool:
-        """
-        Note that both `run` and `launch` can take `--single-cpu` arg
-        Also note that `launch` passes --single-cpu` arg to `run` automatically.
-        """
-        return '--single-cpu' in sys.argv
 
     def init(self):
         # ------------------------------------------------------------------ 01
