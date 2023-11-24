@@ -12,7 +12,7 @@ todo: add richy tracking panel ...that makes a layout for all stages and
  IMP: see docstring we can even have dearpygui client if we can submit jobs
    and track jobs via ssh
 """
-
+import datetime
 import os
 import time
 import psutil
@@ -54,6 +54,11 @@ def lsf(
     """
 
     # --------------------------------------------------------- 01
+    # validate
+    if not settings.IS_LSF:
+        raise e.validation.NotAllowed(
+            msgs=["This is not LSF environment so cannot launch lsf jobs ..."]
+        )
     # get some vars
     _rp = _RUNNER.richy_panel
     _rp.update(f"launching jobs on LSF cluster ...")
@@ -105,13 +110,11 @@ def lsf(
                     " && ".join([f"done({_.job_id})" for _ in _wait_on_jobs])
                 _nxdi_prefix += ["-w", f"{_wait_on}"]
             _cli_command = _nxdi_prefix + _job.cli_command
-            print(">> ", " ".join(_cli_command))
             # _rp.log([" ".join(_cli_command)])
 
             # ------------------------------------------------- 02.03
             # run job
-            # for bsub shell should be False
-            _job.launch_as_subprocess(shell=False, cli_command=_cli_command)
+            _job.launch_as_subprocess(cli_command=_cli_command)
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
@@ -157,6 +160,7 @@ def local(
 
     # --------------------------------------------------------- 04
     # loop infinitely until all jobs complete
+    _start_time = datetime.datetime.now()
     while bool(_all_jobs):
 
         # loop over _all_jobs
@@ -166,6 +170,16 @@ def local(
             # get job
             _job = _all_jobs[_job_flow_id]
             _job_short_name = _job.short_name
+            # make cli command
+            _cli_command = _job.cli_command
+            if single_cpu:
+                _cli_command += ["--single-cpu"]
+            else:
+                if 'WSL2' in settings.PLATFORM.release:
+                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
+                        '"' + ' '.join(_cli_command) + '"']
+                else:
+                    _cli_command = ["start", "cmd", "/c", ] + _cli_command
 
             # ------------------------------------------------- 04.02
             # if finished skip
@@ -206,7 +220,9 @@ def local(
                     _all_finished = False
                     break
             if not _all_finished:
-                _rp.update(f"⏰ {_job_short_name} :: postponed wait_on jobs not completed")
+                if (datetime.datetime.now() - _start_time).total_seconds() > 10:
+                    _rp.update(f"⏰ {_job_short_name} :: postponed wait_on jobs not completed")
+                    _start_time = datetime.datetime.now()
                 continue
 
             # ------------------------------------------------- 04.06
@@ -229,7 +245,7 @@ def local(
             # ------------------------------------------------- 04.07.01
             # for first job no need to check anything just launch
             if len(_jobs_running_in_parallel) == 0:
-                _job.launch_as_subprocess(shell=not single_cpu)
+                _job.launch_as_subprocess(cli_command=_cli_command, shell=not single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]
@@ -247,7 +263,7 @@ def local(
                     _rp.update(f"⏰ {_job_short_name} :: postponed not enough memory")
                     continue
                 # all is well launch
-                _job.launch_as_subprocess(shell=not single_cpu)
+                _job.launch_as_subprocess(cli_command=_cli_command, shell=not single_cpu)
                 _jobs_running_in_parallel[_job.job_id] = _job
                 _rp.log([f"🏁 {_job_short_name} :: launching"])
                 del _all_jobs[_job_flow_id]

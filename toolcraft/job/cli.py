@@ -56,6 +56,8 @@ def get_app(runner: Runner):
     global _RUNNER, _APP
     if _RUNNER is None:
         _RUNNER = runner
+        # noinspection PyProtectedMember
+        assert cli_launch._RUNNER is None, "was expecting this to be None"
         cli_launch._RUNNER = runner
     else:
         raise e.code.CodingError(
@@ -84,6 +86,12 @@ def run(
             show_default=False,
         )
     ],
+    single_cpu: Annotated[
+        bool, typer.Option(
+            help="This `run` job was launched by `launch` with single cpu mode on (good for debugging). "
+                 "This will be set only by `launch` command automatically."
+        )
+    ] = False
 ):
     """
     Run a job in runner.
