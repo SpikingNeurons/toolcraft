@@ -10,6 +10,8 @@ import typing as t
 import dataclasses
 import subprocess
 import itertools
+import warnings
+
 import yaml
 import sys
 import asyncio
@@ -637,7 +639,13 @@ class Job:
                 ]
             )
 
-    def launch_as_subprocess(self, cli_command: t.List[str] = None, shell: bool = False):
+    def launch_as_subprocess(
+        self,
+        cli_command: t.List[str] = None,
+        shell: bool = False,
+        use_current_env_vars: bool = True,
+        extra_env_vars: dict = None,
+    ):
         # ------------------------------------------------------------- 01
         # make cli command if None
         if cli_command is None:
@@ -660,7 +668,16 @@ class Job:
 
         # ------------------------------------------------------------- 04
         # run in subprocess
-        _ret = subprocess.run(cli_command, env=os.environ.copy(), shell=shell)
+        _env_vars = {}
+        if use_current_env_vars:
+            _env_vars.update(os.environ.copy())
+        if bool(extra_env_vars):
+            _env_vars.update(extra_env_vars)
+        _ret = subprocess.run(cli_command, env=_env_vars, shell=shell)
+        if _ret.returncode != 0:
+            warnings.warn(
+                f"Failed with return code `{_ret.returncode}` while calling `{cli_command}`"
+            )
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on_jobs.append(wait_on)
