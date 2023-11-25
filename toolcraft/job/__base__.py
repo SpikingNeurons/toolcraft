@@ -119,9 +119,19 @@ class Tag:
                 ]
             )
 
-    def update(self, data: t.Dict[str, t.Any]):
-        # _LOGGER.info(msg=f"Updating tag {self.path}")
-        raise e.code.NotYetImplemented(msgs=[f"yet to implement {Tag.update}"])
+    def update(self, data: t.Dict[str, t.Any], allow_overwrite: bool = False, encoding: str = 'utf-8'):
+        _LOGGER.info(msg=f"Updating tag {self.path}")
+        _old_data = {}
+        if self.path.exists():
+            _old_data = self.path.read_yaml(encoding=encoding)
+        for _k in data.keys():
+            if _k in _old_data.keys():
+                if not allow_overwrite:
+                    raise e.validation.NotAllowed(
+                        msgs=[f"Cannot overwrite key {_k} in tag ..."]
+                    )
+        _old_data.update(data)
+        self.path.write_yaml(_old_data, encoding=encoding)
 
 
 @dataclasses.dataclass

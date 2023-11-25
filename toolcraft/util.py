@@ -1215,18 +1215,28 @@ def io_is_dir_empty(_dir: pathlib.Path) -> bool:
     return _is_empty
 
 
-def find_free_port(localhost: bool):
+def find_open_port(start_port=49152, end_port=65535, raise_error: bool = True) -> t.Optional[int]:
     """
-    Inspired from
-    https://stackoverflow.com/questions/1365265/on-localhost-how-do-i-pick-a-free-port-number
+    Find an open port on the local machine between the specified range.
+    Returns the open port number or None if no port is found.
     """
-    with contextlib.closing(
-        socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ) as _socket:
-        # use 'localhost' for local machines ... or else I assume that it will scan all network routes
-        _socket.bind(('localhost' if localhost else '', 0))
-        _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        return _socket.getsockname()[1]
+    for _port in range(start_port, end_port):
+        try:
+            # Try to create a socket using TCP/IP
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                # Try to bind to the port
+                s.bind(("", _port))
+                # If successful, return this port
+                return _port
+        except OSError:
+            # This will be raised if the port is already in use
+            pass
+    # No open port was found
+    if raise_error:
+        raise e.validation.NotAllowed(
+            msgs=["We did not find any open port"]
+        )
+    return None
 
 
 def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> np.ndarray:
