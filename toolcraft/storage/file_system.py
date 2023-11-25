@@ -43,6 +43,8 @@ import os
 import toml
 import subprocess
 import io
+
+import yaml
 from fsspec.spec import AbstractBufferedFile
 
 # todo: keep exploring these known_implementationsas they are updated
@@ -664,15 +666,21 @@ class Path:
         _pickled_data = blosc2.decompress(_compressed_pickled_data)
         return pickle.loads(_pickled_data)
 
-    def write_text(self, text: str, encoding: str = None):
+    def write_yaml(self, data: dict, encoding: str = 'utf-8'):
+        self.write_text(yaml.safe_dump(data), encoding=encoding)
+
+    def read_yaml(self, encoding: str = 'utf-8') -> dict:
+        return yaml.safe_load(self.read_text(encoding=encoding))
+
+    def write_text(self, text: str, encoding: str = 'utf-8'):
         with self.fs.open(path=self.full_path, mode='w', encoding=encoding) as _f:
             _f.write(text)
 
-    def append_text(self, text: str, encoding: str = None):
+    def append_text(self, text: str, encoding: str = 'utf-8'):
         with self.fs.open(path=self.full_path, mode='a', encoding=encoding) as _f:
             _f.write(text)
 
-    def read_text(self, encoding: str = None) -> str:
+    def read_text(self, encoding: str = 'utf-8') -> str:
         with self.fs.open(path=self.full_path, mode='r', encoding=encoding) as _f:
             return _f.read()
 

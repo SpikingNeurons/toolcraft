@@ -40,11 +40,7 @@ _APP = typer.Typer(
 
 
 @_APP.command(help="Launches all the jobs in runner on lsf infrastructure.")
-def lsf(
-    email: Annotated[bool, typer.Option(help="Set this if you want to receive email after lsf job completion.")] = False,
-    cpus: Annotated[int, typer.Option(help="Number of processors to use for lsf job.")] = None,
-    memory: Annotated[int, typer.Option(help="Amount of memory to reserve for lsf job.")] = None,
-):
+def lsf():
     """
 
     todo: see if wsl can be used to submit job queue from windows to lsf https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
@@ -93,17 +89,15 @@ def lsf(
             _log = _job.path / "bsub.log"
             _nxdi_prefix = ["bsub", ]
             _nxdi_prefix += ["-J", _job.job_id, ]
-            # override if job specific launch_lsf_parameters are supplied
-            if bool(_job.launch_lsf_parameters):
-                email = _job.launch_lsf_parameters['email']
-                cpus = _job.launch_lsf_parameters['cpus']
-                memory = _job.launch_lsf_parameters['memory']
-            if not email:
+            _email = _job.launch_parameters.lsf_email
+            _cpus = _job.launch_parameters.lsf_cpus
+            _memory = _job.launch_parameters.lsf_memory
+            if not _email:
                 _nxdi_prefix += ["-oo", _log.local_path.as_posix(), ]
-            if cpus is not None:
-                _nxdi_prefix += ["-n", f"{cpus}"]
-            if memory is not None:
-                _nxdi_prefix += ["-R", f'rusage[mem={memory}]']
+            if _cpus is not None:
+                _nxdi_prefix += ["-n", f"{_cpus}"]
+            if _memory is not None:
+                _nxdi_prefix += ["-R", f'rusage[mem={_memory}]']
             _wait_on_jobs = [_ for _ in _job.wait_on_jobs if not _.is_finished]
             if bool(_wait_on_jobs):
                 _wait_on = \
@@ -114,12 +108,16 @@ def lsf(
 
             # ------------------------------------------------- 02.03
             # run job
-            _job.launch_as_subprocess(cli_command=_cli_command)
+            assert not _job.os_env_vars.IS_ON_SINGLE_CPU, "Should be False"
+            _job.os_env_vars.IS_LSF_JOB = True
+            _job.launch_as_subprocess(
+                cli_command=_cli_command,
+            )
 
 
 @_APP.command(help="Launches all the jobs in runner on local machine.")
 def local(
-    single_cpu: Annotated[bool, typer.Option(help="Launches on single CPU in sequence (good for debugging)")] = False
+    single_cpu: Annotated[bool, typer.Option(help="Launches on single CPU in sequence (good for debugging)")] = False,
 ):
     """
     todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
@@ -172,9 +170,7 @@ def local(
             _job_short_name = _job.short_name
             # make cli command
             _cli_command = _job.cli_command
-            if single_cpu:
-                _cli_command += ["--single-cpu"]
-            else:
+            if not single_cpu:
                 if 'WSL2' in settings.PLATFORM.release:
                     _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
                         '"' + ' '.join(_cli_command) + '"']
@@ -241,19 +237,10 @@ def local(
 
             # ------------------------------------------------- 04.07
             # if we reach here that means all jobs are over and current job is eligible to execute
-            # but before launching make sure that memory and cpus are available
             # ------------------------------------------------- 04.07.01
-            # for first job no need to check anything just launch
-            if len(_jobs_running_in_parallel) == 0:
-                _job.launch_as_subprocess(cli_command=_cli_command, shell=not single_cpu)
-                _jobs_running_in_parallel[_job.job_id] = _job
-                _rp.log([f"🏁 {_job_short_name} :: launching"])
-                del _all_jobs[_job_flow_id]
-                _job_track_task.update(advance=1)
-                continue
-            # ------------------------------------------------- 04.07.02
-            # else we need to do multiple things
-            else:
+            # But before launching make sure that memory and cpus are available only if there are
+            # jobs running in parallel
+            if len(_jobs_running_in_parallel) > 0:
                 # if not enough cpus then skip
                 if len(_jobs_running_in_parallel) >= _MAX_JOBS:
                     _rp.update(f"⏰ {_job_short_name} :: postponed not enough cpu's")
@@ -262,16 +249,27 @@ def local(
                 if psutil.virtual_memory()[2] > _MAX_MEMORY_USAGE_IN_PERCENT:
                     _rp.update(f"⏰ {_job_short_name} :: postponed not enough memory")
                     continue
-                # all is well launch
-                _job.launch_as_subprocess(cli_command=_cli_command, shell=not single_cpu)
-                _jobs_running_in_parallel[_job.job_id] = _job
-                _rp.log([f"🏁 {_job_short_name} :: launching"])
-                del _all_jobs[_job_flow_id]
-                _job_track_task.update(advance=1)
+            # ------------------------------------------------- 04.07.02
+            # all is well launch
+            # set os env for job to be called
+            if single_cpu:
+                _job.os_env_vars.IS_ON_SINGLE_CPU = single_cpu
+            else:
+                assert not _job.os_env_vars.IS_ON_SINGLE_CPU, "Should be False"
+            _job.os_env_vars.IS_LOCAL_JOB = True
+            _job.launch_as_subprocess(
+                cli_command=_cli_command,
+                shell=not single_cpu,
+            )
+            _jobs_running_in_parallel[_job.job_id] = _job
+            _rp.log([f"🏁 {_job_short_name} :: launching"])
+            del _all_jobs[_job_flow_id]
+            _job_track_task.update(advance=1)
             # ------------------------------------------------- 04.07.03
             # _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS
             # this allows the job to enter properly and get realistic ram usage
-            time.sleep(_WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS)
+            if len(_jobs_running_in_parallel) > 0:
+                time.sleep(_WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS)
 
     # --------------------------------------------------------- 05
     if single_cpu:
