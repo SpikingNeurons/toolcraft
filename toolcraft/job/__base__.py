@@ -450,23 +450,28 @@ class JobLaunchParameters:
     lsf_memory: int = None
 
     def __setattr__(self, key, value):
+        # test for lsf parameters
         if key.startswith("lsf_"):
             if not settings.IS_LSF:
                 raise e.code.CodingError(
                     msgs=["Do not try to set LSF launch parameters as this is not LSF environment."]
                 )
-        # noinspection PyUnresolvedReferences
+
+        # check if value is set multiple times
+        # noinspection PyUnresolvedReferences,DuplicatedCode
         _default_value = self.__class__.__dataclass_fields__[key].default
-        if _default_value == value:
-            raise e.code.CodingError(
-                msgs=[f"The launch parameter {key} cannot be set to default value {_default_value}"]
-            )
-        else:
-            if getattr(self, key) == value:
+        _current_value = getattr(self, key)
+        # this means incoming value is not default
+        if _default_value != value:
+            # this means that current value is already updated
+            if _current_value != _default_value:
                 raise e.code.CodingError(
-                    msgs=[f"The launch parameter {key} is already set to {value} and you cannot set it again"]
+                    msgs=[f"The launch parameter {key} is already set to non default value {_current_value}",
+                          f"You cannot update it again with new value {value}"]
                 )
-            super().__setattr__(key, value)
+
+        # set attr
+        super().__setattr__(key, value)
 
 
 @dataclasses.dataclass
