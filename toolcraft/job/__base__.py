@@ -490,9 +490,9 @@ class JobOsEnvVars:
         # ------------------------------------------- 01.01
         # check IS_ON_SINGLE_CPU
         if key == 'IS_ON_SINGLE_CPU':
-            if settings.IS_LSF:
+            if settings.IS_LSF and value:
                 raise e.code.CodingError(
-                    msgs=["You cannot set IS_ON_SINGLE_CPU on LSF platform"]
+                    msgs=["You cannot set IS_ON_SINGLE_CPU on LSF platform to True"]
                 )
         # ------------------------------------------- 01.02
         # check IS_LSF_JOB
