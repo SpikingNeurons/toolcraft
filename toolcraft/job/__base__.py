@@ -606,6 +606,14 @@ class Job:
             return self.os_env_vars.IS_LOCAL_JOB
 
     @property
+    def is_view_job(self) -> bool:
+        if 'view' in sys.argv:
+            if sys.argv[1] == 'view':
+                return True
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+
+    @property
     def is_launched(self) -> bool:
         return self.tag_manager.launched.exists()
 
@@ -783,6 +791,8 @@ class Job:
                         "This is lsf environment and you are trying to run local job"
                     ]
                 )
+        elif self.is_view_job:
+            ...
         else:
             raise e.code.ShouldNeverHappen(msgs=[])
         # ------------------------------------------------------------------ 01.03
