@@ -629,6 +629,14 @@ class Job:
                 raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
 
     @property
+    def is_archive_job(self) -> bool:
+        if 'archive' in sys.argv:
+            if sys.argv[1] == 'archive':
+                return True
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+
+    @property
     def is_launched(self) -> bool:
         return self.tag_manager.launched.exists()
 
@@ -806,10 +814,10 @@ class Job:
                         "This is lsf environment and you are trying to run local job"
                     ]
                 )
-        elif self.is_view_job:
+        elif self.is_view_job or self.is_archive_job:
             ...
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
         # ------------------------------------------------------------------ 01.03
         # check single cpu
         if self.is_on_single_cpu:
