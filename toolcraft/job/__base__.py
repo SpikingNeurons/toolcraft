@@ -637,6 +637,22 @@ class Job:
                 raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
 
     @property
+    def is_unfinished_job(self) -> bool:
+        if 'unfinished' in sys.argv:
+            if sys.argv[1] == 'unfinished':
+                return True
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+
+    @property
+    def is_failed_job(self) -> bool:
+        if 'failed' in sys.argv:
+            if sys.argv[1] == 'failed':
+                return True
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+
+    @property
     def is_launched(self) -> bool:
         return self.tag_manager.launched.exists()
 
@@ -814,7 +830,7 @@ class Job:
                         "This is lsf environment and you are trying to run local job"
                     ]
                 )
-        elif self.is_view_job or self.is_archive_job:
+        elif self.is_view_job or self.is_archive_job or self.is_unfinished_job or self.is_failed_job:
             ...
         else:
             raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
