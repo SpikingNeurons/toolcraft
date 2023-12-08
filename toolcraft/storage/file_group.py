@@ -1231,14 +1231,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
     @property
     @util.CacheResult
     def lengths(self) -> t.Dict[str, int]:
-        if self.is_created:
-            _shape = self.config.shape
-            return {
-                k: _shape[k][0] for k in self.file_keys
-            }
-        raise e.code.CodingError(
-            msgs=["You have not created files yet so you cannot use this property"]
-        )
+        _shape = self.shape
+        return {
+            k: _shape[k][0] for k in self.file_keys
+        }
 
     @property
     def has_arbitrary_lengths(self) -> bool:
