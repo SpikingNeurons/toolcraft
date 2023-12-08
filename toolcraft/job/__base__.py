@@ -1786,7 +1786,7 @@ class Runner(_Common, abc.ABC):
         )
 
         # call property flow .... so that some experiments dynamically added to flow are available to Runner
-        # _ = self.flow
+        _ = self.flow
 
         # make <hex_hash>.info for runner if not present
         self.monitor.make_runner_info_file()
