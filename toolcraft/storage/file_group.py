@@ -310,17 +310,6 @@ class FileGroup(StorageHashable, abc.ABC):
     def is_outdated(self) -> bool:
         return False
 
-    # def __getattribute__(self, item: str) -> t.Any:
-    #     """
-    #     Helper method to access the files in group as annotated attributes.
-    #     """
-    #     # todo: if there is t.ClassVar annotation use their name to
-    #     #  resolve the file and get() it here ... so that we can get files in
-    #     #  FileGroup without file_key
-    #     # a way to detect if field is class var
-    #     # dataclasses._is_classvar('aa', typing)
-    #     ...
-
     def explore(self):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
