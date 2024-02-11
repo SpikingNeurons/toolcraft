@@ -813,7 +813,7 @@ class Document(LaTeX):
         if make_pdf:
             from . import helper
             helper.make_pdf_with_pdflatex(
-                tex_file=_save_to_file,
+                main_tex_file=_save_to_file,
                 pdf_file=_save_to_file.parent /
                          (_save_to_file.name.split(".")[0] + ".pdf"),
                 clean=clean,

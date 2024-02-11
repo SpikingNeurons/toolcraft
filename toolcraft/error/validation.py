@@ -152,11 +152,11 @@ class OnlyValueAllowed(_CustomException):
         ])
 
 
-class IsSliceOrListWithin(_CustomException):
+class IsIntOrSliceOrListWithin(_CustomException):
     def __init__(
         self,
         *,
-        value: t.Union[slice, t.List[int]],
+        value: t.Union[int, slice, t.List[int]],
         min_value: int,
         max_value: int,
         msgs: MESSAGES_TYPE,
@@ -206,6 +206,13 @@ class IsSliceOrListWithin(_CustomException):
                     ]
                     _raise = True
                     break
+        elif isinstance(value, int):
+            if not min_value <= value < max_value:
+                msgs += [
+                    f"The value {value} is not within range i.e. "
+                    f"between {min_value} and {max_value}",
+                ]
+                _raise = True
         else:
             msgs += [
                 f"Expected a int, slice or list of int instead found "

@@ -381,6 +381,7 @@ def archive(
         print("*"*30)
         print(_ps1_script_file.read_text())
         print("*"*30)
+        subprocess.run(["gedit", _ps1_script_file.as_posix()])
 
 
 @_APP.command(help="Copies from server to cwd.")

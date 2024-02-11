@@ -119,9 +119,19 @@ class Tag:
                 ]
             )
 
-    def update(self, data: t.Dict[str, t.Any]):
-        # _LOGGER.info(msg=f"Updating tag {self.path}")
-        raise e.code.NotYetImplemented(msgs=[f"yet to implement {Tag.update}"])
+    def update(self, data: t.Dict[str, t.Any], allow_overwrite: bool = False, encoding: str = 'utf-8'):
+        _LOGGER.info(msg=f"Updating tag {self.path}")
+        _old_data = {}
+        if self.path.exists():
+            _old_data = self.path.read_yaml(encoding=encoding)
+        for _k in data.keys():
+            if _k in _old_data.keys():
+                if not allow_overwrite:
+                    raise e.validation.NotAllowed(
+                        msgs=[f"Cannot overwrite key {_k} in tag ..."]
+                    )
+        _old_data.update(data)
+        self.path.write_yaml(_old_data, encoding=encoding)
 
 
 @dataclasses.dataclass
@@ -450,23 +460,28 @@ class JobLaunchParameters:
     lsf_memory: int = None
 
     def __setattr__(self, key, value):
+        # test for lsf parameters
         if key.startswith("lsf_"):
             if not settings.IS_LSF:
                 raise e.code.CodingError(
                     msgs=["Do not try to set LSF launch parameters as this is not LSF environment."]
                 )
-        # noinspection PyUnresolvedReferences
+
+        # check if value is set multiple times
+        # noinspection PyUnresolvedReferences,DuplicatedCode
         _default_value = self.__class__.__dataclass_fields__[key].default
-        if _default_value == value:
-            raise e.code.CodingError(
-                msgs=[f"The launch parameter {key} cannot be set to default value {_default_value}"]
-            )
-        else:
-            if getattr(self, key) == value:
+        _current_value = getattr(self, key)
+        # this means incoming value is not default
+        if _default_value != value:
+            # this means that current value is already updated
+            if _current_value != _default_value:
                 raise e.code.CodingError(
-                    msgs=[f"The launch parameter {key} is already set to {value} and you cannot set it again"]
+                    msgs=[f"The launch parameter {key} is already set to non default value {_current_value}",
+                          f"You cannot update it again with new value {value}"]
                 )
-            super().__setattr__(key, value)
+
+        # set attr
+        super().__setattr__(key, value)
 
 
 @dataclasses.dataclass
@@ -490,9 +505,9 @@ class JobOsEnvVars:
         # ------------------------------------------- 01.01
         # check IS_ON_SINGLE_CPU
         if key == 'IS_ON_SINGLE_CPU':
-            if settings.IS_LSF:
+            if settings.IS_LSF and value:
                 raise e.code.CodingError(
-                    msgs=["You cannot set IS_ON_SINGLE_CPU on LSF platform"]
+                    msgs=["You cannot set IS_ON_SINGLE_CPU on LSF platform to True"]
                 )
         # ------------------------------------------- 01.02
         # check IS_LSF_JOB
@@ -609,6 +624,30 @@ class Job:
     def is_view_job(self) -> bool:
         if 'view' in sys.argv:
             if sys.argv[1] == 'view':
+                return True
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+
+    @property
+    def is_archive_job(self) -> bool:
+        if 'archive' in sys.argv:
+            if sys.argv[1] == 'archive':
+                return True
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+
+    @property
+    def is_unfinished_job(self) -> bool:
+        if 'unfinished' in sys.argv:
+            if sys.argv[1] == 'unfinished':
+                return True
+            else:
+                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+
+    @property
+    def is_failed_job(self) -> bool:
+        if 'failed' in sys.argv:
+            if sys.argv[1] == 'failed':
                 return True
             else:
                 raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
@@ -791,10 +830,10 @@ class Job:
                         "This is lsf environment and you are trying to run local job"
                     ]
                 )
-        elif self.is_view_job:
+        elif self.is_view_job or self.is_archive_job or self.is_unfinished_job or self.is_failed_job:
             ...
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
         # ------------------------------------------------------------------ 01.03
         # check single cpu
         if self.is_on_single_cpu:
