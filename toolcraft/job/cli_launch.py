@@ -172,8 +172,9 @@ def local(
             _cli_command = _job.cli_command
             if not single_cpu:
                 if 'WSL2' in settings.PLATFORM.release:
-                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
-                        '"' + ' '.join(_cli_command) + '"']
+                    # _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
+                    #     '"' + ' '.join(_cli_command) + '"']
+                    _cli_command = ["gnome-terminal", "--"] + _cli_command
                 else:
                     _cli_command = ["start", "cmd", "/c", ] + _cli_command
 
@@ -259,7 +260,6 @@ def local(
             _job.os_env_vars.IS_LOCAL_JOB = True
             _job.launch_as_subprocess(
                 cli_command=_cli_command,
-                shell=not single_cpu,
             )
             _jobs_running_in_parallel[_job.job_id] = _job
             _rp.log([f"🏁 {_job_short_name} :: launching"])

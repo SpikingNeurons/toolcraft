@@ -519,7 +519,7 @@ class Path:
             return gui.widget.Text(f"Image does not exist in path \n - {self}")
 
         # noinspection PyTypeChecker
-        webbrowser.open(self.local_path)
+        webbrowser.open(self.local_path.as_posix())
         return gui.widget.Text(f"Image will be opened in external window\n - {self}")
 
     def pb_open(self) -> "gui.widget.Widget":

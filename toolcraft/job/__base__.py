@@ -867,7 +867,6 @@ class Job:
     def launch_as_subprocess(
         self,
         cli_command: t.List[str] = None,
-        shell: bool = False,
         use_current_env_vars: bool = True,
     ):
         # ------------------------------------------------------------- 01
@@ -896,7 +895,7 @@ class Job:
         if use_current_env_vars:
             _env_vars.update(os.environ.copy())
         _env_vars.update(self.os_env_vars.get_environ_dict())
-        _ret = subprocess.run(cli_command, env=_env_vars, shell=shell)
+        _ret = subprocess.run(cli_command, env=_env_vars)
         if _ret.returncode != 0:
             warnings.warn(
                 f"Failed with return code `{_ret.returncode}` while calling `{cli_command}`"
