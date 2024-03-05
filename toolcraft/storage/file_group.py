@@ -56,6 +56,21 @@ SELECT_TYPE = t.Union[
 ]
 
 
+class Generator:
+
+    def __init__(self, meta: t.Dict[str, t.Any], gen_fn: t.Callable, length: int):
+        self._length = length
+        self._gen_fn = gen_fn
+        self.meta = meta
+
+    def __len__(self) -> int:
+        return self._length
+
+    def __iter__(self) -> t.Generator[t.Dict[str, t.Any], None, None]:
+        for _ in self._gen_fn():
+            yield _
+
+
 @dataclasses.dataclass
 class FileGroupConfig(s.Config):
 
@@ -1339,6 +1354,41 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # return
         return _file
+
+    def save_using_generator(self, generator: Generator):
+        # first save things in meta ...
+        for _k, _v in generator.meta.items():
+            _memmap = np.memmap(
+                filename=self.path / _k,
+                dtype=_v.dtype,
+                shape=_v.shape, mode='r+'
+            )
+            _memmap[:] = _v
+            _memmap.flush()
+            del _memmap
+
+        # now save data obtained from generator
+        _memmaps = {}
+        _length = len(generator)
+        _iterator = iter(generator)
+        _first_element = next(_iterator)
+        _keys = [k for k in _first_element.keys() if k != "index_to_write"]
+        _first_element_index_to_write = _first_element["index_to_write"]
+        for _k in _keys:
+            _memmaps[_k] = np.memmap(
+                filename=self.path / _k,
+                dtype=_v.dtype,
+                shape=(_length, *_v.shape[1:]), mode='r+'
+            )
+            _memmaps[_k][_first_element_index_to_write] = _first_element[_k]
+        for _ in _iterator:
+            _index_to_write = _["index_to_write"]
+            for _k in _keys:
+                _memmaps[_k][_index_to_write] = _[_k]
+        for _k in _keys:
+            _memmaps[_k].flush()
+            del _memmaps[_k]
+        del _memmaps
 
     def create_pre_runner(self):
 

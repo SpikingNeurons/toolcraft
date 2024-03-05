@@ -29,7 +29,7 @@ from .folder import Folder
 from .file_group import FileGroup, FileGroupFromPaths, USE_ALL, \
     SELECT_TYPE, FileGroupConfig
 from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup, \
-    NpyFileGroupConfig
+    NpyFileGroupConfig, Generator
 from .table import Table, Filter, make_expression
 
 
