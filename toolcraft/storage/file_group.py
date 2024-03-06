@@ -58,7 +58,7 @@ SELECT_TYPE = t.Union[
 
 class Generator:
 
-    def __init__(self, meta: t.Dict[str, t.Any], gen_fn: t.Callable, length: int):
+    def __init__(self, gen_fn: t.Callable, length: int, meta: t.Dict[str, t.Any] = None):
         self._length = length
         self._gen_fn = gen_fn
         self.meta = meta
@@ -1355,36 +1355,59 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # return
         return _file
 
-    def save_using_generator(self, generator: Generator):
+    def save_using_generator(self, generator: Generator, task_name: str = None):
+        # get richy panel
+        _rp = self.richy_panel
+
+        # check if file exists they should not exist
+        for _fk in self.file_keys:
+            if (self.path / _fk).exists():
+                raise e.validation.NotAllowed(
+                    msgs=[
+                        f"File {_fk} already exists in the folder {self.path}",
+                        f"We cannot overwrite the file. Please delete it if "
+                        f"possible."
+                    ]
+                )
+
         # first save things in meta ...
-        for _k, _v in generator.meta.items():
-            _memmap = np.memmap(
-                filename=self.path / _k,
-                dtype=_v.dtype,
-                shape=_v.shape, mode='r+'
-            )
-            _memmap[:] = _v
-            _memmap.flush()
-            del _memmap
+        if bool(generator.meta):
+            _rp.update("saving meta data")
+            for _k, _v in generator.meta.items():
+                _memmap = np.memmap(
+                    filename=(self.path / _k).local_path,
+                    dtype=_v.dtype,
+                    shape=_v.shape, mode='w+'
+                )
+                _memmap[:] = _v
+                _memmap.flush()
+                del _memmap
 
         # now save data obtained from generator
+        _rp.update("saving memmap")
         _memmaps = {}
         _length = len(generator)
+        _task_name = "save in memmap#" if task_name is None else task_name
+        _task = _rp.add_task(task_name=_task_name, total=_length)
         _iterator = iter(generator)
         _first_element = next(_iterator)
         _keys = [k for k in _first_element.keys() if k != "index_to_write"]
         _first_element_index_to_write = _first_element["index_to_write"]
         for _k in _keys:
+            _v = _first_element[_k]
             _memmaps[_k] = np.memmap(
-                filename=self.path / _k,
+                filename=(self.path / _k).local_path,
                 dtype=_v.dtype,
-                shape=(_length, *_v.shape[1:]), mode='r+'
+                shape=(_length, *_v.shape), mode='w+'
             )
-            _memmaps[_k][_first_element_index_to_write] = _first_element[_k]
+            _memmaps[_k][_first_element_index_to_write] = _v
+        _task.update(advance=1)
         for _ in _iterator:
+            _task.update(advance=1)
             _index_to_write = _["index_to_write"]
             for _k in _keys:
                 _memmaps[_k][_index_to_write] = _[_k]
+        _rp.update("flushing the memmaps")
         for _k in _keys:
             _memmaps[_k].flush()
             del _memmaps[_k]
