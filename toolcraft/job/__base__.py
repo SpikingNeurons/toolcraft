@@ -864,10 +864,117 @@ class Job:
                 ]
             )
 
+    def run_on_worker(self, _rp: richy.StatusPanel):
+
+        # ------------------------------------------------------------ 01
+        # reconfig logger to change log file for job
+        import logging
+        _log = self.log_file
+        _previous_log_settings = logger.setup_logging(
+            propagate=False,
+            level=logging.NOTSET,
+            # todo: here we can config that on server where things will be logged
+            handlers=[
+                # logger.get_rich_handler(),
+                # logger.get_stream_handler(),
+                logger.get_file_handler(_log.local_path),
+            ],
+        )
+        _start = _now()
+        _LOGGER.info(
+            msg=f"Starting job on worker machine ...",
+            msgs=[
+                {
+                    "job_id": self.job_id,
+                    "sys.argv": sys.argv,
+                    "started": _start.ctime(),
+                }
+            ]
+        )
+
+        # ------------------------------------------------------------ 02
+        # check if launcher client machine has created launched tag
+        if not self.tag_manager.launched.exists():
+            raise e.code.CodingError(
+                msgs=[
+                    "We expect that `launched` tag is created by client launching machine .... "
+                ]
+            )
+
+        # ------------------------------------------------------------ 03
+        # indicates that job is started
+        self.tag_manager.started.create()
+
+        # ------------------------------------------------------------ 04
+        # indicate that job will now be running
+        # also note this acts as semaphore and is deleted when job is finished
+        # ... hence started tag is important
+        self.tag_manager.running.create()
+
+        # ------------------------------------------------------------ 05
+        try:
+            for _wj in self.wait_on_jobs:
+                if not _wj.is_finished:
+                    raise e.code.CodingError(
+                        msgs=[f"Wait-on job with job-id "
+                              f"{_wj.job_id} is supposed to be finished ..."]
+                    )
+            _job_kwargs = {} if self.kwargs is None else self.kwargs
+            if self.experiment is None:
+                self.method(**_job_kwargs)
+            else:
+                with self.experiment(richy_panel=_rp):
+                    self.method(**_job_kwargs)
+            self.tag_manager.running.delete()
+            self.tag_manager.finished.create()
+            _end = _now()
+            _LOGGER.info(
+                msg=f"Successfully finished job on worker machine ...",
+                msgs=[
+                    {
+                        "job_id": self.job_id,
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds()),
+                    }
+                ]
+            )
+        except Exception as _ex:
+            import traceback
+            _ex_str = traceback.format_exc()
+            self.tag_manager.failed.create(exception=_ex_str)
+            _end = _now()
+            _LOGGER.error(
+                msg=f"Failed job on worker machine ...",
+                msgs=[
+                    {
+                        "job_id": self.job_id,
+                        "started": _start.ctime(),
+                        "ended": _end.ctime(),
+                        "seconds": str((_end - _start).total_seconds()),
+                    }
+                ]
+            )
+            _LOGGER.error(
+                msg="*** EXCEPTION MESSAGE *** \n" + _ex_str
+            )
+            self.tag_manager.running.delete()
+            # above thing will tell toolcraft that things failed gracefully
+            # while below raise will tell cluster systems like bsub that job has failed
+            # todo for `JobRunnerClusterType.local_on_same_thread` this will not allow
+            #  future jobs to run ... but this is expected as we want to debug in
+            #  this mode mostly
+            raise _ex
+
+        # ------------------------------------------------------------ 06
+        # reset back the logger handling
+        logger.setup_logging(**_previous_log_settings)
+
     def launch_as_subprocess(
         self,
         cli_command: t.List[str] = None,
         use_current_env_vars: bool = True,
+        single_cpu: bool = False,
     ):
         # ------------------------------------------------------------- 01
         # make cli command if None
@@ -895,7 +1002,21 @@ class Job:
         if use_current_env_vars:
             _env_vars.update(os.environ.copy())
         _env_vars.update(self.os_env_vars.get_environ_dict())
-        _ret = subprocess.run(cli_command, env=_env_vars)
+        if single_cpu:
+            _sub_title = [
+                self.short_name,
+            ]
+            if bool(self.kwargs):
+                _sub_title += [f"with kwargs: {self.kwargs}"]
+            with richy.StatusPanel(
+                tc_log=_LOGGER,
+                title=f".. running on single cpu ..",
+                sub_title=_sub_title,
+                log_task_progress_after=10*60,
+            ) as _rp:
+                self.run_on_worker(_rp=_rp)
+        else:
+            _ret = subprocess.run(cli_command, env=_env_vars)
         if _ret.returncode != 0:
             warnings.warn(
                 f"Failed with return code `{_ret.returncode}` while calling `{cli_command}`"

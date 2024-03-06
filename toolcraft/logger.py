@@ -305,7 +305,7 @@ def setup_logging(
     propagate: bool = False,
     level: int = logging.NOTSET,
     handlers: t.List[logging.Handler] = None,
-):
+) -> dict:
     """
     Setup handlers, formatters and filters stc. here ...
 
@@ -353,6 +353,12 @@ def setup_logging(
         # --------------------------------------------------------------- 01
         # get root logger
         _root_logger = logging.root
+        # save the previous state
+        _ret = dict(
+            propagate=_root_logger.propagate,
+            level=_root_logger.level,
+            handlers=_root_logger.handlers.copy()
+        )
 
         # --------------------------------------------------------------- 02
         # remove any handlers or filters
@@ -372,6 +378,10 @@ def setup_logging(
         # set basic things
         _root_logger.setLevel(level=level)
         _root_logger.propagate = propagate
+
+        # --------------------------------------------------------------- 05
+        # return
+        return _ret
 
     # ----
     finally:

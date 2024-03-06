@@ -259,7 +259,7 @@ def local(
                 assert not _job.os_env_vars.IS_ON_SINGLE_CPU, "Should be False"
             _job.os_env_vars.IS_LOCAL_JOB = True
             _job.launch_as_subprocess(
-                cli_command=_cli_command,
+                cli_command=_cli_command, single_cpu=single_cpu,
             )
             _jobs_running_in_parallel[_job.job_id] = _job
             _rp.log([f"🏁 {_job_short_name} :: launching"])
