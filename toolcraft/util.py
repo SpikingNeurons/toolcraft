@@ -1245,32 +1245,34 @@ def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> 
     But in some cases the header is not saved then it will raise allow_pickle error
     This can be misleading as this happens because the data is binary array with no numpy header
     """
-    try:
-        if memmap:
-            # todo: see if npy_save method can work with s.Path
-            try:
-                # noinspection PyTypeChecker
-                _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
-            except ValueError as __ve:
-                if shape is None and dtype is None:
-                    raise __ve
-                # noinspection PyTypeChecker
-                _ret = np.memmap(file.local_path, mode="r", shape=shape, dtype=dtype)
-        else:
-            with file.open(mode='rb') as f:
-                _ret = np.load(f, allow_pickle=False, fix_imports=False)
-                f.close()
-    except ValueError as _ve:
-        raise e.code.CodingError(
-            msgs=[
-                "If raised exception is `Cannot load file containing pickled data when allow_pickle=False` then that means you are loading binary data",
-                "May be that means the numpy header was not added while saving data, for example because of memmap save",
-                "Please supply dtype and shape to load binary blob as numpy array",
-                {
-                    "raise exception": str(_ve)
-                }
-            ]
-        )
+    if memmap:
+        # todo: see if npy_save method can work with s.Path
+        try:
+            # noinspection PyTypeChecker
+            _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
+        except ValueError as __ve:
+            if shape is None and dtype is None:
+                raise e.code.CodingError(
+                    msgs=[
+                        "If raised exception is `Cannot load file containing pickled data when allow_pickle=False` then that means you are loading binary data",
+                        "May be that means the numpy header was not added while saving data, for example because of memmap save",
+                        "Please supply dtype and shape to load binary blob as numpy array",
+                        {
+                            "raise exception": str(__ve)
+                        }
+                    ]
+                )
+            # noinspection PyTypeChecker
+            _ret = np.memmap(file.local_path, mode="r", shape=shape, dtype=dtype)
+    else:
+        try:
+            _ret = np.load(file.local_path, allow_pickle=False, fix_imports=False)
+        except ValueError as __ve:
+            raise e.code.CodingError(
+                msgs=[
+                    "Looks like underlying file is a memmap so use memmap=True and supply shape and dtype"
+                ]
+            )
     return _ret
 
 

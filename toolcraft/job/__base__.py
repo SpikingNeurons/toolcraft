@@ -1017,10 +1017,10 @@ class Job:
                 self.run_on_worker(_rp=_rp)
         else:
             _ret = subprocess.run(cli_command, env=_env_vars)
-        if _ret.returncode != 0:
-            warnings.warn(
-                f"Failed with return code `{_ret.returncode}` while calling `{cli_command}`"
-            )
+            if _ret.returncode != 0:
+                warnings.warn(
+                    f"Failed with return code `{_ret.returncode}` while calling `{cli_command}`"
+                )
 
     def wait_on(self, wait_on: t.Union['Job', 'SequentialJobGroup', 'ParallelJobGroup']) -> "Job":
         self._wait_on_jobs.append(wait_on)
