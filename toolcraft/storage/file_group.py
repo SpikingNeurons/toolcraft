@@ -62,6 +62,7 @@ class Generator:
         self._length = length
         self._gen_fn = gen_fn
         self.meta = meta
+        self.generator_cache = None  # type: dict
 
     def __len__(self) -> int:
         return self._length
