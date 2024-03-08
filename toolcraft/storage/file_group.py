@@ -721,6 +721,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 for _chunk in iter(lambda: fb.read(_chunk_size), b''):
                     _hash_module.update(_chunk)
                     _progress.tasks[fk].update(advance=len(_chunk),)
+                    _rp.log_tasks_progress()
                 fb.close()
                 _computed_hash = _hash_module.hexdigest()
             # make dicts to return
@@ -1404,6 +1405,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _task.update(advance=1)
         for _ in _iterator:
             _task.update(advance=1)
+            _rp.log_tasks_progress()
             _index_to_write = _["index_to_write"]
             for _k in _keys:
                 _memmaps[_k][_index_to_write] = _[_k]
