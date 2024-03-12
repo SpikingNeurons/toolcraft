@@ -796,8 +796,8 @@ class FileGroup(StorageHashable, abc.ABC):
         # delete state files and print failed hashes
         if bool(_failed_hashes):
             # wipe state manager files
-            self.info.delete()
-            self.config.delete()
+            # self.info.delete()
+            # self.config.delete()
             # raise error
             _failed_hashes_msgs = []
             for _k, _v in _failed_hashes.items():
