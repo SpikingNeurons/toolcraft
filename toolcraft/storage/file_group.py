@@ -799,12 +799,17 @@ class FileGroup(StorageHashable, abc.ABC):
             self.info.delete()
             self.config.delete()
             # raise error
+            _failed_hashes_msgs = []
+            for _k, _v in _failed_hashes.items():
+                _failed_hashes_msgs.append(f"{_k}:")
+                _failed_hashes_msgs.append(f" correct : {_v['correct']}")
+                _failed_hashes_msgs.append(f" computed: {_v['computed']}")
             raise e.code.CodingError(
                 msgs=[
                     f"Hashes for some files did not match. ",
                     f"FileGroup: {self.name}",
                     f"Check below",
-                    _failed_hashes,
+                    _failed_hashes_msgs,
                     f"Check file system {self.path}"
                 ]
             )
