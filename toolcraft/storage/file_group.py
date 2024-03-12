@@ -731,8 +731,8 @@ class FileGroup(StorageHashable, abc.ABC):
                 if _computed_hash != _correct_hashes[fk]:
                     _progress.tasks[fk].failed()
                     _failed_hashes[fk] = {
-                        'correct  ': _correct_hashes[fk],
-                        'computed ': _computed_hash,
+                        'correct': _correct_hashes[fk],
+                        'computed': _computed_hash,
                     }
 
         # ------------------------------------------------------ 04
@@ -801,7 +801,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # raise error
             _failed_hashes_msgs = []
             for _k, _v in _failed_hashes.items():
-                _failed_hashes_msgs.append(f"{_k}:")
+                _failed_hashes_msgs.append(f"{_k}::")
                 _failed_hashes_msgs.append(f" correct : {_v['correct']}")
                 _failed_hashes_msgs.append(f" computed: {_v['computed']}")
             raise e.code.CodingError(
@@ -809,7 +809,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"Hashes for some files did not match. ",
                     f"FileGroup: {self.name}",
                     f"Check below",
-                    _failed_hashes_msgs,
+                    *_failed_hashes_msgs,
                     f"Check file system {self.path}"
                 ]
             )
