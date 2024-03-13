@@ -27,6 +27,9 @@ import atexit
 import multiprocessing as mp
 import socket
 import sys
+import h5py
+import itertools
+import psutil
 import contextlib
 _now = datetime.datetime.now
 
@@ -611,6 +614,39 @@ def rhasattr(obj, attr):
         else:
             return False
     return hasattr(_curr_obj, _nested_attrs[-1])
+
+
+def read_h5py_dataset_efficiently(_data: h5py.Dataset, free_mem_use_frac: float = 0.8, richy_panel = None) -> t.Generator[np.ndarray, None, None]:
+    """
+    todo: optimize this for automatic batch size ...
+      start with some 10 batches with random sizes
+      form 11th batch select the best batch size from 10 trials ;)
+    """
+    _free_mem_to_use = psutil.virtual_memory().free * free_mem_use_frac
+    _num_bytes_used_by_example = _data[0].nbytes
+    _num_examples_in_batch = int(_free_mem_to_use // _num_bytes_used_by_example)
+    _len = len(_data)
+
+    def _gen():
+        _index = 0
+        while True:
+            if richy_panel is not None:
+                richy_panel.update(f"Loading chunk {_index + 1} from h5py.Dataset")
+            _chunk = _data[_index * _num_examples_in_batch: (_index + 1) * _num_examples_in_batch]
+            if richy_panel is not None:
+                richy_panel.update(f"Fetching examples from chunk {_index + 1} of h5py.Dataset...")
+            _index += 1
+            for _ in _chunk:
+                yield _
+            if _index * _num_examples_in_batch >= len(_data):
+                break
+        if richy_panel is not None:
+            richy_panel.update("Finished reading h5py.Dataset")
+
+    return _gen()
+
+
+
 
 
 def load_class_from_strs(

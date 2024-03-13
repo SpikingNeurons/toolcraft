@@ -60,16 +60,12 @@ class Generator:
 
     def __init__(self, gen_fn: t.Callable, length: int, meta: t.Dict[str, t.Any] = None):
         self._length = length
-        self._gen_fn = gen_fn
+        self.gen_fn = gen_fn
         self.meta = meta
         self.generator_cache = None  # type: dict
 
     def __len__(self) -> int:
         return self._length
-
-    def __iter__(self) -> t.Generator[t.Dict[str, t.Any], None, None]:
-        for _ in self._gen_fn():
-            yield _
 
 
 @dataclasses.dataclass
@@ -1391,12 +1387,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
                 del _memmap
 
         # now save data obtained from generator
-        _rp.update("saving memmap")
+        _rp.update("saving to memmap")
         _memmaps = {}
         _length = len(generator)
         _task_name = "save in memmap#" if task_name is None else task_name
         _task = _rp.add_task(task_name=_task_name, total=_length)
-        _iterator = iter(generator)
+        _iterator = generator.gen_fn()
         _first_element = next(_iterator)
         _keys = [k for k in _first_element.keys() if k != "index_to_write"]
         _first_element_index_to_write = _first_element["index_to_write"]
