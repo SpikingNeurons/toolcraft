@@ -616,15 +616,18 @@ def rhasattr(obj, attr):
     return hasattr(_curr_obj, _nested_attrs[-1])
 
 
-def read_h5py_dataset_efficiently(_data: h5py.Dataset, free_mem_use_frac: float = 0.8, richy_panel = None) -> t.Generator[np.ndarray, None, None]:
+def read_h5py_dataset_efficiently(_data: h5py.Dataset, free_mem_use_frac: float = 0.2, richy_panel = None) -> t.Generator[np.ndarray, None, None]:
     """
     todo: optimize this for automatic batch size ...
-      start with some 10 batches with random sizes
-      form 11th batch select the best batch size from 10 trials ;)
+      + start with some 10 batches with random sizes form 11th batch select the best batch size from 10 trials ;)
+      + fetch next chunk in background while processing current chunk (using async)
     """
     _free_mem_to_use = psutil.virtual_memory().free * free_mem_use_frac
     _num_bytes_used_by_example = _data[0].nbytes
     _num_examples_in_batch = int(_free_mem_to_use // _num_bytes_used_by_example)
+    if _num_examples_in_batch == 0:
+        # in case the memory is too low then have at-least one example
+        _num_examples_in_batch = 1
     _len = len(_data)
 
     def _gen():
