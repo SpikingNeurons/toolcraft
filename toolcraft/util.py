@@ -11,6 +11,7 @@ import pickle
 import inspect
 import abc
 import gc
+import os
 import types
 import datetime
 import pathlib
@@ -52,6 +53,83 @@ _FILE_EXE_MODE = 0o0777
 
 # note keep this as dunder style
 CACHE_KEY = "CACHE"
+
+
+class MergedFile:
+    def __init__(self, *input_files, chunk_size=4096):
+        self.input_files = input_files
+        self.chunk_size = chunk_size
+        self.current_file_index = 0
+        self.current_file = None
+        self.current_chunk = b''
+        self.open_next_file()
+        self.total_size = sum(os.path.getsize(file) for file in input_files)
+
+    def open_next_file(self):
+        if self.current_file:
+            self.current_file.close()
+        if self.current_file_index < len(self.input_files):
+            self.current_file = open(self.input_files[self.current_file_index], 'rb')
+            self.current_file_index += 1
+        else:
+            self.current_file = None
+
+    def read(self, size=-1):
+        if not self.current_file:
+            return b''
+        if size < 0:
+            size = self.chunk_size
+        result = b''
+        while len(result) < size:
+            if not self.current_chunk:
+                self.current_chunk = self.current_file.read(self.chunk_size)
+                if not self.current_chunk:
+                    self.open_next_file()
+                    if not self.current_file:
+                        break
+            chunk_to_read = min(size - len(result), len(self.current_chunk))
+            result += self.current_chunk[:chunk_to_read]
+            self.current_chunk = self.current_chunk[chunk_to_read:]
+        return result
+
+    def seek(self, offset, whence=0):
+        if whence == 0:
+            target = offset
+        elif whence == 1:
+            target = self.tell() + offset
+        elif whence == 2:
+            target = self.total_size + offset
+        else:
+            raise ValueError("Invalid whence argument")
+        if target < 0:
+            raise ValueError("Negative seek position")
+        if target > self.total_size:
+            raise ValueError("Seek position beyond end of file")
+        # Close current file and re-open to reset position
+        self.current_file.close()
+        self.current_file_index = 0
+        self.current_chunk = b''
+        self.open_next_file()
+        # Read and discard data up to seek position
+        while target > 0:
+            data = self.read(min(self.chunk_size, target))
+            if not data:
+                break
+            target -= len(data)
+
+    def tell(self):
+        # Calculate the current position by summing the sizes of all previously read files
+        position = sum(os.path.getsize(file) for file in self.input_files[:self.current_file_index - 1])
+        # Add the position within the current file
+        position += self.current_file.tell()
+        return position
+
+    def seekable(self):
+        return True  # The MergedFile object supports seeking
+
+    def close(self):
+        if self.current_file:
+            self.current_file.close()
 
 
 # noinspection PyUnresolvedReferences,PyMethodParameters,PyArgumentList
