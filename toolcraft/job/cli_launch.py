@@ -123,6 +123,8 @@ def local(
     """
     todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
       decide parameters by arguments to this method
+
+    todo: explore celery or rq https://frappe.io/blog/engineering/why-we-moved-from-celery-to-rq
     """
 
     # --------------------------------------------------------- 01
