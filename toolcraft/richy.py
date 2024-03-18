@@ -627,8 +627,8 @@ class Progress(Widget):
         tc_log: logger.CustomLogger = None,
         box_type: r_box.Box = r_box.ASCII,
         border_style: r_style.Style = "green",
-        show_time_elapsed: bool = True,
-        show_time_remaining: bool = False,
+        show_time_elapsed: bool = False,
+        show_time_remaining: bool = True,
         use_msg_field: bool = False,
     ) -> "Progress":
         if console is None:
