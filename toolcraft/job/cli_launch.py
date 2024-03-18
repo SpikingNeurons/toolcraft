@@ -118,6 +118,7 @@ def lsf():
 @_APP.command(help="Launches all the jobs in runner on local machine.")
 def local(
     single_cpu: Annotated[bool, typer.Option(help="Launches on single CPU in sequence (good for debugging)")] = False,
+    warm_up_time: Annotated[int, typer.Option(help="Warm up time for next job in seconds")] = 1,
 ):
     """
     todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
@@ -145,7 +146,6 @@ def local(
     # some vars
     _MAX_JOBS = os.cpu_count()
     _MAX_MEMORY_USAGE_IN_PERCENT = 95.
-    _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS = 1
     _jobs_running_in_parallel = {}
 
     # --------------------------------------------------------- 03
@@ -269,7 +269,7 @@ def local(
             # _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS
             # this allows the job to enter properly and get realistic ram usage
             if len(_jobs_running_in_parallel) > 0:
-                time.sleep(_WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS)
+                time.sleep(warm_up_time)
 
     # --------------------------------------------------------- 05
     if single_cpu:
