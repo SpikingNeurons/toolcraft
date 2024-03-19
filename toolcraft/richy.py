@@ -670,8 +670,8 @@ class Progress(Widget):
         tc_log: logger.CustomLogger = None,
         box_type: r_box.Box = r_box.ASCII,
         border_style: r_style.Style = "green",
-        show_time_elapsed: bool = True,
-        show_time_remaining: bool = False,
+        show_time_elapsed: bool = False,
+        show_time_remaining: bool = True,
         use_msg_field: bool = False,
     ) -> t.Generator[r_progress.ProgressType, None, None]:
         """
@@ -699,29 +699,35 @@ class Progress(Widget):
         console: t.Optional[r_console.Console],
         box_type: r_box.Box = r_box.ASCII,
         border_style: r_style.Style = "green",
+        show_time_elapsed: bool = False,
+        show_time_remaining: bool = True,
     ) -> "Progress":
         """
         todo: ass hashcheck progress panel ... currently only download shown .... similar to FitProgressPanel
         """
         if console is None:
             console = r_console.Console(record=True)
+        _cols = {
+            "file_key": r_progress.TextColumn(
+                "[progress.description]{task.description}"),
+            "progress": r_progress.BarColumn(),
+            "percentage": r_progress.TextColumn(
+                "[progress.percentage]{task.percentage:>3.0f}%"),
+            # todo: combine hash checking here ...
+            #  especially better if we are building hash as we progress download
+            # "hash_progress": progress.BarColumn(),
+            # "hash_percentage": progress.TextColumn(
+            #     "[progress.percentage]{task.percentage:>3.0f}%"),
+            "download": r_progress.DownloadColumn(),
+        }
+        if show_time_elapsed:
+            _cols['time_elapsed'] = r_progress.TimeElapsedColumn()
+        if show_time_remaining:
+            _cols['time_remaining'] = r_progress.TimeRemainingColumn()
+        _cols['status'] = SpinnerColumn()
         _progress = Progress(
             title=title,
-            columns={
-                "file_key": r_progress.TextColumn(
-                    "[progress.description]{task.description}"),
-                "progress": r_progress.BarColumn(),
-                "percentage": r_progress.TextColumn(
-                    "[progress.percentage]{task.percentage:>3.0f}%"),
-                # todo: combine hash checking here ...
-                #  especially better if we are building hash as we progress download
-                # "hash_progress": progress.BarColumn(),
-                # "hash_percentage": progress.TextColumn(
-                #     "[progress.percentage]{task.percentage:>3.0f}%"),
-                "download": r_progress.DownloadColumn(),
-                "time_elapsed": r_progress.TimeElapsedColumn(),
-                "status": SpinnerColumn(),
-            },
+            columns=_cols,
             tc_log=tc_log,
             box_type=box_type,
             border_style=border_style,
