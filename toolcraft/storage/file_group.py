@@ -42,9 +42,9 @@ if False:
 
 _now = datetime.datetime.now
 
-TFileGroup = t.TypeVar('TFileGroup', bound='FileGroup')
-
 _LOGGER = logger.get_logger()
+
+TFileGroup = t.TypeVar('TFileGroup', bound='FileGroup')
 
 # noinspection PyUnresolvedReferences
 USE_ALL = slice(None, None, None)
