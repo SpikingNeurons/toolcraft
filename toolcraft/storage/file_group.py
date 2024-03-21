@@ -792,6 +792,9 @@ class FileGroup(StorageHashable, abc.ABC):
         # delete state files and print failed hashes
         if bool(_failed_hashes):
             # wipe state manager files
+            # check else part we no longer delete state files
+            #   we do not want to wipe meta information stored in config file just because hash_check fails
+            #   ideally we will modify hashes in code as returned by get_hashes()
             # self.info.delete()
             # self.config.delete()
             # raise error
@@ -809,6 +812,19 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"Check file system {self.path}"
                 ]
             )
+        else:
+            # sometimes the config has old hashes when we debug
+            # and when update hashes in code then the congig file needs to be deleted
+            # this necessaciates creating files again so if we just check again then it will
+            # just recompute hashes and modify hashes in config file here
+            # ....
+            # Note earlier we used to delete config and info files to achieve this but now sometimes
+            # we save some meta info like min and max while generating dataset so that no longer is possible
+            # so this will do the trick ...
+            # Also this is consequence of the behaviour that we no longer
+            # delete config and info files when hash check fails ... as the system can still detect that hash
+            # check was not successful as there are no entries in checked_in list
+            self.config.hashes = self.get_hashes()
 
     # noinspection PyUnusedLocal
     def check_post_runner(
