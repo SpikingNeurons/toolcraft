@@ -56,6 +56,10 @@ CACHE_KEY = "CACHE"
 
 
 class MergedFile:
+    """
+    This can merge file which are split directly
+    Basically this is alternate to files that we concatenate via cat command on linux
+    """
     def __init__(self, *input_files, chunk_size=4096):
         self.input_files = input_files
         self.chunk_size = chunk_size
