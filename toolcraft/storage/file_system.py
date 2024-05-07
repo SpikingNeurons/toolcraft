@@ -93,7 +93,7 @@ _FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, FileSystemConfig]
 )
 class FileSystemConfig(m.HashableClass):
     fs_name: str
-    protocol: t.Literal['gs', 'gcs', 'file']
+    protocol: t.Literal['gs', 'gcs', 'file', 'huggingface']
     root_dir: str
     kwargs: t.Dict[str, t.Any] = None
 
@@ -103,7 +103,11 @@ class FileSystemConfig(m.HashableClass):
         # ------------------------------------------------------------- 01
         # load class for protocol
         try:
-            _protocol_class = fsspec.get_filesystem_class(self.protocol)
+            if self.protocol == 'huiggingface':
+                from huggingface_hub import HfFileSystem
+                _protocol_class = HfFileSystem
+            else:
+                _protocol_class = fsspec.get_filesystem_class(self.protocol)
         except ImportError as _ie:
             raise e.code.CodingError(
                 msgs=[

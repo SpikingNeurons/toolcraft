@@ -1212,6 +1212,16 @@ class FileGroup(StorageHashable, abc.ABC):
 
 
 @dataclasses.dataclass
+class HFFileGroupConfig(FileGroupConfig):
+    ...
+
+
+@dataclasses.dataclass(frozen=True)
+class HFFileGroup(FileGroup, abc.ABC):
+    ...
+
+
+@dataclasses.dataclass
 class NpyFileGroupConfig(FileGroupConfig):
 
     # look for auto_hashes field in super class to understand how fields are created and value assigned
