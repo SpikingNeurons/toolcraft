@@ -7,10 +7,9 @@ from rich.traceback import Traceback, Trace
 from .. import logger
 
 
-# todo: for python 3 there is special method Exception().with_traceback() see
-#  if can be used .... also for stack trace instead if using inspect see if
-#  Exception().__traceback__ can be used
-#  check PEP 3109 https://www.python.org/dev/peps/pep-3109/
+# todo: for python 3 exception can do more things
+#       like adding notes chaining exception and exception group
+#       please drop this module and refer https://realpython.com/python-raise-exception/
 
 _LOGGER = logger.get_logger()
 

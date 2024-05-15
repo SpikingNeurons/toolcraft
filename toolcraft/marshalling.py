@@ -11,7 +11,7 @@ import yaml
 import pathlib
 
 from . import error as e
-from . import logger, settings, util
+from . import logger, util
 from .settings import Settings
 from . import gui
 
@@ -2042,11 +2042,11 @@ class HashableClass(YamlRepr, abc.ABC):
         """
         # In debug method this will return something meaningful as debugger
         # keeps accessing this method to get str representation of any object
-        if settings.PYC_DEBUGGING:
+        if Settings.PYC_DEBUGGING:
             return f"... debugging ... {self.name}"
 
         # if interactive mode then allow use of __str__
-        if settings.INTERACTIVE:
+        if Settings.INTERACTIVE:
             return f"... interactive ... {self.name}"
 
         # when not in debug method we do not allow to print this object

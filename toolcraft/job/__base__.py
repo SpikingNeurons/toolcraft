@@ -28,7 +28,7 @@ from .. import marshalling as m
 from .. import util
 from .. import storage as s
 from .. import richy
-from .. import settings
+from .. import settings, Settings
 from .. import gui
 
 _now = datetime.datetime.now
@@ -462,7 +462,7 @@ class JobLaunchParameters:
     def __setattr__(self, key, value):
         # test for lsf parameters
         if key.startswith("lsf_"):
-            if not settings.IS_LSF:
+            if not Settings.IS_LSF_MACHINE:
                 raise e.code.CodingError(
                     msgs=["Do not try to set LSF launch parameters as this is not LSF environment."]
                 )
@@ -505,7 +505,7 @@ class JobOsEnvVars:
         # ------------------------------------------- 01.01
         # check IS_ON_SINGLE_CPU
         if key == 'IS_ON_SINGLE_CPU':
-            if settings.IS_LSF and value:
+            if Settings.IS_LSF_MACHINE and value:
                 raise e.code.CodingError(
                     msgs=["You cannot set IS_ON_SINGLE_CPU on LSF platform to True"]
                 )
@@ -817,14 +817,14 @@ class Job:
         # ------------------------------------------------------------------ 01.02
         # check environments
         if self.is_lsf_job:
-            if not settings.IS_LSF:
+            if not Settings.IS_LSF_MACHINE:
                 raise e.validation.NotAllowed(
                     msgs=[
                         "Please run lsf job on LSF environment"
                     ]
                 )
         elif self.is_local_job:
-            if settings.IS_LSF:
+            if Settings.IS_LSF_MACHINE:
                 raise e.validation.NotAllowed(
                     msgs=[
                         "This is lsf environment and you are trying to run local job"

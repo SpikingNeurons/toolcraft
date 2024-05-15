@@ -21,7 +21,7 @@ from typing_extensions import Annotated
 import typing as t
 import subprocess
 
-from .. import logger, settings
+from .. import logger, Settings
 from .. import error as e
 from .__base__ import Runner, Job
 from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
@@ -51,7 +51,7 @@ def lsf():
 
     # --------------------------------------------------------- 01
     # validate
-    if not settings.IS_LSF:
+    if not Settings.IS_LSF_MACHINE:
         raise e.validation.NotAllowed(
             msgs=["This is not LSF environment so cannot launch lsf jobs ..."]
         )
@@ -129,7 +129,7 @@ def local(
 
     # --------------------------------------------------------- 01
     # some validation
-    if settings.PYC_DEBUGGING:
+    if Settings.PYC_DEBUGGING:
         if not single_cpu:
             raise e.validation.NotAllowed(
                 msgs=[
@@ -173,7 +173,8 @@ def local(
             # make cli command
             _cli_command = _job.cli_command
             if not single_cpu:
-                if 'WSL2' in settings.PLATFORM.release:
+                import platform
+                if 'WSL2' in platform.uname().release:
                     # _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
                     #     '"' + ' '.join(_cli_command) + '"']
                     _cli_command = ["gnome-terminal", "--"] + _cli_command

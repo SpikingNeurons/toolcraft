@@ -43,7 +43,7 @@ import os
 import toml
 import subprocess
 import io
-
+import abc
 import yaml
 from fsspec.spec import AbstractBufferedFile
 
@@ -73,7 +73,7 @@ from fsspec.implementations.arrow import ArrowFSWrapper
 
 from .. import error as e
 from .. import logger
-from .. import settings
+from .. import Settings
 from .. import marshalling as m
 from .. import util
 
@@ -84,18 +84,22 @@ if False:
 
 _LOGGER = logger.get_logger()
 
-_FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, FileSystemConfig]
+_FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, BaseFileSystem]
 
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
     things_to_be_cached=['fs']
 )
-class FileSystemConfig(m.HashableClass):
-    fs_name: str
-    protocol: t.Literal['gs', 'gcs', 'file', 'huggingface']
+class BaseFileSystem(m.HashableClass, abc.ABC):
+
     root_dir: str
     kwargs: t.Dict[str, t.Any] = None
+
+    @property
+    @abc.abstractmethod
+    def protocol(self) -> str:
+        ...
 
     @property
     @util.CacheResult
@@ -103,11 +107,16 @@ class FileSystemConfig(m.HashableClass):
         # ------------------------------------------------------------- 01
         # load class for protocol
         try:
-            if self.protocol == 'huiggingface':
-                from huggingface_hub import HfFileSystem
-                _protocol_class = HfFileSystem
-            else:
-                _protocol_class = fsspec.get_filesystem_class(self.protocol)
+            _protocol_class = fsspec.get_filesystem_class(self.protocol)
+        except ValueError as _ve:
+            raise e.code.CodingError(
+                msgs=[
+                    f"Protocol not known by fsspec ...",
+                    {
+                        "raised_error": str(_ve)
+                    }
+                ]
+            )
         except ImportError as _ie:
             raise e.code.CodingError(
                 msgs=[
@@ -127,9 +136,8 @@ class FileSystemConfig(m.HashableClass):
         try:
             # --------------------------------------------------------- 02.01
             if self.protocol in ['gs', 'gcs']:
-                import gcsfs
                 # some vars
-                _credentials_file = settings.TC_HOME / self.kwargs['credentials']
+                _credentials_file = Settings.TC_HOME / _kwargs['credentials']
                 _project = _kwargs['project']
                 # make _fs
                 _fs = _protocol_class(
@@ -146,7 +154,7 @@ class FileSystemConfig(m.HashableClass):
                 msgs=[
                     f"Invalid kwargs supplied ... Class {_protocol_class} "
                     f"cannot recognize them ...",
-                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}",
+                    f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}",
                     {
                         "raised_error": str(_ex)
                     }
@@ -161,7 +169,7 @@ class FileSystemConfig(m.HashableClass):
             import gcsfs
             _fs: gcsfs.GCSFileSystem
             # some vars
-            _credentials_file = settings.TC_HOME / self.kwargs['credentials']
+            _credentials_file = Settings.TC_HOME / _kwargs['credentials']
             _project = _kwargs['project']
             _bucket = _kwargs['bucket']
             # test if bucket exists
@@ -183,15 +191,9 @@ class FileSystemConfig(m.HashableClass):
 
         # ------------------------------------------------------------- 02
         # validate protocol
-        if self.protocol in known_implementations.keys():
-            _err_msg = "This protocol is known by gcsfs but not yet " \
-                       "implemented in `toolcraft`. Please raise PR for support ..."
-        else:
-            _err_msg = "this protocol is not known by gcsfs and cannot be " \
-                       "supported by `toolcraft`"
         e.validation.ShouldBeOneOf(
-            value=self.protocol, values=['gs', 'gcs', 'file'],
-            msgs=[_err_msg]
+            value=self.protocol, values=known_implementations.keys(),
+            msgs=["This is not a known protocol by fsspec"]
         ).raise_if_failed()
 
         # ------------------------------------------------------------- 03
@@ -203,19 +205,22 @@ class FileSystemConfig(m.HashableClass):
             if self.kwargs is None:
                 raise e.validation.NotAllowed(
                     msgs=[f"Please supply mandatory `kwargs` dict in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                          f"file {Settings.TC_CONFIG_FILE} "
+                          f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
             # get credentials
             if 'credentials' not in self.kwargs.keys():
                 raise e.validation.NotAllowed(
                     msgs=[f"Please supply mandatory kwarg `credentials` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                          f"file {Settings.TC_CONFIG_FILE} "
+                          f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
-            _credentials_file = settings.TC_HOME / self.kwargs['credentials']
+            _credentials_file = Settings.TC_HOME / self.kwargs['credentials']
             if not _credentials_file.exists():
                 raise e.validation.NotAllowed(
                     msgs=[
-                        f"Cannot find credential file {_credentials_file} for file system {self.fs_name}",
+                        f"Cannot find credential file {_credentials_file} "
+                        f"for file system {self.fs_name} with protocol {self.protocol}.",
                         f"Please create it using information from here:",
                         "https://cloud.google.com/docs/authentication/"
                         "getting-started#create-service-account-console",
@@ -225,13 +230,16 @@ class FileSystemConfig(m.HashableClass):
             if 'project' not in self.kwargs.keys():
                 raise e.validation.NotAllowed(
                     msgs=[f"Please supply mandatory kwarg `project` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                          f"file {Settings.TC_CONFIG_FILE} "
+                          f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
             if 'bucket' not in self.kwargs.keys():
                 raise e.validation.NotAllowed(
                     msgs=[f"Please supply mandatory kwarg `bucket` in config "
-                          f"file {settings.TC_CONFIG_FILE} for file_system {self.fs_name}"]
+                          f"file {Settings.TC_CONFIG_FILE} "
+                          f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
+
 
         # ------------------------------------------------------------- 04
         # call property fs as it also validates creation
@@ -264,22 +272,22 @@ class FileSystemConfig(m.HashableClass):
             return self.root_dir
 
     @classmethod
-    def get(cls, fs_name: str) -> "FileSystemConfig":
+    def get(cls, fs_name: str) -> "BaseFileSystem":
         # --------------------------------------------------------- 01
         # if available return
         if fs_name in _FILE_SYSTEM_CONFIGS.keys():
             return _FILE_SYSTEM_CONFIGS[fs_name]
 
         # --------------------------------------------------------- 02
-        # load `settings.TC_CONFIG["file_systems"]` to get predefined file systems in `toolcraft/config.toml`
+        # load `Settings.TC_CONFIG["file_systems"]` to get predefined file systems in `toolcraft/config.toml`
         try:
-            _all_fs_config = settings.TC_CONFIG["file_systems"]
+            _all_fs_config = Settings.TC_CONFIG["file_systems"]
         except KeyError:
             # if not add an empty dict and save it to config
             _all_fs_config = {}
             # update settings and save
-            settings.TC_CONFIG["file_systems"] = _all_fs_config
-            settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
+            Settings.TC_CONFIG["file_systems"] = _all_fs_config
+            Settings.TC_CONFIG_FILE.write_text(toml.dumps(Settings.TC_CONFIG))
 
         # --------------------------------------------------------- 03
         # now check if fs_name is supplied in `toolcraft/config.toml`
@@ -296,8 +304,8 @@ class FileSystemConfig(m.HashableClass):
                     "protocol": "file", "root_dir": ".",
                 }
                 # update settings and save
-                assert id(settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)
-                settings.TC_CONFIG_FILE.write_text(toml.dumps(settings.TC_CONFIG))
+                assert id(Settings.TC_CONFIG["file_systems"]) == id(_all_fs_config)
+                Settings.TC_CONFIG_FILE.write_text(toml.dumps(Settings.TC_CONFIG))
                 # store to current _fs_config
                 _fs_config = _all_fs_config[fs_name]
             # else it is not CWD nor supported so raise error
@@ -306,7 +314,7 @@ class FileSystemConfig(m.HashableClass):
                     msgs=[
                         f"Please provide file system settings for `{fs_name}` in dict "
                         f"`file_systems`",
-                        f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
+                        f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
                     ]
                 )
 
@@ -318,7 +326,7 @@ class FileSystemConfig(m.HashableClass):
         e.validation.ShouldBeInstanceOf(
             value=_fs_config, value_types=(dict, ), msgs=[
                 f"Was expecting dict for file system {fs_name} configured in settings",
-                f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
+                f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
             ]
         ).raise_if_failed()
         # --------------------------------------------------------- 04.02
@@ -329,13 +337,13 @@ class FileSystemConfig(m.HashableClass):
                 value=_k, values=["protocol", "kwargs", "root_dir"],
                 msgs=[
                     f"Invalid config provided for file system `{fs_name}` in settings",
-                    f"Please update file {settings.TC_CONFIG_FILE.as_posix()}"
+                    f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
                 ]
             ).raise_if_failed()
 
         # --------------------------------------------------------- 05
         # make FileSystemConfig instance from _fs_config
-        _FILE_SYSTEM_CONFIGS[fs_name] = FileSystemConfig(fs_name=fs_name, **_fs_config)
+        _FILE_SYSTEM_CONFIGS[fs_name] = BaseFileSystem(fs_name=fs_name, **_fs_config)
 
         # --------------------------------------------------------- 06
         # return
@@ -447,7 +455,7 @@ class Path:
 
     def __post_init__(self):
         # set some vars for faster access
-        self.fs_config = FileSystemConfig.get(self.fs_name)  # type: FileSystemConfig
+        self.fs_config = BaseFileSystem.get(self.fs_name)  # type: BaseFileSystem
         self.fs = self.fs_config.fs  # type: fsspec.AbstractFileSystem
         self.sep = self.fs.sep  # type: str
         self.root_path = self.fs_config.make_root_path(sep=self.sep)
@@ -782,4 +790,4 @@ class Path:
 
 
 def available_file_systems() -> t.List[str]:
-    return list(settings.TC_CONFIG["file_systems"].keys())
+    return list(Settings.TC_CONFIG["file_systems"].keys())
