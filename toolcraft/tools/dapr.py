@@ -45,9 +45,9 @@ class DaprTool(Tool):
         #   Refer mlflow to see if this can be done
 
         # check if python script available
-        e.io.FileMustBeOnDiskOrNetwork(
-            path=py_script, msgs=["Please supply python script ..."]
-        ).raise_if_failed()
+        e.io.FileMustBeOnDiskOrNetwork.check(
+            path=py_script, notes=["Please supply python script ..."]
+        )
 
         # check if dapr installed
         if shutil.which("dapr") is None:

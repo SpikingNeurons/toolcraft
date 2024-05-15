@@ -464,7 +464,7 @@ class Path:
         else:
             self.full_path = self.root_path + self.sep + self.suffix_path
         self.name = self.suffix_path.split(self.sep)[-1]
-        e.io.LongPath(path=self.full_path, msgs=[]).raise_if_failed()
+        e.io.LongPath.check(path=self.full_path)
 
         # do any validations if needed
         ...

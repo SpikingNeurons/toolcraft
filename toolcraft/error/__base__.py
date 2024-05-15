@@ -11,6 +11,8 @@ from .. import logger
 #       like adding notes chaining exception and exception group
 #       please drop this module and refer https://realpython.com/python-raise-exception/
 
+# todo: use `rich` libs traceback interface etc
+
 _LOGGER = logger.get_logger()
 
 _SKULL_EMOJI = "💀"
@@ -24,8 +26,26 @@ def camel_case_split(identifier):
 
 
 class _CustomException(Exception):
+
+    def __init__(
+        self, *, notes: logger.MESSAGES_TYPE = None,
+    ):
+        _header = " ".join(camel_case_split(self.__class__.__name__)).upper()
+        _header = _EXCEPTION_HEADER.format(header=_header)
+        super().__init__(_header)
+        self.add_note(_header)
+        if bool(notes):
+            self.add_note(yaml.dump(notes))
+
+    @classmethod
+    def check(cls, **kwargs):
+        raise NotImplementedError(f"This method must be implemented in child class `{cls}`.")
+
+
+
+class __CCustomEException(Exception):
     """
-    todo: use `rich` libs traceback interface etc
+
     """
     # If not a validator then you need to explicitly raise instead of calling
     _RAISE_EXPLICITLY = False
@@ -78,7 +98,19 @@ class _CustomException(Exception):
     def raise_if_failed(self):
         # test if it needs to be raised explicitly
         if self._RAISE_EXPLICITLY:
-            from .code import RaiseExplicitly
+            class RaiseExplicitly(__CustomException):
+                _RAISE_EXPLICITLY = True
+
+                def __init__(
+                    self, *,
+                    msgs: logger.MESSAGES_TYPE
+                ):
+                    super().__init__(
+                        msgs=[
+                            "Error while coding !!!",
+                            *msgs
+                        ]
+                    )
             raise RaiseExplicitly(
                 msgs=[
                     f"Do not call {self.raise_if_failed} for class {self.__class__} "

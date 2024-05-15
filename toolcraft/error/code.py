@@ -4,22 +4,6 @@ from .__base__ import _CustomException
 from ..logger import MESSAGES_TYPE
 
 
-class RaiseExplicitly(_CustomException):
-
-    _RAISE_EXPLICITLY = True
-
-    def __init__(
-        self, *,
-        msgs: MESSAGES_TYPE
-    ):
-        super().__init__(
-            msgs=[
-                "Error while coding !!!",
-                *msgs
-            ]
-        )
-
-
 class ShouldNeverHappen(_CustomException):
 
     _RAISE_EXPLICITLY = True

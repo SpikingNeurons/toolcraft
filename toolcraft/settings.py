@@ -32,6 +32,10 @@ class Settings:
     # detect if in interactive mode
     INTERACTIVE = not hasattr(main, '__file__')
 
+    # 260 is for windows ... leave 60 for arrow storage
+    # todo: adapt code based on OS platform
+    FILE_SYSTEMS_PATH_LENGTH = 260 - 60
+
 
     # time interval between to check hashes on disk
     # note that this is a list ... any one of the values in list will be picked

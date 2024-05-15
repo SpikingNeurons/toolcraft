@@ -1200,9 +1200,7 @@ def save_pickle(py_obj, file_path: pathlib.Path):
 
 def read_pickle(file_path: pathlib.Path):
     # raise error if needed
-    e.io.FileMustBeOnDiskOrNetwork(
-        path=file_path, msgs=[]
-    ).raise_if_failed()
+    e.io.FileMustBeOnDiskOrNetwork.check(path=file_path)
     # save
     with file_path.open(mode='rb') as _f:
         return pickle.load(_f)
