@@ -1965,6 +1965,15 @@ class Dashboard(abc.ABC):
         return internal_dpg.get_frame_rate(**kwargs)
 
     @staticmethod
+    def get_focused_item(**kwargs) -> t.Union[int, str]:
+        """
+        Refer:
+        >>> dpg.get_focused_item
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_focused_item(**kwargs)
+
+    @staticmethod
     def get_global_font_scale(**kwargs) -> float:
         """
         Refer:

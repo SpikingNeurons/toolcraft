@@ -2,7 +2,7 @@
 ********************************************************************************
 This code is auto-generated:
 >> Script: toolcraft/gui/_scripts/dpg_generator.py
->> DearPyGui: 1.10.1
+>> DearPyGui: 1.11.1
 ********************        DO NOT EDIT           ******************************
 ********************************************************************************
 """
@@ -150,135 +150,135 @@ class EnKey(enum.Enum):
     Num8 = internal_dpg.mvKey_8  # 56
     Num9 = internal_dpg.mvKey_9  # 57
     A = internal_dpg.mvKey_A  # 65
-    Add = internal_dpg.mvKey_Add  # 107
-    Alt = internal_dpg.mvKey_Alt  # 18
-    Apps = internal_dpg.mvKey_Apps  # 93
+    Add = internal_dpg.mvKey_Add  # 334
+    Alt = internal_dpg.mvKey_Alt  # 342
+    Apps = internal_dpg.mvKey_Apps  # -1
     B = internal_dpg.mvKey_B  # 66
-    Back = internal_dpg.mvKey_Back  # 8
-    Backslash = internal_dpg.mvKey_Backslash  # 220
-    Browser_Back = internal_dpg.mvKey_Browser_Back  # 166
-    Browser_Favorites = internal_dpg.mvKey_Browser_Favorites  # 171
-    Browser_Forward = internal_dpg.mvKey_Browser_Forward  # 167
-    Browser_Home = internal_dpg.mvKey_Browser_Home  # 172
-    Browser_Refresh = internal_dpg.mvKey_Browser_Refresh  # 168
-    Browser_Search = internal_dpg.mvKey_Browser_Search  # 170
-    Browser_Stop = internal_dpg.mvKey_Browser_Stop  # 169
+    Back = internal_dpg.mvKey_Back  # 259
+    Backslash = internal_dpg.mvKey_Backslash  # 92
+    Browser_Back = internal_dpg.mvKey_Browser_Back  # -1
+    Browser_Favorites = internal_dpg.mvKey_Browser_Favorites  # -1
+    Browser_Forward = internal_dpg.mvKey_Browser_Forward  # -1
+    Browser_Home = internal_dpg.mvKey_Browser_Home  # -1
+    Browser_Refresh = internal_dpg.mvKey_Browser_Refresh  # -1
+    Browser_Search = internal_dpg.mvKey_Browser_Search  # -1
+    Browser_Stop = internal_dpg.mvKey_Browser_Stop  # -1
     C = internal_dpg.mvKey_C  # 67
-    Capital = internal_dpg.mvKey_Capital  # 20
-    Clear = internal_dpg.mvKey_Clear  # 12
-    Close_Brace = internal_dpg.mvKey_Close_Brace  # 221
-    Colon = internal_dpg.mvKey_Colon  # 186
-    Comma = internal_dpg.mvKey_Comma  # 188
-    Control = internal_dpg.mvKey_Control  # 17
+    Capital = internal_dpg.mvKey_Capital  # 280
+    Clear = internal_dpg.mvKey_Clear  # 259
+    Close_Brace = internal_dpg.mvKey_Close_Brace  # 93
+    Colon = internal_dpg.mvKey_Colon  # 59
+    Comma = internal_dpg.mvKey_Comma  # 44
+    Control = internal_dpg.mvKey_Control  # 341
     D = internal_dpg.mvKey_D  # 68
-    Decimal = internal_dpg.mvKey_Decimal  # 110
-    Delete = internal_dpg.mvKey_Delete  # 46
-    Divide = internal_dpg.mvKey_Divide  # 111
-    Down = internal_dpg.mvKey_Down  # 40
+    Decimal = internal_dpg.mvKey_Decimal  # 330
+    Delete = internal_dpg.mvKey_Delete  # 261
+    Divide = internal_dpg.mvKey_Divide  # 331
+    Down = internal_dpg.mvKey_Down  # 264
     E = internal_dpg.mvKey_E  # 69
-    End = internal_dpg.mvKey_End  # 35
-    Escape = internal_dpg.mvKey_Escape  # 27
-    Execute = internal_dpg.mvKey_Execute  # 43
+    End = internal_dpg.mvKey_End  # 269
+    Escape = internal_dpg.mvKey_Escape  # 256
+    Execute = internal_dpg.mvKey_Execute  # -1
     F = internal_dpg.mvKey_F  # 70
-    F1 = internal_dpg.mvKey_F1  # 112
-    F10 = internal_dpg.mvKey_F10  # 121
-    F11 = internal_dpg.mvKey_F11  # 122
-    F12 = internal_dpg.mvKey_F12  # 123
-    F13 = internal_dpg.mvKey_F13  # 124
-    F14 = internal_dpg.mvKey_F14  # 125
-    F15 = internal_dpg.mvKey_F15  # 126
-    F16 = internal_dpg.mvKey_F16  # 127
-    F17 = internal_dpg.mvKey_F17  # 128
-    F18 = internal_dpg.mvKey_F18  # 129
-    F19 = internal_dpg.mvKey_F19  # 130
-    F2 = internal_dpg.mvKey_F2  # 113
-    F20 = internal_dpg.mvKey_F20  # 131
-    F21 = internal_dpg.mvKey_F21  # 132
-    F22 = internal_dpg.mvKey_F22  # 133
-    F23 = internal_dpg.mvKey_F23  # 134
-    F24 = internal_dpg.mvKey_F24  # 135
-    F25 = internal_dpg.mvKey_F25  # 136
-    F3 = internal_dpg.mvKey_F3  # 114
-    F4 = internal_dpg.mvKey_F4  # 115
-    F5 = internal_dpg.mvKey_F5  # 116
-    F6 = internal_dpg.mvKey_F6  # 117
-    F7 = internal_dpg.mvKey_F7  # 118
-    F8 = internal_dpg.mvKey_F8  # 119
-    F9 = internal_dpg.mvKey_F9  # 120
+    F1 = internal_dpg.mvKey_F1  # 290
+    F10 = internal_dpg.mvKey_F10  # 299
+    F11 = internal_dpg.mvKey_F11  # 300
+    F12 = internal_dpg.mvKey_F12  # 301
+    F13 = internal_dpg.mvKey_F13  # 302
+    F14 = internal_dpg.mvKey_F14  # 303
+    F15 = internal_dpg.mvKey_F15  # 304
+    F16 = internal_dpg.mvKey_F16  # 305
+    F17 = internal_dpg.mvKey_F17  # 306
+    F18 = internal_dpg.mvKey_F18  # 307
+    F19 = internal_dpg.mvKey_F19  # 308
+    F2 = internal_dpg.mvKey_F2  # 291
+    F20 = internal_dpg.mvKey_F20  # 309
+    F21 = internal_dpg.mvKey_F21  # 310
+    F22 = internal_dpg.mvKey_F22  # 311
+    F23 = internal_dpg.mvKey_F23  # 312
+    F24 = internal_dpg.mvKey_F24  # 313
+    F25 = internal_dpg.mvKey_F25  # 314
+    F3 = internal_dpg.mvKey_F3  # 292
+    F4 = internal_dpg.mvKey_F4  # 293
+    F5 = internal_dpg.mvKey_F5  # 294
+    F6 = internal_dpg.mvKey_F6  # 295
+    F7 = internal_dpg.mvKey_F7  # 296
+    F8 = internal_dpg.mvKey_F8  # 297
+    F9 = internal_dpg.mvKey_F9  # 298
     G = internal_dpg.mvKey_G  # 71
     H = internal_dpg.mvKey_H  # 72
-    Help = internal_dpg.mvKey_Help  # 47
-    Home = internal_dpg.mvKey_Home  # 36
+    Help = internal_dpg.mvKey_Help  # -1
+    Home = internal_dpg.mvKey_Home  # 268
     I = internal_dpg.mvKey_I  # 73
-    Insert = internal_dpg.mvKey_Insert  # 45
+    Insert = internal_dpg.mvKey_Insert  # 260
     J = internal_dpg.mvKey_J  # 74
     K = internal_dpg.mvKey_K  # 75
     L = internal_dpg.mvKey_L  # 76
-    LControl = internal_dpg.mvKey_LControl  # 162
-    LMenu = internal_dpg.mvKey_LMenu  # 164
-    LShift = internal_dpg.mvKey_LShift  # 160
-    LWin = internal_dpg.mvKey_LWin  # 91
-    Launch_App1 = internal_dpg.mvKey_Launch_App1  # 182
-    Launch_App2 = internal_dpg.mvKey_Launch_App2  # 183
-    Launch_Mail = internal_dpg.mvKey_Launch_Mail  # 180
-    Launch_Media_Select = internal_dpg.mvKey_Launch_Media_Select  # 181
-    Left = internal_dpg.mvKey_Left  # 37
+    LControl = internal_dpg.mvKey_LControl  # 341
+    LMenu = internal_dpg.mvKey_LMenu  # -1
+    LShift = internal_dpg.mvKey_LShift  # 340
+    LWin = internal_dpg.mvKey_LWin  # 343
+    Launch_App1 = internal_dpg.mvKey_Launch_App1  # -1
+    Launch_App2 = internal_dpg.mvKey_Launch_App2  # -1
+    Launch_Mail = internal_dpg.mvKey_Launch_Mail  # -1
+    Launch_Media_Select = internal_dpg.mvKey_Launch_Media_Select  # -1
+    Left = internal_dpg.mvKey_Left  # 263
     M = internal_dpg.mvKey_M  # 77
-    Media_Next_Track = internal_dpg.mvKey_Media_Next_Track  # 176
-    Media_Play_Pause = internal_dpg.mvKey_Media_Play_Pause  # 179
-    Media_Prev_Track = internal_dpg.mvKey_Media_Prev_Track  # 177
-    Media_Stop = internal_dpg.mvKey_Media_Stop  # 178
-    Minus = internal_dpg.mvKey_Minus  # 189
-    Multiply = internal_dpg.mvKey_Multiply  # 106
+    Media_Next_Track = internal_dpg.mvKey_Media_Next_Track  # -1
+    Media_Play_Pause = internal_dpg.mvKey_Media_Play_Pause  # -1
+    Media_Prev_Track = internal_dpg.mvKey_Media_Prev_Track  # -1
+    Media_Stop = internal_dpg.mvKey_Media_Stop  # -1
+    Minus = internal_dpg.mvKey_Minus  # 45
+    Multiply = internal_dpg.mvKey_Multiply  # 332
     N = internal_dpg.mvKey_N  # 78
-    Next = internal_dpg.mvKey_Next  # 34
-    NumLock = internal_dpg.mvKey_NumLock  # 144
-    NumPad0 = internal_dpg.mvKey_NumPad0  # 96
-    NumPad1 = internal_dpg.mvKey_NumPad1  # 97
-    NumPad2 = internal_dpg.mvKey_NumPad2  # 98
-    NumPad3 = internal_dpg.mvKey_NumPad3  # 99
-    NumPad4 = internal_dpg.mvKey_NumPad4  # 100
-    NumPad5 = internal_dpg.mvKey_NumPad5  # 101
-    NumPad6 = internal_dpg.mvKey_NumPad6  # 102
-    NumPad7 = internal_dpg.mvKey_NumPad7  # 103
-    NumPad8 = internal_dpg.mvKey_NumPad8  # 104
-    NumPad9 = internal_dpg.mvKey_NumPad9  # 105
+    Next = internal_dpg.mvKey_Next  # 267
+    NumLock = internal_dpg.mvKey_NumLock  # 282
+    NumPad0 = internal_dpg.mvKey_NumPad0  # 320
+    NumPad1 = internal_dpg.mvKey_NumPad1  # 321
+    NumPad2 = internal_dpg.mvKey_NumPad2  # 322
+    NumPad3 = internal_dpg.mvKey_NumPad3  # 323
+    NumPad4 = internal_dpg.mvKey_NumPad4  # 324
+    NumPad5 = internal_dpg.mvKey_NumPad5  # 325
+    NumPad6 = internal_dpg.mvKey_NumPad6  # 326
+    NumPad7 = internal_dpg.mvKey_NumPad7  # 327
+    NumPad8 = internal_dpg.mvKey_NumPad8  # 328
+    NumPad9 = internal_dpg.mvKey_NumPad9  # 329
     O = internal_dpg.mvKey_O  # 79
-    Open_Brace = internal_dpg.mvKey_Open_Brace  # 219
+    Open_Brace = internal_dpg.mvKey_Open_Brace  # 91
     P = internal_dpg.mvKey_P  # 80
-    Pause = internal_dpg.mvKey_Pause  # 19
-    Period = internal_dpg.mvKey_Period  # 190
-    Plus = internal_dpg.mvKey_Plus  # 187
-    Print = internal_dpg.mvKey_Print  # 42
-    PrintScreen = internal_dpg.mvKey_PrintScreen  # 44
-    Prior = internal_dpg.mvKey_Prior  # 33
+    Pause = internal_dpg.mvKey_Pause  # 284
+    Period = internal_dpg.mvKey_Period  # 46
+    Plus = internal_dpg.mvKey_Plus  # 61
+    Print = internal_dpg.mvKey_Print  # -1
+    PrintScreen = internal_dpg.mvKey_PrintScreen  # 286
+    Prior = internal_dpg.mvKey_Prior  # 266
     Q = internal_dpg.mvKey_Q  # 81
-    Quote = internal_dpg.mvKey_Quote  # 222
+    Quote = internal_dpg.mvKey_Quote  # 39
     R = internal_dpg.mvKey_R  # 82
-    RControl = internal_dpg.mvKey_RControl  # 163
-    RMenu = internal_dpg.mvKey_RMenu  # 165
-    RShift = internal_dpg.mvKey_RShift  # 161
-    RWin = internal_dpg.mvKey_RWin  # 92
-    Return = internal_dpg.mvKey_Return  # 13
-    Right = internal_dpg.mvKey_Right  # 39
+    RControl = internal_dpg.mvKey_RControl  # 345
+    RMenu = internal_dpg.mvKey_RMenu  # -1
+    RShift = internal_dpg.mvKey_RShift  # 344
+    RWin = internal_dpg.mvKey_RWin  # 347
+    Return = internal_dpg.mvKey_Return  # 257
+    Right = internal_dpg.mvKey_Right  # 262
     S = internal_dpg.mvKey_S  # 83
-    ScrollLock = internal_dpg.mvKey_ScrollLock  # 145
-    Select = internal_dpg.mvKey_Select  # 41
-    Separator = internal_dpg.mvKey_Separator  # 108
-    Shift = internal_dpg.mvKey_Shift  # 16
-    Slash = internal_dpg.mvKey_Slash  # 191
-    Sleep = internal_dpg.mvKey_Sleep  # 95
+    ScrollLock = internal_dpg.mvKey_ScrollLock  # 281
+    Select = internal_dpg.mvKey_Select  # -1
+    Separator = internal_dpg.mvKey_Separator  # -1
+    Shift = internal_dpg.mvKey_Shift  # 340
+    Slash = internal_dpg.mvKey_Slash  # 47
+    Sleep = internal_dpg.mvKey_Sleep  # -1
     Spacebar = internal_dpg.mvKey_Spacebar  # 32
-    Subtract = internal_dpg.mvKey_Subtract  # 109
+    Subtract = internal_dpg.mvKey_Subtract  # 333
     T = internal_dpg.mvKey_T  # 84
-    Tab = internal_dpg.mvKey_Tab  # 9
-    Tilde = internal_dpg.mvKey_Tilde  # 192
+    Tab = internal_dpg.mvKey_Tab  # 258
+    Tilde = internal_dpg.mvKey_Tilde  # 96
     U = internal_dpg.mvKey_U  # 85
-    Up = internal_dpg.mvKey_Up  # 38
+    Up = internal_dpg.mvKey_Up  # 265
     V = internal_dpg.mvKey_V  # 86
-    Volume_Down = internal_dpg.mvKey_Volume_Down  # 174
-    Volume_Mute = internal_dpg.mvKey_Volume_Mute  # 173
-    Volume_Up = internal_dpg.mvKey_Volume_Up  # 175
+    Volume_Down = internal_dpg.mvKey_Volume_Down  # -1
+    Volume_Mute = internal_dpg.mvKey_Volume_Mute  # -1
+    Volume_Up = internal_dpg.mvKey_Volume_Up  # -1
     W = internal_dpg.mvKey_W  # 87
     X = internal_dpg.mvKey_X  # 88
     Y = internal_dpg.mvKey_Y  # 89
@@ -9571,6 +9571,9 @@ class ChildWindow(MovableContainerWidget):
     # no_scroll_with_mouse (bool, optional): Disable user vertically scrolling with mouse wheel.
     no_scroll_with_mouse: bool = False
 
+    # flattened_navigation (bool, optional): Allow gamepad/keyboard navigation to cross over parent border to this child (only use on child that have no scrolling!)
+    flattened_navigation: bool = True
+
     def build(self) -> int:
 
         _parent_guid = self.parent.guid
@@ -9599,6 +9602,7 @@ class ChildWindow(MovableContainerWidget):
             horizontal_scrollbar=self.horizontal_scrollbar,
             menubar=self.menubar,
             no_scroll_with_mouse=self.no_scroll_with_mouse,
+            flattened_navigation=self.flattened_navigation,
         )
         
         return _ret
@@ -10645,6 +10649,9 @@ class DrawRectangle(MovableWidget):
     # thickness (float, optional): ...
     thickness: float = 1.0
 
+    # corner_colors (Any, optional): Corner colors in a list, starting with upper-left and going clockwise
+    corner_colors: t.List[COLOR_TYPE] = dataclasses.field(default_factory=lambda: [(255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255), (255, 255, 255, 255)])
+
     def build(self) -> int:
 
         _parent_guid = self.parent.guid
@@ -10667,6 +10674,7 @@ class DrawRectangle(MovableWidget):
             multicolor=self.multicolor,
             rounding=self.rounding,
             thickness=self.thickness,
+            corner_colors=self.corner_colors,
         )
         
         return _ret
@@ -11725,13 +11733,13 @@ class Plot(MovableContainerWidget):
     query_mod: int = -1
 
     # query_toggle_mod (int, optional): when held, active box selections turn into queries
-    query_toggle_mod: int = 17
+    query_toggle_mod: int = 341
 
     # horizontal_mod (int, optional): expands active box selection/query horizontally to plot edge when held
-    horizontal_mod: int = 18
+    horizontal_mod: int = 342
 
     # vertical_mod (int, optional): expands active box selection/query vertically to plot edge when held
-    vertical_mod: int = 16
+    vertical_mod: int = 340
 
     def build(self) -> int:
 
