@@ -10,6 +10,9 @@ import re
 
 
 def add_raise_before_exceptions_that_have_no_check():
+    """
+    Check is raise is use before exceptions that do not override check and if .check is not called over it
+    """
     from toolcraft.error import code, io, validation
     from toolcraft.error import __base__
     _tokens = []
@@ -42,11 +45,12 @@ def add_raise_before_exceptions_that_have_no_check():
             for _t in _tokens:
                 _r_t = _t.replace(".", "\.") + "\([\s\S]*?\)\n"
                 for _match in re.finditer(_r_t, string=_src_txt):
-                    print(_match.group())
-                    if _src_txt[_match.span()[1]: _match.span()[1]+1] == ".":
+                    # print(_match.group())
+                    if _match.group().find(").check") != -1:
+                    # if _src_txt[_match.span()[1]: _match.span()[1]+1] == ".":
                         print(_match.group())
                         raise Exception(
-                            f"Check file {_fi} you seem to call some attribute of "
+                            f"Check file {_fi} you seem to call check method of "
                             f"exception {_t}"
                         )
             # replace tokens and prefix raise to them
