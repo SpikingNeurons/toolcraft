@@ -552,15 +552,15 @@ class RuleChecker:
 
         # ---------------------------------------------------------- xx
         # todo: check should_add_raise_explicitly_class_field ...
-        #  check toolcraft._bulk_code_refactor._script.py
+        #  check toolcraft._bulk_code_refactor.custom_exception_classes.py
 
         # ---------------------------------------------------------- xx
         # todo: check add_raise_before_exceptions_to_be_raised_explicitly ...
-        #  check toolcraft._bulk_code_refactor._script.py
+        #  check toolcraft._bulk_code_refactor.custom_exception_classes.py
 
         # ---------------------------------------------------------- xx
         # todo: check add_raise_if_expected_after_some_exceptions ...
-        #  check toolcraft._bulk_code_refactor._script.py
+        #  check toolcraft._bulk_code_refactor.custom_exception_classes.py
 
     # noinspection PyPep8Naming
     def check_related_to_class_FrozenEnum(self):
