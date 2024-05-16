@@ -41,9 +41,9 @@ class Settings:
     # note that this is a list ... any one of the values in list will be picked
     # for determining if to do hash check or not ... this distributes the hash
     # check over time so that there is no time slogging
-    _MIN_HOURS = 100 * 24  # 100 days
-    _MAX_HOURS = 200 * 24  # 200 days
-    CHECK_INTERVALS_IN_SEC = list(np.arange(_MIN_HOURS, _MAX_HOURS, 3) * 60 * 60)
+    CHECK_MIN_HOURS = 100 * 24  # 100 days
+    CHECK_MAX_HOURS = 200 * 24  # 200 days
+    CHECK_INTERVALS_IN_SEC = list(np.arange(CHECK_MIN_HOURS, CHECK_MAX_HOURS, 3) * 60 * 60)
     # CHECK_INTERVALS_IN_SEC = [1]
 
     # when you want to debug if auto_hashing feature creates same files in
@@ -58,6 +58,7 @@ class Settings:
         return [
             "TC_HOME", "TC_CONFIG_FILE", "TC_CONFIG",
             "IS_LSF_MACHINE", "PYC_DEBUGGING", "INTERACTIVE",
+            "CHECK_INTERVALS_IN_SEC",
         ]
 
     @classmethod
@@ -90,7 +91,7 @@ class Settings:
         _config = {}
         _fields_not_to_be_persisted = cls.fields_not_to_be_persisted()
         for _k, _v in cls.__dict__.items():
-            if _k in _fields_not_to_be_persisted:
+            if _k in _fields_not_to_be_persisted or _k.startswith("_") or callable(_v) or isinstance(_v, (classmethod, property, staticmethod)):
                 continue
             _config[_k] = _v
         toml.dump(_config, cls.TC_CONFIG_FILE.open('w'))

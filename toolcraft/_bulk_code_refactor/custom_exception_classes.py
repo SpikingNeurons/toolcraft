@@ -9,29 +9,7 @@ import pathlib
 import re
 
 
-def should_add_raise_explicitly_class_field():
-    from toolcraft.error import code, io, validation
-    from toolcraft.error import __base__
-    for _m in [code, io, validation]:
-        for _a in dir(_m):
-            _v = getattr(_m, _a)
-            try:
-                if issubclass(_v, __base__._CustomException):
-                    _r = inspect.getsource(_v.__init__).find("return")
-                    # if return keyword not found property raise_explicitly must
-                    # return True
-                    print(_v, _r, _v._RAISE_EXPLICITLY)
-                    if _r == -1:
-                        if not _v._RAISE_EXPLICITLY:
-                            raise Exception(
-                                f"Override property raise_explicitly for class "
-                                f"{_v} to return True"
-                            )
-            except TypeError:
-                ...
-
-
-def add_raise_before_exceptions_to_be_raised_explicitly():
+def add_raise_before_exceptions_that_have_no_check():
     from toolcraft.error import code, io, validation
     from toolcraft.error import __base__
     _tokens = []
@@ -40,16 +18,17 @@ def add_raise_before_exceptions_to_be_raised_explicitly():
             _v = getattr(_m, _a)
             try:
                 if issubclass(_v, __base__._CustomException):
-                    _r = inspect.getsource(_v.__init__).find("return")
-                    if _v._RAISE_EXPLICITLY:
+                    if __base__._CustomException == _v:
+                        continue
+                    if "check" not in _v.__dict__.keys():
                         _token = f"{_v.__module__}.{_v.__name__}".replace("toolcraft.error", "e")
                         print(_v, _token)
                         _tokens.append(_token)
             except TypeError:
                 ...
     for _fo in [
-        pathlib.Path("C:\\Users\\prave\\Documents\\Github\\RU"),
-        pathlib.Path("C:\\Users\\prave\\Documents\\Github\\toolcraft"),
+        pathlib.Path("/mnt/c/Github/RU"),
+        pathlib.Path("/mnt/c/Github/toolcraft"),
     ]:
         for _fi in _fo.glob('**/*.py'):
             # do not apply anything for code in this file
@@ -145,6 +124,5 @@ def add_raise_if_expected_after_some_exceptions():
 
 
 if __name__ == "__main__":
-    should_add_raise_explicitly_class_field()
-    add_raise_before_exceptions_to_be_raised_explicitly()
-    add_raise_if_expected_after_some_exceptions()
+    add_raise_before_exceptions_that_have_no_check()
+    # add_raise_if_expected_after_some_exceptions()
