@@ -391,13 +391,12 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # check if already exists
         if _fs.exists(_file_to_make):
-            e.code.NotAllowed(
+            raise e.code.NotAllowed(
                 notes=[
                     f"The file `{_file_to_make}` already exists on GCS ",
                     f"Use different name/location ..."
                 ]
             )
-            return
 
         # this can get buckets but does not work for now
         # todo: explore later

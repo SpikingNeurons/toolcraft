@@ -225,7 +225,7 @@ class Invoke:
             elif DAPR.MODE is DaprMode.server:
                 return fn(_self, **kwargs)
             else:
-                e.code.NotAllowed(
+                raise e.code.NotAllowed(
                     notes=[
                         f"DaprMode {DAPR.MODE} is not supported by decorator "
                         f"{self.__class__}"

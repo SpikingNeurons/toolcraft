@@ -1546,7 +1546,7 @@ class PointOnNode(Point):
         # if node is provided make sure that id is available
         if self.node is not None:
             if self.node.name is None:
-                e.code.CodingError(
+                raise e.code.CodingError(
                     notes=["Please use node's that have id defined ..."]
                 )
 

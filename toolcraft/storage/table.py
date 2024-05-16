@@ -577,7 +577,7 @@ class Table(Folder):
                 columns=self.partition_cols,
                 filter_expression=make_expression(_filters))
             if _table:
-                e.validation.NotAllowed(
+                raise e.validation.NotAllowed(
                     notes=[
                         "Below partition col values already exist",
                         _table.to_pydict()
