@@ -137,7 +137,7 @@ class DaprMode(m.FrozenEnum, enum.Enum):
             return cls[dapr_mode]
         except KeyError:
             raise e.code.CodingError(
-                msgs=[f"unknown dapr mode {dapr_mode}",
+                notes=[f"unknown dapr mode {dapr_mode}",
                       {"allowed strs": [_.name for _ in cls]}]
             )
 
@@ -201,7 +201,7 @@ class _Dapr(m.HashableClass):
     def client(self) -> "clients.DaprGrpcClient":
         if self.MODE is not DaprMode.client:
             raise e.code.NotAllowed(
-                msgs=[f"Use client property only for {DaprMode.client}"]
+                notes=[f"Use client property only for {DaprMode.client}"]
             )
         return clients.DaprGrpcClient(
             # f"{self.DAPR_RUNTIME_HOST}:{self.DAPR_GRPC_PORT}"
@@ -218,7 +218,7 @@ class _Dapr(m.HashableClass):
         from . import helper
         if self.MODE is not DaprMode.client:
             raise e.code.NotAllowed(
-                msgs=[f"Use server property only for {DaprMode.client}"]
+                notes=[f"Use server property only for {DaprMode.client}"]
             )
         return helper.Server()
 
@@ -278,7 +278,7 @@ class _Dapr(m.HashableClass):
             )
         else:
             raise e.code.NotSupported(
-                msgs=[f"Unsupported dapr mode: {_dapr_mode}"]
+                notes=[f"Unsupported dapr mode: {_dapr_mode}"]
             )
 
     def sync_with_dapr_settings(self):
@@ -302,7 +302,7 @@ class _Dapr(m.HashableClass):
         # validation
         if len(sys.argv) != 2:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "Pass one arg to handle dapr ...", sys.argv[1:]
                 ]
             )
@@ -332,10 +332,10 @@ class _Dapr(m.HashableClass):
                     _server_ip = "127.0.0.1"
             except KeyError:
                 raise e.code.NotAllowed(
-                    msgs=[f"Environment variable NXDI is not set ..."]
+                    notes=[f"Environment variable NXDI is not set ..."]
                 )
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen()
         # --------------------------------------------------- 02.05
         # get _app_id
         _app_id = f"hashable"
@@ -383,7 +383,7 @@ class HashableRunner:
     """
 
     def __new__(cls, *args, **kwargs):
-        raise e.code.NotAllowed(msgs=[
+        raise e.code.NotAllowed(notes=[
             f"This class is meant to be used to as it is ...",
             f"Do not try to create instance of {cls} ...",
         ])
@@ -398,7 +398,7 @@ class HashableRunner:
         _hcs = m.HashableClass.available_concrete_sub_classes()
         _LOGGER.info(
             msg=f"Below {len(_hcs)} hashable classes are available ",
-            msgs=[f"{_hc}" for _hc in _hcs]
+            notes=[f"{_hc}" for _hc in _hcs]
         )
 
     @classmethod
@@ -409,7 +409,7 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Dapr server started ...",
-            msgs=[DAPR.as_dict()])
+            notes=[DAPR.as_dict()])
         DAPR.app.run(app_port=DAPR.APP_PORT)
 
     @classmethod
@@ -420,7 +420,7 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Running client ...",
-            msgs=[DAPR.as_dict()])
+            notes=[DAPR.as_dict()])
 
     @classmethod
     def launch(cls):
@@ -430,7 +430,7 @@ class HashableRunner:
         cls._start()
         _LOGGER.info(
             "Launching jobs on server ...",
-            msgs=[DAPR.as_dict()])
+            notes=[DAPR.as_dict()])
 
     @classmethod
     def make_dashboard(
@@ -459,4 +459,4 @@ class HashableRunner:
         elif _dapr_mode is DaprMode.client:
             cls.client()
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown {_dapr_mode}"])
+            raise e.code.ShouldNeverHappen(notes=[f"Unknown {_dapr_mode}"])

@@ -124,7 +124,7 @@ class Folder(StorageHashable):
         # if _state_manager_files_available:
         #     if not _folder_present:
         #         raise e.code.CodingError(
-        #             msgs=[
+        #             notes=[
         #                 f"The state is available but respective folder is "
         #                 f"absent."
         #             ]
@@ -175,7 +175,7 @@ class Folder(StorageHashable):
             response = "y"
         else:
             # todo: need to implement the ask dialog inside richy_panel
-            raise e.code.NotYetImplemented(msgs=["todo: need to implement the ask dialog inside richy_panel"])
+            raise e.code.NotYetImplemented(notes=["todo: need to implement the ask dialog inside richy_panel"])
             # response = richy.r_prompt.Confirm.ask(
             #     f"Do you want to delete files for Folder `{self.path}`?",
             #     default=True,
@@ -192,7 +192,7 @@ class Folder(StorageHashable):
         # by now we are confident that folder is empty so just check it
         if not self.path.is_dir_empty():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"The folder should be empty by now ...",
                     f"Check path {self.path}",
                     f"May be you have non StorageHashable files ... note that even "

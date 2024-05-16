@@ -64,7 +64,7 @@ def invoke_for_hashable_on_server(request: InvokeMethodRequest) -> bytes:
     # check if CWD set
     if DAPR.cwd is None:
         raise e.code.CodingError(
-            msgs=["Dapr.CWD should be set by now ..."]
+            notes=["Dapr.CWD should be set by now ..."]
         )
 
     # confirm if server knows about requested hashable
@@ -226,7 +226,7 @@ class Invoke:
                 return fn(_self, **kwargs)
             else:
                 e.code.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"DaprMode {DAPR.MODE} is not supported by decorator "
                         f"{self.__class__}"
                     ]

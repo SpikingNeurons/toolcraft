@@ -53,7 +53,7 @@ def lsf():
     # validate
     if not Settings.IS_LSF_MACHINE:
         raise e.validation.NotAllowed(
-            msgs=["This is not LSF environment so cannot launch lsf jobs ..."]
+            notes=["This is not LSF environment so cannot launch lsf jobs ..."]
         )
     # get some vars
     _rp = _RUNNER.richy_panel
@@ -132,7 +132,7 @@ def local(
     if Settings.PYC_DEBUGGING:
         if not single_cpu:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "looks like you are in pycharm debug mode",
                     "Make sure to set --single-cpu to enable full debugging inside jobs ... "
                 ]

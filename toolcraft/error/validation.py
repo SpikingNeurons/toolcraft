@@ -17,7 +17,7 @@ class ShouldBeOneOf(_CustomException):
                  msgs: MESSAGES_TYPE):
         if value in values:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"Supplied value `{value}` should be one of: ",
             values if bool(values) else "[]",
@@ -29,7 +29,7 @@ class ShouldNotBeOneOf(_CustomException):
                  msgs: MESSAGES_TYPE):
         if value not in values:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"Supplied value `{value}` should not be one of:",
             values,
@@ -63,14 +63,14 @@ class ShouldBeEqual(_CustomException):
                 f"Value {value1} != {value2}",
                 f"Value types are {type(value1)}, {type(value2)}",
             ]
-        super().__init__(msgs=[*msgs, *_msgs])
+        super().__init__(notes=[*msgs, *_msgs])
 
 
 class ShouldNotBeEqual(_CustomException):
     def __init__(self, *, value1, value2, msgs: MESSAGES_TYPE):
         if value1 != value2:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"Value {value1} == {value2}",
             f"Value types are {type(value1)}, {type(value2)}",
@@ -81,7 +81,7 @@ class ValueNotAllowed(_CustomException):
     def __init__(self, *, value, not_be_value, msgs: MESSAGES_TYPE):
         if value != not_be_value:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"We do not allow value {value!r}.",
         ])
@@ -91,7 +91,7 @@ class SliceShouldNotOverlap(_CustomException):
     def __init__(self, *, slice1: slice, slice2: slice, msgs: MESSAGES_TYPE):
         # step should be always None
         if slice1.step is not None or slice2.step is not None:
-            super().__init__(msgs=[
+            super().__init__(notes=[
                 *msgs,
                 f"One of the supplied slices have step==None.",
                 {
@@ -102,7 +102,7 @@ class SliceShouldNotOverlap(_CustomException):
 
         # check overlap
         if slice1.start <= slice2.start < slice1.stop:
-            super().__init__(msgs=[
+            super().__init__(notes=[
                 *msgs,
                 f"The start of slice overlaps slice2",
                 {
@@ -111,7 +111,7 @@ class SliceShouldNotOverlap(_CustomException):
                 },
             ])
         if slice1.start < slice2.stop <= slice1.stop:
-            super().__init__(msgs=[
+            super().__init__(notes=[
                 *msgs,
                 f"The stop of slice overlaps slice2",
                 {
@@ -130,7 +130,7 @@ class NotAllowed(_CustomException):
     _RAISE_EXPLICITLY = True
 
     def __init__(self, *, msgs: MESSAGES_TYPE):
-        super().__init__(msgs=["This is Not Allowed !!!", *msgs])
+        super().__init__(notes=["This is Not Allowed !!!", *msgs])
 
 
 class ConfigError(_CustomException):
@@ -138,14 +138,14 @@ class ConfigError(_CustomException):
     _RAISE_EXPLICITLY = True
 
     def __init__(self, *, msgs: MESSAGES_TYPE):
-        super().__init__(msgs=["Error with .toolcraft/config.toml", *msgs])
+        super().__init__(notes=["Error with .toolcraft/config.toml", *msgs])
 
 
 class OnlyValueAllowed(_CustomException):
     def __init__(self, *, value, to_be_value, msgs: MESSAGES_TYPE):
         if value == to_be_value:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"We do not allow value {value!r}. "
             f"Only value allowed is {to_be_value!r}.",
@@ -223,7 +223,7 @@ class IsIntOrSliceOrListWithin(_CustomException):
         if not _raise:
             return
 
-        super().__init__(msgs=[*msgs])
+        super().__init__(notes=[*msgs])
 
 
 class ShouldBeBetween(_CustomException):
@@ -236,14 +236,14 @@ class ShouldBeBetween(_CustomException):
         msgs: MESSAGES_TYPE,
     ):
         if not isinstance(value, (int, float)):
-            super().__init__(msgs=[
+            super().__init__(notes=[
                 *msgs,
                 f"The value supplied is not a int or float. "
                 f"Found unrecognized type {type(value)}.",
             ])
         if minimum <= value < maximum:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"Value should be in the range {minimum} <= value < {maximum}",
             f"Instead found value {value!r} which is out of range."
@@ -261,7 +261,7 @@ class ShouldBeGreaterThan(_CustomException):
     ):
         if value > minimum_value:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs, f"Value {value} should be greater than {minimum_value}."
         ])
 
@@ -276,7 +276,7 @@ class ShouldBeLessThanEqTo(_CustomException):
     ):
         if value <= maximum_value:
             return
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs, f"Value {value} should be <= {maximum_value}."
         ])
 
@@ -287,7 +287,7 @@ class ShouldBeInstanceOf(_CustomException):
         if isinstance(value, value_types):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"Supplied value type {type(value)!r} is not one of: ",
             value_types,
@@ -300,7 +300,7 @@ class ShouldNotBeInstanceOf(_CustomException):
         if not isinstance(value, value_types):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"Supplied value type {type(value)!r} is one of: ",
             value_types,
@@ -313,7 +313,7 @@ class ShouldBeSubclassOf(_CustomException):
         if issubclass(value, value_types):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"Supplied class {value!r} is not a subclass of: ",
             value_types,
@@ -325,7 +325,7 @@ class ShouldBeClassMethod(_CustomException):
         if inspect.ismethod(value):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"We expect a method instead found value {value} with type"
             f" {type(value)}",
@@ -338,7 +338,7 @@ class ShouldBeFunction(_CustomException):
         if inspect.isfunction(value):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"We expect a function instead found value {value} with type"
             f" {type(value)}",
@@ -350,7 +350,7 @@ class ShouldBeDataClass(_CustomException):
         if dataclasses.is_dataclass(obj):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"We expect a dataclass instead found value {obj} with "
             f"type {type(obj)}",
@@ -362,7 +362,7 @@ class ShouldHaveAttribute(_CustomException):
         if hasattr(obj, attr_name):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"We expect an attribute {attr_name!r} in object:",
             f"{obj}.",
@@ -372,14 +372,14 @@ class ShouldHaveAttribute(_CustomException):
 class ShouldHaveProperty(_CustomException):
     def __init__(self, *, attr_name: str, obj: t.Any, msgs: MESSAGES_TYPE):
         if not hasattr(obj.__class__, attr_name):
-            super().__init__(msgs=[
+            super().__init__(notes=[
                 *msgs,
                 f"We expect class {obj.__class__} to have a property "
                 f"named {attr_name!r}",
             ])
 
         if not isinstance(getattr(obj.__class__, attr_name), property):
-            super().__init__(msgs=[
+            super().__init__(notes=[
                 *msgs,
                 f"The member {attr_name!r} of class {obj.__class__} is "
                 f"not a property.",
@@ -394,7 +394,7 @@ class ShouldNotHaveAttribute(_CustomException):
         if not hasattr(obj, attr_name):
             return
 
-        super().__init__(msgs=[
+        super().__init__(notes=[
             *msgs,
             f"We do not expect a attribute {attr_name} in object:",
             f"{obj}.",

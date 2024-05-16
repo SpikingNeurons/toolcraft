@@ -164,12 +164,12 @@ def make_pdf(
                 # If compiler does not exist, try next in the list
                 continue
             raise e.code.NotAllowed(
-                msgs=[ex_]
+                notes=[ex_]
             )
         except subprocess.CalledProcessError as ex_:
             # For all other errors print the output and raise the error
             raise e.code.NotAllowed(
-                msgs=[ex_.output.decode()]
+                notes=[ex_.output.decode()]
             )
         else:
             if not silent:
@@ -199,7 +199,7 @@ def make_pdf(
 
     else:
         raise e.code.NotAllowed(
-            msgs=[
+            notes=[
                 'We cannot find suitable LaTeX compiler ...',
                 'Either specify a LaTex compiler '
                 'or make sure you have latexmk or pdfLaTex installed.'

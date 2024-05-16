@@ -219,7 +219,7 @@ class Widget(m.Checker, abc.ABC):
         # temp mandatory
         if self.tc_log is None:
             raise e.validation.NotAllowed(
-                msgs=["For now we want to keep tc_log field mandatory ..."]
+                notes=["For now we want to keep tc_log field mandatory ..."]
             )
 
         # modify sub_title
@@ -251,7 +251,7 @@ class Widget(m.Checker, abc.ABC):
 
         if self.is_in_with_context:
             raise e.code.CodingError(
-                msgs=["We do not expect this to be set already ..."]
+                notes=["We do not expect this to be set already ..."]
             )
         self.is_in_with_context = True
 
@@ -319,7 +319,7 @@ class Widget(m.Checker, abc.ABC):
         if isinstance(_layout, r_layout.Layout):
             # todo: still need to handle title and sub_title for rich.layout.Layout
             raise e.code.NotSupported(
-                msgs=["still need to handle title and sub_title for rich.layout.Layout"]
+                notes=["still need to handle title and sub_title for rich.layout.Layout"]
             )
             # return _layout
 
@@ -363,7 +363,7 @@ class Widget(m.Checker, abc.ABC):
         """
         if self._live is None:
             raise e.code.CodingError(
-                msgs=["Did you miss to call from with context ..."]
+                notes=["Did you miss to call from with context ..."]
             )
         if update_renderable:
             self._live.update(renderable=self.get_renderable(), refresh=True)
@@ -394,11 +394,11 @@ class ProgressTask:
         """
         if self._failed:
             raise e.code.CodingError(
-                msgs=["Cannot update anything as the task has failed ..."]
+                notes=["Cannot update anything as the task has failed ..."]
             )
         if self._already_finished:
             raise e.code.CodingError(
-                msgs=["The task is already finished ... so there should be no call for update ..."]
+                notes=["The task is already finished ... so there should be no call for update ..."]
             )
         self.rich_progress.update(
             task_id=self.rich_task.id,
@@ -453,7 +453,7 @@ class Progress(Widget):
         # make rich progress
         if self.columns is None:
             raise e.validation.NotAllowed(
-                msgs=["Please supply mandatory columns field"]
+                notes=["Please supply mandatory columns field"]
             )
 
         # ------------------------------------------------------------ 02
@@ -470,7 +470,7 @@ class Progress(Widget):
         # process task_name
         if task_name in self.tasks.keys():
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"There already exists a task named {task_name!r}",
                     "Try giving new task name while iterating or else add '#' token at end to make name reusable.",
                 ]
@@ -484,7 +484,7 @@ class Progress(Widget):
         for _k in fields.keys():
             e.validation.ShouldBeOneOf(
                 value=_k, values=list(self.columns.keys()),
-                msgs=[f"You have not specified how to render extra field {_k} in `Progress.columns`"]
+                notes=[f"You have not specified how to render extra field {_k} in `Progress.columns`"]
             ).raise_if_failed()
 
         # add task
@@ -507,7 +507,7 @@ class Progress(Widget):
     def log_tasks_progress(self):
         if self.tc_log is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "This method is only supported when tc_log field is supplied"
                 ]
             )
@@ -533,14 +533,14 @@ class Progress(Widget):
             else:
                 if task_name not in self.tasks.keys():
                     raise e.code.CodingError(
-                        msgs=[f"There is no task with name {task_name} available ..."]
+                        notes=[f"There is no task with name {task_name} available ..."]
                     )
             self.tasks[task_name].update(
                 advance=advance, total=total, description=description, **fields
             )
         else:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"There are no tasks added yet ... so nothing to update"
                 ]
             )
@@ -810,7 +810,7 @@ class StatusPanel(Widget):
         if self.log_task_progress_after is not None:
             if self.tc_log is None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "You have supplied field `log_task_progress_after` "
                         "so please make sure to supply field `tc_log`"
                     ]
@@ -827,17 +827,17 @@ class StatusPanel(Widget):
         if isinstance(value, Widget):
             if self.console != value.console:
                 raise e.code.CodingError(
-                    msgs=["Please make sure that you share the console of the widget "
+                    notes=["Please make sure that you share the console of the widget "
                           "you want to add to this StatusPanel"]
                 )
         _reserved_keys = ['final_message', 'stages_progress', 'spinner']
         e.validation.ShouldNotBeOneOf(
             value=key, values=_reserved_keys,
-            msgs=["Cannot add items with reserved names ..."]
+            notes=["Cannot add items with reserved names ..."]
         ).raise_if_failed()
         e.validation.ShouldNotBeOneOf(
             value=key, values=list(self.layout.keys()),
-            msgs=["There already exists a item with that name"]
+            notes=["There already exists a item with that name"]
         ).raise_if_failed()
         _new_dict = dict()
         _reserved_dict = dict()
@@ -853,7 +853,7 @@ class StatusPanel(Widget):
 
     def __getitem__(self, item: str) -> t.Union[rich.jupyter.JupyterMixin, Widget, r_console.Group]:
         e.validation.ShouldBeOneOf(
-            value=item, values=list(self.layout.keys()), msgs=["There is no item with that name"]
+            value=item, values=list(self.layout.keys()), notes=["There is no item with that name"]
         ).raise_if_failed()
         return self.layout[item]
 
@@ -866,7 +866,7 @@ class StatusPanel(Widget):
     def __enter__(self) -> "StatusPanel":
         if self.current_stage is not None:
             raise e.code.CodingError(
-                msgs=["Looks like the previous with context did not exit properly",
+                notes=["Looks like the previous with context did not exit properly",
                       f"We expect this to be None, but found {self.current_stage}"]
             )
         self.layout['spinner'] = SpinnerType.dots.get_spinner(text="Waiting ...")
@@ -885,7 +885,7 @@ class StatusPanel(Widget):
     def __iter__(self):
         if self.stages is None:
             raise e.code.CodingError(
-                msgs=["Could not iterate over this panel as stages are not provided ..."]
+                notes=["Could not iterate over this panel as stages are not provided ..."]
             )
         _len = len(self.stages)
         _str_len = len(str(_len))
@@ -943,7 +943,7 @@ class StatusPanel(Widget):
         if prefix_current_stage:
             if self.current_stage is None:
                 raise e.code.CodingError(
-                    msgs=["To prefix current_stage must be using `stages` field and you "
+                    notes=["To prefix current_stage must be using `stages` field and you "
                           "must be iterating on this instance."]
                 )
             task_name = f"{self.current_stage}:{task_name}"
@@ -969,7 +969,7 @@ class StatusPanel(Widget):
         if prefix_current_stage:
             if self.current_stage is None:
                 raise e.code.CodingError(
-                    msgs=["To prefix current_stage must be using `stages` field and you "
+                    notes=["To prefix current_stage must be using `stages` field and you "
                           "must be iterating on the `StatusPanel` richy instance."]
                 )
             task_name = f"{self.current_stage}:{task_name}"
@@ -1001,13 +1001,13 @@ class StatusPanel(Widget):
         # _msg = f"# Fitting summary \n" + "\n".join(self.summary)
         self['summary'] = r_console.Group(*_text_lines)
         if self.tc_log is not None:
-            self.tc_log.info(msg="Summary: ", msgs=[line])
+            self.tc_log.info(msg="Summary: ", notes=[line])
 
     def set_final_message(self, msg: str):
         self.layout['final_message'] = r_markdown.Markdown(msg)
         self.refresh(update_renderable=True)
         if self.tc_log is not None:
-            self.tc_log.info(msg="Final message: ", msgs=[msg])
+            self.tc_log.info(msg="Final message: ", notes=[msg])
 
     def ask(
         self,
@@ -1032,13 +1032,13 @@ class StatusPanel(Widget):
             )
         else:
             raise e.code.CodingError(
-                msgs=[f"Unexpected {option=}"]
+                notes=[f"Unexpected {option=}"]
             )
 
     def log_tasks_progress(self, force: bool = False):
         if self.tc_log is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "This method is only supported when tc_log field is supplied"
                 ]
             )
@@ -1077,7 +1077,7 @@ class StatusPanel(Widget):
 
         # only log is status is supplied ...
         if status is not None and self.tc_log is not None:
-            self.tc_log.info(msg=f"[{self.title}] status changed ...", msgs=[status])
+            self.tc_log.info(msg=f"[{self.title}] status changed ...", notes=[status])
 
     def convert_to_fit_status_panel(
         self, epochs: int,
@@ -1088,7 +1088,7 @@ class StatusPanel(Widget):
             self.layout['stages_progress'] = self._make_stages_progress()
         else:
             raise e.code.CodingError(
-                msgs=["Was expecting `self.layout['stages_progress']` to be None"]
+                notes=["Was expecting `self.layout['stages_progress']` to be None"]
             )
 
         # set stages
@@ -1096,7 +1096,7 @@ class StatusPanel(Widget):
             self.stages = [f"epoch {_:0{len(str(epochs))}d}" for _ in range(epochs)]
         else:
             raise e.code.CodingError(
-                msgs=["Was expecting `self.stages` this to be None"]
+                notes=["Was expecting `self.stages` this to be None"]
             )
 
         # refresh renderable

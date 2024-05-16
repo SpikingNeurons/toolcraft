@@ -89,7 +89,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             if _found_file_system:
                 if not isinstance(getattr(self.__class__, "file_system"), property):
                     raise e.code.CodingError(
-                        msgs=[
+                        notes=[
                             f"Was expecting `file_system` to be property in class "
                             f"{self.__class__}"
                         ]
@@ -105,7 +105,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             if _found_parent_folder:
                 if not isinstance(getattr(self.__class__, "parent_folder"), property):
                     raise e.code.CodingError(
-                        msgs=[
+                        notes=[
                             f"Was expecting `parent_folder` to be property in class "
                             f"{self.__class__}"
                         ]
@@ -118,7 +118,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         _config_there = self.config.is_available
         if _info_there ^ _config_there:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Both config and info should be present or none should "
                     f"be present ...",
                     dict(
@@ -165,7 +165,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         _uses_file_system = self.uses_file_system
         if not(_uses_parent_folder ^ _uses_file_system):
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Either supply dataclass-field/property "
                     f"`file_system` or `parent_folder` "
                     f"for class {self.__class__} ...",
@@ -195,7 +195,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             # it is not allowed as parent_folder should do it while syncing
             if self.parent_folder == _DOT_DOT:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Problem with initializing {self.__class__}",
                         f"Yaml on disc can have `..` string so the Folder "
                         f"which is creating this instance must update it and "
@@ -215,7 +215,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             # should be instance of Folder
             e.validation.ShouldBeInstanceOf(
                 value=self.parent_folder, value_types=(Folder,),
-                msgs=[
+                notes=[
                     "Please supply correct value for dataclass field `parent_folder`"
                 ]
             ).raise_if_failed()
@@ -225,7 +225,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         else:
             e.validation.ShouldBeOneOf(
                 value=self.file_system, values=_fs.available_file_systems(),
-                msgs=[
+                notes=[
                     "Expecting file_system to be valid ..."
                 ]
             ).raise_if_failed()
@@ -235,7 +235,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         if self.path.exists():
             if not self.path.isdir():
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"We expect {self.path} to be a dir"
                     ]
                 )
@@ -253,7 +253,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             if yaml_state["parent_folder"] == _DOT_DOT:
                 if "parent_folder" not in kwargs.keys():
                     raise e.code.CodingError(
-                        msgs=[
+                        notes=[
                             f"The yaml_state dict loaded from file_or_text "
                             f"does has parent_folder set to `..`",
                             f"This means we do not have access to "
@@ -284,7 +284,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             # if there is parent_folder update it to ..
             if _parent_folder == _DOT_DOT:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"If loading from yaml on disk make sure that a "
                         f"Folder is doing that un sync so that parent_folder "
                         f"is set appropriately before calling __post_init__ on "
@@ -304,7 +304,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # check if already created
         if self.is_created:
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"Things related to hashable class {self.__class__} "
                     f"with name `{self.name}` has already been created ...",
                 ]
@@ -312,7 +312,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     def create(self) -> t.Union[_fs.Path, t.List[_fs.Path]]:
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"There is nothing to create for class {self.__class__}",
                 F"You might need to override this method if you have "
                 F"something to create ...",
@@ -331,7 +331,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # check if .info and .config file exists i.e. state exists
         if self.config.is_available:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Looks like you have updated config before this parent "
                     f"create_post_runner was called.",
                     f"Try to make updates to config after the config is "
@@ -340,7 +340,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             )
         if self.info.is_available:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"looks like info file for this StorageHashable is "
                     f"already present",
                     f"As files were just created we expect that this state "
@@ -366,7 +366,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # check if property updated
         if not self.is_created:
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"Did you forget to update appropriately the things in "
                     f"`create()` method of {self.__class__}",
                     f"Property `self.is_created` should return `True` as "
@@ -379,7 +379,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # check if already created
         if not self.is_created:
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"Things related to hashable class {self.__class__} are "
                     f"not created ..."
                 ]
@@ -387,7 +387,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     def delete(self, *, force: bool = False) -> t.Any:
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"There is nothing to delete for class {self.__class__}",
                 F"You might need to override this method if you have "
                 F"something to delete ...",
@@ -409,7 +409,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
             self.path.rmdir()
         except OSError as _ose:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"All the files inside folder should be deleted by now ...",
                     f"Expected path dir to be empty",
                     f"Check path {self.path}",
@@ -420,7 +420,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # check if property updated
         if self.is_created:
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"Did you forget to update appropriately the things in "
                     f"`delete()` method of {self.__class__}",
                     f"Property `self.is_created` should return `False` as "

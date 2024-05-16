@@ -110,7 +110,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
             _protocol_class = fsspec.get_filesystem_class(self.protocol)
         except ValueError as _ve:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Protocol not known by fsspec ...",
                     {
                         "raised_error": str(_ve)
@@ -119,7 +119,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
             )
         except ImportError as _ie:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"You need to install some packages",
                     {
                         "raised_error": str(_ie)
@@ -151,7 +151,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
 
         except Exception as _ex:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Invalid kwargs supplied ... Class {_protocol_class} "
                     f"cannot recognize them ...",
                     f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}",
@@ -176,7 +176,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
             e.validation.ShouldBeOneOf(
                 value=_bucket + '/',  # as buckets from _fs has suffix `/`
                 values=_fs.buckets,
-                msgs=[
+                notes=[
                     "Cannot find bucket on GCS ...",
                 ]
             ).raise_if_failed()
@@ -193,7 +193,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         # validate protocol
         e.validation.ShouldBeOneOf(
             value=self.protocol, values=known_implementations.keys(),
-            msgs=["This is not a known protocol by fsspec"]
+            notes=["This is not a known protocol by fsspec"]
         ).raise_if_failed()
 
         # ------------------------------------------------------------- 03
@@ -204,21 +204,21 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
             # kwargs must be supplied
             if self.kwargs is None:
                 raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory `kwargs` dict in config "
+                    notes=[f"Please supply mandatory `kwargs` dict in config "
                           f"file {Settings.TC_CONFIG_FILE} "
                           f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
             # get credentials
             if 'credentials' not in self.kwargs.keys():
                 raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `credentials` in config "
+                    notes=[f"Please supply mandatory kwarg `credentials` in config "
                           f"file {Settings.TC_CONFIG_FILE} "
                           f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
             _credentials_file = Settings.TC_HOME / self.kwargs['credentials']
             if not _credentials_file.exists():
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"Cannot find credential file {_credentials_file} "
                         f"for file system {self.fs_name} with protocol {self.protocol}.",
                         f"Please create it using information from here:",
@@ -229,13 +229,13 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
             # get project and bucket
             if 'project' not in self.kwargs.keys():
                 raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `project` in config "
+                    notes=[f"Please supply mandatory kwarg `project` in config "
                           f"file {Settings.TC_CONFIG_FILE} "
                           f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
             if 'bucket' not in self.kwargs.keys():
                 raise e.validation.NotAllowed(
-                    msgs=[f"Please supply mandatory kwarg `bucket` in config "
+                    notes=[f"Please supply mandatory kwarg `bucket` in config "
                           f"file {Settings.TC_CONFIG_FILE} "
                           f"for file_system {self.fs_name} with protocol {self.protocol}."]
                 )
@@ -249,7 +249,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         # if root_dir in fs_config end with sep then raise error as we will be adding it
         if self.root_dir.endswith(self.fs.sep):
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"Please do not supply seperator `{self.fs.sep}` at end for "
                     f"root_dir in config files. As we will take care of that ..."
                 ]
@@ -258,7 +258,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         if self.fs_name == "CWD":
             if not self.root_dir.startswith("."):
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"For CWD file_system always make sure that root_dir "
                         f"starts with '.', found {self.root_dir}"
                     ]
@@ -311,7 +311,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
             # else it is not CWD nor supported so raise error
             else:
                 raise e.validation.ConfigError(
-                    msgs=[
+                    notes=[
                         f"Please provide file system settings for `{fs_name}` in dict "
                         f"`file_systems`",
                         f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
@@ -324,7 +324,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         # --------------------------------------------------------- 04.01
         # first validate _fs_config is proper dict with specific keys
         e.validation.ShouldBeInstanceOf(
-            value=_fs_config, value_types=(dict, ), msgs=[
+            value=_fs_config, value_types=(dict, ), notes=[
                 f"Was expecting dict for file system {fs_name} configured in settings",
                 f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
             ]
@@ -335,7 +335,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         for _k in _fs_config.keys():
             e.validation.ShouldBeOneOf(
                 value=_k, values=["protocol", "kwargs", "root_dir"],
-                msgs=[
+                notes=[
                     f"Invalid config provided for file system `{fs_name}` in settings",
                     f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
                 ]
@@ -438,7 +438,7 @@ class Path:
         _new_suffix_path = _sep.join(self.suffix_path.split(_sep)[:-1])
         if _new_suffix_path == "":
             raise e.code.CodingError(
-                msgs=["The parent happens to be file system root ... so refrain from using it",
+                notes=["The parent happens to be file system root ... so refrain from using it",
                       f"Instead directly use file system {self.fs_name}"])
         # noinspection PyArgumentList
         return self.__class__(suffix_path=_new_suffix_path, fs_name=self.fs_name)
@@ -447,7 +447,7 @@ class Path:
     def local_path(self) -> pathlib.Path:
         if not isinstance(self.fs, fsspec.implementations.local.LocalFileSystem):
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "Only allowed when local file system ..."
                 ]
             )
@@ -478,7 +478,7 @@ class Path:
     def __truediv__(self, other: str) -> "Path":
         if other.find(self.sep) != -1:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"we do not allow seperator `{self.sep}` in the token `{other}`"
                 ]
             )
@@ -492,7 +492,7 @@ class Path:
     def __add__(self, other: str) -> "Path":
         if other.find(self.sep) != -1:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"we do not allow seperator {self.sep} in the token {other}"
                 ]
             )
@@ -511,7 +511,7 @@ class Path:
         from .. import gui
         if not self.isdir():
             raise e.code.CodingError(
-                msgs=[f"There is no dir so cannot create the delete folder button, check path {self}"]
+                notes=[f"There is no dir so cannot create the delete folder button, check path {self}"]
             )
         # NOTE: the returned widget of `self.webbrowser_open` has no effect ...
         return gui.callback.CallFnCallback().get_button_widget(
@@ -656,7 +656,7 @@ class Path:
         import blosc2
         if self.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"file {self.name} already exists ... cannot over write"
                 ]
             )
@@ -669,7 +669,7 @@ class Path:
         import blosc2
         if not self.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"file {self.name} does not exist ... cannot load"
                 ]
             )
@@ -725,7 +725,7 @@ class Path:
             ]
         else:
             raise e.code.NotSupported(
-                msgs=[f"Unknown type {type(_res)}"]
+                notes=[f"Unknown type {type(_res)}"]
             )
 
     def find(

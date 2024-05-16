@@ -67,13 +67,13 @@ class StateFile(m.YamlRepr, abc.ABC):
     @property
     @util.CacheResult
     def backup_path(self) -> Path:
-        e.code.AssertError(
+        e.code.AssertError.check(
             value1=settings.Settings.DEBUG_HASHABLE_STATE, value2=True,
-            msgs=[
+            notes=[
                 f"This property can be used only when you have configured "
                 f"`config.DEBUG_HASHABLE_STATE=True`"
             ]
-        ).raise_if_failed()
+        )
         return self.path / f"_backup_{self.path.name}_backup_"
 
     @abc.abstractmethod
@@ -116,7 +116,7 @@ class StateFile(m.YamlRepr, abc.ABC):
         **kwargs
     ) -> "StateFile":
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"For state files we refrain using as_dict and from_dict"
             ]
         )
@@ -126,7 +126,7 @@ class StateFile(m.YamlRepr, abc.ABC):
         self
     ) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"For state files we refrain using as_dict and from_dict"
             ]
         )
@@ -160,7 +160,7 @@ class Info(StateFile):
             _yaml_on_disk = self.path.read_text()
             if _yaml_on_disk != _yaml:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         "Info file mismatch ... should never happen",
                         "State on disk: ",
                         [_yaml_on_disk],
@@ -179,7 +179,7 @@ class Info(StateFile):
     def check_if_backup_matches(self):
         if not self.backup_path.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Looks like you have forgot to backup the state file ..."
                 ]
             )
@@ -188,7 +188,7 @@ class Info(StateFile):
         _backup_yaml = self.backup_path.read_text()
         if self.hashable.yaml() != self.backup_path.read_text():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We expect Info state file to be exactly same",
                     dict(
                         _self_yaml=_self_yaml, _backup_yaml=_backup_yaml
@@ -349,7 +349,7 @@ class Config(StateFile):
             #  using some sort of database that can track things over multiple processes
             # if _current_state == _disk_state:
             #     raise e.code.CodingError(
-            #         msgs=[
+            #         notes=[
             #             f"We expect the state on disk to be different to "
             #             f"internal state for config ...",
             #             {
@@ -383,7 +383,7 @@ class Config(StateFile):
                 v = f.default_factory()
             if v == dataclasses.MISSING:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Field {f_name} does not have any default value to "
                         f"extract",
                         f"We assume it is non mandatory field and hence we "
@@ -401,7 +401,7 @@ class Config(StateFile):
         if len(self.accessed_on) > \
                 self.LITERAL.accessed_on_list_limit:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"This should never happens ... did you try to append "
                     f"last_accessed_on list multiple times"
                 ]
@@ -417,7 +417,7 @@ class Config(StateFile):
         # noinspection DuplicatedCode
         if not self.backup_path.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Looks like you have forgot to backup the state file ..."
                 ]
             )
@@ -431,7 +431,7 @@ class Config(StateFile):
         # match lengths
         if len(_self_yaml_dict) != len(_backup_yaml_dict):
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"The config does not have same number of keys as that "
                     f"in backup"
                 ]
@@ -449,7 +449,7 @@ class Config(StateFile):
             if k in _keys_that_must_differ:
                 if _matches:
                     raise e.code.CodingError(
-                        msgs=[
+                        notes=[
                             f"We expect value for key `{k}` to differ in "
                             f"backup",
                             f"Found value: {_backup_yaml_dict[k]}"
@@ -458,7 +458,7 @@ class Config(StateFile):
             if k in _keys_that_must_not_differ:
                 if not _matches:
                     raise e.code.CodingError(
-                        msgs=[
+                        notes=[
                             f"We expect value for key `{k}` to not differ in "
                             f"backup",
                             dict(

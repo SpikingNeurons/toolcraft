@@ -61,7 +61,7 @@ def get_app(runner: Runner):
         cli_launch._RUNNER = runner
     else:
         raise e.code.CodingError(
-            msgs=["Was expecting internal var _RUNNER to be None"]
+            notes=["Was expecting internal var _RUNNER to be None"]
         )
     return _APP
 
@@ -192,7 +192,7 @@ def archive(
     if transmft:
         if part_size is not None:
             raise e.validation.NotAllowed(
-                msgs=["When using transmft do not supply part_size as we hardcode it to 399MB"]
+                notes=["When using transmft do not supply part_size as we hardcode it to 399MB"]
             )
         part_size = 399
 
@@ -266,7 +266,7 @@ def archive(
                 ]
                 subprocess.run(_cmd_tokens, shell=False)
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"unknown value -- {_chapters}"])
+            raise e.code.ShouldNeverHappen(notes=[f"unknown value -- {_chapters}"])
         _trans_log_file = _archive_folder / f"trans.log"
         shutil.move(_cwd / "trans.log", _trans_log_file)
         _trans_file_keys = [

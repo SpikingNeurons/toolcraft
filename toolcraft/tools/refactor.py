@@ -12,12 +12,12 @@ _STR_OR_FILE_OR_FOLDER = """
 def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
     e.io.FileMustnotBeOnDiskOrNetwork(
-        path=file_path, msgs=[]
+        path=file_path
     ).raise_if_failed()
 def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
     e.io.FileMustnotBeOnDiskOrNetwork(
-        path=file_path, msgs=[]
+        path=file_path
     ).raise_if_failed()
 """
 

@@ -166,7 +166,7 @@ def make_expression(
     # validate
     e.validation.ShouldBeInstanceOf(
         value=filters, value_types=(list, ),
-        msgs=["Was expecting list type for filters"]
+        notes=["Was expecting list type for filters"]
     ).raise_if_failed()
 
     # ---------------------------------------------------- 02
@@ -183,7 +183,7 @@ def make_expression(
             if bool(restrict_columns):
                 e.validation.ShouldBeOneOf(
                     value=_filter.column, values=restrict_columns,
-                    msgs=["You should use one of restricted columns ..."]
+                    notes=["You should use one of restricted columns ..."]
                 ).raise_if_failed()
             _exp = _filter.expression
             if _ret_exp is None:
@@ -191,7 +191,7 @@ def make_expression(
             else:
                 _ret_exp = operator.and_(_ret_exp, _exp)
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(_filter)}"])
+            raise e.code.ShouldNeverHappen(notes=[f"Unknown type {type(_filter)}"])
 
     # ---------------------------------------------------- 03
     # return
@@ -317,7 +317,7 @@ class TableConfig(s.Config):
         if table is None:
             if self.schema is None:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"We cannot guess schema as you have not "
                         f"supplied table nor there is schema definition "
                         f"available in config which should be either "
@@ -342,7 +342,7 @@ class TableConfig(s.Config):
         for _col in _partition_cols:
             if _col not in _tables_cols:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The pa.Table provided do not have important partition "
                         f"column `{_col}`"
                     ]
@@ -357,7 +357,7 @@ class TableConfig(s.Config):
         else:
             if self.schema != table.schema:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The table schema is "
                         f"not valid",
                         {
@@ -434,7 +434,7 @@ class Table(Folder):
         _schema = self.config.schema
         if _schema is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Ideally by now this should be set by now if not "
                     f"available",
                     f"That is possible on first write where table schema not "
@@ -455,7 +455,7 @@ class Table(Folder):
         # can be even HashableClass and that cannot be tolerated here
         if not isinstance(self.for_hashable, str):
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"We only allow for_hashable to be a str as this is "
                     f"Table.",
                     f"Most likely for_hashable is name of method on which "
@@ -547,7 +547,7 @@ class Table(Folder):
         # extra check
         if len(_table) == 0:
             raise e.code.ShouldNeverHappen(
-                msgs=[
+                notes=[
                     "The exists check before read call should handled it.",
                     "Found a empty table while reading",
                     f"Please do not use `.` or `_` at start of any folder in "
@@ -578,7 +578,7 @@ class Table(Folder):
                 filter_expression=make_expression(_filters))
             if _table:
                 e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Below partition col values already exist",
                         _table.to_pydict()
                     ]
@@ -682,7 +682,7 @@ class Table(Folder):
         # ------------------------------------------------------02
         if _partition_cols is None:
             raise e.validation.NotAllowed(
-                msgs=["This Table does not use partition_cols and hence there "
+                notes=["This Table does not use partition_cols and hence there "
                       "is no point using filters while calling delete_"]
             )
 

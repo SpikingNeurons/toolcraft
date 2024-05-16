@@ -76,14 +76,14 @@ class Tag:
     def create(self, data: t.Dict[str, t.Any] = None, exception: str = None):
         if self.path.exists():
             raise e.code.CodingError(
-                msgs=[f"Tag at {self.path} already exists ..."]
+                notes=[f"Tag at {self.path} already exists ..."]
             )
         if data is None:
             data = {}
         for _k in ['time', 'hostname', 'ip_address']:
             if _k in data.keys():
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Do not supply key {_k} in data dict we will add it ..."
                     ]
                 )
@@ -114,7 +114,7 @@ class Tag:
             self.path.delete()
         else:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"The tag {self.path} does not exist so cannot delete ..."
                 ]
             )
@@ -128,7 +128,7 @@ class Tag:
             if _k in _old_data.keys():
                 if not allow_overwrite:
                     raise e.validation.NotAllowed(
-                        msgs=[f"Cannot overwrite key {_k} in tag ..."]
+                        notes=[f"Cannot overwrite key {_k} in tag ..."]
                     )
         _old_data.update(data)
         self.path.write_yaml(_old_data, encoding=encoding)
@@ -396,7 +396,7 @@ class SubProcessManager:
             _stderr_stream.extend(_final_lines)
         if _ret_code != 0:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Below cli command failed with error code {_ret_code}:",
                     self.job.cli_command,
                     f"The stderr from subprocess is as below:", _stderr_stream,
@@ -411,27 +411,27 @@ class SubProcessManager:
         # todo: only is_started check should suffice ...
         if self.job.is_started:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "You might not need to call this multiple times!!!",
                     "Job has already started for cli command: ", self.job.cli_command,
                 ]
             )
         if self.job.is_running:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "Multiple calls detected for cli command: ", self.job.cli_command,
                 ]
             )
         if self.job.is_failed:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "You might not need to call this multiple times!!!",
                     "Previous call to below cli command has failed: ", self.job.cli_command,
                 ]
             )
         if self.job.is_finished:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "You might not need to call this multiple times!!!",
                     "Previous call to below cli command has finished: ", self.job.cli_command,
                 ]
@@ -464,7 +464,7 @@ class JobLaunchParameters:
         if key.startswith("lsf_"):
             if not Settings.IS_LSF_MACHINE:
                 raise e.code.CodingError(
-                    msgs=["Do not try to set LSF launch parameters as this is not LSF environment."]
+                    notes=["Do not try to set LSF launch parameters as this is not LSF environment."]
                 )
 
         # check if value is set multiple times
@@ -476,7 +476,7 @@ class JobLaunchParameters:
             # this means that current value is already updated
             if _current_value != _default_value:
                 raise e.code.CodingError(
-                    msgs=[f"The launch parameter {key} is already set to non default value {_current_value}",
+                    notes=[f"The launch parameter {key} is already set to non default value {_current_value}",
                           f"You cannot update it again with new value {value}"]
                 )
 
@@ -495,7 +495,7 @@ class JobOsEnvVars:
         for _f in dataclasses.fields(self):
             if not _f.name.isupper():
                 raise e.code.CodingError(
-                    msgs=[f"All the fields in this class must be upper case. Found {_f.name} !!!"]
+                    notes=[f"All the fields in this class must be upper case. Found {_f.name} !!!"]
                 )
 
 
@@ -507,21 +507,21 @@ class JobOsEnvVars:
         if key == 'IS_ON_SINGLE_CPU':
             if Settings.IS_LSF_MACHINE and value:
                 raise e.code.CodingError(
-                    msgs=["You cannot set IS_ON_SINGLE_CPU on LSF platform to True"]
+                    notes=["You cannot set IS_ON_SINGLE_CPU on LSF platform to True"]
                 )
         # ------------------------------------------- 01.02
         # check IS_LSF_JOB
         if key == 'IS_LSF_JOB':
             if getattr(self, 'IS_LOCAL_JOB'):
                 raise e.code.CodingError(
-                    msgs=["You cannot set IS_LSF_JOB as you have already set IS_LOCAL_JOB"]
+                    notes=["You cannot set IS_LSF_JOB as you have already set IS_LOCAL_JOB"]
                 )
         # ------------------------------------------- 01.03
         # check IS_LSF_JOB
         if key == 'IS_LOCAL_JOB':
             if getattr(self, 'IS_LSF_JOB'):
                 raise e.code.CodingError(
-                    msgs=["You cannot set IS_LOCAL_JOB as you have already set IS_LSF_JOB"]
+                    notes=["You cannot set IS_LOCAL_JOB as you have already set IS_LSF_JOB"]
                 )
         # ------------------------------------------- 01.04
         # check if value is set multiple times
@@ -533,7 +533,7 @@ class JobOsEnvVars:
             # this means that current value is already updated
             if _current_value != _default_value:
                 raise e.code.CodingError(
-                    msgs=[f"The env var {key} is already set to non default value {_current_value}",
+                    notes=[f"The env var {key} is already set to non default value {_current_value}",
                           f"You cannot update it again with new value {value}"]
                 )
 
@@ -546,7 +546,7 @@ class JobOsEnvVars:
             _env_name = f"TC_{_f.name}"
             if _env_name in os.environ.keys():
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The env var {_env_name} is already set to {os.environ[_env_name]}.",
                     ]
                 )
@@ -626,7 +626,7 @@ class Job:
             if sys.argv[1] == 'view':
                 return True
             else:
-                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+                raise e.code.ShouldNeverHappen(notes=[f"Check {sys.argv}"])
 
     @property
     def is_archive_job(self) -> bool:
@@ -634,7 +634,7 @@ class Job:
             if sys.argv[1] == 'archive':
                 return True
             else:
-                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+                raise e.code.ShouldNeverHappen(notes=[f"Check {sys.argv}"])
 
     @property
     def is_unfinished_job(self) -> bool:
@@ -642,7 +642,7 @@ class Job:
             if sys.argv[1] == 'unfinished':
                 return True
             else:
-                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+                raise e.code.ShouldNeverHappen(notes=[f"Check {sys.argv}"])
 
     @property
     def is_failed_job(self) -> bool:
@@ -650,7 +650,7 @@ class Job:
             if sys.argv[1] == 'failed':
                 return True
             else:
-                raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+                raise e.code.ShouldNeverHappen(notes=[f"Check {sys.argv}"])
 
     @property
     def is_launched(self) -> bool:
@@ -803,14 +803,14 @@ class Job:
         if experiment is None:
             e.validation.ShouldBeOneOf(
                 value=method, values=runner.methods_that_can_be_used_by_jobs(),
-                msgs=[
+                notes=[
                     f"Method {method} is not recognized as a method that can be used with runner level Job's"
                 ]
             ).raise_if_failed()
         else:
             e.validation.ShouldBeOneOf(
                 value=method, values=experiment.methods_that_can_be_used_by_jobs(),
-                msgs=[
+                notes=[
                     f"Method {method} is not recognized as a method that can be used with experiment level Job's"
                 ]
             ).raise_if_failed()
@@ -819,27 +819,27 @@ class Job:
         if self.is_lsf_job:
             if not Settings.IS_LSF_MACHINE:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Please run lsf job on LSF environment"
                     ]
                 )
         elif self.is_local_job:
             if Settings.IS_LSF_MACHINE:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "This is lsf environment and you are trying to run local job"
                     ]
                 )
         elif self.is_view_job or self.is_archive_job or self.is_unfinished_job or self.is_failed_job:
             ...
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Check {sys.argv}"])
+            raise e.code.ShouldNeverHappen(notes=[f"Check {sys.argv}"])
         # ------------------------------------------------------------------ 01.03
         # check single cpu
         if self.is_on_single_cpu:
             if not self.is_local_job:
                 raise e.validation.NotAllowed(
-                    msgs=["This is not local job so you cannot have single cpu mode"]
+                    notes=["This is not local job so you cannot have single cpu mode"]
                 )
 
         # ------------------------------------------------------------------ 02
@@ -858,7 +858,7 @@ class Job:
         _full_arg_spec = inspect.getfullargspec(self.method)
         if _full_arg_spec.args != ['self']:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"Only kwargs are allowed for job method {self.method} except for arg `self`",
                     f"Invalid arg spec: {_full_arg_spec}",
                 ]
@@ -883,7 +883,7 @@ class Job:
         _start = _now()
         _LOGGER.info(
             msg=f"Starting job on worker machine ...",
-            msgs=[
+            notes=[
                 {
                     "job_id": self.job_id,
                     "sys.argv": sys.argv,
@@ -896,7 +896,7 @@ class Job:
         # check if launcher client machine has created launched tag
         if not self.tag_manager.launched.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "We expect that `launched` tag is created by client launching machine .... "
                 ]
             )
@@ -916,7 +916,7 @@ class Job:
             for _wj in self.wait_on_jobs:
                 if not _wj.is_finished:
                     raise e.code.CodingError(
-                        msgs=[f"Wait-on job with job-id "
+                        notes=[f"Wait-on job with job-id "
                               f"{_wj.job_id} is supposed to be finished ..."]
                     )
             _job_kwargs = {} if self.kwargs is None else self.kwargs
@@ -930,7 +930,7 @@ class Job:
             _end = _now()
             _LOGGER.info(
                 msg=f"Successfully finished job on worker machine ...",
-                msgs=[
+                notes=[
                     {
                         "job_id": self.job_id,
                         "started": _start.ctime(),
@@ -946,7 +946,7 @@ class Job:
             _end = _now()
             _LOGGER.error(
                 msg=f"Failed job on worker machine ...",
-                msgs=[
+                notes=[
                     {
                         "job_id": self.job_id,
                         "started": _start.ctime(),
@@ -1032,20 +1032,20 @@ class Job:
             for _k in _dict.keys():
                 e.validation.ShouldBeOneOf(
                     value=_k, values=_full_arg_spec.kwonlyargs,
-                    msgs=[f"One of the item in dict is not valid kwarg for method {self.method}"]
+                    notes=[f"One of the item in dict is not valid kwarg for method {self.method}"]
                 ).raise_if_failed()
             for _k in _full_arg_spec.kwonlyargs:
                 if _k not in _full_arg_spec.kwonlydefaults.keys():
                     if _k not in _dict.keys():
                         raise e.validation.NotAllowed(
-                            msgs=[f"Please supply mandatory kwarg {_k}"]
+                            notes=[f"Please supply mandatory kwarg {_k}"]
                         )
             # noinspection PyAttributeOutsideInit
             self._kwargs = _dict
             return self
         else:
             raise e.code.CodingError(
-                msgs=["with_kwargs was already set ..."]
+                notes=["with_kwargs was already set ..."]
             )
 
     def check_health(self, is_on_main_machine: bool) -> t.Optional[str]:
@@ -1068,7 +1068,7 @@ class Job:
         if _finished or _failed:
             if _running:
                 raise e.code.ShouldNeverHappen(
-                    msgs=[
+                    notes=[
                         "the previous job was wither failed or finished but the running tag was never deleted",
                         "Please fix any bugs or `clean` previous runs ...",
                         _job_info,
@@ -1080,7 +1080,7 @@ class Job:
         if _running:
             if not _started:
                 raise e.code.ShouldNeverHappen(
-                    msgs=[
+                    notes=[
                         "When running started tag is expected to be present",
                         _job_info,
                     ]
@@ -1089,7 +1089,7 @@ class Job:
         if _started:
             if not _launched:
                 raise e.code.ShouldNeverHappen(
-                    msgs=[
+                    notes=[
                         "When started launched tag is expected to be present",
                         _job_info,
                     ]
@@ -1108,7 +1108,7 @@ class Job:
         if is_on_main_machine:
             if _launched or _started or _running:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         "You are on main (client) machine that launches job",
                         "So no tags including launched must be present",
                         _job_info,
@@ -1121,7 +1121,7 @@ class Job:
         else:
             if not _launched:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         "You are on worker machine so we expect to have launched tag that will be created by main "
                         "(i.e. client) machine that launches job",
                         _job_info,
@@ -1129,7 +1129,7 @@ class Job:
                 )
             if _started or _running:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         "You are on worker machine that runs job",
                         "So no tag started and running must not be present",
                         _job_info,
@@ -1158,13 +1158,13 @@ class Job:
         # check if tensorflow available
         if tf is None:
             raise e.code.CodingError(
-                msgs=["Tensorflow is not available so cannot call dont use this method"]
+                notes=["Tensorflow is not available so cannot call dont use this method"]
             )
 
         # if name has . do not allow
         if name.find(".") != -1:
             raise e.validation.NotAllowed(
-                msgs=[f"Tensorflow checkpoint saving mechanism does not allow `.` in checkpoint names ... "
+                notes=[f"Tensorflow checkpoint saving mechanism does not allow `.` in checkpoint names ... "
                       f"Correct the value `{name}`"]
             )
 
@@ -1174,7 +1174,7 @@ class Job:
         _index_file = self.tf_chkpts_path / f"{name}.index"
         if _file.exists() or _data_file.exists() or _index_file.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"looks like there is already a checkpoint artifact or simple artifact for name '{name}' present"
                 ]
             )
@@ -1191,7 +1191,7 @@ class Job:
         # check if tensorflow available
         if tf is None:
             raise e.code.CodingError(
-                msgs=["Tensorflow is not available so cannot call dont use this method"]
+                notes=["Tensorflow is not available so cannot call dont use this method"]
             )
 
         # check if respective files present
@@ -1200,19 +1200,19 @@ class Job:
         _index_file = self.tf_chkpts_path / f"{name}.index"
         if not _data_file.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"was expecting {_data_file.name} to be present on the disk ..."
                 ]
             )
         if not _index_file.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"was expecting {_index_file.name} to be present on the disk ..."
                 ]
             )
         if _file.exists():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"This should not happen as tensorflow saves things as data and index file ..."
                 ]
             )
@@ -1272,7 +1272,7 @@ class JobGroup(abc.ABC):
                     if _k not in _full_arg_spec.kwonlydefaults.keys():
                         if _k not in _supplied_kwargs.keys():
                             raise e.validation.NotAllowed(
-                                msgs=[
+                                notes=[
                                     f"You need to supply mandatory kwarg {_k} for method {_j.method}",
                                     f"Please use with_kwargs method on job instance to supply kwargs ..."
                                 ]
@@ -1518,7 +1518,7 @@ class Monitor:
         # ------------------------------------------------------------- 04
         # raise error as there is no experiment that is monitored for his hex_hash
         raise e.code.CodingError(
-            msgs=[f"We expect that you should have already created file "
+            notes=[f"We expect that you should have already created file "
                   f"{_experiment_info_file}"]
         )
 
@@ -1542,7 +1542,7 @@ class _Common(m.HashableClass, abc.ABC):
         elif isinstance(self, Experiment):
             return f"{self.__class__.__module__}:{self.mini_hex_hash}"
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen()
 
     @property
     @util.CacheResult
@@ -1572,7 +1572,7 @@ class _Common(m.HashableClass, abc.ABC):
                 for _m in self.methods_that_can_be_used_by_jobs()
             }
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen()
 
     @property
     def job(self) -> Job:
@@ -1588,7 +1588,7 @@ class _Common(m.HashableClass, abc.ABC):
                 return _v
 
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"You have called from method {_caller_name} which is not "
                 f"supported by associated jobs ..."
             ]
@@ -1609,7 +1609,7 @@ class _Common(m.HashableClass, abc.ABC):
                 cls.get_job_from_cli_run_arg,
             ]
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen()
 
         # ------------------------------------------------------ 02
         # some vars
@@ -1656,7 +1656,7 @@ class _Common(m.HashableClass, abc.ABC):
             # you must have self
             if _full_arg_spec.args[0] != 'self':
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Any method defined in class {cls} is used for job ... ",
                         f"So we expect it to have `self` i.e., it should be instance method",
                         f"If you are using anything special either make it private with `_` or "
@@ -1665,7 +1665,7 @@ class _Common(m.HashableClass, abc.ABC):
                 )
             if len(_full_arg_spec.args) > 1:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         "You are not allowed to use args ... only kwargs are "
                         "allowed used special * notation to use kwargs"
                     ]
@@ -1701,7 +1701,7 @@ class _Common(m.HashableClass, abc.ABC):
                 default_open=True,
             )
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen()
 
     @gui.UseMethodInForm(label_fmt="Job's")
     def associated_jobs_view(self) -> "gui.widget.Widget":
@@ -1712,7 +1712,7 @@ class _Common(m.HashableClass, abc.ABC):
         elif isinstance(self, Experiment):
             _type = "experiment"
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen()
         if bool(_jobs):
             _form = gui.form.ButtonBarForm(
                 label=f"Jobs for this {_type} ...",
@@ -1838,7 +1838,7 @@ class Runner(_Common, abc.ABC):
     @property
     def copy_src_dst(self) -> t.Tuple[str, str]:
         raise e.code.NotYetImplemented(
-            msgs=["Cannot use copy cli command", "Please implement property copy_src_dst to use copy cli command"]
+            notes=["Cannot use copy cli command", "Please implement property copy_src_dst to use copy cli command"]
         )
 
     @property
@@ -1863,16 +1863,16 @@ class Runner(_Common, abc.ABC):
         """
         _py_script = self.py_script
         _ret = s.Path(suffix_path=".", fs_name='CWD')
-        e.code.AssertError(
+        e.code.AssertError.check(
             value1=_ret.local_path.absolute().as_posix(),
             value2=_py_script.parent.absolute().as_posix(),
-            msgs=[
+            notes=[
                 f"This is unexpected ... ",
                 f"The cwd for job runner is {_ret.local_path.absolute().as_posix()}",
                 f"While the accompanying script is at {_py_script.as_posix()}",
                 f"Please debug ..."
             ]
-        ).raise_if_failed()
+        )
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -1918,12 +1918,12 @@ class Runner(_Common, abc.ABC):
         if len(_split_strs) in [2, 3]:
             # -------------------------------------------------------- 01.01
             # the runner hash should always match
-            e.code.AssertError(
+            e.code.AssertError.check(
                 value1=_split_strs[0], value2=self.hex_hash,
-                msgs=[
+                notes=[
                     "The runner used is not exactly same"
                 ]
-            ).raise_if_failed()
+            )
             # -------------------------------------------------------- 01.02
             if len(_split_strs) == 2:
                 _method = getattr(self.__class__, _split_strs[1])
@@ -1934,7 +1934,7 @@ class Runner(_Common, abc.ABC):
                 return _experiment.associated_jobs[_method]
         else:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "The job str should have format "
                     "<runner-hex-hash:method-name> or <runner-hex-hash:experi-hex-hash:method-name>",
                     f"Found unknown str {job}"

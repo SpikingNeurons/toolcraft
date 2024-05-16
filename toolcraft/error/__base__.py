@@ -39,7 +39,12 @@ class _CustomException(Exception):
 
     @classmethod
     def check(cls, **kwargs):
-        raise NotImplementedError(f"This method must be implemented in child class `{cls}`.")
+        from . import code
+        raise code.ImplementInChildClass(
+            notes=[
+                f"Method `check` is not implemented in class `{cls}`"
+            ]
+        )
 
 
 
@@ -106,13 +111,13 @@ class __CCustomEException(Exception):
                     msgs: logger.MESSAGES_TYPE
                 ):
                     super().__init__(
-                        msgs=[
+                        notes=[
                             "Error while coding !!!",
                             *msgs
                         ]
                     )
             raise RaiseExplicitly(
-                msgs=[
+                notes=[
                     f"Do not call {self.raise_if_failed} for class {self.__class__} "
                     f"as it is configured to be raised explicitly.",
                     f"Instead use keyword `raise`"
