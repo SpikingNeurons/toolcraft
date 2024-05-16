@@ -13,9 +13,6 @@ import toml
 import __main__ as main
 
 
-
-
-
 class Settings:
 
     TC_HOME = pathlib.Path.home() / ".toolcraft"
