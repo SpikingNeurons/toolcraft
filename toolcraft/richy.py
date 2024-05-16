@@ -237,7 +237,7 @@ class Widget(m.Checker, abc.ABC):
     def __enter__(self: TWidget) -> TWidget:
 
         if self.tc_log is not None:
-            self.tc_log.info(msg=f"[{self.title}] started ...", msgs=self.sub_title)
+            self.tc_log.info(msg=f"[{self.title}] started ...", notes=self.sub_title)
 
         self._live = r_live.Live(
             self.get_renderable(),
@@ -277,7 +277,7 @@ class Widget(m.Checker, abc.ABC):
             #   to write things to file like FileHandler ... explore later
             # _ct = self.console.export_text()
             self.tc_log.info(
-                msg=f"[{self.title}] finished in {_elapsed_seconds} seconds ...", msgs=self.sub_title,
+                msg=f"[{self.title}] finished in {_elapsed_seconds} seconds ...", notes=self.sub_title,
                 # + _ct
             )
 
@@ -309,7 +309,7 @@ class Widget(m.Checker, abc.ABC):
         # todo: improve this to use self.tc_log so that terminal based
         #   richy loging plays well with file logging of toolcraft
         if self.tc_log is not None:
-            self.tc_log.info(msg=f"[{self.title}] log ...", msgs=objects)
+            self.tc_log.info(msg=f"[{self.title}] log ...", notes=objects)
 
     def get_renderable(self) -> r_console.RenderableType:
         # ------------------------------------------------------------- 01
@@ -516,7 +516,7 @@ class Progress(Widget):
             _msgs.append(
                 f"  >> {_k:30s} ... {_v.rich_task.percentage} % ..."
             )
-        self.tc_log.info(msg=f"[{self.title}] tasks progress ...", msgs=_msgs)
+        self.tc_log.info(msg=f"[{self.title}] tasks progress ...", notes=_msgs)
 
     def update(
         self,

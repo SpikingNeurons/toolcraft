@@ -78,7 +78,7 @@ class __CCustomEException(Exception):
 
         # -----------------------------------------------------------------03
         # log
-        _logger.error(msg=_header, msgs=msgs)
+        _logger.error(msg=_header, notes=msgs)
         # log with rich
         # todo: doing this here as the error does not appear on console
         #   need to investigate how to use RichHandler to log to file as well as console

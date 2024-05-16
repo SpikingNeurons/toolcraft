@@ -58,65 +58,65 @@ class CustomLogger(logging.Logger):
 
     # noinspection PyMethodOverriding
     # def debug(self, *, msg: str, msgs: MESSAGES_TYPE = None):
-    def debug(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
+    def debug(self, msg: str, *args, notes: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.debug
         """
-        if msgs is not None:
-            msg = msg + "\n" + yaml.dump(msgs)
+        if bool(notes):
+            msg = msg + "\n" + yaml.dump(notes)
         if self.isEnabledFor(logging.DEBUG):
             self._log(logging.DEBUG, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def info(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
+    def info(self, msg: str, *args, notes: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.info
         """
-        if msgs is not None:
-            msg = msg + "\n" + yaml.dump(msgs)
+        if bool(notes):
+            msg = msg + "\n" + yaml.dump(notes)
         if self.isEnabledFor(logging.INFO):
             self._log(logging.INFO, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def warning(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
+    def warning(self, msg: str, *args, notes: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.warning
         """
-        if msgs is not None:
-            msg = msg + "\n" + yaml.dump(msgs)
+        if bool(notes):
+            msg = msg + "\n" + yaml.dump(notes)
         if self.isEnabledFor(logging.WARNING):
             self._log(logging.WARNING, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def error(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
+    def error(self, msg: str, *args, notes: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.error
         """
-        if msgs is not None:
-            msg = msg + "\n" + yaml.dump(msgs)
+        if bool(notes):
+            msg = msg + "\n" + yaml.dump(notes)
         if self.isEnabledFor(logging.ERROR):
             self._log(logging.ERROR, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
-    def critical(self, msg: str, *args, msgs: MESSAGES_TYPE = None, **kwargs):
+    def critical(self, msg: str, *args, notes: MESSAGES_TYPE = None, **kwargs):
         """
         >>> logging.Logger.critical
         """
-        if msgs is not None:
-            msg = msg + "\n" + yaml.dump(msgs)
+        if bool(notes):
+            msg = msg + "\n" + yaml.dump(notes)
         if self.isEnabledFor(logging.CRITICAL):
             self._log(logging.CRITICAL, msg, args, **kwargs)
 
     # noinspection PyMethodOverriding
     def exception(
-        self, msg: str, *args, msgs: MESSAGES_TYPE = None,
+        self, msg: str, *args, notes: MESSAGES_TYPE = None,
         exc_info: bool = True, **kwargs
     ):
         """
         >>> logging.Logger.exception
         """
-        if msgs is not None:
-            msg = msg + "\n" + yaml.dump(msgs)
+        if bool(notes):
+            msg = msg + "\n" + yaml.dump(notes)
         if self.isEnabledFor(logging.ERROR):
             self._log(logging.ERROR, msg, args, exc_info=exc_info, **kwargs)
 
