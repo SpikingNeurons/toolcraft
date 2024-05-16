@@ -52,12 +52,12 @@ def add_raise_before_exceptions_that_have_no_check():
             # replace tokens and prefix raise to them
             # for _t in _tokens:
             #     _src_txt = _src_txt.replace(_t, "raise " + _t)
-            # # if already done then there will be two raises
-            # # so simply do final replace ;) ... this preserves old changes and add
-            # # raise where we have forgotten
+            # if already done then there will be two raises
+            # so simply do final replace ;) ... this preserves old changes and add
+            # raise where we have forgotten
             # _src_txt = _src_txt.replace("raise raise", "raise")
-            # # finally, write back changes
-            # _fi.write_text(_src_txt, encoding="utf8")
+            # finally, write back changes
+            _fi.write_text(_src_txt, encoding="utf8")
 
 
 def add_raise_if_expected_after_some_exceptions():
