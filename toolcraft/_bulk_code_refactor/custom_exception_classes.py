@@ -78,8 +78,8 @@ def add_raise_if_expected_after_some_exceptions():
             except TypeError:
                 ...
     for _fo in [
-        pathlib.Path("C:\\Users\\prave\\Documents\\Github\\RU"),
-        pathlib.Path("C:\\Users\\prave\\Documents\\Github\\toolcraft"),
+        pathlib.Path("/mnt/c/Github/RU"),
+        pathlib.Path("/mnt/c/Github/toolcraft"),
     ]:
         for _fi in _fo.glob('**/*.py'):
             # do not apply anything for code in this file
