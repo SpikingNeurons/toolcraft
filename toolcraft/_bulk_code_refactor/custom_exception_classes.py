@@ -64,7 +64,7 @@ def add_raise_before_exceptions_that_have_no_check():
             _fi.write_text(_src_txt, encoding="utf8")
 
 
-def add_raise_if_expected_after_some_exceptions():
+def add_check_for_exceptions_that_override_check():
     from toolcraft.error import code, io, validation
     from toolcraft.error import __base__
     _tokens = []
@@ -73,9 +73,9 @@ def add_raise_if_expected_after_some_exceptions():
             _v = getattr(_m, _a)
             try:
                 if issubclass(_v, __base__._CustomException):
-                    _r = inspect.getsource(_v.__init__).find("return")
-                    # raise_if_expected needed for exceptions that could not be _RAISE_EXPLICITLY
-                    if not _v._RAISE_EXPLICITLY:
+                    if __base__._CustomException == _v:
+                        continue
+                    if "check" in _v.__dict__.keys():
                         _token = f"{_v.__module__}.{_v.__name__}".replace("toolcraft.error", "e")
                         print(_v, _token)
                         _tokens.append(_token)
@@ -98,7 +98,7 @@ def add_raise_if_expected_after_some_exceptions():
                 if _src_txt.find(f"raise {_t}") != -1:
                     raise Exception(
                         f"You have explicitly raised exception {_t} in file {_fi}. "
-                        f"Please instead call `raise_if_failed()` method on "
+                        f"Please instead call `check(...)` method on "
                         f"exception instance ... "
                     )
             # find the end location for matched tokens
@@ -114,7 +114,7 @@ def add_raise_if_expected_after_some_exceptions():
                 _start = 0
                 _new_src_txt = ""
                 for _ii in _locations_to_inject:
-                    _new_src_txt += _src_txt[_start: _ii] + ".raise_if_failed()"
+                    _new_src_txt += _src_txt[_start: _ii] + ".check(...)"
                     _start = _ii
                 _new_src_txt += _src_txt[_start:]
             else:
@@ -122,11 +122,11 @@ def add_raise_if_expected_after_some_exceptions():
             # if already done then there will be two raise_if_failed
             # so simply do final replace ;) ... this preserves old changes and add
             # raise where we have forgotten
-            _new_src_txt = _new_src_txt.replace(".raise_if_failed().raise_if_failed()", ".raise_if_failed()")
+            _new_src_txt = _new_src_txt.replace(".check(...).check(...)", ".check(...)")
             # finally, write back changes
             _fi.write_text(_new_src_txt, encoding="utf8")
 
 
 if __name__ == "__main__":
-    add_raise_before_exceptions_that_have_no_check()
-    # add_raise_if_expected_after_some_exceptions()
+    # add_raise_before_exceptions_that_have_no_check()
+    add_check_for_exceptions_that_override_check()
