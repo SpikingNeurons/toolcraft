@@ -482,10 +482,10 @@ class Progress(Widget):
 
         # test if fields are defined in columns for progress bar
         for _k in fields.keys():
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=_k, values=list(self.columns.keys()),
                 notes=[f"You have not specified how to render extra field {_k} in `Progress.columns`"]
-            ).raise_if_failed()
+            )
 
         # add task
         _p = self.layout['progress']
@@ -831,14 +831,14 @@ class StatusPanel(Widget):
                           "you want to add to this StatusPanel"]
                 )
         _reserved_keys = ['final_message', 'stages_progress', 'spinner']
-        e.validation.ShouldNotBeOneOf(
+        e.validation.ShouldNotBeOneOf.check(
             value=key, values=_reserved_keys,
             notes=["Cannot add items with reserved names ..."]
-        ).raise_if_failed()
-        e.validation.ShouldNotBeOneOf(
+        )
+        e.validation.ShouldNotBeOneOf.check(
             value=key, values=list(self.layout.keys()),
             notes=["There already exists a item with that name"]
-        ).raise_if_failed()
+        )
         _new_dict = dict()
         _reserved_dict = dict()
         for _k in self.layout.keys():
@@ -852,9 +852,9 @@ class StatusPanel(Widget):
         self.refresh(update_renderable=True)
 
     def __getitem__(self, item: str) -> t.Union[rich.jupyter.JupyterMixin, Widget, r_console.Group]:
-        e.validation.ShouldBeOneOf(
+        e.validation.ShouldBeOneOf.check(
             value=item, values=list(self.layout.keys()), notes=["There is no item with that name"]
-        ).raise_if_failed()
+        )
         return self.layout[item]
 
     def __delitem__(self, key: str):

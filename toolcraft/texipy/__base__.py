@@ -597,12 +597,12 @@ class LaTeX(abc.ABC):
         for _ in self._items:
             if not isinstance(_, (str, Text, ParaBox, Icon, base.Base)):
                 if _.label is not None:
-                    e.validation.ShouldNotBeOneOf(
+                    e.validation.ShouldNotBeOneOf.check(
                         value=_.label, values=self.doc.labels,
                         notes=[
                             f"Please use a unique label ..."
                         ]
-                    ).raise_if_failed()
+                    )
                     self.doc.labels.append(_.label)
 
         # create str
@@ -911,10 +911,10 @@ class Figure(LaTeX):
         from . import tikz
 
         # test item
-        e.validation.ShouldBeInstanceOf(
+        e.validation.ShouldBeInstanceOf.check(
             value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
             notes=[f"Only certain item types are allowed in {Figure}"],
-        ).raise_if_failed()
+        )
 
         # call super to add item
         return super().add_item(item=item)
@@ -960,10 +960,10 @@ class SubFigure(LaTeX):
         from . import tikz
 
         # test item
-        e.validation.ShouldBeInstanceOf(
+        e.validation.ShouldBeInstanceOf.check(
             value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
             notes=[f"Only certain item types are allowed in {SubFigure}"],
-        ).raise_if_failed()
+        )
 
         # call super to add item
         return super().add_item(item=item)

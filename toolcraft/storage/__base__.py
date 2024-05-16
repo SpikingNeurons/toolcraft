@@ -213,22 +213,22 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
             # ------------------------------------------------------- 02.02
             # should be instance of Folder
-            e.validation.ShouldBeInstanceOf(
+            e.validation.ShouldBeInstanceOf.check(
                 value=self.parent_folder, value_types=(Folder,),
                 notes=[
                     "Please supply correct value for dataclass field `parent_folder`"
                 ]
-            ).raise_if_failed()
+            )
 
         # ----------------------------------------------------------- 03
         # if not _uses_parent_folder then test if valid file_system
         else:
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=self.file_system, values=_fs.available_file_systems(),
                 notes=[
                     "Expecting file_system to be valid ..."
                 ]
-            ).raise_if_failed()
+            )
 
         # ----------------------------------------------------------- 04
         # if path exists check if it is a folder

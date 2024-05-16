@@ -164,10 +164,10 @@ def make_expression(
     """
     # ---------------------------------------------------- 01
     # validate
-    e.validation.ShouldBeInstanceOf(
+    e.validation.ShouldBeInstanceOf.check(
         value=filters, value_types=(list, ),
         notes=["Was expecting list type for filters"]
-    ).raise_if_failed()
+    )
 
     # ---------------------------------------------------- 02
     # loop
@@ -181,10 +181,10 @@ def make_expression(
                 _ret_exp = operator.or_(_ret_exp, _exp)
         elif isinstance(_filter, Filter):
             if bool(restrict_columns):
-                e.validation.ShouldBeOneOf(
+                e.validation.ShouldBeOneOf.check(
                     value=_filter.column, values=restrict_columns,
                     notes=["You should use one of restricted columns ..."]
-                ).raise_if_failed()
+                )
             _exp = _filter.expression
             if _ret_exp is None:
                 _ret_exp = _exp

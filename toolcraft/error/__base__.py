@@ -100,7 +100,7 @@ class __CCustomEException(Exception):
         # be explicitly raised
         return
 
-    def raise_if_failed(self):
+    def rrrrrrrrrrr(self):
         # test if it needs to be raised explicitly
         if self._RAISE_EXPLICITLY:
             class RaiseExplicitly(__CustomException):
@@ -118,7 +118,7 @@ class __CCustomEException(Exception):
                     )
             raise RaiseExplicitly(
                 notes=[
-                    f"Do not call {self.raise_if_failed} for class {self.__class__} "
+                    f"Do not call  for class {self.__class__} "
                     f"as it is configured to be raised explicitly.",
                     f"Instead use keyword `raise`"
                 ]

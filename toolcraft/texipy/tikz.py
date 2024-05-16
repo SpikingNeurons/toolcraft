@@ -1937,10 +1937,10 @@ class Node(BaseNode):
         # when style key provided check if it is registered ...
         _style = self.style
         if isinstance(_style, str):
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=_style, values=list(self._tikz.styles.keys()),
                 notes=[f"Style {_style} si not registered with tikz_context"]
-            ).raise_if_failed()
+            )
             _style = self._tikz.styles[_style]
 
         # -------------------------------------------------------- 02
@@ -2983,14 +2983,14 @@ class TikZ(LaTeX):
                     notes=["Please supply name for node as this will be declared globally to be used by TikZ",
                           "Only nodes that are declared on path or as pin or label can be used without id"]
                 )
-        e.validation.ShouldNotBeOneOf(
+        e.validation.ShouldNotBeOneOf.check(
             value=node, values=self._nodes,
             notes=["The node is already registered", f"{type(node)}:{node.name}"]
-        ).raise_if_failed()
-        e.validation.ShouldNotBeOneOf(
+        )
+        e.validation.ShouldNotBeOneOf.check(
             value=node.name, values=[_.name for _ in self._nodes if _.name is not None],
             notes=[f"The node name {node.name} is already taken"]
-        ).raise_if_failed()
+        )
 
         # -------------------------------------------------------
         # add node
@@ -3000,10 +3000,10 @@ class TikZ(LaTeX):
     def add_path(self, path: Path) -> "TikZ":
         # when style key provided check if it is registered ...
         if isinstance(path.style, str):
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=path.style, values=list(self.styles.keys()),
                 notes=[f"Style {path.style} is not registered with tikz"]
-            ).raise_if_failed()
+            )
 
         # if tikz not present provide it
         # noinspection PyProtectedMember

@@ -538,12 +538,12 @@ class FileGroup(StorageHashable, abc.ABC):
             # check hashes provided in hashes dict
             for k, _hash in _hashes.items():
                 # check if key is known
-                e.validation.ShouldBeOneOf(
+                e.validation.ShouldBeOneOf.check(
                     value=k, values=self.file_keys,
                     notes=[
                         f"The key {k} in hashes dict is not known"
                     ]
-                ).raise_if_failed()
+                )
                 # This is in case we want to let code print hash that we want
                 # to supply
                 # value should be a valid hash

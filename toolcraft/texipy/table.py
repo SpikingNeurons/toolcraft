@@ -520,17 +520,17 @@ class Table(LaTeX):
 
         # will support later
         # todo: support when needed
-        e.validation.ShouldNotBeEqual(
+        e.validation.ShouldNotBeEqual.check(
             value1=self.type, value2='array',
             notes=["We will support this type later ..."]
-        ).raise_if_failed()
+        )
 
         # width must be None for certain types
         if self.t_width is not None:
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=self.type, values=['*', 'X'],
                 notes=["width is not supported for this type ... keep it None"]
-            ).raise_if_failed()
+            )
 
         # allow column format stretched i.e. X for type=='X'
         if self.t_cols_def.uses_stretched_fmt:

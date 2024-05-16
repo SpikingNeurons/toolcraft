@@ -257,14 +257,14 @@ class Internal:
             return super().__setattr__(key, value)
 
         # only keys that are annotated can be set
-        e.validation.ShouldBeOneOf(
+        e.validation.ShouldBeOneOf.check(
             value=key,
             values=self.__field_names__,
             notes=[
                 f"Member `{key}` is not annotated in class "
                 f"{self.__class__} so you cannot set it."
             ],
-        ).raise_if_failed()
+        )
 
         # if item is allowed to be set only once then do not allow it to be
         # set again
@@ -717,13 +717,13 @@ class RuleChecker:
         if _restrict_dataclass_fields_to is not None:
             if bool(_restrict_dataclass_fields_to):
                 for _attr_k in _annotated_attr_keys:
-                    e.validation.ShouldBeOneOf(
+                    e.validation.ShouldBeOneOf.check(
                         value=_attr_k, values=_restrict_dataclass_fields_to,
                         notes=[
                             f"Please use only allowed dataclass fields for class "
                             f"{_hashable_cls}..."
                         ]
-                    ).raise_if_failed()
+                    )
             else:
                 # empty list was supplied that means you don't want to use any fields
                 if bool(_annotated_attr_keys):
@@ -780,14 +780,14 @@ class RuleChecker:
         # ---------------------------------------------------------- 02
         # test if LITERAL is extended properly
         _parent_literal_class = self.parent.decorated_class.LITERAL
-        e.validation.ShouldBeSubclassOf(
+        e.validation.ShouldBeSubclassOf.check(
             value=self.decorated_class.LITERAL, value_types=(_parent_literal_class, ),
             notes=[
                 f"We expect a nested class of class {self.decorated_class} with name "
                 f"`{_LITERAL_CLASS_NAME}` to "
                 f"extend the class {_parent_literal_class}"
             ]
-        ).raise_if_failed()
+        )
 
     def check_things_not_to_be_overridden(self):
         # ---------------------------------------------------------- 01
@@ -1602,12 +1602,12 @@ class YamlRepr(Tracker):
                 # ---------------------------------------------------- 04.05
                 # else value needs to be one of supported hashable
                 else:
-                    e.validation.ShouldBeInstanceOf(
+                    e.validation.ShouldBeInstanceOf.check(
                         value=v,
                         value_types=allowed_types,
                         notes=[f"Value for key `{k}` in dict cannot be frozen"]
                         + _err_msg,
-                    ).raise_if_failed()
+                    )
 
         # ------------------------------------------------------------ 05
         # if list check values
@@ -1620,12 +1620,12 @@ class YamlRepr(Tracker):
                 current_key = f">{i}" if key_or_index is None else f"{key_or_index}>{i}"
                 # ---------------------------------------------------- 05.03
                 # value needs to be hashable
-                e.validation.ShouldBeInstanceOf(
+                e.validation.ShouldBeInstanceOf.check(
                     value=v,
                     value_types=allowed_types + (dict, list),
                     notes=[f"Value for index `{i}` in list cannot be frozen"] +
                     _err_msg,
-                ).raise_if_failed()
+                )
                 # ---------------------------------------------------- 05.04
                 # if nested dict or list try to verify keys and values
                 if isinstance(v, (dict, list)):
@@ -1717,13 +1717,13 @@ class YamlRepr(Tracker):
 #         # validate
 #         # -------------------------------------------------------- 01.01
 #         # check item type
-#         e.validation.ShouldBeInstanceOf(
+#         e.validation.ShouldBeInstanceOf.check(
 #             value=item,
 #             value_types=self.LITERAL.SUPPORTED_KERAS_OBJECTS,
 #             notes=[
 #                 f"Unrecognized item type that cannot be freezed ..."
 #             ]
-#         ).raise_if_failed()
+#         )
 #         # -------------------------------------------------------- 01.02
 #         # check if keras config is serializable as per our code
 #         _k_config = item.get_config()
@@ -2168,14 +2168,14 @@ class HashableClass(YamlRepr, abc.ABC):
             # ----------------------------------------------------------01.03
             # else should be one of supported type
             else:
-                e.validation.ShouldBeInstanceOf(
+                e.validation.ShouldBeInstanceOf.check(
                     value=v,
                     value_types=SUPPORTED_HASHABLE_OBJECTS,
                     notes=[
                         f"Check value of field `{f_name}` for class "
                         f"{self.__class__}"
                     ],
-                ).raise_if_failed()
+                )
 
     def init(self):
         ...
@@ -2200,7 +2200,7 @@ class HashableClass(YamlRepr, abc.ABC):
         This will avoid any accidental file/folder creations and IO tracking
         """
         from . import storage
-        e.validation.ShouldNotBeInstanceOf(
+        e.validation.ShouldNotBeInstanceOf.check(
             value=self, value_types=(storage.StorageHashable, ),
             notes=[
                 f"Do not use {storage.StorageHashable} for field_key `{field_key}`",
@@ -2208,7 +2208,7 @@ class HashableClass(YamlRepr, abc.ABC):
                 f"and we want to use it as pure HashableClass ...",
                 f"This will avoid any accidental file/folder creations and IO tracking ..."
             ]
-        ).raise_if_failed()
+        )
         for _f in self.dataclass_field_names:
             _v = getattr(self, _f)
             if isinstance(_v, HashableClass):

@@ -173,13 +173,13 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
             _project = _kwargs['project']
             _bucket = _kwargs['bucket']
             # test if bucket exists
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=_bucket + '/',  # as buckets from _fs has suffix `/`
                 values=_fs.buckets,
                 notes=[
                     "Cannot find bucket on GCS ...",
                 ]
-            ).raise_if_failed()
+            )
 
         # ------------------------------------------------------------- 04
         return _fs
@@ -191,10 +191,10 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
 
         # ------------------------------------------------------------- 02
         # validate protocol
-        e.validation.ShouldBeOneOf(
+        e.validation.ShouldBeOneOf.check(
             value=self.protocol, values=known_implementations.keys(),
             notes=["This is not a known protocol by fsspec"]
-        ).raise_if_failed()
+        )
 
         # ------------------------------------------------------------- 03
         # protocol specific validations
@@ -323,23 +323,23 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         # lets test it
         # --------------------------------------------------------- 04.01
         # first validate _fs_config is proper dict with specific keys
-        e.validation.ShouldBeInstanceOf(
+        e.validation.ShouldBeInstanceOf.check(
             value=_fs_config, value_types=(dict, ), notes=[
                 f"Was expecting dict for file system {fs_name} configured in settings",
                 f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
             ]
-        ).raise_if_failed()
+        )
         # --------------------------------------------------------- 04.02
         # make sure that there we know thw settings i.e. they should be one or more
         # of these three
         for _k in _fs_config.keys():
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=_k, values=["protocol", "kwargs", "root_dir"],
                 notes=[
                     f"Invalid config provided for file system `{fs_name}` in settings",
                     f"Please update file {Settings.TC_CONFIG_FILE.as_posix()}"
                 ]
-            ).raise_if_failed()
+            )
 
         # --------------------------------------------------------- 05
         # make FileSystemConfig instance from _fs_config

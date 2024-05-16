@@ -801,19 +801,19 @@ class Job:
         # ------------------------------------------------------------------ 01.01
         # check if method supplied is available in runner
         if experiment is None:
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=method, values=runner.methods_that_can_be_used_by_jobs(),
                 notes=[
                     f"Method {method} is not recognized as a method that can be used with runner level Job's"
                 ]
-            ).raise_if_failed()
+            )
         else:
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=method, values=experiment.methods_that_can_be_used_by_jobs(),
                 notes=[
                     f"Method {method} is not recognized as a method that can be used with experiment level Job's"
                 ]
-            ).raise_if_failed()
+            )
         # ------------------------------------------------------------------ 01.02
         # check environments
         if self.is_lsf_job:
@@ -1030,10 +1030,10 @@ class Job:
         if self.kwargs is None:
             _full_arg_spec = inspect.getfullargspec(self.method)
             for _k in _dict.keys():
-                e.validation.ShouldBeOneOf(
+                e.validation.ShouldBeOneOf.check(
                     value=_k, values=_full_arg_spec.kwonlyargs,
                     notes=[f"One of the item in dict is not valid kwarg for method {self.method}"]
-                ).raise_if_failed()
+                )
             for _k in _full_arg_spec.kwonlyargs:
                 if _k not in _full_arg_spec.kwonlydefaults.keys():
                     if _k not in _dict.keys():

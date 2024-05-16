@@ -354,7 +354,7 @@ class _SmartListDict:
                     )
             # if there is restriction on allowed types then check
             if self.allowed_types != t.Any:
-                e.validation.ShouldBeInstanceOf(
+                e.validation.ShouldBeInstanceOf.check(
                     value=item,
                     value_types=self.allowed_types,
                     notes=[
@@ -363,7 +363,7 @@ class _SmartListDict:
                         f"Only allowed types are: ",
                         self.allowed_types,
                     ]
-                ).raise_if_failed()
+                )
             return item
 
 
@@ -396,17 +396,17 @@ class SmartDict(_SmartListDict):
 
         # ---------------------------------------------------------- 01
         # check if key is str
-        e.validation.ShouldBeInstanceOf(
+        e.validation.ShouldBeInstanceOf.check(
             value=key, value_types=(int, str, ),
             notes=[
                 f"We expect key to be always a str or int.",
                 f"Found unsupported type {type(key)}"
             ]
-        ).raise_if_failed()
+        )
 
         # ---------------------------------------------------------- 02
         # check if key present
-        e.validation.ShouldNotBeOneOf(
+        e.validation.ShouldNotBeOneOf.check(
             value=key, values=tuple(self._items.keys()),
             notes=[
                 f"Item {key!r} is already present in "
@@ -414,7 +414,7 @@ class SmartDict(_SmartListDict):
                 f"cannot overwrite it...",
                 f"If you want to overwrite we recommend to delete then add it."
             ]
-        ).raise_if_failed()
+        )
 
         # ---------------------------------------------------------- 03
         # set item
@@ -441,13 +441,13 @@ class SmartDict(_SmartListDict):
     def __delitem__(self, key):
 
         # if key does not exist do not delete
-        e.validation.ShouldBeOneOf(
+        e.validation.ShouldBeOneOf.check(
             value=key, values=tuple(self._items.keys()),
             notes=[
                 f"We cannot delete the item `{key}` as it is not present in "
                 f"the SmartDict."
             ]
-        ).raise_if_failed()
+        )
 
         # delete ... this will also propagate to __del__ of item so that you
         # can manage __del__ of what is contained
@@ -897,13 +897,13 @@ def CacheResult(*dec_args, **dec_kwargs):
     # this should be always the case when used decorator with curly braces
     # the thing that i decorated should be a function
     if len(dec_args) == 1:
-        e.validation.ShouldBeFunction(
+        e.validation.ShouldBeFunction.check(
             value=dec_args[0],
             notes=[
                 f"We expect you to use CacheResult related decorators on "
                 f"function, instead you have decorated it over {dec_args[0]}"
             ]
-        ).raise_if_failed()
+        )
     else:
         raise e.code.ShouldNeverHappen(
             notes=[
@@ -1083,12 +1083,12 @@ def get_object_memory_usage(obj) -> int:
     # print(".......... DEBUG .........")
     # noinspection PyPep8Naming
     BLACKLIST = (type, types.ModuleType, types.FunctionType)
-    e.validation.ShouldNotBeOneOf(
+    e.validation.ShouldNotBeOneOf.check(
         value=obj, values=BLACKLIST,
         notes=[
             f"Object of type {type(obj)} is not allowed ..."
         ]
-    ).raise_if_failed()
+    )
     seen_ids = set()
     size = 0
     objects = [obj]
@@ -1189,9 +1189,9 @@ def pathlib_rmtree(
 
 def save_pickle(py_obj, file_path: pathlib.Path):
     # raise error if needed
-    e.io.FileMustnotBeOnDiskOrNetwork(
+    e.io.FileMustnotBeOnDiskOrNetwork.check(
         path=file_path
-    ).raise_if_failed()
+    )
     # save
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with file_path.open(mode='wb') as _f:
@@ -1404,13 +1404,13 @@ def npy_array_save(file: "s.Path", npy_array: np.ndarray):
         )
 
     # only supported type is np.ndarray
-    e.validation.ShouldBeInstanceOf(
+    e.validation.ShouldBeInstanceOf.check(
         value=npy_array,
         value_types=(np.ndarray,),
         notes=[
             f"Only numpy arrays are allowed to be saved"
         ]
-    ).raise_if_failed()
+    )
 
     # if npy_array is structured raise error
     if npy_array.dtype.names is not None:
@@ -1514,12 +1514,12 @@ def npy_record_save(
         raise e.code.CodingError(
             notes=[f"The file {file} was already crated"]
         )
-    e.validation.ShouldBeInstanceOf(
+    e.validation.ShouldBeInstanceOf.check(
         value=npy_record_dict, value_types=(dict,),
         notes=[
             f"Was expecting dictionary of numpy arrays"
         ]
-    ).raise_if_failed()
+    )
 
     # ---------------------------------------------------------------02
     npy_record = dict_2_npy_record(npy_record_dict)
@@ -1839,10 +1839,10 @@ def safe_npy_reduce_dtype(val: np.ndarray) -> np.ndarray:
     _integer_signed_dtypes = [np.int8, np.int16, np.int32, np.int64, ]
     _integer_unsigned_dtypes = [np.uint8, np.uint16, np.uint32, np.uint64, ]
     _float_dtypes = [np.float16, np.float32, np.float64]
-    e.validation.ShouldBeOneOf(
+    e.validation.ShouldBeOneOf.check(
         value=val.dtype, values=_integer_signed_dtypes + _integer_unsigned_dtypes + _float_dtypes,
         notes=["util method safe_npy_reduce_dtype only supported for certain types"]
-    ).raise_if_failed()
+    )
     # noinspection PyArgumentList
     _is_signed = val.min() < 0.
     if val.dtype in _float_dtypes:
@@ -1943,12 +1943,12 @@ def one_hot_to_simple_labels(oh_label: pd.Series) -> pd.Series:
 
 #
 # def parse_tensor_for_pandas_column(t: tf.Tensor):
-#     e.validation.ShouldBeInstanceOf(
+#     e.validation.ShouldBeInstanceOf.check(
 #         value=t, value_types=(tf.Tensor,),
 #         notes=[
 #             f"We expect you to pass a tensor instead found {type(t)}"
 #         ]
-#     ).raise_if_failed()
+#     )
 #
 #     npy_value = t.numpy()
 #
