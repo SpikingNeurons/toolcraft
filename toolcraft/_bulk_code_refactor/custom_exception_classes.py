@@ -128,5 +128,5 @@ def add_check_for_exceptions_that_override_check():
 
 
 if __name__ == "__main__":
-    # add_raise_before_exceptions_that_have_no_check()
+    add_raise_before_exceptions_that_have_no_check()
     add_check_for_exceptions_that_override_check()
