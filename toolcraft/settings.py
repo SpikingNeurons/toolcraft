@@ -12,6 +12,11 @@ import toml
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
 
+from . import storage as s
+
+
+class FileSystems(t.NamedTuple):
+    CWD: s.BaseFileSystem
 
 class Settings:
 
@@ -22,9 +27,9 @@ class Settings:
     IS_LSF_MACHINE = bool(shutil.which('bjobs'))
     PYC_DEBUGGING = None  # type: bool
 
-    FILE_SYSTEMS = {
-        "CWD": ...
-    }  # type: t.Dict[str, t.Any]
+    FILE_SYSTEMS = FileSystems(
+        CWD=...
+    )
 
     # detect if in interactive mode
     INTERACTIVE = not hasattr(main, '__file__')
@@ -55,7 +60,7 @@ class Settings:
         return [
             "TC_HOME", "TC_CONFIG_FILE", "TC_CONFIG",
             "IS_LSF_MACHINE", "PYC_DEBUGGING", "INTERACTIVE",
-            "CHECK_INTERVALS_IN_SEC",
+            "CHECK_INTERVALS_IN_SEC", "FILE_SYSTEMS",
         ]
 
     @classmethod

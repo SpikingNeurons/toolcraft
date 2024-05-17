@@ -73,7 +73,6 @@ from fsspec.implementations.arrow import ArrowFSWrapper
 
 from .. import error as e
 from .. import logger
-from .. import Settings
 from .. import marshalling as m
 from .. import util
 
@@ -200,6 +199,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         # protocol specific validations
         # ------------------------------------------------------------- 03.01
         # if gcs related protocol validate kwargs
+        from .. import Settings
         if self.protocol in ['gs', 'gcs']:
             # kwargs must be supplied
             if self.kwargs is None:
@@ -357,11 +357,15 @@ class Path:
       On certain file systems we can do it and we can exploit **kwargs of
       fsspec.AbstractFileSystem or else add our custom methods overe here
 
-    todo: Explore and implement fsspec.AbstractFileSystem
+    todo: Explore and implement some methods in fsspec.AbstractFileSystem
+        import fsspec
         for _ in dir(fsspec.AbstractFileSystem):
-        if _.startswith("_"):
-            continue
-        print(f"    >>> fsspec.AbstractFileSystem.{_}")
+            if _.startswith("_"):
+                continue
+            print(f"    >>> fsspec.AbstractFileSystem.{_}")
+    >>> fsspec.AbstractFileSystem.async_impl
+    >>> fsspec.AbstractFileSystem.blocksize
+    >>> fsspec.AbstractFileSystem.cachable
     >>> fsspec.AbstractFileSystem.cat
     >>> fsspec.AbstractFileSystem.cat_file
     >>> fsspec.AbstractFileSystem.cat_ranges
@@ -381,6 +385,7 @@ class Path:
     >>> fsspec.AbstractFileSystem.expand_path
     >>> fsspec.AbstractFileSystem.find
     >>> fsspec.AbstractFileSystem.from_json
+    >>> fsspec.AbstractFileSystem.fsid
     >>> fsspec.AbstractFileSystem.get
     >>> fsspec.AbstractFileSystem.get_file
     >>> fsspec.AbstractFileSystem.get_mapper
@@ -395,6 +400,7 @@ class Path:
     >>> fsspec.AbstractFileSystem.ls
     >>> fsspec.AbstractFileSystem.makedir
     >>> fsspec.AbstractFileSystem.makedirs
+    >>> fsspec.AbstractFileSystem.mirror_sync_methods
     >>> fsspec.AbstractFileSystem.mkdir
     >>> fsspec.AbstractFileSystem.mkdirs
     >>> fsspec.AbstractFileSystem.modified
@@ -407,6 +413,8 @@ class Path:
     >>> fsspec.AbstractFileSystem.put
     >>> fsspec.AbstractFileSystem.put_file
     >>> fsspec.AbstractFileSystem.read_block
+    >>> fsspec.AbstractFileSystem.read_bytes
+    >>> fsspec.AbstractFileSystem.read_text
     >>> fsspec.AbstractFileSystem.rename
     >>> fsspec.AbstractFileSystem.rm
     >>> fsspec.AbstractFileSystem.rm_file
@@ -422,9 +430,13 @@ class Path:
     >>> fsspec.AbstractFileSystem.to_json
     >>> fsspec.AbstractFileSystem.touch
     >>> fsspec.AbstractFileSystem.transaction
+    >>> fsspec.AbstractFileSystem.transaction_type
     >>> fsspec.AbstractFileSystem.ukey
+    >>> fsspec.AbstractFileSystem.unstrip_protocol
     >>> fsspec.AbstractFileSystem.upload
     >>> fsspec.AbstractFileSystem.walk
+    >>> fsspec.AbstractFileSystem.write_bytes
+    >>> fsspec.AbstractFileSystem.write_text
     """
     suffix_path: str
     fs_name: str

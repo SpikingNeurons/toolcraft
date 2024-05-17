@@ -52,7 +52,6 @@ __version__ = "0.1.4a23"
 
 import time
 _now = time.time()
-from . import settings
 from .settings import Settings
 print("settings", time.time() - _now)
 from . import logger

@@ -12,7 +12,6 @@ import pathlib
 
 from . import error as e
 from . import logger, util
-from .settings import Settings
 from . import gui
 
 # to avoid cyclic imports
@@ -1959,6 +1958,7 @@ class HashableClass(YamlRepr, abc.ABC):
     #     return util.dataclass_to_yaml_repr(self)
 
     def __post_init__(self):
+        from .settings import Settings
         # ---------------------------------------------------------- 01
         # this is a very wierd way of doing rule check as we cannot detect when the
         # class subclassing is over
@@ -2040,6 +2040,7 @@ class HashableClass(YamlRepr, abc.ABC):
 
         We will henceforth raise error here.
         """
+        from .settings import Settings
         # In debug method this will return something meaningful as debugger
         # keeps accessing this method to get str representation of any object
         if Settings.PYC_DEBUGGING:

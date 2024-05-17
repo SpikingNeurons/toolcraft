@@ -37,7 +37,6 @@ TYamlRepr = t.TypeVar('TYamlRepr', bound='YamlRepr')
 COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
-from .. import Settings
 
 # container widget stack ... to add to parent automatically
 _CONTAINER_WIDGET_STACK: t.List["ContainerWidget"] = []
@@ -820,6 +819,7 @@ class Engine:
 
     @classmethod
     async def dpg_loop(cls):
+        from .. import Settings
         try:
             if Settings.PYC_DEBUGGING:
                 while internal_dpg.is_dearpygui_running():
@@ -891,6 +891,7 @@ class Engine:
 
     @classmethod
     def run(cls, dash: "Dashboard"):
+        from .. import Settings
         # -------------------------------------------------- 01
         # setup dpg
         dpg.create_context()
