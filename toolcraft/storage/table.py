@@ -416,7 +416,7 @@ class Table(Folder):
     # we override type as this is always method name which was decorated with
     # StoreField
     for_hashable: str
-    parent_folder: "store.StoreFieldsFolder"
+    parent_folder: Folder
     partition_cols: t.List[str] = None
 
     @property
