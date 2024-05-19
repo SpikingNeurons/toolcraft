@@ -79,6 +79,7 @@ from .. import util
 # noinspection PyUnreachableCode
 if False:
     from .. import gui
+    import gcsfs
 
 
 _LOGGER = logger.get_logger()
@@ -91,14 +92,27 @@ _FILE_SYSTEM_CONFIGS = {}  # type: t.Dict[str, BaseFileSystem]
     things_to_be_cached=['fs']
 )
 class BaseFileSystem(m.HashableClass, abc.ABC):
+    """
+    Dir cache storage options can be found here
+    >>> fsspec.spec.DirCache
+    """
 
-    root_dir: str
-    kwargs: t.Dict[str, t.Any] = None
+
+    root_dir: str = "."
+
+    # Dir cache storage options can be found here fsspec.spec.DirCache
+    dir_cache_use_listings: bool = True
+    dir_cache_listings_expiry_time: int | float = None
+    dir_cache_max_paths: int = None
 
     @property
-    @abc.abstractmethod
-    def protocol(self) -> str:
-        ...
+    def storage_options(self) -> dict:
+        return {
+            "use_listings_cache": self.dir_cache_use_listings,
+            "listings_expiry_time": self.dir_cache_listings_expiry_time,
+            "max_paths": self.dir_cache_max_paths,
+        }
+
 
     @property
     @util.CacheResult
@@ -125,10 +139,6 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
                     }
                 ]
             )
-        # some vars
-        _kwargs = self.kwargs
-        if _kwargs is None:
-            _kwargs = {}
 
         # ------------------------------------------------------------- 02
         # make instance
@@ -350,6 +360,27 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
         return _FILE_SYSTEM_CONFIGS[fs_name]
 
 
+@dataclasses.dataclass(frozen=True)
+class LocalFileSystem(BaseFileSystem):
+
+    auto_mkdir: bool = False
+
+    @property
+    @util.CacheResult
+    def fs(self) -> fsspec.implementations.local.LocalFileSystem:
+        return fsspec.implementations.local.LocalFileSystem(auto_mkdir=self.auto_mkdir, **self.storage_options)
+
+
+@dataclasses.dataclass(frozen=True)
+class GCSFileSystem(BaseFileSystem):
+
+    @property
+    @util.CacheResult
+    def fs(self) -> "gcsfs.GCSFileSystem":
+        import gcsfs
+        return gcsfs.GCSFileSystem(auto_mkdir=self.auto_mkdir, **self.storage_options)
+
+
 @dataclasses.dataclass
 class Path:
     """
@@ -370,7 +401,7 @@ class Path:
     >>> fsspec.AbstractFileSystem.cat_file
     >>> fsspec.AbstractFileSystem.cat_ranges
     >>> fsspec.AbstractFileSystem.checksum
-    >>> fsspec.AbstractFileSystem.clear_instance_cache
+    >>> fsspec.AbstractFileSystem.clear_instancee_cache
     >>> fsspec.AbstractFileSystem.copy
     >>> fsspec.AbstractFileSystem.cp
     >>> fsspec.AbstractFileSystem.cp_file

@@ -14,10 +14,6 @@ import __main__ as main
 
 from . import storage as s
 
-
-class FileSystems(t.NamedTuple):
-    CWD: s.BaseFileSystem
-
 class Settings:
 
     TC_HOME = pathlib.Path.home() / ".toolcraft"
@@ -27,8 +23,8 @@ class Settings:
     IS_LSF_MACHINE = bool(shutil.which('bjobs'))
     PYC_DEBUGGING = None  # type: bool
 
-    FILE_SYSTEMS = FileSystems(
-        CWD=...
+    FILE_SYSTEMS = dict(
+        CWD=s.LocalFileSystem(),
     )
 
     # detect if in interactive mode

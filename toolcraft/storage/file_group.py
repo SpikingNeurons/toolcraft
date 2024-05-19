@@ -1643,6 +1643,8 @@ class TempFileGroup(FileGroup, abc.ABC):
     this object will automatically delete all temporary files ...
     todo: if you do not want for file to get deleted then have some option ....
       keep_file=True
+
+    todo: use tempfile module to create temporary files https://docs.python.org/3/library/tempfile.html#
     """
 
     # we should not override dunders
