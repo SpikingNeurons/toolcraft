@@ -68,7 +68,8 @@ class StorageHashable(m.HashableClass, abc.ABC):
             _path = self.parent_folder.upath
         # else it will be file system so get from it
         else:
-            _path = UPath.get_root(fs_name=self.file_system)
+            from .. import Settings
+            _path = Settings.FILE_SYSTEMS[self.file_system].upath
 
         # ------------------------------------------------------------- 03
         # note that we allow separators in name so split name with seperator

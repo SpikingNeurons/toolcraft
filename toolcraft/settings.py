@@ -25,6 +25,7 @@ class Settings:
 
     FILE_SYSTEMS = dict(
         CWD=s.LocalFileSystem(),
+        DOWNLOAD=s.LocalFileSystem(),
     )  # type: t.Dict[str, s.BaseFileSystem]
 
     # detect if in interactive mode
@@ -56,7 +57,7 @@ class Settings:
         return [
             "TC_HOME", "TC_CONFIG_FILE", "TC_CONFIG",
             "IS_LSF_MACHINE", "PYC_DEBUGGING", "INTERACTIVE",
-            "CHECK_INTERVALS_IN_SEC", "FILE_SYSTEMS",
+            "CHECK_INTERVALS_IN_SEC",
         ]
 
     @classmethod
@@ -69,6 +70,9 @@ class Settings:
             if gettrace():
                 cls.PYC_DEBUGGING = True
 
+        # backup filesystems
+        _file_systems_bu = cls.FILE_SYSTEMS.copy()
+
         # load class fields from settings file
         if not cls.TC_HOME.exists():
             cls.TC_HOME.mkdir(parents=True)
@@ -78,11 +82,26 @@ class Settings:
         _config = toml.load(cls.TC_CONFIG_FILE.as_posix())
         for _k, _v in _config.items():
             if _k in cls.__dict__.keys():
-                setattr(cls, _k, _v)
+                if _k == "FILE_SYSTEMS":
+                    setattr(
+                        cls, _k, {__k: s.get_fs_from_toml_config(__v) for __k, __v in _v.items()}
+                    )
+                else:
+                    setattr(cls, _k, _v)
             elif _k in cls.fields_not_to_be_persisted():
                 raise KeyError(f"Key {_k} in config file is supposed to be not persisted ... Please check code for bugs")
             else:
                 raise ValueError(f"Unknown key {_k} in config file")
+
+        # compare and persist
+        for _k in list(_file_systems_bu.keys()):
+            if _k not in cls.FILE_SYSTEMS.keys():
+                cls.FILE_SYSTEMS[_k] = _file_systems_bu[_k]
+            else:
+                if cls.FILE_SYSTEMS[_k] != _file_systems_bu[_k]:
+                    raise ValueError(
+                        f"File system {_k!r} loaded from config file and the one supplied in code does not match ... "
+                        f"Please check code for bugs")
 
     @classmethod
     def persist_fields(cls):
@@ -91,7 +110,10 @@ class Settings:
         for _k, _v in cls.__dict__.items():
             if _k in _fields_not_to_be_persisted or _k.startswith("_") or callable(_v) or isinstance(_v, (classmethod, property, staticmethod)):
                 continue
-            _config[_k] = _v
+            if _k == "FILE_SYSTEMS":
+                _config[_k] = {__k: s.get_dict_for_toml_config(__v) for __k, __v in _v.items()}
+            else:
+                _config[_k] = _v
         toml.dump(_config, cls.TC_CONFIG_FILE.open('w'))
 
     @classmethod

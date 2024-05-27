@@ -10,6 +10,17 @@ from .. import marshalling as m
 from .. import util
 
 
+def get_dict_for_toml_config(fs: "BaseFileSystem") -> t.Dict:
+    _ret = fs.as_dict(skip_defaults=True)
+    _ret['fs'] = fs.__class__.__name__.replace("FileSystem", "").lower()
+    return _ret
+
+
+def get_fs_from_toml_config(d: t.Dict) -> "BaseFileSystem":
+    return {
+        "local": LocalFileSystem
+    }[d.pop('fs')](**d)
+
 
 @dataclasses.dataclass(frozen=True)
 @m.RuleChecker(
@@ -39,7 +50,7 @@ class BaseFileSystem(m.HashableClass, abc.ABC):
           have a file system instance cached in self.fs ... we need to see if we can make them one
         """
         _str = self.fs.unstrip_protocol(".")
-        return UPath(...)
+        return UPath(_str)
 
 
 
