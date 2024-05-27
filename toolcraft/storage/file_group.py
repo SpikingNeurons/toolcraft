@@ -932,7 +932,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # create path dir if it does not exist
         # Note that FileGroup is a folder with file names file_keys inside it
         if not self.upath.exists():
-            self.upath.mkdir()
+            self.upath.mkdir(parents=True, exist_ok=True)
 
         # --------------------------------------------------------------03
         # if unknown files present throw error
