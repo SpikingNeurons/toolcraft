@@ -22,7 +22,7 @@ todo: storage in point of view of mlflow (also see top of individual module for
 """
 
 from . import file_system
-from .file_system import Path, BaseFileSystem
+from .fs import LocalFileSystem
 from .__base__ import StorageHashable
 from .state import Info, Config, Suffix
 from .folder import Folder

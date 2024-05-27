@@ -271,10 +271,10 @@ class StorageHashable(m.HashableClass, abc.ABC):
         return cls(**yaml_state)
 
     def as_dict(
-        self
+        self, skip_defaults: bool = False
     ) -> t.Dict[str, "m.SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         # get dict from super
-        _dict = super().as_dict()
+        _dict = super().as_dict(skip_defaults=skip_defaults)
 
         # if uses parent_folder
         if self.uses_parent_folder:

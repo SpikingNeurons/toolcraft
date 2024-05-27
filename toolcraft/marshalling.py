@@ -2084,15 +2084,21 @@ class HashableClass(YamlRepr, abc.ABC):
                         _ret.append(_)
         return _ret
 
-    def as_dict(self) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
+    def as_dict(self, skip_defaults: bool = False) -> t.Dict[str, "SUPPORTED_HASHABLE_OBJECTS_TYPE"]:
         """
         todo: Explore
            >>> dataclasses.asdict
         """
         _ret = {}
         _field_names = self.dataclass_field_names
-        for f_name in _field_names:
-            _ret[f_name] = _tf_serialize(getattr(self, f_name))
+        for _f_name in _field_names:
+            _f_value = getattr(self, _f_name)
+            # noinspection PyUnresolvedReferences
+            _default_value = self.__dataclass_fields__[_f_name].default
+            if _default_value is not dataclasses.MISSING:
+                if skip_defaults and _f_value == _default_value:
+                    continue
+            _ret[_f_name] = _tf_serialize(_f_value)
         return _ret
 
     @classmethod
