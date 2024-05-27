@@ -157,7 +157,7 @@ class Folder(StorageHashable):
         """
         If there is no Folder we create an empty folder.
         """
-        if not self.upath.isdir():
+        if not self.upath.is_dir():
             self.richy_panel.update(f"creating folder {self.name}")
             self.upath.mkdir()
 

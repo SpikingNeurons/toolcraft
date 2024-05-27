@@ -73,7 +73,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
         # ------------------------------------------------------------- 03
         # note that we allow separators in name so split name with seperator
-        _split_strs += self.name.split(_path.sep)
+        _split_strs += [self.name]
         # build path
         for _ in _split_strs:
             _path /= _
@@ -235,7 +235,7 @@ class StorageHashable(m.HashableClass, abc.ABC):
         # ----------------------------------------------------------- 04
         # if path exists check if it is a folder
         if self.upath.exists():
-            if not self.upath.isdir():
+            if not self.upath.is_dir():
                 raise e.validation.NotAllowed(
                     notes=[
                         f"We expect {self.upath} to be a dir"

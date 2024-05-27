@@ -274,7 +274,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # look inside path dir if it exists
         if self.upath.exists():
             # expect path to be a dir
-            if self.upath.isfile():
+            if self.upath.is_file():
                 raise e.code.CodingError(
                     notes=[
                         f"We expect path to be a dir for FileGroup"

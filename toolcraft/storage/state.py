@@ -52,7 +52,7 @@ class StateFile(m.YamlRepr, abc.ABC):
     @property
     @util.CacheResult
     def upath(self) -> UPath:
-        return self.hashable.upath + self.suffix
+        return self.hashable.upath / self.suffix
 
     @property
     @abc.abstractmethod
