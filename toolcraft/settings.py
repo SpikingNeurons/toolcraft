@@ -24,8 +24,8 @@ class Settings:
     PYC_DEBUGGING = None  # type: bool
 
     FILE_SYSTEMS = dict(
-        CWD=s.LocalFileSystem(),
-        DOWNLOAD=s.LocalFileSystem(),
+        CWD=s.LocalFileSystem(url="file://./"),
+        DOWNLOAD=s.LocalFileSystem(url="file://./.download/"),
     )  # type: t.Dict[str, s.BaseFileSystem]
 
     # detect if in interactive mode
@@ -111,7 +111,7 @@ class Settings:
             if _k in _fields_not_to_be_persisted or _k.startswith("_") or callable(_v) or isinstance(_v, (classmethod, property, staticmethod)):
                 continue
             if _k == "FILE_SYSTEMS":
-                _config[_k] = {__k: s.get_dict_for_toml_config(__v) for __k, __v in _v.items()}
+                _config[_k] = {__k: __v.as_dict(skip_defaults=True) for __k, __v in _v.items()}
             else:
                 _config[_k] = _v
         toml.dump(_config, cls.TC_CONFIG_FILE.open('w'))

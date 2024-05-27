@@ -281,7 +281,8 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             # look inside path dir
-            for _path in self.upath.find(maxdepth=1, detail=False, withdirs=True):
+            for _path in self.upath.fs.find(self.upath, maxdepth=1, detail=False, withdirs=True):
+                print(_path, type(_path))
                 if _path == self.upath:
                     continue
                 if _path.name in self.file_keys and _path.isfile():
