@@ -25,7 +25,7 @@ class Settings:
 
     FILE_SYSTEMS = dict(
         CWD=s.LocalFileSystem(),
-    )
+    )  # type: t.Dict[str, s.BaseFileSystem]
 
     # detect if in interactive mode
     INTERACTIVE = not hasattr(main, '__file__')

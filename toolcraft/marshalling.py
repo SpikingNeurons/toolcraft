@@ -9,6 +9,7 @@ import typing as t
 import rich
 import yaml
 import pathlib
+from upath import UPath
 
 from . import error as e
 from . import logger, util
@@ -1351,11 +1352,11 @@ class YamlLoader(yaml.UnsafeLoader):
         super().__init__(stream=stream)
 
     @staticmethod
-    def load(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> t.Union[dict, TYamlRepr]:
+    def load(cls, file_or_text: t.Union[UPath, str], **kwargs) -> t.Union[dict, TYamlRepr]:
         from . import storage
         # get text
         _text = file_or_text
-        if isinstance(file_or_text, storage.Path):
+        if isinstance(file_or_text, UPath):
             _text = file_or_text.read_text()
 
         # load with Loader
@@ -1958,7 +1959,7 @@ class HashableClass(YamlRepr, abc.ABC):
     #     return util.dataclass_to_yaml_repr(self)
 
     def __post_init__(self):
-        from .settings import Settings
+
         # ---------------------------------------------------------- 01
         # this is a very wierd way of doing rule check as we cannot detect when the
         # class subclassing is over
@@ -1977,18 +1978,23 @@ class HashableClass(YamlRepr, abc.ABC):
         #    when converted to dataclass cannot clall __init__ you need to override __post_init__ to call
         #    Tracker.__init__ ...
         #    Temporary workaround is to create fake HashableClass instance once all modules are loaded in your library
-        if Settings.DO_RULE_CHECK:
-            from . import richy
-            _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
-            # _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
-            if bool(_rc_keys):
-                for _rc_k in richy.Progress.simple_track(
-                    _rc_keys,
-                    description=f"Rule Check ({len(_rc_keys)} classes) ...",
-                    title="Rule Check", tc_log=_LOGGER, console=None,
-                ):
-                    _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
-                    del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]
+        try:
+            from .settings import Settings
+            if Settings.DO_RULE_CHECK:
+                from . import richy
+                _rc_keys = list(_RULE_CHECKERS_TO_BE_CHECKED.keys())
+                # _modules = [_.decorated_class for _ in _RULE_CHECKERS_TO_BE_CHECKED.values()]
+                if bool(_rc_keys):
+                    for _rc_k in richy.Progress.simple_track(
+                        _rc_keys,
+                        description=f"Rule Check ({len(_rc_keys)} classes) ...",
+                        title="Rule Check", tc_log=_LOGGER, console=None,
+                    ):
+                        _RULE_CHECKERS_TO_BE_CHECKED[_rc_k].check()
+                        del _RULE_CHECKERS_TO_BE_CHECKED[_rc_k]
+        except ImportError as _ie:
+            # as this triggers due to cyclic import as we aim to initialize Settings.FILE_SYSTEMS
+            ...
 
         # ---------------------------------------------------------- 02
         # dict field if any will be transformed

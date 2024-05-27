@@ -575,7 +575,7 @@ class Path:
             return gui.widget.Text(f"Image does not exist in path \n - {self}")
 
         # noinspection PyTypeChecker
-        webbrowser.open(self.local_path.as_posix())
+        webbrowser.open(self.as_posix())
         return gui.widget.Text(f"Image will be opened in external window\n - {self}")
 
     def pb_open(self) -> "gui.widget.Widget":
@@ -630,19 +630,19 @@ class Path:
 
         # write files
         with session.Session(graph=ops.Graph()) as sess:
-            with gfile.GFile(self.local_path.as_posix(), "rb") as f:
+            with gfile.GFile(self.as_posix(), "rb") as f:
                 graph_def = graph_pb2.GraphDef()
                 graph_def.ParseFromString(f.read())
                 importer.import_graph_def(graph_def)
 
-            pb_visual_writer = summary.FileWriter(_tb_log.local_path.as_posix())
+            pb_visual_writer = summary.FileWriter(_tb_log.as_posix())
             pb_visual_writer.add_graph(sess.graph)
 
         # run tensorboard
         _free_port = util.find_free_port(localhost=True)
         subprocess.Popen(
             [
-                "tensorboard", f"--logdir={_tb_log.local_path.as_posix()}",
+                "tensorboard", f"--logdir={_tb_log.as_posix()}",
                 "--port", f"{_free_port}", "--host", "localhost"
             ],
             creationflags=subprocess.CREATE_NEW_CONSOLE,

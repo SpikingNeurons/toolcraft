@@ -1358,17 +1358,17 @@ def find_open_port(start_port=49152, end_port=65535, raise_error: bool = True) -
     return None
 
 
-def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> np.ndarray:
+def npy_load(file: "UPath", memmap: bool = False, shape=None, dtype=None, ) -> np.ndarray:
     """
     Note that we assume that npy header is present in files
     But in some cases the header is not saved then it will raise allow_pickle error
     This can be misleading as this happens because the data is binary array with no numpy header
     """
     if memmap:
-        # todo: see if npy_save method can work with s.Path
+        # todo: see if npy_save method can work with UPath
         try:
             # noinspection PyTypeChecker
-            _ret = np.load(file.local_path, mmap_mode="r", allow_pickle=False, fix_imports=False)
+            _ret = np.load(file, mmap_mode="r", allow_pickle=False, fix_imports=False)
         except ValueError as __ve:
             if shape is None and dtype is None:
                 raise e.code.CodingError(
@@ -1382,10 +1382,10 @@ def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> 
                     ]
                 )
             # noinspection PyTypeChecker
-            _ret = np.memmap(file.local_path, mode="r", shape=shape, dtype=dtype)
+            _ret = np.memmap(file, mode="r", shape=shape, dtype=dtype)
     else:
         try:
-            _ret = np.load(file.local_path, allow_pickle=False, fix_imports=False)
+            _ret = np.load(file, allow_pickle=False, fix_imports=False)
         except ValueError as __ve:
             raise e.code.CodingError(
                 notes=[
@@ -1395,7 +1395,7 @@ def npy_load(file: "s.Path", memmap: bool = False, shape=None, dtype=None, ) -> 
     return _ret
 
 
-def npy_array_save(file: "s.Path", npy_array: np.ndarray):
+def npy_array_save(file: "UPath", npy_array: np.ndarray):
 
     # if file exists raise error
     if file.exists():
@@ -1499,7 +1499,7 @@ def dict_2_npy_record(
 
 
 def npy_record_save(
-    file: "s.Path", npy_record_dict: t.Dict[str, np.ndarray]
+    file: "UPath", npy_record_dict: t.Dict[str, np.ndarray]
 ) -> np.ndarray:
     """
     todo: migrate to `np.core.records.fromarrays` if needed

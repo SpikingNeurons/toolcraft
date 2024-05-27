@@ -199,15 +199,15 @@ def archive(
     # -------------------------------------------------------------- 02
     # make archive
     _rp.update(
-        f"archiving results dir {_RUNNER.results_dir.local_path.as_posix()} "
+        f"archiving results dir {_RUNNER.results_dir.as_posix()} "
         f"{'' if part_size is None else 'and making parts '} ..."
     )
     _zip_base_name = _RUNNER.results_dir.name
-    _cwd = _RUNNER.cwd.local_path.resolve().absolute()
-    _archive_folder = _RUNNER.results_dir.local_path.parent / f"{_zip_base_name}_archive"
+    _cwd = _RUNNER.cwd.resolve().absolute()
+    _archive_folder = _RUNNER.results_dir.parent / f"{_zip_base_name}_archive"
     _archive_folder.mkdir()
     _big_zip_file = _archive_folder / f"{_zip_base_name}.zip"
-    _src_dir = _RUNNER.results_dir.local_path.expanduser().resolve(strict=True)
+    _src_dir = _RUNNER.results_dir.expanduser().resolve(strict=True)
     _files_and_folders_to_compress = 0
     for _file in _src_dir.rglob('*'):
         _files_and_folders_to_compress += 1
@@ -334,7 +334,7 @@ def clean():
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             if not _j.is_finished:
                 _rp.update(f"Deleting job {_j.short_name}")
-                _j.path.delete(recursive=True)
+                _j.upath.delete(recursive=True)
 
 
 @_APP.command(help="Deletes the job in runner even successfully finished runs (use carefully).")
@@ -349,7 +349,7 @@ def delete():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             _rp.update(f"Deleting job {_j.short_name}")
-            _j.path.delete(recursive=True)
+            _j.upath.delete(recursive=True)
 
 
 @_APP.command(help="Lists the jobs in runner that are not finished.")

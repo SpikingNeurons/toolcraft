@@ -219,7 +219,7 @@ def _read_table(
             metadata=table_schema.metadata
         )
     # noinspection PyProtectedMember
-    _path = table_as_folder.path
+    _path = table_as_folder.upath
     _table = pa.Table.from_batches(
         batches=pds.dataset(
             source=_path.full_path,
@@ -278,7 +278,7 @@ def _write_table(
     _partitioning = table_as_folder.partitioning
 
     # write to disk
-    _path = table_as_folder.path
+    _path = table_as_folder.upath
     # noinspection PyProtectedMember
     pds.write_dataset(
         data=table,
@@ -468,9 +468,9 @@ class Table(Folder):
         A faster version of exists with no columns or filter_expression kwargs
         Useful when only used for write ...
         """
-        if not self.path.exists():
+        if not self.upath.exists():
             return False
-        if self.path.is_dir_empty():
+        if self.upath.is_dir_empty():
             return False
         return True
 
@@ -494,9 +494,9 @@ class Table(Folder):
         """
         # if nothing exists simply exit ... as there is no table to read on disk
         # noinspection PyTypeChecker
-        if not self.path.exists():
+        if not self.upath.exists():
             return False
-        if self.path.is_dir_empty():
+        if self.upath.is_dir_empty():
             return False
 
         # this should always be there as above check suggests that something
@@ -526,9 +526,9 @@ class Table(Folder):
 
         # if nothing exists simply exit ... as there is no table to read on disk
         # noinspection PyTypeChecker
-        if not self.path.exists():
+        if not self.upath.exists():
             return None
-        if self.path.is_dir_empty():
+        if self.upath.is_dir_empty():
             return None
 
         # this should always be there as above check suggests that something
@@ -553,7 +553,7 @@ class Table(Folder):
                     f"Please do not use `.` or `_` at start of any folder in "
                     f"the path as the pyarrow does not raise error but reads "
                     f"empty table.",
-                    f"Check path {self.path}"
+                    f"Check path {self.upath}"
                 ]
             )
 
@@ -672,10 +672,10 @@ class Table(Folder):
         _partition_cols = self.partition_cols
         if filters is None:
             # noinspection PyTypeChecker
-            self.path.delete(recursive=True)
+            self.upath.delete(recursive=True)
             # just make a empty dir again fo that things are consistent for
             # Folder class i.e. is_created can detect things properly
-            self.path.mkdir()
+            self.upath.mkdir()
             # return need to satisfy the API
             return True
 
@@ -703,7 +703,7 @@ class Table(Folder):
 
         # ------------------------------------------------------04
         # make all combos then resolve paths and delete them
-        _path = self.path
+        _path = self.upath
         for _tuple in itertools.product(*_uniques):
             _p = _path
             for _ in _tuple:

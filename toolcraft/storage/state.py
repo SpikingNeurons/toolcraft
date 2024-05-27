@@ -7,7 +7,7 @@ todo: check mlflow tags ... we will save state with dapr state and use it as tag
 """
 
 import dataclasses
-import pathlib
+from upath import UPath
 import typing as t
 import datetime
 import abc
@@ -17,7 +17,6 @@ from .. import error as e
 from .. import util, settings
 from .. import marshalling as m
 from . import StorageHashable
-from . import Path
 
 
 class Suffix:
@@ -27,7 +26,7 @@ class Suffix:
 
 @dataclasses.dataclass
 @m.RuleChecker(
-    things_to_be_cached=['path'],
+    things_to_be_cached=['upath'],
     things_not_to_be_cached=['is_available'],
 )
 class StateFile(m.YamlRepr, abc.ABC):
@@ -52,8 +51,8 @@ class StateFile(m.YamlRepr, abc.ABC):
 
     @property
     @util.CacheResult
-    def path(self) -> Path:
-        return self.hashable.path + self.suffix
+    def upath(self) -> UPath:
+        return self.hashable.upath + self.suffix
 
     @property
     @abc.abstractmethod
@@ -62,11 +61,11 @@ class StateFile(m.YamlRepr, abc.ABC):
 
     @property
     def is_available(self) -> bool:
-        return self.path.exists()
+        return self.upath.exists()
 
     @property
     @util.CacheResult
-    def backup_path(self) -> Path:
+    def backup_path(self) -> UPath:
         e.code.AssertError.check(
             value1=settings.Settings.DEBUG_HASHABLE_STATE, value2=True,
             notes=[
@@ -74,7 +73,7 @@ class StateFile(m.YamlRepr, abc.ABC):
                 f"`config.DEBUG_HASHABLE_STATE=True`"
             ]
         )
-        return self.path / f"_backup_{self.path.name}_backup_"
+        return self.upath / f"_backup_{self.upath.name}_backup_"
 
     @abc.abstractmethod
     def sync(self):
@@ -97,11 +96,11 @@ class StateFile(m.YamlRepr, abc.ABC):
         # )
         # todo: figure this out with fsspec
         # util.io_make_path_editable(self.path)
-        self.path.rm_file()
+        self.upath.rm_file()
         self.reset()
 
     def backup(self):
-        self.backup_path.write_text(self.path.read_text())
+        self.backup_path.write_text(self.upath.read_text())
         util.io_make_path_read_only(self.backup_path)
 
     @abc.abstractmethod
@@ -156,8 +155,8 @@ class Info(StateFile):
         hashableClass and not the Info class
         """
         _yaml = self.hashable.yaml()
-        if self.path.exists():
-            _yaml_on_disk = self.path.read_text()
+        if self.upath.exists():
+            _yaml_on_disk = self.upath.read_text()
             if _yaml_on_disk != _yaml:
                 raise e.code.CodingError(
                     notes=[
@@ -171,7 +170,7 @@ class Info(StateFile):
         else:
             # handle info file and make it read only
             # ... write hashable info
-            self.path.write_text(_yaml)
+            self.upath.write_text(_yaml)
             # ... make read only as done only once
             # todo: see if fsspec can allow this explore later ...
             # util.io_make_path_read_only(self.path)
@@ -284,9 +283,9 @@ class Config(StateFile):
         # ------------------------------------------------------------ 01
         # if path exists load data dict from it
         # that is sync with contents on disk
-        if self.path.exists():
+        if self.upath.exists():
             _dict_from_dick = m.YamlLoader.load(
-                cls=dict, file_or_text=self.path
+                cls=dict, file_or_text=self.upath
             )
             # update internal dict from HashableDict loaded from disk
             for _k, _v in _dict_from_dick.items():
@@ -342,8 +341,8 @@ class Config(StateFile):
         # this helps us catch unexpected syncs
         # if the contents are same then we raise error as nothing is there to
         # update
-        if self.path.exists():
-            _disk_state = self.path.read_text()
+        if self.upath.exists():
+            _disk_state = self.upath.read_text()
             # todo: this fails with distributed computing as multiple processes have
             #  no updates to their config ... we have to update design for config
             #  using some sort of database that can track things over multiple processes
@@ -363,7 +362,7 @@ class Config(StateFile):
 
         # -------------------------------------------------- 03
         # write to disk
-        self.path.write_text(_current_state)
+        self.upath.write_text(_current_state)
 
     def reset(self):
         """

@@ -26,6 +26,7 @@ import hashlib
 import zipfile
 import platform
 import random
+from upath import UPath
 
 from .. import util, logger, settings
 from .. import storage as s
@@ -229,7 +230,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # Note that if some file_groups are missing we raise error ... either
         # all file_groups should be present or none of them should exist
         _present_files = [
-            (self.path / fk).exists() for fk in self.file_keys
+            (self.upath / fk).exists() for fk in self.file_keys
         ]
         _all_files_in_fg_present = all(_present_files)
         _some_files_in_fg_present = any(_present_files)
@@ -251,7 +252,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 raise e.code.CodingError(
                     notes=[
                         f"State manager files for file group `{self.name}` "
-                        f"are present in dir {self.path}.",
+                        f"are present in dir {self.upath}.",
                         _msg,
                     ]
                 )
@@ -271,17 +272,17 @@ class FileGroup(StorageHashable, abc.ABC):
         _unknown_paths = []
 
         # look inside path dir if it exists
-        if self.path.exists():
+        if self.upath.exists():
             # expect path to be a dir
-            if self.path.isfile():
+            if self.upath.isfile():
                 raise e.code.CodingError(
                     notes=[
                         f"We expect path to be a dir for FileGroup"
                     ]
                 )
             # look inside path dir
-            for _path in self.path.find(maxdepth=1, detail=False, withdirs=True):
-                if _path == self.path:
+            for _path in self.upath.find(maxdepth=1, detail=False, withdirs=True):
+                if _path == self.upath:
                     continue
                 if _path.name in self.file_keys and _path.isfile():
                     continue
@@ -325,7 +326,7 @@ class FileGroup(StorageHashable, abc.ABC):
     def explore(self):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
-        subprocess.Popen(f'explorer {self.path}')
+        subprocess.Popen(f'explorer {self.upath}')
 
     @classmethod
     def make_possible_instances(cls) -> t.List[TFileGroup]:
@@ -410,8 +411,8 @@ class FileGroup(StorageHashable, abc.ABC):
         ) as _zf:
             for _f in _rp.track(
                 sequence=[
-                    self.info.path, self.config.path
-                ] + [self.path / _fk for _fk in self.file_keys],
+                    self.info.upath, self.config.upath
+                ] + [self.upath / _fk for _fk in self.file_keys],
                 task_name="Zipping files",
             ):
                 # noinspection PyTypeChecker
@@ -655,7 +656,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _failed_hashes = {}
         _computed_hashes = {}
         _file_paths = {
-            fk: self.path/fk for fk in self.file_keys
+            fk: self.upath / fk for fk in self.file_keys
         }  # type: t.Dict[str, Path]
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
@@ -808,7 +809,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     f"FileGroup: {self.name}",
                     f"Check below",
                     *_failed_hashes_msgs,
-                    f"Check file system {self.path}"
+                    f"Check file system {self.upath}"
                 ]
             )
         else:
@@ -901,7 +902,7 @@ class FileGroup(StorageHashable, abc.ABC):
         Default is to return Path
         """
         return {
-            file_key: self.path / file_key
+            file_key: self.upath / file_key
             for file_key in file_keys
         }
 
@@ -913,7 +914,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # we are getting data so update the access info
         self.config.append_last_accessed_on()
 
-    def get_file(self, file_key: str) -> s.Path:
+    def get_file(self, file_key: str) -> UPath:
         return self.get_files(file_keys=[file_key])[file_key]
 
     # noinspection PyUnusedLocal
@@ -929,8 +930,8 @@ class FileGroup(StorageHashable, abc.ABC):
         # --------------------------------------------------------------02
         # create path dir if it does not exist
         # Note that FileGroup is a folder with file names file_keys inside it
-        if not self.path.exists():
-            self.path.mkdir()
+        if not self.upath.exists():
+            self.upath.mkdir()
 
         # --------------------------------------------------------------03
         # if unknown files present throw error
@@ -940,7 +941,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 notes=[
                     f"We were trying to create files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in dir `{self.path}` but, we "
+                    f"{self.name!r} in dir `{self.upath}` but, we "
                     f"found below unknown files",
                     [f.name for f in _unknown_files]
                 ]
@@ -962,7 +963,7 @@ class FileGroup(StorageHashable, abc.ABC):
             _rp.update(f"creating file: {k}")
 
             # get expected file from key
-            _expected_file = self.path / k
+            _expected_file = self.upath / k
 
             # if found on disk bypass creation for efficiency
             if _expected_file.isfile():
@@ -1014,7 +1015,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: if failed delete files that are created
         """
         created_fs = hooked_method_return_value
-        expected_fs = [self.path / fk for fk in self.file_keys]
+        expected_fs = [self.upath / fk for fk in self.file_keys]
 
         # ----------------------------------------------------------------01
         # validation
@@ -1073,7 +1074,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 notes=[
                     f"We have created files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in dir {self.path}. Below "
+                    f"{self.name!r} in dir {self.upath}. Below "
                     f"unknown files were also created along with it.",
                     [f.name for f in _unknown_files]
                 ]
@@ -1189,7 +1190,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # delete all files for the group
             _rp.update("deleting files ...")
             for fk in self.file_keys:
-                _key_path = self.path / fk
+                _key_path = self.upath / fk
                 if _key_path.exists():
                     _key_path.rm_file()
                 else:
@@ -1198,7 +1199,7 @@ class FileGroup(StorageHashable, abc.ABC):
                             f"If you deleted files manually this can happen",
                             f"But if you didnt then this might be a bug",
                             f"We were not able to find file {fk} for file_group "
-                            f"with path {self.path}"
+                            f"with path {self.upath}"
                         ]
                     )
         else:
@@ -1346,7 +1347,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Note that for npy record the type is t.Dict[str, np.ndarray]
         As we can treat it as dict of numpy arrays
         """
-        return util.npy_load(self.path / file_key, memmap=memmap, shape=self.shape[file_key], dtype=self.dtype[file_key])
+        return util.npy_load(self.upath / file_key, memmap=memmap, shape=self.shape[file_key], dtype=self.dtype[file_key])
 
     def save_npy_data(
         self,
@@ -1355,7 +1356,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
     ) -> Path:
 
         # get file from a file_key
-        _file = self.path / file_key
+        _file = self.upath / file_key
 
         # if file exists raise error
         if _file.exists():
@@ -1389,10 +1390,10 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # check if file exists they should not exist
         for _fk in self.file_keys:
-            if (self.path / _fk).exists():
+            if (self.upath / _fk).exists():
                 raise e.validation.NotAllowed(
                     notes=[
-                        f"File {_fk} already exists in the folder {self.path}",
+                        f"File {_fk} already exists in the folder {self.upath}",
                         f"We cannot overwrite the file. Please delete it if "
                         f"possible."
                     ]
@@ -1403,7 +1404,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             _rp.update("saving meta data")
             for _k, _v in generator.meta.items():
                 _memmap = np.memmap(
-                    filename=(self.path / _k).local_path,
+                    filename=(self.upath / _k),
                     dtype=_v.dtype,
                     shape=_v.shape, mode='w+'
                 )
@@ -1424,7 +1425,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         for _k in _keys:
             _v = _first_element[_k]
             _memmaps[_k] = np.memmap(
-                filename=(self.path / _k).local_path,
+                filename=(self.upath / _k),
                 dtype=_v.dtype,
                 shape=(_length, *_v.shape), mode='w+'
             )
@@ -1492,7 +1493,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # we cannot use `self.get_files()`.
             # Note we read in memmap mode as we need only meta info
             _npy_memmaps[file_key] = util.npy_load(
-                self.path / file_key, memmap=True,
+                self.upath / file_key, memmap=True,
                 shape=self.shape[file_key], dtype=self.dtype[file_key],
             )
 
@@ -1519,7 +1520,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
                         f"file_key `{file_key}` does not match.",
                         f"Expected {self.dtype[file_key]} but found "
                         f"{_npy_memmap.dtype}",
-                        f"Check file path: {self.path}"
+                        f"Check file path: {self.upath}"
                     ]
                 )
             # ------------------------------------------------------------02.03
@@ -1709,7 +1710,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         _rp.update(f"get content length for {_total_files} files")
         _chunk_size = 1024 * 50
         _file_paths = {
-            fk: self.path/fk for fk in self.file_keys
+            fk: self.upath / fk for fk in self.file_keys
         }  # type: t.Dict[str, Path]
         _urls = self.get_urls()
         _raise_error = False
@@ -1844,7 +1845,7 @@ class FileGroupFromPaths(FileGroup):
         _rp.update("creating file group from file paths")
 
         for fk in self.file_keys:
-            _f = self.path / fk
+            _f = self.upath / fk
             if not _f.exists():
                 raise e.code.CodingError(
                     notes=[

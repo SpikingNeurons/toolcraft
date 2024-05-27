@@ -12,7 +12,7 @@ import dataclasses
 import subprocess
 import itertools
 import warnings
-
+from upath import UPath
 import yaml
 import sys
 import asyncio
@@ -28,7 +28,7 @@ from .. import marshalling as m
 from .. import util
 from .. import storage as s
 from .. import richy
-from .. import settings, Settings
+from .. import Settings
 from .. import gui
 
 _now = datetime.datetime.now
@@ -69,14 +69,14 @@ class Tag:
 
     @property
     @util.CacheResult
-    def path(self) -> s.Path:
-        _ret = self.manager.path / self.name
+    def upath(self) -> UPath:
+        _ret = self.manager.upath / self.name
         return _ret
 
     def create(self, data: t.Dict[str, t.Any] = None, exception: str = None):
-        if self.path.exists():
+        if self.upath.exists():
             raise e.code.CodingError(
-                notes=[f"Tag at {self.path} already exists ..."]
+                notes=[f"Tag at {self.upath} already exists ..."]
             )
         if data is None:
             data = {}
@@ -93,37 +93,37 @@ class Tag:
         if exception is not None:
             # data['exception'] = "\n".join(["", ">>> EXCEPTION <<<", "", exception])
             data['exception'] = ["", ">>> EXCEPTION <<<", "", *exception.split("\n")]
-        _LOGGER.info(msg=f"Creating tag {self.path}")
-        _parent_dir = self.path.parent
+        _LOGGER.info(msg=f"Creating tag {self.upath}")
+        _parent_dir = self.upath.parent
         if not _parent_dir.exists():
             _parent_dir.mkdir(create_parents=True)
-        self.path.write_yaml(data=data)
+        self.upath.write_yaml(data=data)
 
     def read(self) -> t.Optional[t.Dict[str, t.Any]]:
-        if not self.path.exists():
+        if not self.upath.exists():
             return None
-        _LOGGER.info(msg=f"Reading tag {self.path}")
-        return self.path.read_yaml()
+        _LOGGER.info(msg=f"Reading tag {self.upath}")
+        return self.upath.read_yaml()
 
     def exists(self) -> bool:
-        return self.path.exists()
+        return self.upath.exists()
 
     def delete(self):
-        if self.path.exists():
-            _LOGGER.info(msg=f"Deleting tag {self.path}")
-            self.path.delete()
+        if self.upath.exists():
+            _LOGGER.info(msg=f"Deleting tag {self.upath}")
+            self.upath.delete()
         else:
             raise e.code.CodingError(
                 notes=[
-                    f"The tag {self.path} does not exist so cannot delete ..."
+                    f"The tag {self.upath} does not exist so cannot delete ..."
                 ]
             )
 
     def update(self, data: t.Dict[str, t.Any], allow_overwrite: bool = False, encoding: str = 'utf-8'):
-        _LOGGER.info(msg=f"Updating tag {self.path}")
+        _LOGGER.info(msg=f"Updating tag {self.upath}")
         _old_data = {}
-        if self.path.exists():
-            _old_data = self.path.read_yaml(encoding=encoding)
+        if self.upath.exists():
+            _old_data = self.upath.read_yaml(encoding=encoding)
         for _k in data.keys():
             if _k in _old_data.keys():
                 if not allow_overwrite:
@@ -131,7 +131,7 @@ class Tag:
                         notes=[f"Cannot overwrite key {_k} in tag ..."]
                     )
         _old_data.update(data)
-        self.path.write_yaml(_old_data, encoding=encoding)
+        self.upath.write_yaml(_old_data, encoding=encoding)
 
 
 @dataclasses.dataclass
@@ -147,8 +147,8 @@ class TagManager:
 
     @property
     @util.CacheResult
-    def path(self) -> s.Path:
-        _ret = self.job.path / "tags"
+    def upath(self) -> UPath:
+        _ret = self.job.upath / "tags"
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -205,7 +205,7 @@ class TagManager:
                     gui.widget.Text(default_value="--- FINISHED ---")
                 elif _failed:
                     gui.widget.Text(default_value="XXX  FAILED  XXX")
-                    self.job.path.delete_folder_button(label="Delete")
+                    self.job.upath.delete_folder_button(label="Delete")
                 elif _launched:
                     if _running:
                         gui.widget.Text(default_value="--- RUNNING  ---")
@@ -244,22 +244,22 @@ class ArtifactManager:
 
     @property
     @util.CacheResult
-    def path(self) -> s.Path:
-        _ret = self.job.path / "artifacts"
+    def upath(self) -> UPath:
+        _ret = self.job.upath / "artifacts"
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
 
     def save_compressed_pickle(self, name: str, data: t.Any):
-        _file = self.path / name
+        _file = self.upath / name
         _file.save_compressed_pickle(data)
 
     def load_compressed_pickle(self, name: str) -> t.Any:
-        _file = self.path / name
+        _file = self.upath / name
         return _file.load_compressed_pickle()
 
     def available_artifacts(self) -> t.List[str]:
-        return [_.name for _ in self.path.ls()]
+        return [_.name for _ in self.upath.ls()]
 
 
 @dataclasses.dataclass
@@ -703,8 +703,8 @@ class Job:
 
     @property
     @util.CacheResult
-    def tf_chkpts_path(self) -> s.Path:
-        _ret = self.path / "tf_chkpts"
+    def tf_chkpts_upath(self) -> UPath:
+        _ret = self.upath / "tf_chkpts"
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
@@ -765,7 +765,7 @@ class Job:
 
     @property
     @util.CacheResult
-    def path(self) -> s.Path:
+    def upath(self) -> UPath:
         """
         Note that if group_by is defined in Experiment then the nested folders are created and `hashable.hex_hash`
         is created inside it.
@@ -786,8 +786,8 @@ class Job:
         return _ret
 
     @property
-    def log_file(self) -> s.Path:
-        return self.path / "toolcraft.log"
+    def log_file(self) -> UPath:
+        return self.upath / "toolcraft.log"
 
     def __init__(
         self,
@@ -877,7 +877,7 @@ class Job:
             handlers=[
                 # logger.get_rich_handler(),
                 # logger.get_stream_handler(),
-                logger.get_file_handler(_log.local_path),
+                logger.get_file_handler(_log),
             ],
         )
         _start = _now()
@@ -1055,7 +1055,7 @@ class Job:
         """
         # ------------------------------------------------------------- 01
         # some vars
-        _job_info = {"name": self.job_id, "py-script": self.runner.py_script, "path": self.path.full_path}
+        _job_info = {"name": self.job_id, "py-script": self.runner.py_script, "path": self.upath.full_path}
         _tm = self.tag_manager
         _launched = _tm.launched.read()
         _started = _tm.started.read()
@@ -1169,9 +1169,9 @@ class Job:
             )
 
         # check if files present
-        _file = self.tf_chkpts_path / name
-        _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
-        _index_file = self.tf_chkpts_path / f"{name}.index"
+        _file = self.tf_chkpts_upath / name
+        _data_file = self.tf_chkpts_upath / f"{name}.data-00000-of-00001"
+        _index_file = self.tf_chkpts_upath / f"{name}.index"
         if _file.exists() or _data_file.exists() or _index_file.exists():
             raise e.code.CodingError(
                 notes=[
@@ -1181,7 +1181,7 @@ class Job:
 
         # write
         # options have type tf.train.CheckpointOptions
-        tf_chkpt.write(file_prefix=_file.local_path.as_posix(), options=None)
+        tf_chkpt.write(file_prefix=_file.as_posix(), options=None)
 
     def restore_tf_chkpt(self, name: str, tf_chkpt: "tf.train.Checkpoint"):
         """
@@ -1195,9 +1195,9 @@ class Job:
             )
 
         # check if respective files present
-        _file = self.tf_chkpts_path / name
-        _data_file = self.tf_chkpts_path / f"{name}.data-00000-of-00001"
-        _index_file = self.tf_chkpts_path / f"{name}.index"
+        _file = self.tf_chkpts_upath / name
+        _data_file = self.tf_chkpts_upath / f"{name}.data-00000-of-00001"
+        _index_file = self.tf_chkpts_upath / f"{name}.index"
         if not _data_file.exists():
             raise e.code.CodingError(
                 notes=[
@@ -1219,7 +1219,7 @@ class Job:
 
         # options have type tf.train.CheckpointOptions
         _status = tf_chkpt.read(
-            save_path=_file.local_path.as_posix(), options=None)  # type: tf_util.CheckpointLoadStatus
+            save_path=_file.as_posix(), options=None)  # type: tf_util.CheckpointLoadStatus
         _status.assert_existing_objects_matched()
         _status.assert_nontrivial_match()
         _status.expect_partial()
@@ -1450,7 +1450,7 @@ class Monitor:
 
     @property
     @util.CacheResult
-    def path(self) -> s.Path:
+    def upath(self) -> UPath:
         _ret = self.runner.results_dir / _MONITOR_FOLDER
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
@@ -1458,24 +1458,24 @@ class Monitor:
 
     @property
     @util.CacheResult
-    def experiments_folder_path(self) -> s.Path:
-        _ret = self.path / "experiments"
+    def experiments_folder_path(self) -> UPath:
+        _ret = self.upath / "experiments"
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
 
     def make_runner_info_file(self):
-        _file = self.path / f"{self.runner.hex_hash}.info"
+        _file = self.upath / f"{self.runner.hex_hash}.info"
         if not _file.exists():
             _LOGGER.info(
-                f"Creating runner info file {_file.local_path.as_posix()}")
+                f"Creating runner info file {_file.as_posix()}")
             _file.write_text(self.runner.yaml())
 
     def make_experiment_info_file(self, experiment: "Experiment"):
         _file = self.experiments_folder_path / f"{experiment.hex_hash}.info"
         if not _file.exists():
             _LOGGER.info(
-                f"Creating experiment info file {_file.local_path.as_posix()}")
+                f"Creating experiment info file {_file.as_posix()}")
             _file.write_text(experiment.yaml())
 
     def get_experiment_from_hex_hash(self, hex_hash: str) -> "Experiment":
@@ -1843,32 +1843,33 @@ class Runner(_Common, abc.ABC):
 
     @property
     @util.CacheResult
-    def results_dir(self) -> s.Path:
+    def results_dir(self) -> UPath:
         """
         results dir where results will be stored for this runner
         """
         _py_script = self.py_script
         _folder_name = _py_script.name.replace(".py", "")
         _folder_name += f"_{self.hex_hash[:5]}"
-        _ret = s.Path(suffix_path=_folder_name, fs_name='RESULTS')
+        _ret = UPath(suffix_path=_folder_name, fs_name='RESULTS')
         if not _ret.exists():
             _ret.mkdir(create_parents=True)
         return _ret
 
     @property
     @util.CacheResult
-    def cwd(self) -> s.Path:
+    def cwd(self) -> UPath:
         """
         todo: adapt code so that the cwd can be on any other file system instead of CWD
         """
         _py_script = self.py_script
-        _ret = s.Path(suffix_path=".", fs_name='CWD')
+        _ret = UPath(suffix_path=".", fs_name='CWD')
+        _ret = Settings.FILE_SYSTEMS['CWD'].upath
         e.code.AssertError.check(
-            value1=_ret.local_path.absolute().as_posix(),
+            value1=_ret.absolute().as_posix(),
             value2=_py_script.parent.absolute().as_posix(),
             notes=[
                 f"This is unexpected ... ",
-                f"The cwd for job runner is {_ret.local_path.absolute().as_posix()}",
+                f"The cwd for job runner is {_ret.absolute().as_posix()}",
                 f"While the accompanying script is at {_py_script.as_posix()}",
                 f"Please debug ..."
             ]
@@ -1901,7 +1902,7 @@ class Runner(_Common, abc.ABC):
             handlers=[
                 # logger.get_rich_handler(),
                 # logger.get_stream_handler(),
-                logger.get_file_handler(_log_file.local_path),
+                logger.get_file_handler(_log_file),
             ],
         )
 

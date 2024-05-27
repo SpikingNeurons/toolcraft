@@ -10,6 +10,7 @@ import enum
 import pathlib
 import sys
 import time
+from upath import UPath
 import typing as t
 # todo ... get rich dunder methods for YamlRepr and then get rid of this print ;)
 from rich import print
@@ -21,14 +22,13 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 from toolcraft import marshalling as m
-from toolcraft import settings
+from toolcraft import Settings
 from toolcraft import storage as s
 from toolcraft import util, richy, logger
-from toolcraft.storage import file_system, Path
 from toolcraft.storage.table import Filter
 from toolcraft.storage.table import make_expression as me
 
-settings.DEBUG_HASHABLE_STATE = False
+Settings.DEBUG_HASHABLE_STATE = False
 
 _LOGGER = logger.get_logger()
 _TEMP_PATH = "storage_temp"
@@ -233,7 +233,7 @@ def try_creating_folders():
 
         with folder0(richy_panel=_rp), folder1(richy_panel=_rp), folder2(richy_panel=_rp), folder3(richy_panel=_rp):
 
-            print([_.full_path for _ in folder0.path.ls()])
+            print([_.full_path for _ in folder0.upath.ls()])
 
             # or else just delete the super parent and things will chain
             folder0.delete(force=True)
@@ -342,8 +342,8 @@ class FileGroup0(s.FileGroup):
     def file_keys(self) -> t.List[str]:
         return [self.start_str + _ for _ in ["a", "b", "c", "d"]]
 
-    def create_file(self, *, file_key: str) -> Path:
-        _ret = self.path / file_key
+    def create_file(self, *, file_key: str) -> UPath:
+        _ret = self.upath / file_key
         _ret.touch()
         _ret.write_text("Hi I am toolcraft ...")
         return _ret
@@ -710,10 +710,10 @@ def try_file_storage(gcs: bool):
             "dir1": ["xxaa", "xxbb", "xxcc", "xxdd"]
         }.items():
             print(f"    create for {_dir}")
-            (folder0.path / _dir).mkdir()
+            (folder0.upath / _dir).mkdir()
             for _file in _files:
-                (folder0.path / _dir / _file).touch()
-                (folder0.path / _dir / _file).write_text("Hi I am toolcraft ...")
+                (folder0.upath / _dir / _file).touch()
+                (folder0.upath / _dir / _file).write_text("Hi I am toolcraft ...")
             _fgs.append(
                 s.FileGroupFromPaths(
                     parent_folder=folder0, folder_name=_dir, keys=_files,

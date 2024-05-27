@@ -5,7 +5,7 @@ todo: delete this file after `toolcraft.tools` is available via pip install
 import sys
 import pathlib
 
-sys.path.append(os.path.join("..", ".."))
+sys.path.append(os.upath.join("..", ".."))
 from toolcraft.tools import dapr
 from toolcraft import settings
 

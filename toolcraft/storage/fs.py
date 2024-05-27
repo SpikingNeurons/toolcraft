@@ -15,7 +15,7 @@ from .. import util
 @m.RuleChecker(
     things_to_be_cached=['fs', 'upath']
 )
-class FileSystem(m.HashableClass, abc.ABC):
+class BaseFileSystem(m.HashableClass, abc.ABC):
 
     # Dir cache storage options can be found here >>> fsspec.spec.DirCache
     use_listings_cache: bool = True
@@ -44,7 +44,7 @@ class FileSystem(m.HashableClass, abc.ABC):
 
 
 @dataclasses.dataclass(frozen=True)
-class LocalFileSystem(FileSystem):
+class LocalFileSystem(BaseFileSystem):
     """
     >>> local.LocalFileSystem
     """

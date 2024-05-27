@@ -86,14 +86,14 @@ def lsf():
             # todo: when self.path is not local we need to see how to log files ...
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
-            _log = _job.path / "bsub.log"
+            _log = _job.upath / "bsub.log"
             _nxdi_prefix = ["bsub", ]
             _nxdi_prefix += ["-J", _job.job_id, ]
             _email = _job.launch_parameters.lsf_email
             _cpus = _job.launch_parameters.lsf_cpus
             _memory = _job.launch_parameters.lsf_memory
             if not _email:
-                _nxdi_prefix += ["-oo", _log.local_path.as_posix(), ]
+                _nxdi_prefix += ["-oo", _log.as_posix(), ]
             if _cpus is not None:
                 _nxdi_prefix += ["-n", f"{_cpus}"]
             if _memory is not None:
