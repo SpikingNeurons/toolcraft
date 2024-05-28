@@ -26,6 +26,7 @@ import hashlib
 import zipfile
 import platform
 import random
+from fsspec import AbstractFileSystem
 from upath import UPath
 
 from .. import util, logger, settings
@@ -281,9 +282,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             # look inside path dir
-            for _ in self.upath.fs.find(self.upath, maxdepth=1, detail=False, withdirs=True):
-                _upath = UPath(_)
-                print(_upath, self.upath, "<<<< ???")
+            for _upath in self.find(maxdepth=1, detail=False, withdirs=True):
                 if _upath == self.upath:
                     continue
                 if _upath.name in self.file_keys and _upath.is_file():
@@ -329,6 +328,22 @@ class FileGroup(StorageHashable, abc.ABC):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
         subprocess.Popen(f'explorer {self.upath}')
+
+    def find(self, sub_path: str = None, maxdepth: int = 1, detail: bool = False, withdirs: bool = True) -> [UPath]:
+        """
+        Inspired by
+        >>> AbstractFileSystem.find
+        """
+        _ret = []
+        _fs = self.upath.fs
+        _upath = self.upath
+        if sub_path:
+            _upath = _upath / sub_path
+        for _ in _fs.find(_upath, maxdepth=maxdepth, detail=detail, withdirs=withdirs):
+            _upath = UPath(_)
+            print(_upath, self.upath, "<<<< ???")
+            _ret.append(_upath)
+        return _ret
 
     @classmethod
     def make_possible_instances(cls) -> t.List[TFileGroup]:
