@@ -269,7 +269,7 @@ class FileGroup(StorageHashable, abc.ABC):
     def unknown_paths_on_disk(self) -> t.List[Path]:
 
         # container for unknown files
-        _unknown_paths = []
+        _unknown_upaths = []
 
         # look inside path dir if it exists
         if self.upath.exists():
@@ -281,21 +281,22 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             # look inside path dir
-            for _path in self.upath.fs.find(self.upath, maxdepth=1, detail=False, withdirs=True):
-                print(_path, type(_path))
-                if _path == self.upath:
+            for _ in self.upath.fs.find(self.upath, maxdepth=1, detail=False, withdirs=True):
+                _upath = UPath(_)
+                print(_upath, self.upath, "<<<< ???")
+                if _upath == self.upath:
                     continue
-                if _path.name in self.file_keys and _path.isfile():
+                if _upath.name in self.file_keys and _upath.is_file():
                     continue
                 # anything starting with `_` will be ignored
                 # helpful in case you want to store results cached by `@s.dec.XYZ`
                 # which uses `stores` property
-                if _path.name.startswith("_"):
+                if _upath.name.startswith("_"):
                     continue
-                _unknown_paths.append(_path)
+                _unknown_upaths.append(_upath)
 
         # return
-        return _unknown_paths
+        return _unknown_upaths
 
     @property
     def is_auto_hash(self) -> bool:
