@@ -63,16 +63,16 @@ class ColumnFmt:
         if self.type in ['|', '||', ]:
             if self.width is not None or self.insert_before is not None or self.insert_after is not None or self.insert_text is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[f"While using column fmt {self.type} special options are not available"]
+                    notes=[f"While using column fmt {self.type} special options are not available"]
                 )
         if self.type is None:
-            raise e.validation.NotAllowed(msgs=["Field type is mandatory please supply"])
+            raise e.validation.NotAllowed(notes=["Field type is mandatory please supply"])
         # ------------------------------------------------------- 01.02
         # width can only be used with only para columns
         if self.width is not None:
             if self.type not in ['p', 'm', 'b', ]:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"The width kwarg cannot be used with Column fmt {self.type}"
                     ]
                 )
@@ -84,7 +84,7 @@ class ColumnFmt:
             ]
             if not _allowed_insert_before_after:
                 raise e.code.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"Do not use fields `insert_before` or `insert_after` with column fmt {self.type}",
                         f"It can only be used with l, c, r, p, m, b (and even X)"
                     ]
@@ -94,14 +94,14 @@ class ColumnFmt:
         if self.type in ['@', '!']:
             if self.insert_text is None:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"When using column fmt type {['@', '!']} please supply kwarg `insert_text`"
                     ]
                 )
         else:
             if self.insert_text is not None:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Field insert_text can only be used with column fmt type {['@', '!']}"
                     ]
                 )
@@ -281,7 +281,7 @@ class TableColsDef:
 
     def __post_init__(self):
         if self.items is None:
-            raise e.validation.NotAllowed(msgs=["Field list is mandatory ..."])
+            raise e.validation.NotAllowed(notes=["Field list is mandatory ..."])
 
     def __str__(self):
         _ret = []
@@ -346,7 +346,7 @@ class Row(LaTeX):
         super().init_validate()
         if self.items is None:
             raise e.validation.NotAllowed(
-                msgs=["items field is mandatory, please supply"]
+                notes=["items field is mandatory, please supply"]
             )
 
     def generate(self):
@@ -439,7 +439,7 @@ class Table(LaTeX):
         elif _type == 'X':
             _type = 'tabularx'
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"type {_type} is not supported"])
+            raise e.code.ShouldNeverHappen(notes=[f"type {_type} is not supported"])
 
         # return
         return _type
@@ -503,7 +503,7 @@ class Table(LaTeX):
         # there should be minimum one col present
         if len(self.t_cols_def) < 1:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "Please specify at-least one legit column in `self.t_cols_def.items` ...",
                 ]
             )
@@ -515,28 +515,28 @@ class Table(LaTeX):
         # should not be None
         if self.t_cols_def is None:
             raise e.validation.NotAllowed(
-                msgs=[f"Please supply value for field `t_cols_fmt`"]
+                notes=[f"Please supply value for field `t_cols_fmt`"]
             )
 
         # will support later
         # todo: support when needed
-        e.validation.ShouldNotBeEqual(
+        e.validation.ShouldNotBeEqual.check(
             value1=self.type, value2='array',
-            msgs=["We will support this type later ..."]
-        ).raise_if_failed()
+            notes=["We will support this type later ..."]
+        )
 
         # width must be None for certain types
         if self.t_width is not None:
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=self.type, values=['*', 'X'],
-                msgs=["width is not supported for this type ... keep it None"]
-            ).raise_if_failed()
+                notes=["width is not supported for this type ... keep it None"]
+            )
 
         # allow column format stretched i.e. X for type=='X'
         if self.t_cols_def.uses_stretched_fmt:
             if self.type != 'X':
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"The t_cols_def uses one or more {ColumnFmt.stretched}",
                         f"This is only allowed when table type is 'X' i.e. tabularx",
                     ]
@@ -546,7 +546,7 @@ class Table(LaTeX):
         if self.is_auto_stretchable:
             if self.t_width is None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"Please specify `t_width` as table is auto stretchable ..."
                     ]
                 )
@@ -554,7 +554,7 @@ class Table(LaTeX):
     def add_row(self, row: Row):
         if len(row) != len(self.t_cols_def):
             raise e.validation.NotAllowed(
-                msgs=[f"We only expect to have {len(self.t_cols_def)} items in "
+                notes=[f"We only expect to have {len(self.t_cols_def)} items in "
                       f"row but instead we found {len(row)}"]
             )
         self.add_item(item=row)
@@ -569,7 +569,7 @@ class Table(LaTeX):
         """
         if m < n or n <= 0:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "Select n and m to be positive non-zero numbers and n<=m",
                     "Found", dict(n=n, m=m),
                 ]
@@ -604,7 +604,7 @@ class Table(LaTeX):
         """
         if m < n or n <= 0:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "Select n and m to be positive non-zero numbers and n<=m",
                     "Found", dict(n=n, m=m),
                 ]

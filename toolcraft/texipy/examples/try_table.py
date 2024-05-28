@@ -86,7 +86,7 @@ def make_table(scale: t.Tuple[float, float] = None):
                 "\\textbf{Model}",
                 f"\\boldmath{symbols.glbacc}\\unboldmath~(\\%)",
                 f"\\boldmath{symbols.glacc}\\unboldmath~(\\%)",
-                f"\\boldmath{symbols.gltgezero}\\unboldmath",
+                f"\\boldmath{symbols.gltgeone}\\unboldmath",
             ],
         )
     )

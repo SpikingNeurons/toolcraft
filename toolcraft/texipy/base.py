@@ -31,7 +31,7 @@ class Base(abc.ABC):
         self._var_name = _stack[2].code_context[0].split("=")[0].replace(" ", "")
         if self._var_name in _ALL_VAR_NAMES:
             raise e.code.CodingError(
-                msgs=[f"Should never happen there is already a latex symbol with name {self._var_name}"]
+                notes=[f"Should never happen there is already a latex symbol with name {self._var_name}"]
             )
         else:
             _ALL_VAR_NAMES.append(self._var_name)
@@ -46,7 +46,7 @@ class Base(abc.ABC):
             "label",
         ]:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Symbol {_var_name!r} cannot be used as it is reserved "
                     f"by latex system"
                 ]
@@ -54,7 +54,7 @@ class Base(abc.ABC):
 
         if _var_name.find("_") != -1:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We do not support _ in command name as latex does not "
                     f"allow that in command names rename the module variable "
                     f"{_var_name!r}."
@@ -62,7 +62,7 @@ class Base(abc.ABC):
             )
         if bool(re.search(r'\d', _var_name)):
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We do not support numbers as latex does not "
                     f"allow that in command names rename the module "
                     f"variable {_var_name}."
@@ -71,7 +71,7 @@ class Base(abc.ABC):
 
         if _var_name.lower() != _var_name:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Please do not use capital letters",
                     f"Rename {_var_name} to {_var_name.lower()}"
                 ]
@@ -82,7 +82,7 @@ class Base(abc.ABC):
 
     def __str__(self):
         raise e.code.CodingError(
-            msgs=[f"Please implement this in child class {self.__class__}"]
+            notes=[f"Please implement this in child class {self.__class__}"]
         )
 
     @abc.abstractmethod
@@ -237,13 +237,13 @@ class Command(Base):
 
         if self.latex is None:
             raise e.validation.NotAllowed(
-                msgs=["Please assign mandatory field `latex`"]
+                notes=["Please assign mandatory field `latex`"]
             )
 
         if self.default_value is not None:
             if self.num_args == 0:
                 raise e.validation.NotAllowed(
-                    msgs=["Please update num_args as you are using default values"]
+                    notes=["Please update num_args as you are using default values"]
                 )
 
     def __str__(self):
@@ -254,17 +254,17 @@ class Command(Base):
         # some validation for usage of call
         if self.num_args == 0:
             raise e.validation.NotAllowed(
-                msgs=[f"Command {self} does not support args"]
+                notes=[f"Command {self} does not support args"]
             )
         if self.default_value is None:
             if len(args) != self.num_args:
                 raise e.validation.NotAllowed(
-                    msgs=[f"Command {self} expect {self.num_args} args"]
+                    notes=[f"Command {self} expect {self.num_args} args"]
                 )
         else:
             if len(args) not in [self.num_args, self.num_args-1]:
                 raise e.validation.NotAllowed(
-                    msgs=[f"Command {self} expect {self.num_args} "
+                    notes=[f"Command {self} expect {self.num_args} "
                           f"or {self.num_args-1} args"]
                 )
 
@@ -301,7 +301,7 @@ class Command(Base):
         elif isinstance(_latex, Text):
             _cmd += f"{str(_latex)}"
         else:
-            raise e.code.ShouldNeverHappen(msgs=[])
+            raise e.code.ShouldNeverHappen()
         return _cmd
 
 
@@ -327,7 +327,7 @@ class Symbol(Command):
         _str_latex = str(self.latex)
         if _str_latex.startswith("\\(") or _str_latex.startswith("$"):
             raise e.code.NotAllowed(
-                msgs=[f"This is {Symbol} class do not use the latex field in math mode"]
+                notes=[f"This is {Symbol} class do not use the latex field in math mode"]
             )
         return super().init_validate()
 

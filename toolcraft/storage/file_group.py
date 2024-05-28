@@ -26,6 +26,7 @@ import hashlib
 import zipfile
 import platform
 import random
+from upath import UPath
 
 from .. import util, logger, settings
 from .. import storage as s
@@ -42,9 +43,9 @@ if False:
 
 _now = datetime.datetime.now
 
-TFileGroup = t.TypeVar('TFileGroup', bound='FileGroup')
-
 _LOGGER = logger.get_logger()
+
+TFileGroup = t.TypeVar('TFileGroup', bound='FileGroup')
 
 # noinspection PyUnresolvedReferences
 USE_ALL = slice(None, None, None)
@@ -54,6 +55,18 @@ USE_ALL = slice(None, None, None)
 SELECT_TYPE = t.Union[
     int, slice, t.List[int],
 ]
+
+
+class Generator:
+
+    def __init__(self, gen_fn: t.Callable, length: int, meta: t.Dict[str, t.Any] = None):
+        self._length = length
+        self.gen_fn = gen_fn
+        self.meta = meta
+        self.generator_cache = None  # type: dict
+
+    def __len__(self) -> int:
+        return self._length
 
 
 @dataclasses.dataclass
@@ -118,7 +131,7 @@ class FileGroupConfig(s.Config):
         # this can never happen
         if len(self.checked_on) > self.LITERAL.checked_on_list_limit:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"This should never happens ... did you try to append "
                     f"checked_on list multiple times"
                 ]
@@ -217,7 +230,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # Note that if some file_groups are missing we raise error ... either
         # all file_groups should be present or none of them should exist
         _present_files = [
-            (self.path / fk).exists() for fk in self.file_keys
+            (self.upath / fk).exists() for fk in self.file_keys
         ]
         _all_files_in_fg_present = all(_present_files)
         _some_files_in_fg_present = any(_present_files)
@@ -237,9 +250,9 @@ class FileGroup(StorageHashable, abc.ABC):
                     _msg = "But all files in the file group are missing"
 
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"State manager files for file group `{self.name}` "
-                        f"are present in dir {self.path}.",
+                        f"are present in dir {self.upath}.",
                         _msg,
                     ]
                 )
@@ -256,32 +269,34 @@ class FileGroup(StorageHashable, abc.ABC):
     def unknown_paths_on_disk(self) -> t.List[Path]:
 
         # container for unknown files
-        _unknown_paths = []
+        _unknown_upaths = []
 
         # look inside path dir if it exists
-        if self.path.exists():
+        if self.upath.exists():
             # expect path to be a dir
-            if self.path.isfile():
+            if self.upath.is_file():
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"We expect path to be a dir for FileGroup"
                     ]
                 )
             # look inside path dir
-            for _path in self.path.find(maxdepth=1, detail=False, withdirs=True):
-                if _path == self.path:
+            for _ in self.upath.fs.find(self.upath, maxdepth=1, detail=False, withdirs=True):
+                _upath = UPath(_)
+                print(_upath, self.upath, "<<<< ???")
+                if _upath == self.upath:
                     continue
-                if _path.name in self.file_keys and _path.isfile():
+                if _upath.name in self.file_keys and _upath.is_file():
                     continue
                 # anything starting with `_` will be ignored
                 # helpful in case you want to store results cached by `@s.dec.XYZ`
                 # which uses `stores` property
-                if _path.name.startswith("_"):
+                if _upath.name.startswith("_"):
                     continue
-                _unknown_paths.append(_path)
+                _unknown_upaths.append(_upath)
 
         # return
-        return _unknown_paths
+        return _unknown_upaths
 
     @property
     def is_auto_hash(self) -> bool:
@@ -294,7 +309,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: remove later
         if not self.is_created:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We need to create files before trying to do periodic "
                     f"check",
                     f"Please make a call to {self.__class__.__name__}.create",
@@ -313,7 +328,7 @@ class FileGroup(StorageHashable, abc.ABC):
     def explore(self):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
-        subprocess.Popen(f'explorer {self.path}')
+        subprocess.Popen(f'explorer {self.upath}')
 
     @classmethod
     def make_possible_instances(cls) -> t.List[TFileGroup]:
@@ -324,7 +339,7 @@ class FileGroup(StorageHashable, abc.ABC):
         + PreparedData
         """
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"The `make_possible_instances` method is not supported for class {cls}",
                 f"Implement this method when you know that there are finite instances for class {cls}",
             ]
@@ -341,7 +356,7 @@ class FileGroup(StorageHashable, abc.ABC):
         import gcsfs
         if platform.system() != "Windows":
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "Only supported for windows platform"
                 ]
             )
@@ -352,7 +367,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         if not _cred_file.exists():
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     "Please make sure that gcloud is installed ...",
                     "Then run command `gcloud auth application-default login`",
                     f"This should ideally generate credential file {_cred_file} ...",
@@ -379,13 +394,12 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # check if already exists
         if _fs.exists(_file_to_make):
-            e.code.NotAllowed(
-                msgs=[
+            raise e.code.NotAllowed(
+                notes=[
                     f"The file `{_file_to_make}` already exists on GCS ",
                     f"Use different name/location ..."
                 ]
             )
-            return
 
         # this can get buckets but does not work for now
         # todo: explore later
@@ -399,8 +413,8 @@ class FileGroup(StorageHashable, abc.ABC):
         ) as _zf:
             for _f in _rp.track(
                 sequence=[
-                    self.info.path, self.config.path
-                ] + [self.path / _fk for _fk in self.file_keys],
+                    self.info.upath, self.config.upath
+                ] + [self.upath / _fk for _fk in self.file_keys],
                 task_name="Zipping files",
             ):
                 # noinspection PyTypeChecker
@@ -426,7 +440,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # the state_manager files to be present on the disk
             if not self.is_created:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Never call this until files are created. Only after "
                         f"that the state files will be present on the disk"
                     ]
@@ -435,7 +449,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # check if auto_hashes present
             if self.config.auto_hashes is None:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"We expect that auto_hashes will be set by now"
                     ]
                 )
@@ -446,7 +460,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # if not auto hash then raise error to inform to override this method
         else:
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"Since you have not configured for auto hashing we "
                     f"expect you to override this method to provide hashes "
                     f"dict.",
@@ -489,7 +503,7 @@ class FileGroup(StorageHashable, abc.ABC):
         if self.is_auto_hash:
             if FileGroup.get_hashes != self.__class__.get_hashes:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"When in auto hashing mode do not override get_hashes",
                         f"Please check:",
                         {
@@ -501,7 +515,7 @@ class FileGroup(StorageHashable, abc.ABC):
         else:
             if FileGroup.get_hashes == self.__class__.get_hashes:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"When not in auto hashing mode please override "
                         f"get_hashes to provide hashes",
                         f"Please check:",
@@ -526,18 +540,18 @@ class FileGroup(StorageHashable, abc.ABC):
             # check hashes provided in hashes dict
             for k, _hash in _hashes.items():
                 # check if key is known
-                e.validation.ShouldBeOneOf(
+                e.validation.ShouldBeOneOf.check(
                     value=k, values=self.file_keys,
-                    msgs=[
+                    notes=[
                         f"The key {k} in hashes dict is not known"
                     ]
-                ).raise_if_failed()
+                )
                 # This is in case we want to let code print hash that we want
                 # to supply
                 # value should be a valid hash
                 # if not len(_hash) == 64:
                 #     raise e.code.NotAllowed(
-                #         msgs=[
+                #         notes=[
                 #             f"Unsupported file hash for key {k!r}",
                 #             f"We only support sha-256",
                 #             f"Found hash {_hash!r} with length "
@@ -547,7 +561,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 # check if value is lower case
                 if _hash.lower() != _hash:
                     raise e.code.NotAllowed(
-                        msgs=[
+                        notes=[
                             f"For consistency make sure that hashes are "
                             f"lower case",
                             f"Found a hash {_hash!r} with upper case "
@@ -560,7 +574,7 @@ class FileGroup(StorageHashable, abc.ABC):
             for k in self.file_keys:
                 if k not in _hashes_keys:
                     raise e.code.CodingError(
-                        msgs=[
+                        notes=[
                             f"Please provide hash for file_key `{k}` in "
                             f"`get_hashes` method of class {self.__class__}"
                         ]
@@ -570,7 +584,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # check if duplicate file_keys
         if len(self.file_keys) != len(set(self.file_keys)):
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"We found some duplicates in self.file_keys",
                     self.file_keys
                 ]
@@ -591,7 +605,7 @@ class FileGroup(StorageHashable, abc.ABC):
             _config_backup_exists = _config_backup_path.exists()
             if _info_backup_exists ^ _config_backup_exists:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"We expect both info and config backup file to be "
                         f"present"
                     ]
@@ -644,7 +658,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _failed_hashes = {}
         _computed_hashes = {}
         _file_paths = {
-            fk: self.path/fk for fk in self.file_keys
+            fk: self.upath / fk for fk in self.file_keys
         }  # type: t.Dict[str, Path]
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
@@ -694,7 +708,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 _hash_type = "md5"
             else:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Should not happen found unsupported hash length {_len}"
                     ]
                 )
@@ -706,6 +720,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 for _chunk in iter(lambda: fb.read(_chunk_size), b''):
                     _hash_module.update(_chunk)
                     _progress.tasks[fk].update(advance=len(_chunk),)
+                    _rp.log_tasks_progress()
                 fb.close()
                 _computed_hash = _hash_module.hexdigest()
             # make dicts to return
@@ -714,8 +729,8 @@ class FileGroup(StorageHashable, abc.ABC):
                 if _computed_hash != _correct_hashes[fk]:
                     _progress.tasks[fk].failed()
                     _failed_hashes[fk] = {
-                        'correct  ': _correct_hashes[fk],
-                        'computed ': _computed_hash,
+                        'correct': _correct_hashes[fk],
+                        'computed': _computed_hash,
                     }
 
         # ------------------------------------------------------ 04
@@ -737,7 +752,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # do this
         if not self.is_created:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Do not try to check until all files are created, "
                     f"make sure to call {self.__class__.__name__}.create()",
                     f"Also make sure that you are first checking property "
@@ -748,7 +763,7 @@ class FileGroup(StorageHashable, abc.ABC):
         if not force:
             if not self.periodic_check_needed:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Find the bug in the code, you need to make sure if "
                         f"periodic check is needed using property "
                         f"self.periodic_check_needed then only call this "
@@ -768,7 +783,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _unknown_paths = self.unknown_paths_on_disk
         if bool(_unknown_paths):
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "We found some unknown files/folders on disk",
                     _unknown_paths
                 ]
@@ -779,18 +794,39 @@ class FileGroup(StorageHashable, abc.ABC):
         # delete state files and print failed hashes
         if bool(_failed_hashes):
             # wipe state manager files
-            self.info.delete()
-            self.config.delete()
+            # check else part we no longer delete state files
+            #   we do not want to wipe meta information stored in config file just because hash_check fails
+            #   ideally we will modify hashes in code as returned by get_hashes()
+            # self.info.delete()
+            # self.config.delete()
             # raise error
+            _failed_hashes_msgs = []
+            for _k, _v in _failed_hashes.items():
+                _failed_hashes_msgs.append(f"{_k} >>>")
+                _failed_hashes_msgs.append(f" correct : {_v['correct']}")
+                _failed_hashes_msgs.append(f" computed: {_v['computed']}")
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Hashes for some files did not match. ",
                     f"FileGroup: {self.name}",
                     f"Check below",
-                    _failed_hashes,
-                    f"Check file system {self.path}"
+                    *_failed_hashes_msgs,
+                    f"Check file system {self.upath}"
                 ]
             )
+        else:
+            # sometimes the config has old hashes when we debug
+            # and when update hashes in code then the congig file needs to be deleted
+            # this necessaciates creating files again so if we just check again then it will
+            # just recompute hashes and modify hashes in config file here
+            # ....
+            # Note earlier we used to delete config and info files to achieve this but now sometimes
+            # we save some meta info like min and max while generating dataset so that no longer is possible
+            # so this will do the trick ...
+            # Also this is consequence of the behaviour that we no longer
+            # delete config and info files when hash check fails ... as the system can still detect that hash
+            # check was not successful as there are no entries in checked_in list
+            self.config.hashes = self.get_hashes()
 
     # noinspection PyUnusedLocal
     def check_post_runner(
@@ -824,7 +860,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # check if in file keys
             if file_key not in self.file_keys:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The supplied `file_key={file_key}` to "
                         f"`{self.__class__}.get_file` method is not one of:",
                         self.file_keys
@@ -835,7 +871,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # check if created
         if not self.is_created:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"Make sure to create files for instance of type "
                     f"{self.__class__} before calling `get_files()`"
                 ]
@@ -845,7 +881,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # if periodic check needed
         if self.periodic_check_needed:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"Make sure to perform check before using `get_files()` "
                     f"for class {self.__class__}"
                 ]
@@ -855,7 +891,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # delete if outdated
         if self.is_outdated:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"Files are out dated for class {self.__class__}. You "
                     f"need to delete it."
                 ]
@@ -868,7 +904,7 @@ class FileGroup(StorageHashable, abc.ABC):
         Default is to return Path
         """
         return {
-            file_key: self.path / file_key
+            file_key: self.upath / file_key
             for file_key in file_keys
         }
 
@@ -880,7 +916,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # we are getting data so update the access info
         self.config.append_last_accessed_on()
 
-    def get_file(self, file_key: str) -> s.Path:
+    def get_file(self, file_key: str) -> UPath:
         return self.get_files(file_keys=[file_key])[file_key]
 
     # noinspection PyUnusedLocal
@@ -896,18 +932,18 @@ class FileGroup(StorageHashable, abc.ABC):
         # --------------------------------------------------------------02
         # create path dir if it does not exist
         # Note that FileGroup is a folder with file names file_keys inside it
-        if not self.path.exists():
-            self.path.mkdir()
+        if not self.upath.exists():
+            self.upath.mkdir(parents=True, exist_ok=True)
 
         # --------------------------------------------------------------03
         # if unknown files present throw error
         _unknown_files = self.unknown_paths_on_disk
         if bool(_unknown_files):
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"We were trying to create files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in dir `{self.path}` but, we "
+                    f"{self.name!r} in dir `{self.upath}` but, we "
                     f"found below unknown files",
                     [f.name for f in _unknown_files]
                 ]
@@ -929,7 +965,7 @@ class FileGroup(StorageHashable, abc.ABC):
             _rp.update(f"creating file: {k}")
 
             # get expected file from key
-            _expected_file = self.path / k
+            _expected_file = self.upath / k
 
             # if found on disk bypass creation for efficiency
             if _expected_file.isfile():
@@ -943,14 +979,14 @@ class FileGroup(StorageHashable, abc.ABC):
             # check if created and expected file is same
             if not isinstance(_created_file, Path):
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"You are supported to return instance of {Path} ... "
                         f"instead found {type(_created_file)}"
                     ]
                 )
             if _expected_file != _created_file:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The {self.__class__}.create() returns file path "
                         f"which is not expected for key {k!r}",
                         {
@@ -962,7 +998,7 @@ class FileGroup(StorageHashable, abc.ABC):
             # note we do not check if exists as sometimes some files are created in post runner
             # if not _created_file.exists():
             #     raise e.code.CodingError(
-            #         msgs=["The create_file returned successfully ... but file was not created ..."]
+            #         notes=["The create_file returned successfully ... but file was not created ..."]
             #     )
 
             # append
@@ -981,7 +1017,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # todo: if failed delete files that are created
         """
         created_fs = hooked_method_return_value
-        expected_fs = [self.path / fk for fk in self.file_keys]
+        expected_fs = [self.upath / fk for fk in self.file_keys]
 
         # ----------------------------------------------------------------01
         # validation
@@ -989,7 +1025,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # created files should be `list` and should not be empty
         if not isinstance(created_fs, list):
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Expected a list from {self.__class__.create_file} but "
                     f"instead found returned value of type "
                     f"{type(created_fs)}"
@@ -1000,14 +1036,14 @@ class FileGroup(StorageHashable, abc.ABC):
         for f in created_fs:
             if not isinstance(f, Path):
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"Method {self.create_file} should return the list of "
                         f"files created, instead found {created_fs}"
                     ]
                 )
             if f not in expected_fs:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"File {f.name!r} generated by create method of class "
                         f"{self.__class__} does not correspond to one of the "
                         f"file keys given by property self.file_keys",
@@ -1016,7 +1052,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 )
             if not f.exists():
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"One of the file {f} you are returning from "
                         f"self.create_file() is not present on the disk"
                     ]
@@ -1026,7 +1062,7 @@ class FileGroup(StorageHashable, abc.ABC):
         for f in expected_fs:
             if f not in created_fs:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"We expect file {f.name} to be created",
                         f"But the file was not created"
                     ]
@@ -1037,10 +1073,10 @@ class FileGroup(StorageHashable, abc.ABC):
         _unknown_files = self.unknown_paths_on_disk
         if bool(_unknown_files):
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"We have created files for class "
                     f"{self.__class__.__name__!r} with base name "
-                    f"{self.name!r} in dir {self.path}. Below "
+                    f"{self.name!r} in dir {self.upath}. Below "
                     f"unknown files were also created along with it.",
                     [f.name for f in _unknown_files]
                 ]
@@ -1063,14 +1099,14 @@ class FileGroup(StorageHashable, abc.ABC):
         # validation
         if self.config.auto_hashes is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect auto "
                     f"hashes to be present in the config"
                 ]
             )
         if self.config.hashes is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect "
                     f"hashes to be present in the config"
                 ]
@@ -1136,7 +1172,7 @@ class FileGroup(StorageHashable, abc.ABC):
             response = "y"
         else:
             # todo: need to implement the ask dialog inside richy_panel
-            raise e.code.NotYetImplemented(msgs=["todo: need to implement the ask dialog inside richy_panel"])
+            raise e.code.NotYetImplemented(notes=["todo: need to implement the ask dialog inside richy_panel"])
             # response = richy.r_prompt.Confirm.ask(
             #     f"Do you want to delete files for FileGroup `{self.path}`?",
             #     default=True,
@@ -1156,25 +1192,35 @@ class FileGroup(StorageHashable, abc.ABC):
             # delete all files for the group
             _rp.update("deleting files ...")
             for fk in self.file_keys:
-                _key_path = self.path / fk
+                _key_path = self.upath / fk
                 if _key_path.exists():
                     _key_path.rm_file()
                 else:
                     raise e.code.CodingError(
-                        msgs=[
+                        notes=[
                             f"If you deleted files manually this can happen",
                             f"But if you didnt then this might be a bug",
                             f"We were not able to find file {fk} for file_group "
-                            f"with path {self.path}"
+                            f"with path {self.upath}"
                         ]
                     )
         else:
             raise e.code.ExitGracefully(
-                msgs=[
+                notes=[
                     "We will terminate the program as you requested "
                     "not to delete files..."
                 ]
             )
+
+
+@dataclasses.dataclass
+class HFFileGroupConfig(FileGroupConfig):
+    ...
+
+
+@dataclasses.dataclass(frozen=True)
+class HFFileGroup(FileGroup, abc.ABC):
+    ...
 
 
 @dataclasses.dataclass
@@ -1261,12 +1307,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # todo: test memory limit
         if memory_limit_in_gbytes is not None:
             raise e.code.NotYetImplemented(
-                msgs=["This feature is not yet implemented"]
+                notes=["This feature is not yet implemented"]
             )
         if fix_all_lengths_same:
             if self.has_arbitrary_lengths:
                 raise e.code.NotAllowed(
-                    msgs=[f"This {self.__class__} has files with arbitrary lengths "
+                    notes=[f"This {self.__class__} has files with arbitrary lengths "
                           f"so we cannot make all lengths fixed "]
                 )
 
@@ -1288,7 +1334,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
                     _len = len(_ret[_k])
                     break
             if _len is None:
-                raise e.code.ShouldNeverHappen(msgs=[])
+                raise e.code.ShouldNeverHappen()
             for _k in self.file_keys:
                 if len(_ret[_k]) == 1:
                     _ret[_k] = np.repeat(_ret[_k][:], _len, axis=0)
@@ -1303,7 +1349,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         Note that for npy record the type is t.Dict[str, np.ndarray]
         As we can treat it as dict of numpy arrays
         """
-        return util.npy_load(self.path / file_key, memmap=memmap, shape=self.shape[file_key], dtype=self.dtype[file_key])
+        return util.npy_load(self.upath / file_key, memmap=memmap, shape=self.shape[file_key], dtype=self.dtype[file_key])
 
     def save_npy_data(
         self,
@@ -1312,12 +1358,12 @@ class NpyFileGroup(FileGroup, abc.ABC):
     ) -> Path:
 
         # get file from a file_key
-        _file = self.path / file_key
+        _file = self.upath / file_key
 
         # if file exists raise error
         if _file.exists():
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"The file {_file} already exists so we cannot overwrite "
                     f"the file. Please delete it if possible."
                 ]
@@ -1330,7 +1376,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             util.npy_record_save(file=_file, npy_record_dict=npy_data)
         else:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Unrecognized type of npy_data {type(npy_data)!r} for "
                     f"file_key={file_key!r}",
                     f"Expected numpy array or dict of numpy array"
@@ -1339,6 +1385,65 @@ class NpyFileGroup(FileGroup, abc.ABC):
 
         # return
         return _file
+
+    def save_using_generator(self, generator: Generator, task_name: str = None):
+        # get richy panel
+        _rp = self.richy_panel
+
+        # check if file exists they should not exist
+        for _fk in self.file_keys:
+            if (self.upath / _fk).exists():
+                raise e.validation.NotAllowed(
+                    notes=[
+                        f"File {_fk} already exists in the folder {self.upath}",
+                        f"We cannot overwrite the file. Please delete it if "
+                        f"possible."
+                    ]
+                )
+
+        # first save things in meta ...
+        if bool(generator.meta):
+            _rp.update("saving meta data")
+            for _k, _v in generator.meta.items():
+                _memmap = np.memmap(
+                    filename=(self.upath / _k),
+                    dtype=_v.dtype,
+                    shape=_v.shape, mode='w+'
+                )
+                _memmap[:] = _v
+                _memmap.flush()
+                del _memmap
+
+        # now save data obtained from generator
+        _rp.update("saving to memmap")
+        _memmaps = {}
+        _length = len(generator)
+        _task_name = "save in memmap#" if task_name is None else task_name
+        _task = _rp.add_task(task_name=_task_name, total=_length)
+        _iterator = generator.gen_fn()
+        _first_element = next(_iterator)
+        _keys = [k for k in _first_element.keys() if k != "index_to_write"]
+        _first_element_index_to_write = _first_element["index_to_write"]
+        for _k in _keys:
+            _v = _first_element[_k]
+            _memmaps[_k] = np.memmap(
+                filename=(self.upath / _k),
+                dtype=_v.dtype,
+                shape=(_length, *_v.shape), mode='w+'
+            )
+            _memmaps[_k][_first_element_index_to_write] = _v
+        _task.update(advance=1)
+        for _ in _iterator:
+            _task.update(advance=1)
+            _rp.log_tasks_progress()
+            _index_to_write = _["index_to_write"]
+            for _k in _keys:
+                _memmaps[_k][_index_to_write] = _[_k]
+        _rp.update("flushing the memmaps")
+        for _k in _keys:
+            _memmaps[_k].flush()
+            del _memmaps[_k]
+        del _memmaps
 
     def create_pre_runner(self):
 
@@ -1351,7 +1456,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         _keys.sort()
         if _keys != _shape_keys:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"The file_keys and the keys of shape dict do not match",
                     {
                         'file_keys': _keys,
@@ -1363,7 +1468,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             )
         if _keys != _dtype_keys:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"The file_keys and the keys of dtype dict do not match",
                     {
                         'file_keys': _keys,
@@ -1390,7 +1495,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # we cannot use `self.get_files()`.
             # Note we read in memmap mode as we need only meta info
             _npy_memmaps[file_key] = util.npy_load(
-                self.path / file_key, memmap=True,
+                self.upath / file_key, memmap=True,
                 shape=self.shape[file_key], dtype=self.dtype[file_key],
             )
 
@@ -1411,20 +1516,20 @@ class NpyFileGroup(FileGroup, abc.ABC):
             # check dtype
             if _npy_memmap.dtype != _dtype[file_key]:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"Type mismatch for files created.",
                         f"The data type for loaded numpy file from disk for "
                         f"file_key `{file_key}` does not match.",
                         f"Expected {self.dtype[file_key]} but found "
                         f"{_npy_memmap.dtype}",
-                        f"Check file path: {self.path}"
+                        f"Check file path: {self.upath}"
                     ]
                 )
             # ------------------------------------------------------------02.03
             # check shape
             if _npy_memmap.shape != _shape[file_key]:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         f"Shape mismatch for files created.",
                         f"The shape for loaded numpy file from disk for "
                         f"file_key `{file_key}` does not match.",
@@ -1482,42 +1587,42 @@ class NpyFileGroup(FileGroup, abc.ABC):
         # ----------------------------------------------------------------05
         if self.config.shape is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect `shape` "
                     f"to be present in the config"
                 ]
             )
         if self.config.dtype is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect `dtype` "
                     f"to be present in the config"
                 ]
             )
         if self.config.min is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect `min` "
                     f"to be present in the config"
                 ]
             )
         if self.config.max is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect `max` "
                     f"to be present in the config"
                 ]
             )
         if self.config.median is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect `median` "
                     f"to be present in the config"
                 ]
             )
         if self.config.mean is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"We just generated files so we do not expect `mean` "
                     f"to be present in the config"
                 ]
@@ -1541,6 +1646,8 @@ class TempFileGroup(FileGroup, abc.ABC):
     this object will automatically delete all temporary files ...
     todo: if you do not want for file to get deleted then have some option ....
       keep_file=True
+
+    todo: use tempfile module to create temporary files https://docs.python.org/3/library/tempfile.html#
     """
 
     # we should not override dunders
@@ -1605,7 +1712,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         _rp.update(f"get content length for {_total_files} files")
         _chunk_size = 1024 * 50
         _file_paths = {
-            fk: self.path/fk for fk in self.file_keys
+            fk: self.upath / fk for fk in self.file_keys
         }  # type: t.Dict[str, Path]
         _urls = self.get_urls()
         _raise_error = False
@@ -1670,7 +1777,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         # raise error if _raise_error
         if _raise_error:
             raise e.validation.NotAllowed(
-                msgs=["Check errors ...", _errors]
+                notes=["Check errors ...", _errors]
             )
 
         # ------------------------------------------------------ 06
@@ -1685,7 +1792,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     # noinspection PyTypeChecker
     def create_file(self, *, file_key: str) -> Path:
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"This method need not be called as create method is "
                 f"overridden for class {self.__class__}"
             ]
@@ -1740,10 +1847,10 @@ class FileGroupFromPaths(FileGroup):
         _rp.update("creating file group from file paths")
 
         for fk in self.file_keys:
-            _f = self.path / fk
+            _f = self.upath / fk
             if not _f.exists():
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"We were expecting path {_f} to exist"
                     ]
                 )
@@ -1754,7 +1861,7 @@ class FileGroupFromPaths(FileGroup):
     # noinspection PyTypeChecker
     def create_file(self, *, file_key: str) -> Path:
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 f"This method need not be called as create method is "
                 f"overridden for class {self.__class__}"
             ]

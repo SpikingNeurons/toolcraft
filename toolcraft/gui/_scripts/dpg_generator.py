@@ -154,6 +154,7 @@ _SKIP_METHODS = [
     dpg.get_delta_time,
     dpg.get_drawing_mouse_pos,
     dpg.get_frame_count,
+    dpg.get_focused_item,
     dpg.get_frame_rate,
     dpg.get_global_font_scale,
     dpg.get_item_types,
@@ -559,11 +560,11 @@ class DpgDef:
             if _param_type == "t.Union[t.List[float], t.Tuple[float, ...]]":
                 _param_type = "PLOT_DATA_TYPE"
             # if below type then it is COLOR_TYPE
-            if _param_name.find("color") != -1 and \
-                    _param_name not in ["colormap", "multicolor"]:
-                if self.fn == dpg.add_colormap:
-                    if _param_name == "colors":
-                        _param_type = "t.List[COLOR_TYPE]"
+            if _param_name.find("color") != -1 and _param_name not in ["colormap", "multicolor"]:
+                if self.fn == dpg.add_colormap and _param_name == "colors":
+                    _param_type = "t.List[COLOR_TYPE]"
+                elif self.fn == dpg.draw_rectangle and _param_name == "corner_colors":
+                    _param_type = "t.List[COLOR_TYPE]"
                 elif _param_type == "t.Union[t.List[int], t.Tuple[int, ...]]":
                     _param_type = "COLOR_TYPE"
                 else:
@@ -1393,8 +1394,8 @@ def main():
 
 
 def backup_to_scf():
-    _src = pathlib.Path("C:\\") / "Github" / "toolcraft" / "toolcraft" / "gui"
-    _dst = pathlib.Path("C:\\") / "Github" / "RU" / "scaffold" / "dl" / "examples" / "deep_learning" / "viewer"
+    _src = pathlib.Path("/mnt/c") / "Github" / "toolcraft" / "toolcraft" / "gui"
+    _dst = pathlib.Path("/mnt/c") / "Github" / "RU" / "scaffold" / "dl" / "examples" / "deep_learning" / "viewer"
     shutil.copytree(_src, _dst, dirs_exist_ok=True)
     shutil.rmtree(_dst / "_scripts")
 

@@ -38,13 +38,6 @@ COLOR_TYPE = t.Tuple[int, int, int, int]
 # PLOT_DATA_TYPE = t.Union[t.List[float], t.Tuple[float, ...]]
 PLOT_DATA_TYPE = t.Union[t.List[float], np.ndarray]
 
-try:
-    # either borrow from settings
-    from ..settings import PYC_DEBUGGING
-except ImportError:
-    # else in standalone set configuration here
-    PYC_DEBUGGING = True
-
 # container widget stack ... to add to parent automatically
 _CONTAINER_WIDGET_STACK: t.List["ContainerWidget"] = []
 
@@ -826,8 +819,9 @@ class Engine:
 
     @classmethod
     async def dpg_loop(cls):
+        from .. import Settings
         try:
-            if PYC_DEBUGGING:
+            if Settings.PYC_DEBUGGING:
                 while internal_dpg.is_dearpygui_running():
                     # add this extra line for callback debug
                     # https://pythonrepo.com/repo/hoffstadt-DearPyGui-python-graphical-user-interface-applications
@@ -897,10 +891,11 @@ class Engine:
 
     @classmethod
     def run(cls, dash: "Dashboard"):
+        from .. import Settings
         # -------------------------------------------------- 01
         # setup dpg
         dpg.create_context()
-        dpg.configure_app(manual_callback_management=PYC_DEBUGGING)
+        dpg.configure_app(manual_callback_management=Settings.PYC_DEBUGGING)
         dpg.create_viewport()
         dpg.setup_dearpygui()
         dpg.show_viewport()
@@ -922,7 +917,7 @@ class Engine:
 
         # -------------------------------------------------- 04
         # call gui main code in async
-        asyncio.run(cls.main(), debug=PYC_DEBUGGING, )
+        asyncio.run(cls.main(), debug=Settings.PYC_DEBUGGING, )
 
         # -------------------------------------------------- 05
         # destroy
@@ -1969,6 +1964,15 @@ class Dashboard(abc.ABC):
         """
         # noinspection PyArgumentList
         return internal_dpg.get_frame_rate(**kwargs)
+
+    @staticmethod
+    def get_focused_item(**kwargs) -> t.Union[int, str]:
+        """
+        Refer:
+        >>> dpg.get_focused_item
+        """
+        # noinspection PyArgumentList
+        return internal_dpg.get_focused_item(**kwargs)
 
     @staticmethod
     def get_global_font_scale(**kwargs) -> float:

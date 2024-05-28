@@ -6,52 +6,43 @@ import numpy as np
 import pyarrow as pa  # do not comment this as on unix it causes seg fault
 import pathlib
 import shutil
-import platform
-import toml
 import typing as t
 import sys
+import toml
 # noinspection PyUnresolvedReferences,PyCompatibility
 import __main__ as main
 
-
-ENV_DIR = pathlib.Path(sys.exec_prefix)
-
-
-# platform
-PLATFORM = platform.uname()  # type: platform.uname_result
-IS_LSF = bool(shutil.which('bjobs'))
-
-
-# check if debugger is used
-PYC_DEBUGGING = False
-gettrace = getattr(sys, 'gettrace', None)
-if gettrace is not None:
-    if gettrace():
-        PYC_DEBUGGING = True
-
-# detect if in interactive mode
-INTERACTIVE = not hasattr(main, '__file__')
-
-
-
-# make config
-TC_HOME = pathlib.Path.home() / ".toolcraft"
-if not TC_HOME.exists():
-    TC_HOME.mkdir(parents=True)
-TC_CONFIG_FILE = TC_HOME / "config.toml"
-if not TC_CONFIG_FILE.exists():
-    TC_CONFIG_FILE.touch()
-TC_CONFIG = toml.load(TC_CONFIG_FILE.as_posix())
-
+from . import storage as s
 
 class Settings:
+
+    TC_HOME = pathlib.Path.home() / ".toolcraft"
+    TC_CONFIG_FILE = None  # type: pathlib.Path
+    TC_CONFIG = None  # type: t.Dict[str, t.Any]
+
+    IS_LSF_MACHINE = bool(shutil.which('bjobs'))
+    PYC_DEBUGGING = None  # type: bool
+
+    FILE_SYSTEMS = dict(
+        CWD=s.LocalFileSystem(url="file://./"),
+        DOWNLOAD=s.LocalFileSystem(url="file://./.download/"),
+    )  # type: t.Dict[str, s.BaseFileSystem]
+
+    # detect if in interactive mode
+    INTERACTIVE = not hasattr(main, '__file__')
+
+    # 260 is for windows ... leave 60 for arrow storage
+    # todo: adapt code based on OS platform
+    FILE_SYSTEMS_PATH_LENGTH = 260 - 60
+
+
     # time interval between to check hashes on disk
     # note that this is a list ... any one of the values in list will be picked
     # for determining if to do hash check or not ... this distributes the hash
     # check over time so that there is no time slogging
-    _MIN_HOURS = 100 * 24  # 100 days
-    _MAX_HOURS = 200 * 24  # 200 days
-    CHECK_INTERVALS_IN_SEC = list(np.arange(_MIN_HOURS, _MAX_HOURS, 3) * 60 * 60)
+    CHECK_MIN_HOURS = 100 * 24  # 100 days
+    CHECK_MAX_HOURS = 200 * 24  # 200 days
+    CHECK_INTERVALS_IN_SEC = list(np.arange(CHECK_MIN_HOURS, CHECK_MAX_HOURS, 3) * 60 * 60)
     # CHECK_INTERVALS_IN_SEC = [1]
 
     # when you want to debug if auto_hashing feature creates same files in
@@ -61,3 +52,78 @@ class Settings:
     DO_RULE_CHECK = True
     LOGGER_USE_FILE_HANDLER = False
 
+    @classmethod
+    def fields_not_to_be_persisted(cls) -> [str]:
+        return [
+            "TC_HOME", "TC_CONFIG_FILE", "TC_CONFIG",
+            "IS_LSF_MACHINE", "PYC_DEBUGGING", "INTERACTIVE",
+            "CHECK_INTERVALS_IN_SEC",
+        ]
+
+    @classmethod
+    def load_and_init_fields(cls):
+
+        # check if debugger is used
+        cls.PYC_DEBUGGING = False
+        gettrace = getattr(sys, 'gettrace', None)
+        if gettrace is not None:
+            if gettrace():
+                cls.PYC_DEBUGGING = True
+
+        # backup filesystems
+        _file_systems_bu = cls.FILE_SYSTEMS.copy()
+
+        # load class fields from settings file
+        if not cls.TC_HOME.exists():
+            cls.TC_HOME.mkdir(parents=True)
+        cls.TC_CONFIG_FILE = cls.TC_HOME / "config.toml"
+        if not cls.TC_CONFIG_FILE.exists():
+            cls.TC_CONFIG_FILE.touch()
+        _config = toml.load(cls.TC_CONFIG_FILE.as_posix())
+        for _k, _v in _config.items():
+            if _k in cls.__dict__.keys():
+                if _k == "FILE_SYSTEMS":
+                    setattr(
+                        cls, _k, {__k: s.get_fs_from_toml_config(__v) for __k, __v in _v.items()}
+                    )
+                else:
+                    setattr(cls, _k, _v)
+            elif _k in cls.fields_not_to_be_persisted():
+                raise KeyError(f"Key {_k} in config file is supposed to be not persisted ... Please check code for bugs")
+            else:
+                raise ValueError(f"Unknown key {_k} in config file")
+
+        # compare and persist
+        for _k in list(_file_systems_bu.keys()):
+            if _k not in cls.FILE_SYSTEMS.keys():
+                cls.FILE_SYSTEMS[_k] = _file_systems_bu[_k]
+            else:
+                if cls.FILE_SYSTEMS[_k] != _file_systems_bu[_k]:
+                    raise ValueError(
+                        f"File system {_k!r} loaded from config file and the one supplied in code does not match ... "
+                        f"Please check code for bugs")
+
+    @classmethod
+    def persist_fields(cls):
+        _config = {}
+        _fields_not_to_be_persisted = cls.fields_not_to_be_persisted()
+        for _k, _v in cls.__dict__.items():
+            if _k in _fields_not_to_be_persisted or _k.startswith("_") or callable(_v) or isinstance(_v, (classmethod, property, staticmethod)):
+                continue
+            if _k == "FILE_SYSTEMS":
+                _config[_k] = {__k: __v.as_dict(skip_defaults=True) for __k, __v in _v.items()}
+            else:
+                _config[_k] = _v
+        toml.dump(_config, cls.TC_CONFIG_FILE.open('w'))
+
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.load_and_init_fields()
+        cls.persist_fields()
+
+
+# this happens at toolcraft library level
+# if you override Settings in your library then __init_subclass__ will be triggered
+# which in turn sets the fields for your library
+Settings.__init_subclass__()

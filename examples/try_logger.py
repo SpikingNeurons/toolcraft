@@ -51,7 +51,7 @@ def _experiment_rich():
 def try_logging():
     _LOGGER.info(
         msg="I am showing some message",
-        msgs=[
+        notes=[
             "JJKH wegbdkq2zuyhbviu ",
             ["sadas", "sadas", "uiyu", "ewgy"],
             (1,2,3,"dfsdf"),
@@ -65,7 +65,7 @@ def try_logging():
 def try_exceptions():
     try:
         raise e.code.CodingError(
-            msgs=[
+            notes=[
                 "I am wrong ...", "But why ???", {1: 1, 2: 3}, ["q", "tt", "yy"]
             ]
         )

@@ -80,10 +80,10 @@ class Experiment(job.Experiment):
 class Runner(job.Runner):
 
     def some_job(self):
-        _LOGGER.info(f"{(self.job.job_id, self.job.path)}")
+        _LOGGER.info(f"{(self.job.job_id, self.job.upath)}")
 
     def some_job_experiment(self, experiment: Experiment):
-        _LOGGER.info(f"{(self.job.job_id, self.job.path)}")
+        _LOGGER.info(f"{(self.job.job_id, self.job.upath)}")
         if experiment.a == 44444:
             _msg = f"I just wanted to fail one job ... " \
                    f"Note that if cluster type is " \
@@ -92,7 +92,7 @@ class Runner(job.Runner):
             raise Exception(_msg)
 
     def end(self):
-        _LOGGER.info(f"{(self.job.job_id, self.job.path, 'ended')}")
+        _LOGGER.info(f"{(self.job.job_id, self.job.upath, 'ended')}")
 
     @property
     @util.CacheResult

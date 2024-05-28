@@ -37,3 +37,9 @@ except ImportError:
 
         def __call__(self, fn: t.Callable):
             return fn
+
+    # re raising for time being .... looks like we might not need this except block as we expect import to
+    # work even on server machines
+    # todo: remove this block once we know that gui will work on server machines
+    #       or else comment the below code in case you want old behaviour
+    raise

@@ -18,7 +18,7 @@ import traceback
 
 from .. import error as e
 from .. import logger
-from .. import settings
+from .. import settings, Settings
 from .__base__ import Runner, Job
 from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
 from . import cli_launch
@@ -61,7 +61,7 @@ def get_app(runner: Runner):
         cli_launch._RUNNER = runner
     else:
         raise e.code.CodingError(
-            msgs=["Was expecting internal var _RUNNER to be None"]
+            notes=["Was expecting internal var _RUNNER to be None"]
         )
     return _APP
 
@@ -70,7 +70,7 @@ def get_app(runner: Runner):
 def nxdi():
     """
     """
-    print("IS_LSF", settings.IS_LSF)
+    print("IS_LSF", Settings.IS_LSF_MACHINE)
     # noinspection PyUnresolvedReferences
     import tensorflow as tf
     print("CUDA", tf.test.is_built_with_cuda())
@@ -101,103 +101,8 @@ def run(
     _rp = _RUNNER.richy_panel
 
     # ------------------------------------------------------------ 03
-    # reconfig logger to change log file for job
-    import logging
-    _log = _job.log_file
-    logger.setup_logging(
-        propagate=False,
-        level=logging.NOTSET,
-        # todo: here we can config that on server where things will be logged
-        handlers=[
-            # logger.get_rich_handler(),
-            # logger.get_stream_handler(),
-            logger.get_file_handler(_log.local_path),
-        ],
-    )
-    _start = _now()
-    _LOGGER.info(
-        msg=f"Starting job on worker machine ...",
-        msgs=[
-            {
-                "job_id": _job.job_id,
-                "sys.argv": sys.argv,
-                "started": _start.ctime(),
-            }
-        ]
-    )
-
-    # ------------------------------------------------------------ 04
-    # check if launcher client machine has created launched tag
-    if not _job.tag_manager.launched.exists():
-        raise e.code.CodingError(
-            msgs=[
-                "We expect that `launched` tag is created by client launching machine .... "
-            ]
-        )
-
-    # ------------------------------------------------------------ 05
-    # indicates that job is started
-    _job.tag_manager.started.create()
-
-    # ------------------------------------------------------------ 06
-    # indicate that job will now be running
-    # also note this acts as semaphore and is deleted when job is finished
-    # ... hence started tag is important
-    _job.tag_manager.running.create()
-
-    # ------------------------------------------------------------ 07
-    try:
-        for _wj in _job.wait_on_jobs:
-            if not _wj.is_finished:
-                raise e.code.CodingError(
-                    msgs=[f"Wait-on job with job-id "
-                          f"{_wj.job_id} is supposed to be finished ..."]
-                )
-        _job_kwargs = {} if _job.kwargs is None else _job.kwargs
-        if _job.experiment is None:
-            _job.method(**_job_kwargs)
-        else:
-            with _job.experiment(richy_panel=_rp):
-                _job.method(**_job_kwargs)
-        _job.tag_manager.running.delete()
-        _job.tag_manager.finished.create()
-        _end = _now()
-        _LOGGER.info(
-            msg=f"Successfully finished job on worker machine ...",
-            msgs=[
-                {
-                    "job_id": _job.job_id,
-                    "started": _start.ctime(),
-                    "ended": _end.ctime(),
-                    "seconds": str((_end - _start).total_seconds()),
-                }
-            ]
-        )
-    except Exception as _ex:
-        _ex_str = traceback.format_exc()
-        _job.tag_manager.failed.create(exception=_ex_str)
-        _end = _now()
-        _LOGGER.error(
-            msg=f"Failed job on worker machine ...",
-            msgs=[
-                {
-                    "job_id": _job.job_id,
-                    "started": _start.ctime(),
-                    "ended": _end.ctime(),
-                    "seconds": str((_end - _start).total_seconds()),
-                }
-            ]
-        )
-        _LOGGER.error(
-            msg="*** EXCEPTION MESSAGE *** \n" + _ex_str
-        )
-        _job.tag_manager.running.delete()
-        # above thing will tell toolcraft that things failed gracefully
-        # while below raise will tell cluster systems like bsub that job has failed
-        # todo for `JobRunnerClusterType.local_on_same_thread` this will not allow
-        #  future jobs to run ... but this is expected as we want to debug in
-        #  this mode mostly
-        raise _ex
+    # call on worker
+    _job.run_on_worker(_rp=_rp)
 
 
 @_APP.command(help="View dashboard")
@@ -287,22 +192,22 @@ def archive(
     if transmft:
         if part_size is not None:
             raise e.validation.NotAllowed(
-                msgs=["When using transmft do not supply part_size as we hardcode it to 399MB"]
+                notes=["When using transmft do not supply part_size as we hardcode it to 399MB"]
             )
         part_size = 399
 
     # -------------------------------------------------------------- 02
     # make archive
     _rp.update(
-        f"archiving results dir {_RUNNER.results_dir.local_path.as_posix()} "
+        f"archiving results dir {_RUNNER.results_dir.as_posix()} "
         f"{'' if part_size is None else 'and making parts '} ..."
     )
     _zip_base_name = _RUNNER.results_dir.name
-    _cwd = _RUNNER.cwd.local_path.resolve().absolute()
-    _archive_folder = _RUNNER.results_dir.local_path.parent / f"{_zip_base_name}_archive"
+    _cwd = _RUNNER.cwd.resolve().absolute()
+    _archive_folder = _RUNNER.results_dir.parent / f"{_zip_base_name}_archive"
     _archive_folder.mkdir()
     _big_zip_file = _archive_folder / f"{_zip_base_name}.zip"
-    _src_dir = _RUNNER.results_dir.local_path.expanduser().resolve(strict=True)
+    _src_dir = _RUNNER.results_dir.expanduser().resolve(strict=True)
     _files_and_folders_to_compress = 0
     for _file in _src_dir.rglob('*'):
         _files_and_folders_to_compress += 1
@@ -361,7 +266,7 @@ def archive(
                 ]
                 subprocess.run(_cmd_tokens, shell=False)
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"unknown value -- {_chapters}"])
+            raise e.code.ShouldNeverHappen(notes=[f"unknown value -- {_chapters}"])
         _trans_log_file = _archive_folder / f"trans.log"
         shutil.move(_cwd / "trans.log", _trans_log_file)
         _trans_file_keys = [
@@ -429,7 +334,7 @@ def clean():
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             if not _j.is_finished:
                 _rp.update(f"Deleting job {_j.short_name}")
-                _j.path.delete(recursive=True)
+                _j.upath.delete(recursive=True)
 
 
 @_APP.command(help="Deletes the job in runner even successfully finished runs (use carefully).")
@@ -444,7 +349,7 @@ def delete():
         _j: Job
         for _j in _rp.track(_stage.all_jobs, task_name=f"Deleting for stage {_stage_name}"):
             _rp.update(f"Deleting job {_j.short_name}")
-            _j.path.delete(recursive=True)
+            _j.upath.delete(recursive=True)
 
 
 @_APP.command(help="Lists the jobs in runner that are not finished.")

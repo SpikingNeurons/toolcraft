@@ -45,14 +45,14 @@ class DaprTool(Tool):
         #   Refer mlflow to see if this can be done
 
         # check if python script available
-        e.io.FileMustBeOnDiskOrNetwork(
-            path=py_script, msgs=["Please supply python script ..."]
-        ).raise_if_failed()
+        e.io.FileMustBeOnDiskOrNetwork.check(
+            path=py_script, notes=["Please supply python script ..."]
+        )
 
         # check if dapr installed
         if shutil.which("dapr") is None:
             raise e.code.NotAllowed(
-                msgs=["dapr is not available on this system"]
+                notes=["dapr is not available on this system"]
             )
 
         # check if script is called from same dir
@@ -60,7 +60,7 @@ class DaprTool(Tool):
         _script_dir = py_script.parent.absolute().resolve().as_posix()
         if _cwd != _script_dir:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "Improper current working dir ...",
                     f"Script dir is {_script_dir}",
                     f"Current working dir is {_cwd}",
@@ -72,7 +72,7 @@ class DaprTool(Tool):
         # log details
         _LOGGER.info(
             msg=f"Calling tool {cls.tool_name()} for",
-            msgs=[{'py_script': py_script.as_posix(), 'dapr_mode': dapr_mode}]
+            notes=[{'py_script': py_script.as_posix(), 'dapr_mode': dapr_mode}]
         )
 
         # final call to dapr sidecar

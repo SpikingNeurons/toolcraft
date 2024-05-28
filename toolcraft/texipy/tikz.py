@@ -182,7 +182,7 @@ class WidthFactor:
         if self.outer_factor is not None:
             if self.line_width_factor is None:
                 raise e.validation.NotAllowed(
-                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                    notes=["You supplied outer_factor so make sure to supply line_width_factor"]
                 )
 
     def __str__(self):
@@ -194,7 +194,7 @@ class WidthFactor:
         else:
             if self.outer_factor is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                    notes=["You supplied outer_factor so make sure to supply line_width_factor"]
                 )
         return _ret
 
@@ -211,7 +211,7 @@ class AngleWidthFactor:
         if self.outer_factor is not None:
             if self.line_width_factor is None:
                 raise e.validation.NotAllowed(
-                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                    notes=["You supplied outer_factor so make sure to supply line_width_factor"]
                 )
 
     def __str__(self):
@@ -223,7 +223,7 @@ class AngleWidthFactor:
         else:
             if self.outer_factor is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["You supplied outer_factor so make sure to supply line_width_factor"]
+                    notes=["You supplied outer_factor so make sure to supply line_width_factor"]
                 )
         return _ret
 
@@ -240,7 +240,7 @@ class LengthFactor:
         if self.line_width_factor is not None:
             if self.length_factor is None:
                 raise e.validation.NotAllowed(
-                    msgs=["You supplied line_width_factor so make sure to supply length_factor"]
+                    notes=["You supplied line_width_factor so make sure to supply length_factor"]
                 )
 
     def __str__(self):
@@ -252,7 +252,7 @@ class LengthFactor:
         else:
             if self.line_width_factor is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["You supplied line_width_factor so make sure to supply length_factor"]
+                    notes=["You supplied line_width_factor so make sure to supply length_factor"]
                 )
         return _ret
 
@@ -272,7 +272,7 @@ class ArrowTipScale:
     def __post_init__(self):
         if not self.length and not self.width:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "Either one or both length and width should be True"
                 ]
             )
@@ -311,21 +311,21 @@ class ArrowTipSize:
         if self.width is not None:
             if self.width_ is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "We assume that either width or width_ can be used. But they cannot be used simultaneously."
                     ]
                 )
         if self.inset is not None:
             if self.inset_ is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "We assume that either inset or inset_ can be used. But they cannot be used simultaneously."
                     ]
                 )
         if self.angle is not None:
             if self.angle_ is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "We assume that either angle or angle_ can be used. But they cannot be used simultaneously."
                     ]
                 )
@@ -375,12 +375,12 @@ class ArrowTipLineStyle:
     def __post_init__(self):
         if self.line_width is not None and self.line_width_ is not None:
             raise e.validation.NotAllowed(
-                msgs=["Both line_width and line_width_ cannot be supplied simultaneously"]
+                notes=["Both line_width and line_width_ cannot be supplied simultaneously"]
             )
         if self.line_width_ is not None:
             if self.line_width_.line_width_factor is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "arrow tip line_width_ does not support line_width_factor"]
                 )
 
@@ -424,7 +424,7 @@ class ArrowTipBending(enum.Enum):
         if self in [self.quick, self.bend]:
             if bending_factor is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[f"Do not use bending_factor for tip {self.name}"]
+                    notes=[f"Do not use bending_factor for tip {self.name}"]
                 )
             return self.name
         else:
@@ -544,7 +544,7 @@ class ArrowTip:
         else:
             if self.bending_factor is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["Do not supply bending_factor is bending is not provided"]
+                    notes=["Do not supply bending_factor is bending is not provided"]
                 )
 
     def __str__(self) -> str:
@@ -629,7 +629,7 @@ class ArrowSpec:
         # validation
         if self.start_tips is None and self.end_tips is None:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "Either one of start or end tips should be provided"
                 ]
             )
@@ -694,7 +694,7 @@ class Join(enum.Enum):
                 return f"join={self.value},miter limit={join_miter_limit}"
             else:
                 raise e.code.CodingError(
-                    msgs=[f"join_miter_limit is not allowed for {self}"]
+                    notes=[f"join_miter_limit is not allowed for {self}"]
                 )
         return f"join={self.value}"
 
@@ -871,7 +871,7 @@ class DrawOptions:
         else:
             if self.join_miter_limit is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Please do not supply join_miter_limit when join is not provided"
                     ]
                 )
@@ -1237,23 +1237,23 @@ class Anchor:
         if self.shift_y is not None:
             if self.shift_x is None:
                 raise e.validation.NotAllowed(
-                    msgs=["Since shift_x is not supplied please do not supply shift_y"]
+                    notes=["Since shift_x is not supplied please do not supply shift_y"]
                 )
         if isinstance(self.of, BaseNode):
             if self.of.name is None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "only use nodes with name"
                     ]
                 )
         if isinstance(self.of, Point2D):
             if self.of.relative != '':
                 raise e.validation.NotAllowed(
-                    msgs=["relative coordinates not supported"]
+                    notes=["relative coordinates not supported"]
                 )
             if self.of.id is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["id for coordinate is not supported"]
+                    notes=["id for coordinate is not supported"]
                 )
 
     def __str__(self):
@@ -1275,7 +1275,7 @@ class Anchor:
             elif isinstance(self.of, Point2D):
                 _spec += f"{{{self.of.x}.{self.of.y}}}"
             else:
-                raise e.code.ShouldNeverHappen(msgs=[])
+                raise e.code.ShouldNeverHappen()
         if bool(_spec):
             _ret += "=" + _spec
         return _ret
@@ -1333,7 +1333,7 @@ class Anchor:
         """
         shorthand for anchor=center ... i.e. above center anchor
         """
-        raise e.code.CodingError(msgs=["needs testing ... not sure if shift and of options allowed"])
+        raise e.code.CodingError(notes=["needs testing ... not sure if shift and of options allowed"])
         # noinspection PyUnreachableCode
         return Anchor(name="centered", shift_x=shift_x, shift_y=shift_y, of=of, on_grid=on_grid)
 
@@ -1351,7 +1351,7 @@ class Point(abc.ABC):
 
     def __str__(self):
         raise e.code.NotAllowed(
-            msgs=[f"Please override in child class {self.__class__}"]
+            notes=[f"Please override in child class {self.__class__}"]
         )
 
     def __add__(self, other: "Point") -> str:
@@ -1535,7 +1535,7 @@ class PointOnNode(Point):
             ]
         ) != 1:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "only one out of six fields should be specified",
                     [
                         'angle', 'side', 'corner', 'inner_point', 'outer_point', 'anchor'
@@ -1546,8 +1546,8 @@ class PointOnNode(Point):
         # if node is provided make sure that id is available
         if self.node is not None:
             if self.node.name is None:
-                e.code.CodingError(
-                    msgs=["Please use node's that have id defined ..."]
+                raise e.code.CodingError(
+                    notes=["Please use node's that have id defined ..."]
                 )
 
     def __str__(self) -> str:
@@ -1563,7 +1563,7 @@ class PointOnNode(Point):
             return f"({self.node.name}.inner point {self.inner_point})"
         if self.outer_point is not None:
             return f"({self.node.name}.outer point {self.outer_point})"
-        raise e.code.ShouldNeverHappen(msgs=[f"Unknown {self}"])
+        raise e.code.ShouldNeverHappen(notes=[f"Unknown {self}"])
 
 
 @dataclasses.dataclass
@@ -1669,7 +1669,7 @@ class BaseNode(abc.ABC):
 
         if _TIKZ_IN_WITH_CONTEXT is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "Ideally Node/Label/Pin instances must be created in with context of TikZ"
                 ]
             )
@@ -1702,7 +1702,7 @@ class _LabelPin(BaseNode):
 
         if self.angle is not None and self.anchor is not None:
             raise e.code.CodingError(
-                msgs=["only supply one of angle or anchor kwarg"]
+                notes=["only supply one of angle or anchor kwarg"]
             )
 
     def init(self):
@@ -1717,7 +1717,7 @@ class _LabelPin(BaseNode):
         if self._parent_node is not None:
             # noinspection PyProtectedMember
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"The label/pin is already registered with node {self._parent_node.name}"
                 ]
             )
@@ -1746,7 +1746,7 @@ class Label(_LabelPin):
     def __str__(self):
         if self._parent_node is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "This label was never attached to any node",
                     "Ideally it should be passed as argument to Node class",
                 ]
@@ -1788,7 +1788,7 @@ class Pin(_LabelPin):
     def __str__(self):
         if self._parent_node is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "This pin was never attached to any node",
                     "Ideally it should be passed as argument to Node class",
                 ]
@@ -1915,7 +1915,7 @@ class Node(BaseNode):
             self._at = other
         else:
             raise e.code.CodingError(
-                msgs=[f"This node {self} is already positioned at {self._at}"]
+                notes=[f"This node {self} is already positioned at {self._at}"]
             )
         return self
         # _kwargs = {
@@ -1937,10 +1937,10 @@ class Node(BaseNode):
         # when style key provided check if it is registered ...
         _style = self.style
         if isinstance(_style, str):
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=_style, values=list(self._tikz.styles.keys()),
-                msgs=[f"Style {_style} si not registered with tikz_context"]
-            ).raise_if_failed()
+                notes=[f"Style {_style} si not registered with tikz_context"]
+            )
             _style = self._tikz.styles[_style]
 
         # -------------------------------------------------------- 02
@@ -2101,7 +2101,7 @@ class Path:
 
         if _TIKZ_IN_WITH_CONTEXT is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "Ideally Path instances must be created in with context of TikZ"
                 ]
             )
@@ -2127,7 +2127,7 @@ class Path:
         #     else:
         #         if id(_pi._tikz) != id(self._tikz):
         #             raise e.code.CodingError(
-        #                 msgs=["_tikz was already set ... "
+        #                 notes=["_tikz was already set ... "
         #                       "and is not same as new value you want to set",
         #                       "We expect the nodes to be from same tikz picture"]
         #             )
@@ -2156,7 +2156,7 @@ class Path:
     def add_node(self, node: BaseNode) -> "Path":
         # todo: if not needed remove this method
         raise e.code.CodingError(
-            msgs=["Although adding nodes in path is possible but for now we block it",
+            notes=["Although adding nodes in path is possible but for now we block it",
                   "Prefer registering nodes directly with TikZ"]
         )
         # the below code works and new nodes to path
@@ -2361,21 +2361,21 @@ class Path:
         if radius is not None:
             if x_radius is not None or y_radius is not None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "If radius is specified do not specify x_radius and(or) y_radius"
                     ]
                 )
         else:
             if x_radius is None or y_radius is None:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Please specify x_radius and y_radius or else specify radius"
                     ]
                 )
         if start_angle is None:
-            raise e.validation.NotAllowed(msgs=["Please specify start_angle"])
+            raise e.validation.NotAllowed(notes=["Please specify start_angle"])
         if not (end_angle is None ^ delta_angle is None):
-            raise e.validation.NotAllowed(msgs=["Specify one of end_angle or delta_angle"])
+            raise e.validation.NotAllowed(notes=["Specify one of end_angle or delta_angle"])
 
         # bake options
         _ops = []
@@ -2412,9 +2412,9 @@ class Path:
         """
         if step is not None:
             if xstep is not None:
-                raise e.validation.NotAllowed(msgs=["Please do not use xstep as you are using step"])
+                raise e.validation.NotAllowed(notes=["Please do not use xstep as you are using step"])
             if ystep is not None:
-                raise e.validation.NotAllowed(msgs=["Please do not use ystep as you are using step"])
+                raise e.validation.NotAllowed(notes=["Please do not use ystep as you are using step"])
 
         _options = []
         if step is not None:
@@ -2565,7 +2565,7 @@ class Path:
         # scale it to given height and width
         if width.unit != height.unit:
             raise e.validation.NotAllowed(
-                msgs=["Was expecting the unit of height and width to be same"]
+                notes=["Was expecting the unit of height and width to be same"]
             )
         _unit = width.unit
         x *= width.value
@@ -2731,7 +2731,7 @@ class Path:
             else:
                 # `to` is mandatory when not loop
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The `to` kwarg is mandatory when not using for loop"
                     ]
                 )
@@ -2895,7 +2895,7 @@ class TikZ(LaTeX):
         if bool(self._items):
             # todo: address this issue later
             raise e.code.CodingError(
-                msgs=["Do not call this twice as self.items will be populated again"]
+                notes=["Do not call this twice as self.items will be populated again"]
             )
 
         # note that nodes are already added via open_clause
@@ -2914,7 +2914,7 @@ class TikZ(LaTeX):
 
         if _TIKZ_IN_WITH_CONTEXT is not None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "There is already some other TikZ instance in with context"
                 ]
             )
@@ -2928,7 +2928,7 @@ class TikZ(LaTeX):
 
         if id(_TIKZ_IN_WITH_CONTEXT) != id(self):
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     "While escaping with context we we expect global var _TIKZ_IN_WITH_CONTEXT to be set to self"
                 ]
             )
@@ -2938,7 +2938,7 @@ class TikZ(LaTeX):
     def __getitem__(self, node_name: str) -> BaseNode:
         if node_name is None:
             raise e.validation.NotAllowed(
-                msgs=["item=None is not supported ..."]
+                notes=["item=None is not supported ..."]
             )
 
         for _n in self._nodes:
@@ -2946,7 +2946,7 @@ class TikZ(LaTeX):
                 return _n
 
         raise e.validation.NotAllowed(
-            msgs=[f"We cannot find node with name {node_name}"]
+            notes=[f"We cannot find node with name {node_name}"]
         )
 
     def init_validate(self):
@@ -2956,13 +2956,13 @@ class TikZ(LaTeX):
         # more validations
         if self.label is not None:
             raise e.validation.NotAllowed(
-                msgs=["label field is not usable with TikZ so do not set it"]
+                notes=["label field is not usable with TikZ so do not set it"]
             )
 
         if self.node_distance_x is None:
             if self.node_distance_y is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["please supply node_distance_y only if you supply node_distance_x"]
+                    notes=["please supply node_distance_y only if you supply node_distance_x"]
                 )
 
     def init(self):
@@ -2980,17 +2980,17 @@ class TikZ(LaTeX):
         if isinstance(node, Node):
             if node.name is None:
                 raise e.code.NotAllowed(
-                    msgs=["Please supply name for node as this will be declared globally to be used by TikZ",
+                    notes=["Please supply name for node as this will be declared globally to be used by TikZ",
                           "Only nodes that are declared on path or as pin or label can be used without id"]
                 )
-        e.validation.ShouldNotBeOneOf(
+        e.validation.ShouldNotBeOneOf.check(
             value=node, values=self._nodes,
-            msgs=["The node is already registered", f"{type(node)}:{node.name}"]
-        ).raise_if_failed()
-        e.validation.ShouldNotBeOneOf(
+            notes=["The node is already registered", f"{type(node)}:{node.name}"]
+        )
+        e.validation.ShouldNotBeOneOf.check(
             value=node.name, values=[_.name for _ in self._nodes if _.name is not None],
-            msgs=[f"The node name {node.name} is already taken"]
-        ).raise_if_failed()
+            notes=[f"The node name {node.name} is already taken"]
+        )
 
         # -------------------------------------------------------
         # add node
@@ -3000,10 +3000,10 @@ class TikZ(LaTeX):
     def add_path(self, path: Path) -> "TikZ":
         # when style key provided check if it is registered ...
         if isinstance(path.style, str):
-            e.validation.ShouldBeOneOf(
+            e.validation.ShouldBeOneOf.check(
                 value=path.style, values=list(self.styles.keys()),
-                msgs=[f"Style {path.style} is not registered with tikz"]
-            ).raise_if_failed()
+                notes=[f"Style {path.style} is not registered with tikz"]
+            )
 
         # if tikz not present provide it
         # noinspection PyProtectedMember
@@ -3013,7 +3013,7 @@ class TikZ(LaTeX):
             # noinspection PyProtectedMember
             if id(path._tikz) != id(self):
                 raise e.code.CodingError(
-                    msgs=["_tikz was already set ... "
+                    notes=["_tikz was already set ... "
                           "and path may be from different tikz picture"]
                 )
 
@@ -3026,13 +3026,13 @@ class TikZ(LaTeX):
     def register_style(self, key: str, style: Style):
         if not key.startswith("s_"):
             raise e.validation.NotAllowed(
-                msgs=["Style should start with s_"]
+                notes=["Style should start with s_"]
             )
         if key not in self.styles:
             self.styles[key] = style
         else:
             raise e.validation.NotAllowed(
-                msgs=[f"Style with key {key} is already registered ..."]
+                notes=[f"Style with key {key} is already registered ..."]
             )
 
     def add_debug_grid(

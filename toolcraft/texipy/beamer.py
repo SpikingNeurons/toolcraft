@@ -96,7 +96,7 @@ class _Sec(LaTeX, abc.ABC):
         if self.starred:
             if self.short_name is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["In starred mode you cannot use short name "]
+                    notes=["In starred mode you cannot use short name "]
                 )
 
 
@@ -248,14 +248,14 @@ class Beamer(LaTeX):
         super().init_validate()
         if self.label is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set label for {self.__class__}"]
+                notes=[f"No need to set label for {self.__class__}"]
             )
 
     def init(self):
         super().init()
         if self._parent is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set _parent for {self.__class__}"]
+                notes=[f"No need to set _parent for {self.__class__}"]
             )
         # noinspection PyAttributeOutsideInit
         self._parent = self
@@ -516,10 +516,10 @@ class Bibliography(Frame):
         # test file
         if self.file is None:
             raise e.validation.NotAllowed(
-                msgs=["Please set mandatory field `file`"]
+                notes=["Please set mandatory field `file`"]
             )
         if not self.file.exists():
             raise e.validation.NotAllowed(
-                msgs=[f"Cannot find `bib` file {self.file} on the disk ..."]
+                notes=[f"Cannot find `bib` file {self.file} on the disk ..."]
             )
 

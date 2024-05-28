@@ -23,7 +23,7 @@ class SftpTool(Tool):
         yaml_file = pathlib.Path(file_name)
         if not yaml_file.exists():
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     f"We cannot find file `{file_name}`"
                 ]
             )
@@ -42,7 +42,7 @@ class SftpTool(Tool):
         # iterate over files to download and check hash
         cls.info(
             msg="Downloading and uploading files to SFTP server at:",
-            msgs=[
+            notes=[
                 sftp_details
             ]
         )

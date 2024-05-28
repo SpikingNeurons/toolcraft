@@ -1,12 +1,12 @@
 import dataclasses
 import typing as t
+from upath import UPath
 
 from .__base__ import StorageHashable
 from .. import error as e
 from .. import util
 from .. import marshalling as m
 from . import Suffix
-from . import Path
 from .. import logger
 
 _LOGGER = logger.get_logger()
@@ -124,7 +124,7 @@ class Folder(StorageHashable):
         # if _state_manager_files_available:
         #     if not _folder_present:
         #         raise e.code.CodingError(
-        #             msgs=[
+        #             notes=[
         #                 f"The state is available but respective folder is "
         #                 f"absent."
         #             ]
@@ -153,16 +153,16 @@ class Folder(StorageHashable):
         if not self.is_created:
             self.create()
 
-    def create(self) -> Path:
+    def create(self) -> UPath:
         """
         If there is no Folder we create an empty folder.
         """
-        if not self.path.isdir():
+        if not self.upath.is_dir():
             self.richy_panel.update(f"creating folder {self.name}")
-            self.path.mkdir()
+            self.upath.mkdir()
 
         # return
-        return self.path
+        return self.upath
 
     def delete(self, *, force: bool = False) -> t.Any:
         _rp = self.richy_panel
@@ -175,7 +175,7 @@ class Folder(StorageHashable):
             response = "y"
         else:
             # todo: need to implement the ask dialog inside richy_panel
-            raise e.code.NotYetImplemented(msgs=["todo: need to implement the ask dialog inside richy_panel"])
+            raise e.code.NotYetImplemented(notes=["todo: need to implement the ask dialog inside richy_panel"])
             # response = richy.r_prompt.Confirm.ask(
             #     f"Do you want to delete files for Folder `{self.path}`?",
             #     default=True,
@@ -190,11 +190,11 @@ class Folder(StorageHashable):
 
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it
-        if not self.path.is_dir_empty():
+        if not self.upath.is_dir_empty():
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"The folder should be empty by now ...",
-                    f"Check path {self.path}",
+                    f"Check path {self.upath}",
                     f"May be you have non StorageHashable files ... note that even "
                     f"with force=True we cannot delete this"
                 ]
@@ -245,12 +245,12 @@ class Folder(StorageHashable):
         # The max we can do in that case is warn users that some
         # thing else is lying around in folder check method
         # warn_about_garbage.
-        _sep = self.path.sep
+        _sep = self.upath.sep
         if only_names:
-            for f in self.path.glob(pattern=f"*{Suffix.info}"):
+            for f in self.upath.glob(pattern=f"*{Suffix.info}"):
                 yield f.full_path.split(_sep)[-1].split(f"{Suffix.info}")[0]
         else:
-            for f in self.path.glob(pattern=f"*{Suffix.info}"):
+            for f in self.upath.glob(pattern=f"*{Suffix.info}"):
                 # build instance
                 _cls = m.YamlRepr.get_class(f)
                 # noinspection PyTypeChecker

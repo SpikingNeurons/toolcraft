@@ -21,15 +21,14 @@ todo: storage in point of view of mlflow (also see top of individual module for
 
 """
 
-from . import file_system
-from .file_system import Path, FileSystemConfig
+from .fs import BaseFileSystem, LocalFileSystem, get_fs_from_toml_config
 from .__base__ import StorageHashable
 from .state import Info, Config, Suffix
 from .folder import Folder
 from .file_group import FileGroup, FileGroupFromPaths, USE_ALL, \
     SELECT_TYPE, FileGroupConfig
 from .file_group import DownloadFileGroup, NpyFileGroup, TempFileGroup, \
-    NpyFileGroupConfig
+    NpyFileGroupConfig, Generator
 from .table import Table, Filter, make_expression
 
 

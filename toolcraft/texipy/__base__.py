@@ -115,7 +115,7 @@ class Text:
         if self.color is not None:
             if self.color.intensity is not None:
                 raise e.validation.NotAllowed(
-                    msgs=["Intensity use needs to be tested ... comment this check and test"]
+                    notes=["Intensity use needs to be tested ... comment this check and test"]
                 )
 
     def __str__(self) -> str:
@@ -212,7 +212,7 @@ class Icon(enum.Enum):
             try:
                 _cmd = f"ding{{{_dict[_cmd]}}}"
             except KeyError:
-                raise e.code.CodingError(msgs=[f"Unknown ding {_cmd}"])
+                raise e.code.CodingError(notes=[f"Unknown ding {_cmd}"])
         else:
             ...
         return "\\" + _cmd
@@ -424,7 +424,7 @@ class Scalar(t.NamedTuple):
         if isinstance(other, Scalar):
             if other.unit != self.unit:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Units should match ...", dict(self=self.unit, other=other.unit)
                     ]
                 )
@@ -437,7 +437,7 @@ class Scalar(t.NamedTuple):
         if isinstance(other, Scalar):
             if other.unit != self.unit:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Units should match ...", dict(self=self.unit, other=other.unit)
                     ]
                 )
@@ -450,7 +450,7 @@ class Scalar(t.NamedTuple):
         if isinstance(other, Scalar):
             if other.unit != self.unit:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Units should match ...", dict(self=self.unit, other=other.unit)
                     ]
                 )
@@ -463,7 +463,7 @@ class Scalar(t.NamedTuple):
         if isinstance(other, Scalar):
             if other.unit != self.unit:
                 raise e.validation.NotAllowed(
-                    msgs=[
+                    notes=[
                         "Units should match ...", dict(self=self.unit, other=other.unit)
                     ]
                 )
@@ -579,7 +579,7 @@ class LaTeX(abc.ABC):
                 return self
             else:
                 raise e.code.CodingError(
-                    msgs=[f"Dis you set parent with wrong class {self.__class__} ???"]
+                    notes=[f"Dis you set parent with wrong class {self.__class__} ???"]
                 )
         else:
             return self._parent.doc
@@ -597,12 +597,12 @@ class LaTeX(abc.ABC):
         for _ in self._items:
             if not isinstance(_, (str, Text, ParaBox, Icon, base.Base)):
                 if _.label is not None:
-                    e.validation.ShouldNotBeOneOf(
+                    e.validation.ShouldNotBeOneOf.check(
                         value=_.label, values=self.doc.labels,
-                        msgs=[
+                        notes=[
                             f"Please use a unique label ..."
                         ]
-                    ).raise_if_failed()
+                    )
                     self.doc.labels.append(_.label)
 
         # create str
@@ -634,7 +634,7 @@ class LaTeX(abc.ABC):
         else:
             # if not self.use_single_line_repr:
             #     raise e.code.CodingError(
-            #         msgs=["was expecting to repr to be single line ... implement if you want this"]
+            #         notes=["was expecting to repr to be single line ... implement if you want this"]
             #     )
             return _sta + \
                    self.open_clause + \
@@ -645,7 +645,7 @@ class LaTeX(abc.ABC):
     def add_item(self, item: t.Union[str, "LaTeX", Text]) -> TLaTeX:
         if not self.allow_add_items:
             raise e.code.NotAllowed(
-                msgs=[f"You are not allowed to use `add_items` method for class "
+                notes=[f"You are not allowed to use `add_items` method for class "
                       f"{self.__class__}"]
             )
         if isinstance(item, LaTeX):
@@ -653,7 +653,7 @@ class LaTeX(abc.ABC):
                 item._parent = self
             else:
                 raise e.code.CodingError(
-                    msgs=["We expect _parent of item not to be set ..."]
+                    notes=["We expect _parent of item not to be set ..."]
                 )
         self._items.append(item)
         return self
@@ -673,7 +673,7 @@ class LaTeX(abc.ABC):
                     _v._parent = self
                 else:
                     raise e.code.CodingError(
-                        msgs=["mst be set by add_item or init method ..."]
+                        notes=["mst be set by add_item or init method ..."]
                     )
 
     def generate(self) -> str:
@@ -740,14 +740,14 @@ class Document(LaTeX):
         super().init_validate()
         if self.label is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set label for {self.__class__}"]
+                notes=[f"No need to set label for {self.__class__}"]
             )
 
     def init(self):
         super().init()
         if self._parent is not None:
             raise e.code.CodingError(
-                msgs=[f"No need to set _parent for {self.__class__}"]
+                notes=[f"No need to set _parent for {self.__class__}"]
             )
         # noinspection PyAttributeOutsideInit
         self._parent = self
@@ -853,7 +853,7 @@ class IncludeGraphics(LaTeX):
         super().init_validate()
         if self.image_path is None:
             raise e.validation.NotAllowed(
-                msgs=["Field image_path is mandatory"]
+                notes=["Field image_path is mandatory"]
             )
 
 
@@ -911,10 +911,10 @@ class Figure(LaTeX):
         from . import tikz
 
         # test item
-        e.validation.ShouldBeInstanceOf(
+        e.validation.ShouldBeInstanceOf.check(
             value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
-            msgs=[f"Only certain item types are allowed in {Figure}"],
-        ).raise_if_failed()
+            notes=[f"Only certain item types are allowed in {Figure}"],
+        )
 
         # call super to add item
         return super().add_item(item=item)
@@ -954,16 +954,16 @@ class SubFigure(LaTeX):
 
         # check
         if self.width is None:
-            raise e.validation.NotAllowed(msgs=["Please supply value for width field"])
+            raise e.validation.NotAllowed(notes=["Please supply value for width field"])
 
     def add_item(self, item: t.Union["tikz.TikZ", "SubFigure", IncludeGraphics]) -> "SubFigure":
         from . import tikz
 
         # test item
-        e.validation.ShouldBeInstanceOf(
+        e.validation.ShouldBeInstanceOf.check(
             value=item, value_types=(tikz.TikZ, SubFigure, IncludeGraphics, FBox),
-            msgs=[f"Only certain item types are allowed in {SubFigure}"],
-        ).raise_if_failed()
+            notes=[f"Only certain item types are allowed in {SubFigure}"],
+        )
 
         # call super to add item
         return super().add_item(item=item)
@@ -1002,7 +1002,7 @@ class List(LaTeX):
             elif isinstance(_item, List):
                 if _item._parent is not None:
                     raise e.code.CodingError(
-                        msgs=["Was expecting lis to not have parent"]
+                        notes=["Was expecting lis to not have parent"]
                     )
                 _item._parent = self
                 _ret += str(_item)
@@ -1011,7 +1011,7 @@ class List(LaTeX):
                 _bullet_style, _value = _item
                 _ret += f"\\item[{_bullet_style}] {_value}\n"
             else:
-                raise e.code.ShouldNeverHappen(msgs=[])
+                raise e.code.ShouldNeverHappen()
         return _ret
 
     @property
@@ -1021,7 +1021,7 @@ class List(LaTeX):
     def init_validate(self):
         if self.items is None:
             raise e.validation.NotAllowed(
-                msgs=["Please supply mandatory field items"]
+                notes=["Please supply mandatory field items"]
             )
 
 

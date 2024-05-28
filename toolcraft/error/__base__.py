@@ -7,10 +7,11 @@ from rich.traceback import Traceback, Trace
 from .. import logger
 
 
-# todo: for python 3 there is special method Exception().with_traceback() see
-#  if can be used .... also for stack trace instead if using inspect see if
-#  Exception().__traceback__ can be used
-#  check PEP 3109 https://www.python.org/dev/peps/pep-3109/
+# todo: for python 3 exception can do more things
+#       like adding notes chaining exception and exception group
+#       please drop this module and refer https://realpython.com/python-raise-exception/
+
+# todo: use `rich` libs traceback interface etc
 
 _LOGGER = logger.get_logger()
 
@@ -25,8 +26,31 @@ def camel_case_split(identifier):
 
 
 class _CustomException(Exception):
+
+    def __init__(
+        self, *, notes: logger.MESSAGES_TYPE = None,
+    ):
+        _header = " ".join(camel_case_split(self.__class__.__name__)).upper()
+        _header = _EXCEPTION_HEADER.format(header=_header)
+        super().__init__(_header)
+        self.add_note(_header)
+        if bool(notes):
+            self.add_note(yaml.dump(notes))
+
+    @classmethod
+    def check(cls, **kwargs):
+        from . import code
+        raise code.ImplementInChildClass(
+            notes=[
+                f"Method `check` is not implemented in class `{cls}`"
+            ]
+        )
+
+
+
+class __CCustomEException(Exception):
     """
-    todo: use `rich` libs traceback interface etc
+
     """
     # If not a validator then you need to explicitly raise instead of calling
     _RAISE_EXPLICITLY = False
@@ -54,7 +78,7 @@ class _CustomException(Exception):
 
         # -----------------------------------------------------------------03
         # log
-        _logger.error(msg=_header, msgs=msgs)
+        _logger.error(msg=_header, notes=msgs)
         # log with rich
         # todo: doing this here as the error does not appear on console
         #   need to investigate how to use RichHandler to log to file as well as console
@@ -76,13 +100,25 @@ class _CustomException(Exception):
         # be explicitly raised
         return
 
-    def raise_if_failed(self):
+    def rrrrrrrrrrr(self):
         # test if it needs to be raised explicitly
         if self._RAISE_EXPLICITLY:
-            from .code import RaiseExplicitly
+            class RaiseExplicitly(__CustomException):
+                _RAISE_EXPLICITLY = True
+
+                def __init__(
+                    self, *,
+                    msgs: logger.MESSAGES_TYPE
+                ):
+                    super().__init__(
+                        notes=[
+                            "Error while coding !!!",
+                            *msgs
+                        ]
+                    )
             raise RaiseExplicitly(
-                msgs=[
-                    f"Do not call {self.raise_if_failed} for class {self.__class__} "
+                notes=[
+                    f"Do not call  for class {self.__class__} "
                     f"as it is configured to be raised explicitly.",
                     f"Instead use keyword `raise`"
                 ]

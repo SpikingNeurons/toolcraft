@@ -21,7 +21,7 @@ from typing_extensions import Annotated
 import typing as t
 import subprocess
 
-from .. import logger, settings
+from .. import logger, Settings
 from .. import error as e
 from .__base__ import Runner, Job
 from . import PRETTY_EXCEPTIONS_ENABLE, PRETTY_EXCEPTIONS_SHOW_LOCALS
@@ -51,9 +51,9 @@ def lsf():
 
     # --------------------------------------------------------- 01
     # validate
-    if not settings.IS_LSF:
+    if not Settings.IS_LSF_MACHINE:
         raise e.validation.NotAllowed(
-            msgs=["This is not LSF environment so cannot launch lsf jobs ..."]
+            notes=["This is not LSF environment so cannot launch lsf jobs ..."]
         )
     # get some vars
     _rp = _RUNNER.richy_panel
@@ -86,14 +86,14 @@ def lsf():
             # todo: when self.path is not local we need to see how to log files ...
             #   should we stream or dump locally ?? ... or maybe figure out
             #   dapr telemetry
-            _log = _job.path / "bsub.log"
+            _log = _job.upath / "bsub.log"
             _nxdi_prefix = ["bsub", ]
             _nxdi_prefix += ["-J", _job.job_id, ]
             _email = _job.launch_parameters.lsf_email
             _cpus = _job.launch_parameters.lsf_cpus
             _memory = _job.launch_parameters.lsf_memory
             if not _email:
-                _nxdi_prefix += ["-oo", _log.local_path.as_posix(), ]
+                _nxdi_prefix += ["-oo", _log.as_posix(), ]
             if _cpus is not None:
                 _nxdi_prefix += ["-n", f"{_cpus}"]
             if _memory is not None:
@@ -118,18 +118,21 @@ def lsf():
 @_APP.command(help="Launches all the jobs in runner on local machine.")
 def local(
     single_cpu: Annotated[bool, typer.Option(help="Launches on single CPU in sequence (good for debugging)")] = False,
+    warm_up_time: Annotated[int, typer.Option(help="Warm up time for next job in seconds")] = 1,
 ):
     """
     todo: remote linux instances via wsl via ssh https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/WSL.html
       decide parameters by arguments to this method
+
+    todo: explore celery or rq https://frappe.io/blog/engineering/why-we-moved-from-celery-to-rq
     """
 
     # --------------------------------------------------------- 01
     # some validation
-    if settings.PYC_DEBUGGING:
+    if Settings.PYC_DEBUGGING:
         if not single_cpu:
             raise e.validation.NotAllowed(
-                msgs=[
+                notes=[
                     "looks like you are in pycharm debug mode",
                     "Make sure to set --single-cpu to enable full debugging inside jobs ... "
                 ]
@@ -145,7 +148,6 @@ def local(
     # some vars
     _MAX_JOBS = os.cpu_count()
     _MAX_MEMORY_USAGE_IN_PERCENT = 95.
-    _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS = 1
     _jobs_running_in_parallel = {}
 
     # --------------------------------------------------------- 03
@@ -171,9 +173,11 @@ def local(
             # make cli command
             _cli_command = _job.cli_command
             if not single_cpu:
-                if 'WSL2' in settings.PLATFORM.release:
-                    _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
-                        '"' + ' '.join(_cli_command) + '"']
+                import platform
+                if 'WSL2' in platform.uname().release:
+                    # _cli_command = ["gnome-terminal", "--", "bash", "-c", ] + [
+                    #     '"' + ' '.join(_cli_command) + '"']
+                    _cli_command = ["gnome-terminal", "--"] + _cli_command
                 else:
                     _cli_command = ["start", "cmd", "/c", ] + _cli_command
 
@@ -258,8 +262,7 @@ def local(
                 assert not _job.os_env_vars.IS_ON_SINGLE_CPU, "Should be False"
             _job.os_env_vars.IS_LOCAL_JOB = True
             _job.launch_as_subprocess(
-                cli_command=_cli_command,
-                shell=not single_cpu,
+                cli_command=_cli_command, single_cpu=single_cpu,
             )
             _jobs_running_in_parallel[_job.job_id] = _job
             _rp.log([f"🏁 {_job_short_name} :: launching"])
@@ -269,7 +272,7 @@ def local(
             # _WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS
             # this allows the job to enter properly and get realistic ram usage
             if len(_jobs_running_in_parallel) > 0:
-                time.sleep(_WARM_UP_TIME_FOR_NEXT_JOB_IN_SECONDS)
+                time.sleep(warm_up_time)
 
     # --------------------------------------------------------- 05
     if single_cpu:

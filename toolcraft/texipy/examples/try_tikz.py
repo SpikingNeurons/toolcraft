@@ -300,7 +300,7 @@ def make_edges(
                     elif _lk == "msb":
                         _label_anchor = _label_node.pt_east
                     else:
-                        raise e.code.ShouldNeverHappen(msgs=[])
+                        raise e.code.ShouldNeverHappen()
                     _path.move_to(_point_node.pt_center).line_to(_label_anchor)
                 _tikz.add_path(_path)
 

@@ -164,10 +164,10 @@ def make_expression(
     """
     # ---------------------------------------------------- 01
     # validate
-    e.validation.ShouldBeInstanceOf(
+    e.validation.ShouldBeInstanceOf.check(
         value=filters, value_types=(list, ),
-        msgs=["Was expecting list type for filters"]
-    ).raise_if_failed()
+        notes=["Was expecting list type for filters"]
+    )
 
     # ---------------------------------------------------- 02
     # loop
@@ -181,17 +181,17 @@ def make_expression(
                 _ret_exp = operator.or_(_ret_exp, _exp)
         elif isinstance(_filter, Filter):
             if bool(restrict_columns):
-                e.validation.ShouldBeOneOf(
+                e.validation.ShouldBeOneOf.check(
                     value=_filter.column, values=restrict_columns,
-                    msgs=["You should use one of restricted columns ..."]
-                ).raise_if_failed()
+                    notes=["You should use one of restricted columns ..."]
+                )
             _exp = _filter.expression
             if _ret_exp is None:
                 _ret_exp = _exp
             else:
                 _ret_exp = operator.and_(_ret_exp, _exp)
         else:
-            raise e.code.ShouldNeverHappen(msgs=[f"Unknown type {type(_filter)}"])
+            raise e.code.ShouldNeverHappen(notes=[f"Unknown type {type(_filter)}"])
 
     # ---------------------------------------------------- 03
     # return
@@ -219,7 +219,7 @@ def _read_table(
             metadata=table_schema.metadata
         )
     # noinspection PyProtectedMember
-    _path = table_as_folder.path
+    _path = table_as_folder.upath
     _table = pa.Table.from_batches(
         batches=pds.dataset(
             source=_path.full_path,
@@ -278,7 +278,7 @@ def _write_table(
     _partitioning = table_as_folder.partitioning
 
     # write to disk
-    _path = table_as_folder.path
+    _path = table_as_folder.upath
     # noinspection PyProtectedMember
     pds.write_dataset(
         data=table,
@@ -317,7 +317,7 @@ class TableConfig(s.Config):
         if table is None:
             if self.schema is None:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"We cannot guess schema as you have not "
                         f"supplied table nor there is schema definition "
                         f"available in config which should be either "
@@ -342,7 +342,7 @@ class TableConfig(s.Config):
         for _col in _partition_cols:
             if _col not in _tables_cols:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The pa.Table provided do not have important partition "
                         f"column `{_col}`"
                     ]
@@ -357,7 +357,7 @@ class TableConfig(s.Config):
         else:
             if self.schema != table.schema:
                 raise e.code.CodingError(
-                    msgs=[
+                    notes=[
                         f"The table schema is "
                         f"not valid",
                         {
@@ -416,7 +416,7 @@ class Table(Folder):
     # we override type as this is always method name which was decorated with
     # StoreField
     for_hashable: str
-    parent_folder: "store.StoreFieldsFolder"
+    parent_folder: Folder
     partition_cols: t.List[str] = None
 
     @property
@@ -434,7 +434,7 @@ class Table(Folder):
         _schema = self.config.schema
         if _schema is None:
             raise e.code.CodingError(
-                msgs=[
+                notes=[
                     f"Ideally by now this should be set by now if not "
                     f"available",
                     f"That is possible on first write where table schema not "
@@ -455,7 +455,7 @@ class Table(Folder):
         # can be even HashableClass and that cannot be tolerated here
         if not isinstance(self.for_hashable, str):
             raise e.code.NotAllowed(
-                msgs=[
+                notes=[
                     f"We only allow for_hashable to be a str as this is "
                     f"Table.",
                     f"Most likely for_hashable is name of method on which "
@@ -468,9 +468,9 @@ class Table(Folder):
         A faster version of exists with no columns or filter_expression kwargs
         Useful when only used for write ...
         """
-        if not self.path.exists():
+        if not self.upath.exists():
             return False
-        if self.path.is_dir_empty():
+        if self.upath.is_dir_empty():
             return False
         return True
 
@@ -494,9 +494,9 @@ class Table(Folder):
         """
         # if nothing exists simply exit ... as there is no table to read on disk
         # noinspection PyTypeChecker
-        if not self.path.exists():
+        if not self.upath.exists():
             return False
-        if self.path.is_dir_empty():
+        if self.upath.is_dir_empty():
             return False
 
         # this should always be there as above check suggests that something
@@ -526,9 +526,9 @@ class Table(Folder):
 
         # if nothing exists simply exit ... as there is no table to read on disk
         # noinspection PyTypeChecker
-        if not self.path.exists():
+        if not self.upath.exists():
             return None
-        if self.path.is_dir_empty():
+        if self.upath.is_dir_empty():
             return None
 
         # this should always be there as above check suggests that something
@@ -547,13 +547,13 @@ class Table(Folder):
         # extra check
         if len(_table) == 0:
             raise e.code.ShouldNeverHappen(
-                msgs=[
+                notes=[
                     "The exists check before read call should handled it.",
                     "Found a empty table while reading",
                     f"Please do not use `.` or `_` at start of any folder in "
                     f"the path as the pyarrow does not raise error but reads "
                     f"empty table.",
-                    f"Check path {self.path}"
+                    f"Check path {self.upath}"
                 ]
             )
 
@@ -577,8 +577,8 @@ class Table(Folder):
                 columns=self.partition_cols,
                 filter_expression=make_expression(_filters))
             if _table:
-                e.validation.NotAllowed(
-                    msgs=[
+                raise e.validation.NotAllowed(
+                    notes=[
                         "Below partition col values already exist",
                         _table.to_pydict()
                     ]
@@ -672,17 +672,17 @@ class Table(Folder):
         _partition_cols = self.partition_cols
         if filters is None:
             # noinspection PyTypeChecker
-            self.path.delete(recursive=True)
+            self.upath.delete(recursive=True)
             # just make a empty dir again fo that things are consistent for
             # Folder class i.e. is_created can detect things properly
-            self.path.mkdir()
+            self.upath.mkdir()
             # return need to satisfy the API
             return True
 
         # ------------------------------------------------------02
         if _partition_cols is None:
             raise e.validation.NotAllowed(
-                msgs=["This Table does not use partition_cols and hence there "
+                notes=["This Table does not use partition_cols and hence there "
                       "is no point using filters while calling delete_"]
             )
 
@@ -703,7 +703,7 @@ class Table(Folder):
 
         # ------------------------------------------------------04
         # make all combos then resolve paths and delete them
-        _path = self.path
+        _path = self.upath
         for _tuple in itertools.product(*_uniques):
             _p = _path
             for _ in _tuple:

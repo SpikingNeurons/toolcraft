@@ -204,26 +204,26 @@ class PythonDownloader(s.DownloadFileGroup):
                     self.create()
 
                 # get paths and if exist return
-                _exe_path = self.path / f"{self.name}.exe"
-                _zip_path = self.path.local_path.parent / f"{self.name}.zip"
+                _exe_path = self.upath / f"{self.name}.exe"
+                _zip_path = self.upath.parent / f"{self.name}.zip"
                 if _zip_path.exists():
                     return _zip_path
 
                 # get all related debug files
                 _rp.text = f"getting debug symbols and all related files"
                 os.system(
-                    f"{_exe_path.local_path.resolve().as_posix()} /layout"
+                    f"{_exe_path.resolve().as_posix()} /layout"
                 )
 
                 # zip all files
                 _rp.text = f"zipping files"
                 _zip = zipfile.ZipFile(_zip_path, mode="w")
-                for _f in self.path.local_path.iterdir():
+                for _f in self.upath.iterdir():
                     _zip.write(_f, _f.name)
                     if _f != _exe_path:
                         _f.unlink()
-                _zip.write(self.info.path.local_path, self.info.path.name)
-                _zip.write(self.config.path.local_path, self.config.path.name)
+                _zip.write(self.info.upath, self.info.upath.name)
+                _zip.write(self.config.upath, self.config.upath.name)
                 _zip.close()
 
                 # deleting

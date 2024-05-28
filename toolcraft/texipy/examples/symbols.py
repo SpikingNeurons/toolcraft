@@ -96,7 +96,7 @@ glbacc = Glossary(
                 "distribution of the classes as seen in the labels. These numbers "
                 "are more desirable especially in case of class-imbalance."
 )
-gltgezero = Glossary(
+gltgeone = Glossary(
     name="$T_{GE0}$",
     description="The number of side-channel measurements (i.e., traces) "
                 "required to reach guessing entropy ($GE$) equal to zero."
