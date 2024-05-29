@@ -35,7 +35,6 @@ from .. import error as e
 from .. import marshalling as m
 from .. import richy
 from . import StorageHashable
-from .file_system import Path
 
 # noinspection PyUnreachableCode
 if False:
@@ -267,7 +266,7 @@ class FileGroup(StorageHashable, abc.ABC):
             return False
 
     @property
-    def unknown_paths_on_disk(self) -> t.List[Path]:
+    def unknown_paths_on_disk(self) -> t.List[UPath]:
 
         # container for unknown files
         _unknown_upaths = []
@@ -337,12 +336,12 @@ class FileGroup(StorageHashable, abc.ABC):
         _ret = []
         _fs = self.upath.fs
         _upath = self.upath
+        _upath_class = _upath.__class__
+        _upath_protocol = _upath.protocol
         if sub_path:
             _upath = _upath / sub_path
         for _ in _fs.find(_upath, maxdepth=maxdepth, detail=detail, withdirs=withdirs):
-            _upath = UPath(_)
-            print(_upath, self.upath, "<<<< ???")
-            _ret.append(_upath)
+            _ret.append(_upath_class(_, protocol=_upath_protocol))
         return _ret
 
     @classmethod
@@ -657,7 +656,7 @@ class FileGroup(StorageHashable, abc.ABC):
             self.create()
             self.check()
 
-    def do_hash_check(self, compute: bool) -> t.Dict:
+    def do_hash_check(self, compute: bool) -> t.Dict[str, str]:
         """
         When compute returns computed hashes else returns failed hashes if any ...
 
@@ -674,7 +673,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _computed_hashes = {}
         _file_paths = {
             fk: self.upath / fk for fk in self.file_keys
-        }  # type: t.Dict[str, Path]
+        }  # type: t.Dict[str, UPath]
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
         # needed are similar
@@ -914,9 +913,9 @@ class FileGroup(StorageHashable, abc.ABC):
 
     def get_files(
         self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
+    ) -> t.Dict[str, UPath]:
         """
-        Default is to return Path
+        Default is to return UPath
         """
         return {
             file_key: self.upath / file_key
@@ -964,7 +963,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-    def create(self) -> t.List[Path]:
+    def create(self) -> t.List[UPath]:
         # some vars
         _rp = self.richy_panel
         _iterable = self.file_keys
@@ -992,10 +991,10 @@ class FileGroup(StorageHashable, abc.ABC):
                 self.create_file(file_key=k)
 
             # check if created and expected file is same
-            if not isinstance(_created_file, Path):
+            if not isinstance(_created_file, UPath):
                 raise e.code.CodingError(
                     notes=[
-                        f"You are supported to return instance of {Path} ... "
+                        f"You are supported to return instance of {UPath} ... "
                         f"instead found {type(_created_file)}"
                     ]
                 )
@@ -1025,7 +1024,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     def create_post_runner(
-        self, *, hooked_method_return_value: t.List[Path]
+        self, *, hooked_method_return_value: t.List[UPath]
     ):
         """
         The files are now created let us now do post handling
@@ -1049,7 +1048,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------01.02
         # check if created file is proper and if it is on disk
         for f in created_fs:
-            if not isinstance(f, Path):
+            if not isinstance(f, UPath):
                 raise e.code.CodingError(
                     notes=[
                         f"Method {self.create_file} should return the list of "
@@ -1099,7 +1098,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ----------------------------------------------------------------03
         # make files read only
-        # todo: not sure how to make our `Path` based on fsspec as readonly
+        # todo: not sure how to make our `UPath` based on fsspec as readonly
         # for f in created_fs:
         #     util.io_make_path_read_only(f)
 
@@ -1143,7 +1142,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     @abc.abstractmethod
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(self, *, file_key: str) -> UPath:
         """
         If for efficiency you want to create multiple files ... hack it to
         create files on first call and subsequent file_keys will just fake
@@ -1370,7 +1369,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         self,
         file_key: str,
         npy_data: t.Union[np.ndarray, t.Dict[str, np.ndarray]],
-    ) -> Path:
+    ) -> UPath:
 
         # get file from a file_key
         _file = self.upath / file_key
@@ -1498,7 +1497,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         return super().create_pre_runner()
 
     def create_post_runner(
-        self, *, hooked_method_return_value: t.List[Path]
+        self, *, hooked_method_return_value: t.List[UPath]
     ):
         # ----------------------------------------------------------------01
         # load as memmaps
@@ -1715,7 +1714,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     def get_urls(self) -> t.Dict[str, str]:
         ...
 
-    def create(self) -> t.List[Path]:
+    def create(self) -> t.List[UPath]:
         """
         todo: we can make this with asyncio with aiohttps and aiofiles
           https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
@@ -1805,7 +1804,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         return list(_file_paths.values())
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(self, *, file_key: str) -> UPath:
         raise e.code.CodingError(
             notes=[
                 f"This method need not be called as create method is "
@@ -1845,7 +1844,7 @@ class FileGroupFromPaths(FileGroup):
         return True
 
     @property
-    def unknown_paths_on_disk(self) -> t.List[Path]:
+    def unknown_paths_on_disk(self) -> t.List[UPath]:
         """
         As the files will already be created for this FileGroup we trick the system
         to ignore those already created files so that pre_runner checks can succeed
@@ -1855,7 +1854,7 @@ class FileGroupFromPaths(FileGroup):
             if _f.name not in self.file_keys
         ]
 
-    def create(self) -> t.List[Path]:
+    def create(self) -> t.List[UPath]:
 
         _ret = []
         _rp = self.richy_panel
@@ -1874,7 +1873,7 @@ class FileGroupFromPaths(FileGroup):
         return _ret
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(self, *, file_key: str) -> UPath:
         raise e.code.CodingError(
             notes=[
                 f"This method need not be called as create method is "
