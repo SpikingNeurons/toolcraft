@@ -29,12 +29,13 @@ import random
 from fsspec import AbstractFileSystem
 from upath import UPath
 
-from .. import util, logger, settings
+from .. import util, logger
 from .. import storage as s
 from .. import error as e
 from .. import marshalling as m
 from .. import richy
 from . import StorageHashable
+
 
 # noinspection PyUnreachableCode
 if False:
@@ -113,7 +114,8 @@ class FileGroupConfig(s.Config):
         in different results ... this ensures that for instance the
         randomness is consistent ...
         """
-        return random.choice(settings.Settings.CHECK_INTERVALS_IN_SEC)
+        from .. import Settings
+        return random.choice(Settings.CHECK_INTERVALS_IN_SEC)
 
     @property
     def periodic_check_needed(self) -> bool:
@@ -595,7 +597,8 @@ class FileGroup(StorageHashable, abc.ABC):
         # if config.DEBUG_HASHABLE_STATE we will create files two times
         # to confirm if states are consistent and hence it will help us to
         # debug DEBUG_HASHABLE_STATE
-        if settings.Settings.DEBUG_HASHABLE_STATE:
+        from .. import Settings
+        if Settings.DEBUG_HASHABLE_STATE:
             _info_backup_path = self.info.backup_path
             _config_backup_path = self.config.backup_path
             _info_backup_exists = _info_backup_path.exists()
@@ -965,7 +968,7 @@ class FileGroup(StorageHashable, abc.ABC):
             _expected_file = self.upath / k
 
             # if found on disk bypass creation for efficiency
-            if _expected_file.isfile():
+            if _expected_file.is_file():
                 _ret.append(_expected_file)
                 continue
 
@@ -1150,7 +1153,8 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ---------------------------------------------------------------01
         _rp = self.richy_panel
-        if settings.Settings.DEBUG_HASHABLE_STATE:
+        from .. import Settings
+        if Settings.DEBUG_HASHABLE_STATE:
             # if config.DEBUG_HASHABLE_STATE we know what we are doing ... we
             # are debugging and there will be one time programmatically delete
             # so set the response automatically for FileGroup

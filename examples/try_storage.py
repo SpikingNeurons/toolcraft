@@ -687,7 +687,7 @@ def try_file_storage(gcs: bool):
     fg0 = FileGroup0(start_str="f1", parent_folder=folder0)
     fg1 = FileGroup0(start_str="f2", parent_folder=folder0)
     _rp = richy.StatusPanel(
-        title="Try File Storage", tc_log=_LOGGER
+        title="Try File Storage", tc_log=_LOGGER, log_task_progress_after=10
     )
     with _rp, folder0(richy_panel=_rp), fg0(richy_panel=_rp), fg1(richy_panel=_rp):
 
@@ -740,8 +740,8 @@ def try_main():
     try_auto_hashed_download_file()
     try_metainfo_file()
     try_creating_folders()
-    try_arrow_storage(gcs=False)
     try_file_storage(gcs=False)
+    try_arrow_storage(gcs=False)
 
     # todo: add tests for NpyFileGroup especially with nupy records load and save
     # try_npy_file_group(gcs=False)

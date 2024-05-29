@@ -1504,17 +1504,17 @@ class YamlRepr(Tracker):
         return YamlDumper.dump(self)
 
     @classmethod
-    def from_yaml(cls, file_or_text: t.Union["storage.Path", str], **kwargs) -> TYamlRepr:
+    def from_yaml(cls, file_or_text: t.Union[UPath, str], **kwargs) -> TYamlRepr:
         # return
         return YamlLoader.load(cls, file_or_text=file_or_text, **kwargs)
 
     @classmethod
     def get_class(
-        cls, file_or_text: t.Union["storage.Path", str]
+        cls, file_or_text: t.Union[UPath, str]
     ) -> t.Type[TYamlRepr]:
         from . import storage
         _text = file_or_text
-        if isinstance(file_or_text, storage.Path):
+        if isinstance(file_or_text, UPath):
             _text = file_or_text.read_text()
         _tag = _text.split("\n")[0]
         try:
