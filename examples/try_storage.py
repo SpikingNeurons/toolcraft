@@ -114,7 +114,7 @@ def try_download_file():
     # noinspection SpellCheckingInspection
     df = DnTestFile()
 
-    with richy.StatusPanel(title="Test Download File", tc_log=_LOGGER) as _rp:
+    with richy.StatusPanel(title="Test Download File", tc_log=_LOGGER, log_task_progress_after=10) as _rp:
         with df(richy_panel=_rp):
             if df.is_created:
                 df.delete(force=True)
@@ -157,7 +157,7 @@ def try_auto_hashed_download_file():
     df = DnTestFileAutoHashed()
     df0 = DnTestFile()
 
-    with richy.StatusPanel(title="Test Auto Hashed Download File", tc_log=_LOGGER) as _rp:
+    with richy.StatusPanel(title="Test Auto Hashed Download File", tc_log=_LOGGER, log_task_progress_after=10) as _rp:
         with (df(richy_panel=_rp), df0(richy_panel=_rp)):
             df.get_file(file_key="file1")
             df0.get_file(file_key="file1")
@@ -170,7 +170,7 @@ def try_metainfo_file():
     # noinspection SpellCheckingInspection
     df = DnTestFile()
 
-    with richy.StatusPanel(title="Test MetaInfo of Download File", tc_log=_LOGGER) as _rp:
+    with richy.StatusPanel(title="Test MetaInfo of Download File", tc_log=_LOGGER, log_task_progress_after=10) as _rp:
         with df(richy_panel=_rp):
             # note that creating instance above creates file
             df.delete(force=True)
@@ -233,7 +233,7 @@ def try_creating_folders():
 
         with folder0(richy_panel=_rp), folder1(richy_panel=_rp), folder2(richy_panel=_rp), folder3(richy_panel=_rp):
 
-            print([_.full_path for _ in folder0.upath.ls()])
+            print([_ for _ in folder0.ls()])
 
             # or else just delete the super parent and things will chain
             folder0.delete(force=True)

@@ -756,6 +756,7 @@ class StatusPanel(Widget):
 
     # this fild is to handle logging when log_task_progress is called
     # note that we will write to log only when timer is elapsed
+    # (it is in seconds)
     log_task_progress_after: int = None
 
     @property

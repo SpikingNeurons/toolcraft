@@ -52,7 +52,8 @@ class StateFile(m.YamlRepr, abc.ABC):
     @property
     @util.CacheResult
     def upath(self) -> UPath:
-        return self.hashable.upath / self.suffix
+        _upath = self.hashable.upath
+        return _upath.parent / f"{_upath.name}{self.suffix}"
 
     @property
     @abc.abstractmethod
@@ -96,7 +97,7 @@ class StateFile(m.YamlRepr, abc.ABC):
         # )
         # todo: figure this out with fsspec
         # util.io_make_path_editable(self.path)
-        self.upath.rm_file()
+        self.upath.unlink()
         self.reset()
 
     def backup(self):

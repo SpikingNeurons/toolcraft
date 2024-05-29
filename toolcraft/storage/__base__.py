@@ -6,6 +6,7 @@ These are special hashables whose state can be serialized on disk.
 import typing as t
 import datetime
 import dataclasses
+from fsspec import AbstractFileSystem
 from upath import UPath
 import abc
 _now = datetime.datetime.now
@@ -429,3 +430,56 @@ class StorageHashable(m.HashableClass, abc.ABC):
                     f"things are now deleted."
                 ]
             )
+
+    def ls(
+        self, sub_path: str = None, detail: bool = False
+    ) -> t.List[UPath]:
+        """
+        Inspired by
+        >>> AbstractFileSystem.ls
+        """
+        _fs = self.upath.fs
+        _upath = self.upath
+        _upath_class = _upath.__class__
+        _upath_protocol = _upath.protocol
+        if sub_path is not None:
+            _upath /= sub_path
+        _res = _fs.ls(
+            path=_upath,
+            detail=detail
+        )
+        if isinstance(_res, list):
+            return [
+                _upath_class(_, protocol=_upath_protocol) for _ in _res
+            ]
+        # elif isinstance(_res, dict):
+        #     return [
+        #         UPath(
+        #             suffix_path=_k.replace(_root_path, ""),
+        #             fs_name=self.fs_name, details=_v)
+        #         for _k, _v in _res.items()
+        #     ]
+        else:
+            raise e.code.NotSupported(
+                notes=[f"Unknown type {type(_res)}"]
+            )
+
+    def find(self, sub_path: str = None, maxdepth: int = 1, detail: bool = False, withdirs: bool = True) -> [UPath]:
+        """
+        Inspired by
+        >>> AbstractFileSystem.find
+        """
+        _ret = []
+        _fs = self.upath.fs
+        _upath = self.upath
+        _upath_class = _upath.__class__
+        _upath_protocol = _upath.protocol
+        if sub_path is not None:
+            _upath /= sub_path
+        for _ in _fs.find(
+            path=_upath,
+            maxdepth=maxdepth, detail=detail, withdirs=withdirs
+        ):
+            _ret.append(_upath_class(_, protocol=_upath_protocol))
+        return _ret
+

@@ -327,23 +327,6 @@ class FileGroup(StorageHashable, abc.ABC):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
         subprocess.Popen(f'explorer {self.upath}')
-
-    def find(self, sub_path: str = None, maxdepth: int = 1, detail: bool = False, withdirs: bool = True) -> [UPath]:
-        """
-        Inspired by
-        >>> AbstractFileSystem.find
-        """
-        _ret = []
-        _fs = self.upath.fs
-        _upath = self.upath
-        _upath_class = _upath.__class__
-        _upath_protocol = _upath.protocol
-        if sub_path:
-            _upath = _upath / sub_path
-        for _ in _fs.find(_upath, maxdepth=maxdepth, detail=detail, withdirs=withdirs):
-            _ret.append(_upath_class(_, protocol=_upath_protocol))
-        return _ret
-
     @classmethod
     def make_possible_instances(cls) -> t.List[TFileGroup]:
         """
@@ -1208,7 +1191,7 @@ class FileGroup(StorageHashable, abc.ABC):
             for fk in self.file_keys:
                 _key_path = self.upath / fk
                 if _key_path.exists():
-                    _key_path.rm_file()
+                    _key_path.unlink()
                 else:
                     raise e.code.CodingError(
                         notes=[
