@@ -383,7 +383,7 @@ class GCSFileSystem(BaseFileSystem):
 
 
 @dataclasses.dataclass
-class Path:
+class UPath:
     """
     todo: chmod and dir permissions
       On certain file systems we can do it and we can exploit **kwargs of

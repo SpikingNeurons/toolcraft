@@ -184,13 +184,13 @@ class Folder(StorageHashable):
         # perform action
         if response == "y":
             _rp.update("deleting folder ...")
-            for _sh in self.walk(only_names=False):
+            for _sh in self.walk():
                 with _sh(richy_panel=_rp):
                     _sh.delete(force=force)
 
         # todo: remove redundant check
         # by now we are confident that folder is empty so just check it
-        if not self.upath.is_dir_empty():
+        if len(list(self.walk())):
             raise e.code.CodingError(
                 notes=[
                     f"The folder should be empty by now ...",
@@ -199,69 +199,3 @@ class Folder(StorageHashable):
                     f"with force=True we cannot delete this"
                 ]
             )
-
-    def warn_about_garbage(self):
-        """
-        On disk a StorageHashable will have two files and one folder
-        + folder <hashable_name>
-        + file <hashable_name>.info
-        + file <hashable_name>.config
-
-        A walk on folder will give us all the StorageHashable.
-        Anything else which do not have info and config will be treated as garbage
-        and can be warned about it.
-
-        todo: implement this
-
-        """
-        ...
-
-    def walk(
-        self, only_names: bool = True
-    ) -> t.Iterable[t.Union[str, StorageHashable]]:
-        """
-        When only_names = True things will be fast
-
-        Note that walk will not test if other components are present or not
-        On disk a StorageHashable will have two files and one folder
-        + folder <hashable_name>
-        + file <hashable_name>.info
-        + file <hashable_name>.config
-        [NOTE]
-        This method will only look for *.info files so be aware that if other files
-        are not present this can falsely yield a StorageHashable
-        """
-
-        # -----------------------------------------------------------------01
-        # track for registered file groups
-        # *** NOTE ***
-        # We skip anything that does not end with *.info this will also
-        # skip files that are not StorageHashable .... but that is okay
-        # for multiple reasons ...
-        #  + performance
-        #  + we might want something extra lying around in folders
-        #  + we might have deleted state info but the folders might be
-        #    lying around and might be wise to not delete it
-        # The max we can do in that case is warn users that some
-        # thing else is lying around in folder check method
-        # warn_about_garbage.
-        _sep = self.upath.sep
-        if only_names:
-            for f in self.upath.glob(pattern=f"*{Suffix.info}"):
-                yield f.full_path.split(_sep)[-1].split(f"{Suffix.info}")[0]
-        else:
-            for f in self.upath.glob(pattern=f"*{Suffix.info}"):
-                # build instance
-                _cls = m.YamlRepr.get_class(f)
-                # noinspection PyTypeChecker
-                _hashable = _cls.from_yaml(
-                    f, parent_folder=self,
-                )  # type: StorageHashable
-                # yield
-                yield _hashable
-
-        # -----------------------------------------------------------------02
-        # todo: we might not need this as we are yielding above ... delete later
-        # sync is equivalent to accessing folder
-        # so update state manager files
-        # self.config.append_last_accessed_on()

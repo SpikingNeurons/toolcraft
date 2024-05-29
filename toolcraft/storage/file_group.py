@@ -26,15 +26,16 @@ import hashlib
 import zipfile
 import platform
 import random
+from fsspec import AbstractFileSystem
 from upath import UPath
 
-from .. import util, logger, settings
+from .. import util, logger
 from .. import storage as s
 from .. import error as e
 from .. import marshalling as m
 from .. import richy
 from . import StorageHashable
-from .file_system import Path
+
 
 # noinspection PyUnreachableCode
 if False:
@@ -113,7 +114,8 @@ class FileGroupConfig(s.Config):
         in different results ... this ensures that for instance the
         randomness is consistent ...
         """
-        return random.choice(settings.Settings.CHECK_INTERVALS_IN_SEC)
+        from .. import Settings
+        return random.choice(Settings.CHECK_INTERVALS_IN_SEC)
 
     @property
     def periodic_check_needed(self) -> bool:
@@ -266,7 +268,7 @@ class FileGroup(StorageHashable, abc.ABC):
             return False
 
     @property
-    def unknown_paths_on_disk(self) -> t.List[Path]:
+    def unknown_paths_on_disk(self) -> t.List[UPath]:
 
         # container for unknown files
         _unknown_upaths = []
@@ -281,9 +283,7 @@ class FileGroup(StorageHashable, abc.ABC):
                     ]
                 )
             # look inside path dir
-            for _ in self.upath.fs.find(self.upath, maxdepth=1, detail=False, withdirs=True):
-                _upath = UPath(_)
-                print(_upath, self.upath, "<<<< ???")
+            for _upath in self.find(maxdepth=1, detail=False, withdirs=True):
                 if _upath == self.upath:
                     continue
                 if _upath.name in self.file_keys and _upath.is_file():
@@ -329,7 +329,6 @@ class FileGroup(StorageHashable, abc.ABC):
         # for open with select
         # subprocess.Popen(r'explorer /select,"sadasdfas"')
         subprocess.Popen(f'explorer {self.upath}')
-
     @classmethod
     def make_possible_instances(cls) -> t.List[TFileGroup]:
         """
@@ -598,7 +597,8 @@ class FileGroup(StorageHashable, abc.ABC):
         # if config.DEBUG_HASHABLE_STATE we will create files two times
         # to confirm if states are consistent and hence it will help us to
         # debug DEBUG_HASHABLE_STATE
-        if settings.Settings.DEBUG_HASHABLE_STATE:
+        from .. import Settings
+        if Settings.DEBUG_HASHABLE_STATE:
             _info_backup_path = self.info.backup_path
             _config_backup_path = self.config.backup_path
             _info_backup_exists = _info_backup_path.exists()
@@ -642,7 +642,7 @@ class FileGroup(StorageHashable, abc.ABC):
             self.create()
             self.check()
 
-    def do_hash_check(self, compute: bool) -> t.Dict:
+    def do_hash_check(self, compute: bool) -> t.Dict[str, str]:
         """
         When compute returns computed hashes else returns failed hashes if any ...
 
@@ -659,7 +659,7 @@ class FileGroup(StorageHashable, abc.ABC):
         _computed_hashes = {}
         _file_paths = {
             fk: self.upath / fk for fk in self.file_keys
-        }  # type: t.Dict[str, Path]
+        }  # type: t.Dict[str, UPath]
         _lengths = {}
         # get panels ... reusing richy.Progress.for_download as the stats
         # needed are similar
@@ -899,9 +899,9 @@ class FileGroup(StorageHashable, abc.ABC):
 
     def get_files(
         self, *, file_keys: t.List[str]
-    ) -> t.Dict[str, Path]:
+    ) -> t.Dict[str, UPath]:
         """
-        Default is to return Path
+        Default is to return UPath
         """
         return {
             file_key: self.upath / file_key
@@ -949,7 +949,7 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
-    def create(self) -> t.List[Path]:
+    def create(self) -> t.List[UPath]:
         # some vars
         _rp = self.richy_panel
         _iterable = self.file_keys
@@ -968,7 +968,7 @@ class FileGroup(StorageHashable, abc.ABC):
             _expected_file = self.upath / k
 
             # if found on disk bypass creation for efficiency
-            if _expected_file.isfile():
+            if _expected_file.is_file():
                 _ret.append(_expected_file)
                 continue
 
@@ -977,10 +977,10 @@ class FileGroup(StorageHashable, abc.ABC):
                 self.create_file(file_key=k)
 
             # check if created and expected file is same
-            if not isinstance(_created_file, Path):
+            if not isinstance(_created_file, UPath):
                 raise e.code.CodingError(
                     notes=[
-                        f"You are supported to return instance of {Path} ... "
+                        f"You are supported to return instance of {UPath} ... "
                         f"instead found {type(_created_file)}"
                     ]
                 )
@@ -1010,7 +1010,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     def create_post_runner(
-        self, *, hooked_method_return_value: t.List[Path]
+        self, *, hooked_method_return_value: t.List[UPath]
     ):
         """
         The files are now created let us now do post handling
@@ -1034,7 +1034,7 @@ class FileGroup(StorageHashable, abc.ABC):
         # ----------------------------------------------------------------01.02
         # check if created file is proper and if it is on disk
         for f in created_fs:
-            if not isinstance(f, Path):
+            if not isinstance(f, UPath):
                 raise e.code.CodingError(
                     notes=[
                         f"Method {self.create_file} should return the list of "
@@ -1084,7 +1084,7 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ----------------------------------------------------------------03
         # make files read only
-        # todo: not sure how to make our `Path` based on fsspec as readonly
+        # todo: not sure how to make our `UPath` based on fsspec as readonly
         # for f in created_fs:
         #     util.io_make_path_read_only(f)
 
@@ -1128,7 +1128,7 @@ class FileGroup(StorageHashable, abc.ABC):
         return _ret
 
     @abc.abstractmethod
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(self, *, file_key: str) -> UPath:
         """
         If for efficiency you want to create multiple files ... hack it to
         create files on first call and subsequent file_keys will just fake
@@ -1153,7 +1153,8 @@ class FileGroup(StorageHashable, abc.ABC):
 
         # ---------------------------------------------------------------01
         _rp = self.richy_panel
-        if settings.Settings.DEBUG_HASHABLE_STATE:
+        from .. import Settings
+        if Settings.DEBUG_HASHABLE_STATE:
             # if config.DEBUG_HASHABLE_STATE we know what we are doing ... we
             # are debugging and there will be one time programmatically delete
             # so set the response automatically for FileGroup
@@ -1194,7 +1195,7 @@ class FileGroup(StorageHashable, abc.ABC):
             for fk in self.file_keys:
                 _key_path = self.upath / fk
                 if _key_path.exists():
-                    _key_path.rm_file()
+                    _key_path.unlink()
                 else:
                     raise e.code.CodingError(
                         notes=[
@@ -1355,7 +1356,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         self,
         file_key: str,
         npy_data: t.Union[np.ndarray, t.Dict[str, np.ndarray]],
-    ) -> Path:
+    ) -> UPath:
 
         # get file from a file_key
         _file = self.upath / file_key
@@ -1483,7 +1484,7 @@ class NpyFileGroup(FileGroup, abc.ABC):
         return super().create_pre_runner()
 
     def create_post_runner(
-        self, *, hooked_method_return_value: t.List[Path]
+        self, *, hooked_method_return_value: t.List[UPath]
     ):
         # ----------------------------------------------------------------01
         # load as memmaps
@@ -1700,7 +1701,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
     def get_urls(self) -> t.Dict[str, str]:
         ...
 
-    def create(self) -> t.List[Path]:
+    def create(self) -> t.List[UPath]:
         """
         todo: we can make this with asyncio with aiohttps and aiofiles
           https://gist.github.com/darwing1210/c9ff8e3af8ba832e38e6e6e347d9047a
@@ -1790,7 +1791,7 @@ class DownloadFileGroup(FileGroup, abc.ABC):
         return list(_file_paths.values())
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(self, *, file_key: str) -> UPath:
         raise e.code.CodingError(
             notes=[
                 f"This method need not be called as create method is "
@@ -1830,7 +1831,7 @@ class FileGroupFromPaths(FileGroup):
         return True
 
     @property
-    def unknown_paths_on_disk(self) -> t.List[Path]:
+    def unknown_paths_on_disk(self) -> t.List[UPath]:
         """
         As the files will already be created for this FileGroup we trick the system
         to ignore those already created files so that pre_runner checks can succeed
@@ -1840,7 +1841,7 @@ class FileGroupFromPaths(FileGroup):
             if _f.name not in self.file_keys
         ]
 
-    def create(self) -> t.List[Path]:
+    def create(self) -> t.List[UPath]:
 
         _ret = []
         _rp = self.richy_panel
@@ -1859,7 +1860,7 @@ class FileGroupFromPaths(FileGroup):
         return _ret
 
     # noinspection PyTypeChecker
-    def create_file(self, *, file_key: str) -> Path:
+    def create_file(self, *, file_key: str) -> UPath:
         raise e.code.CodingError(
             notes=[
                 f"This method need not be called as create method is "
