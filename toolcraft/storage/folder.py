@@ -199,3 +199,45 @@ class Folder(StorageHashable):
                     f"with force=True we cannot delete this"
                 ]
             )
+
+    def walk(self) -> t.Iterable["StorageHashable"]:
+        """
+        Note that walk will not test if other components are present or not
+        On disk a StorageHashable will have two files and one folder
+        + folder <hashable_name>
+        + file <hashable_name>.info
+        + file <hashable_name>.config
+        [NOTE]
+        This method will only look for *.info files so be aware that if other files
+        are not present this can falsely yield a StorageHashable
+        """
+        from .state import Suffix
+
+        # -----------------------------------------------------------------01
+        # track for registered file groups
+        # *** NOTE ***
+        # We skip anything that does not end with *.info this will also
+        # skip files that are not StorageHashable .... but that is okay
+        # for multiple reasons ...
+        #  + performance
+        #  + we might want something extra lying around in folders
+        #  + we might have deleted state info but the folders might be
+        #    lying around and might be wise to not delete it
+        # The max we can do in that case is warn users that some
+        # thing else is lying around in folder check method
+        # warn_about_garbage.
+        for _f in self.upath.glob(pattern=f"*{Suffix.info}"):
+            _f_txt = _f.read_text()
+            # build instance
+            _cls = m.YamlRepr.get_class(_f_txt)
+            # noinspection PyTypeChecker
+            _hashable = _cls.from_yaml(_f_txt, parent_folder=self,
+            )  # type: StorageHashable
+            # yield
+            yield _hashable
+
+        # -----------------------------------------------------------------02
+        # todo: we might not need this as we are yielding above ... delete later
+        # sync is equivalent to accessing folder
+        # so update state manager files
+        # self.config.append_last_accessed_on()

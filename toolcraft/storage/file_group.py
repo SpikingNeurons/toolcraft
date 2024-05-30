@@ -1213,6 +1213,31 @@ class FileGroup(StorageHashable, abc.ABC):
                 ]
             )
 
+    def walk(self) -> t.Iterable[UPath]:
+        """
+        Note that walk will not test if other components are present or not
+        On disk a StorageHashable will have two files and one folder
+        + folder <hashable_name>
+        + file <hashable_name>.info
+        + file <hashable_name>.config
+        [NOTE]
+        This method will only look for *.info files so be aware that if other files
+        are not present this can falsely yield a StorageHashable
+        """
+
+        # _fs = self.upath.fs
+        _upath = self.upath
+        # _upath_class = _upath.__class__
+        # _upath_protocol = _upath.protocol
+        for _ in _upath.iterdir():
+            yield _
+
+        # -----------------------------------------------------------------02
+        # todo: we might not need this as we are yielding above ... delete later
+        # sync is equivalent to accessing folder
+        # so update state manager files
+        # self.config.append_last_accessed_on()
+
 
 @dataclasses.dataclass
 class HFFileGroupConfig(FileGroupConfig):

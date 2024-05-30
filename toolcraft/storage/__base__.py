@@ -398,56 +398,6 @@ class StorageHashable(m.HashableClass, abc.ABC):
             ]
         )
 
-
-    def delete(self, *, force: bool = False) -> t.Any:
-        from .. import Settings
-
-        # ---------------------------------------------------------------01
-        _rp = self.richy_panel
-        if Settings.DEBUG_HASHABLE_STATE:
-            # if config.DEBUG_HASHABLE_STATE we know what we are doing ... we
-            # are debugging and there will be one time programmatically delete
-            # so set the response automatically for FileGroup
-            force = True
-            _rp.update(
-                "Deleting files automatically for file group [DEBUG_HASHABLE_STATE is True]"
-            )
-
-        # ---------------------------------------------------------------02
-        # ask permission if needed
-        # We ask for user response as most of the files/folders are important
-        # and programmatically deletes will cost download or generation of
-        # files ...
-        # This can be easily bypasses by setting force == True
-        if force:
-            response = "y"
-        else:
-            # todo: need to implement the ask dialog inside richy_panel
-            raise e.code.NotYetImplemented(notes=["todo: need to implement the ask dialog inside richy_panel"])
-            # response = richy.r_prompt.Confirm.ask(
-            #     f"Do you want to delete files for Folder `{self.path}`?",
-            #     default=True,
-            # )
-
-        # ---------------------------------------------------------------03
-        # perform action
-        if response == "y":
-            _rp.update("deleting folder ...")
-            for _sh in self.walk(only_names=False):
-                with _sh(richy_panel=_rp):
-                    _sh.delete(force=force)
-        # todo: remove redundant check
-        # by now we are confident that folder is empty so just check it
-        if len(self.ls()) != 0:
-            raise e.code.CodingError(
-                notes=[
-                    f"The folder for storage hashable should be empty by now ...",
-                    f"Check path {self.upath}",
-                    f"May be you have non StorageHashable files ... note that even "
-                    f"with force=True we cannot delete this"
-                ]
-            )
-
     # noinspection PyUnusedLocal
     def delete_post_runner(
         self, *, hooked_method_return_value: t.Any, force: bool
@@ -483,10 +433,12 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
     def ls(
         self, sub_path: str = None, detail: bool = False
-    ) -> t.List[UPath]:
+    ) -> t.Iterable[UPath]:
         """
         Inspired by
         >>> AbstractFileSystem.ls
+        todo try to borrow UPath creation statergy from
+          >>> UPath.iterdir
         """
         _fs = self.upath.fs
         _upath = self.upath
@@ -494,30 +446,33 @@ class StorageHashable(m.HashableClass, abc.ABC):
         _upath_protocol = _upath.protocol
         if sub_path is not None:
             _upath /= sub_path
-        _res = _fs.ls(
-            path=_upath,
-            detail=detail
-        )
+        _res = _fs.ls(path=_upath, detail=detail)
         if isinstance(_res, list):
-            return [
-                _upath_class(_, protocol=_upath_protocol) for _ in _res
-            ]
+            for _ in _res:
+                yield _upath_class(_, protocol=_upath_protocol)
         # elif isinstance(_res, dict):
-        #     return [
-        #         UPath(
+        #     for _k, _v in _res.items():
+        #         yield UPath(
         #             suffix_path=_k.replace(_root_path, ""),
         #             fs_name=self.fs_name, details=_v)
-        #         for _k, _v in _res.items()
-        #     ]
         else:
             raise e.code.NotSupported(
                 notes=[f"Unknown type {type(_res)}"]
             )
 
+    @abc.abstractmethod
+    def walk(self) -> t.Iterable[t.Union["StorageHashable", UPath]]:
+        """
+        A Folder can have Folder or FileGroup so we yield StorageHashable
+        A FileGroup can have only UPaths so we yield UPath
+        """
+        ...
+
     def find(self, sub_path: str = None, maxdepth: int = 1, detail: bool = False, withdirs: bool = True) -> [UPath]:
         """
         Inspired by
         >>> AbstractFileSystem.find
+        todo: dont know what is the difference between ls and find ...
         """
         _ret = []
         _fs = self.upath.fs
@@ -548,46 +503,4 @@ class StorageHashable(m.HashableClass, abc.ABC):
 
         """
         ...
-
-    def walk(self) -> t.Iterable["StorageHashable"]:
-        """
-        Note that walk will not test if other components are present or not
-        On disk a StorageHashable will have two files and one folder
-        + folder <hashable_name>
-        + file <hashable_name>.info
-        + file <hashable_name>.config
-        [NOTE]
-        This method will only look for *.info files so be aware that if other files
-        are not present this can falsely yield a StorageHashable
-        """
-        from .state import Suffix
-
-        # -----------------------------------------------------------------01
-        # track for registered file groups
-        # *** NOTE ***
-        # We skip anything that does not end with *.info this will also
-        # skip files that are not StorageHashable .... but that is okay
-        # for multiple reasons ...
-        #  + performance
-        #  + we might want something extra lying around in folders
-        #  + we might have deleted state info but the folders might be
-        #    lying around and might be wise to not delete it
-        # The max we can do in that case is warn users that some
-        # thing else is lying around in folder check method
-        # warn_about_garbage.
-        for _f in self.upath.glob(pattern=f"*{Suffix.info}"):
-            _f_txt = _f.read_text()
-            # build instance
-            _cls = m.YamlRepr.get_class(_f_txt)
-            # noinspection PyTypeChecker
-            _hashable = _cls.from_yaml(_f_txt, parent_folder=self,
-            )  # type: StorageHashable
-            # yield
-            yield _hashable
-
-        # -----------------------------------------------------------------02
-        # todo: we might not need this as we are yielding above ... delete later
-        # sync is equivalent to accessing folder
-        # so update state manager files
-        # self.config.append_last_accessed_on()
 
